@@ -1,0 +1,220 @@
+﻿/*<!--CSS - Main & Modal -->*/
+
+.day-cell {
+    min-width: 60px;
+}
+
+.name-cell {
+    min-width: 80px;
+    background: #004d4d;
+    color: white;
+    font-weight: bold;
+    font-size: 0.65rem;
+    white-space: nowrap;
+}
+
+.badge {
+    font-size: 0.6rem;
+    border-radius: 4px;
+    transition: transform 0.1s;
+    /* Center the text in all directions */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Optional: fix height for uniform look */
+    height: 22px; /* or whatever fits your design */
+    line-height: 1.5;
+}
+
+.badge1 {
+    font-size: 0.6rem;
+    border-radius: 4px;
+    transition: transform 0.1s;
+    display: inline-flex; /* changed from flex to inline-flex */
+    justify-content: center;
+    align-items: center;
+    height: 22px;
+    line-height: 1.5;
+    padding: 0 6px; /* add horizontal padding */
+    white-space: nowrap; /* prevent breaking */
+}
+
+.badge-container {
+    display: flex;
+    gap: 4px; /* spacing between badges */
+    flex-wrap: wrap; /* allow wrapping if many badges */
+}
+
+.badge:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.bg-pink {
+    background-color: #e89ecb !important;
+}
+
+/* .highlight-column {
+        background-color: #f1f1f1 !important;
+    } */
+/* Make rows a horizontal flex container */
+.row-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+    /* Make each day cell share equal width */
+    .row-wrapper .day-cell {
+        flex: 1 1 auto;
+        min-width: 0; /* Prevent overflow */
+        font-size: 0.6rem; /* smaller font so all dates fit */
+        padding: 0.15rem; /* tighter spacing */
+    }
+
+/* Make the scroll wrapper stop scrolling horizontally */
+.scroll-wrapper {
+    overflow-x: hidden;
+}
+
+
+/*<!-- CSS - Menu items modal-- >*/
+
+/* For new items with delete button */
+.new-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.new-item label {
+    margin-bottom: 0;
+}
+
+.new-item button.delete-item {
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.form-check-input:checked {
+    accent-color: #ffc107; /* Bootstrap warning color */
+}
+
+
+/*<!-- CSS - Tooltip-- >*/
+
+#customTooltip {
+    position: absolute;
+    background: #e11d48; /* modern red */
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 9999;
+    max-width: 350px;
+    white-space: normal;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+    display: none;
+    transition: opacity 0.15s ease;
+}
+
+#customTooltip i {
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+    #customTooltip i.fa-solid.fa-calendar-alt {
+        color: #ffd43b;
+    }
+    /* gold */
+    #customTooltip i.fa-solid.fa-user {
+        color: #4cc9f0;
+    }
+    /* sky blue */
+    #customTooltip i.fa-solid.fa-phone {
+        color: #00d084;
+    }
+    /* green */
+    #customTooltip i.fa-solid.fa-clock {
+        color: #f38b02;
+    }
+    /* orange */
+
+    #customTooltip i.fa-sun {
+        color: #facc15;
+    }
+    /* gold-yellow */
+    #customTooltip i.fa-cloud-sun {
+        color: #fbbf24;
+    }
+    /* soft sunrise */
+    #customTooltip i.fa-cloud-moon {
+        color: #93c5fd;
+    }
+    /* soft blue for evening */
+    #customTooltip i.fa-moon {
+        color: #60a5fa;
+    }
+/* cool blue for night */
+
+
+/*<!-- CSS Payment Trial Details - Table-- >*/
+
+/* 🔹 Compact, minimal table design */
+.payment-table {
+    font-size: 0.84rem; /* Reduced font size */
+    color: #343a40; /* Soft dark text */
+    border-color: #dee2e6; /* Subtle borders */
+}
+
+/* 🔹 Table Header */
+.payment-table thead th {
+    background-color: #f8f9fa !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+}
+
+/* 🔹 Row hover effect */
+.payment-table tbody tr:hover {
+    background-color: #f9fbff;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* 🔹 Table padding & alignment */
+.payment-table td,
+.payment-table th {
+    padding: 0.45rem 0.5rem;
+    vertical-align: middle !important;
+}
+
+/* 🔹 Buttons refinement */
+.payment-table button {
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+/* 🔹 Responsive badge tones (Bootstrap 5.3+) */
+.bg-success-subtle {
+    background-color: #d1e7dd !important;
+}
+
+
+/*<!-- Booking Report modal-- >*/
+
+.card-body ul li {
+    margin-bottom: 4px;
+}
+
+.card-body h6 i {
+    color: inherit;
+}
+
+

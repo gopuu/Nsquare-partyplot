@@ -1,0 +1,158 @@
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using ERPAdmin.ApiControllers;
+using ERPAdmin.Helper;
+using ERPAdmin.Models;
+using Humanizer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Data;
+using System.Data.SqlClient;
+using System.Dynamic;
+
+namespace ERPAdmin.ApiControllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class InventoryController : MasterController
+    {
+        private string connString = string.Empty;
+
+        public InventoryController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        {
+            //_configuration = configuration;
+            //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
+            //_connClass = new ConnClass(httpContextAccessor, masterConnString);
+        }
+
+        [HttpPost]
+        [Route("GetStockList")]
+        public IActionResult GetStockList([FromBody] GetStockListRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<GetStockListModel> stocks = new List<GetStockListModel>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetStockList", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@ItemCategoryId", request.ItemCategoryId == 0 ? 0 : request.ItemCategoryId);
+                    cmd.Parameters.AddWithValue("@RawMaterialId", request.RawMaterialId == 0 ? 0 : request.RawMaterialId);
+                    cmd.Parameters.AddWithValue("@UnitId", request.UnitId == 0 ? 0 : request.UnitId);
+
+                    cmd.Parameters.AddWithValue("@ItemCategoryName", request.ItemCategoryName);
+                    cmd.Parameters.AddWithValue("@RawMaterialName", request.RawMaterialName);
+                    cmd.Parameters.AddWithValue("@UnitName", request.UnitName);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        GetStockListModel m = new GetStockListModel();
+
+                        m.RawMaterialId = Convert.ToInt64(row["RawMaterialId"]);
+                        m.RawMaterialName = Convert.ToString(row["RawMaterialName"]);
+                        m.ItemCategoryId = Convert.ToInt64(row["ItemCategoryId"]);
+                        m.ItemCategoryName = Convert.ToString(row["ItemCategoryName"]);
+                        m.UnitId = Convert.ToInt64(row["UnitId"]);
+                        m.UnitName = Convert.ToString(row["UnitName"]);
+                        m.CurrentQty = Convert.ToDecimal(row["CurrentQty"]);
+
+                        stocks.Add(m);
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Stock list fetched successfully!";
+                apiResponse.data = stocks;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("SaveStockOut")]
+        public IActionResult SaveStockOut([FromBody] SaveStockOutRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                // Convert StockOutList to JSON
+                string jsonStockOutList = JsonConvert.SerializeObject(model.StockOutList);
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SaveStockOut", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@JSON_StockOutList", SqlDbType.NVarChar).Value =
+                        (object)jsonStockOutList ?? DBNull.Value;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
+
+                    conn.Open();
+                    // Read SQL return message (Success/Error)
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string status = reader["Status"].ToString();
+                            string message = reader["Message"].ToString();
+
+                            apiResponse.status = status;
+                            apiResponse.message = message;
+                            apiResponse.data = null;
+
+                            if (status == "Error")
+                                return BadRequest(apiResponse);   // return 400 for validation fail
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "StockOut saved successfully!";
+                apiResponse.data = null;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+    }
+}

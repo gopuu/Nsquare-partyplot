@@ -1,0 +1,3005 @@
+﻿@{
+    ViewData["Title"] = "Enquiry";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
+<script src="/assets2/vendors/flatpickr/flatpickr.min.js"></script>
+
+<!-- MAIN -->
+<div class="content">
+    <div class="pb-5">
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="mb-12">
+                    <!-- Title + Buttons + Sort in same row -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h4 class="mb-0 fw-semibold">Enquiry / Lead Management</h4>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2"
+                                    data-bs-toggle="modal" data-bs-target="#processModal" id="btnProcess">
+                                + Add Process
+                            </button>
+
+                            <button class="btn btn-outline-success btn-sm fw-bold py-1 px-2"
+                                    data-bs-toggle="modal" data-bs-target="#dealModal">
+                                + Add Deal
+                            </button>
+
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2 dropdown-toggle"
+                                        type="button" id="sortByDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Sort By: This Month
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
+                                    <li><a class="dropdown-item sort-option" data-value="today" href="#">Today</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="week" href="#">This Week</a></li>
+                                    <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="year" href="#">This Year</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Board -->
+                    <div class="container-fluid py-3">
+                        <div id="processBoard" class="d-flex flex-row overflow-auto" style="gap: 1rem;">
+                            <!-- Columns will be injected here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Process -->
+<div class="modal fade" id="processModal" tabindex="-1" aria-labelledby="processModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <!-- Made modal larger -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="processModalLabel">Process Master</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Form -->
+                <form id="processForm" class="d-flex align-items-start gap-2">
+                    <input type="hidden" id="processId" value="0">
+
+                    <!-- Process Name -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label for="processName" class="form-label">Process Name</label>
+                        <input type="text" class="form-control mt-1" id="processName">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter event type</div>
+                    </div>
+
+                    <!-- Index No -->
+                    <div class="d-flex flex-column" style="width: 120px;">
+                        <label for="indexNo" class="form-label">Step</label>
+                        <input type="number" class="form-control mt-1" id="processIndexNo" step="1" min="0">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter step no</div>
+                    </div>
+
+                    <!-- Button aligned at bottom -->
+                    <div class="d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive mt-2">
+                    <table class="table table-bordered table-striped align-middle" id="processTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;" class="text-center">Sr No</th>
+                                <th style="width: 55%;">Name</th>
+                                <th style="width: 15%;" class="text-center">Steps</th>
+                                <th style="width: 20%;" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be filled via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Deal -->
+<div class="modal fade" id="dealModal" tabindex="-1" aria-labelledby="dealModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <!-- extra wide modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dealModalLabel">Add Enquiry / Deal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dealForm" class="row g-3">
+                    <input type="hidden" id="dealId">
+
+                    <!-- Row 1: Process / Stage, Name, Contact -->
+                    <div class="col-md-4">
+                        <label for="dealProcess" class="form-label">
+                            Process / Stage <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <select id="dealProcess" class="form-select"></select>
+                            <button type="button" class="btn btn-outline-primary" id="openProcessModal">+</button>
+                        </div>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select process</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dealName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="dealName" placeholder="Name" maxlength="100">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter name</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dealContact" class="form-label">Contact <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="dealContact" placeholder="1234567890" maxlength="10">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter contact no.</div>
+                    </div>
+
+                    <!-- Row 2: Address, Email -->
+                    <div class="col-md-6">
+                        <label for="dealAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="dealAddress" placeholder="address" maxlength="250"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="dealEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="dealEmail" placeholder="email id" maxlength="100">
+                    </div>
+
+                    <!-- Row 3: Event Type, Event Subtype, Banquet Hall-->
+                    <div class="row">
+                        <!-- Event Type -->
+                        <div class="col-md-4">
+                            <label for="eventTypeDropdown" class="form-label">
+                                Event Type <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <select id="eventTypeDropdown" class="form-select">
+                                    <option value="0">-- Select Event Type --</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" id="openEventTypeModal">+</button>
+                            </div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select event type</div>
+                        </div>
+
+                        <!-- Event Sub-Type -->
+                        <div class="col-md-4">
+                            <label for="eventSubTypeDropdown" class="form-label">
+                                Event Sub-Type <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <select id="eventSubTypeDropdown" class="form-select">
+                                    <option value="0">-- Select Event Sub-Type --</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" id="openEventSubTypeModal">+</button>
+                            </div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select event sub-type</div>
+                        </div>
+
+                        <!-- Banquet Hall -->
+                        <div class="col-md-4">
+                            <label for="banquetHallDropdown" class="form-label">
+                                Banquet Hall <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <select id="banquetHallDropdown" class="form-select">
+                                    <option value="0">-- Select Banquet Hall --</option>
+                                </select>
+                            </div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select banquet hall</div>
+                        </div>
+
+                        <!-- Info Line -->
+                        <div class="col-12">
+                            <p class="text-muted small mt-1 mb-2">
+                                <i class="fa fa-info-circle me-1 text-primary"></i>
+                                <span class="text-primary">
+                                    Select <strong>Event Type</strong> & <strong>Sub-Type</strong> carefully — this helps us deliver precise reports.
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Event Date, Start Time, End Time, Pax -->
+                    <div class="col-md-4">
+                        <label for="eventDate" class="form-label">Date Of Event <span class="text-danger">*</span></label>
+                        <input class="form-control datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter date</div>
+                    </div>
+
+                    <!-- START TIME FIELD -->
+                    <div class="col-md-2 position-relative">
+                        <label for="eventStart" class="form-label">
+                            Start Time <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="eventStart" class="form-control text-center" placeholder="Select Time" readonly>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select start time</div>
+
+                        <!-- CLOCK PICKER -->
+                        <div id="clockPicker" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                            <div class="text-center mb-3">
+                                <span id="hourDisplay" class="fw-bold fs-3 text-primary clickable">12</span>
+                                <span class="fs-3 text-dark">:</span>
+                                <span id="minuteDisplay" class="fw-bold fs-3 text-dark clickable">00</span>
+                            </div>
+
+                            <!-- AM/PM toggle -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <button id="amBtn" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
+                                <button id="pmBtn" class="btn btn-outline-primary btn-sm">PM</button>
+                            </div>
+
+                            <!-- Clock face -->
+                            <div class="clock-face mx-auto mb-3">
+                                <div class="clock-hand hour-hand" id="hourHand"></div>
+                                <div class="clock-hand minute-hand" id="minuteHand"></div>
+                                <div class="center-dot"></div>
+
+                                <!-- Hour numbers -->
+                                <div class="clock-number" style="--i:1;">1</div>
+                                <div class="clock-number" style="--i:2;">2</div>
+                                <div class="clock-number" style="--i:3;">3</div>
+                                <div class="clock-number" style="--i:4;">4</div>
+                                <div class="clock-number" style="--i:5;">5</div>
+                                <div class="clock-number" style="--i:6;">6</div>
+                                <div class="clock-number" style="--i:7;">7</div>
+                                <div class="clock-number" style="--i:8;">8</div>
+                                <div class="clock-number" style="--i:9;">9</div>
+                                <div class="clock-number" style="--i:10;">10</div>
+                                <div class="clock-number" style="--i:11;">11</div>
+                                <div class="clock-number" style="--i:12;">12</div>
+                            </div>
+
+                            <!-- Confirm -->
+                            <div class="text-center">
+                                <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- END TIME FIELD -->
+                    <div class="col-md-2 position-relative">
+                        <label for="eventEnd" class="form-label">
+                            End Time <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="eventEnd" class="form-control text-center" placeholder="Select Time" readonly>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select end time</div>
+
+                        <!-- CLOCK PICKER -->
+                        <div id="clockPickerEnd" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                            <div class="text-center mb-3">
+                                <span id="hourDisplayEnd" class="fw-bold fs-3 text-primary clickable">12</span>
+                                <span class="fs-3 text-dark">:</span>
+                                <span id="minuteDisplayEnd" class="fw-bold fs-3 text-dark clickable">00</span>
+                            </div>
+
+                            <!-- AM/PM toggle -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <button id="amBtnEnd" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
+                                <button id="pmBtnEnd" class="btn btn-outline-primary btn-sm">PM</button>
+                            </div>
+
+                            <!-- Clock face -->
+                            <div class="clock-face mx-auto mb-3">
+                                <div class="clock-hand hour-hand" id="hourHandEnd"></div>
+                                <div class="clock-hand minute-hand" id="minuteHandEnd"></div>
+                                <div class="center-dot"></div>
+
+                                <!-- Hour numbers -->
+                                <div class="clock-number" style="--i:1;">1</div>
+                                <div class="clock-number" style="--i:2;">2</div>
+                                <div class="clock-number" style="--i:3;">3</div>
+                                <div class="clock-number" style="--i:4;">4</div>
+                                <div class="clock-number" style="--i:5;">5</div>
+                                <div class="clock-number" style="--i:6;">6</div>
+                                <div class="clock-number" style="--i:7;">7</div>
+                                <div class="clock-number" style="--i:8;">8</div>
+                                <div class="clock-number" style="--i:9;">9</div>
+                                <div class="clock-number" style="--i:10;">10</div>
+                                <div class="clock-number" style="--i:11;">11</div>
+                                <div class="clock-number" style="--i:12;">12</div>
+                            </div>
+
+                            <!-- Confirm -->
+                            <div class="text-center">
+                                <button type="button" id="setTimeBtnEnd" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--pax-->
+                    <div class="col-md-4">
+                        <label for="pax" class="form-label">Pax <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="pax" placeholder="pax" maxlength="50">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
+                    </div>
+
+                    <!-- Row 5: Follow-up Date, Estimated Amount, Lead Source -->
+                    <div class="col-md-4">
+                        <label for="followUpDate" class="form-label">Follow-up Date</label>
+                        <input class="form-control datetimepicker flatpickr-input" id="followUpDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="estimatedAmount" class="form-label">Estimated Amount <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="estimatedAmount" placeholder="amount" value="0" step="0.01" min="0">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Amount</div>
+                        <!-- ℹ️ Info Line -->
+                        <p class="text-muted small mt-1 mb-2">
+                            <i class="fa fa-info-circle me-1 text-primary"></i>
+                            <span class="text-primary">
+                                For Accurate reporting, Enter the <strong>Estimated Bill Amount</strong> as per PAX & Interested Package of the Guest.
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="leadSourceDropdown" class="form-label">Lead Source <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select id="leadSourceDropdown" class="form-select">
+                                <option value="0">-- Select Lead Source --</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" id="openLeadSourceModal">+</button>
+                        </div>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select lead source</div>
+                        <!-- ℹ️ Info Line -->
+                        <p class="text-muted small mt-1 mb-2">
+                            <i class="fa fa-info-circle me-1 text-primary"></i>
+                            <span class="text-primary">
+                                Please select proper <strong>Lead Source</strong> to ensure accurate reports for Future Insights.
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Row 6: Remarks -->
+                    <div class="col-12">
+                        <label for="remark" class="form-label">Remarks / Notes</label>
+                        <textarea class="form-control" id="remark" rows="2" placeholder="Remarks"></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="col-12 text-end">
+                        <button type="button" class="btn btn-outline-danger d-none" id="deleteDealBtn">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                        <button type="submit" class="btn btn-outline-success" id="saveDealBtn">
+                            <i class="fa fa-save"></i> Save Enquiry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🗓️ Move - Deal Modal -->
+<div class="modal fade" id="moveDealModal" tabindex="-1" aria-labelledby="moveDealModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="moveDealModalLabel">
+                    Add Lead Followup
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="moveDealForm">
+                    <div class="row mb-3">
+                        <!-- FOLLOW-UP DATE -->
+                        <div class="col-md-6 position-relative">
+                            <label for="nextFollowUpDate" class="form-label">
+                                Next Follow-Up Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" id="nextFollowUpDate" class="form-control text-center" placeholder="Select Date">
+                            <div class="text-danger small mt-1 error-msg d-none">Please select a date</div>
+                        </div>
+
+                        <!-- FOLLOW-UP TIME -->
+                        <div class="col-md-6 position-relative">
+                            <label for="nextFollowUpTime" class="form-label">
+                                Next Follow-Up Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="nextFollowUpTime" class="form-control text-center" placeholder="Select Time" readonly>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select time</div>
+
+                            <!-- CLOCK PICKER -->
+                            <div id="clockPickerFollowUp" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                                <div class="text-center mb-3">
+                                    <span id="hourDisplayFollowUp" class="fw-bold fs-3 text-primary clickable">12</span>
+                                    <span class="fs-3 text-dark">:</span>
+                                    <span id="minuteDisplayFollowUp" class="fw-bold fs-3 text-dark clickable">00</span>
+                                </div>
+
+                                <!-- AM/PM Toggle -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <button id="amBtnFollowUp" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
+                                    <button id="pmBtnFollowUp" class="btn btn-outline-primary btn-sm">PM</button>
+                                </div>
+
+                                <!-- Clock Face -->
+                                <div class="clock-face mx-auto mb-3">
+                                    <div class="clock-hand hour-hand" id="hourHandFollowUp"></div>
+                                    <div class="clock-hand minute-hand" id="minuteHandFollowUp"></div>
+                                    <div class="center-dot"></div>
+
+                                    <!-- Hour numbers -->
+                                    <div class="clock-number" style="--i:1;">1</div>
+                                    <div class="clock-number" style="--i:2;">2</div>
+                                    <div class="clock-number" style="--i:3;">3</div>
+                                    <div class="clock-number" style="--i:4;">4</div>
+                                    <div class="clock-number" style="--i:5;">5</div>
+                                    <div class="clock-number" style="--i:6;">6</div>
+                                    <div class="clock-number" style="--i:7;">7</div>
+                                    <div class="clock-number" style="--i:8;">8</div>
+                                    <div class="clock-number" style="--i:9;">9</div>
+                                    <div class="clock-number" style="--i:10;">10</div>
+                                    <div class="clock-number" style="--i:11;">11</div>
+                                    <div class="clock-number" style="--i:12;">12</div>
+                                </div>
+
+                                <!-- Confirm -->
+                                <div class="text-center">
+                                    <button type="button" id="setTimeBtnFollowUp" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Comments / Remarks</label>
+                        <textarea class="form-control" id="remarks" rows="3" placeholder="Enter remarks"></textarea>
+                    </div>
+                    <!-- Attachment (Optional) -->
+                    <div class="mb-3">
+                        <label for="attachment" class="form-label">Attachment (Optional)</label>
+                        <div id="attachmentDropzone" class="border border-2 border-dashed rounded p-4 text-center bg-light" style="cursor: pointer;">
+                            <i class="fa fa-cloud-upload fa-2x mb-2 text-primary"></i>
+                            <p class="mb-1 fw-semibold">Drop file here or Click to upload</p>
+                            <p class="small text-muted mb-0">Allowed: Images, Videos, PDF, DOC, Excel, PPT, Text</p>
+                            <p class="small text-muted">Max Size: 5 MB</p>
+                            <input type="file" id="attachment" class="d-none"
+                                   accept=".jpg,.jpeg,.png,.gif,.mp4,.mov,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                        </div>
+                        <input type="hidden" id="attachmentBase64_enquiryMove">
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="saveMoveDealBtn" class="btn btn-outline-primary">Save & Move</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Event Type Master -->
+<div class="modal fade" id="eventTypeModal" tabindex="-1" aria-labelledby="eventTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <!-- Large modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventTypeModalLabel">Event Type Master</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Form -->
+                <form id="eventTypeForm" class="d-flex align-items-start gap-2">
+                    <input type="hidden" id="eventTypeId" value="0">
+
+                    <!-- Input + Error stacked vertically -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label for="eventTypeName" class="form-label">Event Type</label>
+                        <input type="text" class="form-control mt-1" id="eventTypeName">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter event type</div>
+                    </div>
+
+                    <!-- Button aligned at bottom -->
+                    <div class="d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive mt-2">
+                    <table class="table table-bordered table-striped align-middle" id="eventTypeTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;" class="text-center">Sr No</th>
+                                <th style="width: 70%;">Name</th>
+                                <th style="width: 20%;" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be filled via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Event Sub-Type Master -->
+<div class="modal fade" id="eventSubTypeModal" tabindex="-1" aria-labelledby="eventSubTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <!-- Large modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventSubTypeModalLabel">Event Sub-Type Master</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Form -->
+                <form id="eventSubTypeForm" class="d-flex align-items-start gap-2">
+                    <input type="hidden" id="eventSubTypeId" value="0">
+
+                    <!-- Event Type Dropdown -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label for="eventTypeDropdown_SubTypeModal" class="form-label">
+                            Event Type <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group mt-1">
+                            <select id="eventTypeDropdown_SubTypeModal" class="form-select">
+                                <option value="0">-- Select Event Type --</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" id="openEventTypeModal_SubTypeModal">+</button>
+                        </div>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select event type</div>
+                    </div>
+
+                    <!-- Event Sub-Type Input -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label for="eventSubTypeName" class="form-label">Event Sub-Type <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control mt-1" id="eventSubTypeName">
+                        <span class="text-danger small mt-1 error-msg d-none">Please enter event sub-type</span>
+                    </div>
+
+                    <!-- Save Button aligned with inputs -->
+                    <div class="d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive mt-2">
+                    <table class="table table-bordered table-striped align-middle" id="eventSubTypeTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;" class="text-center">Sr No</th>
+                                <th style="width: 70%;">Name</th>
+                                <th style="width: 20%;" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be filled via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Lead Source Master -->
+<div class="modal fade" id="leadSourceModal" tabindex="-1" aria-labelledby="leadSourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <!-- Large modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leadSourceModalLabel">Lead Source Master</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Form -->
+                <form id="leadSourceForm" class="d-flex align-items-start gap-2">
+                    <input type="hidden" id="leadSourceId" value="0">
+
+                    <!-- Input + Error stacked vertically -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label for="leadSourceName" class="form-label">Lead Source</label>
+                        <input type="text" class="form-control mt-1" id="leadSourceName">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter lead source</div>
+                    </div>
+
+                    <!-- Button aligned at bottom -->
+                    <div class="d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive mt-2">
+                    <table class="table table-bordered table-striped align-middle" id="leadSourceTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;" class="text-center">Sr No</th>
+                                <th style="width: 70%;">Name</th>
+                                <th style="width: 20%;" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be filled via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--MAIN-->
+<script>
+    let userId=0;
+    // Sample data (replace later with API fetch)
+    let processes = [
+/*
+        {
+            ProcessId: 1,
+            ProcessName: "Enquiry/Lead",
+            TotalAmount: 1500.00,
+            TotalEnquiryDeals: 2,
+            EnquiryDealsJson: [
+                { EnquiryDealId: 101, EnquiryDealTitle: "Enquiry #101", EnquiryDealName: "Ramesh", Amount: 500.00, EventDate_Format2: "Feb-01" },
+                { EnquiryDealId: 102, EnquiryDealTitle: "Enquiry #102", EnquiryDealName: "Suresh", Amount: 1000.00, EventDate_Format2: "Feb-02" }
+            ]
+        },
+        {
+            ProcessId: 2,
+            ProcessName: "Follow-Up & Detail Shared",
+            TotalAmount: 0.00,
+            TotalEnquiryDeals: 0,
+            EnquiryDealsJson: []
+        },
+        {
+            ProcessId: 3,
+            ProcessName: "Place Visit",
+            TotalAmount: 2200.00,
+            TotalEnquiryDeals: 2,
+            EnquiryDealsJson: [
+                { EnquiryDealId: 103, EnquiryDealTitle: "Enquiry #103", EnquiryDealName: "Nilesh", Amount: 1200.00, EventDate_Format2: "Feb-05" },
+                { EnquiryDealId: 104, EnquiryDealTitle: "Enquiry #104", EnquiryDealName: "Mahesh", Amount: 1000.00, EventDate_Format2: "Feb-06" }
+            ]
+        },
+        {
+            ProcessId: 4,
+            ProcessName: "Proposal/Negotiation",
+            TotalAmount: 3500.00,
+            TotalEnquiryDeals: 1,
+            EnquiryDealsJson: [
+                { EnquiryDealId: 105, EnquiryDealTitle: "Enquiry #105", EnquiryDealName: "Hitesh", Amount: 3500.00, EventDate_Format2: "Feb-10" }
+            ]
+        },
+        {
+            ProcessId: 5,
+            ProcessName: "Event Booked",
+            TotalAmount: 0.00,
+            TotalEnquiryDeals: 0,
+            EnquiryDealsJson: []
+        },
+        {
+            ProcessId: 6,
+            ProcessName: "Lead Lost",
+            TotalAmount: 5000.00,
+            TotalEnquiryDeals: 1,
+            EnquiryDealsJson: [
+                { EnquiryDealId: 106, EnquiryDealTitle: "Enquiry #106", EnquiryDealName: "Divyesh", Amount: 5000.00, EventDate_Format2: "Feb-12" }
+            ]
+        }
+*/
+    ];
+
+    // Load Enquiry Deals (Drag & Drop view)
+    function loadEnquiryDeals(processId = 0) {
+        ////////showLoader()()()();
+        // get currently selected sort value from active item
+        let duration_selectedSort = $(".sort-option.active").data("value") || "month";
+
+        var inpuData = 
+        {
+            ProcessId: processId,
+            Duration: duration_selectedSort
+        };
+        console.log("EnquiryDeal inpuData:", inpuData);
+        $.ajax({
+            url: "/api/EnquiryDeal/GetEnquiryDealList_forDragNDrop",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(inpuData),
+            success: function (response) {
+                console.log("EnquiryDeal response:", response);
+                if (response.status === "Success") {
+                    processes = response.data; 
+                    renderBoard();
+                } else {
+                    console.warn("No data received or API returned error:", response.message);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching enquiry deals.",
+                    confirmButtonText: "OK",
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Render board dynamically
+    function renderBoard() {
+        const board = document.getElementById("processBoard");
+        const processSelect = document.getElementById("dealProcess");
+        board.innerHTML = "";
+        processSelect.innerHTML = "";
+
+        console.log("processes:", processes);
+        processes.forEach(process => {
+            let dealsHtml = "";
+
+            if (process.EnquiryDealsJson.length > 0) {
+                process.EnquiryDealsJson.forEach(deal => {
+                    dealsHtml += `
+                        <div class="card shadow-sm mb-2 deal-card cursor-pointer"
+                             draggable="true"
+                             data-dealid="${deal.EnquiryDealId}"
+                             data-processid="${process.ProcessId}">
+                            <div class="card-body p-2">
+                                <h6 class="mb-1">${deal.EnquiryDealTitle}</h6>
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span class="text-muted">${deal.EnquiryDealName}</span>
+                                    <span class="text-muted">${deal.EventDate_Format1}</span>
+                                </div>
+                                <p class="mb-1 fw-bold">₹${deal.Amount.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                dealsHtml = `<p class="text-muted fst-italic">This stage is empty</p>`;
+            }
+
+            board.innerHTML += `
+                <div class="card flex-shrink-0 process-column"
+                     style="width: 18rem; min-width: 18rem;"
+                     data-processid="${process.ProcessId}">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">${process.ProcessName}</h6>
+                        <small class="text-muted">₹${process.TotalAmount.toLocaleString()} • ${process.TotalEnquiryDeals} Deal(s)</small>
+                    </div>
+                    <div class="card-body deal-dropzone" style="min-height: 500px;">
+                        ${dealsHtml}
+                    </div>
+                </div>
+            `;
+
+            processSelect.innerHTML += `<option value="${process.ProcessId}">${process.ProcessName}</option>`;
+        });
+
+        enableDragDrop();
+
+        // 🔥 Add click event listener for all deal cards
+        document.querySelectorAll(".deal-card").forEach(card => {
+            card.addEventListener("click", function () {
+                const dealId = this.getAttribute("data-dealid");
+                console.log("Clicked dealId:", dealId);
+                // later you can call your API here
+                // 🔥 Reset before fetching data
+                resetDealForm();
+                ////showLoader()(); // optional - show loader while fetching
+
+                $.ajax({
+                    url: `/api/EnquiryDeal/GetEnquiryDealById/${dealId}`,
+                    type: "GET",
+                    success: function (response) {
+                        if (response.status === "Success" && response.data) {
+                            const data = response.data;
+
+                            // 🔥 Change modal title for edit mode
+                            $("#dealModalLabel").text("Edit Enquiry / Deal");
+                            // Show delete button
+                            $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
+
+                            // Populate form fields
+                            $("#dealId").val(data.Id);
+                            $("#dealProcess").val(data.ProcessId);
+                            $("#dealName").val(data.Name);
+                            $("#dealContact").val(data.Contact);
+                            $("#dealAddress").val(data.Address || "");
+                            $("#dealEmail").val(data.Email || "");
+
+                            // First, set the event type
+                            $("#eventTypeDropdown").val(data.EventTypeId).trigger("change");
+
+                            // Wait until subtypes are populated (assuming loadSubTypes is async)
+                            setTimeout(() => {
+                                $("#eventSubTypeDropdown").val(data.EventSubTypeId);
+                            }, 300); // small delay to ensure subtypes are loaded
+
+                            $("#banquetHallDropdown").val(data.BanquetHallId);
+                            $("#eventDate").val(data.EventDate);
+
+                            $("#eventStart").val(data.EventStartTime);
+                            $("#eventEnd").val(data.EventEndTime);
+                            $("#pax").val(data.Pax);
+                            $("#followUpDate").val(data.FollowUpDate);
+
+                            $("#estimatedAmount").val(data.EstimatedAmount);
+                            $("#leadSourceDropdown").val(data.LeadSourceId);
+                            $("#remark").val(data.Remarks || "");
+
+                            // finally, open modal
+                            // const modal = new bootstrap.Modal(document.getElementById("dealModal"));
+                            // modal.show();
+                            $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                        } else {
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Not Found",
+                                text: response.message || "No data available for this deal."
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text: xhr.responseText || "Something went wrong while fetching deal data."
+                        });
+                    },
+                    complete: function () {
+                        //hideLoader();
+                    }
+                });
+
+            });
+        });
+    }
+
+    // Drag & Drop setup
+    function enableDragDrop() {
+        const cards = document.querySelectorAll(".deal-card");
+        const dropzones = document.querySelectorAll(".deal-dropzone");
+
+        cards.forEach(card => {
+            card.addEventListener("dragstart", e => {
+                e.dataTransfer.setData("dealId", card.dataset.dealid);
+                e.dataTransfer.setData("fromProcessId", card.dataset.processid);
+            });
+        });
+
+        // dropzones.forEach(zone => {
+        //     zone.addEventListener("dragover", e => e.preventDefault());
+        //     zone.addEventListener("drop", e => {
+        //         e.preventDefault();
+        //         const dealId = parseInt(e.dataTransfer.getData("dealId"));
+        //         const fromProcessId = parseInt(e.dataTransfer.getData("fromProcessId"));
+        //         const toProcessId = parseInt(zone.closest(".process-column").dataset.processid);
+
+        //         if (fromProcessId !== toProcessId) {
+        //             moveDeal(dealId, fromProcessId, toProcessId);
+        //         }
+        //     });
+        // });
+        let pendingMoveData = {}; // temporarily store drag-drop data
+
+        dropzones.forEach(zone => {
+            zone.addEventListener("dragover", e => e.preventDefault());
+            zone.addEventListener("drop", e => {
+                e.preventDefault();
+                const dealId = parseInt(e.dataTransfer.getData("dealId"));
+                const fromProcessId = parseInt(e.dataTransfer.getData("fromProcessId"));
+                const toProcessId = parseInt(zone.closest(".process-column").dataset.processid);
+
+                if (fromProcessId !== toProcessId) {
+                    // 🧠 store temporarily
+                    pendingMoveData = { dealId, fromProcessId, toProcessId };
+
+                    // Clear Move Deal Modal fields
+                    // Clear Next Follow-Up fields
+                    document.getElementById("nextFollowUpDate").value = "";
+                    document.getElementById("nextFollowUpTime").value = "";
+                    // (Optional) also hide the custom clock picker if visible
+                    document.getElementById("clockPickerFollowUp").classList.add("d-none");
+
+                    document.getElementById("remarks").value = "";
+                    document.getElementById("attachment").value = "";
+                    document.getElementById("attachmentBase64_enquiryMove").value = "";
+
+                    // Optional: reset dropzone text to default
+                    const dropzone = document.getElementById("attachmentDropzone");
+                    dropzone.querySelector("p.fw-semibold").innerText = "Drop file here or Click to upload";
+
+                    // open modal
+                    const modal = new bootstrap.Modal(document.getElementById("moveDealModal"));
+                    modal.show();
+                }
+            });
+        });
+
+        // 🧩 Handle Save Button in Modal
+        document.getElementById("saveMoveDealBtn").addEventListener("click", () => {
+            // Get Date & Time fields
+            const dateVal = document.getElementById("nextFollowUpDate").value.trim();
+            const timeVal = document.getElementById("nextFollowUpTime").value.trim(); // e.g. "02:30 PM"
+
+            let nextFollowUp = "";
+
+            if (dateVal && timeVal) {
+                // Parse time (convert 12-hour format with AM/PM to 24-hour)
+                const [timePart, ampm] = timeVal.split(" ");
+                let [hour, minute] = timePart.split(":").map(Number);
+                if (ampm === "PM" && hour < 12) hour += 12;
+                if (ampm === "AM" && hour === 12) hour = 0;
+
+                // Combine to ISO format (e.g. 2025-11-06T14:30)
+                nextFollowUp = `${dateVal}T${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+            }
+            //const nextFollowUp = document.getElementById("nextFollowUp").value.trim();
+            const remarks = document.getElementById("remarks").value.trim();
+            const attachmentBase64_enquiryMove = document.getElementById("attachmentBase64_enquiryMove").value.trim();
+            /*
+            if (!venueVisitDate || !stageWise || !remarks) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Details',
+                    text: 'Please fill in all fields before saving.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+            */
+
+            const modalEl = document.getElementById("moveDealModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // ✅ Call your moveDeal function with parameters
+            moveDeal(
+                pendingMoveData.dealId,
+                pendingMoveData.fromProcessId,
+                pendingMoveData.toProcessId,
+                nextFollowUp,
+                remarks,
+                attachmentBase64_enquiryMove
+            );
+        });
+
+        // Toggle clock picker visibility
+        $("#nextFollowUpTime").on("focus click", function () {
+            $("#clockPickerFollowUp").removeClass("d-none");
+        });
+
+        // Example: Set time on confirm
+        $("#setTimeBtnFollowUp").on("click", function () {
+            const hour = $("#hourDisplayFollowUp").text();
+            const minute = $("#minuteDisplayFollowUp").text();
+            const ampm = $("#amBtnFollowUp").hasClass("active") ? "AM" : "PM";
+            $("#nextFollowUpTime").val(`${hour}:${minute} ${ampm}`);
+            $("#clockPickerFollowUp").addClass("d-none");
+        });
+
+    }
+
+    // Move deal between processes
+    function moveDeal(dealId, fromProcessId, toProcessId, nextFollowUp, remarks, attachmentBase64_enquiryMove) {
+        const fromProcess = processes.find(p => p.ProcessId === fromProcessId);
+        const toProcess = processes.find(p => p.ProcessId === toProcessId);
+
+        if (!fromProcess || !toProcess) return;
+
+        const dealIndex = fromProcess.EnquiryDealsJson.findIndex(d => d.EnquiryDealId === dealId);
+        if (dealIndex >= 0) {
+            const deal = fromProcess.EnquiryDealsJson.splice(dealIndex, 1)[0];
+            toProcess.EnquiryDealsJson.push(deal);
+
+            // update totals
+            fromProcess.TotalEnquiryDeals--;
+            fromProcess.TotalAmount -= deal.Amount;
+            toProcess.TotalEnquiryDeals++;
+            toProcess.TotalAmount += deal.Amount;
+
+            renderBoard();
+            // var venueVisitDate = null
+            // var stageWise = null
+            // var remarks = null
+            //console.log("moved-> from:",dealId, ", to:", toProcessId);
+            // OPTIONAL: Call API to persist change
+            // $.post("/api/EnquiryDeal/UpdateProcess", { dealId, toProcessId }, function(response) {
+            //     console.log("Server update response:", response);
+            // });
+            var inputData = {
+                EnquiryDealId: dealId,
+                ProcessId: toProcessId,
+                FollowUpDate: nextFollowUp,
+                Remarks: remarks,
+                FileUpload: attachmentBase64_enquiryMove, 
+                ActionBy: userId // set actual logged-in user id
+            };
+            console.log("EnquiryDeal inputData:", inputData);
+            $.ajax({
+                url: "/api/EnquiryDeal/SaveEnquiryDeal_forDragNDrop",   // your API for saving banquet hall
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(inputData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        loadEnquiryDeals();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseText
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
+            });
+        }
+    }
+
+    // Reset Deal Form
+    function resetDealForm() {
+        $("#dealModalLabel").text("Add Enquiry / Deal");
+        $("#deleteDealBtn").addClass("d-none").data("deal-id", "0"); // hide delete btn
+
+        // Reset all fields
+        $("#dealId").val(0);
+        $("#dealProcess").val(1);
+        $("#dealName").val("");
+        $("#dealContact").val("");
+        $("#dealAddress").val("");
+        $("#dealEmail").val("");
+        $("#eventTypeDropdown").val("0");
+        $("#eventSubTypeDropdown").val("0");
+        $("#banquetHallDropdown").val("0");
+        $("#eventDate").val("");
+        $("#eventStart").val("");
+        $("#eventEnd").val("");
+        $("#pax").val("");
+        $("#leadSourceDropdown").val("0");
+        $("#followUpDate").val("");
+        $("#estimatedAmount").val("0");
+        $("#remark").val("");
+
+        // Hide all error messages
+        $("#dealProcess").siblings(".error-msg").hide();
+        $("#dealName").siblings(".error-msg").hide();
+        $("#dealContact").siblings(".error-msg").hide();
+        $("#eventTypeDropdown").siblings(".error-msg").hide();
+        $("#eventSubTypeDropdown").siblings(".error-msg").hide();
+        $("#banquetHallDropdown").siblings(".error-msg").hide();
+        $("#eventDate").siblings(".error-msg").hide();
+        $("#pax").siblings(".error-msg").hide();
+        $("#leadSourceDropdown").siblings(".error-msg").hide();
+        $("#estimatedAmount").siblings(".error-msg").hide();
+    }
+
+    // Validate Deal Form
+    function validateDealForm() {
+        let isValid = true;
+
+        // (0) Process / Stage
+        const dealProcessErr = document.getElementById("dealProcess").parentElement.nextElementSibling;
+        if ($("#dealProcess").val() === "" || $("#dealProcess").val() === "0") {
+            dealProcessErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            dealProcessErr.classList.add("d-none");
+        }
+
+        // (1) Name
+        const dealNameErr = document.getElementById("dealName").nextElementSibling;
+        if ($("#dealName").val().trim() === "") {
+            dealNameErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            dealNameErr.classList.add("d-none");
+        }
+
+        // (2) Contact
+        const dealContactErr = document.getElementById("dealContact").nextElementSibling;
+        if ($("#dealContact").val().trim() === "") {
+            dealContactErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            dealContactErr.classList.add("d-none");
+        }
+
+        // (5) Event Type
+        const eventTypeErr = document.getElementById("eventTypeDropdown").parentElement.nextElementSibling;
+        if ($("#eventTypeDropdown").val() === "" || $("#eventTypeDropdown").val() === "0") {
+            eventTypeErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            eventTypeErr.classList.add("d-none");
+        }
+
+        // (5) Event Sub-Type
+        const eventSubTypeErr = document.getElementById("eventSubTypeDropdown").parentElement.nextElementSibling;
+        if ($("#eventSubTypeDropdown").val() === "" || $("#eventSubTypeDropdown").val() === "0") {
+            eventSubTypeErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            eventSubTypeErr.classList.add("d-none");
+        }
+
+        // (6) Banquet Hall
+        const banquetHallErr = document.getElementById("banquetHallDropdown").parentElement.nextElementSibling;
+        if ($("#banquetHallDropdown").val() === "" || $("#banquetHallDropdown").val() === "0") {
+            banquetHallErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            banquetHallErr.classList.add("d-none");
+        }
+
+        // (7) Event Date
+        const eventDateErr = document.getElementById("eventDate").nextElementSibling;
+        if ($("#eventDate").val() === "") {
+            eventDateErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            eventDateErr.classList.add("d-none");
+        }
+
+        // (8) Start Time
+        const eventStartErr = document.getElementById("eventStart").nextElementSibling;
+        if ($("#eventStart").val() === "") {
+            eventStartErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            eventStartErr.classList.add("d-none");
+        }
+
+        // (8) End Time
+        const eventEndErr = document.getElementById("eventEnd").nextElementSibling;
+        if ($("#eventEnd").val() === "") {
+            eventEndErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            eventEndErr.classList.add("d-none");
+        }
+
+        // (8) Compare Start & End Time
+        const startTime = $("#eventStart").val();
+        const endTime = $("#eventEnd").val();
+        // const eventEndInput = document.getElementById("eventEnd");
+        // const eventEndErr = eventEndInput.nextElementSibling;
+
+        // Run comparison only if both fields are filled
+        if (startTime && endTime) {
+            // Parse times into comparable Date objects
+            const start = parseTime(startTime);
+            const end = parseTime(endTime);
+
+            if (end <= start) {
+                eventEndErr.textContent = "End Time must be after Start Time";
+                eventEndErr.classList.remove("d-none");
+                isValid = false;
+            } else {
+                eventEndErr.classList.add("d-none");
+            }
+        }
+
+        // (9) Pax
+        const paxErr = document.getElementById("pax").nextElementSibling;
+        if ($("#pax").val().trim() === "") {
+            paxErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            paxErr.classList.add("d-none");
+        }
+
+        // (10) Lead Source
+        const leadSourceErr = document.getElementById("leadSourceDropdown").parentElement.nextElementSibling;
+        if ($("#leadSourceDropdown").val() === "" || $("#leadSourceDropdown").val() === "0") {
+            leadSourceErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            leadSourceErr.classList.add("d-none");
+        }
+
+        // (12) Estimated Amount
+        const estimatedAmountErr = document.getElementById("estimatedAmount").nextElementSibling;
+        if ($("#estimatedAmount").val().trim() === "" || Number($("#estimatedAmount").val()) <= 0) {
+            estimatedAmountErr.classList.remove("d-none");
+            isValid = false;
+        } else {
+            estimatedAmountErr.classList.add("d-none");
+        }
+
+        return isValid;
+    }
+    // Utility: convert "hh:mm AM/PM" → Date object for comparison
+    function parseTime(timeStr) {
+        // e.g. "07:30 PM"
+        const [time, modifier] = timeStr.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
+
+        if (modifier === "PM" && hours < 12) hours += 12;
+        if (modifier === "AM" && hours === 12) hours = 0;
+
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+    }
+
+    // Initial load
+    document.addEventListener("DOMContentLoaded", function () {
+        loadProcessList();
+        loadEventTypeList();
+        loadBanquetHallList();
+        loadLeadSourceList();
+        loadEnquiryDeals(); 
+        //renderBoard();
+
+        //Modal Behaviour -- START ---------------------------------------------------
+        //Deal form
+        // 1️⃣ Handle + Add Deal button (New Deal)
+        document.querySelector('[data-bs-target="#dealModal"]').addEventListener("click", function () {
+            resetDealForm(); // always reset before showing modal
+        });
+
+        // 2️⃣ Handle modal open (just a safeguard)
+        $('#dealModal').on('shown.bs.modal', function () {
+            console.log("Modal opened");
+            // You can keep additional logic here if needed
+        });
+
+        let openedFromDeal = false; // track source
+
+        // Open from Deal Modal (+ button)
+        $(document).on("click", "#openProcessModal, #btnProcess", function () {
+            openedFromDeal = true; // mark flag
+            $("#dealModal").modal("hide"); // hide deal modal
+            $("#processModal").modal("show");
+            resetProcessForm();
+        });
+
+
+        // When Process Modal closes
+        $("#processModal").on("hidden.bs.modal", function () {
+            if (openedFromDeal) {
+                $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                openedFromDeal = false; // reset flag
+            }
+        });
+                
+        // Open from Deal Modal (+ button)
+        $(document).on("click", "#openEventTypeModal", function () {
+            openedFromDeal = true; // mark flag
+            $("#dealModal").modal("hide"); // hide deal modal
+            $("#eventTypeModal").modal("show");
+            resetEventTypeForm();
+        });
+
+        // When eventType Modal closes
+        $("#eventTypeModal").on("hidden.bs.modal", function () {
+            if (openedFromDeal) {
+                $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                openedFromDeal = false; // reset flag
+            }
+        });
+
+        // Open from Deal Modal (+ button)
+        $(document).on("click", "#openEventSubTypeModal", function () {
+            openedFromDeal = true; // mark flag
+            $("#dealModal").modal("hide"); // hide deal modal
+            $("#eventSubTypeModal").modal("show");
+            resetEventSubTypeForm();
+        });
+
+        // When eventSubType Modal closes
+        $("#eventSubTypeModal").on("hidden.bs.modal", function () {
+            if (openedFromDeal) {
+                $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                openedFromDeal = false; // reset flag
+            }
+        });
+
+        // Open from Deal Modal (+ button)
+        $(document).on("click", "#openBanquetHallModal", function () {
+            openedFromDeal = true; // mark flag
+            $("#dealModal").modal("hide"); // hide deal modal
+            $("#banquetHallModal").modal("show");
+            resetBanquetHallForm();
+        });
+
+        // When Banquet Hall Modal closes
+        $("#banquetHallModal").on("hidden.bs.modal", function () {
+            if (openedFromDeal) {
+                $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                openedFromDeal = false; // reset flag
+            }
+        });
+
+        // Open from Deal Modal (+ button)
+        $(document).on("click", "#openLeadSourceModal", function () {
+            openedFromDeal = true; // mark flag
+            $("#dealModal").modal("hide"); // hide deal modal
+            $("#leadSourceModal").modal("show");
+            resetLeadSourceForm();
+        });
+
+        // When Lead Source Modal closes
+        $("#leadSourceModal").on("hidden.bs.modal", function () {
+            if (openedFromDeal) {
+                $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                openedFromDeal = false; // reset flag
+            }
+        });
+
+        //Modal Behaviour -- START ---------------------------------------------------
+
+        // sort -- START ---------------------------------------------------------
+        // set default (This Month) on page load
+        $("#sortByDropdown").text("Sort By: This Month");
+        $(".sort-option[data-value='month']").addClass("active");
+
+        $(document).on("click", ".sort-option", function (e) {
+            e.preventDefault();
+            let value = $(this).data("value");
+            let text = $(this).text();
+
+            console.log("Selected Sort:", value);
+
+            // update dropdown text
+            $("#sortByDropdown").text("Sort By: " + text);
+
+            // highlight active item
+            $(".sort-option").removeClass("active");
+            $(this).addClass("active");
+
+            // reload deals when sort changes
+            loadEnquiryDeals(); // no need to pass duration, function will auto-detect
+        });
+        // sort -- END ---------------------------------------------------------
+
+        //PROCESS MASTER -- START --------------------------------------------------------------------
+        // Add Process
+        document.getElementById("processForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            if (!validateProcessForm()) {
+                console.log("Validation failed");
+                return;
+            }
+
+            //////showLoader()()();
+
+            let id = $("#processId").val();
+            let name = $("#processName").val();
+            let indexno = $("#processIndexNo").val();
+
+            var inputData =
+            {
+                Id: id,
+                Name: name ,
+                IndexNo: indexno,
+                ActionBy: userId
+            };
+            $.ajax({
+                url: "/api/Process/SaveProcess",   // your API for saving
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(inputData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        resetProcessForm();
+                        loadProcessList();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Error saving process."
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
+            });
+
+        });
+
+        // Edit Process
+        $(document).on("click", ".edit-btn", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+            let name = row.find("td:eq(1)").text();
+            let indexno = row.find("td:eq(2)").text();
+
+            resetProcessForm();
+            $("#processId").val(id);
+            $("#processName").val(name);
+            $("#processIndexNo").prop("disabled", false).val(indexno);
+        });
+
+        // Delete Process
+        $(document).on("click", ".delete-btn", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to delete this process?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //////showLoader()()();
+
+                    var inputData =
+                    {
+                        Id: id,
+                        ActionBy: userId // set actual logged-in user id
+                    }
+
+                    $.ajax({
+                        url: "/api/Process/DeleteProcess",
+                        type: "POST", // backend expects POST
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(inputData),
+                        success: function (response) {
+                            if (response.status === "Success") {
+                                Swal.fire({
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Deleted!",
+                                    showConfirmButton: false,
+                                    timer: 900
+                                });
+                                loadProcessList();
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Error deleting process."
+                            });
+                        },
+                        complete: function () {
+                            //hideLoader();
+                        }
+                    });
+                }
+            });
+        });
+        //PROCESS MASTER -- END -----------------------------------------------------------------------
+
+        // Enquiry/Deal -- START --------------------------------------------------------------------
+        // Save Deal Form
+        document.getElementById("saveDealBtn").addEventListener("click", function (e) {
+            e.preventDefault();
+            if (!validateDealForm()) {
+                console.log("Deal Save - Validation failed");
+                return;
+            }
+            //////showLoader()()();
+
+            const enquiryData = {
+                Id: $("#dealId").val() || 0, // ensure number
+                ProcessId: parseInt($("#dealProcess").val()) || 0,
+                Name: $("#dealName").val().trim(),
+                Contact: $("#dealContact").val().trim(),
+                Address: $("#dealAddress").val().trim(),
+
+                Email: $("#dealEmail").val().trim(),
+                EventTypeId: parseInt($("#eventTypeDropdown").val()) || 0,
+                EventSubTypeId: parseInt($("#eventSubTypeDropdown").val()) || 0,
+                BanquetHallId: parseInt($("#banquetHallDropdown").val()) || 0,
+                EventDate: $("#eventDate").val(),
+
+                EventDate: $("#eventDate").val(), // if required separately
+                EventStartTime: $("#eventStart").val(),
+                EventEndTime: $("#eventEnd").val(),
+                Pax: parseInt($("#pax").val()) || 0,
+                FollowUpDate: $("#followUpDate").val() || null,
+
+                EstimatedAmount: parseFloat($("#estimatedAmount").val()) || 0,
+                LeadSourceId: parseInt($("#leadSourceDropdown").val()) || 0,
+                Remarks: $("#remark").val().trim(),
+                ActionBy: userId // must be >0
+            };
+            console.log("Posting EnquiryDeal:", enquiryData);
+
+            $.ajax({
+                url: "/api/EnquiryDeal/SaveEnquiryDeal",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(enquiryData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        loadEnquiryDeals();
+                        resetDealForm();
+                        bootstrap.Modal.getInstance(document.getElementById("dealModal")).hide();
+
+                        // TODO: refresh deal list if you have one
+                        // loadDealList();
+                    } else {
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Failed",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text: xhr.responseText || "Something went wrong while saving."
+                    });
+                },
+                complete: function () {
+                    ////hideLoader();
+                }
+            });
+        });
+
+        // Delete Deal
+        $(document).on("click", "#deleteDealBtn", function () {
+            let dealId = $(this).data("deal-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to delete this deal?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //////showLoader()()();
+
+                    var inputData = {
+                        Id: dealId,
+                        ActionBy: userId // use logged-in user id
+                    };
+
+                    $.ajax({
+                        url: "/api/EnquiryDeal/DeleteEnquiryDeal",
+                        type: "POST", // adjust if API expects DELETE
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(inputData),
+                        success: function (response) {
+                            if (response.status === "Success") {
+                                Swal.fire({
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Deal Deleted!",
+                                    showConfirmButton: false,
+                                    timer: 900
+                                });
+                                loadEnquiryDeals();
+                                resetDealForm();
+                                //bootstrap.Modal.getInstance(document.getElementById("dealModal")).hide();
+                                $("#dealModal").modal("hide");
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Error deleting deal."
+                            });
+                        },
+                        complete: function () {
+                            //hideLoader();
+                        }
+                    });
+                }
+            });
+        });
+
+        // Enquiry/Deal -- END ----------------------------------------------------------------------
+
+        //EVENT TYPE MASTER -- START --------------------------------------------------------------------
+        // Add Event Type
+        document.getElementById("eventTypeForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            if (!validateEventTypeForm()) {
+                return; // stop submission if validation fails
+            }
+            ////showLoader()();
+
+            let id = $("#eventTypeId").val();
+            let name = $("#eventTypeName").val();
+
+            var inputData = {
+                Id: id,
+                Name: name,
+                ActionBy: userId // set actual logged-in user id
+            };
+
+            $.ajax({
+                url: "/api/EventType/SaveEventType",   // your API for saving event type
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(inputData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        resetEventTypeForm();
+                        loadEventTypeList();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Error saving event type."
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
+            });
+
+        });
+
+        // Edit Event Type
+        $(document).on("click", ".edit-eventType", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+            let name = row.find("td:eq(1)").text();
+
+            resetEventTypeForm();
+            $("#eventTypeId").val(id);
+            $("#eventTypeName").val(name);
+        });
+
+        // Delete Event Type
+        $(document).on("click", ".delete-eventType", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to delete this event type?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ////showLoader()();
+
+                    var inputData = {
+                        Id: id,
+                        ActionBy: userId // set actual logged-in user id
+                    }
+
+                    $.ajax({
+                        url: "/api/EventType/DeleteEventType",
+                        type: "POST", // backend expects POST
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(inputData),
+                        success: function (response) {
+                            if (response.status === "Success") {
+                                Swal.fire({
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Deleted!",
+                                    showConfirmButton: false,
+                                    timer: 900
+                                });
+                                loadEventTypeList();
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Error deleting event type."
+                            });
+                        },
+                        complete: function () {
+                            //hideLoader();
+                        }
+                    });
+                }
+            });
+        });
+
+        // Event Type dropdown change event
+        $(document).on("change", "#eventTypeDropdown, #eventTypeDropdown_SubTypeModal", function () {
+            let selectedEventTypeId = $(this).val();
+            $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal").val(selectedEventTypeId);
+            if (selectedEventTypeId && selectedEventTypeId !== "0") {
+                loadEventSubTypeList(selectedEventTypeId); // Pass selected EventTypeId
+            } else {
+                // Clear the Event Sub-Type table if no event type selected
+                $("#eventSubTypeTable tbody").html(
+                    `<tr><td colspan="4" class="text-center text-muted">Please select an Event Type</td></tr>`
+                );
+            }
+        });
+
+        //EVENT TYPE MASTER -- END ----------------------------------------------------------------------
+
+        //EVENT SUB-TYPE MASTER -- START --------------------------------------------------------------------
+        // Save / Update Event Sub-Type
+        document.getElementById("eventSubTypeForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            if (!validateEventSubTypeForm()) {
+                return; // stop submission if validation fails
+            }
+            ////showLoader()();
+
+            let id = $("#eventSubTypeId").val();
+            let name = $("#eventSubTypeName").val();
+            let eventTypeId = $("#eventTypeDropdown_SubTypeModal").val();
+
+            var inputData = {
+                Id: id,
+                Name: name,
+                EventTypeId: eventTypeId,
+                ActionBy: userId // set actual logged-in user id
+            };
+
+            $.ajax({
+                url: "/api/EventSubType/SaveEventSubType", // your API endpoint
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(inputData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        resetEventSubTypeForm();
+                        loadEventSubTypeList(eventTypeId);
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Error saving event sub-type."
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
+            });
+        });
+
+        // Edit Event Sub-Type
+        $(document).on("click", ".edit-eventSubType", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+            let eventtypeid = row.data("eventtypeid");
+            let name = row.find("td:eq(1)").text();
+
+            resetEventSubTypeForm();
+            $("#eventSubTypeId").val(id);
+            $("#eventSubTypeName").val(name);
+            $("#eventTypeDropdown_SubTypeModal").val(eventtypeid);
+        });
+
+        // Delete Event Sub-Type
+        $(document).on("click", ".delete-eventSubType", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to delete this event sub-type?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ////showLoader()();
+
+                    var inputData = {
+                        Id: id,
+                        ActionBy: userId
+                    };
+
+                    $.ajax({
+                        url: "/api/EventSubType/DeleteEventSubType", // API endpoint
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(inputData),
+                        success: function (response) {
+                            if (response.status === "Success") {
+                                Swal.fire({
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Deleted!",
+                                    showConfirmButton: false,
+                                    timer: 900
+                                });
+                                loadEventSubTypeList();
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Error deleting event sub-type."
+                            });
+                        },
+                        complete: function () {
+                            //hideLoader();
+                        }
+                    });
+                }
+            });
+        });        
+        
+        //EVENT SUB-TYPE MASTER -- END ----------------------------------------------------------------------
+
+        //EVENT LEAD SOURCE MASTER -- START ----------------------------------------------------------------------
+        // ✅ Add / Update Lead Source
+        document.getElementById("leadSourceForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            if (!validateLeadSourceForm()) {
+                return; // stop submission if validation fails
+            }
+            ////showLoader()();
+
+            let id = $("#leadSourceId").val();
+            let name = $("#leadSourceName").val();
+
+            var inputData = {
+                Id: id,
+                Name: name,
+                ActionBy: userId // set actual logged-in user id
+            };
+
+            $.ajax({
+                url: "/api/LeadSource/SaveLeadSource",   // your API for saving lead source
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(inputData),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        resetLeadSourceForm();
+                        loadLeadSourceList();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Error saving lead source."
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
+            });
+        });
+
+        // ✅ Edit Lead Source
+        $(document).on("click", ".edit-leadSource", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+            let name = row.find("td:eq(1)").text();
+
+            resetLeadSourceForm();
+            $("#leadSourceId").val(id);
+            $("#leadSourceName").val(name);
+        });
+
+        // ✅ Delete Lead Source
+        $(document).on("click", ".delete-leadSource", function () {
+            let row = $(this).closest("tr");
+            let id = row.data("id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you really want to delete this lead source?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ////showLoader()();
+
+                    var inputData = {
+                        Id: id,
+                        ActionBy: userId // set actual logged-in user id
+                    }
+
+                    $.ajax({
+                        url: "/api/LeadSource/DeleteLeadSource",
+                        type: "POST", // backend expects POST
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(inputData),
+                        success: function (response) {
+                            if (response.status === "Success") {
+                                Swal.fire({
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Deleted!",
+                                    showConfirmButton: false,
+                                    timer: 900
+                                });
+                                loadLeadSourceList();
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Error deleting lead source."
+                            });
+                        },
+                        complete: function () {
+                            //hideLoader();
+                        }
+                    });
+                }
+            });
+        });
+        //EVENT LEAD SOURCE MASTER -- END ----------------------------------------------------------------------
+    });
+
+    // Load process list from API
+    var last_processIndexNo = 0;
+    function loadProcessList() {
+        ////showLoader()();
+        $.ajax({
+            url: "/api/Process/GetProcessList",   // adjust path if needed
+            type: "GET",
+            success: function (response) {
+                console.log("process response:", response);
+                if (response.status === "Success") {
+                    let rows = "";
+                    let srNo = 1;
+                    let options = `<option value="0">-- Select --</option>`; // default option
+                    
+                    $.each(response.data, function (index, item) {
+                        rows += `
+                            <tr data-id="${item.Id}">
+                                <td class="text-center">${srNo++}</td>
+                                <td>${item.Name}</td>
+                                <td class="text-center">${item.IndexNo}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-warning btn-sm me-1 edit-btn">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-btn">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        // dropdown options
+                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                        last_processIndexNo = item.IndexNo;
+                        //console.log("loop - last_processIndexNo:", last_processIndexNo);
+                    });
+                    //console.log("process options:", options);
+                    $("#processTable tbody").html(rows);
+                    $("#dealProcess").html(options);
+                } else {
+                    $("#processTable tbody").html(
+                        `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
+                    );
+                    $("#dealProcess").html(`<option value="0">No Process Found</option>`); // reset dropdown
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching process list.",
+                    confirmButtonText: "OK",
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Reset Process Form
+    function resetProcessForm() {
+        $("#processForm")[0].reset();   // clear input fields
+        $("#processId").val(0);         // reset hidden ID to 0
+        $("#processIndexNo").prop("disabled", true).val(parseInt(last_processIndexNo) + 1);
+        // Reset error message
+        $("#processName").siblings(".error-msg").addClass("d-none");
+    }
+
+    // ✅ Validation Function for Event Type Form
+    function validateProcessForm() {
+        let isValid = true;
+
+        let name = $("#processName").val().trim();
+
+        // Reset error message
+        $("#processName").siblings(".error-msg").addClass("d-none");
+
+        // Validate Event Type Name
+        if (name === "" || name === null) {
+            $("#processName").siblings(".error-msg").removeClass("d-none").text("Please enter Process Name");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Load event type list from API
+    function loadEventTypeList() {
+        ////showLoader()();
+        $.ajax({
+            url: "/api/EventType/GetEventTypeList",
+            type: "GET",
+            success: function (response) {
+                console.log("eventType response:", response);
+                if (response.status === "Success") {
+                    let rows = "";
+                    let srNo = 1;
+                    let options = `<option value="0">-- Select Event Type --</option>`; // default option
+
+                    $.each(response.data, function (index, item) {
+                        rows += `
+                            <tr data-id="${item.Id}">
+                                <td class="text-center">${srNo++}</td>
+                                <td>${item.Name}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-warning btn-sm me-1 edit-eventType">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-eventType">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                    });
+
+                    $("#eventTypeTable tbody").html(rows);
+                    $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal").html(options); 
+                    //loadEventSubTypeList(eventTypeId);
+                } else {
+                    $("#eventTypeTable tbody").html(
+                        `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
+                    );
+                    $("#eventTypeDropdown").html(`<option value="0">No Event Type Found</option>`);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching event type list.",
+                    confirmButtonText: "OK",
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Reset Event Type Form
+    function resetEventTypeForm() {
+        $("#eventTypeForm")[0].reset();
+        $("#eventTypeId").val(0);
+        // Reset error message
+        $("#eventTypeName").siblings(".error-msg").addClass("d-none");
+
+    }
+
+    // ✅ Validation Function for Event Type Form
+    function validateEventTypeForm() {
+        let isValid = true;
+
+        let name = $("#eventTypeName").val().trim();
+
+        // Reset error message
+        $("#eventTypeName").siblings(".error-msg").addClass("d-none");
+
+        // Validate Event Type Name
+        if (name === "" || name === null) {
+            $("#eventTypeName").siblings(".error-msg").removeClass("d-none").text("Please enter event type");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Load event sub-type list from API
+    function loadEventSubTypeList(eventTypeId=0) {
+        ////showLoader()();
+
+        //let eventTypeId = $("#eventTypeDropdown").val(); // capture selected event type
+
+        var inputData = {
+            EventTypeId: eventTypeId // match your C# EventSubType_Request model
+        };
+
+        $.ajax({
+            url: "/api/EventSubType/GetEventSubTypeList",
+            type: "POST", // Must be POST since backend expects POST
+            contentType: "application/json",
+            data: JSON.stringify(inputData),
+            success: function (response) {
+                console.log("eventSubType response:", response);                
+                if (response.status === "Success") {
+                    let rows = "";
+                    let srNo = 1;
+                    let options = `<option value="0">-- Select Event Sub-Type --</option>`;
+
+                    $.each(response.data, function (index, item) {
+                        rows += `
+                            <tr data-id="${item.Id}" data-eventtypeid="${item.EventTypeId}">
+                                <td class="text-center">${srNo++}</td>
+                                <td>${item.Name}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-warning btn-sm me-1 edit-eventSubType">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-eventSubType">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                    });
+
+                    $("#eventSubTypeTable tbody").html(rows);
+                    $("#eventSubTypeDropdown").html(options);
+                } else {
+                    $("#eventSubTypeTable tbody").html(
+                        `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
+                    );
+                    $("#eventSubTypeDropdown").html(`<option value="0">No Event Sub-Type Found</option>`);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching event sub-type list."
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Reset Event Sub-Type Form
+    function resetEventSubTypeForm() {
+        //$("#eventSubTypeForm")[0].reset();
+        $("#eventSubTypeId").val(0);
+        $("#eventSubTypeName").val("");
+
+        // Reset error message
+        $("#eventSubTypeName").siblings(".error-msg").addClass("d-none");
+        $("#eventTypeDropdown_SubTypeModal").siblings(".error-msg").addClass("d-none");
+    }
+
+    // ✅ Event Sub-Type Validation Function
+    function validateEventSubTypeForm() {
+        let isValid = true;
+
+        let eventTypeId = $("#eventTypeDropdown_SubTypeModal").val();
+        let name = $("#eventSubTypeName").val().trim();
+
+        // Reset error messages
+        $("#eventSubTypeForm .error-msg").addClass("d-none");
+
+        // Validate Event Type
+        if (eventTypeId === "0" || !eventTypeId) {
+            $("#eventTypeDropdown_SubTypeModal")
+                .closest(".flex-grow-1")   // go to parent container
+                .find(".error-msg")
+                .removeClass("d-none");
+            isValid = false;
+        }
+
+        // Validate Event Sub-Type Name
+        if (!name) {
+            $("#eventSubTypeName")
+                .closest(".flex-grow-1")   // go to parent container
+                .find(".error-msg")
+                .removeClass("d-none");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Load banquet hall list from API
+    function loadBanquetHallList() {
+        ////showLoader()();
+        $.ajax({
+            url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ Id: 0 }), // Get all halls
+            success: function (response) {
+                console.log("banquetHall response:", response);
+                if (response.status === "Success") {
+                    let options = `<option value="0">-- Select Banquet Hall --</option>`; // default option
+                    $.each(response.data, function (index, item) {
+                        options += `<option value="${item.Id}">${item.HallName}</option>`;
+                    });
+                    $("#banquetHallDropdown").html(options);
+                } else {
+                    $("#banquetHallDropdown").html(`<option value="0">No Banquet Hall Found</option>`);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching banquet hall list.",
+                    confirmButtonText: "OK",
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Load lead source list from API
+    function loadLeadSourceList() {
+        ////showLoader()();
+        $.ajax({
+            url: "/api/LeadSource/GetLeadSourceList",
+            type: "GET",
+            success: function (response) {
+                console.log("leadSource response:", response);
+                if (response.status === "Success") {
+                    let rows = "";
+                    let srNo = 1;
+                    let options = `<option value="0">-- Select Lead Source --</option>`; // default option
+
+                    $.each(response.data, function (index, item) {
+                        rows += `
+                            <tr data-id="${item.Id}">
+                                <td class="text-center">${srNo++}</td>
+                                <td>${item.Name}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-warning btn-sm me-1 edit-leadSource">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-leadSource">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                    });
+
+                    $("#leadSourceTable tbody").html(rows);
+                    $("#leadSourceDropdown").html(options);
+                } else {
+                    $("#leadSourceTable tbody").html(
+                        `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
+                    );
+                    $("#leadSourceDropdown").html(`<option value="0">No Lead Source Found</option>`);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Error fetching lead source list.",
+                    confirmButtonText: "OK",
+                });
+            },
+            complete: function () {
+                //hideLoader();
+            }
+        });
+    }
+
+    // Reset Lead Source Form
+    function resetLeadSourceForm() {
+        $("#leadSourceForm")[0].reset();
+        $("#leadSourceId").val(0);
+        // Reset error message
+        $("#leadSourceName").siblings(".error-msg").addClass("d-none");
+    }
+
+    // ✅ Validation Function for Lead Source Form
+    function validateLeadSourceForm() {
+        let isValid = true;
+        let name = $("#leadSourceName").val().trim();
+
+        // Reset error message
+        $("#leadSourceName").siblings(".error-msg").addClass("d-none");
+
+        // Validate Lead Source Name
+        if (name === "" || name === null) {
+            $("#leadSourceName").siblings(".error-msg").removeClass("d-none").text("Please enter lead source");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+</script>
+
+<!--file upload / drag - before Moving Enquiry -- START -->
+<script>
+    let attachmentBase64 = "";
+    const dropzone = document.getElementById("attachmentDropzone");
+    const fileInput = document.getElementById("attachment");
+    const hiddenBase64 = document.getElementById("attachmentBase64_enquiryMove");
+
+    // When user clicks dropzone, open file picker
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    // Dragging over
+    dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("bg-primary", "text-white");
+    });
+
+    // Leaving drop area
+    dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("bg-primary", "text-white");
+    });
+
+    // When file dropped
+    dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("bg-primary", "text-white");
+        const file = e.dataTransfer.files[0];
+        handleFile(file);
+    });
+
+    // When file selected manually
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        handleFile(file);
+    });
+
+    // Convert to Base64
+    function handleFile(file) {
+    if (!file) return;
+
+    // Validate file size (max 5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert("File size exceeds 5 MB limit!");
+        fileInput.value = "";
+        attachmentBase64 = "";
+        hiddenBase64.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        //attachmentBase64 = e.target.result; // base64 string (with data: prefix)
+        attachmentBase64 = e.target.result.split(',')[1];
+        hiddenBase64.value = attachmentBase64;
+        dropzone.querySelector("p.fw-semibold").innerText = `Selected: ${file.name}`;
+    };
+    reader.readAsDataURL(file);
+}
+
+</script>
+<!--file upload / drag - before Moving Enquiry -- END -->
+
+<!-- Clock Time Design -- Delas -> START TIME & END TIME -- START -->
+<style>
+    .custom-clock-picker {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 230px;
+        background: #fff;
+        z-index: 10;
+        transform: translateY(8px);
+    }
+
+    .clock-face {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        margin: 0 auto;
+    }
+
+    .clock-number {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        text-align: center;
+        line-height: 32px;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        transition: 0.2s ease;
+        top: 42%;
+        left: 40%;
+        transform: rotate(calc(30deg * var(--i))) translateY(-70px) rotate(calc(-30deg * var(--i)));
+    }
+
+        .clock-number:hover {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+    .clock-hand {
+        position: absolute;
+        left: 50%;
+        transform-origin: bottom center;
+        transition: 0.3s ease;
+    }
+
+    .hour-hand {
+        top: 50px;
+        height: 40px;
+        width: 3px;
+        background-color: #6c757d;
+    }
+
+    .minute-hand {
+        top: 30px;
+        height: 60px;
+        width: 2px;
+        background-color: #6c757d;
+    }
+
+    .active-hand {
+        background-color: #0d6efd !important;
+        box-shadow: 0 0 10px rgba(13, 110, 253, 0.6);
+    }
+
+    .center-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #0d6efd;
+        border-radius: 50%;
+        top: 85px;
+        left: 85px;
+    }
+
+    .btn.active {
+        background-color: #0d6efd !important;
+        color: #fff !important;
+    }
+
+    #clockPicker::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: 25px;
+        width: 14px;
+        height: 14px;
+        background: white;
+        transform: rotate(45deg);
+        border-left: 1px solid #dee2e6;
+        border-top: 1px solid #dee2e6;
+    }
+
+    /* 💡 Text highlight glow */
+    .active-text {
+        color: #0d6efd !important;
+        text-shadow: 0 0 5px rgba(13, 110, 253, 0.6);
+        transition: all 0.3s ease;
+    }
+
+    .inactive-text {
+        color: #333 !important;
+        text-shadow: none;
+    }
+
+    .clickable {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    /* --------------------- 🕒 START TIME --------------------- */
+    const input = document.getElementById('eventStart');
+    const picker = document.getElementById('clockPicker');
+    const hourDisplay = document.getElementById('hourDisplay');
+    const minuteDisplay = document.getElementById('minuteDisplay');
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const amBtn = document.getElementById('amBtn');
+    const pmBtn = document.getElementById('pmBtn');
+    const setBtn = document.getElementById('setTimeBtn');
+
+    let hour = 12;
+    let minute = 0;
+    let ampm = 'AM';
+    let mode = 'hour';
+
+    // Toggle picker visibility
+    input.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent document click handler
+        initializePicker(input.value);
+        picker.classList.toggle('d-none');
+    });
+
+    // Initialize picker when opening
+    function initializePicker(value) {
+        let time = value.trim();
+        if (!time) time = "12:00 AM"; // Default if empty
+
+        const [timePart, modifier] = time.split(" ");
+        let [h, m] = timePart.split(":").map(Number);
+
+        ampm = modifier || 'AM';
+        hour = h;
+        minute = m;
+
+        hourDisplay.textContent = hour.toString().padStart(2, '0');
+        minuteDisplay.textContent = minute.toString().padStart(2, '0');
+        hourHand.style.transform = `rotate(${hour * 30}deg)`;
+        minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+
+        if (ampm === 'AM') {
+            amBtn.classList.add('active');
+            pmBtn.classList.remove('active');
+        } else {
+            pmBtn.classList.add('active');
+            amBtn.classList.remove('active');
+        }
+
+        setMode('hour');
+    }
+
+    // Switch between hour/minute mode
+    hourDisplay.addEventListener('click', () => setMode('hour'));
+    minuteDisplay.addEventListener('click', () => setMode('minute'));
+
+    function setMode(m) {
+        mode = m;
+
+        if (mode === 'hour') {
+            hourDisplay.classList.add('active-text');
+            minuteDisplay.classList.remove('active-text');
+            minuteDisplay.classList.add('inactive-text');
+            hourDisplay.classList.remove('inactive-text');
+            hourHand.classList.add('active-hand');
+            minuteHand.classList.remove('active-hand');
+        } else {
+            minuteDisplay.classList.add('active-text');
+            hourDisplay.classList.remove('active-text');
+            hourDisplay.classList.add('inactive-text');
+            minuteDisplay.classList.remove('inactive-text');
+            minuteHand.classList.add('active-hand');
+            hourHand.classList.remove('active-hand');
+        }
+    }
+
+    // Handle number click
+    picker.querySelectorAll('.clock-number').forEach(num => {
+        num.addEventListener('click', () => {
+            const value = parseInt(num.textContent);
+            if (mode === 'hour') {
+                hour = value;
+                hourDisplay.textContent = value.toString().padStart(2, '0');
+                hourHand.style.transform = `rotate(${value * 30}deg)`;
+            } else {
+                minute = (value % 12) * 5;
+                minuteDisplay.textContent = minute.toString().padStart(2, '0');
+                minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+            }
+        });
+    });
+
+    // AM/PM toggle
+    amBtn.addEventListener('click', () => {
+        ampm = 'AM';
+        amBtn.classList.add('active');
+        pmBtn.classList.remove('active');
+    });
+
+    pmBtn.addEventListener('click', () => {
+        ampm = 'PM';
+        pmBtn.classList.add('active');
+        amBtn.classList.remove('active');
+    });
+
+    // Set time
+    function setTimeStart() {
+        input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm}`;
+        picker.classList.add('d-none');
+    }
+    setBtn.addEventListener('click', setTimeStart);
+
+    // 🔹 Outside click handler
+    document.addEventListener('click', (e) => {
+        if (!picker.contains(e.target) && e.target !== input) {
+            if (!picker.classList.contains('d-none')) {
+                setTimeStart(); // auto save selected time
+            }
+        }
+    });
+
+    setMode('hour');
+
+
+    /* --------------------- 🕓 END TIME --------------------- */
+    const inputEnd = document.getElementById('eventEnd');
+    const pickerEnd = document.getElementById('clockPickerEnd');
+    const hourDisplayEnd = document.getElementById('hourDisplayEnd');
+    const minuteDisplayEnd = document.getElementById('minuteDisplayEnd');
+    const hourHandEnd = document.getElementById('hourHandEnd');
+    const minuteHandEnd = document.getElementById('minuteHandEnd');
+    const amBtnEnd = document.getElementById('amBtnEnd');
+    const pmBtnEnd = document.getElementById('pmBtnEnd');
+    const setBtnEnd = document.getElementById('setTimeBtnEnd');
+
+    let hourEnd = 12;
+    let minuteEnd = 0;
+    let ampmEnd = 'AM';
+    let modeEnd = 'hour';
+
+    inputEnd.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initializePickerEnd(inputEnd.value);
+        pickerEnd.classList.toggle('d-none');
+    });
+
+    function initializePickerEnd(value) {
+        let time = value.trim();
+        if (!time) time = "12:00 AM";
+
+        const [timePart, modifier] = time.split(" ");
+        let [h, m] = timePart.split(":").map(Number);
+
+        ampmEnd = modifier || 'AM';
+        hourEnd = h;
+        minuteEnd = m;
+
+        hourDisplayEnd.textContent = hourEnd.toString().padStart(2, '0');
+        minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
+        hourHandEnd.style.transform = `rotate(${hourEnd * 30}deg)`;
+        minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
+
+        if (ampmEnd === 'AM') {
+            amBtnEnd.classList.add('active');
+            pmBtnEnd.classList.remove('active');
+        } else {
+            pmBtnEnd.classList.add('active');
+            amBtnEnd.classList.remove('active');
+        }
+
+        setModeEnd('hour');
+    }
+
+    hourDisplayEnd.addEventListener('click', () => setModeEnd('hour'));
+    minuteDisplayEnd.addEventListener('click', () => setModeEnd('minute'));
+
+    function setModeEnd(m) {
+        modeEnd = m;
+
+        if (modeEnd === 'hour') {
+            hourDisplayEnd.classList.add('active-text');
+            minuteDisplayEnd.classList.remove('active-text');
+            minuteDisplayEnd.classList.add('inactive-text');
+            hourDisplayEnd.classList.remove('inactive-text');
+            hourHandEnd.classList.add('active-hand');
+            minuteHandEnd.classList.remove('active-hand');
+        } else {
+            minuteDisplayEnd.classList.add('active-text');
+            hourDisplayEnd.classList.remove('active-text');
+            hourDisplayEnd.classList.add('inactive-text');
+            minuteDisplayEnd.classList.remove('inactive-text');
+            minuteHandEnd.classList.add('active-hand');
+            hourHandEnd.classList.remove('active-hand');
+        }
+    }
+
+    pickerEnd.querySelectorAll('.clock-number').forEach(num => {
+        num.addEventListener('click', () => {
+            const value = parseInt(num.textContent);
+            if (modeEnd === 'hour') {
+                hourEnd = value;
+                hourDisplayEnd.textContent = value.toString().padStart(2, '0');
+                hourHandEnd.style.transform = `rotate(${value * 30}deg)`;
+            } else {
+                minuteEnd = (value % 12) * 5;
+                minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
+                minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
+            }
+        });
+    });
+
+    amBtnEnd.addEventListener('click', () => {
+        ampmEnd = 'AM';
+        amBtnEnd.classList.add('active');
+        pmBtnEnd.classList.remove('active');
+    });
+
+    pmBtnEnd.addEventListener('click', () => {
+        ampmEnd = 'PM';
+        pmBtnEnd.classList.add('active');
+        amBtnEnd.classList.remove('active');
+    });
+
+    // Set time
+    function setTimeEnd() {
+        inputEnd.value = `${hourDisplayEnd.textContent}:${minuteDisplayEnd.textContent} ${ampmEnd}`;
+        pickerEnd.classList.add('d-none');
+    }
+    setBtnEnd.addEventListener('click', setTimeEnd);
+
+    // 🔹 Outside click handler
+    document.addEventListener('click', (e) => {
+        if (!pickerEnd.contains(e.target) && e.target !== inputEnd) {
+            if (!pickerEnd.classList.contains('d-none')) {
+                setTimeEnd();
+            }
+        }
+    });
+
+    setModeEnd('hour');
+
+    /* --------------------- 🕒 NEXT FOLLOW-UP TIME --------------------- */
+    const followUpInput = document.getElementById('nextFollowUpTime');
+    const followUpPicker = document.getElementById('clockPickerFollowUp');
+    const hourDisplayFollowUp = document.getElementById('hourDisplayFollowUp');
+    const minuteDisplayFollowUp = document.getElementById('minuteDisplayFollowUp');
+    const hourHandFollowUp = document.getElementById('hourHandFollowUp');
+    const minuteHandFollowUp = document.getElementById('minuteHandFollowUp');
+    const amBtnFollowUp = document.getElementById('amBtnFollowUp');
+    const pmBtnFollowUp = document.getElementById('pmBtnFollowUp');
+    const setBtnFollowUp = document.getElementById('setTimeBtnFollowUp');
+
+    let hourFollowUp = 12;
+    let minuteFollowUp = 0;
+    let ampmFollowUp = 'AM';
+    let modeFollowUp = 'hour';
+
+    // Toggle picker visibility
+    followUpInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initializeFollowUpPicker(followUpInput.value);
+        followUpPicker.classList.toggle('d-none');
+    });
+
+    // Initialize picker when opening
+    function initializeFollowUpPicker(value) {
+        let time = value.trim();
+        if (!time) time = "12:00 AM"; // Default if empty
+
+        const [timePart, modifier] = time.split(" ");
+        let [h, m] = timePart.split(":").map(Number);
+
+        ampmFollowUp = modifier || 'AM';
+        hourFollowUp = h;
+        minuteFollowUp = m;
+
+        hourDisplayFollowUp.textContent = hourFollowUp.toString().padStart(2, '0');
+        minuteDisplayFollowUp.textContent = minuteFollowUp.toString().padStart(2, '0');
+        hourHandFollowUp.style.transform = `rotate(${hourFollowUp * 30}deg)`;
+        minuteHandFollowUp.style.transform = `rotate(${minuteFollowUp * 6}deg)`;
+
+        if (ampmFollowUp === 'AM') {
+            amBtnFollowUp.classList.add('active');
+            pmBtnFollowUp.classList.remove('active');
+        } else {
+            pmBtnFollowUp.classList.add('active');
+            amBtnFollowUp.classList.remove('active');
+        }
+
+        setFollowUpMode('hour');
+    }
+
+    // Switch between hour/minute mode
+    hourDisplayFollowUp.addEventListener('click', () => setFollowUpMode('hour'));
+    minuteDisplayFollowUp.addEventListener('click', () => setFollowUpMode('minute'));
+
+    function setFollowUpMode(m) {
+        modeFollowUp = m;
+
+        if (modeFollowUp === 'hour') {
+            hourDisplayFollowUp.classList.add('active-text');
+            minuteDisplayFollowUp.classList.remove('active-text');
+            minuteDisplayFollowUp.classList.add('inactive-text');
+            hourDisplayFollowUp.classList.remove('inactive-text');
+            hourHandFollowUp.classList.add('active-hand');
+            minuteHandFollowUp.classList.remove('active-hand');
+        } else {
+            minuteDisplayFollowUp.classList.add('active-text');
+            hourDisplayFollowUp.classList.remove('active-text');
+            hourDisplayFollowUp.classList.add('inactive-text');
+            minuteDisplayFollowUp.classList.remove('inactive-text');
+            minuteHandFollowUp.classList.add('active-hand');
+            hourHandFollowUp.classList.remove('active-hand');
+        }
+    }
+
+    // Handle number click
+    followUpPicker.querySelectorAll('.clock-number').forEach(num => {
+        num.addEventListener('click', () => {
+            const value = parseInt(num.textContent);
+            if (modeFollowUp === 'hour') {
+                hourFollowUp = value;
+                hourDisplayFollowUp.textContent = value.toString().padStart(2, '0');
+                hourHandFollowUp.style.transform = `rotate(${value * 30}deg)`;
+            } else {
+                minuteFollowUp = (value % 12) * 5;
+                minuteDisplayFollowUp.textContent = minuteFollowUp.toString().padStart(2, '0');
+                minuteHandFollowUp.style.transform = `rotate(${minuteFollowUp * 6}deg)`;
+            }
+        });
+    });
+
+    // AM/PM toggle
+    amBtnFollowUp.addEventListener('click', () => {
+        ampmFollowUp = 'AM';
+        amBtnFollowUp.classList.add('active');
+        pmBtnFollowUp.classList.remove('active');
+    });
+
+    pmBtnFollowUp.addEventListener('click', () => {
+        ampmFollowUp = 'PM';
+        pmBtnFollowUp.classList.add('active');
+        amBtnFollowUp.classList.remove('active');
+    });
+
+    // Set time function
+    function setTimeFollowUp() {
+        followUpInput.value = `${hourDisplayFollowUp.textContent}:${minuteDisplayFollowUp.textContent} ${ampmFollowUp}`;
+        followUpPicker.classList.add('d-none');
+    }
+
+    // Confirm button click
+    setBtnFollowUp.addEventListener('click', setTimeFollowUp);
+
+    // 🔹 Auto-save on outside click
+    document.addEventListener('click', (e) => {
+        if (!followUpPicker.contains(e.target) && e.target !== followUpInput) {
+            if (!followUpPicker.classList.contains('d-none')) {
+                setTimeFollowUp();
+            }
+        }
+    });
+
+    // Default mode
+    setFollowUpMode('hour');
+
+</script>
+<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->

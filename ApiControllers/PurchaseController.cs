@@ -1,0 +1,409 @@
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using ERPAdmin.ApiControllers;
+using ERPAdmin.Helper;
+using ERPAdmin.Models;
+using ERPAdmin.Services;
+using Humanizer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Data;
+using System.Data.SqlClient;
+using System.Dynamic;
+using System.Web.Helpers;
+
+namespace ERPAdmin.ApiControllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class PurchaseController : MasterController
+    {
+        private readonly ImageUploadService _imageUploadService;
+        private readonly string domainUrl;
+        private string connString = string.Empty;
+        public PurchaseController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        {
+            _imageUploadService = imageUploadService;
+            var request = httpContextAccessor.HttpContext?.Request;
+            domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+        }
+
+        [HttpPost]
+        [Route("GetPurchaseList")]
+        public IActionResult GetPurchaseList([FromBody] GetPurchaseRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<GetPurchaseListModel> purchases = new List<GetPurchaseListModel>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetPurchaseList", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId == 0 ? 0 : request.SupplierId);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        GetPurchaseListModel model = new GetPurchaseListModel();
+                        model.Id = Convert.ToInt64(row["Id"]);
+                        model.PurchaseFrom = Convert.ToInt64(row["PurchaseFrom"]);
+                        model.PurchaseFromName = Convert.ToString(row["PurchaseFromName"]);
+                        model.SupplierId = Convert.ToInt64(row["SupplierId"]);
+                        model.SupplierName = Convert.ToString(row["SupplierName"]);
+                        model.SupplierCompany = Convert.ToString(row["SupplierCompany"]);
+                        model.SupplierPhone = Convert.ToString(row["SupplierPhone"]);
+
+                        model.InvoiceDate = row["InvoiceDate"] == DBNull.Value ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["InvoiceDate"]));
+                        model.InvoiceDate_Format = Convert.ToString(row["InvoiceDate_Format"]);
+                        model.InvoiceNo = Convert.ToString(row["InvoiceNo"]);
+                        model.PONo = Convert.ToString(row["PONo"]);
+
+                        model.DiscountType = Convert.ToInt64(row["DiscountType"]);
+                        model.TotalDiscountInInvoice = Convert.ToDecimal(row["TotalDiscountInInvoice"]);
+                        model.DiscountPercentage = Convert.ToDecimal(row["DiscountPercentage"]);
+                        model.DetermineWhenTaxApplicable = Convert.ToInt64(row["DetermineWhenTaxApplicable"]);
+
+                        model.SubTotal_TotalDiscount_Amount = Convert.ToDecimal(row["SubTotal_TotalDiscount_Amount"]);
+                        model.SubTotal_OtherCharges_Amount = Convert.ToDecimal(row["SubTotal_OtherCharges_Amount"]);
+
+                        model.DeliveryChargeIncludedInInvoice = Convert.ToDecimal(row["DeliveryChargeIncludedInInvoice"]);
+                        model.DeliveryCharge_CGST = Convert.ToDecimal(row["DeliveryCharge_CGST"]);
+                        model.DeliveryCharge_SGST = Convert.ToDecimal(row["DeliveryCharge_SGST"]);
+
+                        model.SubTotal_OtherTaxes_Amount = Convert.ToDecimal(row["SubTotal_OtherTaxes_Amount"]);
+                        model.TCS_Percent = Convert.ToDecimal(row["TCS_Percent"]);
+                        model.TDS_Percent = Convert.ToDecimal(row["TDS_Percent"]);
+                        model.GrandTotal_Amount = Convert.ToDecimal(row["GrandTotal_Amount"]);
+
+                        model.PaymentType = Convert.ToInt64(row["PaymentType"]);
+                        model.PaymentDate = Convert.ToString(row["PaymentDate"]);
+                        model.PaidAmount = Convert.ToDecimal(row["PaidAmount"]);
+                        model.PaymentModeId = Convert.ToInt64(row["PaymentModeId"]);
+                        model.PaymentRefNo = Convert.ToString(row["PaymentRefNo"]);
+
+                        model.IsUpdateInventoryStock = Convert.ToBoolean(row["IsUpdateInventoryStock"]);
+
+                        model.UploadInvoiceFile = row["UploadInvoiceFile"] != DBNull.Value
+                                && !string.IsNullOrEmpty(row["UploadInvoiceFile"].ToString())
+                            ? domainUrl + "/uploads/org/" + domain + "/purchaseDocuments/" + row["UploadInvoiceFile"].ToString()
+                            : string.Empty;
+
+                        model.IsActive = Convert.ToBoolean(row["IsActive"]);
+
+                        //JSON_PurchaseItems = row["JSON_PurchaseItems"].ToString()
+                        var json = row["JSON_PurchaseItems"].ToString();
+
+                        if (!string.IsNullOrWhiteSpace(json))
+                        {
+                            model.JSON_PurchaseItems =
+                                Newtonsoft.Json.JsonConvert.DeserializeObject<List<GetPurchaseItems>>(json);
+                        }
+                        else
+                        {
+                            model.JSON_PurchaseItems = new List<GetPurchaseItems>();
+                        }
+
+                        model.Created_By_EmpId = Convert.ToInt64(row["Created_By_EmpId"]);
+                        model.Created_By_EmpName = Convert.ToString(row["Created_By_EmpName"]);
+                        model.Created_On = Convert.ToString(row["Created_On"]);
+                        model.Modified_On = Convert.ToString(row["Modified_On"]);
+                        model.Status = Convert.ToString(row["Status"]);
+
+                        purchases.Add(model);
+                    }
+                }
+
+                apiResponse.message = "Purchase data fetched successfully!";
+                apiResponse.data = purchases;
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+                apiResponse.status = "Error";
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("SavePurchase")]
+        public IActionResult SavePurchase([FromBody] SavePurchaseRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SavePurchase", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
+
+                    cmd.Parameters.Add("@PurchaseFrom", SqlDbType.BigInt).Value = (object)model.PurchaseFrom ?? DBNull.Value;
+                    cmd.Parameters.Add("@SupplierId", SqlDbType.BigInt).Value = model.SupplierId;
+                    cmd.Parameters.Add("@InvoiceDate", SqlDbType.Date).Value = model.InvoiceDate;
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar).Value = (object)model.InvoiceNo ?? DBNull.Value;
+                    cmd.Parameters.Add("@PONo", SqlDbType.NVarChar).Value = (object)model.PONo ?? DBNull.Value;
+
+                    cmd.Parameters.Add("@DiscountType", SqlDbType.BigInt).Value = (object)model.DiscountType ?? DBNull.Value;
+                    cmd.Parameters.Add("@TotalDiscountInInvoice", SqlDbType.Decimal).Value = model.TotalDiscountInInvoice;
+                    cmd.Parameters.Add("@DiscountPercentage", SqlDbType.Decimal).Value = model.DiscountPercentage;
+                    cmd.Parameters.Add("@DetermineWhenTaxApplicable", SqlDbType.BigInt).Value = (object)model.DetermineWhenTaxApplicable ?? DBNull.Value;
+
+                    cmd.Parameters.Add("@SubTotal_TotalDiscount_Amount", SqlDbType.Decimal).Value = model.SubTotal_TotalDiscount_Amount;
+                    cmd.Parameters.Add("@SubTotal_OtherCharges_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherCharges_Amount;
+                    cmd.Parameters.Add("@SubTotal_OtherTaxes_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherTaxes_Amount;
+
+                    cmd.Parameters.Add("@DeliveryChargeIncludedInInvoice", SqlDbType.Decimal).Value = model.DeliveryChargeIncludedInInvoice;
+                    cmd.Parameters.Add("@DeliveryCharge_CGST", SqlDbType.Decimal).Value = model.DeliveryCharge_CGST;
+                    cmd.Parameters.Add("@DeliveryCharge_SGST", SqlDbType.Decimal).Value = model.DeliveryCharge_SGST;
+
+                    cmd.Parameters.Add("@TCS_Percent", SqlDbType.Decimal).Value = model.TCS_Percent;
+                    cmd.Parameters.Add("@TDS_Percent", SqlDbType.Decimal).Value = model.TDS_Percent;
+
+                    cmd.Parameters.Add("@GrandTotal_Amount", SqlDbType.Decimal).Value = model.GrandTotal_Amount;
+
+                    cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object)model.PaymentType ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object)model.PaymentDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal).Value = (object)model.PaidAmount ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaymentModeId", SqlDbType.BigInt).Value = (object)model.PaymentModeId ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaymentRefNo", SqlDbType.NVarChar).Value = (object)model.PaymentRefNo ?? DBNull.Value;
+
+                    cmd.Parameters.Add("@IsUpdateInventoryStock", SqlDbType.Bit).Value = model.IsUpdateInventoryStock;
+
+                    cmd.Parameters.Add("@UploadInvoiceFile", SqlDbType.NVarChar).Value = DBNull.Value;
+
+                    var itemsJson = model.JSON_PurchaseItems != null
+                        ? Newtonsoft.Json.JsonConvert.SerializeObject(model.JSON_PurchaseItems)
+                        : null;
+                    cmd.Parameters.Add("@JSON_PurchaseItems", SqlDbType.NVarChar)
+                        .Value = (object)itemsJson ?? DBNull.Value;
+
+                    cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = model.IsActive;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
+
+                    conn.Open();
+
+                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
+                    string latestImagePath = string.Empty;
+                    //photo upload
+                    if (model.UploadInvoiceFile != string.Empty && model.UploadInvoiceFile != null)
+                    {
+                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.UploadInvoiceFile);
+
+                        //string imgType = ".jpg";
+                        //get filename with fileType
+                        //model.UploadInvoiceFile = _imageUploadService.UploadImage(model.UploadInvoiceFile, "employeePic", rowid.ToString(), imgType);
+
+                        string folderPath = $"org/{domain}/purchaseDocuments/"; // Updated to include domain
+                        _imageUploadService.DeleteImages(folderPath, $"Invoice_PurchaseId_{rowid.ToString()}");
+                        //model.Logo = _imageUploadService.UploadImage(model.Logo, folderPath, rowid.ToString(), imgType);
+                        model.UploadInvoiceFile = _imageUploadService.UploadImage(model.UploadInvoiceFile, folderPath, $"Invoice_PurchaseId_{rowid.ToString()}", imgType);
+
+                        //update table
+                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", conn);
+                        cmd2.CommandType = CommandType.StoredProcedure;
+                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
+                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.UploadInvoiceFile; // Kept max for nvarchar(max)
+                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "Purchase";
+                        cmd2.ExecuteNonQuery();
+
+                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/purchaseDocuments/{model.UploadInvoiceFile}";
+                    }
+
+                    apiResponse.message = model.Id > 0 ? "Purchase updated successfully!" : "Purchase inserted successfully!";
+                    apiResponse.data = new { PurchaseId = rowid };
+                    apiResponse.status = "Success";
+
+                    return Ok(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.status = "Error";
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost("DeletePurchase")]
+        public IActionResult DeletePurchase([FromBody] DeletePurchaseRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("DeletePurchase", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", request.Id);
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+
+                apiResponse.message = "Purchase deleted successfully!";
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.status = "Error";
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpGet]
+        [Route("GetNextPurchaseOrderNo")]
+        public IActionResult GetNextPurchaseOrderNo()
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetNextPurchaseOrderNo", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+
+                    object result = cmd.ExecuteScalar();
+                    apiResponse.status = "Success";
+                    apiResponse.message = "Next Purchase Order No fetched!";
+                    apiResponse.data = new { NextPONo = result?.ToString() ?? "1" };
+
+                    return Ok(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpGet]
+        [Route("GetNextInvoiceNo")]
+        public IActionResult GetNextInvoiceNo()
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetNextInvoiceNo", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+
+                    object result = cmd.ExecuteScalar();
+                    apiResponse.status = "Success";
+                    apiResponse.message = "Next Invoice No fetched!";
+                    apiResponse.data = new { NextInvoiceNo = result?.ToString() ?? "1" };
+
+                    return Ok(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        //Widgets
+        [HttpGet]
+        [Route("GetPurchaseList_Widgets")]
+        public IActionResult GetPurchaseList_Widgets()
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                PurchaseWidgetDto widgetData = null;
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetPurchaseList_Widgets", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    conn.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())   // Only one row expected
+                        {
+                            widgetData = new PurchaseWidgetDto
+                            {
+                                GrandTotal_Amount = Convert.ToString(dr["GrandTotal_Amount"]),
+                                Outstanding_Amount = Convert.ToString(dr["Outstanding_Amount"]),
+                                TaxPaidToSeller = Convert.ToString(dr["TaxPaidToSeller"])
+                            };
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Purchase widget data fetched!";
+                apiResponse.data = widgetData;   // RETURN SINGLE OBJECT
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
+    }
+}

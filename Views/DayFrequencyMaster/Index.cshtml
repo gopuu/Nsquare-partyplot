@@ -1,0 +1,450 @@
+﻿@{
+    ViewData["Title"] = "Day Frequency Master";
+    Layout = "_Layout";
+}
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- MAIN -->
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-6">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Day Frequency Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add Item Frequency 
+                        </button>
+                    </div>
+
+                    <div id="tableMain">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ========== Modal ========== -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="addEventModalTitle">Add Day Frequency</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="freqId" value="0">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Frequency Title</label>
+                        <input type="text" id="frequencyTitle" class="form-control" placeholder="Enter Frequency Title">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+
+                <!-- LEFT SIDE -->
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="isActive" checked>
+                    <label class="form-check-label" for="isActive">Active</label>
+                </div>
+
+                <!-- RIGHT SIDE BUTTONS -->
+                <div>
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-outline-warning" id="btnSaveAddEventModal">Save</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+<!--MAIN JS-->
+<script>
+
+    $(document).ready(function () {
+        fetchData();
+
+        // Add button click
+        $(document).on('click', '#btn-add, #resetbtn', function (event) {
+            // Check Add Permission from Session or Local Storage
+            var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
+            if (!canAdd) {
+                // Display Access Denied Message
+                Swal.fire({
+                    icon: "error",
+                    title: "Access Denied",
+                    text: "You don't have permission to Add. Please contact admin.",
+                    confirmButtonText: "OK"
+                });
+                event.preventDefault(); // Stop the modal from opening
+                $('#addEventModal').modal('hide');
+            } else {
+                resetFormFields(); // Reset form fields when modal is shown
+                $("#addEventModalTitle").text("Add Day Frequency");
+                $("#addEventModal").modal("show");
+            }
+        });
+
+        // Edit button click
+        $(document).on('click', '.btn-edit', function (event) {
+            var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
+            if (!canEdit) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Access Denied",
+                    text: "You don't have permission to Edit. Please contact admin.",
+                    confirmButtonText: "OK"
+                });
+                event.preventDefault(); // Stop navigation
+                $('#addEventModal').modal('hide');
+            }
+            else {
+                resetFormFields();
+
+                // Get the DataTable instance
+                var table = $('#tableMain table').DataTable();
+
+                // Get the row object for the clicked Edit button
+                var row = $(this).closest('tr');
+                var rowData = table.row(row).data(); // Get the data object for this row
+
+                $("#freqId").val(rowData.Id);
+                $("#frequencyTitle").val(rowData.FrequencyTitle);
+
+                $("#addEventModalTitle").text("Edit Day Frequency");
+                $('#addEventModal').modal('show');
+            }
+        });
+
+        // SAVE - Handle form submission
+        $("#btnSaveAddEventModal").click(function (event) {
+            event.preventDefault(); // Prevent the default form submission
+            validateAddEventForm();
+
+            let id = $("#freqId").val();
+            let title = $("#frequencyTitle").val().trim();
+
+            let payload = {
+                Id: id,
+                FrequencyTitle: title,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+
+            //console.log("inputData:", inputData)
+            // Send AJAX request
+            $('#btn-loader').show();
+            $.ajax({
+                url: "/api/DayFrequencyMaster/SaveDayFrequency",
+                type: "POST",
+                data: JSON.stringify(payload),
+                contentType: "application/json",
+                success: function (response) {
+                    //var obj = JSON.parse(response);
+                    var obj = response;
+                    //console.log("submit obj:", obj);
+                    if (obj.status.toLowerCase() == "success") {
+                        //$('#btn-loader').hide();
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        fetchData();
+                        resetFormFields();  // Reset the form fields
+                        $('#addEventModal').modal('hide');  // Close the modal
+                    } else {
+                        $('#message').removeAttr('hidden');
+                        $('#message').text(obj.message).css('color', 'red').fadeIn(300).delay(5000).fadeOut(300);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Save DayFrequency Error")
+                },
+                complete: function () {
+                    $('#btn-loader').hide(); // Ensure loader is hidden in any case
+                }
+            });
+        });
+
+        // Delete Event handler for remove button click
+        $(document).on('click', '.btn-delete', function (event) {
+            var canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
+            if (!canDelete) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Access Denied",
+                    text: "You don't have permission to Delete. Please contact admin.",
+                    confirmButtonText: "OK"
+                });
+                event.preventDefault(); // Stop navigation
+                $('#deleteRecordModal').modal('hide');
+            }
+            else {
+                // Get the DataTable instance
+                var table = $('#tableMain table').DataTable();
+
+                // Get the row object for the clicked Edit button
+                var row = $(this).closest('tr');
+                var rowData = table.row(row).data(); // Get the data object for this row
+
+                // Extract values from the row data object
+                var id = rowData.Id;
+
+                $('#deleteRecordModal').data('id', id).modal('show');
+            }
+        });
+
+        // Handle delete confirmation
+        $('#delete-record').click(function () {
+            var id = $('#deleteRecordModal').data('id');
+
+            let payload = {
+                Id: id,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+
+            $('#btn-loader').show();
+            $.ajax({
+                url: "/api/DayFrequencyMaster/DeleteDayFrequency",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    //console.log("Delete Data:", response);
+                    // Parse the response if it's a string
+                    if (typeof response === 'string') {
+                        response = JSON.parse(response);
+                    }
+
+                    //debugger
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Deleted !!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                    }
+                    else {
+                        Swal.fire({
+                            title: "Delete Fail..!!",
+                            text: response.message,
+                            icon: "error"
+                        });
+                    }
+                    fetchData();
+                    //$('#btn-loader').hide();
+                    $('#deleteRecordModal').modal('hide');
+                },
+                error: function (xhr) {
+                    handleApiError(xhr, status, error, "Delete DayFrequency Error")
+                },
+                complete: function () {
+                    $('#btn-loader').hide(); // Ensure loader is hidden in any case
+                }
+            });
+            $('#deleteRecordModal').modal('hide');
+        });
+
+    });
+
+    function renderTable(data) {
+        console.log("data:", data);
+
+        // Destroy existing DataTable if present
+        if ($.fn.dataTable.isDataTable('#tableMain table')) {
+            $('#tableMain table').DataTable().clear().destroy();
+        }
+
+        // Check if data is null or empty
+        if (!data || data.length === 0) {
+            console.log("No Data Found");
+
+            // Ensure table headers remain visible and add "No Data Found" row in the tbody
+            $('#tableMain tbody').html(`
+                        <tr>
+                            <td colspan="3" class="text-center fw-bold text-danger">No Data Found !!</td>
+                        </tr>
+                    `);
+
+            // Initialize an empty DataTable with headers intact
+            $('#tableMain table').DataTable({
+                data: [],
+                columns: [
+                    { data: 'srno', title: 'Sr. No.' },
+                    { data: 'FrequencyTitle', title: 'Frequency Title' },
+                    {
+                        data: null,
+                        title: 'Actions',
+                        render: function (data, type, row) {
+                            return `
+                                <button class="btn btn-outline-warning btn-sm me-1 mb-0 btn-edit">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm me-1 mb-0 btn-delete">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                        targets: 0,        // Sr. No. column index
+                        className: "sr-padding"
+                    }
+                ],
+                stateSave: false,
+                pageLength: 10,           // Items per page
+                ordering: true,          // Enable sorting
+                searching: true,         // Enable searching
+                lengthChange: false,     // Hide page length change
+                pagingType: "full_numbers" // Show Prev, Next, and Page Numbers
+            });
+
+            return; // Exit function
+        }
+
+        let processData = data;
+        // Adding Sr. No.
+        processData.forEach((item, index) => {
+            item.srno = index + 1;
+        });
+
+        console.log("processData:", processData);
+
+        // Destroy the previous DataTable instance before reinitializing
+        if ($.fn.dataTable.isDataTable('#tableMain table')) {
+            $('#tableMain table').DataTable().clear().destroy(); // Destroy the existing DataTable instance
+        }
+
+        $('#tableMain table').DataTable({
+            data: processData,
+            columns: [
+                { data: 'srno', title: 'Sr. No.' },
+                { data: 'FrequencyTitle', title: 'Frequency Title' },
+                {
+                    data: null,
+                    title: 'Actions',
+                    render: function (data, type, row) {
+                        return `
+                        <div class="d-flex flex-column flex-sm-row gap-2">
+                            <button class="btn btn-outline-warning btn-sm me-1 mb-0 btn-action-xs btn-edit">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm me-1 mb-0 btn-action-xs btn-delete">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                        `;
+                    }
+                }
+            ],
+            columnDefs: [
+                {
+                    targets: 0,        // Sr. No. column index
+                    className: "text-center"
+                }
+            ],
+            stateSave: false,
+            pageLength: 10,           // Items per page
+            ordering: true,          // Enable sorting
+            searching: true,         // Enable searching
+            lengthChange: false,     // Hide page length change
+            pagingType: "full_numbers" // Show Prev, Next, and Page Numbers
+        });
+    }
+
+    // Initialize sorting
+    function initializeSorting() {
+        const options = {
+            valueNames: ["srno", "Category","Description", "IsActive"],
+            page: 10,
+            pagination: true
+        };
+        const list = new List('tableMain', options); // Initialize List.js or your sorting library
+    }
+
+    //get data from API
+    function fetchData() {
+        $('#btn-loader').show();
+        $('.search').val('');
+
+        $.ajax({
+            url: "/api/DayFrequencyMaster/GetDayFrequencyList",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: 0 }),
+            success: function (response) {
+                //data = response; // Store the fetched data
+                console.log("response fetchData:", response);
+                var data = response.data;
+                renderTable(data);
+            },
+            error: function (xhr) {
+                handleApiError(xhr, status, error, "Get DayFrequency Error")
+            },
+            complete: function () {
+                $('#btn-loader').hide(); // Ensure loader is hidden in any case
+            }
+        });
+    }
+
+    // Reset form fields
+    function resetFormFields() {
+        $("#freqId").val(0);
+        $("#frequencyTitle").val("");
+    }
+
+    // Validate form fields
+    function validateAddEventForm() {
+        let title = $("#frequencyTitle").val().trim();
+
+        if (title === "") {
+            Swal.fire("Validation", "Frequency Title is required", "warning");
+            return;
+        }
+    }
+</script>
+
