@@ -1,0 +1,281 @@
+﻿--Cashflow----------------------------------------------------------------------------------
+CREATE TABLE AccountTypeMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    TypeName NVARCHAR(100) NOT NULL,
+    TypeCode NVARCHAR(50) NULL,      -- e.g., CASH, BANK, UPI, CARD
+    Description NVARCHAR(300) NULL,
+    IsActive BIT DEFAULT 1,
+
+    -- Audit Fields
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+WORK:
+sp-SaveAccountType
+sp-GetAccountType
+sp-DeleteAccountType
+api-
+api-
+api-
+
+PaymentMode:
+sp-SavePaymentMode
+sp-GetPaymentModeList
+sp-DeletePaymentMode
+api-SavePaymentMode
+api-DeletePaymentMode
+api-GetPaymentMode
+
+
+CREATE TABLE AccountMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+    AccountName NVARCHAR(150) NOT NULL,          -- Display Name
+    AccountType NVARCHAR(50) NOT NULL,           -- Cash, Bank, UPI, CreditCard, Wallet
+
+    OpeningBalance DECIMAL(18,2) DEFAULT 0,
+    CurrentBalance DECIMAL(18,2) DEFAULT 0,
+
+    -- Bank Details (nullable for Cash/Wallet/UPI accounts)
+    BankName NVARCHAR(150) NULL,
+    BranchName NVARCHAR(150) NULL,
+    IFSC NVARCHAR(20) NULL,
+    AccountNumber NVARCHAR(50) NULL,
+    AccountHolderName NVARCHAR(150) NULL,
+
+    -- UPI field for UPI accounts
+    UPI_Id NVARCHAR(100) NULL,
+
+    Description NVARCHAR(300) NULL,
+
+    -- Flags
+    IsDefaultAccount BIT DEFAULT 0,  -- Useful for the system's primary account
+
+    -- Audit Columns
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-SaveAccountMaster
+sp-GetAccountMasterList
+sp-DeleteAccountMaster
+api-GetAccount
+api-SaveAccount
+api-DeleteAccount
+
+CREATE TABLE ExpenseCategoryMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    CategoryName NVARCHAR(150) NOT NULL,
+    Description NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-DeleteExpenseCategory
+sp-GetExpenseCategory
+sp-SaveExpenseCategory
+api-GetExpenseCategoryList
+api-SaveExpenseCategory
+api-DeleteExpenseCategory
+
+
+CREATE TABLE IncomeCategoryMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    CategoryName NVARCHAR(150) NOT NULL,
+    Description NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-DeleteIncomeCategory
+sp-GetIncomeCategory
+sp-SaveIncomeCategory
+api-GetIncomeCategoryList
+api-SaveIncomeCategory
+api-DeleteIncomeCategory
+
+CREATE TABLE ExpenseSubCategoryMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    CategoryId BIGINT NOT NULL FOREIGN KEY REFERENCES ExpenseCategoryMaster(Id),
+    SubCategoryName NVARCHAR(150) NOT NULL,
+    Description NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-SaveExpenseSubCategory
+sp-GetExpenseSubCategory
+sp-DeleteExpenseSubCategory
+api-GetExpenseSubCategoryList
+api-SaveExpenseSubCategory
+api-DeleteExpenseSubCategory
+
+CREATE TABLE IncomeSubCategoryMaster
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    CategoryId BIGINT NOT NULL FOREIGN KEY REFERENCES IncomeCategoryMaster(Id),
+    SubCategoryName NVARCHAR(150) NOT NULL,
+    Description NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-SaveIncomeSubCategory
+sp-GetIncomeSubCategory
+sp-DeleteIncomeSubCategory
+api-GetIncomeSubCategoryList
+api-SaveIncomeSubCategory
+api-DeleteIncomeSubCategory
+
+CREATE TABLE IncomeTransactions
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    AccountId BIGINT NOT NULL,
+    CategoryId BIGINT NOT NULL,
+    SubCategoryId BIGINT NULL,
+
+    Amount DECIMAL(18,2) NOT NULL,
+    TransactionDate DATE NOT NULL,
+    PaymentMode NVARCHAR(50) NULL,   -- Cash/Bank/UPI/etc.
+    ReferenceNo NVARCHAR(100) NULL,
+    Notes NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-SaveIncomeTransaction
+sp-GetIncomeTransaction
+sp-DeleteIncomeTransaction
+api-GetIncomeTransactionList
+api-SaveIncomeTransaction
+api-DeleteIncomeTransaction
+
+CREATE TABLE ExpenseTransactions
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    AccountId BIGINT NOT NULL,
+    CategoryId BIGINT NOT NULL,
+    SubCategoryId BIGINT NULL,
+
+    Amount DECIMAL(18,2) NOT NULL,
+    TransactionDate DATE NOT NULL,
+    PaymentMode NVARCHAR(50) NULL,
+    ReferenceNo NVARCHAR(100) NULL,
+    Notes NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-SaveExpenseTransaction
+sp-GetExpenseTransaction
+sp-DeleteExpenseTransaction
+api-GetExpenseTransactionList
+api-SaveExpenseTransaction
+api-DeleteExpenseTransaction
+
+CREATE TABLE FundTransfer
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+    FromAccountId BIGINT NOT NULL,
+    ToAccountId BIGINT NOT NULL,
+
+    Amount DECIMAL(18,2) NOT NULL,
+    TransferDate DATE NOT NULL,
+    ReferenceNo NVARCHAR(100) NULL,
+    Notes NVARCHAR(300) NULL,
+
+    -- Audit
+    is_deleted BIT DEFAULT 0,
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL,
+    updated_at DATETIME NULL,
+    updated_by BIGINT NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT NULL
+);
+sp-DeleteFundTransfer
+sp-GetFundTransfer
+sp-SaveFundTransfer
+api-GetFundTransferList
+api-SaveFundTransfer
+api-DeleteFundTransfer
+
+CREATE TABLE AccountBalanceAudit
+(
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+    AccountId BIGINT NOT NULL,
+    PreviousBalance DECIMAL(18,2) NOT NULL,
+    AmountChanged DECIMAL(18,2) NOT NULL,  -- +Credit / -Debit
+    NewBalance DECIMAL(18,2) NOT NULL,
+
+    ActionType NVARCHAR(100) NOT NULL,      -- Income, Expense, FundTransfer-Debit, etc.
+    ReferenceId BIGINT NULL,                -- Transaction Id (Income, Expense, FundTransfer)
+
+    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+    created_by BIGINT NULL
+);
+sp-LogAccountBalanceChange
+sp-GetAccountBalanceAudit
+api-GetAccountBalanceAudit - Show Created By Name
+eg:
+			DECLARE @NegOldAmt DECIMAL(18,2) = -@OldAmt;
+			EXEC LogAccountBalanceChange 
+				 @AccountId    = @OldTo,
+				 @AmountChanged = @NegOldAmt,
+				 @ActionType    = 'FundTransfer-RevertCredit',
+				 @ReferenceId   = @Id,
+				 @ActionBy      = @ActionBy;
+
+--/Cashflow----------------------------------------------------------------------------------
