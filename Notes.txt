@@ -263,7 +263,7 @@ CREATE TABLE AccountBalanceAudit
     ActionType NVARCHAR(100) NOT NULL,      -- Income, Expense, FundTransfer-Debit, etc.
     ReferenceId BIGINT NULL,                -- Transaction Id (Income, Expense, FundTransfer)
 
-    created_at DATETIME DEFAULT dbo.GETDATEIST(),
+ x   created_at DATETIME DEFAULT dbo.GETDATEIST(),
     created_by BIGINT NULL
 );
 sp-LogAccountBalanceChange

@@ -117,30 +117,29 @@
 
 <!--MAIN JS-->
 <script>
-
-    $(document).ready(function () {
+$(document).ready(function () {
         fetchData();
 
-        // Add button click
-        $(document).on('click', '#btn-add', function (event) {
-            // Check Add Permission from Session or Local Storage
-            var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
-            if (!canAdd) {
-                // Display Access Denied Message
-                Swal.fire({
-                    icon: "error",
-                    title: "Access Denied",
-                    text: "You don't have permission to Add. Please contact admin.",
-                    confirmButtonText: "OK"
-                });
-                event.preventDefault(); // Stop the modal from opening
-                $('#addEventModal').modal('hide');
-            } else {
-                resetFormFields(); // Reset form fields when modal is shown
-                $("#addEventModalTitle").text("Add Payment Mode");
-                $("#addEventModal").modal("show");
-            }
+// Add button click
+$(document).on('click', '#btn-add', function (event) {
+    // Check Add Permission from Session or Local Storage
+    var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
+    if (!canAdd) {
+        // Display Access Denied Message
+        Swal.fire({
+            icon: "error",
+            title: "Access Denied",
+            text: "You don't have permission to Add. Please contact admin.",
+            confirmButtonText: "OK"
         });
+        event.preventDefault(); // Stop the modal from opening
+        $('#addEventModal').modal('hide');
+    } else {
+        resetFormFields(); // Reset form fields when modal is shown
+        $("#addEventModalTitle").text("Add Payment Mode");
+        $("#addEventModal").modal("show");
+    }
+});
 
         // Edit button click
         $(document).on('click', '.btn-edit', function (event) {

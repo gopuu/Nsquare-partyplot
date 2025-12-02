@@ -30,45 +30,40 @@
     </div>
 </div>
 
-<!-- ========== ADD / EDIT ACCOUNT MODAL ========== -->
+<!-- ADD / EDIT MODAL -->
 <div class="modal fade" id="accountModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
 
             <div class="modal-header bg-warning text-white">
                 <h5 class="modal-title text-white" id="accountModalTitle">Add Account</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
                 <input type="hidden" id="accountId" value="0">
-
                 <div class="row g-3">
-
                     <div class="col-md-4">
-                        <label class="form-label">Account Name</label>
-                        <input type="text" id="accountName" class="form-control" placeholder="Enter name">
+                        <label class="form-label">Account Name <span class="text-danger">*</span></label>
+                        <input type="text" id="accountName" class="form-control">
                     </div>
-
                     <div class="col-md-3">
                         <label class="form-label">Account Type</label>
                         <select id="accountType" class="form-select">
-                            <option value="0">Select Type</option>
-                            <option value="1">Cash</option>
-                            <option value="2">Bank</option>
-                            <option value="3">UPI</option>
-                            <option value="4">Credit Card</option>
+                            <option value="0">Select</option>
                         </select>
                     </div>
-
                     <div class="col-md-3">
                         <label class="form-label">Opening Balance</label>
                         <input type="number" id="openingBalance" class="form-control" value="0">
                     </div>
 
-                    <!-- BANK DETAILS -->
-                    <div class="col-12"><hr /></div>
+                    <div class="col-md-2">
+                        <label class="form-label">Current Balance</label>
+                        <input type="number" id="currentBalance" class="form-control" value="0">
+                    </div>
+
+                    <!-- BANK FIELDS -->
+                    <div class="col-12"><hr></div>
 
                     <div class="col-md-3 bank-field">
                         <label class="form-label">Bank Name</label>
@@ -76,7 +71,7 @@
                     </div>
 
                     <div class="col-md-3 bank-field">
-                        <label class="form-label">Branch Name</label>
+                        <label class="form-label">Branch</label>
                         <input type="text" id="branchName" class="form-control">
                     </div>
 
@@ -95,7 +90,7 @@
                         <input type="text" id="accountHolderName" class="form-control">
                     </div>
 
-                    <!-- UPI -->
+                    <!-- UPI FIELD -->
                     <div class="col-md-4 upi-field">
                         <label class="form-label">UPI ID</label>
                         <input type="text" id="upiId" class="form-control">
@@ -103,301 +98,288 @@
 
                     <div class="col-md-12">
                         <label class="form-label">Description</label>
-                        <textarea id="description" class="form-control" rows="2"></textarea>
+                        <textarea id="description" class="form-control"></textarea>
                     </div>
 
                 </div>
 
             </div>
 
-            <div class="modal-footer d-flex justify-content-between align-items-center">
-
-                <!-- LEFT SIDE: Default Switch -->
+            <div class="modal-footer d-flex justify-content-between">
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="isDefaultAccountSwitchFooter">
-                    <label class="form-check-label" for="isDefaultAccountSwitchFooter">Default Account</label>
+                    <input class="form-check-input" type="checkbox" id="isDefaultAccount">
+                    <label class="form-check-label">Default</label>
                 </div>
 
-                <!-- RIGHT SIDE BUTTONS -->
                 <div>
                     <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button class="btn btn-outline-warning ms-2" id="btnSaveAccount">Save</button>
+                    <button class="btn btn-outline-warning" id="btnSaveAccount">Save</button>
                 </div>
-
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- DELETE MODAL -->
-<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+<!-- DELETE CONFIRMATION -->
+<div class="modal fade" id="deleteModal">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title text-white">Delete Confirmation</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="text-white">Delete?</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mt-2">
-                    <h4>Are you sure?</h4>
-                    <p class="text-muted">Delete this account?</p>
-                </div>
-                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete!</button>
-                </div>
+            <div class="modal-body text-center">
+                <h4>Are you sure?</h4>
+                <p class="text-muted">This account will be permanently deleted.</p>
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-outline-danger" id="confirmDelete">Delete</button>
             </div>
         </div>
     </div>
 </div>
 
+
 <script>
+$(document).ready(function () {
+    fetchData();
+    loadAccountTypeDropdown();
 
-    $(document).ready(function () {
+    $("#btn-add").click(function () {
 
-        fetchData();
-        hideConditionalFields();
+        if (!checkPermission("CanAdd")) return;
 
-        // -------------------------
-        // Add Account Button
-        // -------------------------
-        $(document).on("click", "#btn-add", function (e) {
-            let canAdd = (sessionStorage.getItem("CanAdd") || localStorage.getItem("CanAdd")) === "true";
+        resetForm();
+        $("#accountModalTitle").text("Add Account");
+        $("#accountModal").modal("show");
+});
 
-            if (!canAdd) {
-                Swal.fire("Access Denied", "You do not have permission to Add.", "error");
-                return;
+function loadAccountTypeDropdown() {
+    $.ajax({
+        type: "POST",
+        url: "/api/AccountTypeMaster/GetAccountTypeList",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }), // if API requires Id param
+        success: function (response) {
+
+            if (response.status === "Success" && response.data.length > 0) {
+
+                let dropdown = $("#accountType");
+                dropdown.empty(); // clear dropdown
+
+                dropdown.append(`<option value="0">Select</option>`);
+
+                response.data.forEach(item => {
+                            dropdown.append(`<option value="${item.Id}">${item.TypeName}</option>`);
+                });
             }
-
-            resetForm();
-            $("#accountModalTitle").text("Add Account");
-            $("#accountModal").modal("show");
-        });
-
-        // -------------------------
-        // Account Type Change (Show/Hide Bank/UPI fields)
-        // -------------------------
-        $("#accountType").on("change", function () {
-            hideConditionalFields();
-        });
-
-        function hideConditionalFields() {
-            let type = $("#accountType").val();
-
-            $(".bank-field").hide();
-            $(".upi-field").hide();
-
-            if (type === "Bank" || type === "CreditCard") $(".bank-field").show();
-            if (type === "UPI") $(".upi-field").show();
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading Account Type");
         }
-
-        // -------------------------
-        // Edit Account
-        // -------------------------
-        $(document).on("click", ".btn-edit", function () {
-
-            let canEdit = (sessionStorage.getItem("CanEdit") || localStorage.getItem("CanEdit")) === "true";
-            if (!canEdit) {
-                Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
-                return;
-            }
-
-            let table = $("#tableMain table").DataTable();
-            let row = $(this).closest("tr");
-            let rowData = table.row(row).data();
-
-            resetForm();
-
-            $("#accountId").val(rowData.Id);
-            $("#accountName").val(rowData.AccountName);
-            $("#accountType").val(rowData.AccountType);
-            $("#openingBalance").val(rowData.OpeningBalance);
-            //$("#isDefaultAccount").val(rowData.IsDefaultAccount);
-            $('#isDefaultAccountSwitchFooter').prop("checked", rowData.IsDefault);
-
-            $("#bankName").val(rowData.BankName);
-            $("#branchName").val(rowData.BranchName);
-            $("#ifsc").val(rowData.IFSC);
-            $("#accountNumber").val(rowData.AccountNumber);
-            $("#accountHolderName").val(rowData.AccountHolderName);
-
-            $("#upiId").val(rowData.UPI_Id);
-            $("#description").val(rowData.Description);
-
-            hideConditionalFields();
-            $("#accountModalTitle").text("Edit Account");
-            $("#accountModal").modal("show");
-        });
-
-        // -------------------------
-        // SAVE Account
-        // -------------------------
-        $("#btnSaveAccount").click(function () {
-
-            let payload = {
-                Id: $("#accountId").val(),
-                AccountName: $("#accountName").val(),
-                AccountType: $("#accountType").val(),
-                OpeningBalance: $("#openingBalance").val(),
-                IsDefaultAccount= $('#isDefaultAccountSwitchFooter').is(":checked")
-                BankName: $("#bankName").val(),
-                BranchName: $("#branchName").val(),
-                IFSC: $("#ifsc").val(),
-                AccountNumber: $("#accountNumber").val(),
-                AccountHolderName: $("#accountHolderName").val(),
-                UPI_Id: $("#upiId").val(),
-                Description: $("#description").val(),
-                ActionBy: sessionStorage.getItem("userId")
-            };
-
-            $.ajax({
-                url: "/api/Account/SaveAccountMaster",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(payload),
-                success: function (res) {
-
-                    if (res.status === "Success") {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Saved!",
-                            timer: 900,
-                            showConfirmButton: false
-                        });
-                        $("#accountModal").modal("hide");
-                        fetchData();
-                    } else {
-                        Swal.fire("Error", res.message, "error");
-                    }
-                }
-            });
-        });
-
-        // -------------------------
-        // Delete Click
-        // -------------------------
-        $(document).on("click", ".btn-delete", function () {
-
-            let canDelete = (sessionStorage.getItem("CanDelete") || localStorage.getItem("CanDelete")) === "true";
-            if (!canDelete) {
-                Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
-                return;
-            }
-
-            let table = $("#tableMain table").DataTable();
-            let row = $(this).closest("tr");
-            let rowData = table.row(row).data();
-
-            $("#deleteRecordModal").data("id", rowData.Id).modal("show");
-        });
-
-        // -------------------------
-        // Delete Account Confirm
-        // -------------------------
-        $("#delete-record").click(function () {
-            let id = $("#deleteRecordModal").data("id");
-
-            let payload = {
-                Id: id,
-                ActionBy: sessionStorage.getItem("userId")
-            };
-
-            $.ajax({
-                url: "/api/Account/DeleteAccountMaster",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(payload),
-                success: function (res) {
-
-                    if (res.status === "Success") {
-
-                        Swal.fire("Deleted!", "Account removed.", "success");
-                        fetchData();
-                        $("#deleteRecordModal").modal("hide");
-
-                    } else {
-                        Swal.fire("Error", res.message, "error");
-                    }
-                }
-            });
-        });
-
     });
+}
+$("#btnSaveAccount").click(function () {
+    if (!validateForm()) return;
+    saveAccount();
+});
 
-    // -------------------------
-    // Fetch Data
-    // -------------------------
-    function fetchData() {
+$(document).on("click", ".btn-edit", function () {
 
+    // Permission check
+    if (!checkPermission("CanEdit")) return;
+
+    resetForm(); // Clear previous data
+
+    // Get datatable row data
+    let table = $("#tableMain table").DataTable();
+    let rowData = table.row($(this).closest("tr")).data();
+
+    // Fill modal fields
+    $("#accountId").val(rowData.Id);
+    $("#accountName").val(rowData.AccountName);
+    $("#accountType").val(rowData.AccountType).trigger("change");
+    $("#openingBalance").val(rowData.OpeningBalance);
+    $("#currentBalance").val(rowData.CurrentBalance);
+
+    // Bank fields
+    $("#bankName").val(rowData.BankName);
+    $("#branchName").val(rowData.BranchName);
+    $("#ifsc").val(rowData.IFSC);
+    $("#accountNumber").val(rowData.AccountNumber);
+    $("#accountHolderName").val(rowData.AccountHolderName);
+
+    // UPI
+    $("#upiId").val(rowData.UPI_Id);
+
+    // General fields
+    $("#description").val(rowData.Description);
+    $("#isDefaultAccount").prop("checked", rowData.IsDefaultAccount);
+
+    // Change modal title and open modal
+    $("#accountModalTitle").text("Edit Account");
+    $("#accountModal").modal("show");
+});
+$(document).on("click", ".btn-delete", function () {
+    if (!checkPermission("CanDelete")) return;
+
+    let table = $("#tableMain table").DataTable();
+    let data = table.row($(this).closest("tr")).data();
+
+    $("#deleteModal").data("id", data.Id).modal("show");
+});
+    $("#confirmDelete").click(deleteAccount);
+});
+
+// PERMISSION CHECK
+function checkPermission(type) {
+    let allowed = (sessionStorage.getItem(type) || localStorage.getItem(type)) === "true";
+    if (!allowed) Swal.fire("Access Denied", "Permission Required", "error");
+    return allowed;
+}
+// FETCH DATA
+function fetchData() {
         $.ajax({
-            url: "/api/Account/GetAccountMaster",
+            url: "/api/AccountMaster/GetAccount",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ Id: 0 }),
             success: function (res) {
-                renderTable(res.data);
+                if (res.status === "Success") {
+                    renderTable(res.data);
+                } else {
+                    console.warn("API Error:", res.message);
+                }
+            },
+            error: function (err) {
+                    handleApiError(xhr, status, error, "Get PaymentMode Error")
             }
         });
     }
 
-    // -------------------------
-    // Render DataTable
-    // -------------------------
-    function renderTable(data) {
+// RENDER TABLE
+function renderTable(data) {
 
-        if ($.fn.dataTable.isDataTable("#tableMain table")) {
-            $("#tableMain table").DataTable().clear().destroy();
+if ($.fn.DataTable.isDataTable("#tableMain table")) {
+    $("#tableMain table").DataTable().clear().destroy();
+}
+
+$("#tableMain table").DataTable({
+    data: data,
+    responsive: true,
+    pageLength: 10,
+    scrollX: true,
+    columns: [
+        { data: "Id", title: "Sr. No", visible:true },
+            { data: "AccountName", title: "Account Name" },
+        {
+            data: "OpeningBalance",
+            title: "Opening Bal",
+            render: d => d?.toLocaleString("en-IN")
+        },
+        {
+            data: "CurrentBalance",
+            title: "Current Bal",
+            render: d => d?.toLocaleString("en-IN")
+        },
+            { data: "BankName", title: "Bank Name" },
+            { data: "BranchName", title: "Branch" },
+            { data: "IFSC", title: "IFSC Code" },
+            { data: "AccountNumber", title: "Account No." },
+            { data: "AccountHolderName", title: "Holder Name" },
+        {
+                data: "IsDefaultAccount",
+            title: "Default",
+            render: d => d
+                ? `<span class="badge bg-success">Yes</span>`
+                : `<span class="badge bg-secondary">No</span>`
+        },
+        {
+            data: null,
+            title: "Action",
+            orderable: false,
+            render: (data, type, row) => `
+                <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${row.Id}">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${row.Id}">
+                    <i class="fa fa-trash"></i>
+                </button>`
         }
+    ]
+});
+}
+ // RESET FORM
+ function resetForm() {
+    $("input, textarea").val("");
+    $("#accountId").val(0);
+    $("#accountType").val("0");
+    $("#isDefaultAccount").prop("checked", false);
+      
+}
+// FILL FORM ON EDIT
+function fillForm(d) {
+    $("#accountId").val(d.Id);
+    $("#accountName").val(d.AccountName);
+    $("#accountType").val(d.AccountType).trigger("change");
+    $("#openingBalance").val(d.OpeningBalance);
+    $("#bankName").val(d.BankName);
+    $("#upiId").val(d.UPI);
+    $("#description").val(d.Description);
+    $("#isDefaultAccount").prop("checked", d.IsDefault);
+}
+// SAVE
+function saveAccount() {
+    let payload = {
+        Id: $("#accountId").val(),
+        AccountName: $("#accountName").val().trim(),
+        AccountType: $("#accountType").val(),
+        OpeningBalance: $("#openingBalance").val(),
+        CurrentBalance: $("#currentBalance").val(),
+        BankName: $("#bankName").val(),
+        BranchName: $("#branchName").val(),
+        IFSC: $("#ifsc").val(),
+        AccountNumber: $("#accountNumber").val(),
+        AccountHolderName: $("#accountHolderName").val(),
+        UPI_Id: $("#upiId").val(),
+        Description: $("#description").val(),
+        IsDefaultAccount: $("#isDefaultAccount").is(":checked"),
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+};
 
-        data.forEach((x, i) => x.srno = i + 1);
+    $.ajax({
+        url: "/api/AccountMaster/SaveAccount",
+        type: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        success: function (res) {
+            Swal.fire("Saved!", "", "success");
+            $("#accountModal").modal("hide");
+            fetchData();
+        }
+    });
+}
+// DELETE
+function deleteAccount() {
+    let id = $("#deleteModal").data("id");
 
-        $("#tableMain table").DataTable({
-            data: data,
-            columns: [
-                { data: "srno", title: "Sr." },
-                { data: "AccountName", title: "Account Name" },
-                { data: "AccountType", title: "Type" },
-                { data: "OpeningBalance", title: "Opening Balance" },
-                { data: "CurrentBalance", title: "Current Balance" },
-                {
-                    data: null,
-                    title: "Actions",
-                    render: function () {
-                        return `
-                            <button class="btn btn-outline-warning btn-sm btn-edit">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm btn-delete">
-                                <i class="fa fa-trash"></i>
-                            </button>`;
-                    }
-                }
-            ]
-        });
+    $.ajax({
+        url: "/api/AccountMaster/DeleteAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: id }),
+        success: function () {
+            Swal.fire("Deleted!", "", "success");
+            $("#deleteModal").modal("hide");
+            fetchData();
+        }
+    });
+}
+// VALIDATION
+function validateForm() {
+    if ($("#accountName").val().trim() === "") {
+        Swal.fire("Required", "Account Name is required", "warning");
+        return false;
     }
-
-    // -------------------------
-    // Reset Form
-    // -------------------------
-    function resetForm() {
-        $("#accountId").val(0);
-        $("#accountName").val("");
-        $("#accountType").val("");
-        $("#openingBalance").val("0");
-        //$("#isDefaultAccount").val("0");
-        $('#isDefaultAccountSwitchFooter').prop("checked", false);
-
-        $("#bankName").val("");
-        $("#branchName").val("");
-        $("#ifsc").val("");
-        $("#accountNumber").val("");
-        $("#accountHolderName").val("");
-
-        $("#upiId").val("");
-        $("#description").val("");
-
-        hideConditionalFields();
-    }
-
+    return true;
+}
 </script>

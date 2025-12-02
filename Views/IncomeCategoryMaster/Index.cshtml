@@ -1,0 +1,244 @@
+﻿@{
+    ViewData["Title"] = "Income Category Master";
+    Layout = "_Layout";
+}
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-6">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Income Category Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add-income">
+                            <i class="fa fa-plus-circle"></i> Add Income Category
+                        </button>
+                    </div>
+
+                    <div id="tableIncome">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="incomeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="incomeModalTitle">Add Income Category</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="incomeCategoryId" value="0">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" id="incomeName" class="form-control" placeholder="Enter Category Name">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea id="incomeDescription" class="form-control" placeholder="Enter Description"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-end">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning" id="btnSaveIncomeCategory">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+
+<script>
+$(document).ready(function () {
+fetchData();
+
+// Add button click
+$(document).on("click", "#btn-add-income", function () {
+
+    var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
+    if (!canAdd) {
+        Swal.fire("Access Denied", "You don't have permission to Add!", "error");
+        return;
+    }
+
+    resetIncomeFields();
+    $("#incomeModalTitle").text("Add Income Category");
+    $("#incomeModal").modal("show");
+});
+
+// Save
+$("#btnSaveIncomeCategory").click(function (e) {
+    e.preventDefault();
+
+    if ($("#incomeName").val().trim() === "") {
+        Swal.fire("Validation", "Category name is required", "warning");
+        return;
+    }
+
+    let payload = {
+        Id: $("#incomeCategoryId").val(),
+        CategoryName: $("#incomeName").val().trim(),
+        Description: $("#incomeDescription").val().trim(),
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+
+    $.ajax({
+        url: "/api/IncomeCategory/SaveIncomeCategory",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+                 Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Saved!",
+                    showConfirmButton: false,
+                    timer: 900
+                });
+                $("#incomeModal").modal("hide");
+                fetchData();
+        },
+        error: function (xhr, status, error) {
+          handleApiError(xhr, status, error, "Save IncomeCategory Error")
+        }
+    });
+});
+
+// Edit
+$(document).on("click", ".btn-edit", function () {
+    let table = $("#tableIncome table").DataTable();
+    let data = table.row($(this).closest("tr")).data();
+
+    $("#incomeCategoryId").val(data.Id);
+    $("#incomeName").val(data.CategoryName);
+    $("#incomeDescription").val(data.Description);
+
+    $("#incomeModalTitle").text("Edit Income Category");
+    $("#incomeModal").modal("show");
+});
+
+// Delete
+$(document).on("click", ".btn-delete", function () {
+    let table = $("#tableIncome table").DataTable();
+    let row = table.row($(this).closest("tr")).data();
+
+    $("#deleteRecordModal").data("id", row.Id).modal("show");
+});
+
+$("#delete-record").click(function () {
+    let payload = {
+        Id: $("#deleteRecordModal").data("id"),
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+
+    $.ajax({
+        url: "/api/IncomeCategory/DeleteIncomeCategory",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function () {
+            Swal.fire("Deleted!", "Record deleted successfully!", "success");
+            $("#deleteRecordModal").modal("hide");
+                fetchData();
+        }
+    });
+});
+
+});
+
+// ================= Render & Fetch ===================== //
+
+function fetchData() {
+    $('#btn-loader').show();
+    $('.search').val('');
+
+    $.ajax({
+    url: "/api/IncomeCategory/GetIncomeCategoryList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            console.log("response fetchData:", response);
+            var data = response.data;
+            renderTable(data);
+        },
+        error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Get Income Category Error")
+        }
+    });
+}
+
+function renderTable(data) {
+
+if ($.fn.dataTable.isDataTable("#tableIncome table")) {
+    $("#tableIncome table").DataTable().destroy();
+}
+
+data.forEach((x, i) => x.srno = i + 1);
+
+$("#tableIncome table").DataTable({
+    data: data,
+    columns: [
+        { data: "srno", title: "Sr. No." },
+        { data: "CategoryName", title: "Category Name" },
+        { data: "Description", title: "Description" },
+        {
+            data: null,
+            title: "Actions",
+            render: () => `
+                    <button class="btn btn-outline-warning btn-edit"><i class="fa fa-edit"></i></button>
+                <button class="btn btn-outline-danger btn-delete"><i class="fa fa-trash"></i></button>
+            `
+        }
+    ]
+});
+}
+
+function resetIncomeFields() {
+    $("#incomeCategoryId").val(0);
+    $("#incomeName").val("");
+    $("#incomeDescription").val("");
+}
+
+</script>
