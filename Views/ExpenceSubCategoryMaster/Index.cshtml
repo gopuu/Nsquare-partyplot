@@ -298,8 +298,8 @@ $.ajax({
         //$('#btn-loader').hide();
         $('#deleteRecordModal').modal('hide');
     },
-    error: function (xhr) {
-            handleApiError(xhr, status, error, "Delete SubCategory Error")
+    error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Something went wrong!")
     },
     complete: function () {
         $('#btn-loader').hide(); // Ensure loader is hidden in any case
@@ -325,7 +325,7 @@ function fetchData() {
                 renderTable(data);
             },
             error: function (xhr, status, error) {
-                    handleApiError(xhr, status, error, "Get ExpenceSubCategory Error")
+                   handleApiError(xhr, status, error, "Something went wrong fetching Expense SubCategory")
             }
         });
     }
@@ -407,7 +407,7 @@ $('#tableMain table').DataTable({
                 });
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Dropdown Load Error");
+                    handleApiError(xhr, status, error, "Failed to load dropdown data");
             }
         });
     }

@@ -389,13 +389,56 @@
                     <!-- Staff -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-user"></span>Staff
+                            <span class="uil fs-8 me-2 uil-staff"></span>Staff
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
-                                <a class="dropdown-item @(currentController == "Staff" ? "active" : "")" href="/Staff">
+                                <a class="dropdown-item @(currentController == "LevelMaster" ? "active" : "")" href="/LevelMaster">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="users"></span>Manage Staff
+                                        <span class="me-2 uil" data-feather="level"></span>Level Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "DesignationMaster" ? "active" : "")" href="/DesignationMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="staff"></span>Designation Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "StatusMaster" ? "active" : "")" href="/StatusMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="statusmaster"></span>Status Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "LeaveTypeMaster" ? "active" : "")" href="/LeaveTypeMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="leave"></span>LeaveType Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "StaffMaster" ? "active" : "")" href="/StaffMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="staffmaster"></span>Staff Master
+                                    </div>
+                                </a>
+                            </li>
+                            
+                            <li>
+                                <a class="dropdown-item @(currentController == "StaffAttendance" ? "active" : "")" href="/StaffAttendance">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="staffattendance"></span>Staff Attendance
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "StaffLeave" ? "active" : "")" href="/StaffLeave">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="staffleave"></span>Staff Leave
                                     </div>
                                 </a>
                             </li>
@@ -403,7 +446,7 @@
                     </li>
 
                     <!-- Document Center -->
-                    @* <li class="nav-item dropdown">
+                   @*  <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-file"></span>Document Center
                         </a>

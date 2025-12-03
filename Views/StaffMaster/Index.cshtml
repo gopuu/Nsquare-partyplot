@@ -1,0 +1,555 @@
+﻿@{
+    ViewData["Title"] = "Staff Master";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-8">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Staff Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add Staff
+                        </button>
+                    </div>
+
+                    <div id="tableStaff">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="staffModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="staffModalTitle">Add Staff</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="staffId" value="0" />
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" id="txtName" class="form-control" placeholder="Enter Name">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Employee Code</label>
+                        <input type="text" id="txtEmpCode" class="form-control" placeholder="Enter Employee Code">
+                    </div>
+
+                    <div class="col-4">
+                        <label class="form-label">Address</label>
+                        <textarea id="txtAddress" class="form-control" placeholder="Enter Address"></textarea>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Phone No <span class="text-danger">*</span></label>
+                        <input type="text" id="txtPhoneNo" class="form-control" placeholder="Enter Mobile No">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Emergency Phone No</label>
+                        <input type="text" id="txtEmergencyPhone" class="form-control" placeholder="Enter Emergency ContactNo">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="txtEmail" class="form-control" placeholder="Enter Email">
+                    </div>
+                  <div class="col-md-4">
+                        <label class="form-label">Designation</label>
+                        <select id="ddlDesignation" class="form-select"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Aadhar Card No</label>
+                        <input type="text" id="txtAadhar" class="form-control" placeholder="Enter Aadhar Card No">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Joining Date</label>
+                        <input type="date" id="txtJoiningDate" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Salary</label>
+                        <input type="number" id="txtSalary" class="form-control" placeholder="Enter Salary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Photo</label>
+                        <input type="file" id="txtPhoto"
+                               accept="image/*"
+                               class="form-control form-control-sm"
+                               style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">User Name</label>
+                        <input type="text" id="txtUserName" class="form-control" placeholder="Enter Username">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="txtPassword" class="form-control" placeholder="Enter Password">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">GCM</label>
+                        <input type="text" id="txtGCM" class="form-control" placeholder="Enter GCM">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bank Name</label>
+                        <input type="text" id="txtBankName" class="form-control" placeholder="Enter Bank Name">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bank Branch</label>
+                        <input type="text" id="txtBankBranch" class="form-control" placeholder="Enter Bank Branch">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">IFSC</label>
+                        <input type="text" id="txtIFSC" class="form-control" placeholder="Enter IFSC Code">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Account No</label>
+                        <input type="text" id="txtAccountNo" class="form-control" placeholder="Enter AccountNo">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bank Account Holder Name</label>
+                        <input type="text" id="txtBankAccountHolderName" class="form-control" placeholder="Enter Account Holder Name">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">UPI ID</label>
+                        <input type="text" id="txtBankUPIId" class="form-control" placeholder="Enter UPI Id">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-4">
+                    <!-- Is Super User Switch -->
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" id="switchIsSuperUser">
+                        <label class="form-check-label" for="switchIsSuperUser">Is Super User</label>
+                    </div>
+                    <!-- Auto Login Switch -->
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" id="switchIsAutoLogin">
+                        <label class="form-check-label" for="switchIsAutoLogin">Auto Login</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-outline-warning" id="btnSaveStaff">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+
+<script>
+function loadDesignationDropdown() {
+    $.ajax({
+        url: "/api/DesignationMaster/GetDesignationMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            const dropdown = $("#ddlDesignation");
+            dropdown.empty().append('<option value="">-- Select --</option>');
+
+            if (res?.status === "Success") {
+                res.data.forEach(item => {
+                    dropdown.append(`<option value="${item.Id}">${item.DesignationName}</option>`);
+                });
+            }
+        },
+        error: function (xhr, s, e) {
+                handleApiError(xhr, s, e, "Fetch Designation Error");
+        }
+    });
+}
+
+$(document).ready(function () {
+            function getBase64WithName(file, callback) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            let base64 = e.target.result.split(',')[1];
+
+            // Combine filename + base64 value
+            let finalValue =  base64;
+
+            callback(finalValue);
+        };
+        reader.readAsDataURL(file);
+    }
+
+
+    fetchStaffData();
+    $(document).on("click", "#btn-add", function () {
+        resetStaffForm();
+        loadDesignationDropdown();
+        $("#staffModalTitle").text("Add Staff");
+        $("#staffModal").modal("show");
+    });
+
+    $(document).on("click", "#btnSaveStaff", function () {
+        // --- Validation ---
+        const name = $("#txtName").val().trim();
+        const phone = $("#txtPhoneNo").val().trim();
+        if (!name) {
+        Swal.fire("Validation", "Name is required", "warning");
+        return;
+        }
+        if (!phone) {
+          Swal.fire("Validation", "Phone number is required", "warning");
+           return;
+        }
+
+        let fileInput = $("#txtPhoto").get(0);
+        let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+        if (file) {
+            getBase64WithName(file, function (result) {
+                submitSave(result);
+            });
+        } else {
+            submitSave(null);
+        }
+        // ---- Convert Photo to Base64 ----
+        // let uploadPhotoBase64 = "";
+        // const fileInput = document.getElementById("txtPhoto");
+
+        // if (fileInput && fileInput.files.length > 0) {
+        //     const file = fileInput.files[0];
+        //     const reader = new FileReader();
+        //     reader.onload = function (e) {
+        //     uploadPhotoBase64 = e.target.result;
+        //     saveStaff(uploadPhotoBase64);
+        //     };
+        //     reader.readAsDataURL(file);
+        // } else {
+        //      saveStaff(uploadPhotoBase64); // call without photo
+        // }
+
+    });
+
+    function saveStaff(photoBase64) {
+        $("#btnSaveStaff").prop("disabled", true);
+
+        const payload = {
+            Id: Number($("#staffId").val() || 0),
+            Name: $("#txtName").val().trim(),
+            Emp_Code: $("#txtEmpCode").val().trim(),
+            Address: $("#txtAddress").val().trim(),
+            PhoneNo: $("#txtPhoneNo").val().trim(),
+            Emergency_PhoneNo: $("#txtEmergencyPhone").val().trim(),
+            Email: $("#txtEmail").val().trim(),
+            DesignationId: Number($("#ddlDesignation").val() || 0),
+            AadharCardNo: $("#txtAadhar").val().trim(),
+            JoiningDate: $("#txtJoiningDate").val(),
+            Salary: Number($("#txtSalary").val() || 0),
+
+             Photo: photoValue ,  // backend expects null (actual file stored from upload)
+            UploadInvoiceFile: photoBase64 || "",
+
+            User_Name: $("#txtUserName").val().trim(),
+            Password: $("#txtPassword").val().trim(),
+            gcm: $("#txtGCM").val(),
+
+            IsSuperUser: $("#switchIsSuperUser").is(":checked"),
+            IsAutoLogin: $("#switchIsAutoLogin").is(":checked"),
+
+            Bank_Name: $("#txtBankName").val().trim(),
+            Bank_BranchName: $("#txtBankBranch").val().trim(),
+            Bank_IFSC: $("#txtIFSC").val().trim(),
+            Bank_AccountNo: $("#txtAccountNo").val().trim(),
+            Bank_AccountHolderName: $("#txtBankAccountHolderName").val().trim(),
+            Bank_UPI_Id: $("#txtBankUPIId").val().trim(),
+
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        // ---- API Call ----
+        $.ajax({
+            url: "/api/StaffMaster/SaveStaffMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res?.status === "Success") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Saved!",
+                        timer: 1200,
+                        showConfirmButton: false,
+                        position: "top-end"
+                    });
+
+                    $("#staffModal").modal("hide");
+                    fetchStaffData(); // reload list
+                } else {
+                    Swal.fire("Error", res?.message || "Save failed", "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log("Error:", xhr);
+                Swal.fire("API Error", "Something went wrong.", "error");
+            },
+            complete: function () {
+                $("#btnSaveStaff").prop("disabled", false);
+            }
+        });
+    }
+
+    $(document).on("click", ".btn-edit", function () {
+        // Permission Check
+        const canEdit = (sessionStorage.getItem("CanEdit") || localStorage.getItem("CanEdit")) === "true";
+        if (!canEdit) {
+            Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
+            return;
+        }
+
+        // Get row data
+        const table = $("#tableStaff table").DataTable();
+        const rowData = table.row($(this).closest("tr")).data();
+        resetStaffForm(); // Optional call if you have reset logic
+                console.log("rowData canEdit :",rowData);
+
+        // Fill Modal Fields
+        $("#staffId").val(rowData.Id);
+        $("#txtName").val(rowData.Name);
+        $("#txtEmpCode").val(rowData.EmployeeCode);
+        $("#txtAddress").val(rowData.Address);
+        $("#txtPhoneNo").val(rowData.PhoneNo);
+        $("#txtEmergencyPhone").val(rowData.EmergencyPhoneNo);
+        $("#txtEmail").val(rowData.Email);
+        $("#ddlDesignation").val(rowData.DesignationId).trigger('change');
+        $("#txtAadhar").val(rowData.AadharNo);
+        $("#txtJoiningDate").val(rowData.JoiningDate ? rowData.JoiningDate.split('T')[0] : "");
+        $("#txtSalary").val(rowData.Salary);
+
+        // Photo not prefilled in input type="file" for security reasons
+
+        $("#txtUserName").val(rowData.UserName);
+        $("#txtPassword").val(rowData.Password);
+        $("#txtGCM").val(rowData.GCM);
+        $("#txtBankName").val(rowData.BankName);
+        $("#txtBankBranch").val(rowData.BankBranch);
+        $("#txtIFSC").val(rowData.IFSC);
+        $("#txtAccountNo").val(rowData.AccountNo);
+        $("#txtBankAccountHolderName").val(rowData.AccountHolderName);
+        $("#txtBankUPIId").val(rowData.UPIID);
+
+        $("#switchIsSuperUser").prop("checked", rowData.IsSuperUser);
+        $("#switchIsAutoLogin").prop("checked", rowData.IsAutoLogin);
+
+        // Change modal title
+        $("#staffModalTitle").text("Edit Staff");
+       // $("#btnSaveStaff").text("Update");
+
+        // Show modal
+        $("#staffModal").modal("show");
+    });
+
+    // Delete button click
+    $(document).on('click', '.btn-delete', function () {
+        const canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
+        if (!canDelete) {
+            Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
+            return;
+        }
+        let table = $('#tableStaff table').DataTable();
+        let rowData = table.row($(this).closest('tr')).data();
+        $("#deleteRecordModal")
+            .data("id", rowData.Id)
+            .modal("show");
+    });
+
+    // Confirm Delete
+    $("#delete-record").click(function () {
+        let id = $("#deleteRecordModal").data("id");
+        let payload = {
+            Id: id,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        $('#btn-loader').show();
+        $.ajax({
+            url: "/api/StaffMaster/DeleteStaffMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (typeof response === "string") {
+                    response = JSON.parse(response);
+                }
+                if (response.status === "Success") {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Leave Type Deleted!",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+
+                } else {
+                    Swal.fire("Delete Failed", response.message, "error");
+                }
+                $("#deleteRecordModal").modal("hide");
+                    fetchStaffData(); // reload updated list
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Delete Staff Error");
+            },
+            complete: function () {
+                $('#btn-loader').hide();
+            }
+        });
+    });
+
+});
+
+function resetStaffForm() {
+    $("#staffId").val(0);
+    $("#staffModalTitle").text("Add Staff");
+    $("#staffModal input, #staffModal textarea").val("");
+    $("#switchIsSuperUser, #switchIsAutoLogin").prop("checked", false);
+}
+
+function fetchStaffData() {
+    $.ajax({
+        url: '/api/StaffMaster/GetStaffMaster',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: 0 }),
+
+        success: function (res) {
+            const data = (res && res.data) ? res.data : [];
+            renderStaffTable(data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Staff Error");
+        }
+    });
+}
+
+function renderStaffTable(data) {
+
+if ($.fn.dataTable.isDataTable('#tableStaff table')) {
+    $('#tableStaff table').DataTable().clear().destroy();
+}
+
+if (!data || data.length === 0) {
+    $('#tableStaff table').DataTable({
+        data: [],
+        columns: [
+            { data: 'srno', title: '#' },
+            { data: 'Name', title: 'Name' },
+            { data: 'PhoneNo', title: 'Phone' },
+            { data: 'Email', title: 'Email' },
+            { data: 'DesignationId', title: 'Designation' },
+            {
+                data: null,
+                title: 'Actions',
+                render: () => getActionsHtml()
+            }
+        ],
+        pageLength: 10
+    });
+    return;
+}
+
+// Add auto numbering
+data.forEach((x, i) => x.srno = i + 1);
+
+$('#tableStaff table').DataTable({
+    data: data,
+    columns: [
+        { data: 'srno', title: '#' },
+        { data: 'Name', title: 'Name' },
+        { data: 'Emp_Code', title: 'Emp Code' },
+        { data: 'PhoneNo', title: 'Phone' },
+        //{ data: 'Emergency_PhoneNo', title: 'Emergency No' },
+        { data: 'Email', title: 'Email' },
+        {
+            data: 'Photo',
+            title: 'Photo',
+            render: function (d) {
+                return d
+                    ? `<img src="${d}" class="rounded" width="40" height="40" />`
+                    : `<span class="text-muted">No Image</span>`;
+            }
+        },
+        //{ data: 'DesignationId', title: 'Designation' },
+        { data: 'AadharCardNo', title: 'Aadhar' },
+        { data: 'JoiningDate', title: 'Joining Date' },
+        { data: 'Salary', title: 'Salary' },
+        { data: 'User_Name', title: 'Username' },
+        {
+            data: 'IsSuperUser',
+            title: 'Super User',
+            render: d => d ? `<span class="badge bg-success">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+        },
+        {
+            data: 'IsAutoLogin',
+            title: 'Auto Login',
+            render: d => d ? `<span class="badge bg-info">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+        },
+        { data: 'gcm', title: 'GCM' },
+        { data: 'Bank_Name', title: 'Bank' },
+        { data: 'Bank_IFSC', title: 'IFSC' },
+        { data: 'Bank_AccountNo', title: 'Account No' },
+        { data: 'Bank_UPI_Id', title: 'UPI' },
+        {
+            data: null,
+            title: 'Actions',
+            render: () => getActionsHtml()
+        }
+    ],
+    pageLength: 10,
+    ordering: true,
+    searching: true,
+    lengthChange: false
+});
+}
+
+function getActionsHtml() {
+return `
+    <div class="d-flex gap-2">
+            <button class="btn btn-outline-warning btn-sm btn-action-xs  btn-edit"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-outline-danger btn-sm btn-action-xs  btn-delete"><i class="fa fa-trash"></i></button>
+    </div>
+`;
+}
+
+</script>

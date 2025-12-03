@@ -1,0 +1,155 @@
+﻿
+using ERPAdmin.ApiControllers;
+using ERPAdmin.Helper;
+using ERPAdmin.Models;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Data;
+using System.Data.SqlClient;
+
+public class StaffDocumentsController : MasterController
+{
+    private readonly string domainUrl;
+    private string connString = string.Empty;
+
+    public StaffDocumentsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        : base(configuration, httpContextAccessor)
+    {
+        var request = httpContextAccessor.HttpContext?.Request;
+        domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+    }
+
+    // ====================== GET ======================
+    [HttpPost]
+    [Route("GetStaffDocuments")]
+    public IActionResult GetStaffDocuments([FromBody] GetStaffDocumentsRequest request)
+    {
+        apiResponse apiResponse = new apiResponse();
+        List<StaffDocumentsModel> list = new List<StaffDocumentsModel>();
+
+        try
+        {
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                return errorResult;
+
+            DataTable dt = new DataTable();
+
+            using (SqlConnection con = new SqlConnection(connString))
+            using (SqlCommand cmd = new SqlCommand("GetStaffDocuments", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
+                cmd.Parameters.AddWithValue("@StaffId", request.StaffId == 0 ? 0 : request.StaffId);
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(new StaffDocumentsModel
+                {
+                    Id = Convert.ToInt64(row["Id"]),
+                    StaffId = Convert.ToInt64(row["StaffId"]),
+                    DocumentType = Convert.ToString(row["DocumentType"]),
+                    DocumentName = Convert.ToString(row["DocumentName"]),
+                    FilePath = Convert.ToString(row["FilePath"])
+                });
+            }
+
+            apiResponse.message = "Documents fetched successfully!";
+            apiResponse.data = list;
+            apiResponse.status = "Success";
+            return Ok(apiResponse);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogException(ex, ControllerContext, Request, null);
+            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.status = "Error";
+            return StatusCode(500, apiResponse);
+        }
+    }
+
+    // ====================== SAVE ======================
+    [HttpPost]
+    [Route("SaveStaffDocuments")]
+    public IActionResult SaveStaffDocuments([FromBody] SaveStaffDocumentsRequest model)
+    {
+        apiResponse apiResponse = new apiResponse();
+
+        try
+        {
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                return errorResult;
+
+            long rowId = 0;
+
+            using (SqlConnection con = new SqlConnection(connString))
+            using (SqlCommand cmd = new SqlCommand("SaveStaffDocuments", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@Id", model.Id);
+                cmd.Parameters.AddWithValue("@StaffId", model.StaffId);
+                cmd.Parameters.AddWithValue("@DocumentType", (object)model.DocumentType ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DocumentName", (object)model.DocumentName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@FilePath", (object)model.FilePath ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                con.Open();
+                rowId = Convert.ToInt64(cmd.ExecuteScalar());
+            }
+
+            apiResponse.message = model.Id > 0 ? "Document updated successfully!" : "Document inserted successfully!";
+            apiResponse.data = new { DocumentId = rowId };
+            apiResponse.status = "Success";
+            return Ok(apiResponse);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogException(ex, ControllerContext, Request, null);
+            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.status = "Error";
+            return StatusCode(500, apiResponse);
+        }
+    }
+
+    // ====================== DELETE ======================
+    [HttpPost]
+    [Route("DeleteStaffDocuments")]
+    public IActionResult DeleteStaffDocuments([FromBody] DeleteStaffDocumentsRequest model)
+    {
+        apiResponse apiResponse = new apiResponse();
+
+        try
+        {
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                return errorResult;
+
+            using (SqlConnection con = new SqlConnection(connString))
+            using (SqlCommand cmd = new SqlCommand("DeleteStaffDocuments", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@Id", model.Id);
+                cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            apiResponse.message = "Document deleted successfully!";
+            apiResponse.status = "Success";
+            return Ok(apiResponse);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogException(ex, ControllerContext, Request, null);
+            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.status = "Error";
+            return StatusCode(500, apiResponse);
+        }
+    }
+}

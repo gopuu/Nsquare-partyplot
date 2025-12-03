@@ -37,61 +37,61 @@
                 <h5 class="modal-title text-white" id="ExpenceTransactionModalTitle">Add Expense Transaction</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <!-- BODY -->
             <div class="modal-body">
                 <input type="hidden" id="ExpenceTransactionId" value="0">
 
-                <div class="mb-3">
-                    <label class="form-label">Account<span class="text-danger">*</span></label>
-                    <select id="ddlAccount" class="form-select">
-                        <option value="">-- Select Account --</option>
-                        <!-- populate options dynamically -->
-                    </select>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Account<span class="text-danger">*</span></label>
+                        <select id="ddlAccount" class="form-select">
+                            <option value="">-- Select Account --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Category<span class="text-danger">*</span></label>
+                        <select id="ddlExpenceCategory" class="form-select">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Category<span class="text-danger">*</span></label>
-                    <select id="ddlExpenceCategory" class="form-select">
-                        <option value="">-- Select Category --</option>
-                        <!-- populate options dynamically -->
-                    </select>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">SubCategory</label>
+                        <select id="ddlSubCategory" class="form-select">
+                            <option value="">-- Select SubCategory --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Amount<span class="text-danger">*</span></label>
+                        <input type="number" id="txtAmount" class="form-control" placeholder="Enter Amount">
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">SubCategory</label>
-                    <select id="ddlSubCategory" class="form-select">
-                        <option value="">-- Select SubCategory --</option>
-                        <!-- populate options dynamically -->
-                    </select>
-                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
+                        <input type="date" id="txtTransactionDate" class="form-control">
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Amount<span class="text-danger">*</span></label>
-                    <input type="number" id="txtAmount" class="form-control" placeholder="Enter Amount">
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Mode</label>
+                        <input type="text" id="txtPaymentMode" class="form-control" placeholder="Enter Payment Mode">
+                    </div>
                 </div>
-
                 <div class="mb-3">
-                    <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
-                    <input type="date" id="txtTransactionDate" class="form-control">
+                        <label class="form-label">Reference No</label>
+                        <input type="text" id="txtReferenceNo" class="form-control" placeholder="Enter Reference No">
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Payment Mode</label>
-                    <input type="text" id="txtPaymentMode" class="form-control" placeholder="Enter Payment Mode">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Reference No</label>
-                    <input type="text" id="txtReferenceNo" class="form-control" placeholder="Enter Reference No">
-                </div>
-
+                <!-- Notes Full Width -->
                 <div class="mb-3">
                     <label class="form-label">Notes</label>
                     <textarea id="txtNotes" class="form-control" rows="3"></textarea>
                 </div>
             </div>
-
             <!-- FOOTER -->
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
@@ -180,7 +180,7 @@
             Notes: $("#txtNotes").val().trim() || null,
             ActionBy: sessionStorage.getItem("userId") ?? 0
         };
-            console.log("SAVE PAYLOAD:", payload);
+           // console.log("SAVE PAYLOAD:", payload);
         $.ajax({
         url: "/api/ExpenseTransactions/SaveExpenseTransaction",
         type: "POST",
@@ -315,9 +315,9 @@
                     Swal.fire("Error", response.message, "error");
                 }
             },
-                error: function (xhr) {
-                        handleApiError(xhr, status, error, "Delete ExpenceTransaction Error")
-            },
+            error: function (xhr, status, error) {
+               handleApiError(xhr, status, error, "Something went wrong!")
+            }
         });
     });
 
@@ -358,7 +358,7 @@
                 });
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Dropdown Load Error");
+                handleApiError(xhr, status, error, "Failed to load dropdown data");
             }
         });
     }
@@ -388,8 +388,8 @@
                     });
                 },
                 error: function (xhr, status, error) {
-                    console.error("Error loading SubCategories:", error);
-                }
+                handleApiError(xhr, status, error, "Failed to load dropdown data");
+            }
             });
         }
 
@@ -422,7 +422,7 @@
                 }
             },
             error: function (xhr, status, error) {
-                console.error("Error loading Accounts:", error);
+                handleApiError(xhr, status, error, "Failed to load dropdown data");
             }
         });
     }
@@ -445,12 +445,12 @@
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            console.log("Expence Transactions:", response);
+            //console.log("Expence Transactions:", response);
             var data = response.data || [];
             renderExpenceTransactionTable(data);
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Get Expence Transactions Error");
+            handleApiError(xhr, status, error, "Something went wrong fetching Expence Transactions.");
         },
         complete: function() {
             $('#btn-loader').hide();
@@ -483,8 +483,8 @@
                 data: null,
                 title: "Actions",
                 render: (row) => `
-                    <button class="btn btn-outline-warning btn-edit"><i class="fa fa-edit"></i></button>
-                    <button class="btn btn-outline-danger btn-delete"><i class="fa fa-trash"></i></button>
+                    <button class="btn btn-outline-warning  btn-action-xs btn-edit"><i class="fa fa-edit"></i></button>
+                    <button class="btn btn-outline-danger  btn-action-xs btn-delete"><i class="fa fa-trash"></i></button>
                 `
             }
         ],

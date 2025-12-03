@@ -37,40 +37,48 @@
             </div>
 
             <div class="modal-body">
-
                 <input type="hidden" id="FundTransferId" value="0">
 
-                <div class="mb-3">
-                    <label class="form-label">From Account<span class="text-danger">*</span></label>
-                    <select id="ddlFromAccount" class="form-select"></select>
-                </div>
+                <div class="row g-3">
 
-                <div class="mb-3">
-                    <label class="form-label">To Account<span class="text-danger">*</span></label>
-                    <select id="ddlToAccount" class="form-select"></select>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">From Account <span class="text-danger">*</span></label>
+                        <select id="ddlFromAccount" class="form-select">
+                            <option value="">-- Select From Account --</option>
+                        </select>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Amount<span class="text-danger">*</span></label>
-                    <input type="number" id="txtAmount" class="form-control" placeholder="Enter Amount">
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">To Account <span class="text-danger">*</span></label>
+                        <select id="ddlToAccount" class="form-select">
+                            <option value="">-- Select To Account --</option>
+                        </select>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Transfer Date<span class="text-danger">*</span></label>
-                    <input type="date" id="txtTransferDate" class="form-control">
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Amount <span class="text-danger">*</span></label>
+                        <input type="number" id="txtAmount" class="form-control" placeholder="Enter Amount">
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Reference No</label>
-                    <input type="text" id="txtReferenceNo" class="form-control" placeholder="Enter Reference No">
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Transfer Date <span class="text-danger">*</span></label>
+                        <input type="date" id="txtTransferDate" class="form-control">
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Notes</label>
-                    <textarea id="txtNotes" class="form-control" rows="3"></textarea>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference No</label>
+                        <input type="text" id="txtReferenceNo" class="form-control" placeholder="Enter Reference No">
+                    </div>
 
+                    <!-- Notes full row -->
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea id="txtNotesFull" class="form-control" rows="3" placeholder="Write full notes..."></textarea>
+                    </div>
+
+                </div>
             </div>
+
 
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
@@ -130,55 +138,48 @@ $(document).ready(function () {
         //loadAccountDropdowns();
         $("#FundTransferModal").modal("show");
     });
-
-// SAVE FUND TRANSFER
-$("#btnSaveFundTransfer").click(function () {
-
-let model = {
-    Id: $("#FundTransferId").val(),
-    FromAccountId: $("#ddlFromAccount").val(),
-    ToAccountId: $("#ddlToAccount").val(),
-    Amount: $("#txtAmount").val(),
-        TransferDate: $("#txtTransferDate").val(),
-    ReferenceNo: $("#txtReferenceNo").val(),
-    Notes: $("#txtNotes").val(),
-    ActionBy: sessionStorage.getItem("userId") ?? 0
-};
-
-if (!model.FromAccountId || !model.ToAccountId || !model.Amount || !model.TransferDate) {
-    Swal.fire("Required", "Please fill all mandatory fields.", "warning");
-    return;
-}
-
-if (model.FromAccountId === model.ToAccountId) {
-    Swal.fire("Invalid", "From Account and To Account cannot be same!", "warning");
-    return;
-}
-
-$.ajax({
-    url: "/api/FundTransfer/SaveFundTransfer",
-    type: "POST",
-    contentType: "application/json",
-    data: JSON.stringify(model),
-    success: function (response) {
-        if (response.status === "Success") {
-            Swal.fire("Success", response.message, "success");
-            $("#FundTransferModal").modal("hide");
-            resetFundTransferForm();
-            fetchFundTransfers(); // Reload grid
-        } else {
-            Swal.fire("Error", response.message, "error");
-        }
-    },
-    error: function (xhr, status, error) {
-           handleApiError(xhr, status, error, "Save FundTransfer Error")
+    // SAVE FUND TRANSFER
+    $("#btnSaveFundTransfer").click(function () {
+    let model = {
+        Id: $("#FundTransferId").val(),
+        FromAccountId: $("#ddlFromAccount").val(),
+        ToAccountId: $("#ddlToAccount").val(),
+        Amount: $("#txtAmount").val(),
+            TransferDate: $("#txtTransferDate").val(),
+        ReferenceNo: $("#txtReferenceNo").val(),
+        Notes: $("#txtNotes").val(),
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+    if (!model.FromAccountId || !model.ToAccountId || !model.Amount || !model.TransferDate) {
+        Swal.fire("Required", "Please fill all mandatory fields.", "warning");
+        return;
     }
-});
-});
-
-
-// Edit button click for Fund Transfer
-$(document).on("click", ".btn-edit", function (event) {
+    if (model.FromAccountId === model.ToAccountId) {
+        Swal.fire("Invalid", "From Account and To Account cannot be same!", "warning");
+        return;
+    }
+    $.ajax({
+        url: "/api/FundTransfer/SaveFundTransfer",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(model),
+        success: function (response) {
+            if (response.status === "Success") {
+                Swal.fire("Success", response.message, "success");
+                $("#FundTransferModal").modal("hide");
+                resetFundTransferForm();
+                fetchFundTransfers(); // Reload grid
+            } else {
+                Swal.fire("Error", response.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+               handleApiError(xhr, status, error, "Save FundTransfer Error")
+        }
+    });
+    });
+    // Edit button click for Fund Transfer
+    $(document).on("click", ".btn-edit", function (event) {
 
  var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
 
@@ -201,7 +202,7 @@ $(document).on("click", ".btn-edit", function (event) {
     var row = $(this).closest('tr');
     var rowData = table.row(row).data();
 
-    console.log("Editing Fund Transfer:", rowData);
+    //console.log("Editing Fund Transfer:", rowData);
 
     // Fill hidden ID field
     $("#FundTransferId").val(rowData.Id);
@@ -237,46 +238,40 @@ $(document).on("click", ".btn-edit", function (event) {
     $("#FundTransferModal").modal("show");
 });
 
-// Delete button click in table
-$(document).on("click", ".btn-delete", function () {
-// Get DataTable instance
-var table = $("#tableTransactions table").DataTable(); // make sure this matches your table id
-var rowData = table.row($(this).closest("tr")).data();
-
-if (!rowData || !rowData.Id) {
-    Swal.fire("Error", "Unable to get selected row data.", "error");
-    return;
-}
-
-// Store Id in modal using jQuery data
-$("#deleteRecordModal").data("id", rowData.Id).modal("show");
-});
+    // Delete button click in table
+    $(document).on("click", ".btn-delete", function () {
+        // Get DataTable instance
+        var table = $("#tableFundTransfer table").DataTable(); // make sure this matches your table id
+        var rowData = table.row($(this).closest("tr")).data();
+        if (!rowData || !rowData.Id) {
+            Swal.fire("Error", "Unable to get selected row data.", "error");
+            return;
+        }
+        // Store Id in modal using jQuery data
+        $("#deleteRecordModal").data("id", rowData.Id).modal("show");
+    });
 
     $("#delete-record").click(function () {
         var id = $("#deleteRecordModal").data("id");
-
         if (!id) {
             Swal.fire("Error", "Record Id not found.", "error");
             return;
         }
-
         $.ajax({
-            url: `/api/FundTransfer/DeleteFundTransfer/${id}`,
-            type: "DELETE",
+            url: `/api/FundTransfer/DeleteFundTransfer`,
+            type: "POST",
             contentType: "application/json",
-            data: JSON.stringify({ ActionBy: sessionStorage.getItem("userId") ?? 0 }),
-            success: function (response) {
+            data: JSON.stringify({ Id: id }),
+                success: function (response) {
                 Swal.fire("Deleted!", response.message || "Record deleted.", "success");
                 $("#deleteRecordModal").modal("hide");
-                fetchExpenceTransactions();
+                    fetchFundTransfers();
             },
-            error: function (xhr) {
-                Swal.fire("Error", xhr.responseText || "Something went wrong!", "error");
+            error: function (xhr, status, error) {
+               handleApiError(xhr, status, error, "Something went wrong!")
             }
         });
     });
-
-
 });
 
 let accountList = [];
@@ -289,40 +284,39 @@ function loadAccountDropdowns() {
         success: function (response) {
 
             accountList = response?.data ?? [];
-            console.log("accountList", accountList);
+            //console.log("accountList", accountList);
 
             bindDropdown("#ddlFromAccount", accountList);
             bindDropdown("#ddlToAccount", accountList);
         },
         error: function (xhr, status, error) {
-            console.error("Error loading account list:", error);
+            handleApiError(xhr, status, error, "Error loading account list")
         }
     });
 }
-    function bindDropdown(selectId, data, excludeId = null, selectedValue = null) {
+function bindDropdown(selectId, data, excludeId = null, selectedValue = null) {
+    $(selectId).empty();
+    $(selectId).append(`<option value="">-- Select Account --</option>`);
 
-        $(selectId).empty();
-        $(selectId).append(`<option value="">-- Select Account --</option>`);
-
-        data.forEach(item => {
-            // allow showing selected value even if matching excludeId
-            if (excludeId == null || item.Id != excludeId || item.Id == selectedValue) {
-                const selected = item.Id == selectedValue ? "selected" : "";
-                $(selectId).append(`<option value="${item.Id}" ${selected}>${item.AccountName}</option>`);
-            }
-        });
-    }
-    $(document).on("change", "#ddlFromAccount", function () {
-        let selectedFrom = $(this).val();
-        let selectedTo = $("#ddlToAccount").val();
-        bindDropdown("#ddlToAccount", accountList, selectedFrom, selectedTo);
+    data.forEach(item => {
+        // allow showing selected value even if matching excludeId
+        if (excludeId == null || item.Id != excludeId || item.Id == selectedValue) {
+            const selected = item.Id == selectedValue ? "selected" : "";
+            $(selectId).append(`<option value="${item.Id}" ${selected}>${item.AccountName}</option>`);
+        }
     });
+}
+$(document).on("change", "#ddlFromAccount", function () {
+    let selectedFrom = $(this).val();
+    let selectedTo = $("#ddlToAccount").val();
+    bindDropdown("#ddlToAccount", accountList, selectedFrom, selectedTo);
+});
 
-    $(document).on("change", "#ddlToAccount", function () {
-        let selectedTo = $(this).val();
-        let selectedFrom = $("#ddlFromAccount").val();
-        bindDropdown("#ddlFromAccount", accountList, selectedTo, selectedFrom);
-    });
+$(document).on("change", "#ddlToAccount", function () {
+    let selectedTo = $(this).val();
+    let selectedFrom = $("#ddlFromAccount").val();
+    bindDropdown("#ddlFromAccount", accountList, selectedTo, selectedFrom);
+});
 
 function resetFundTransferForm() {
     $("#FundTransferForm")[0].reset(); // Agar form id hai
@@ -338,100 +332,91 @@ function resetFundTransferForm() {
     $("#txtAmount").val("");
     $("#txtReferenceNo").val("");
     $("#txtNotes").val("");
-
     // Reset to today's date
-        document.getElementById("txtTransferDate").valueAsDate = new Date();
+    document.getElementById("txtTransferDate").valueAsDate = new Date();
 }
-
 
 // FETCH Fund Transfer Records
 function fetchFundTransfers(fromAccountId = 0, toAccountId = 0, fromDate = "", toDate = "") {
+    $('#btn-loader').show(); // loader dikhao
+    const payload = {
+        Id: 0, // 0 means get all
+        FromAccountId: fromAccountId,
+        ToAccountId: toAccountId,
+        FromDate: fromDate || null,
+        ToDate: toDate || null
+    };
+    $.ajax({
+        url: "/api/FundTransfer/GetFundTransferList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+           // console.log("Fund Transfers:", response);
 
-$('#btn-loader').show(); // loader dikhao
-
-const payload = {
-    Id: 0, // 0 means get all
-    FromAccountId: fromAccountId,
-    ToAccountId: toAccountId,
-    FromDate: fromDate || null,
-    ToDate: toDate || null
-};
-
-$.ajax({
-    url: "/api/FundTransfer/GetFundTransferList",
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify(payload),
-    success: function (response) {
-        console.log("Fund Transfers:", response);
-
-        if (response.status === "Success") {
-            renderFundTransferTable(response.data || []);
-        } else {
-            Swal.fire("Error!", response.message, "error");
+            if (response.status === "Success") {
+                renderFundTransferTable(response.data || []);
+            } else {
+                Swal.fire("Error!", response.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+           handleApiError(xhr, status, error, "Something went wrong fetching Fund Transfers.")
+        },
+        complete: function () {
+            $('#btn-loader').hide(); // loader hide
         }
-    },
-    error: function (xhr, status, error) {
-        console.error("Fetch Error:", error);
-        Swal.fire("Error!", "Something went wrong fetching Fund Transfers.", "error");
-    },
-    complete: function () {
-        $('#btn-loader').hide(); // loader hide
-    }
-});
+    });
 }
 
 function renderFundTransferTable(data) {
 
-if ($.fn.dataTable.isDataTable("#tableFundTransfer table")) {
-    $("#tableFundTransfer table").DataTable().destroy();
+    if ($.fn.dataTable.isDataTable("#tableFundTransfer table")) {
+        $("#tableFundTransfer table").DataTable().destroy();
+    }
+
+    // add Sr.No dynamically
+    data.forEach((x, i) => x.srno = i + 1);
+
+    $("#tableFundTransfer table").DataTable({
+        data: data,
+        columns: [
+            { data: "srno", title: "Sr. No.", className: "text-center" },
+            { data: "FromAccountName", title: "From Account" },
+            { data: "ToAccountName", title: "To Account" },
+            {
+                data: "Amount",
+                title: "Amount",
+                className: "text-end",
+                render: (val) => `<b>₹ ${val.toLocaleString()}</b>`
+            },
+            {
+                data: "TransferDate",
+                title: "Transfer Date",
+                render: (val) => val ? new Date(val).toLocaleDateString("en-IN") : ""
+            },
+            { data: "ReferenceNo", title: "Reference #" },
+            { data: "Notes", title: "Notes" },
+            // ACTION BUTTONS
+            {
+                data: null,
+                title: "Actions",
+                className: "text-center",
+                render: (row) => `
+                            <button class="btn btn-outline-warning btn-sm  btn-action-xs  btn-edit" data-id="${row.Id}">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                            <button class="btn btn-outline-danger  btn-action-xs  btn-sm btn-delete" data-id="${row.Id}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `
+            }
+        ],
+        pageLength: 10,
+        ordering: true,
+        searching: true,
+        pagingType: "full_numbers",
+        responsive: true
+    });
 }
-
-// add Sr.No dynamically
-data.forEach((x, i) => x.srno = i + 1);
-
-$("#tableFundTransfer table").DataTable({
-    data: data,
-    columns: [
-        { data: "srno", title: "Sr. No.", className: "text-center" },
-        { data: "FromAccountName", title: "From Account" },
-        { data: "ToAccountName", title: "To Account" },
-        {
-            data: "Amount",
-            title: "Amount",
-            className: "text-end",
-            render: (val) => `<b>₹ ${val.toLocaleString()}</b>`
-        },
-        {
-            data: "TransferDate",
-            title: "Transfer Date",
-            render: (val) => val ? new Date(val).toLocaleDateString("en-IN") : ""
-        },
-        { data: "ReferenceNo", title: "Reference #" },
-        { data: "Notes", title: "Notes" },
-
-        // ACTION BUTTONS
-        {
-            data: null,
-            title: "Actions",
-            className: "text-center",
-            render: (row) => `
-                <button class="btn btn-warning btn-sm btn-edit" data-id="${row.Id}">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <button class="btn btn-danger btn-sm btn-delete" data-id="${row.Id}">
-                    <i class="fa fa-trash"></i>
-                </button>
-            `
-        }
-    ],
-    pageLength: 10,
-    ordering: true,
-    searching: true,
-    pagingType: "full_numbers",
-    responsive: true
-});
-}
-
-
 </script>

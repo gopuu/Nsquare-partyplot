@@ -91,99 +91,99 @@
 
 <script>
 $(document).ready(function () {
-fetchData();
+    fetchData();
 
-// Add button click
-$(document).on("click", "#btn-add-income", function () {
-
-    var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
-    if (!canAdd) {
-        Swal.fire("Access Denied", "You don't have permission to Add!", "error");
-        return;
-    }
-
-    resetIncomeFields();
-    $("#incomeModalTitle").text("Add Income Category");
-    $("#incomeModal").modal("show");
-});
-
-// Save
-$("#btnSaveIncomeCategory").click(function (e) {
-    e.preventDefault();
-
-    if ($("#incomeName").val().trim() === "") {
-        Swal.fire("Validation", "Category name is required", "warning");
-        return;
-    }
-
-    let payload = {
-        Id: $("#incomeCategoryId").val(),
-        CategoryName: $("#incomeName").val().trim(),
-        Description: $("#incomeDescription").val().trim(),
-        ActionBy: sessionStorage.getItem("userId") ?? 0
-    };
-
-    $.ajax({
-        url: "/api/IncomeCategory/SaveIncomeCategory",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-                 Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
-                $("#incomeModal").modal("hide");
-                fetchData();
-        },
-        error: function (xhr, status, error) {
-          handleApiError(xhr, status, error, "Save IncomeCategory Error")
+    // Add button click
+    $(document).on("click", "#btn-add-income", function () {
+        var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
+        if (!canAdd) {
+            Swal.fire("Access Denied", "You don't have permission to Add!", "error");
+            return;
         }
+
+        resetIncomeFields();
+        $("#incomeModalTitle").text("Add Income Category");
+        $("#incomeModal").modal("show");
     });
-});
 
-// Edit
-$(document).on("click", ".btn-edit", function () {
-    let table = $("#tableIncome table").DataTable();
-    let data = table.row($(this).closest("tr")).data();
-
-    $("#incomeCategoryId").val(data.Id);
-    $("#incomeName").val(data.CategoryName);
-    $("#incomeDescription").val(data.Description);
-
-    $("#incomeModalTitle").text("Edit Income Category");
-    $("#incomeModal").modal("show");
-});
-
-// Delete
-$(document).on("click", ".btn-delete", function () {
-    let table = $("#tableIncome table").DataTable();
-    let row = table.row($(this).closest("tr")).data();
-
-    $("#deleteRecordModal").data("id", row.Id).modal("show");
-});
-
-$("#delete-record").click(function () {
-    let payload = {
-        Id: $("#deleteRecordModal").data("id"),
-        ActionBy: sessionStorage.getItem("userId") ?? 0
-    };
-
-    $.ajax({
-        url: "/api/IncomeCategory/DeleteIncomeCategory",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function () {
-            Swal.fire("Deleted!", "Record deleted successfully!", "success");
-            $("#deleteRecordModal").modal("hide");
-                fetchData();
+    // Save
+    $("#btnSaveIncomeCategory").click(function (e) {
+        e.preventDefault();
+        if ($("#incomeName").val().trim() === "") {
+            Swal.fire("Validation", "Category name is required", "warning");
+            return;
         }
+
+        let payload = {
+            Id: $("#incomeCategoryId").val(),
+            CategoryName: $("#incomeName").val().trim(),
+            Description: $("#incomeDescription").val().trim(),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        $.ajax({
+            url: "/api/IncomeCategory/SaveIncomeCategory",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                     Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved!",
+                        showConfirmButton: false,
+                        timer: 900
+                    });
+                    $("#incomeModal").modal("hide");
+                    fetchData();
+            },
+            error: function (xhr, status, error) {
+                       handleApiError(xhr, status, error, "Save IncomeCategory Error")
+            }
+        });
     });
-});
+
+    // Edit
+    $(document).on("click", ".btn-edit", function () {
+        let table = $("#tableIncome table").DataTable();
+        let data = table.row($(this).closest("tr")).data();
+
+        $("#incomeCategoryId").val(data.Id);
+        $("#incomeName").val(data.CategoryName);
+        $("#incomeDescription").val(data.Description);
+
+        $("#incomeModalTitle").text("Edit Income Category");
+        $("#incomeModal").modal("show");
+    });
+
+    // Delete
+    $(document).on("click", ".btn-delete", function () {
+        let table = $("#tableIncome table").DataTable();
+        let row = table.row($(this).closest("tr")).data();
+
+        $("#deleteRecordModal").data("id", row.Id).modal("show");
+    });
+
+    $("#delete-record").click(function () {
+        let payload = {
+            Id: $("#deleteRecordModal").data("id"),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+
+        $.ajax({
+            url: "/api/IncomeCategory/DeleteIncomeCategory",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function () {
+                Swal.fire("Deleted!", "Record deleted successfully!", "success");
+                $("#deleteRecordModal").modal("hide");
+                    fetchData();
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Something went wrong!")
+            }
+        });
+    });
 
 });
 
@@ -199,12 +199,12 @@ function fetchData() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
-            console.log("response fetchData:", response);
+          //  console.log("response fetchData:", response);
             var data = response.data;
             renderTable(data);
         },
         error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Get Income Category Error")
+               handleApiError(xhr, status, error, "Something went wrong fetching IncomeCategory.")
         }
     });
 }
@@ -224,12 +224,12 @@ $("#tableIncome table").DataTable({
         { data: "CategoryName", title: "Category Name" },
         { data: "Description", title: "Description" },
         {
-            data: null,
-            title: "Actions",
-            render: () => `
-                    <button class="btn btn-outline-warning btn-edit"><i class="fa fa-edit"></i></button>
-                <button class="btn btn-outline-danger btn-delete"><i class="fa fa-trash"></i></button>
-            `
+        data: null,
+        title: "Actions",
+        render: () => `
+                <button class="btn btn-outline-warning btn-action-xs btn-edit"><i class="fa fa-edit"></i></button>
+                <button class="btn btn-outline-danger btn-action-xs btn-delete"><i class="fa fa-trash"></i></button>
+               `
         }
     ]
 });

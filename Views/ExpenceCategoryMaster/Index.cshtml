@@ -30,7 +30,6 @@
 
 </div>
 
-
 <!-- MODAL -->
 <div class="modal fade" id="expenseModal" tabindex="-1">
     <div class="modal-dialog">
@@ -95,9 +94,9 @@
 <script>
 
 $(document).ready(function () {
-   fetchData();
-// Add button click
-$(document).on('click', '#btn-add', function (event) {
+    fetchData();
+    // Add button click
+    $(document).on('click', '#btn-add', function (event) {
         // Check Add Permission from Session or Local Storage
         var canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
         if (!canAdd) {
@@ -117,11 +116,9 @@ $(document).on('click', '#btn-add', function (event) {
         }
     });
 
-$("#btnSaveExpenseCategory").click(function (e) {
+    $("#btnSaveExpenseCategory").click(function (e) {
     e.preventDefault();
-
     if (!validateExpenseForm()) return;
-
     let payload = {
         Id: $("#expenseCategoryId").val(),
         CategoryName: $("#categoryName").val().trim(),
@@ -143,7 +140,7 @@ $("#btnSaveExpenseCategory").click(function (e) {
                 showConfirmButton: false,
                 timer: 900
             });
-         fetchData();
+            fetchData();
         resetFormFields();
         $("#expenseModal").modal("hide");
         } else {
@@ -153,46 +150,42 @@ $("#btnSaveExpenseCategory").click(function (e) {
                        
         },
         error: function (xhr, status, error) {
-              handleApiError(xhr, status, error, "Save PaymentMode Error")
+                 handleApiError(xhr, status, error, "Save Expense Category Error")
         }
     });
-});
 
-$(document).on("click", ".btn-edit", function () {
-        resetFormFields();
-
-        let table = $("#tableMain table").DataTable();
-        let rowData = table.row($(this).closest("tr")).data();
-
-        $("#expenseCategoryId").val(rowData.Id);
-        $("#categoryName").val(rowData.CategoryName);
-        $("#categoryDescription").val(rowData.Description);
-
-        $("#expenseModalTitle").text("Edit Expense Category");
-        $("#expenseModal").modal("show");
     });
+
+    $(document).on("click", ".btn-edit", function () {
+            resetFormFields();
+
+            let table = $("#tableMain table").DataTable();
+            let rowData = table.row($(this).closest("tr")).data();
+
+            $("#expenseCategoryId").val(rowData.Id);
+            $("#categoryName").val(rowData.CategoryName);
+            $("#categoryDescription").val(rowData.Description);
+
+            $("#expenseModalTitle").text("Edit Expense Category");
+            $("#expenseModal").modal("show");
+        });
 
     // Delete button click event
     $(document).on('click', '.btn-delete', function () {
-        let table = $('#tableMain table').DataTable();
-        let rowData = table.row($(this).closest('tr')).data();
-
-        $("#deleteRecordModal")
-            .data("id", rowData.Id)
-            .modal("show");
+    let table = $('#tableMain table').DataTable();
+    let rowData = table.row($(this).closest('tr')).data();
+    $("#deleteRecordModal")
+        .data("id", rowData.Id)
+        .modal("show");
     });
-
-        $("#delete-record").click(function () {
-
+    $("#delete-record").click(function () {
         let id = $("#deleteRecordModal").data("id");
-
         let payload = {
             Id: id,
             ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
         $('#btn-loader').show();
-
         $.ajax({
             url: "/api/ExpenseCategory/DeleteExpenseCategory",
             type: "POST",
@@ -224,22 +217,18 @@ $(document).on("click", ".btn-edit", function () {
                 $("#deleteRecordModal").modal("hide");
                 fetchData(); // Refresh data
             },
-
             error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "Delete Expense Category Error");
             },
-
             complete: function () {
                 $('#btn-loader').hide();
             }
         });
     });
-
 });
 
 function renderTable(data) {
-    console.log("ExpenseCategory Data:", data);
-
+    //console.log("ExpenseCategory Data:", data);
     // Destroy existing DataTable if already initialized
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
@@ -269,50 +258,48 @@ function renderTable(data) {
     data.forEach((item, index) => {
         item.srno = index + 1;
     });
-
     // Build DataTable
-$('#tableMain table').DataTable({
-        data: data,
-        columns: [
-            { data: 'srno', title: 'Sr. No.' },
-            { data: 'CategoryName', title: 'Category Name' },
-            { data: 'Description', title: 'Description' },
-            {
-                data: null,
-                title: 'Actions',
-                render: function (data, type, row) {
-                    return `
-                        <div class="d-flex flex-column flex-sm-row gap-2">
+    $('#tableMain table').DataTable({
+    data: data,
+    columns: [
+        { data: 'srno', title: 'Sr. No.' },
+        { data: 'CategoryName', title: 'Category Name' },
+        { data: 'Description', title: 'Description' },
+        {
+            data: null,
+            title: 'Actions',
+            render: function (data, type, row) {
+                return `
+                    <div class="d-flex flex-column flex-sm-row gap-2">
 
-                            <button class="btn btn-outline-warning btn-action-xs btn-edit">
-                                <i class="fa fa-edit"></i>
-                            </button>
+                        <button class="btn btn-outline-warning btn-action-xs btn-edit">
+                            <i class="fa fa-edit"></i>
+                        </button>
 
-                            <button class="btn btn-outline-danger btn-action-xs btn-delete">
-                                <i class="fa fa-trash"></i>
-                            </button>
+                        <button class="btn btn-outline-danger btn-action-xs btn-delete">
+                            <i class="fa fa-trash"></i>
+                        </button>
 
-                        </div>
-                    `;
-                }
+                    </div>
+                `;
             }
-        ],
-        columnDefs: [
-            { targets: 0, className: "text-center" },
-            { targets: 3, className: "text-center" }
-        ],
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: false,
-        pagingType: "full_numbers"
-});
+        }
+    ],
+    columnDefs: [
+        { targets: 0, className: "text-center" },
+        { targets: 3, className: "text-center" }
+    ],
+    pageLength: 10,
+    ordering: true,
+    searching: true,
+    lengthChange: false,
+    pagingType: "full_numbers"
+    });
 }
 
  function fetchData() {
     $('#btn-loader').show();
     $('.search').val('');
-
     $.ajax({
         url: "/api/ExpenseCategory/GetExpenseCategoryList",
         method: "POST",
@@ -325,7 +312,7 @@ $('#tableMain table').DataTable({
             renderTable(data);
         },
         error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Get Expense Category Error")
+               handleApiError(xhr, status, error, "Something went wrong fetching ExpenseCategory data.")
         }
     });
 }

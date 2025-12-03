@@ -64,23 +64,22 @@
 
                     <!-- BANK FIELDS -->
                     <div class="col-12"><hr></div>
-
-                    <div class="col-md-3 bank-field">
+                    <div class="col-md-4 bank-field">
                         <label class="form-label">Bank Name</label>
                         <input type="text" id="bankName" class="form-control">
                     </div>
 
-                    <div class="col-md-3 bank-field">
+                    <div class="col-md-4 bank-field">
                         <label class="form-label">Branch</label>
                         <input type="text" id="branchName" class="form-control">
                     </div>
 
-                    <div class="col-md-3 bank-field">
+                    <div class="col-md-4 bank-field">
                         <label class="form-label">IFSC</label>
                         <input type="text" id="ifsc" class="form-control">
                     </div>
 
-                    <div class="col-md-3 bank-field">
+                    <div class="col-md-4 bank-field">
                         <label class="form-label">Account Number</label>
                         <input type="text" id="accountNumber" class="form-control">
                     </div>
@@ -145,15 +144,13 @@ $(document).ready(function () {
     loadAccountTypeDropdown();
 
     $("#btn-add").click(function () {
-
         if (!checkPermission("CanAdd")) return;
-
         resetForm();
         $("#accountModalTitle").text("Add Account");
         $("#accountModal").modal("show");
-});
+    });
 
-function loadAccountTypeDropdown() {
+    function loadAccountTypeDropdown() {
     $.ajax({
         type: "POST",
         url: "/api/AccountTypeMaster/GetAccountTypeList",
@@ -177,57 +174,54 @@ function loadAccountTypeDropdown() {
             handleApiError(xhr, status, error, "Error loading Account Type");
         }
     });
-}
-$("#btnSaveAccount").click(function () {
-    if (!validateForm()) return;
-    saveAccount();
-});
+    }
 
-$(document).on("click", ".btn-edit", function () {
+    $("#btnSaveAccount").click(function () {
+        if (!validateForm()) return;
+        saveAccount();
+    });
 
-    // Permission check
-    if (!checkPermission("CanEdit")) return;
+    $(document).on("click", ".btn-edit", function () {
+        // Permission check
+        if (!checkPermission("CanEdit")) return;
+        resetForm(); // Clear previous data
+        // Get datatable row data
+        let table = $("#tableMain table").DataTable();
+        let rowData = table.row($(this).closest("tr")).data();
 
-    resetForm(); // Clear previous data
+        // Fill modal fields
+        $("#accountId").val(rowData.Id);
+        $("#accountName").val(rowData.AccountName);
+        $("#accountType").val(rowData.AccountType).trigger("change");
+        $("#openingBalance").val(rowData.OpeningBalance);
+        $("#currentBalance").val(rowData.CurrentBalance);
 
-    // Get datatable row data
-    let table = $("#tableMain table").DataTable();
-    let rowData = table.row($(this).closest("tr")).data();
+        // Bank fields
+        $("#bankName").val(rowData.BankName);
+        $("#branchName").val(rowData.BranchName);
+        $("#ifsc").val(rowData.IFSC);
+        $("#accountNumber").val(rowData.AccountNumber);
+        $("#accountHolderName").val(rowData.AccountHolderName);
 
-    // Fill modal fields
-    $("#accountId").val(rowData.Id);
-    $("#accountName").val(rowData.AccountName);
-    $("#accountType").val(rowData.AccountType).trigger("change");
-    $("#openingBalance").val(rowData.OpeningBalance);
-    $("#currentBalance").val(rowData.CurrentBalance);
+        // UPI
+        $("#upiId").val(rowData.UPI_Id);
 
-    // Bank fields
-    $("#bankName").val(rowData.BankName);
-    $("#branchName").val(rowData.BranchName);
-    $("#ifsc").val(rowData.IFSC);
-    $("#accountNumber").val(rowData.AccountNumber);
-    $("#accountHolderName").val(rowData.AccountHolderName);
+        // General fields
+        $("#description").val(rowData.Description);
+        $("#isDefaultAccount").prop("checked", rowData.IsDefaultAccount);
 
-    // UPI
-    $("#upiId").val(rowData.UPI_Id);
+        // Change modal title and open modal
+        $("#accountModalTitle").text("Edit Account");
+        $("#accountModal").modal("show");
+    });
 
-    // General fields
-    $("#description").val(rowData.Description);
-    $("#isDefaultAccount").prop("checked", rowData.IsDefaultAccount);
-
-    // Change modal title and open modal
-    $("#accountModalTitle").text("Edit Account");
-    $("#accountModal").modal("show");
-});
-$(document).on("click", ".btn-delete", function () {
-    if (!checkPermission("CanDelete")) return;
-
-    let table = $("#tableMain table").DataTable();
-    let data = table.row($(this).closest("tr")).data();
-
-    $("#deleteModal").data("id", data.Id).modal("show");
-});
-    $("#confirmDelete").click(deleteAccount);
+    $(document).on("click", ".btn-delete", function () {
+        if (!checkPermission("CanDelete")) return;
+        let table = $("#tableMain table").DataTable();
+        let data = table.row($(this).closest("tr")).data();
+        $("#deleteModal").data("id", data.Id).modal("show");
+    });
+        $("#confirmDelete").click(deleteAccount);
 });
 
 // PERMISSION CHECK
@@ -238,23 +232,23 @@ function checkPermission(type) {
 }
 // FETCH DATA
 function fetchData() {
-        $.ajax({
-            url: "/api/AccountMaster/GetAccount",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ Id: 0 }),
-            success: function (res) {
-                if (res.status === "Success") {
-                    renderTable(res.data);
-                } else {
-                    console.warn("API Error:", res.message);
-                }
-            },
-            error: function (err) {
-                    handleApiError(xhr, status, error, "Get PaymentMode Error")
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            if (res.status === "Success") {
+                renderTable(res.data);
+            } else {
+                console.warn("API Error:", res.message);
             }
-        });
-    }
+        },
+        error: function (xhr, status, error) {
+               handleApiError(xhr, status, error, "Something went wrong fetching Account Data")
+        },
+    });
+}
 
 // RENDER TABLE
 function renderTable(data) {
@@ -298,16 +292,17 @@ $("#tableMain table").DataTable({
             title: "Action",
             orderable: false,
             render: (data, type, row) => `
-                <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${row.Id}">
+                    <button class="btn btn-sm btn-outline-warning btn-action-xs btn-edit" data-id="${row.Id}">
                     <i class="fa fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${row.Id}">
+                    <button class="btn btn-sm btn-outline-danger btn-action-xs btn-delete" data-id="${row.Id}">
                     <i class="fa fa-trash"></i>
                 </button>`
         }
     ]
 });
 }
+
  // RESET FORM
  function resetForm() {
     $("input, textarea").val("");
@@ -344,8 +339,7 @@ function saveAccount() {
         Description: $("#description").val(),
         IsDefaultAccount: $("#isDefaultAccount").is(":checked"),
         ActionBy: sessionStorage.getItem("userId") ?? 0
-};
-
+    };
     $.ajax({
         url: "/api/AccountMaster/SaveAccount",
         type: "POST",
@@ -355,13 +349,16 @@ function saveAccount() {
             Swal.fire("Saved!", "", "success");
             $("#accountModal").modal("hide");
             fetchData();
-        }
+        },
+        error: function (xhr, status, error) {
+               handleApiError(xhr, status, error, "Save Account Error")
+       }
     });
 }
+
 // DELETE
 function deleteAccount() {
     let id = $("#deleteModal").data("id");
-
     $.ajax({
         url: "/api/AccountMaster/DeleteAccount",
         type: "POST",
@@ -371,9 +368,13 @@ function deleteAccount() {
             Swal.fire("Deleted!", "", "success");
             $("#deleteModal").modal("hide");
             fetchData();
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Something went wrong!")
         }
     });
 }
+
 // VALIDATION
 function validateForm() {
     if ($("#accountName").val().trim() === "") {

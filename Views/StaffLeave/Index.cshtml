@@ -1,0 +1,395 @@
+﻿@{
+    ViewData["Title"] = "StaffLeave";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-8">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Staff Leave Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add Staff Leave
+                        </button>
+                    </div>
+
+                    <div id="tableMain">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ADD / EDIT MODAL -->
+<!-- STAFF LEAVE MODAL -->
+<div class="modal fade" id="staffLeaveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="staffLeaveTitle">Add Staff Leave</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="staffLeaveId" value="0">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Staff <span class="text-danger">*</span></label>
+                        <select id="ddlStaff" class="form-select"></select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Leave Type</label>
+                        <select id="ddlLeaveType" class="form-select"></select>
+                    </div>
+
+                    <div class="col-6">
+                        <label class="form-label">From Date</label>
+                        <input type="date" id="fromDate" class="form-control">
+                    </div>
+
+                    <div class="col-6">
+                        <label class="form-label">To Date</label>
+                        <input type="date" id="toDate" class="form-control">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Reason</label>
+                        <textarea id="reason" class="form-control" rows="2" placeholder="Enter Reason"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Status</label>
+                        <select id="ddlStatus" class="form-select">
+                           
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning" id="btnSaveStaffLeave">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+
+<script>
+$(document).ready(function () {
+fetchStaffLeave();
+
+$(document).on("click", ".btn-edit", function () {
+    const table = $("#tableMain table").DataTable();
+    const row = table.row($(this).closest("tr")).data();
+    resetForm();
+    $('#staffLeaveId').val(row.Id);
+    loadDropdowns({
+        StaffId: row.StaffId,
+        LeaveTypeId: row.LeaveTypeId,
+        StatusId: row.StatusId
+    });
+
+    if (row.FromDate) {
+        const date = new Date(row.FromDate);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+        $('#fromDate').val(`${yyyy}-${mm}-${dd}`);
+    }
+   
+    if (row.ToDate) {
+            const date = new Date(row.ToDate);
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        $('#toDate').val(`${yyyy}-${mm}-${dd}`);
+    }
+  
+    $("#reason").val(row.Reason);
+    $('#staffLeaveTitle').text("Edit Staff Leave");
+    $('#staffLeaveModal').modal('show');
+});
+
+$(document).on('click', '#btn-add', function () {
+    resetForm();
+    loadDropdowns(); 
+    $('#staffLeaveTitle').text("Add Staff Leave");
+    $('#staffLeaveModal').modal('show');
+});
+
+function loadDropdowns(selected = {}) {
+    loadStaffDropdown(selected.StaffId);
+    loadLeaveTypeDropdown(selected.LeaveTypeId);
+    loadStatusDropdown(selected.StatusId);
+}
+
+$("#btnSaveStaffLeave").click(function () {
+
+    let payload = {
+        Id: Number($("#staffLeaveId").val() || 0),
+        StaffId: Number($("#ddlStaff").val()),
+        LeaveTypeId: Number($("#ddlLeaveType").val()),
+        FromDate: $("#fromDate").val(),
+        ToDate: $("#toDate").val(),
+        Reason: $("#reason").val(),
+        StatusId: Number($("#ddlStatus").val()),
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+
+    $.ajax({
+        url: "/api/StaffLeave/SaveStaffLeave",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: (res) => {
+            if (res.status === "Success") {
+                $('#staffLeaveModal').modal('hide');
+                   Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 1200
+                        });
+                fetchStaffLeave();
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        }
+    });
+});
+
+// Delete button click
+$(document).on('click', '.btn-delete', function () {
+    const canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
+    if (!canDelete) {
+        Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
+        return;
+    }
+    let table = $('#tableMain table').DataTable();
+    let rowData = table.row($(this).closest('tr')).data();
+    $("#deleteRecordModal")
+        .data("id", rowData.Id)
+        .modal("show");
+});
+
+// Confirm Delete
+$("#delete-record").click(function () {
+    let id = $("#deleteRecordModal").data("id");
+    let payload = {
+        Id: id,
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+    $('#btn-loader').show();
+    $.ajax({
+        url: "/api/StaffLeave/DeleteStaffLeave",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+
+        success: function (response) {
+            if (typeof response === "string") {
+                response = JSON.parse(response);
+            }
+            if (response.status === "Success") {
+
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Leave Type Deleted!",
+                    showConfirmButton: false,
+                    timer: 1000
+                });
+
+            } else {
+                Swal.fire("Delete Failed", response.message, "error");
+            }
+
+            $("#deleteRecordModal").modal("hide");
+            fetchStaffLeave(); // reload updated list
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Delete Leave Type Error");
+        },
+        complete: function () {
+            $('#btn-loader').hide();
+        }
+    });
+});
+});
+
+
+function loadStaffDropdown(selectedId = 0) {
+    $.ajax({
+        url: "/api/StaffMaster/GetStaffMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            let ddl = $("#ddlStaff");
+            ddl.empty();
+            ddl.append(`<option value="">-- Select Staff --</option>`);
+
+            if (res.data && res.data.length > 0) {
+                res.data.forEach(row => {
+                    ddl.append(`<option value="${row.Id}">${row.Name}</option>`);
+                });
+
+                if (selectedId) ddl.val(selectedId);
+            }
+        }
+    });
+}
+
+function loadLeaveTypeDropdown(selectedId = 0) {
+    $.ajax({
+        url: "/api/LeaveTypeMaster/GetLeaveTypeMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            let ddl = $("#ddlLeaveType");
+            ddl.empty();
+            ddl.append(`<option value="">-- Select Leave Type --</option>`);
+
+            res.data?.forEach(row => {
+                ddl.append(`<option value="${row.Id}">${row.LeaveTypeName}</option>`);
+            });
+
+            if (selectedId) ddl.val(selectedId);
+        }
+    });
+}
+
+function loadStatusDropdown(selectedId = 0) {
+    $.ajax({
+        url: "/api/StatusMaster/GetStatusMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            let ddl = $("#ddlStatus");
+            ddl.empty();
+            ddl.append(`<option value="">-- Select Status --</option>`);
+
+            res.data?.forEach(row => {
+                ddl.append(`<option value="${row.Id}">${row.StatusName}</option>`);
+            });
+
+            if (selectedId) ddl.val(selectedId);
+        }
+    });
+}
+
+
+// FETCH DATA
+function fetchStaffLeave() {
+    $.ajax({
+        url: "/api/StaffLeave/GetStaffLeave",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: (res) => renderTable(res.data ?? [])
+    });
+}
+
+function renderTable(data) {
+
+    if ($.fn.DataTable.isDataTable("#tableMain table")) {
+        $("#tableMain table").DataTable().destroy();
+    }
+
+    data.forEach((x, i) => x.srno = i + 1);
+
+    $("#tableMain table").DataTable({
+        data,
+        columns: [
+            { data: "srno", title: "Sr No" },
+            { data: "StaffName", title: "Staff" },
+            { data: "LeaveTypeName", title: "Leave Type" },
+            {
+            data: "FromDate",
+            title: "FromDate",
+            render: function(d) {
+                if (!d) return '';
+                let date = new Date(d);
+                return date.toLocaleDateString(); // shows only date
+            }
+            },
+            {
+            data: "ToDate",
+            title: "ToDate",
+            render: function(d) {
+                if (!d) return '';
+                let date = new Date(d);
+                return date.toLocaleDateString(); // shows only date
+            }
+            },
+            { data: "Reason", title: "Reason" },
+            {
+             data: "StatusName", title: "Status",
+            },
+            {
+            data: "Id",
+            title: "Actions",
+            render: id => `
+                        <button class="btn btn-outline-warning btn-sm btn-edit btn-action-xs"><i class="fa fa-edit"></i></button>
+                        <button class="btn btn-outline-danger btn-sm btn-delete btn-action-xs" data-id="${id}"><i class="fa fa-trash"></i></button>`
+            }
+        ]
+    });
+}
+
+function resetForm() {
+    $("#staffLeaveId").val(0);
+    $("#ddlStaff").val("");
+    $("#ddlLeaveType").val("");
+    $("#fromDate").val("");
+    $("#toDate").val("");
+    $("#reason").val("");
+    $("#ddlStatus").val(1);
+}
+</script>
