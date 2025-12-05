@@ -3070,9 +3070,9 @@
                     Swal.fire("Error", response.message, "error");
                 }
             },
-            error: function () {
-                Swal.fire("Error", "Something went wrong!", "error");
-            }
+             error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Error");
+        }
         });
     }
 

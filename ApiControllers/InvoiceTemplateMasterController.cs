@@ -214,7 +214,7 @@ namespace ERPAdmin.ApiControllers
         }
 
         //------------- PurchaseInvoiceDefault1 PDF (A4 Portrait) ---------------------
-        public (string pdfUrl, string imageUrl, string pdfFileName, string imgFileName) GetPdfAndImageUrl(string connString, string domain, string domainUrl, long templateId, string methodName)
+        private (string pdfUrl, string imageUrl, string pdfFileName, string imgFileName) GetPdfAndImageUrl(string connString, string domain, string domainUrl, long templateId, string methodName)
         {
             string baseDir = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "invoiceTemplate");
             if (!Directory.Exists(baseDir)) Directory.CreateDirectory(baseDir);
