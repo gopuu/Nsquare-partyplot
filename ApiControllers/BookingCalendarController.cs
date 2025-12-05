@@ -3,6 +3,8 @@ using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using Humanizer;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -18,12 +20,23 @@ namespace ERPAdmin.ApiControllers
     {
         //private readonly IConfiguration _configuration;
         //private readonly ConnClass _connClass;
+        private readonly string domainUrl;
         private string connString = string.Empty;
+        private readonly IWebHostEnvironment _env;
 
-        public BookingCalendarController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public BookingCalendarController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
+            _env = env;
+            var request = httpContextAccessor.HttpContext?.Request;
+            domainUrl = $"{request?.Scheme}://{request?.Host.Value}";
+
+            // Force HTTPS if needed
+            if (!domainUrl.Contains("localhost") && domainUrl.StartsWith("http://") && !domainUrl.Contains("tenxsoftwarek-001-site1"))
+            {
+                domainUrl = domainUrl.Replace("http://", "https://");
+            }
             //_configuration = configuration;
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
@@ -399,6 +412,77 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.data = null;
                 return StatusCode(500, apiResponse);
             }
+        }
+
+
+        [HttpPost]
+        [Route("GeneratePackageReport")]
+        public IActionResult GeneratePackageReport([FromBody] PackageReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (request == null || request.BookingId <= 0)
+                    return BadRequest(new { status = "Error", message = "Invalid Request" });
+
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string conn, out string domain, out IActionResult error))
+                    return error;
+
+                //bool iswithprice = Convert.ToBoolean(request.IsWithPrice);
+
+                // Now pass the bool
+                string pdfPath = GeneratePDF(domain, domainUrl, request.IsWithPrice);
+
+                return Ok(new
+                {
+                    status = "Success",
+                    data = new { FilePath = pdfPath }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = "Error", message = ex.Message });
+            }
+        }
+
+
+
+        private string GeneratePDF(string domain, string domainUrl, bool isWithPrice)
+        {
+            MemoryStream stream = new();
+            Document doc = new(PageSize.A4, 30, 30, 30, 30);
+            PdfWriter writer = PdfWriter.GetInstance(doc, stream);
+
+            doc.Open();
+
+            doc.Add(new Paragraph("PACKAGE DETAILS", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+
+            if (isWithPrice)
+                doc.Add(new Paragraph("Price: ₹ 50,000", FontFactory.GetFont(FontFactory.HELVETICA, 12)));
+            else
+                doc.Add(new Paragraph("Price: -----------", FontFactory.GetFont(FontFactory.HELVETICA, 12)));
+
+            doc.Close();
+            writer.Close();
+
+            string reportsDirPath = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "PackageReports");
+
+            if (!Directory.Exists(reportsDirPath))
+                Directory.CreateDirectory(reportsDirPath);
+            string fileName = $"Package_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string filePath = Path.Combine(reportsDirPath, fileName);
+            System.IO.File.WriteAllBytes(filePath, stream.ToArray());
+
+            return $"{domainUrl}/uploads/org/{domain}/PackageReports/{fileName}";
+        }
+
+
+        public class PackageReportRequest
+        {
+            public long BookingId { get; set; }
+            public bool IsWithPrice { get; set; } 
         }
 
     }

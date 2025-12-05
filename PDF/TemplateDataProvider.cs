@@ -20,6 +20,7 @@ namespace ERPAdmin.PDF
             return dt;
         }
 
+      
         public static DataSet GetInvoiceData()
         {
             DataSet ds = new DataSet();
@@ -52,5 +53,7 @@ namespace ERPAdmin.PDF
 
             return ds;
         }
+
+        
     }
 }

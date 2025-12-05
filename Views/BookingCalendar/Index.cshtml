@@ -2,10 +2,10 @@
     ViewData["Title"] = "Booking Calendar";
     Layout = "_Layout";
 }
-@* <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
+<link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
 <link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
- *@
+
 <!--Booking View MODAL-->
 <style>
     .card-body .d-flex:hover {
@@ -1006,6 +1006,10 @@
 </div>
 <!-- CANCEL BOOKING MODAL -- END -->
 
+<!-- Generate PDF With Price & Without Price -- START -->
+
+
+<!-- Generate PDF With Price & Without Price -- END -->
 <!--MAIN JS -- START-->
 <script>
     // NEW
@@ -2767,10 +2771,15 @@
 
         //BOOKING REPORT MODAL ---- START ------------------------------------------------
         // 🧾 Download Function Prospect
+        // document.getElementById("btnDownloadPDF").addEventListener("click", function () {
+        //     const bookingId = getBookingId();
+        //     console.log("📄 Download Function Prospect clicked - Booking ID:", bookingId);
+        // });
         document.getElementById("btnDownloadPDF").addEventListener("click", function () {
-            const bookingId = getBookingId();
-            console.log("📄 Download Function Prospect clicked - Booking ID:", bookingId);
-        });
+             showReportOptions();
+       });
+
+
 
         // 🖨️ Print Function Prospect
         document.getElementById("btnPrintProspect").addEventListener("click", function () {
@@ -3002,6 +3011,72 @@
 
         //BOOKING REPORT MODAL ---- END  -------------------------------------------------
     });
+
+    // GenerateWithoutPrice & GenerateWithPrice
+       function showReportOptions() {
+
+        Swal.fire({
+            title: "Select Report Type",
+            icon: "info",
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: "With Price",
+            denyButtonText: "Without Price",
+            cancelButtonText: "Close",
+        }).then((result) => {
+
+        if (result.isConfirmed) {
+            generateReport(true);  // With Price
+        }
+        else if (result.isDenied) {
+            generateReport(false); // Without Price
+        }
+
+        });
+    }
+
+    function generateReport(isWithPrice) {
+
+        let bookingId = getBookingId();
+
+        Swal.fire({
+            title: "Generating PDF...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        $.ajax({
+            url: "/api/BookingCalendar/GeneratePackageReport",
+            method: "POST",
+            data: JSON.stringify({ BookingId: bookingId, IsWithPrice: isWithPrice }),
+            contentType: "application/json",
+            success: function (response) {
+
+                Swal.close();
+
+                if (response.status === "Success" && response.data?.FilePath) {
+                    //window.open(response.data.FilePath, "_blank");
+                    let fileUrl = response.data.FilePath;
+
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = fileUrl.split('/').pop(); // extract filename
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                }
+                else {
+                    Swal.fire("Error", response.message, "error");
+                }
+            },
+            error: function () {
+                Swal.fire("Error", "Something went wrong!", "error");
+            }
+        });
+    }
+
+
 
     // 🧠 Helper to get the modal booking ID
     function getBookingId() {

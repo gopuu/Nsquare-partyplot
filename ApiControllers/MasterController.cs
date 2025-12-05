@@ -24,27 +24,37 @@ namespace ERPAdmin.ApiControllers
             _connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
 
-        protected bool TryGetConnectionAndDomain(ControllerContext controllerContext, HttpRequest request,
-                                                 out string connString, out string domain, out IActionResult errorResult)
+        protected bool TryGetConnectionAndDomain(
+    ControllerContext controllerContext,
+    HttpRequest request,
+    out string connString,
+    out string domain,
+    out IActionResult errorResult)
         {
-            var apiResponse = new apiResponse();
             connString = _connClass.GetChildConnectionString();
             domain = _connClass.GetDomainName();
             errorResult = null;
 
+           var apiResponse = new apiResponse();
+
+            // Validation Check
             if (string.IsNullOrEmpty(connString) || string.IsNullOrEmpty(domain))
             {
                 string errorLog = _connClass.GetChildErrorLog();
-                ErrorLogger.LogException(new Exception(errorLog), controllerContext, request, connString);
+               ErrorLogger.LogException(new Exception(errorLog), controllerContext, request, connString);
 
+                // Create response
                 apiResponse.message = errorLog;
                 apiResponse.status = "Failed";
+
                 errorResult = new OkObjectResult(apiResponse);
+
                 return false;
             }
 
             return true;
         }
+
     }
 
 }

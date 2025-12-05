@@ -2,6 +2,7 @@
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ERPAdmin.Services;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
@@ -11,12 +12,14 @@ public class StaffDocumentsController : MasterController
 {
     private readonly string domainUrl;
     private string connString = string.Empty;
-
-    public StaffDocumentsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+    private readonly ImageUploadService _imageUploadService;
+    public StaffDocumentsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService)
         : base(configuration, httpContextAccessor)
     {
+        _imageUploadService = imageUploadService;
         var request = httpContextAccessor.HttpContext?.Request;
         domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+        _imageUploadService = imageUploadService;
     }
 
     // ====================== GET ======================
@@ -39,7 +42,6 @@ public class StaffDocumentsController : MasterController
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
-                cmd.Parameters.AddWithValue("@StaffId", request.StaffId == 0 ? 0 : request.StaffId);
 
                 con.Open();
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -52,9 +54,14 @@ public class StaffDocumentsController : MasterController
                 {
                     Id = Convert.ToInt64(row["Id"]),
                     StaffId = Convert.ToInt64(row["StaffId"]),
+                    StaffName = Convert.ToString(row["StaffName"]),
                     DocumentType = Convert.ToString(row["DocumentType"]),
                     DocumentName = Convert.ToString(row["DocumentName"]),
-                    FilePath = Convert.ToString(row["FilePath"])
+                    //  FilePath = Convert.ToString(row["FilePath"]),
+                    FilePath = row["FilePath"] != DBNull.Value
+                                && !string.IsNullOrEmpty(row["FilePath"].ToString())
+                            ? domainUrl + "/uploads/org/" + domain + "/StaffMaster/Documents/" + row["FilePath"].ToString()
+                            : string.Empty,
                 });
             }
 
@@ -95,11 +102,31 @@ public class StaffDocumentsController : MasterController
                 cmd.Parameters.AddWithValue("@StaffId", model.StaffId);
                 cmd.Parameters.AddWithValue("@DocumentType", (object)model.DocumentType ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@DocumentName", (object)model.DocumentName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@FilePath", (object)model.FilePath ?? DBNull.Value);
+                cmd.Parameters.Add("@FilePath", SqlDbType.NVarChar).Value = DBNull.Value;
                 cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                 con.Open();
                 rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                string latestImagePath = string.Empty;
+                //photo upload
+                if (model.FilePath != string.Empty && model.FilePath != null)
+                {
+                    string imgType = _imageUploadService.GetFileTypeFromBase64(model.FilePath);
+
+                    string folderPath = $"org/{domain}/StaffMaster/Documents/"; // Updated to include domain
+                    _imageUploadService.DeleteImages(folderPath, $"StaffId_{rowId.ToString()}");
+                    model.FilePath = _imageUploadService.UploadImage(model.FilePath, folderPath, $"StaffId_{rowId.ToString()}", imgType);
+
+                    //update table
+                    SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
+                    cmd2.CommandType = CommandType.StoredProcedure;
+                    cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
+                    cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.FilePath; // Kept max for nvarchar(max)
+                    cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "StaffDocuments";
+                    cmd2.ExecuteNonQuery();
+
+                    latestImagePath = $"{domainUrl}/uploads/org/{domain}/StaffMaster/Documents/{model.FilePath}";
+                }
             }
 
             apiResponse.message = model.Id > 0 ? "Document updated successfully!" : "Document inserted successfully!";

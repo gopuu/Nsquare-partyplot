@@ -39,7 +39,7 @@ public class StaffSalaryController : MasterController
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
-                cmd.Parameters.AddWithValue("@StaffId", request.StaffId == 0 ? 0 : request.StaffId);
+              //  cmd.Parameters.AddWithValue("@StaffId", request.StaffId == 0 ? 0 : request.StaffId);
 
                 con.Open();
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -52,11 +52,13 @@ public class StaffSalaryController : MasterController
                 {
                     Id = Convert.ToInt64(row["Id"]),
                     StaffId = Convert.ToInt64(row["StaffId"]),
+                    StaffName = Convert.ToString(row["StaffName"]),
                     SalaryMonth = Convert.ToString(row["SalaryMonth"]),
                     BasicSalary = row["BasicSalary"] == DBNull.Value ? 0 : Convert.ToDecimal(row["BasicSalary"]),
                     Deductions = row["Deductions"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Deductions"]),
                     NetSalary = row["NetSalary"] == DBNull.Value ? 0 : Convert.ToDecimal(row["NetSalary"]),
                     StatusId = row["StatusId"] == DBNull.Value ? null : Convert.ToInt64(row["StatusId"]),
+                    StatusName = Convert.ToString(row["StatusName"]),
                     PaidDate = row["PaidDate"] == DBNull.Value ? null : Convert.ToString(row["PaidDate"])
                 });
             }

@@ -21,7 +21,7 @@
         public string? Password { get; set; }
         public bool? IsSuperUser { get; set; }
         public bool? IsAutoLogin { get; set; }
-        public string? gcm { get; set; }
+       
 
         public string? Bank_Name { get; set; }
         public string? Bank_BranchName { get; set; }
@@ -59,8 +59,7 @@
         public string? Password { get; set; }
         public bool? IsSuperUser { get; set; }
         public bool? IsAutoLogin { get; set; }
-        public string? gcm { get; set; }
-        public string? UploadInvoiceFile { get; set; }
+      
         public string? Bank_Name { get; set; }
         public string? Bank_BranchName { get; set; }
         public string? Bank_IFSC { get; set; }
@@ -97,7 +96,6 @@
         public string? Password { get; set; }
         public bool? IsSuperUser { get; set; }
         public bool? IsAutoLogin { get; set; }
-        public string? gcm { get; set; }
 
         public string? Bank_Name { get; set; }
         public string? Bank_BranchName { get; set; }

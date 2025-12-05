@@ -1,5 +1,6 @@
 ﻿
 using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.EMMA;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
@@ -64,13 +65,16 @@ public class StaffMasterController : MasterController
                     AadharCardNo = Convert.ToString(row["AadharCardNo"]),
                     JoiningDate = row["JoiningDate"] == DBNull.Value ? null : Convert.ToString(row["JoiningDate"]),
                     Salary = row["Salary"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Salary"]),
-                    Photo = Convert.ToString(row["Photo"]),
+                    //Photo = Convert.ToString(row["Photo"]),
+                    Photo = row["Photo"] != DBNull.Value
+                                && !string.IsNullOrEmpty(row["Photo"].ToString())
+                            ? domainUrl + "/uploads/org/" + domain + "/StaffMaster/Photo/" + row["Photo"].ToString()
+                            : string.Empty,
+
                     User_Name = Convert.ToString(row["UserName"]),
                     Password = Convert.ToString(row["Password"]),
                     IsSuperUser = row["IsSuperUser"] == DBNull.Value ? null : Convert.ToBoolean(row["IsSuperUser"]),
                     IsAutoLogin = row["IsAutoLogin"] == DBNull.Value ? null : Convert.ToBoolean(row["IsAutoLogin"]),
-                    gcm = Convert.ToString(row["gcm"]),
-
                     Bank_Name = Convert.ToString(row["Bank_Name"]),
                     Bank_BranchName = Convert.ToString(row["Bank_BranchName"]),
                     Bank_IFSC = Convert.ToString(row["Bank_IFSC"]),
@@ -127,12 +131,11 @@ public class StaffMasterController : MasterController
                 cmd.Parameters.AddWithValue("@JoiningDate", (object)model.JoiningDate ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Salary", model.Salary);
 
-                cmd.Parameters.AddWithValue("@Photo", (object)model.Photo ?? DBNull.Value);
+                cmd.Parameters.Add("@Photo", SqlDbType.NVarChar).Value = DBNull.Value;
                 cmd.Parameters.AddWithValue("@UserName", (object)model.User_Name ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Password", (object)model.Password ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsSuperUser", (object)model.IsSuperUser ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsAutoLogin", (object)model.IsAutoLogin ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@gcm", (object)model.gcm ?? DBNull.Value);
 
                 cmd.Parameters.AddWithValue("@Bank_Name", (object)model.Bank_Name ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Bank_BranchName", (object)model.Bank_BranchName ?? DBNull.Value);
@@ -147,23 +150,23 @@ public class StaffMasterController : MasterController
                 rowId = Convert.ToInt64(cmd.ExecuteScalar());
                 string latestImagePath = string.Empty;
                 //photo upload
-                if (model.UploadInvoiceFile != string.Empty && model.UploadInvoiceFile != null)
+                if (model.Photo != string.Empty && model.Photo != null)
                 {
-                    string imgType = _imageUploadService.GetFileTypeFromBase64(model.UploadInvoiceFile);
+                    string imgType = _imageUploadService.GetFileTypeFromBase64(model.Photo);
 
                      string folderPath = $"org/{domain}/StaffMaster/Photo/"; // Updated to include domain
                     _imageUploadService.DeleteImages(folderPath, $"StaffId_{rowId.ToString()}");
-                    model.UploadInvoiceFile = _imageUploadService.UploadImage(model.UploadInvoiceFile, folderPath, $"StaffId_{rowId.ToString()}", imgType);
+                    model.Photo = _imageUploadService.UploadImage(model.Photo, folderPath, $"StaffId_{rowId.ToString()}", imgType);
 
                     //update table
                     SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
                     cmd2.CommandType = CommandType.StoredProcedure;
                     cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
-                    cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.UploadInvoiceFile; // Kept max for nvarchar(max)
+                    cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.Photo; // Kept max for nvarchar(max)
                     cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "StaffMaster";
                     cmd2.ExecuteNonQuery();
 
-                    latestImagePath = $"{domainUrl}/uploads/org/{domain}/StaffMaster/Photo/{model.UploadInvoiceFile}";
+                    latestImagePath = $"{domainUrl}/uploads/org/{domain}/StaffMaster/Photo/{model.Photo}";
                 }
 
             }

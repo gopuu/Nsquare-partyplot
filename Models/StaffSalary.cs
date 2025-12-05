@@ -43,6 +43,8 @@
         public long Id { get; set; }
         public long StaffId { get; set; }
         public string? SalaryMonth { get; set; }
+        public string? StatusName { get; set; }
+        public string? StaffName { get; set; }
         public decimal BasicSalary { get; set; }
         public decimal Deductions { get; set; }
         public decimal NetSalary { get; set; }

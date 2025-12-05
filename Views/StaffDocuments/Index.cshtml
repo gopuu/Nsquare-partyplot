@@ -1,0 +1,379 @@
+﻿@{
+    ViewData["Title"] = "Staff Documents";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-8">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Staff Documents</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add Staff Documents
+                        </button>
+                    </div>
+
+                    <div id="tableStaffDocuments">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="staffDocModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="staffDocModalTitle">Add  Staff Document</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="docId" value="0" />
+
+                <label class="form-label">Staff <span class="text-danger">*</span></label>
+                <select id="ddlStaff" class="form-select"></select>
+
+                <label class="form-label mt-2">Document Type</label>
+                <input type="text" id="txtDocType" class="form-control" placeholder="Ex: Aadhar, PAN, Resume">
+
+                <label class="form-label mt-2">Document Name</label>
+                <input type="text" id="txtDocName" class="form-control" placeholder="Enter File Name">
+
+                <label class="form-label mt-2">Upload File</label>
+                <div class="d-flex align-items-center">
+                    <input type="file" id="txtDocFile" class="form-control me-2" accept="application/pdf,image/*" style="width:85%;">
+                    <button id="btnDownloadDocFile" class="btn btn-outline-primary btn-sm d-none" type="button">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+                <input type="hidden" id="fileBase64" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-warning" id="btnSaveDoc">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+
+
+<script>
+    function getBase64File(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const base64 = e.target.result.split(',')[1];
+            callback(base64);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function loadStaffDropdown(selectedId = null) {
+        $.ajax({
+            url: "/api/StaffMaster/GetStaffMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: 0 }),
+            success: function (response) {
+                let ddl = $("#ddlStaff");
+                ddl.empty().append(`<option value="">-- Select Staff --</option>`);
+
+                response.data.forEach(staff => {
+                    ddl.append(`<option value="${staff.Id}">${staff.Name}</option>`);
+                });
+
+                if (selectedId) ddl.val(selectedId);
+            },
+            error: function (xhr, status, error) {
+                        handleApiError(xhr, status, error, "Failed to load dropdown data");
+                }
+        });
+    }
+
+    $(document).ready(function () {
+        loadStaffDropdown();
+        resetDocuments();
+        fetchStaffDocuments();
+
+        $(document).on("click", "#btn-add", function () {
+            resetDocuments();
+            $("#staffDocModalTitle").text("Add Staff Document");
+            $("#staffDocModal").modal("show");
+        });
+
+        $("#btnSaveDoc").on("click", function () {
+            const staffId = $("#ddlStaff").val();
+            if (!staffId) {
+                Swal.fire("Required", "Please select staff", "warning");
+                return;
+            }
+            let fileInput = $("#txtDocFile").get(0);
+            let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+            function saveDocument(fileBase64) {
+                const payload = {
+                    Id: Number($("#docId").val() || 0),
+                    StaffId: Number(staffId),
+                    DocumentType: $("#txtDocType").val() || null,
+                    DocumentName: $("#txtDocName").val() || null,
+                    FilePath: fileBase64,
+                    ActionBy: sessionStorage.getItem("userId") || 0
+                };
+                    console.log("payload:",payload);
+                $.ajax({
+                    url: "/api/StaffDocuments/SaveStaffDocuments",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    success: function (res) {
+                        Swal.fire("Success", res.message, "success");
+                        $("#staffDocModal").modal("hide");
+                        fetchStaffDocuments();
+                    },
+                    error: function (xhr, status, error) {
+                        handleApiError(xhr, status, error, "Save StaffDocuments  Error")
+                        }
+                });
+            }
+            if (file)
+                getBase64File(file, saveDocument);
+            else
+                saveDocument(null);
+        });
+
+        $(document).on("click", ".btn-edit", function () {
+
+            // Permission Check (same logic as staff edit)
+            const canEdit = (sessionStorage.getItem("CanEdit") || localStorage.getItem("CanEdit")) === "true";
+            if (!canEdit) {
+                Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
+                return;
+            }
+            // Get row data from table
+            const table = $("#tableStaffDocuments table").DataTable();
+            const rowData = table.row($(this).closest("tr")).data();
+           // console.log("Edit Document Row:", rowData);
+            resetDocuments(); // Clear previous modal values
+
+            // ------- Fill Modal fields --------
+            $("#docId").val(rowData.Id);// Hidden ID
+            $("#ddlStaff").val(rowData.StaffId).trigger("change");
+            $("#txtDocType").val(rowData.DocumentType);
+            $("#txtDocName").val(rowData.DocumentName);
+      
+            // If file exists, show "Download"
+            if (rowData.FilePath && rowData.FilePath !== "") {
+                $("#btnDownloadDocFile")
+                .removeClass("d-none")
+                .data("file", rowData.FilePath);  // <-- THIS
+                } else {
+                $("#btnDownloadDocFile").addClass("d-none").data("file", "");
+            }
+            // Update Modal Title & Button Text
+            $("#staffDocModalTitle").text("Edit Staff Document");
+            $("#btnSaveDoc").text("Update");
+            // Show Modal
+            $("#staffDocModal").modal("show");
+        });
+
+        // Delete button click in table
+        $(document).on("click", ".btn-delete", function () {
+            // Get DataTable instance
+            var table = $("#tableStaffDocuments table").DataTable(); // make sure this matches your table id
+            var rowData = table.row($(this).closest("tr")).data();
+            if (!rowData || !rowData.Id) {
+                Swal.fire("Error", "Unable to get selected row data.", "error");
+                return;
+            }
+            // Store Id in modal using jQuery data
+            $("#deleteRecordModal").data("id", rowData.Id).modal("show");
+
+        });
+        // Confirm delete
+        $("#delete-record").click(function () {
+            var id = $("#deleteRecordModal").data("id");
+            if (!id) {
+            Swal.fire("Error", "Record Id not found.", "error");
+            return;
+            }
+            let payload = {
+                Id: id,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+
+            $.ajax({
+                url: "/api/StaffDocuments/DeleteStaffDocuments",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire("Deleted!", response.message, "success");
+                        $("#deleteRecordModal").modal("hide");
+                        // Reload table
+                        fetchStaffDocuments();
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr, status, error) {
+                        handleApiError(xhr, status, error, "Something went wrong!");
+                }
+            });
+        });
+    });
+
+    $("#btnDownloadDocFile").on("click", function () {
+        let fileUrl = $(this).data("file") || $("#fileBase64").val();
+
+        if (!fileUrl || fileUrl.trim() === "") {
+            Swal.fire("Error", "File not found!", "error");
+            return;
+        }
+
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = fileUrl.split("/").pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    function resetDocuments() {
+        $("#docId").val(0);
+        $("#ddlStaff").val("").trigger("change");
+        $("#txtDocType").val("");
+        $("#txtDocName").val("");
+        $("#txtDocFile").val("");
+        $("#fileBase64").val("");
+
+        $("#btnDownloadDocFile").addClass("d-none");  // hide download
+        $("#btnSaveDoc").text("Save");
+        $("#staffDocModalTitle").text("Add Staff Document");
+    }
+
+    // Fetch Staff Documents
+    function fetchStaffDocuments(staffId = 0) {
+
+        $('#btn-loader').show();
+        const payload = {
+            Id: 0    
+        
+        };
+
+        $.ajax({
+            url: "/api/StaffDocuments/GetStaffDocuments",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                const data = response.data || [];
+                renderStaffDocumentsTable(data);
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Error fetching staff documents");
+            },
+            complete: function () {
+                $('#btn-loader').hide();
+            }
+        });
+    }
+
+    function renderStaffDocumentsTable(data) {
+
+        if ($.fn.dataTable.isDataTable("#tableStaffDocuments table")) {
+            $("#tableStaffDocuments table").DataTable().destroy();
+        }
+
+        // Add Serial Number
+        data.forEach((item, index) => item.srno = index + 1);
+
+        $("#tableStaffDocuments table").DataTable({
+            data: data,
+            columns: [
+                { data: "srno", title: "Sr No", className: "text-center" },
+                { data: "StaffName", title: "Staff" },
+                { data: "DocumentType", title: "Type" },
+                { data: "DocumentName", title: "Name" },
+                {
+                    data: null,
+                    title: "Actions",
+                    render: function (row) 
+                    {
+                        let actionBtns = `
+                        <button class="btn btn-outline-warning btn-action-xs btn-edit">
+                        <i class="fa fa-edit"></i>
+                        </button>
+
+                        <button class="btn btn-outline-danger btn-action-xs btn-delete">
+                        <i class="fa fa-trash"></i>
+                        </button>
+                        `;
+
+                        // File Exists → Show Download Button
+                        if (row.FilePath && row.FilePath.trim() !== "") {
+                            actionBtns += `
+                            <a href="${row.FilePath}" target="_blank" class="btn btn-outline-info btn-action-xs">
+                            <i class="fa fa-download"></i>
+                            </a>
+                            `;
+                        }
+                        else {
+                            actionBtns += `
+                            <span class="text-muted ms-2">No File</span>
+                            `;
+                        }
+
+                        return actionBtns;
+                    }
+                }
+
+            ],
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: false,
+            pagingType: "full_numbers"
+        });
+    }
+
+</script>
