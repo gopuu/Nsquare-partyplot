@@ -1076,9 +1076,9 @@ namespace ERPAdmin.ApiControllers
                         report.UpdatedBy = dr["UpdatedBy"].ToString();
                         report.UpdatedOn = dr["UpdatedOn"].ToString();
                         report.Comment = dr["Comment"].ToString();
-                        //report.PrimaryPackage = dr["PrimaryPackage"].ToString();
-                        //report.PackageRate = Convert.ToDecimal(dr["PackageRate"]);
-                        //report.PackageAmount = Convert.ToDecimal(dr["PackageAmount"]);
+                        report.PrimaryPackage = dr["PrimaryPackage"].ToString();
+                        report.PackageRate = Convert.ToDecimal(dr["RatePerPlate"]);
+                        report.Mukhwas = Convert.ToString(dr["Mukhwas"]);
                         report.TotalPaid = Convert.ToDecimal(dr["TotalPaid"]);
                         report.OutstandingAmount = Convert.ToDecimal(dr["OutstandingAmount"]);
                         report.BookingDiscount = Convert.ToDecimal(dr["BookingDiscount"]);
@@ -1093,10 +1093,11 @@ namespace ERPAdmin.ApiControllers
                         {
                             report.PackageItems.Add(new PackageItem
                             {
+                                Date = dr["Date"].ToString(),
                                 Title = dr["Title"].ToString(),
                                 PackageName = dr["PackageName"].ToString(),
                                 Rate = Convert.ToDecimal(dr["Rate"]),
-                                Qty = Convert.ToInt32(dr["Qty"]),
+                                Pax = Convert.ToInt32(dr["Pax"]),
                                 Amount = Convert.ToDecimal(dr["Amount"]),
                                 Addon = dr["Addon"].ToString(),
                                 Total = Convert.ToDecimal(dr["Total"])
@@ -1291,7 +1292,7 @@ namespace ERPAdmin.ApiControllers
                 if (isWithPrice)
                 {
                     table.AddCell(new PdfPCell(new Phrase(item.Rate.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
-                    table.AddCell(new PdfPCell(new Phrase(item.Qty.ToString(), rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
+                    table.AddCell(new PdfPCell(new Phrase(item.Pax.ToString(), rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Amount.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Addon, rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Total.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
@@ -1482,7 +1483,7 @@ namespace ERPAdmin.ApiControllers
                 if (isWithPrice)
                 {
                     table.AddCell(new PdfPCell(new Phrase(item.Rate.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
-                    table.AddCell(new PdfPCell(new Phrase(item.Qty.ToString(), rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
+                    table.AddCell(new PdfPCell(new Phrase(item.Pax.ToString(), rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Amount.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Addon, rowFont)) { HorizontalAlignment = Element.ALIGN_CENTER, Padding = 4 });
                     table.AddCell(new PdfPCell(new Phrase(item.Total.ToString("N0"), rowFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Padding = 4 });
@@ -1616,11 +1617,12 @@ public class BookingReportModel
 
 public class PackageItem
 {
-    public string Title { get; set; }
-    public string PackageName { get; set; }
+    public string? Date { get; set; }
+    public string? Title { get; set; }
+    public string? PackageName { get; set; }
     public decimal Rate { get; set; }
-    public int Qty { get; set; }
+    public decimal Pax { get; set; }
     public decimal Amount { get; set; }
-    public string Addon { get; set; }
+    public string? Addon { get; set; }
     public decimal Total { get; set; }
 }

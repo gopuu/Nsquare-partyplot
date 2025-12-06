@@ -85,7 +85,7 @@
                 <h5 class="modal-title text-white">Booking Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <div class="modal-body">
                 <form id="bookingForm">
                     <div class="row g-3 align-items-center mb-1">
@@ -520,7 +520,6 @@
     </div>
 </div>
 <!--AddOns -- MODAL -- END -->
-
 <!--Menu Item-- MODAL -- START -->
 <div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -542,7 +541,6 @@
     </div>
 </div>
 <!--Menu Item-- MODAL -- END -->
-
 <!-- Booking Info Modal -- START -->
 <div class="modal fade" id="bookingReportModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -979,7 +977,6 @@
     </div>
 </div>
 <!-- Booking Info Modal -- END -->
-
 <!-- CANCEL BOOKING MODAL -- START -->
 <div class="modal fade" id="cancelBookingModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1005,13 +1002,112 @@
     </div>
 </div>
 <!-- CANCEL BOOKING MODAL -- END -->
+<!-- paymentModal -- START -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white">Add Payment Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="row">
+                        <input type="hidden" id="paymentBookingId">
 
-<!-- Generate PDF With Price & Without Price -- START -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Mode</label>
+                            <select class="form-select" id="PaymentDetails_Mode">
+                                <option value="1">Cash</option>
+                                <option value="2">Cheque</option>
+                                <option value="3">Online</option>
+                                <option value="4">Credit/Debit CCard</option>
+                                <option value="5">discount</option>
+                            </select>
+                        </div>
 
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Date Of Payment</label>
+                            <input type="date" id="paymentDate" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Payment Time</label>
+                            <input type="time" id="paymentTime" class="form-control">
+                        </div>
 
-<!-- Generate PDF With Price & Without Price -- END -->
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Transaction </label>
+                            <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Cheque Bank</label>
+                            <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
+                        </div>
+
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Cheque No</label>
+                            <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Cheque Date</label>
+                            <input type="date" id="paymentChequeDate" class="form-control">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Amount</label>
+                            <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Due Balance</label>
+                            <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Next Due Date</label>
+                            <input type="date" id="NextDueDate" class="form-control">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <input type="button" id="btnwritrnote" class="btn btn-primary" value="Writer Note">
+                            <div class="Payment_editorsContainer" style="display:none;">
+                                <!-- Hidden text editor -->
+                                <div class="col-md-12" id="noteEditor">
+                                    <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" type="reset">Reset</button>
+                <button class="btn btn-outline-primary" id="btnSavePayment">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- paymentModal -- END -->
 <!--MAIN JS -- START-->
 <script>
+    $(document).ready(function () {
+        $("#btnwritrnote").click(function () {
+
+            let editor = $(".Payment_editorsContainer");
+
+            if (editor.is(":visible")) {
+                editor.hide();
+                $(this).val("Write Note");
+            } else {
+                editor.show();
+                $(this).val("Write Note");
+            }
+        });
+    });
+
     // NEW
     var banquetHallsList = [
       // { id: 1, name: "LAXMAN" },
@@ -1155,9 +1251,9 @@
             url: "/api/State/GetStateList",
             type: "POST",
             contentType: "application/json",
-            data: JSON.stringify({ 
+            data: JSON.stringify({
                 Id: 0     // or specific Id if needed
-            }),            
+            }),
             success: function (response) {
                 //console.log("state list response:", response);
                 if (response.status === "Success") {
@@ -1854,7 +1950,7 @@
 
         // Store the selected items for later use
         addonButton.data("selected-AddOnItems", selectedItems);
-    }    
+    }
     //Food Addons ----- /END ------------------------------------------------------------------
 
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -2023,7 +2119,7 @@
         headerLabel.innerHTML = `<div>${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-4">Enquiries</div>`;
         dateRow.appendChild(headerLabel);
 
-        //Column Header -> Date - Day - Enquiry Count 
+        //Column Header -> Date - Day - Enquiry Count
         cachedDays.forEach(d => {
             const cell = document.createElement("div");
             cell.className = "text-center small fw-bold border rounded p-1 bg-light day-cell";
@@ -2045,7 +2141,7 @@
         banquetHallsList.forEach(hall=>{
             const row = document.createElement("div");
             row.className="row-wrapper align-items-center";
-            
+
             //Hall Name - Left Side
             const nameCell = document.createElement("div");
             nameCell.className="text-center rounded p-2 name-cell";
@@ -2119,7 +2215,7 @@
                     let isBooked = false;
                     if (Array.isArray(bookingData)) {
                         for (const booking of bookingData) {
-                            if (booking.BanquetId === hall.Id && booking.ShiftCode === shiftCode) 
+                            if (booking.BanquetId === hall.Id && booking.ShiftCode === shiftCode)
                             {
                                 const fromDate = new Date(booking.FromDate);
                                 const tillDate = new Date(booking.TillDate);
@@ -2466,9 +2562,9 @@
         });
     }
     */
-    
+
     //shift/cell click event
-    function attachShiftClickListeners() { 
+    function attachShiftClickListeners() {
         document.querySelectorAll("#booking-board .badge, #listTable .badge").forEach(badge => {
             badge.style.cursor = "pointer";
             badge.addEventListener("click", () => {
@@ -2594,6 +2690,8 @@
         const addonModal = document.getElementById('addonChargeModal');
         const bookingModal = document.getElementById('bookingModal');
         const menuModal = document.getElementById('menuModal');
+        const bookingReportModal = document.getElementById('bookingReportModal');
+        const paymentModal = document.getElementById('paymentModal');
 
         // Create booking modal instance manually
         const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -2618,6 +2716,34 @@
             if (backdrop) backdrop.style.display = "block";
         });
 
+        // Create payment modal instance manually
+        //const paymentModalInstance = new bootstrap.Modal(paymentModal);
+
+        //hide/show PAYMENT MODAL ----- START --------------------------
+        paymentModal.addEventListener('show.bs.modal', function () {
+            console.log("paymentModal SHOW");
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
+            // Also hide backdrop manually
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.style.display = "none";
+        });
+
+        paymentModal.addEventListener('hidden.bs.modal', function () {
+            console.log("paymentModal HIDE");
+            // Show booking modal visually again (no reset, same position)
+            bookingReportModal.classList.add("show");
+            bookingReportModal.style.display = "block";
+
+            // Show backdrop again
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.style.display = "block";
+        });
+        //hide/show PAYMENT MODAL ----- END --------------------------
+
+
         //hide/show MENU MODAL ----- START --------------------------
         menuModal.addEventListener('show.bs.modal', function () {
             // Just hide visually (do not destroy modal state)
@@ -2639,6 +2765,7 @@
             if (backdrop) backdrop.style.display = "block";
         });
         //hide/show MENU MODAL ----- END --------------------------
+
 
         //Menu Item - START ----- START ---------------------------
         $('#menuModal').on('click', '.btn-success', function () {
@@ -2779,18 +2906,18 @@
              showReportOptions();
        });
 
-
-
         // 🖨️ Print Function Prospect
         document.getElementById("btnPrintProspect").addEventListener("click", function () {
             const bookingId = getBookingId();
             console.log("🖨️ Print Function Prospect clicked - Booking ID:", bookingId);
         });
 
-        // 💳 Enter Payment Details
-        document.getElementById("btnEnterPayment").addEventListener("click", function () {
-            const bookingId = getBookingId();
+        // Open payment modal safely
+        document.getElementById('btnEnterPayment').addEventListener('click', function () {
+            const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
             console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
+            $("#paymentModal").modal("show");
+            //paymentModalInstance.show();
         });
 
         // 📢 Request Feedback
@@ -3137,7 +3264,7 @@
     function loadBookingCalendar(bookingId=0, banquetId=0, eventDate=null, actionMode="fullData") {
         var requestData = {
             BookingId: bookingId,
-            BanquetId: banquetId, 
+            BanquetId: banquetId,
             EventDate: eventDate
         };
 
@@ -3217,7 +3344,7 @@
                         //Open REPORT MODAL
                         bookingReportModal.show();
                     }
-                } 
+                }
                 else {
                     console.warn("API returned error:", response.message);
                     Swal.fire({
@@ -3274,7 +3401,7 @@
             EventDate: $label.data("eventdate"),
             ShiftCode: $label.data("shiftid"),
             GSTAccepted: $("#gstSwitch").is(":checked"),
-            
+
             //Dates
             BanquetId: parseInt($("#banquetDropdown").val() || 0),
             FromDate: $("#fromDate").val(),
@@ -3284,7 +3411,7 @@
             StartTime: `${$("#startHour").val()}:${$("#startMinute").val()} ${$("#startAMPM").val()}`,
             EndTime: `${$("#endHour").val()}:${$("#endMinute").val()} ${$("#endAMPM").val()}`,
 
-            // Client Info            
+            // Client Info
             Client_EnquiryId: parseInt($("#clientEnquiryDropdown").val() || 0),
             Client_Name: $("#clientName").val(),
             Client_Email: $("#clientEmail").val(),
@@ -3321,7 +3448,7 @@
             OtherCharges_ProjectorScreen_GST: parseFloat($("#OtherCharges_ProjectorScreen_GST").val() || 0),
             OtherCharges_BookingNoteForCustomer: customerNote,
             OtherCharges_InternalOfficeNote: internalNote,
-            
+
             // ✅ Payment Summary
             PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text() || 0),
             PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text() || 0),
@@ -3348,7 +3475,7 @@
             // Get common elements
             const $dropdown = $row.find(".foodPackageDropdown, #foodPackage_PackageDropdown");
             const selectedMenuItems = $dropdown.data("selectedItems") || [];
-            
+
             const $dropdown_AddOns = $row.find(".foodPackage_AddOnItems");
             const selectedAddOnCharges = $dropdown_AddOns.data("selected-AddOnItems") || [];
 
@@ -3385,7 +3512,7 @@
                 foodPackage.FoodPackageTitleName = $packageNameInput.val() || '';
                 foodPackage.Pax = $paxInput.val() || 0;
                 foodPackage.FoodPackageDateTime = $dateInput.val() ? `${$dateInput.val()} ${timeString}` : '';
-            } 
+            }
             else {
                 console.log("static row only");
                 // For first row, set default values for optional fields
@@ -3425,7 +3552,7 @@
                     loadBookingCalendar();
                     //CLOSE MODAL
                     bookingModal.hide();
-                } 
+                }
                 else {
                     Swal.fire({
                         title: "Booking Save Failed",
@@ -3566,7 +3693,6 @@
 
 </script>
 <!--MAIN JS -- /END-->
-
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">
 <style>
@@ -3708,13 +3834,18 @@
         modules: { toolbar: toolbarOptions }
     });
 
+     var noteEditor = new Quill('#noteEditor', {
+        theme: 'snow',
+        modules: { toolbar: toolbarOptions }
+    });
+
+
     var otherCharges_internalEditor = new Quill('#OtherCharges_internalEditor', {
         theme: 'snow',
         modules: { toolbar: toolbarOptions }
     });
 </script>
 <!--Booking Note - text Editor --- END ---->
-
 <!-- Time format  --START- Include Flatpickr CSS & JS -->
 <script>
     // Optional: Auto-correct minute/hour inputs
