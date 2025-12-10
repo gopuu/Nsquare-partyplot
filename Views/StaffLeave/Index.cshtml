@@ -309,7 +309,7 @@ function loadStatusDropdown(selectedId = 0) {
         url: "/api/StatusMaster/GetStatusMaster",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: 0 }),
+        data: JSON.stringify({ Id: 0, StatusType: "Leave" }),
         success: function (res) {
             let ddl = $("#ddlStatus");
             ddl.empty();

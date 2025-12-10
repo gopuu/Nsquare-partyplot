@@ -30,7 +30,8 @@
         public decimal EstimatedAmount { get; set; }
         public long LeadSourceId { get; set; }
         public string? LeadSourceName { get; set; }
-        public string Remarks { get; set; }
+        public string? Remarks { get; set; }
+        public long FollowUpCount { get; set; }
     }
     public class SaveEnquiryDeal : BaseClass
     {

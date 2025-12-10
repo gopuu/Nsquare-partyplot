@@ -2,7 +2,7 @@
 
 namespace ERPAdmin.Controllers
 {
-    public class ExpenceSubCategoryMasterController : Controller
+    public class ExpenseCategoryMasterController : Controller
     {
         public IActionResult Index()
         {

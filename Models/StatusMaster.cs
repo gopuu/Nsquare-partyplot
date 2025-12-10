@@ -12,7 +12,8 @@
 
     public class GetStatusMasterRequest
     {
-        public long Id { get; set; }
+        public long? Id { get; set; }
+        public string? StatusType { get; set; }
     }
 
     public class SaveStatusMasterRequest

@@ -29,6 +29,170 @@ namespace ERPAdmin.ApiControllers
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
 
+        [HttpPost]
+        [Route("GetLeadSourceStatistics")]
+        public IActionResult GetLeadSourceStatistics([FromBody] LeadSourceStatisticsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<LeadSourceStatisticsResponse> resultList = new List<LeadSourceStatisticsResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_LeadSourceStatistics", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@YearId", (object?)request.YearId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@MonthId", (object?)request.MonthId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@IncludeAmount", request.IncludeAmount);
+                    cmd.Parameters.AddWithValue("@LeadReferenceId", (object?)request.LeadReferenceId ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    resultList.Add(new LeadSourceStatisticsResponse
+                    {
+                        LeadSourceId = Convert.ToInt64(row["LeadSourceId"]),
+                        LeadSourceName = Convert.ToString(row["LeadSourceName"]),
+                        BookingCount = Convert.ToInt32(row["BookingCount"]),
+                        TotalAmount = row["TotalAmount"] == DBNull.Value ? null : Convert.ToDecimal(row["TotalAmount"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Lead source statistics fetched successfully.";
+                apiResponse.data = resultList;
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetOverallBookingStatistics")]
+        public IActionResult GetOverallBookingStatistics([FromBody] OverallBookingStatsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<OverallBookingStatsResponse> resultList = new List<OverallBookingStatsResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_OverallBookingStatistics", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@YearId", request.YearId);
+                    cmd.Parameters.AddWithValue("@MonthId", (object?)request.MonthId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@BookingQty", request.BookingQty);
+                    cmd.Parameters.AddWithValue("@BookingAmount", request.BookingAmount);
+                    cmd.Parameters.AddWithValue("@EventTypeId", (object?)request.EventTypeId ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    resultList.Add(new OverallBookingStatsResponse
+                    {
+                        MonthNo = Convert.ToInt32(row["MonthNo"]),
+                        MonthName = Convert.ToString(row["MonthName"]),
+                        BookingCount = row["BookingCount"] == DBNull.Value ? null : Convert.ToInt32(row["BookingCount"]),
+                        BookingAmount = row["BookingAmount"] == DBNull.Value ? null : Convert.ToDecimal(row["BookingAmount"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Overall booking statistics fetched successfully.";
+                apiResponse.data = resultList;
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetDashboardWidgetCounts")]
+        public IActionResult GetDashboardWidgetCounts()
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardWidgetCountsResponse result = new DashboardWidgetCountsResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_WidgetCounts", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+
+                    result.DashboardStats = row["DashboardStats"].ToString();
+                    result.Chart_CorporateVsFamily = row["Chart_CorporateVsFamily"].ToString();
+                    result.Chart_CorporateSubTypes = row["Chart_CorporateSubTypes"].ToString();
+                    result.Chart_FamilySubTypes = row["Chart_FamilySubTypes"].ToString();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard widgets fetched successfully.";
+                apiResponse.data = result;
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
+
+        //UNUSED
+        /*
         [HttpGet]
         [Route("GetProcessListWithDeals")]
         public IActionResult GetProcessListWithDeals()
@@ -107,6 +271,6 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
+        */
     }
 }

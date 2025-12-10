@@ -1544,7 +1544,7 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                     return errorResult;
 
-                string baseDir = Path.Combine(_env.WebRootPath, "uploads", "PackageReports");
+                string baseDir = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "PackageReports"); //here
                 if (!Directory.Exists(baseDir)) Directory.CreateDirectory(baseDir);
 
                 string fileName = $"Package_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
@@ -1554,7 +1554,7 @@ namespace ERPAdmin.ApiControllers
                 var builder = new BookingReportTemplateBuilder(_env);
                 builder.Generate_BookingReport_A4_Portrait(pdfPath);
 
-                string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/PackageReports/{fileName}";
+                string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/org/{domain}/PackageReports/{fileName}";
 
                 apiResponse.status = "Success";
                 apiResponse.data = fileUrl;

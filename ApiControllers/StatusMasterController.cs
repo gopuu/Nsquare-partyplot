@@ -39,6 +39,7 @@ public class StatusMasterController : MasterController
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
+                cmd.Parameters.AddWithValue("@StatusType", request.StatusType);
 
                 con.Open();
                 SqlDataReader dr = cmd.ExecuteReader();

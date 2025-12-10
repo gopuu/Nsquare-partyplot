@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Expence SubCategory Master";
+    ViewData["Title"] = "Expense SubCategory Master";
     Layout = "_Layout";
 }
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
@@ -13,9 +13,9 @@
             <div class="col-12 col-xxl-6">
                 <div class="mb-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 text-warning">Expence SubCategory Master</h4>
+                        <h4 class="mb-0 text-warning">Expense SubCategory Master</h4>
                         <button class="btn btn-outline-warning" id="btn-add">
-                            <i class="fa fa-plus-circle"></i> Add Expence SubCategory
+                            <i class="fa fa-plus-circle"></i> Add Expense SubCategory
                         </button>
                     </div>
 
@@ -37,7 +37,7 @@
 
             <!-- HEADER -->
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title text-white" id="addEventModalTitle">Add Expence SubCategory Master</h5>
+                <h5 class="modal-title text-white" id="addEventModalTitle">Add Expense SubCategory Master</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
@@ -46,8 +46,8 @@
                 <input type="hidden" id="SubCategoryId" value="0">
                 <div class="row g-3">
                     <div class="col-12">
-                        <select id="ddlExpenceCategory" class="form-select">
-                            <option value="">-- Select Expence Category --</option>
+                        <select id="ddlExpenseCategory" class="form-select">
+                            <option value="">-- Select Expense Category --</option>
                         </select>
                     </div>
                     <!-- SubCategory Name -->
@@ -111,7 +111,7 @@
 <script>
 $(document).ready(function () {
 fetchData();
-loadExpenceCategoryDropdown();
+loadExpenseCategoryDropdown();
 
 // Add button click
 $(document).on('click', '#btn-add', function (event) {
@@ -129,7 +129,7 @@ if (!canAdd) {
     $('#addEventModal').modal('hide');
 } else {
     resetFormFields(); // Reset form fields when modal is shown
-        $("#addEventModalTitle").text("Add Expence SubCategory");
+        $("#addEventModalTitle").text("Add Expense SubCategory");
     $("#addEventModal").modal("show");
 }
 });
@@ -142,12 +142,12 @@ event.preventDefault();
 if (!validateForm()) return;
 
     let id = $("#SubCategoryId").val();  // hidden field for edit
-    let categoryId = $("#ddlExpenceCategory").val();
+    let categoryId = $("#ddlExpenseCategory").val();
     let subCategoryName = $("#SubCategoryName").val().trim();
     let description = $("#SubCategoryDescription").val().trim();
 
 if (categoryId === "") {
-    Swal.fire("Required!", "Please select Expence Category", "warning");
+    Swal.fire("Required!", "Please select Expense Category", "warning");
     return;
 }
 
@@ -182,12 +182,12 @@ $.ajax({
         }
     },
     error: function (xhr, status, error) {
-        handleApiError(xhr, status, error, "Save Expence SubCategory Error");
+        handleApiError(xhr, status, error, "Save Expense SubCategory Error");
     }
 });
 });
 
-// ---- Edit Expence SubCategory ----
+// ---- Edit Expense SubCategory ----
 $(document).on("click", ".btn-edit", function () {
 
     // Permission Check
@@ -215,7 +215,7 @@ $(document).on("click", ".btn-edit", function () {
     }
 
     // Load dropdown selected value dynamically
-    loadExpenceCategoryDropdown(data.CategoryId);
+    loadExpenseCategoryDropdown(data.CategoryId);
 
     // Fill Form
     $("#SubCategoryId").val(data.Id);
@@ -223,7 +223,7 @@ $(document).on("click", ".btn-edit", function () {
     $("#SubCategoryDescription").val(data.Description);
 
     // Update Modal Title & Show
-    $("#addEventModalTitle").text("Edit Expence SubCategory");
+    $("#addEventModalTitle").text("Edit Expense SubCategory");
     $("#addEventModal").modal("show");
 });
 
@@ -331,7 +331,7 @@ function fetchData() {
     }
 function renderTable(data) {
 
-console.log("Expence SubCategory Data:", data);
+console.log("Expense SubCategory Data:", data);
 
 // Destroy existing instance
 if ($.fn.dataTable.isDataTable('#tableMain table')) {
@@ -385,7 +385,7 @@ $('#tableMain table').DataTable({
 });
 }
 
-    function loadExpenceCategoryDropdown(selectedId = "") {
+    function loadExpenseCategoryDropdown(selectedId = "") {
         $.ajax({
             url: "/api/ExpenseCategory/GetExpenseCategoryList",
             type: "POST",
@@ -393,10 +393,10 @@ $('#tableMain table').DataTable({
             data: JSON.stringify({ Id: 0 }),
             success: function (response) {
 
-                let dropdown = $("#ddlExpenceCategory");
+                let dropdown = $("#ddlExpenseCategory");
                 dropdown.empty(); // clear previous values
 
-                dropdown.append(`<option value="">-- Select Expence Category --</option>`);
+                dropdown.append(`<option value="">-- Select Expense Category --</option>`);
 
                 response.data.forEach(item => {
                     dropdown.append(
@@ -413,12 +413,12 @@ $('#tableMain table').DataTable({
     }
     function resetFormFields() {
             $("#SubCategoryModeId").val(0);
-            $("#ddlExpenceCategory").val("");
+            $("#ddlExpenseCategory").val("");
             $("#SubCategoryName").val("");
             $("#SubCategoryDescription").val("");
     }
     function validateForm() {
-        if ($("#ddlExpenceCategory").val() === "") {
+        if ($("#ddlExpenseCategory").val() === "") {
             Swal.fire("Required!", "Please select category", "warning");
             return false;
         }

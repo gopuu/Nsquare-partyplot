@@ -28,18 +28,18 @@
     </div>
 </div>
 
-<div class="modal fade" id="ExpenceTransactionModal" tabindex="-1">
+<div class="modal fade" id="ExpenseTransactionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
 
             <!-- HEADER -->
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title text-white" id="ExpenceTransactionModalTitle">Add Expense Transaction</h5>
+                <h5 class="modal-title text-white" id="ExpenseTransactionModalTitle">Add Expense Transaction</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- BODY -->
             <div class="modal-body">
-                <input type="hidden" id="ExpenceTransactionId" value="0">
+                <input type="hidden" id="ExpenseTransactionId" value="0">
 
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -51,7 +51,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Category<span class="text-danger">*</span></label>
-                        <select id="ddlExpenceCategory" class="form-select">
+                        <select id="ddlExpenseCategory" class="form-select">
                             <option value="">-- Select Category --</option>
                         </select>
                     </div>
@@ -95,7 +95,7 @@
             <!-- FOOTER -->
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-outline-warning" id="btnSaveExpenceTransaction">Save</button>
+                <button class="btn btn-outline-warning" id="btnSaveExpenseTransaction">Save</button>
             </div>
         </div>
     </div>
@@ -131,11 +131,11 @@
 <script>
     $(document).ready(function () {
      //fetchData();
-    loadExpenceCategoryDropdown();
-    loadExpenceSubCategoryDropdown();
+    loadExpenseCategoryDropdown();
+    loadExpenseSubCategoryDropdown();
     loadAccountDropdown();
     loadAccountDropdown();
-    fetchExpenceTransactions();
+    fetchExpenseTransactions();
 
      const today = new Date().toISOString().split('T')[0];
     document.getElementById('txtTransactionDate').value = today;
@@ -143,13 +143,13 @@
     // Add button click
     $("#btn-add-transactions").click(function () {
             resetFormFields();
-            $("#ExpenceTransactionModalTitle").text("Add Expence Transactions");
+            $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
             $("#txtTransactionDate").val(new Date().toISOString().split('T')[0]); // set today
-            $("#ExpenceTransactionModal").modal("show");
+            $("#ExpenseTransactionModal").modal("show");
         });
 
-    // Save Expence Transaction
-    $("#btnSaveExpenceTransaction").click(function (e) {
+    // Save Expense Transaction
+    $("#btnSaveExpenseTransaction").click(function (e) {
         e.preventDefault();
         // Basic validation
         if ($("#ddlAccount").val() === "") {
@@ -169,9 +169,9 @@
         return;
         }
            let payload = {
-            Id: $("#ExpenceTransactionId").val(),
+            Id: $("#ExpenseTransactionId").val(),
             AccountId: $("#ddlAccount").val(),
-            CategoryId: $("#ddlExpenceCategory").val(), // Corrected
+            CategoryId: $("#ddlExpenseCategory").val(), // Corrected
             SubCategoryId: $("#ddlSubCategory").val() || null,
             Amount: parseFloat($("#txtAmount").val()),
             TransactionDate: $("#txtTransactionDate").val(),
@@ -197,21 +197,21 @@
                 });
                 // Reset form & hide modal
                 resetFormFields();
-                $("#ExpenceTransactionModal").modal("hide");
+                $("#ExpenseTransactionModal").modal("hide");
 
                 // Reload table or data
-                fetchExpenceTransactions();
+                fetchExpenseTransactions();
             } else {
                 Swal.fire("Error", response.message, "error");
             }
         },
         error: function (xhr, status, error) {
-               handleApiError(xhr, status, error, "Save ExpenceTransaction Error")
+               handleApiError(xhr, status, error, "Save ExpenseTransaction Error")
         }
     });
     });
 
-    // Edit button click for Expence Transactions
+    // Edit button click for Expense Transactions
     $(document).on('click', '.btn-edit', function (event) {
         var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
         if (!canEdit) {
@@ -235,16 +235,16 @@
         var rowData = table.row(row).data(); // Get the data object for this row
 
         // Fill modal fields with selected row data
-        $("#ExpenceTransactionId").val(rowData.Id);
+        $("#ExpenseTransactionId").val(rowData.Id);
 
         // Load Account dropdown first, then select value
         loadAccountDropdown(rowData.AccountId);
 
-        // Load Expence Category dropdown, then select value
-        loadExpenceCategoryDropdown(rowData.CategoryId);
+        // Load Expense Category dropdown, then select value
+        loadExpenseCategoryDropdown(rowData.CategoryId);
 
         // Load SubCategory based on selected category, then select value
-        loadExpenceSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
+        loadExpenseSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
 
         $("#txtAmount").val(rowData.Amount);
 
@@ -264,10 +264,10 @@
         $("#txtNotes").val(rowData.Notes);
 
         // Update modal title
-        $("#ExpenceTransactionModalTitle").text("Edit Expence Transaction");
+        $("#ExpenseTransactionModalTitle").text("Edit Expense Transaction");
 
         // Show modal
-        $('#ExpenceTransactionModal').modal('show');
+        $('#ExpenseTransactionModal').modal('show');
     });
 
     // Delete button click in table
@@ -310,7 +310,7 @@
                     $("#deleteRecordModal").modal("hide");
 
                     // Reload table
-                    fetchExpenceTransactions();
+                    fetchExpenseTransactions();
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
@@ -325,7 +325,7 @@
 
     // Optional: Reset form fields
     function resetFormFields() {
-        $("#ExpenceTransactionId").val(0);
+        $("#ExpenseTransactionId").val(0);
         $("#ddlAccount").val("");
         $("#ddlCategory").val("");
         $("#ddlSubCategory").val("");
@@ -336,7 +336,7 @@
         $("#txtNotes").val("");
     }
 
-    function loadExpenceCategoryDropdown(selectedId = "") {
+    function loadExpenseCategoryDropdown(selectedId = "") {
         $.ajax({
             url: "/api/ExpenseCategory/GetExpenseCategoryList",
             type: "POST",
@@ -344,10 +344,10 @@
             data: JSON.stringify({ Id: 0 }),
             success: function (response) {
 
-                let dropdown = $("#ddlExpenceCategory");
+                let dropdown = $("#ddlExpenseCategory");
                 dropdown.empty(); // clear previous values
 
-                dropdown.append(`<option value="">-- Select Expence Category --</option>`);
+                dropdown.append(`<option value="">-- Select Expense Category --</option>`);
 
                 response.data.forEach(item => {
                     dropdown.append(
@@ -363,8 +363,8 @@
         });
     }
 
-    // Load SubCategory dropdown based on selected Expence Category
-    function loadExpenceSubCategoryDropdown(categoryId = 0, selectedId = "") {
+    // Load SubCategory dropdown based on selected Expense Category
+    function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
             if (!categoryId) {
                 $("#ddlSubCategory").empty().append('<option value="">-- Select SubCategory --</option>');
                 return;
@@ -393,10 +393,10 @@
             });
         }
 
-    // Trigger SubCategory load when Expence Category changes
-    $("#ddlExpenceCategory").change(function () {
+    // Trigger SubCategory load when Expense Category changes
+    $("#ddlExpenseCategory").change(function () {
         let selectedCategoryId = $(this).val();
-        loadExpenceSubCategoryDropdown(selectedCategoryId);
+        loadExpenseSubCategoryDropdown(selectedCategoryId);
     });
 
     // Load Account dropdown dynamically
@@ -427,8 +427,8 @@
         });
     }
 
-    // Fetch Expence Transactions
-    function fetchExpenceTransactions(accountId = 0, categoryId = 0, fromDate = "", toDate = "") {
+    // Fetch Expense Transactions
+    function fetchExpenseTransactions(accountId = 0, categoryId = 0, fromDate = "", toDate = "") {
     $('#btn-loader').show(); // optional loader
 
     const payload = {
@@ -445,12 +445,12 @@
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("Expence Transactions:", response);
+            //console.log("Expense Transactions:", response);
             var data = response.data || [];
-            renderExpenceTransactionTable(data);
+            renderExpenseTransactionTable(data);
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Something went wrong fetching Expence Transactions.");
+            handleApiError(xhr, status, error, "Something went wrong fetching Expense Transactions.");
         },
         complete: function() {
             $('#btn-loader').hide();
@@ -459,7 +459,7 @@
     }
 
     // Render DataTable
-    function renderExpenceTransactionTable(data) {
+    function renderExpenseTransactionTable(data) {
         if ($.fn.dataTable.isDataTable("#tableTransactions  table")) {
             $("#tableTransactions  table").DataTable().destroy();
     }

@@ -248,7 +248,7 @@ function fetchStatusData() {
         url: "/api/StatusMaster/GetStatusMaster",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: 0 }),
+        data: JSON.stringify({ Id: 0, StatusType: null }),
         success: function (res) {
         renderStatusTable(res?.data || []);
         }

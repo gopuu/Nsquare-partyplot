@@ -6,6 +6,35 @@
 <link href="/assets2/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
 <script src="/assets2/vendors/flatpickr/flatpickr.min.js"></script>
 
+<style> 
+    .picker-transition {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 1;
+    }
+
+    .picker-hide {
+        opacity: 0;
+        transform: translateY(-5px); /* subtle move */
+    }
+.process-board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* exactly 6 equal columns */
+    gap: 15px;
+}
+
+.process-column {
+    width: 100%; 
+}
+.followup-row {
+    cursor: pointer;
+    border-top: 1px solid #eee;
+}
+.followup-row:hover {
+    background-color: #f6f6f6;
+}
+
+</style>
+
 <!-- MAIN -->
 <div class="content">
     <div class="pb-5">
@@ -22,7 +51,7 @@
                                 + Add Process
                             </button>
 
-                            <button class="btn btn-outline-success btn-sm fw-bold py-1 px-2"
+                            <button class="btn btn-outline-warning btn-sm fw-bold py-1 px-2"
                                     data-bs-toggle="modal" data-bs-target="#dealModal">
                                 + Add Deal
                             </button>
@@ -44,7 +73,7 @@
 
                     <!-- Board -->
                     <div class="container-fluid py-3">
-                        <div id="processBoard" class="d-flex flex-row overflow-auto" style="gap: 1rem;">
+                        <div id="processBoard" class="process-board d-flex flex-row overflow-auto" style="gap: 1rem;">
                             <!-- Columns will be injected here dynamically -->
                         </div>
                     </div>
@@ -59,9 +88,9 @@
     <div class="modal-dialog modal-lg">
         <!-- Made modal larger -->
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="processModalLabel">Process Master</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="processModalLabel">Process Master</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- Modal Body -->
             <div class="modal-body">
@@ -85,7 +114,7 @@
 
                     <!-- Button aligned at bottom -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
                     </div>
                 </form>
 
@@ -115,9 +144,9 @@
     <div class="modal-dialog modal-xl">
         <!-- extra wide modal -->
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dealModalLabel">Add Enquiry / Deal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="dealModalLabel">Add Enquiry / Deal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="dealForm" class="row g-3">
@@ -130,8 +159,8 @@
                         </label>
                         <div class="input-group">
                             <select id="dealProcess" class="form-select"></select>
-                            <button type="button" class="btn btn-outline-primary" id="openProcessModal">+</button>
                         </div>
+                        <button type="button" class="btn btn-outline-primary d-none" id="openProcessModal">+</button>
                         <div class="text-danger small mt-1 error-msg d-none">Please select process</div>
                     </div>
                     <div class="col-md-4">
@@ -234,8 +263,9 @@
 
                             <!-- AM/PM toggle -->
                             <div class="d-flex justify-content-center mb-3">
-                                <button id="amBtn" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
-                                <button id="pmBtn" class="btn btn-outline-primary btn-sm">PM</button>
+                                <button type="button" id="amBtn" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                <button type="button" id="pmBtn" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-action-xs">Set Time</button>
                             </div>
 
                             <!-- Clock face -->
@@ -258,11 +288,6 @@
                                 <div class="clock-number" style="--i:11;">11</div>
                                 <div class="clock-number" style="--i:12;">12</div>
                             </div>
-
-                            <!-- Confirm -->
-                            <div class="text-center">
-                                <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
-                            </div>
                         </div>
                     </div>
 
@@ -284,8 +309,9 @@
 
                             <!-- AM/PM toggle -->
                             <div class="d-flex justify-content-center mb-3">
-                                <button id="amBtnEnd" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
-                                <button id="pmBtnEnd" class="btn btn-outline-primary btn-sm">PM</button>
+                                <button id="amBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                <button id="pmBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                <button id="setTimeBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs">Set Time</button>
                             </div>
 
                             <!-- Clock face -->
@@ -307,11 +333,6 @@
                                 <div class="clock-number" style="--i:10;">10</div>
                                 <div class="clock-number" style="--i:11;">11</div>
                                 <div class="clock-number" style="--i:12;">12</div>
-                            </div>
-
-                            <!-- Confirm -->
-                            <div class="text-center">
-                                <button type="button" id="setTimeBtnEnd" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
                             </div>
                         </div>
                     </div>
@@ -369,7 +390,7 @@
                         <button type="button" class="btn btn-outline-danger d-none" id="deleteDealBtn">
                             <i class="fa fa-trash"></i> Delete
                         </button>
-                        <button type="submit" class="btn btn-outline-success" id="saveDealBtn">
+                        <button type="submit" class="btn btn-outline-warning" id="saveDealBtn">
                             <i class="fa fa-save"></i> Save Enquiry
                         </button>
                     </div>
@@ -383,11 +404,11 @@
 <div class="modal fade" id="moveDealModal" tabindex="-1" aria-labelledby="moveDealModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title" id="moveDealModalLabel">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="moveDealModalLabel">
                     Add Lead Followup
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -420,8 +441,9 @@
 
                                 <!-- AM/PM Toggle -->
                                 <div class="d-flex justify-content-center mb-3">
-                                    <button id="amBtnFollowUp" class="btn btn-outline-primary btn-sm me-2 active">AM</button>
-                                    <button id="pmBtnFollowUp" class="btn btn-outline-primary btn-sm">PM</button>
+                                    <button type="button" id="amBtnFollowUp" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                    <button type="button" id="pmBtnFollowUp" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                    <button type="button" id="setTimeBtnFollowUp" class="btn btn-outline-primary btn-action-xs">Set Time</button>
                                 </div>
 
                                 <!-- Clock Face -->
@@ -443,11 +465,6 @@
                                     <div class="clock-number" style="--i:10;">10</div>
                                     <div class="clock-number" style="--i:11;">11</div>
                                     <div class="clock-number" style="--i:12;">12</div>
-                                </div>
-
-                                <!-- Confirm -->
-                                <div class="text-center">
-                                    <button type="button" id="setTimeBtnFollowUp" class="btn btn-outline-primary btn-sm px-4">Set Time</button>
                                 </div>
                             </div>
                         </div>
@@ -475,8 +492,216 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="saveMoveDealBtn" class="btn btn-outline-primary">Save & Move</button>
+                <button type="button" id="saveMoveDealBtn" class="btn btn-outline-outline">Save & Move</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Follow up modal-->
+<!-- Follow-Up Modal -->
+<style>
+    /* Compact modal UI */
+    #followupModal .modal-body,
+    #followupModal .modal-header,
+    #followupModal .modal-footer {
+        padding: 10px 15px;
+    }
+
+    #followupModal .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+        font-weight: 600;
+    }
+
+    #followupModal .form-control,
+    #followupModal .form-select {
+        padding: 3px 6px !important;
+        font-size: 0.78rem !important;
+        height: 28px;
+    }
+
+    #txtDiscussionNotes {
+        height: 80px !important; /* or any height you want */
+        padding: 6px !important;
+        line-height: 1.3;
+        resize: vertical;          /* allow user to expand */
+    }
+
+
+    #followupHistoryTable th,
+    #followupHistoryTable td {
+        font-size: 0.75rem !important;
+        padding: 4px 6px !important;
+    }
+
+    #followupHistoryWrapper {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 4px;
+    }
+</style>
+<!-- Follow-Up Modal -->
+<div class="modal fade" id="followupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning py-2">
+                <h6 class="modal-title text-white">Follow-Up Management</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hfEnquiryDealId" />
+                <input type="hidden" id="hfFollowUpId" value="0">
+
+<!-- SECTION 1 : INQUIRY DETAILS (Display Only) -->
+<div class="mb-2 pb-2 border-bottom">
+
+    <h6 class="fw-bold text-primary mb-2">Inquiry Details</h6>
+
+    <div class="row g-1 small">
+
+        <div class="col-4">
+            <label class="form-label">Enquirer</label>
+            <div class="form-control-plaintext fw-bold">PA ALL GROUP BY DIVYESH SIR</div>
+        </div>
+
+        <div class="col-2">
+            <label class="form-label">Contact</label>
+            <div class="form-control-plaintext">0000000000</div>
+        </div>
+
+        <div class="col-2">
+            <label class="form-label">Slot</label>
+            <div class="form-control-plaintext">FD</div>
+        </div>
+
+        <div class="col-2">
+            <label class="form-label">Pax</label>
+            <div class="form-control-plaintext">150</div>
+        </div>
+
+        <div class="col-2">
+            <label class="form-label">Event</label>
+            <div class="form-control-plaintext">Meeting</div>
+        </div>
+
+        <div class="col-3">
+            <label class="form-label">Event Date</label>
+            <div class="form-control-plaintext">18-Jun-2025</div>
+        </div>
+
+        <div class="col-3">
+            <label class="form-label">Halls</label>
+            <div class="form-control-plaintext">RAMA, SITA</div>
+        </div>
+
+        <div class="col-3">
+            <label class="form-label">Email</label>
+            <div class="form-control-plaintext">XYZ</div>
+        </div>
+
+        <div class="col-3">
+            <label class="form-label">Address</label>
+            <div class="form-control-plaintext">SURAT</div>
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Note</label>
+            <div class="form-control-plaintext">NO NOTE</div>
+        </div>
+
+    </div>
+</div>
+
+                <!-- SECTION 2: Follow-Up Form -->
+                <div class="mb-2 pb-2 border-bottom">
+                    <div class="row g-2">
+
+                        <div class="col-2">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" id="ddlFollowUpType"></select>
+                        </div>
+
+                        <div class="col-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="ddlStatus"></select>
+                        </div>
+
+                        <div class="col-2">
+                            <label class="form-label">Mood</label>
+                            <select class="form-select" id="ddlMood"></select>
+                        </div>
+
+                        <div class="col-4">
+                            <label class="form-label">Next Follow-Up</label>
+
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="nextFollowUpDate_modalFollowup">
+                                </div>
+
+                                <div class="col-4">
+                                    <select class="form-select" id="nextFollowUpTime_modalFollowup"></select>
+                                </div>
+                            </div>
+
+                            <!-- Hidden field storing final datetime in ISO format -->
+                            <input type="hidden" id="txtNextFollowUpDateTime">
+                        </div>
+
+                        <div class="col-2">
+                            <label class="form-label">Probability (%)</label>
+                            <input type="number" class="form-control" id="txtProbability" min="0" max="100">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Discussion Notes</label>
+                            <textarea class="form-control" id="txtDiscussionNotes" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-2">
+                        <button class="btn btn-outline-warning btn-sm px-3" id="btnSaveFollowUp">
+                            Save Follow-Up
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Follow-Up History Table -->
+                <h6 class="fw-bold mb-2">Previous Follow-Ups</h6>
+
+                <div id="followupHistoryWrapper">
+                    <table class="table table-sm table-bordered mb-0" id="followupHistoryTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Mood</th>
+                                <th>Next Date</th>
+                                <th>Notes</th>
+                                <th>Assigned</th>
+                                <th>Probability</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="followupHistoryBody">
+                            <!-- Dynamic rows inserted via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="modal-footer py-1">
+                <button type="button" class="btn btn-secondary btn-sm d-none" data-bs-dismiss="modal">Close</button>
+            </div>
+
         </div>
     </div>
 </div>
@@ -486,9 +711,9 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="eventTypeModalLabel">Event Type Master</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="eventTypeModalLabel">Event Type Master</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- Modal Body -->
             <div class="modal-body">
@@ -505,7 +730,7 @@
 
                     <!-- Button aligned at bottom -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
                     </div>
                 </form>
 
@@ -534,9 +759,9 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="eventSubTypeModalLabel">Event Sub-Type Master</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="eventSubTypeModalLabel">Event Sub-Type Master</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- Modal Body -->
             <div class="modal-body">
@@ -567,7 +792,7 @@
 
                     <!-- Save Button aligned with inputs -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
                     </div>
                 </form>
 
@@ -596,9 +821,9 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="leadSourceModalLabel">Lead Source Master</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="leadSourceModalLabel">Lead Source Master</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- Modal Body -->
             <div class="modal-body">
@@ -615,7 +840,7 @@
 
                     <!-- Button aligned at bottom -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
                     </div>
                 </form>
 
@@ -643,62 +868,286 @@
 <script>
     let userId=0;
     // Sample data (replace later with API fetch)
-    let processes = [
-/*
-        {
-            ProcessId: 1,
-            ProcessName: "Enquiry/Lead",
-            TotalAmount: 1500.00,
-            TotalEnquiryDeals: 2,
-            EnquiryDealsJson: [
-                { EnquiryDealId: 101, EnquiryDealTitle: "Enquiry #101", EnquiryDealName: "Ramesh", Amount: 500.00, EventDate_Format2: "Feb-01" },
-                { EnquiryDealId: 102, EnquiryDealTitle: "Enquiry #102", EnquiryDealName: "Suresh", Amount: 1000.00, EventDate_Format2: "Feb-02" }
-            ]
-        },
-        {
-            ProcessId: 2,
-            ProcessName: "Follow-Up & Detail Shared",
-            TotalAmount: 0.00,
-            TotalEnquiryDeals: 0,
-            EnquiryDealsJson: []
-        },
-        {
-            ProcessId: 3,
-            ProcessName: "Place Visit",
-            TotalAmount: 2200.00,
-            TotalEnquiryDeals: 2,
-            EnquiryDealsJson: [
-                { EnquiryDealId: 103, EnquiryDealTitle: "Enquiry #103", EnquiryDealName: "Nilesh", Amount: 1200.00, EventDate_Format2: "Feb-05" },
-                { EnquiryDealId: 104, EnquiryDealTitle: "Enquiry #104", EnquiryDealName: "Mahesh", Amount: 1000.00, EventDate_Format2: "Feb-06" }
-            ]
-        },
-        {
-            ProcessId: 4,
-            ProcessName: "Proposal/Negotiation",
-            TotalAmount: 3500.00,
-            TotalEnquiryDeals: 1,
-            EnquiryDealsJson: [
-                { EnquiryDealId: 105, EnquiryDealTitle: "Enquiry #105", EnquiryDealName: "Hitesh", Amount: 3500.00, EventDate_Format2: "Feb-10" }
-            ]
-        },
-        {
-            ProcessId: 5,
-            ProcessName: "Event Booked",
-            TotalAmount: 0.00,
-            TotalEnquiryDeals: 0,
-            EnquiryDealsJson: []
-        },
-        {
-            ProcessId: 6,
-            ProcessName: "Lead Lost",
-            TotalAmount: 5000.00,
-            TotalEnquiryDeals: 1,
-            EnquiryDealsJson: [
-                { EnquiryDealId: 106, EnquiryDealTitle: "Enquiry #106", EnquiryDealName: "Divyesh", Amount: 5000.00, EventDate_Format2: "Feb-12" }
-            ]
+    let processes = [];
+
+    //FOLLOWUP - START ------------------------------------------------------------------------------------------
+    loadFollowUpTypes();
+    loadFollowUpStatus();
+    loadMoodList();
+    loadTimeDropdown();
+    function loadFollowUpTypes() {
+        $.ajax({
+            url: "/api/EnquiryFollowup/GetEnquiryFollowUp_Types",
+            type: "GET",
+            success: function (res) {
+                console.log("res type:",res);
+                if (res.status === "Success") {
+                    let ddl = $("#ddlFollowUpType");
+                    ddl.empty();
+
+                    ddl.append('<option value="">-- Select Type --</option>');
+
+                    $.each(res.data, function (i, item) {
+                        ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                    });
+                }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to fetch follow-up types");
+            }
+        });
+    }
+    function loadFollowUpStatus() {
+        $.ajax({
+            url: '/api/StatusMaster/GetStatusMaster',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ Id: 0, StatusType: "Followup" }),
+            success: function (res) {
+                console.log("res status:",res);
+                if (res.status === "Success") {
+                    let ddl = $("#ddlStatus");
+                    ddl.empty();
+
+                    ddl.append('<option value="">-- Select Status --</option>');
+
+                    $.each(res.data, function (i, item) {
+                        ddl.append(`<option value="${item.Id}">${item.StatusName}</option>`);
+                    });
+                }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to fetch follow-up status");
+            }
+        });
+    }
+    function loadMoodList() {
+        $.ajax({
+            url: "/api/EnquiryFollowup/GetEnquiryFollowUp_MoodList",
+            type: "GET",
+            success: function (res) {
+                console.log("res mood:",res);
+                if (res.status === "Success") {
+                    let ddl = $("#ddlMood");
+                    ddl.empty();
+
+                    ddl.append('<option value="">-- Select Mood --</option>');
+
+                    $.each(res.data, function (i, item) {
+                        ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                    });
+                }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to fetch follow-up mood list");
+            }
+        });
+    }
+
+    function loadFollowUpHistoryById(enquiryId) {
+        const requestObj = {
+            FollowUpId: 0,
+            EnquiryId: enquiryId
+        };
+
+        $.ajax({
+            url: "/api/EnquiryFollowUp/GetEnquiryFollowUp",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(requestObj),
+
+            success: function (response) {
+                if (response.status === "Success") {
+                    renderFollowUpHistory(response.data);
+                }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to fetch follow-up history");
+            }
+        });
+    }
+
+    function renderFollowUpHistory(list) {
+        let html = "";
+
+        list.forEach((item, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.FollowUpDateTime || '-'}</td>
+                    <td>${item.FollowUpTypeName}</td>
+                    <td>${item.StatusName}</td>
+                    <td>${item.MoodName}</td>
+                    <td>${item.NextFollowUpDate || '-'} ${item.NextFollowUpTime12hr || '-'}</td>
+                    <td>${item.DiscussionNotes || '-'}</td>
+                    <td>${item.AssignedToName}</td>
+                    <td>${item.Probability}%</td>
+                    <td>
+                        <button class="btn btn-action-xs btn-outline-warning edit-followup" data-id="${item.FollowUpId}">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button class="btn btn-action-xs btn-outline-danger delete-followup" data-id="${item.FollowUpId}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        $("#followupHistoryBody").html(html);
+    }
+
+    function loadTimeDropdown() {
+        let ddl = $("#nextFollowUpTime_modalFollowup");
+        ddl.empty();
+
+        for (let hour = 0; hour < 24; hour++) {
+            for (let min = 0; min < 60; min += 30) {
+
+                let hour12 = hour % 12;
+                if (hour12 === 0) hour12 = 12;
+
+                let ampm = hour < 12 ? "AM" : "PM";
+                let hh = String(hour12).padStart(2, "0");
+                let mm = String(min).padStart(2, "0");
+
+                let display = `${hh}:${mm} ${ampm}`;
+                let value = `${String(hour).padStart(2,"0")}:${mm}`; // 24-hour format
+                console.log("time: display:", display, ", value:", value);
+                ddl.append(`<option value="${value}">${display}</option>`);
+            }
         }
-*/
-    ];
+    }
+
+    function resetFollowUpForm() {
+    // Select first option dynamically (if exists)
+        const followUpType = $("#ddlFollowUpType option:first").val();
+        const status = $("#ddlStatus option:first").val();
+        const mood = $("#ddlMood option:first").val();
+
+        $("#ddlFollowUpType").val(followUpType || "");
+        $("#ddlStatus").val(status || "");
+        $("#ddlMood").val(mood || "");
+
+        $("#txtDiscussionNotes").val("");
+        // Set today's date
+        let today = new Date().toISOString().split("T")[0];
+        $("#nextFollowUpDate_modalFollowup").val(today);
+
+        // Set first time option
+        let firstTime = $("#nextFollowUpTime_modalFollowup option:first").val();
+        $("#nextFollowUpTime_modalFollowup").val(firstTime);
+        updateNextFollowUpValue();
+
+        $("#txtProbability").val("0");
+    }
+
+    function updateNextFollowUpValue() {
+        let date = $("#nextFollowUpDate_modalFollowup").val();
+        let time = $("#nextFollowUpTime_modalFollowup").val(); // already 24-hour format
+
+        if (!date || !time) {
+            $("#txtNextFollowUpDateTime").val("");
+            return;
+        }
+        $("#txtNextFollowUpDateTime").val(`${date}T${time}`);
+    }
+    // Trigger formatting automatically
+    $("#nextFollowUpDate_modalFollowup, #nextFollowUpTime_modalFollowup").on("change keyup", updateNextFollowUpValue);
+
+    $(document).on("click", ".edit-followup", function () {
+        let followUpId = $(this).data("id");
+        let enquiryId = $("#hfEnquiryDealId").val();
+
+        const requestObj = {
+            FollowUpId: Number(followUpId),
+            EnquiryId: Number(enquiryId)
+        };
+        console.log("flwup edit requestObj",requestObj);
+        $.ajax({
+            url: "/api/EnquiryFollowUp/GetEnquiryFollowUp",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(requestObj),
+            success: function (res) {
+                console.log("edit res:", res);
+                if (res.status === "Success" && res.data.length > 0) {
+                    let f = res.data[0];
+
+                    // Fill modal fields
+                    $("#ddlFollowUpType").val(f.FollowUpTypeId);
+                    $("#ddlStatus").val(f.StatusId);
+                    $("#ddlMood").val(f.MoodId);
+                    $("#txtDiscussionNotes").val(f.DiscussionNotes);
+
+                    if (f.NextFollowUpDateTime) {
+                        $("#nextFollowUpDate_modalFollowup").val(f.NextFollowUpDate);
+                        $("#nextFollowUpTime_modalFollowup").val(f.NextFollowUpTime); // HH:mm
+                    }
+                    $("#txtNextFollowUpDateTime").val(f.NextFollowUpDate + 'T' + f.NextFollowUpTime);
+
+                    $("#txtProbability").val(f.Probability);
+                    // Store ID for update
+                    $("#hfFollowUpId").val(followUpId);
+                }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to load follow-up for editing");
+            }
+        });
+    });
+
+    $(document).on("click", ".delete-followup", function () {
+        let followUpId = $(this).data("id");
+        let enquiryId = $("#hfEnquiryDealId").val();
+        let actionBy = sessionStorage.getItem("userId") ?? 0;
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This follow-up will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it"
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                const deleteObj = {
+                    FollowUpId: followUpId,
+                    ActionBy: actionBy
+                };
+
+                $.ajax({
+                    url: "/api/EnquiryFollowUp/DeleteEnquiryFollowUp",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(deleteObj),
+
+                    success: function (res) {
+                        if (res.status === "Success") {
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Deleted!",
+                                position: "top-end",
+                                toast: true,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
+                            loadFollowUpHistoryById(enquiryId); // Reload table
+                        }
+                    },
+                    error: function (xhr, error, status) {
+                        handleApiError(xhr, error, status, "Failed to delete follow-up");
+                    }
+                });
+            }
+        });
+    });
+
+    //FOLLOWUP - END ------------------------------------------------------------------------------------------
 
     // Load Enquiry Deals (Drag & Drop view)
     function loadEnquiryDeals(processId = 0) {
@@ -726,13 +1175,8 @@
                     console.warn("No data received or API returned error:", response.message);
                 }
             },
-            error: function () {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Error fetching enquiry deals.",
-                    confirmButtonText: "OK",
-                });
+            error: function (xhr, error, status) {
+                handleApiError(xhr, error, status, "Failed to fetch enquiry deals");
             },
             complete: function () {
                 //hideLoader();
@@ -758,13 +1202,21 @@
                              draggable="true"
                              data-dealid="${deal.EnquiryDealId}"
                              data-processid="${process.ProcessId}">
-                            <div class="card-body p-2">
+                            <div class="card-body p-2 deal-open">
                                 <h6 class="mb-1">${deal.EnquiryDealTitle}</h6>
                                 <div class="d-flex justify-content-between mb-1 small">
                                     <span class="text-muted">${deal.EnquiryDealName}</span>
                                     <span class="text-muted">${deal.EventDate_Format1}</span>
                                 </div>
                                 <p class="mb-1 fw-bold">₹${deal.Amount.toLocaleString()}</p>
+                            </div>
+
+                            <!-- Follow-up Row -->
+                            <div class="card-footer py-1 px-2 d-flex justify-content-between align-items-center 
+                                        followup-row text-primary fw-bold open-followup"
+                                 data-dealid="${deal.EnquiryDealId}">
+                                <span>Follow-up</span>
+                                <span class="badge bg-secondary">${deal.FollowUpCount}</span>
                             </div>
                         </div>
                     `;
@@ -774,8 +1226,7 @@
             }
 
             board.innerHTML += `
-                <div class="card flex-shrink-0 process-column"
-                     style="width: 18rem; min-width: 18rem;"
+                <div class="card process-column"
                      data-processid="${process.ProcessId}">
                     <div class="card-header bg-light">
                         <h6 class="mb-0">${process.ProcessName}</h6>
@@ -793,80 +1244,150 @@
         enableDragDrop();
 
         // 🔥 Add click event listener for all deal cards
-        document.querySelectorAll(".deal-card").forEach(card => {
-            card.addEventListener("click", function () {
-                const dealId = this.getAttribute("data-dealid");
-                console.log("Clicked dealId:", dealId);
-                // later you can call your API here
-                // 🔥 Reset before fetching data
-                resetDealForm();
-                ////showLoader()(); // optional - show loader while fetching
+        $(document).on("click", ".deal-open", function () {
+            const dealId = $(this).closest(".deal-card").data("dealid");
+            console.log("Clicked dealId:", dealId);
+            // later you can call your API here
+            // 🔥 Reset before fetching data
+            resetDealForm();
+            ////showLoader()(); // optional - show loader while fetching
 
-                $.ajax({
-                    url: `/api/EnquiryDeal/GetEnquiryDealById/${dealId}`,
-                    type: "GET",
-                    success: function (response) {
-                        if (response.status === "Success" && response.data) {
-                            const data = response.data;
+            $.ajax({
+                url: `/api/EnquiryDeal/GetEnquiryDealById/${dealId}`,
+                type: "GET",
+                success: function (response) {
+                    if (response.status === "Success" && response.data) {
+                        const data = response.data;
 
-                            // 🔥 Change modal title for edit mode
-                            $("#dealModalLabel").text("Edit Enquiry / Deal");
-                            // Show delete button
-                            $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
+                        // 🔥 Change modal title for edit mode
+                        $("#dealModalLabel").text("Edit Enquiry / Deal");
+                        // Show delete button
+                        $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
 
-                            // Populate form fields
-                            $("#dealId").val(data.Id);
-                            $("#dealProcess").val(data.ProcessId);
-                            $("#dealName").val(data.Name);
-                            $("#dealContact").val(data.Contact);
-                            $("#dealAddress").val(data.Address || "");
-                            $("#dealEmail").val(data.Email || "");
+                        // Populate form fields
+                        $("#dealId").val(data.Id);
+                        $("#dealProcess").val(data.ProcessId);
+                        $("#dealName").val(data.Name);
+                        $("#dealContact").val(data.Contact);
+                        $("#dealAddress").val(data.Address || "");
+                        $("#dealEmail").val(data.Email || "");
 
-                            // First, set the event type
-                            $("#eventTypeDropdown").val(data.EventTypeId).trigger("change");
+                        // First, set the event type
+                        $("#eventTypeDropdown").val(data.EventTypeId).trigger("change");
 
-                            // Wait until subtypes are populated (assuming loadSubTypes is async)
-                            setTimeout(() => {
-                                $("#eventSubTypeDropdown").val(data.EventSubTypeId);
-                            }, 300); // small delay to ensure subtypes are loaded
+                        // Wait until subtypes are populated (assuming loadSubTypes is async)
+                        setTimeout(() => {
+                            $("#eventSubTypeDropdown").val(data.EventSubTypeId);
+                        }, 300); // small delay to ensure subtypes are loaded
 
-                            $("#banquetHallDropdown").val(data.BanquetHallId);
-                            $("#eventDate").val(data.EventDate);
+                        $("#banquetHallDropdown").val(data.BanquetHallId);
+                        $("#eventDate").val(data.EventDate);
 
-                            $("#eventStart").val(data.EventStartTime);
-                            $("#eventEnd").val(data.EventEndTime);
-                            $("#pax").val(data.Pax);
-                            $("#followUpDate").val(data.FollowUpDate);
+                        $("#eventStart").val(data.EventStartTime);
+                        $("#eventEnd").val(data.EventEndTime);
+                        $("#pax").val(data.Pax);
+                        $("#followUpDate").val(data.FollowUpDate);
 
-                            $("#estimatedAmount").val(data.EstimatedAmount);
-                            $("#leadSourceDropdown").val(data.LeadSourceId);
-                            $("#remark").val(data.Remarks || "");
+                        $("#estimatedAmount").val(data.EstimatedAmount);
+                        $("#leadSourceDropdown").val(data.LeadSourceId);
+                        $("#remark").val(data.Remarks || "");
 
-                            // finally, open modal
-                            // const modal = new bootstrap.Modal(document.getElementById("dealModal"));
-                            // modal.show();
-                            $("#dealModal").modal("show"); // reopen only if it was opened from deal
-                        } else {
-                            Swal.fire({
-                                icon: "warning",
-                                title: "Not Found",
-                                text: response.message || "No data available for this deal."
-                            });
-                        }
-                    },
-                    error: function (xhr) {
+                        // finally, open modal
+                        // const modal = new bootstrap.Modal(document.getElementById("dealModal"));
+                        // modal.show();
+                        $("#dealModal").modal("show"); // reopen only if it was opened from deal
+                    } else {
                         Swal.fire({
-                            icon: "error",
-                            title: "Error!",
-                            text: xhr.responseText || "Something went wrong while fetching deal data."
+                            icon: "info",
+                            title: "Not Found",
+                            text: response.message || "No data available for this deal."
                         });
-                    },
-                    complete: function () {
-                        //hideLoader();
                     }
-                });
-
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text: xhr.responseText || "Something went wrong while fetching deal data."
+                    });
+                },
+                complete: function () {
+                    //hideLoader();
+                }
             });
+
+        });
+
+        $(document).on("click", ".open-followup", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            resetFollowUpForm();
+            const enquiryDealId = $(this).data("dealid");
+            console.log("Follow-Up clicked. EnquiryDealId =", enquiryDealId);
+            $("#hfEnquiryDealId").val(enquiryDealId);
+            loadFollowUpHistoryById(enquiryDealId);
+            $("#followupModal").modal("show");
+        });
+
+        $("#btnSaveFollowUp").on("click", function () {
+
+            const enquiryId = $("#hfEnquiryDealId").val();
+
+            if (!enquiryId || enquiryId == "0") {
+                Swal.fire("Invalid", "Enquiry ID missing.", "warning");
+                return;
+            }
+
+            const obj = {
+                FollowUpId: $("#hfFollowUpId").val() || 0,  // always insert new record
+                EnquiryId: enquiryId,
+                FollowUpTypeId: $("#ddlFollowUpType").val(),
+                FollowUpDateTime: new Date().toISOString(),   // server accepts nvarchar(30)
+                NextFollowUpDateTime: $("#txtNextFollowUpDateTime").val() || null,
+                StatusId: $("#ddlStatus").val(),
+                MoodId: $("#ddlMood").val(),
+                OutcomeId: null,             // you can add later
+                Probability: $("#txtProbability").val() || null,
+                DiscussionNotes: $("#txtDiscussionNotes").val(),
+                InternalRemarks: null,
+                CustomerRemarks: null,
+                AssignedTo: 1,               // dynamic later
+                IsClosed: false,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+            console.log("Saving Follow-Up:", obj);
+
+            $.ajax({
+                url: "/api/EnquiryFollowUp/SaveEnquiryFollowUp",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(obj),
+
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Saved!",
+                            showConfirmButton: false,
+                            timer: 900
+                        });
+                        resetFollowUpForm();
+                        loadFollowUpHistoryById(enquiryId);
+                        loadEnquiryDeals();
+                    }
+                    else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+
+                error: function (xhr, error, status) {
+                    handleApiError(xhr, error, status,"Failed to save follow-up.");
+                }
+            });
+
         });
     }
 
@@ -1289,12 +1810,12 @@
 
 
         // When Process Modal closes
-        $("#processModal").on("hidden.bs.modal", function () {
-            if (openedFromDeal) {
-                $("#dealModal").modal("show"); // reopen only if it was opened from deal
-                openedFromDeal = false; // reset flag
-            }
-        });
+        // $("#processModal").on("hidden.bs.modal", function () {
+        //     if (openedFromDeal) {
+        //         $("#dealModal").modal("show"); // reopen only if it was opened from deal
+        //         openedFromDeal = false; // reset flag
+        //     }
+        // });
                 
         // Open from Deal Modal (+ button)
         $(document).on("click", "#openEventTypeModal", function () {
@@ -1581,7 +2102,7 @@
                         // loadDealList();
                     } else {
                         Swal.fire({
-                            icon: "warning",
+                            icon: "info",
                             title: "Failed",
                             text: response.message
                         });
@@ -2095,10 +2616,10 @@
                                 <td>${item.Name}</td>
                                 <td class="text-center">${item.IndexNo}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-sm me-1 edit-btn">
+                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-btn">
                                         <i class="fa fa-pencil"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger btn-sm delete-btn">
+                                    <button class="btn btn-outline-danger btn-action-xs delete-btn">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -2179,10 +2700,10 @@
                                 <td class="text-center">${srNo++}</td>
                                 <td>${item.Name}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-sm me-1 edit-eventType">
+                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-eventType">
                                         <i class="fa fa-pencil"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger btn-sm delete-eventType">
+                                    <button class="btn btn-outline-danger btn-action-xs delete-eventType">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -2270,10 +2791,10 @@
                                 <td class="text-center">${srNo++}</td>
                                 <td>${item.Name}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-sm me-1 edit-eventSubType">
+                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-eventSubType">
                                         <i class="fa fa-pencil"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger btn-sm delete-eventSubType">
+                                    <button class="btn btn-outline-danger btn-action-xs delete-eventSubType">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -2388,7 +2909,7 @@
             type: "GET",
             success: function (response) {
                 console.log("leadSource response:", response);
-                if (response.status === "Success") {
+                if (response.status && response.status.toLowerCase() === "success") {
                     let rows = "";
                     let srNo = 1;
                     let options = `<option value="0">-- Select Lead Source --</option>`; // default option
@@ -2399,10 +2920,10 @@
                                 <td class="text-center">${srNo++}</td>
                                 <td>${item.Name}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-sm me-1 edit-leadSource">
+                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-leadSource">
                                         <i class="fa fa-pencil"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger btn-sm delete-leadSource">
+                                    <button class="btn btn-outline-danger btn-action-xs delete-leadSource">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -2413,7 +2934,8 @@
 
                     $("#leadSourceTable tbody").html(rows);
                     $("#leadSourceDropdown").html(options);
-                } else {
+                } 
+                else {
                     $("#leadSourceTable tbody").html(
                         `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
                     );
@@ -2711,6 +3233,32 @@
         }
     }
 
+    function hidePickerSlowly(picker) {
+        picker.classList.add('picker-transition'); // ensure transition enabled
+
+        // Start fade-out
+        picker.classList.add('picker-hide');
+
+        // After animation ends, fully hide
+        setTimeout(() => {
+            picker.classList.add('d-none');
+            picker.classList.remove('picker-hide');
+        }, 300); // match CSS duration
+    }
+
+    function showPicker(picker) {
+        picker.classList.remove('d-none');
+        picker.classList.add('picker-transition');
+
+        // Start from hidden state
+        picker.classList.add('picker-hide');
+
+        // Fade-in after reflow
+        requestAnimationFrame(() => {
+            picker.classList.remove('picker-hide');
+        });
+    }
+
     // Handle number click
     picker.querySelectorAll('.clock-number').forEach(num => {
         num.addEventListener('click', () => {
@@ -2740,10 +3288,11 @@
         amBtn.classList.remove('active');
     });
 
-    // Set time
+    // Set time here1
     function setTimeStart() {
         input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm}`;
-        picker.classList.add('d-none');
+        //picker.classList.add('d-none');
+        hidePickerSlowly(picker);
     }
     setBtn.addEventListener('click', setTimeStart);
 

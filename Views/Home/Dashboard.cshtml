@@ -7,10 +7,254 @@
     <div class="pb-5">
         <div class="row g-4">
             <div class="col-12 col-xxl-6">
-                <div class="mb-8">
-                    <h2 class="mb-2">Dashboard</h2>
-                    <h5 class="text-body-tertiary fw-semibold">Here’s what’s going on at your business right now</h5>
+                <div class="row align-items-center justify-content-between mb-4">
+                    <div class="col-8">
+                        <div class="mb-0">
+                            <h4 class="mb-2">Dashboard</h4>
+                            <h5 class="text-body-tertiary fw-semibold">
+                                Here’s what’s going on at your business right now
+                            </h5>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Dynamic Widgets -->
+                <div id="dashboard-widgets" class="row g-3"></div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        loadDashboardWidgets();
+    });
+
+    function loadDashboardWidgets() {
+        $.ajax({
+            url: "/api/Dashboard/GetDashboardWidgetCounts",
+            type: "POST",
+            contentType: "application/json",
+            success: function (res) {
+                if (res.status === "Success") {
+                    let statsJson = JSON.parse(res.data.DashboardStats);
+                    //renderDashboardWidgets(statsJson);
+                    console.log("statsJson fetchdata:", statsJson);
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, title="Error loading widgets!");
+            }
+        });
+    }
+
+    function renderDashboardWidgets(stats) {
+
+        const container = $("#dashboard-widgets");
+        container.empty();
+
+        // Map KPI → Icons + Colors + Labels
+        const widgetConfig = {
+            TotalSales: { label: "Total Sales", icon: "fa-coins", bg: "#ffdddd" },
+            TotalOrders: { label: "Total Orders", icon: "fa-cart-shopping", bg: "#ddffdd" },
+            TotalCustomer: { label: "Total Customers", icon: "fa-users", bg: "#e0e7ff" },
+            RewardsRedeemed: { label: "Rewards Redeemed", icon: "fa-gift", bg: "#e0f7ff" },
+            TotalEvents: { label: "Total Events", icon: "fa-calendar-days", bg: "#f3e8ff" },
+
+            // TotalCustomer_New: { label: "New Customers", icon: "fa-user-plus", bg: "#ede9fe" },
+            // TotalCustomer_Repeat: { label: "Repeat Customers", icon: "fa-user-check", bg: "#fff7cc" },
+
+            TotalLoss_NoOfEvents: { label: "Loss Events", icon: "fa-triangle-exclamation", bg: "#fff0e6" },
+            TotalLoss_RevenueLoss: { label: "Loss Amount", icon: "fa-indian-rupee-sign", bg: "#ffe6e6" },
+
+            UpcomingBookings_NoOfBookings: { label: "Upcoming Bookings", icon: "fa-clock", bg: "#e6f7ff" },
+            UpcomingBookings_ExpectedRevenue: { label: "Upcoming Revenue", icon: "fa-wallet", bg: "#e8ffe8" }
+        };
+
+        Object.keys(stats).forEach(key => {
+            if (key === "TotalCustomer_New" || key === "TotalCustomer_Repeat") return;
+
+            // ==============================
+            // SPECIAL WIDGET: TOTAL CUSTOMERS
+            // ==============================
+            if (key === "TotalCustomer") {
+
+                const total = stats.TotalCustomer;
+                const newCust = stats.TotalCustomer_New || 0;
+                const repeatCust = stats.TotalCustomer_Repeat || 0;
+
+                const totalValue = Number(total) || 1;
+                const pctNew = (newCust / totalValue) * 100;
+                const pctRepeat = (repeatCust / totalValue) * 100;
+
+                const widgetHtml = `
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="dashboard-widget" style="width:100%;">
+
+                            <div>
+                                <p class="widget-value">${Number(total).toLocaleString("en-IN")}</p>
+                                <p class="widget-title">${widgetConfig[key].label}</p>
+
+                                <!-- Top-right labels -->
+                                <div class="d-none" style="display:flex; justify-content:flex-start; gap:16px; margin-bottom:4px;">
+
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span style="
+                                            width:10px; height:10px; border-radius:50%;
+                                            background:#7c3aed; display:inline-block;">
+                                        </span>
+                                        <span style="font-size:0.75rem; color:#444;">New</span>
+                                    </div>
+
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span style="
+                                            width:10px; height:10px; border-radius:50%;
+                                            background:#fbbf24; display:inline-block;">
+                                        </span>
+                                        <span style="font-size:0.75rem; color:#444;">Repeat</span>
+                                    </div>
+
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div style="width:200px; height:8px; background:#eee; border-radius:6px; overflow:hidden; margin:4px 0 6px 0;">
+                                    <div style="width:${pctNew}%; height:100%; background:#7c3aed; float:left;"></div>
+                                    <div style="width:${pctRepeat}%; height:100%; background:#fbbf24; float:left;"></div>
+                                </div>
+
+                                <!-- Numbers under bar -->
+                                <div style="display:flex; justify-content:space-between; width:200px; font-size:0.8rem; font-weight:600; color:#555;">
+                                    <span>${newCust} New</span>
+                                    <span>${repeatCust} Repeat</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+
+                container.append(widgetHtml);
+                return; // skip normal widget rendering
+            }
+
+            // ==============================
+            // NORMAL WIDGETS
+            //==============================
+            if (!widgetConfig[key]) return;
+
+            const cfg = widgetConfig[key];
+            const value = stats[key];
+
+            const widgetHtml = `
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="dashboard-widget">
+                        <div class="widget-icon" style="background:${cfg.bg}">
+                            <i class="fa-solid ${cfg.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="widget-value">${formatValue(key, value)}</p>
+                            <p class="widget-title">${cfg.label}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.append(widgetHtml);
+        });
+
+    }
+
+    function formatValue(key, value) {
+        if (key.toLowerCase().includes("sales") || key.toLowerCase().includes("revenue") || key.toLowerCase().includes("amount")) {
+            return "₹" + Number(value).toLocaleString("en-IN");
+        }
+        return Number(value).toLocaleString("en-IN");
+    }
+
+</script>
+
+<!--Widgets-->
+<style>
+    .dashboard-widget {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: 0.2s ease-in-out;
+    }
+
+    .dashboard-widget:hover {
+        transform: translateY(-4px);
+    }
+
+    .widget-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .widget-title {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .widget-value {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+</style>
+
+
+@* 
+<div class="content">
+    <div class="pb-5">
+        <div class="row g-4">
+            <div class="col-12 col-xxl-6">
+                <div class="row align-items-center justify-content-between mb-4">
+
+                    <!-- LEFT SIDE -->
+                    <div class="col-8">
+                        <div class="mb-8">
+                            <h2 class="mb-2">Dashboard</h2>
+                            <h5 class="text-body-tertiary fw-semibold">
+                                Here’s what’s going on at your business right now
+                            </h5>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE -->
+                    <div class="col-4 text-xxl-end">
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <!-- Custom Date Inputs -->
+                            <input type="date" id="startDate" class="form-control w-auto d-none" />
+                            <input type="date" id="endDate" class="form-control w-auto d-none" />
+
+                            <!-- Filter Dropdown (JS will populate) -->
+                            <select id="dashboardFilter" class="form-select w-auto"></select>
+
+                            <!-- Reset Button -->
+                            <button id="resetFilterBtn" class="btn btn-outline-secondary w-auto">
+                                Reset
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+
                 <div class="row align-items-center g-4">
                     <div class="col-12 col-md-auto">
                         <div class="d-flex align-items-center">
@@ -1082,5 +1326,83 @@
     </footer>
 </div>
 
+<script>
+    // ---------------------------
+    // Dynamic Filters List
+    // ---------------------------
+    let filterList = [
+        { value: "today", text: "Highlights for Today" },
+        { value: "yesterday", text: "Yesterday" },
+        { value: "7", text: "Last 7 Days" },
+        { value: "30", text: "Last 30 Days" },
+        { value: "thisMonth", text: "This Month" },
+        { value: "lastMonth", text: "Last Month" },
+        { value: "12months", text: "Last 12 Months" },
+        { value: "custom", text: "Custom Range" }
+    ];
+
+    // Load dropdown dynamically
+    function loadFilterDropdown(defaultValue = "today") {
+        const ddl = $("#dashboardFilter");
+        ddl.empty();
+
+        filterList.forEach(item => {
+            ddl.append(`<option value="${item.value}">${item.text}</option>`);
+        });
+
+        ddl.val(defaultValue); // Set selected value
+    }
+
+    // Load on page initial load
+    loadFilterDropdown();
 
 
+    // ---------------------------
+    // Dropdown Change Event
+    // ---------------------------
+    $(document).on("change", "#dashboardFilter", function () {
+        const filter = $(this).val();
+        console.log("Selected Filter:", filter);
+
+        if (filter === "custom") {
+            $("#startDate, #endDate").removeClass("d-none");
+        } else {
+            $("#startDate, #endDate").addClass("d-none");
+        }
+    });
+
+
+    // ---------------------------
+    // Custom Date Inputs Change Event
+    // ---------------------------
+    $(document).on("change", "#startDate, #endDate", function () {
+        console.log("Custom Range:", {
+            start: $("#startDate").val(),
+            end: $("#endDate").val()
+        });
+    });
+
+
+    // ---------------------------
+    // Reset Filter Button
+    // ---------------------------
+    $(document).on("click", "#resetFilterBtn", function () {
+
+        console.log("Filter Reset Clicked");
+
+        // Reset dropdown to default (today/highlights)
+        loadFilterDropdown("today");
+
+        // Hide date fields
+        $("#startDate, #endDate").addClass("d-none");
+
+        // Clear date inputs
+        $("#startDate").val("");
+        $("#endDate").val("");
+
+        console.log("Filter reset to default: today");
+    });
+
+</script>
+
+ *@
