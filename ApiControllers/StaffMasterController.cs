@@ -64,6 +64,8 @@ public class StaffMasterController : MasterController
                     DesignationId = Convert.ToInt64(row["DesignationId"]),
                     AadharCardNo = Convert.ToString(row["AadharCardNo"]),
                     JoiningDate = row["JoiningDate"] == DBNull.Value ? null : Convert.ToString(row["JoiningDate"]),
+                    BirthDate = row["BirthDate"] == DBNull.Value ? null : Convert.ToString(row["BirthDate"]),
+                    AnniversaryDate = row["AnniversaryDate"] == DBNull.Value ? null : Convert.ToString(row["AnniversaryDate"]),
                     Salary = row["Salary"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Salary"]),
                     //Photo = Convert.ToString(row["Photo"]),
                     Photo = row["Photo"] != DBNull.Value
@@ -75,6 +77,7 @@ public class StaffMasterController : MasterController
                     Password = Convert.ToString(row["Password"]),
                     IsSuperUser = row["IsSuperUser"] == DBNull.Value ? null : Convert.ToBoolean(row["IsSuperUser"]),
                     IsAutoLogin = row["IsAutoLogin"] == DBNull.Value ? null : Convert.ToBoolean(row["IsAutoLogin"]),
+                    IsActive = row["IsActive"] == DBNull.Value ? null : Convert.ToBoolean(row["IsActive"]),
                     Bank_Name = Convert.ToString(row["Bank_Name"]),
                     Bank_BranchName = Convert.ToString(row["Bank_BranchName"]),
                     Bank_IFSC = Convert.ToString(row["Bank_IFSC"]),
@@ -129,6 +132,8 @@ public class StaffMasterController : MasterController
 
                 cmd.Parameters.AddWithValue("@AadharCardNo", (object)model.AadharCardNo ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@JoiningDate", (object)model.JoiningDate ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@BirthDate", (object)model.BirthDate ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@AnniversaryDate", (object)model.AnniversaryDate ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Salary", model.Salary);
 
                 cmd.Parameters.Add("@Photo", SqlDbType.NVarChar).Value = DBNull.Value;
@@ -136,6 +141,7 @@ public class StaffMasterController : MasterController
                 cmd.Parameters.AddWithValue("@Password", (object)model.Password ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsSuperUser", (object)model.IsSuperUser ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsAutoLogin", (object)model.IsAutoLogin ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@IsActive", (object)model.IsActive ?? DBNull.Value);
 
                 cmd.Parameters.AddWithValue("@Bank_Name", (object)model.Bank_Name ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Bank_BranchName", (object)model.Bank_BranchName ?? DBNull.Value);

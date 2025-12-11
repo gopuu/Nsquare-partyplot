@@ -52,6 +52,8 @@
 
         public string? AadharCardNo { get; set; }
         public string? JoiningDate { get; set; }
+        public string? BirthDate { get; set; }
+        public string? AnniversaryDate { get; set; }
         public decimal Salary { get; set; }
 
         public string? Photo { get; set; }
@@ -59,7 +61,8 @@
         public string? Password { get; set; }
         public bool? IsSuperUser { get; set; }
         public bool? IsAutoLogin { get; set; }
-      
+        public bool? IsActive { get; set; }
+
         public string? Bank_Name { get; set; }
         public string? Bank_BranchName { get; set; }
         public string? Bank_IFSC { get; set; }
@@ -89,6 +92,8 @@
 
         public string? AadharCardNo { get; set; }
         public string? JoiningDate { get; set; }
+        public string? BirthDate { get; set; }
+        public string? AnniversaryDate { get; set; }
         public decimal Salary { get; set; }
 
         public string? Photo { get; set; }
@@ -96,6 +101,7 @@
         public string? Password { get; set; }
         public bool? IsSuperUser { get; set; }
         public bool? IsAutoLogin { get; set; }
+        public bool? IsActive { get; set; }
 
         public string? Bank_Name { get; set; }
         public string? Bank_BranchName { get; set; }
