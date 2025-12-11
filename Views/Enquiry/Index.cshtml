@@ -42,32 +42,58 @@
             <div class="col-12">
                 <div class="mb-12">
                     <!-- Title + Buttons + Sort in same row -->
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <h4 class="mb-0 fw-semibold">Enquiry / Lead Management</h4>
+                    <div class="row align-items-center mb-2">
 
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2"
-                                    data-bs-toggle="modal" data-bs-target="#processModal" id="btnProcess">
-                                + Add Process
-                            </button>
+                        <!-- LEFT SIDE : TITLE -->
+                        <div class="col-4">
+                            <h4 class="mb-0 fw-semibold">Enquiry / Lead Management</h4>
+                        </div>
 
-                            <button class="btn btn-outline-warning btn-sm fw-bold py-1 px-2"
-                                    data-bs-toggle="modal" data-bs-target="#dealModal">
-                                + Add Deal
-                            </button>
+                        <!-- RIGHT SIDE : BUTTONS + DROPDOWN + FILTERS -->
+                        <div class="col-8">
 
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2 dropdown-toggle"
-                                        type="button" id="sortByDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Sort By: This Month
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+
+                                <!-- Add Process -->
+                                <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#processModal" id="btnProcess">
+                                    + Process
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
-                                    <li><a class="dropdown-item sort-option" data-value="today" href="#">Today</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="week" href="#">This Week</a></li>
-                                    <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="year" href="#">This Year</a></li>
-                                </ul>
+
+                                <!-- Add Deal -->
+                                <button class="btn btn-outline-warning btn-sm fw-bold py-1 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#dealModal">
+                                    + Deal
+                                </button>
+
+                                <!-- Sort Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2 dropdown-toggle"
+                                            type="button" id="sortByDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Sort By: This Month
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
+                                        <li><a class="dropdown-item sort-option" data-value="today" href="#">Today</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="week" href="#">This Week</a></li>
+                                        <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="year" href="#">This Year</a></li>
+                                    </ul>
+                                </div>
+
+                                <!-- Amount Filters -->
+                                ₹ <input type="number" class="form-control form-control-sm"
+                                       style="width: 110px;" id="fromAmount" placeholder="Min Amt">
+
+                                <input type="number" class="form-control form-control-sm"
+                                       style="width: 110px;" id="toAmount" placeholder="Max Amt">
+
+                                <!-- Reset Filters -->
+                                <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2" id="btnResetFilters">
+                                    Reset
+                                </button>
+
                             </div>
+
                         </div>
                     </div>
 
@@ -557,7 +583,7 @@
         <div class="modal-content">
 
             <div class="modal-header bg-warning py-2">
-                <h6 class="modal-title text-white">Follow-Up Management</h6>
+                <h6 class="modal-title text-white">Follow-Up</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
@@ -566,8 +592,8 @@
                 <input type="hidden" id="hfEnquiryDealId" />
                 <input type="hidden" id="hfFollowUpId" value="0">
 
-                <!-- SECTION 1 : INQUIRY DETAILS (Display Only) -->
-                <div class="small">
+                <!-- SECTION 1 : enquiry DETAILS (Display Only) -->
+                <div class="small mb-2 border p-2" id="enquiryDetails">
 
                     <!-- Row 1 -->
                     <div class="row mb-1">
@@ -575,72 +601,64 @@
                         <!-- Long Field -->
                         <div class="col-md-5">
                             <span class="text-secondary fw-semibold">Enquirer:</span>
-                            <span class="fw-bold" id="inqName">PA ALL GROUP BY DIVYESH SIR</span>
+                            <span class="fw-bold" id="inqName"></span>
                         </div>
 
                         <!-- Short Field -->
                         <div class="col-md-2">
                             <span class="text-secondary fw-semibold">Contact:</span>
-                            <span id="inqContact">0000000000</span>
+                            <span id="inqContact"></span>
                         </div>
 
                         <!-- Short Field -->
                         <div class="col-md-1">
                             <span class="text-secondary fw-semibold">Slot:</span>
-                            <span id="inqSlot">FD</span>
+                            <span id="inqSlot"></span>
                         </div>
 
                         <!-- Short Field -->
                         <div class="col-md-1">
                             <span class="text-secondary fw-semibold">Pax:</span>
-                            <span id="inqPax">150</span>
+                            <span id="inqPax"></span>
                         </div>
 
                         <!-- Long Field -->
                         <div class="col-md-3">
                             <span class="text-secondary fw-semibold">Event:</span>
-                            <span id="inqEvent">Meeting</span>
+                            <span id="inqEvent"></span>
                         </div>
                     </div>
 
                     <!-- Row 2 -->
                     <div class="row mb-1">
 
-                        <!-- Short Field -->
-                        <div class="col-md-3">
+                        <div class="col-md-5">
                             <span class="text-secondary fw-semibold">Event Date:</span>
-                            <span id="inqEventDate">18-Jun-2025</span>
+                            <span id="inqEventDate"></span>
                         </div>
 
-                        <!-- Short Field -->
                         <div class="col-md-3">
                             <span class="text-secondary fw-semibold">Halls:</span>
-                            <span id="inqHalls">RAMA, SITA</span>
+                            <span id="inqHalls"></span>
                         </div>
 
-                        <!-- Long Field -->
                         <div class="col-md-4">
                             <span class="text-secondary fw-semibold">Email:</span>
-                            <span id="inqEmail">XYZ@gmail.com</span>
+                            <span id="inqEmail"></span>
                         </div>
 
-                        <!-- Long Field -->
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <span class="text-secondary fw-semibold">Address:</span>
-                            <span id="inqAddress">SURAT</span>
+                            <span id="inqAddress"></span>
                         </div>
-                    </div>
 
-                    <!-- Row 3 Full Width -->
-                    <div class="row mb-1">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <span class="text-secondary fw-semibold">Note:</span>
-                            <span id="inqNote">NO NOTE</span>
+                            <span id="inqNote"></span>
                         </div>
                     </div>
 
                 </div>
-
 
                 <!-- SECTION 2: Follow-Up Form -->
                 <div class="mb-2 pb-2 border-bottom">
@@ -980,12 +998,45 @@
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(requestObj),
-
             success: function (response) {
-                if (response.status === "Success") {
-                    renderFollowUpHistory(response.data);
+                console.log("flwup response:", response);
+                if (response.status.toLowerCase() === "success") {
+
+                    const enquiry = response.data.Enquiry;
+                    const followups = response.data.FollowUps;
+
+                    // -----------------------------
+                    // Bind enquiry Detail Section
+                    // -----------------------------
+                    $("#inqName").text(enquiry.Enquiry_Name || "-");
+                    $("#inqContact").text(enquiry.Enquiry_Contact || "-");
+                    let slot    = enquiry.Enquiry_Slot || "-";
+                    $("#inqSlot").text(`${slot}`);
+
+                    $("#inqPax").text(enquiry.Enquiry_Pax || "-");
+
+                    // event
+                    let eventName    = enquiry.Enquiry_EventName || "-";
+                    $("#inqEvent").text(`${eventName}`);
+
+                    // event date
+                    let eventDate    = (enquiry.Enquiry_EventDate_Format1 || enquiry.Enquiry_EventDate) || "-";
+                    let start   = enquiry.Enquiry_EventStartTime || "-";
+                    let end     = enquiry.Enquiry_EventEndTime || "-";
+                    $("#inqEventDate").text(`${eventDate} (${start} - ${end})`);
+
+                    // halls
+                    $("#inqHalls").text(enquiry.Enquiry_Halls || "-");
+
+                    // email, address, note
+                    $("#inqEmail").text(enquiry.Enquiry_Email || "-");
+                    $("#inqAddress").text(enquiry.Enquiry_Address || "-");
+                    $("#inqNote").text(enquiry.Enquiry_Remarks || "-");
+
+                    // Bind Follow-Up History Table
+                    renderFollowUpHistory(followups);
                 }
-            },
+            },            
             error: function (xhr, error, status) {
                 handleApiError(xhr, error, status, "Failed to fetch follow-up history");
             }
@@ -995,16 +1046,32 @@
     function renderFollowUpHistory(list) {
         let html = "";
 
+        if (!list || list.length === 0) {
+            $("#followupHistoryBody").html(`
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-2">No follow-ups found</td>
+                </tr>
+            `);
+            return;
+        }
+
         list.forEach((item, index) => {
+            let notes = item.DiscussionNotes || "-";
+            let shortNotes = notes.length > 50 ? notes.substring(0, 50) + "..." : notes;
             html += `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${item.FollowUpDateTime || '-'}</td>
+                    <td>${item.FollowUpDateTime2 || '-'}</td>
                     <td>${item.FollowUpTypeName}</td>
                     <td>${item.StatusName}</td>
                     <td>${item.MoodName}</td>
-                    <td>${item.NextFollowUpDate || '-'} ${item.NextFollowUpTime12hr || '-'}</td>
-                    <td>${item.DiscussionNotes || '-'}</td>
+                    <td>${item.NextFollowUpDateTime2 || '-'}</td>
+                    <td 
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="${notes.replace(/"/g, '&quot;')}">
+                        ${shortNotes}
+                    </td>
                     <td>${item.AssignedToName}</td>
                     <td>${item.Probability}%</td>
                     <td>
@@ -1020,6 +1087,12 @@
         });
 
         $("#followupHistoryBody").html(html);
+    
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
     }
 
     function loadTimeDropdown() {
@@ -1038,7 +1111,7 @@
 
                 let display = `${hh}:${mm} ${ampm}`;
                 let value = `${String(hour).padStart(2,"0")}:${mm}`; // 24-hour format
-                console.log("time: display:", display, ", value:", value);
+                //console.log("time: display:", display, ", value:", value);
                 ddl.append(`<option value="${value}">${display}</option>`);
             }
         }
@@ -1096,22 +1169,23 @@
             data: JSON.stringify(requestObj),
             success: function (res) {
                 console.log("edit res:", res);
-                if (res.status === "Success" && res.data.length > 0) {
-                    let f = res.data[0];
+                if (res.status === "Success" && res.data && res.data.FollowUps.length > 0) {
+                    let f = res.data.FollowUps;
+                    let item = f[0];
 
                     // Fill modal fields
-                    $("#ddlFollowUpType").val(f.FollowUpTypeId);
-                    $("#ddlStatus").val(f.StatusId);
-                    $("#ddlMood").val(f.MoodId);
-                    $("#txtDiscussionNotes").val(f.DiscussionNotes);
+                    $("#ddlFollowUpType").val(item.FollowUpTypeId);
+                    $("#ddlStatus").val(item.StatusId);
+                    $("#ddlMood").val(item.MoodId);
+                    $("#txtDiscussionNotes").val(item.DiscussionNotes);
 
-                    if (f.NextFollowUpDateTime) {
-                        $("#nextFollowUpDate_modalFollowup").val(f.NextFollowUpDate);
-                        $("#nextFollowUpTime_modalFollowup").val(f.NextFollowUpTime); // HH:mm
+                    if (item.NextFollowUpDateTime) {
+                        $("#nextFollowUpDate_modalFollowup").val(item.NextFollowUpDate);
+                        $("#nextFollowUpTime_modalFollowup").val(item.NextFollowUpTime); // HH:mm
                     }
-                    $("#txtNextFollowUpDateTime").val(f.NextFollowUpDate + 'T' + f.NextFollowUpTime);
+                    $("#txtNextFollowUpDateTime").val(item.NextFollowUpDate + 'T' + item.NextFollowUpTime);
 
-                    $("#txtProbability").val(f.Probability);
+                    $("#txtProbability").val(item.Probability);
                     // Store ID for update
                     $("#hfFollowUpId").val(followUpId);
                 }
@@ -1176,14 +1250,17 @@
 
     // Load Enquiry Deals (Drag & Drop view)
     function loadEnquiryDeals(processId = 0) {
-        ////////showLoader()()()();
-        // get currently selected sort value from active item
         let duration_selectedSort = $(".sort-option.active").data("value") || "month";
+
+        let fromAmt = $("#fromAmount").val();
+        let toAmt = $("#toAmount").val();
 
         var inpuData = 
         {
-            ProcessId: processId,
-            Duration: duration_selectedSort
+            ProcessId: Number(processId),
+            Duration: duration_selectedSort,
+            FromAmount: Number(fromAmt),
+            ToAmount: Number(toAmt)
         };
         console.log("EnquiryDeal inpuData:", inpuData);
         $.ajax({
@@ -1927,6 +2004,28 @@
             loadEnquiryDeals(); // no need to pass duration, function will auto-detect
         });
         // sort -- END ---------------------------------------------------------
+        //date filter
+        $("#fromAmount, #toAmount").on("change keyup", function () {
+            loadEnquiryDeals();
+        });
+        $("#btnResetFilters").on("click", function () {
+
+            // Clear filters
+            $("#fromAmount").val("0");
+            $("#toAmount").val("0");
+
+            // Reset sort to "This Month"
+            $(".sort-option").removeClass("active");
+            $("[data-value='month']").addClass("active");
+
+            $("#sortByDropdown").text("Sort By: This Month");
+
+            // Reload deals
+            loadEnquiryDeals();
+        });
+
+        //date filter
+
 
         //PROCESS MASTER -- START --------------------------------------------------------------------
         // Add Process

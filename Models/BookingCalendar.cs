@@ -1,5 +1,27 @@
 ﻿namespace ERPAdmin.Models
 {
+    //Get Calendar mock
+    public class GetEnquiryCalendarMock_Request
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+    }
+    public class EnquiryCalendarMock_Model
+    {
+        public string Date { get; set; }
+        public string Day { get; set; }
+        public int Enquiries { get; set; }
+        public List<EnquiryCalendarMock_Customer> EnquiryList { get; set; }
+    }
+
+    public class EnquiryCalendarMock_Customer
+    {
+        public string Name { get; set; }
+        public decimal Amount { get; set; }
+    }
+
+
+
     public class GetBookingCalendar
     {
         public long? BookingId { get; set; } = 0;

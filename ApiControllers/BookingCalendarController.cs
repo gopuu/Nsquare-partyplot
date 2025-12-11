@@ -1568,6 +1568,78 @@ namespace ERPAdmin.ApiControllers
             return Ok(apiResponse);
         }
 
+        //Get Calendar
+        [HttpPost]
+        [Route("GetEnquiryCalendarMock")]
+        public IActionResult GetEnquiryCalendarMock([FromBody] GetEnquiryCalendarMock_Request request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<EnquiryCalendarMock_Model> list = new List<EnquiryCalendarMock_Model>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetEnquiryCalendarMock", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("@Year", SqlDbType.Int).Value = request.Year;
+                    cmd.Parameters.Add("@Month", SqlDbType.Int).Value = request.Month;
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    // Deserialize JSON list
+                    List<EnquiryCalendarMock_Customer> enquiryList = new List<EnquiryCalendarMock_Customer>();
+
+                    if (row["EnquiryList"] != DBNull.Value)
+                    {
+                        try
+                        {
+                            enquiryList = JsonConvert.DeserializeObject<List<EnquiryCalendarMock_Customer>>(
+                                row["EnquiryList"].ToString()
+                            );
+                        }
+                        catch
+                        {
+                            enquiryList = new List<EnquiryCalendarMock_Customer>();
+                        }
+                    }
+
+                    list.Add(new EnquiryCalendarMock_Model
+                    {
+                        Date = Convert.ToString(row["Date"]),
+                        Day = Convert.ToString(row["Day"]),
+                        Enquiries = Convert.ToInt32(row["Enquiries"]),
+                        EnquiryList = enquiryList
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Calendar loaded successfully!";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = "Error: " + ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
     }
 }
 // --------------------- Request / Models ---------------------

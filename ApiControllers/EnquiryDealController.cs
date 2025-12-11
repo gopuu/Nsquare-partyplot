@@ -378,6 +378,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@ProcessId", SqlDbType.BigInt).Value = request.ProcessId;
                     cmd.Parameters.Add("@Duration", SqlDbType.NVarChar, 20).Value = request.Duration;
+                    cmd.Parameters.Add("@FromAmount", SqlDbType.Decimal).Value = request.FromAmount;
+                    cmd.Parameters.Add("@ToAmount", SqlDbType.Decimal).Value = request.ToAmount;
 
                     con.Open();
                     using (SqlDataReader reader = cmd.ExecuteReader())

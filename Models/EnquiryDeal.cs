@@ -10,10 +10,10 @@
         public long Id { get; set; }
         public long ProcessId { get; set; }
         public string? ProcessName { get; set; }
-        public string Name { get; set; }
-        public string Contact { get; set; }
-        public string Address { get; set; }
-        public string Email { get; set; }
+        public string? Name { get; set; }
+        public string? Contact { get; set; }
+        public string? Address { get; set; }
+        public string? Email { get; set; }
         public long EventTypeId { get; set; }
         public string? EventTypeName { get; set; }
         public long EventSubTypeId { get; set; }
@@ -37,16 +37,16 @@
     {
         public long Id { get; set; }
         public long ProcessId { get; set; }
-        public string Name { get; set; }
-        public string Contact { get; set; }
+        public string? Name { get; set; }
+        public string? Contact { get; set; }
         public string? Address { get; set; }
         public string? Email { get; set; }
         public long EventTypeId { get; set; }
         public long EventSubTypeId { get; set; }
         public long BanquetHallId { get; set; }
-        public string EventDate { get; set; }
-        public string EventStartTime { get; set; }
-        public string EventEndTime { get; set; }
+        public string? EventDate { get; set; }
+        public string? EventStartTime { get; set; }
+        public string? EventEndTime { get; set; }
         public long Pax { get; set; }
         public string? FollowUpDate { get; set; }
         public decimal EstimatedAmount { get; set; }
@@ -58,6 +58,8 @@
     {
         public long ProcessId { get; set; }
         public string? Duration { get; set; }
+        public decimal FromAmount { get; set; }
+        public decimal ToAmount { get; set; }
     }
 
     public class SaveEnquiryDeal_forDragNDrop : BaseClass
@@ -72,7 +74,7 @@
     public class EnquiryProcessDto
     {
         public long ProcessId { get; set; }
-        public string ProcessName { get; set; }
+        public string? ProcessName { get; set; }
         public int TotalEnquiryDeals { get; set; }
         public decimal TotalAmount { get; set; }
         public List<dynamic> EnquiryDealsJson { get; set; } = new List<dynamic>();

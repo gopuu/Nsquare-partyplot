@@ -520,6 +520,7 @@
     </div>
 </div>
 <!--AddOns -- MODAL -- END -->
+
 <!--Menu Item-- MODAL -- START -->
 <div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -541,6 +542,7 @@
     </div>
 </div>
 <!--Menu Item-- MODAL -- END -->
+
 <!-- Booking Info Modal -- START -->
 <div class="modal fade" id="bookingReportModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -977,6 +979,7 @@
     </div>
 </div>
 <!-- Booking Info Modal -- END -->
+
 <!-- CANCEL BOOKING MODAL -- START -->
 <div class="modal fade" id="cancelBookingModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1002,6 +1005,7 @@
     </div>
 </div>
 <!-- CANCEL BOOKING MODAL -- END -->
+
 <!-- paymentModal -- START -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1090,7 +1094,41 @@
     </div>
 </div>
 
+<!--Enqury count-->
+<div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
+<style>
+    .enquiry-tooltip {
+        position: absolute;
+        display: none;
+        background: #ffffff;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        min-width: 180px;
+        max-width: 240px;
+        z-index: 999999;
+        border: 1px solid #ddd;
+    }
+
+        .enquiry-tooltip table {
+            width: 100%;
+            margin: 0;
+        }
+
+        .enquiry-tooltip th {
+            background: #f8f9fa;
+            font-weight: bold;
+            padding: 4px;
+        }
+
+        .enquiry-tooltip td {
+            padding: 3px 4px;
+        }
+
+</style>
+
 <!-- paymentModal -- END -->
+
 <!--MAIN JS -- START-->
 <script>
     $(document).ready(function () {
@@ -2066,7 +2104,7 @@
     }
 
     //Generate Days for Selected Month
-    function generateDays(year, month) {
+    function generateDays2(year, month) {
         const daysInMonth = new Date(year, month+1, 0).getDate();
         const days = [];
         for(let d=1; d<=daysInMonth; d++){
@@ -2077,11 +2115,232 @@
                 date: d.toString().padStart(2,"0"),
                 day: dayName,
                 dateObj,
-                enquiries: 0  // ✅ always 0 (will fetch later)
+                enquiries: 2,  // ✅ always 0 (will fetch later)
+                enquiryList: [
+                    {
+                        Name: "Ajay Patel",
+                        Amount: 15000
+                    },
+                    {
+                        Name: "Meera Shah",
+                        Amount: 22000
+                    }
+                ]
             });
         }
         return days;
     }
+
+    // -----------------------------
+    // Async helper: fetch calendar days from API
+    // -----------------------------
+    function generateDaysAsync(year, month) {
+        return new Promise((resolve) => {
+            const req = {
+                Year: year,
+                Month: month + 1 // JS month 0-based -> API month 1-based
+            };
+
+            $.ajax({
+                url: "/api/BookingCalendar/GetEnquiryCalendarMock",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(req),
+                success: function (res) {
+                    try {
+                        if (res && res.status === "Success" && Array.isArray(res.data)) {
+                            const days = res.data.map(item => {
+                                const dd = item.Date;                         // "01"
+                                const day = item.Day;                         // "Mon"
+                                const fullDate = new Date(year, month, parseInt(dd, 10));
+                                return {
+                                    date: String(dd).padStart(2, "0"),
+                                    day: day,
+                                    dateObj: fullDate,
+                                    enquiries: Number(item.Enquiries) || 0,
+                                    enquiryList: Array.isArray(item.EnquiryList) ? item.EnquiryList : []
+                                };
+                            });
+                            resolve(days);
+                            return;
+                        }
+                    } catch (err) {
+                        console.error("generateDaysAsync.parseError:", err);
+                    }
+
+                    // fallback: return empty days (no enquiries)
+                    resolve(generateEmptyDays(year, month));
+                },
+                error: function (err) {
+                    console.error("Calendar API Error:", err);
+                    // fallback: return empty days (no enquiries)
+                    resolve(generateEmptyDays(year, month));
+                }
+            });
+        });
+    }
+
+    // small helper used as fallback when API fails
+    function generateEmptyDays(year, month) {
+        const days = [];
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj = new Date(year, month, d);
+            const dayName = dateObj.toLocaleDateString("en-US", { weekday: "short" });
+            days.push({
+                date: String(d).padStart(2, "0"),
+                day: dayName,
+                dateObj,
+                enquiries: 0,
+                enquiryList: []
+            });
+        }
+        return days;
+    }
+
+    // -----------------------------
+    // Make renderBoard async and await days
+    // -----------------------------
+    async function renderBoard(bookingData = null) {
+        try {
+            board.innerHTML = "";
+
+            // 1. WAIT for enquiry calendar
+            cachedDays = await generateDaysAsync(selectedYear, selectedMonth);
+
+            // 2. Pre-generate shift data
+            cachedShiftData = {};
+            banquetHallsList.forEach(hall => {
+                cachedShiftData[hall.Id] = cachedDays.map(d => generateShiftDataPerDay(d.dateObj));
+            });
+
+            // 3. HEADER (works fine)
+            const dateRow = document.createElement("div");
+            dateRow.className = "row-wrapper";
+
+            const headerLabel = document.createElement("div");
+            headerLabel.className = "text-center";
+            headerLabel.style.minWidth = "80px";
+            headerLabel.innerHTML = `<div class="fw-bold">${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-2">Enquiries</div>`;
+            dateRow.appendChild(headerLabel);
+
+            // 4. DATE CELLS (works fine)
+            cachedDays.forEach(d => {
+                const cell = document.createElement("div");
+                cell.className = "text-center small fw-bold border rounded p-1 bg-light day-cell";
+
+                const badge = document.createElement("span");
+                badge.className = "badge badge-enquiries border border-dark text-black bg-white";
+                badge.style.fontSize = "0.6rem";
+                badge.innerText = d.enquiries;
+
+                if (Array.isArray(d.enquiryList) && d.enquiryList.length > 0) {
+                    badge.dataset.enquiryList = JSON.stringify(d.enquiryList);
+                }
+
+                cell.innerHTML = `${d.date}<br><span class="text-muted" style="font-size:0.6rem">${d.day}</span><br>`;
+                cell.appendChild(badge);
+                dateRow.appendChild(cell);
+            });
+
+            board.appendChild(dateRow);
+
+            // 5. 🔥 ADD THIS ENTIRE BLOCK BACK (YOU MISSED THIS)
+            renderResourceRows(bookingData);
+
+            // 6. Tooltip + other UI initializations (YOU MISSED THESE)
+            enableEnquiryTooltips();
+            attachShiftClickListeners();
+            renderListViewTable();
+            adjustFontSizeForDays(cachedDays.length);
+            attachColumnHoverListeners();
+
+        } catch (err) {
+            console.error("renderBoard error:", err);
+        }
+    }
+    function renderResourceRows(bookingData) {
+
+        banquetHallsList.forEach(hall => {
+            const row = document.createElement("div");
+            row.className = "row-wrapper align-items-center";
+
+            // hall name cell
+            const nameCell = document.createElement("div");
+            nameCell.className = "text-center rounded p-2 name-cell";
+            nameCell.innerText = hall.HallName;
+            row.appendChild(nameCell);
+
+            // each day cells
+            cachedShiftData[hall.Id].forEach((shiftArr, dayIndex) => {
+                const cell = document.createElement("div");
+                cell.className = "border rounded p-1 text-center day-cell";
+
+                const cellDate = cachedDays[dayIndex].dateObj;
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                let isToday = false;
+
+                if (cellDate < today) cell.classList.add("bg-secondary","text-white");
+                else if (cellDate.toDateString() === today.toDateString()) {
+                    cell.classList.add("bg-success","text-white");
+                    isToday = true;
+                }
+                else cell.classList.add("bg-success","text-white");
+
+                cell.innerHTML = shiftArr.map((color, i) => {
+
+                    let finalColor = isToday ? "success" : color;
+
+                    const shiftCode = shiftNames[i];
+                    const full = fullShiftName(shiftCode);
+
+                    // detect booking...
+                    let bookingId = 0; let eventName=""; let clientName=""; let clientContact=""; let eventRange="";
+                    if (Array.isArray(bookingData)) {
+                        for (const b of bookingData) {
+                            if (b.BanquetId === hall.Id && b.ShiftCode === shiftCode) {
+                                const dISO = `${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}-${cachedDays[dayIndex].date}`;
+                                const cur = new Date(dISO);
+                                if (cur >= new Date(b.FromDate) && cur <= new Date(b.TillDate)) {
+                                    bookingId = b.BookingId;
+                                    eventName = b.Booking_TypeName;
+                                    clientName = b.Client_Name;
+                                    clientContact = b.Client_Contact;
+                                    eventRange = `${b.FromDate_Short} ${b.StartTime_Full} - ${b.TillDate_Short} ${b.EndTime_Full}`;
+                                    finalColor = "danger";
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    return `
+                        <div class="badge bg-${finalColor} d-block mb-1"
+                            data-bookingid="${bookingId}"
+                            data-eventname="${eventName}"
+                            data-clientname="${clientName}"
+                            data-clientcontact="${clientContact}"
+                            data-eventdaterange="${eventRange}"
+                            data-shift="${shiftCode}"
+                            data-shiftname="${full}">
+                            ${shiftCode}
+                        </div>`;
+                }).join("");
+
+                row.appendChild(cell);
+            });
+
+            board.appendChild(row);
+        });
+
+        setupShiftTooltip();  // your custom tooltip logic
+    }
+
+    //here5
+
+
 
     //Generate Shifts Colors for Days of Month
     function generateShiftDataPerDay(dateObj) {
@@ -2094,14 +2353,15 @@
         });
     }
 
-    function renderBoard(bookingData=null){
+    //main booking board
+    function renderBoard2(bookingData=null){
         console.log("renderBoard bookingData:", bookingData);
         //showLoader();
         //console.log("renderBoard banquetHallsList:", banquetHallsList);
         board.innerHTML="";
         //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
         cachedDays = generateDays(selectedYear, selectedMonth);
-        //console.log("renderBoard cachedDays:", cachedDays);
+        console.log("renderBoard cachedDays:", cachedDays);
 
         // Pre-generate shift data per resource per day
         cachedShiftData = {};
@@ -2114,9 +2374,9 @@
         const dateRow = document.createElement("div");
         dateRow.className = "row-wrapper";
         const headerLabel = document.createElement("div");
-        headerLabel.className = "fw-bold text-center";
+        headerLabel.className = "text-center";
         headerLabel.style.minWidth="80px";
-        headerLabel.innerHTML = `<div>${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-4">Enquiries</div>`;
+        headerLabel.innerHTML = `<div class="fw-bold">${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-2">Enquiries</div>`;
         dateRow.appendChild(headerLabel);
 
         //Column Header -> Date - Day - Enquiry Count
@@ -2125,11 +2385,15 @@
             cell.className = "text-center small fw-bold border rounded p-1 bg-light day-cell";
 
             const badge = document.createElement("span");
-            badge.className = "badge border border-dark text-black bg-white";
+            badge.className = "badge badge-enquiries border border-dark text-black bg-white";
             badge.style.cursor = "pointer";
             badge.style.padding = "0.15rem 0.25rem"; // smaller than p-1
             badge.style.fontSize = "0.6rem";        // ✅ reduced font size
             badge.innerText = d.enquiries;
+
+            // Make sure enquiryList is always an array
+            if (!Array.isArray(d.enquiryList)) d.enquiryList = [];
+            badge.dataset.enquiryList = JSON.stringify(d.enquiryList);
 
             cell.innerHTML = `${d.date}<br><span class="text-muted" style="font-size:0.6rem">${d.day}</span><br>`;
             cell.appendChild(badge);
@@ -2277,10 +2541,6 @@
             board.appendChild(row);
         });
 
-        // Enable Bootstrap tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
-
         //on cell hover - tooltip ---- START --------------------
         // 🧠 Create a custom tooltip element (only once)
         if (!document.getElementById("customTooltip")) {
@@ -2382,8 +2642,67 @@
         renderListViewTable();
         adjustFontSizeForDays(cachedDays.length);
         attachColumnHoverListeners();
+        enableEnquiryTooltips();
         //hideLoader();
     }
+
+    //enquiry count - tooltip
+    function enableEnquiryTooltips() {
+        const tooltip = document.getElementById("enquiryTooltip");
+
+        // Show tooltip on hover
+        document.addEventListener("mouseover", function (e) {
+            const badge = e.target.closest(".badge-enquiries");
+            if (!badge) return;
+
+            const list = badge.dataset.enquiryList ? JSON.parse(badge.dataset.enquiryList) : [];
+            const count = parseInt(badge.innerText);
+
+            // No tooltip if empty
+            if (count === 0 || list.length === 0) {
+                tooltip.style.display = "none";
+                return;
+            }
+
+            // Build tooltip table
+            let html = `
+                <table class="table table-sm table-bordered m-0">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            list.forEach(x => {
+                html += `
+                    <tr>
+                        <td>${x.Name}</td>
+                        <td class="text-end">₹${(+x.Amount).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+
+            tooltip.innerHTML = html;
+            tooltip.style.display = "block";
+
+            const rect = badge.getBoundingClientRect();
+            tooltip.style.left = (rect.right + 10 + window.scrollX) + "px";
+            tooltip.style.top = (rect.top + window.scrollY) + "px";
+        });
+
+        // Hide tooltip when leaving the badge
+        document.addEventListener("mouseout", function (e) {
+            if (e.target.closest(".badge-enquiries")) {
+                tooltip.style.display = "none";
+            }
+        });
+    }
+
 
     function adjustFontSizeForDays(daysCount){
         const scale = daysCount > 30 ? 0.65 : daysCount > 29 ? 0.7 : 0.75;
@@ -2566,6 +2885,13 @@
     //shift/cell click event
     function attachShiftClickListeners() {
         document.querySelectorAll("#booking-board .badge, #listTable .badge").forEach(badge => {
+            // Skip click event for enquiry badges (tooltip-only)
+            if (badge.classList.contains("badge-enquiries")) {
+                // Ensure cursor style stays pointer
+                badge.style.cursor = "pointer";
+                return; // skip attaching click event
+            }
+
             badge.style.cursor = "pointer";
             badge.addEventListener("click", () => {
                 const color = badge.className.match(/bg-([a-z]+)/)?.[1];
@@ -3693,6 +4019,7 @@
 
 </script>
 <!--MAIN JS -- /END-->
+
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">
 <style>
@@ -3846,6 +4173,7 @@
     });
 </script>
 <!--Booking Note - text Editor --- END ---->
+
 <!-- Time format  --START- Include Flatpickr CSS & JS -->
 <script>
     // Optional: Auto-correct minute/hour inputs
