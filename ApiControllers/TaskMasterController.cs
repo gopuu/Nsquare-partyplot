@@ -57,6 +57,8 @@ public class TaskMasterController : MasterController
                     Id = Convert.ToInt64(row["Id"]),
                     TaskTitle = Convert.ToString(row["TaskTitle"]),
                     TaskDescription = Convert.ToString(row["TaskDescription"]),
+                    CategoryName = Convert.ToString(row["CategoryName"]),
+                    StatusName = Convert.ToString(row["StatusName"]),
 
                     CategoryId = row["CategoryId"] == DBNull.Value ? null : (long?)Convert.ToInt64(row["CategoryId"]),
                     AssignedTo = row["AssignedTo"] == DBNull.Value ? null : (long?)Convert.ToInt64(row["AssignedTo"]),

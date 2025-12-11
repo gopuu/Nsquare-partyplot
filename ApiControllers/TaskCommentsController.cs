@@ -54,8 +54,8 @@ public class TaskCommentsController : MasterController
                     Id = Convert.ToInt64(row["Id"]),
                     TaskId = Convert.ToInt64(row["TaskId"]),
                     CommentText = Convert.ToString(row["CommentText"]),
-                    CommentedBy = Convert.ToInt64(row["CommentedBy"]),
-                    CommentedAt = Convert.ToString(row["CommentedAt"])
+                    CommentedAt = Convert.ToString(row["CommentedAt"]),
+                    TaskTitle = Convert.ToString(row["TaskTitle"])
                 });
             }
 
@@ -99,7 +99,6 @@ public class TaskCommentsController : MasterController
                 cmd.Parameters.AddWithValue("@Id", model.Id);
                 cmd.Parameters.AddWithValue("@TaskId", model.TaskId);
                 cmd.Parameters.AddWithValue("@CommentText", (object)model.CommentText ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@CommentedBy", model.CommentedBy);
                 cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                 con.Open();

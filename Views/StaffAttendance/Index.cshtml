@@ -35,7 +35,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title" id="attendanceModalTitle">Add Attendance</h5>
+                <h5 class="modal-title text-white" id="attendanceModalTitle">Add Attendance</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -306,14 +306,22 @@ $(document).ready(function () {
                 { data: "srno", title: "Sr No" },
                 { data: "StaffName", title: "Staff" },
                 {
-                    data: "AttendanceDate",
+                    data: "AttendanceDateFormat",   // your API date field
                     title: "Date",
-                    render: function(d) {
+                    render: function (d) {
                         if (!d) return '';
+
                         let date = new Date(d);
-                        return date.toLocaleDateString(); // shows only date
+
+                        // Format Date (dd/mm/yyyy OR local format)
+                        let formattedDate = date.toLocaleDateString();
+
+                        // Get Day Name (Monday, Tuesday…)
+                        let dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+                        return `${formattedDate} (${dayName})`;
                     }
-                },
+                 },
                 {
                     data: "CheckInTime",
                     title: "Check In",

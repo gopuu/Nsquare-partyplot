@@ -3681,19 +3681,8 @@
                 }
             },
             error: function (xhr, status, error) {
-                console.error("API xhr:", xhr.responseText);
-
-                let apiError = xhr.responseText || "No response from server.";
-                let customError = error || "Unknown error occurred.";
-
-                // Combine both messages
-                let fullErrorMessage = `API Response: ${apiError}\n\nError: ${customError}`;
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'API Error',
-                    html: `<pre style="text-align:left; white-space:pre-wrap;">${fullErrorMessage}</pre>`,
-                });
+                handleApiError(xhr, status, error,"getBooking fetch fail")
+                
             },
             complete: function() {
                 //hideLoader();

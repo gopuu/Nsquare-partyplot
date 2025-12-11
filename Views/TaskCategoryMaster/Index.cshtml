@@ -1,0 +1,272 @@
+﻿@{
+    ViewData["Title"] = "TaskCategory Master";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-8">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Task Category Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add-task-cat">
+                            <i class="fa fa-plus-circle"></i> Add Task Category
+                        </button>
+                    </div>
+
+                    <div id="tableTaskCategory">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT TASK CATEGORY MODAL -->
+<div class="modal fade" id="TaskCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="TaskCategoryModalTitle">Add Task Category</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="TaskCategoryId" value="0" />
+
+                <div class="row g-3">
+
+                    <div class="col-12">
+                        <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" id="TaskCategoryName" class="form-control" placeholder="Enter Category Name" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Priority No</label>
+                        <input type="number" id="TaskPriorityNo" class="form-control" placeholder="Enter Priority No" />
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex align-items-center">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning ms-2" id="btnSaveTaskCategory">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteTaskCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white">Delete Confirmation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <h4>Are you sure?</h4>
+                <p class="text-muted">Delete this task category?</p>
+
+                <div class="mt-4 d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-task-cat">Yes, Delete</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function () {
+
+    loadTaskCategoryData();
+
+    // ➤ ADD BUTTON CLICK
+    $("#btn-add-task-cat").click(function () {
+
+        const canAdd = (sessionStorage.getItem("CanAdd") === "true");
+        if (!canAdd) return Swal.fire("Access Denied", "You cannot Add.", "error");
+
+        resetTaskCategoryForm();
+        $("#TaskCategoryModalTitle").text("Add Task Category");
+        $("#TaskCategoryModal").modal("show");
+    });
+
+    // ➤ SAVE TASK CATEGORY
+    $("#btnSaveTaskCategory").click(function () {
+
+        let name = $("#TaskCategoryName").val().trim();
+        if (!name) return Swal.fire("Validation", "Category Name is required!", "warning");
+
+        const payload = {
+            Id: Number($("#TaskCategoryId").val() || 0),
+            CategoryName: name,
+            PriorityNo: Number($("#TaskPriorityNo").val() || 0),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+
+        $("#btnSaveTaskCategory").prop("disabled", true);
+
+        $.ajax({
+            url: "/api/TaskCategoryMaster/SaveTaskCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === "Success") {
+                        Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                    $("#TaskCategoryModal").modal("hide");
+                    loadTaskCategoryData();
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save TaskCategory Error");
+            },
+            complete: () => $("#btnSaveTaskCategory").prop("disabled", false)
+        });
+    });
+
+    // ➤ EDIT BUTTON
+    $(document).on("click", ".btn-task-edit", function () {
+
+        const canEdit = (sessionStorage.getItem("CanEdit") === "true");
+        if (!canEdit) return Swal.fire("Access Denied", "You cannot Edit.", "error");
+
+        let row = $("#tableTaskCategory table").DataTable().row($(this).closest("tr")).data();
+
+        resetTaskCategoryForm();
+        $("#TaskCategoryId").val(row.Id);
+        $("#TaskCategoryName").val(row.CategoryName);
+        $("#TaskPriorityNo").val(row.PriorityNo);
+
+        $("#TaskCategoryModalTitle").text("Edit Task Category");
+        $("#TaskCategoryModal").modal("show");
+    });
+
+    // ➤ DELETE BUTTON
+    $(document).on("click", ".btn-task-delete", function () {
+
+        const canDelete = (sessionStorage.getItem("CanDelete") === "true");
+        if (!canDelete) return Swal.fire("Access Denied", "You cannot Delete.", "error");
+
+        let row = $("#tableTaskCategory table").DataTable().row($(this).closest("tr")).data();
+
+        $("#deleteTaskCategoryModal").data("id", row.Id).modal("show");
+    });
+
+    // ➤ CONFIRM DELETE
+    $("#delete-task-cat").click(function () {
+
+        let id = $("#deleteTaskCategoryModal").data("id");
+
+        const payload = {
+            Id: id,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+
+        $.ajax({
+            url: "/api/TaskCategoryMaster/DeleteTaskCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+
+                if (res.status === "Success") {
+                         Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Deleted Successfully!",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+
+                $("#deleteTaskCategoryModal").modal("hide");
+                loadTaskCategoryData();
+            },
+            error: function (xhr, status, error) {
+                   handleApiError(xhr, status, error, "Delete TaskCategory Error");
+            }
+        });
+    });
+
+});
+
+// RESET FORM
+function resetTaskCategoryForm() {
+    $("#TaskCategoryId").val(0);
+    $("#TaskCategoryName").val("");
+    $("#TaskPriorityNo").val("");
+}
+
+// LOAD DATA
+function loadTaskCategoryData() {
+
+    $.ajax({
+        url: "/api/TaskCategoryMaster/GetTaskCategoryMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            renderTaskCategoryTable(res.data);
+        },
+        error: handleApiError
+    });
+}
+
+// RENDER TABLE
+function renderTaskCategoryTable(data) {
+
+    if ($.fn.dataTable.isDataTable("#tableTaskCategory table")) {
+        $("#tableTaskCategory table").DataTable().destroy();
+    }
+
+    data.forEach((x, i) => x.srno = i + 1);
+
+    $("#tableTaskCategory table").DataTable({
+        data: data,
+        columns: [
+            { data: "srno", title: "Sr No" },
+            { data: "CategoryName", title: "Category Name" },
+            { data: "PriorityNo", title: "Priority No" },
+            {
+                data: null,
+                title: "Actions",
+                render: () => `
+                    <button class="btn btn-outline-warning btn-action-xs btn-task-edit">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-action-xs btn-task-delete">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `
+            }
+        ]
+    });
+}
+</script>
+

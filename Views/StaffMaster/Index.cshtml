@@ -44,12 +44,12 @@
                         <input type="text" id="txtName" class="form-control" placeholder="Enter Name">
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Employee Code</label>
                         <input type="text" id="txtEmpCode" class="form-control" placeholder="Enter Employee Code">
                     </div>
 
-                    <div class="col-6">
+                    <div class="col-8">
                         <label class="form-label">Address</label>
                         <textarea id="txtAddress" class="form-control" placeholder="Enter Address"></textarea>
                     </div>
@@ -78,6 +78,14 @@
                     <div class="col-md-4">
                         <label class="form-label">Joining Date</label>
                         <input type="date" id="txtJoiningDate" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Birth Date</label>
+                        <input type="date" id="txtBirthDate" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Anniversary Date</label>
+                        <input type="date" id="txtAnniversaryDate" class="form-control">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Salary</label>
@@ -144,6 +152,11 @@
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" id="switchIsAutoLogin">
                         <label class="form-check-label" for="switchIsAutoLogin">Auto Login</label>
+                    </div>
+
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" id="switchIsActive">
+                        <label class="form-check-label" for="switchIsActive">IsActive</label>
                     </div>
                 </div>
                 <div>
@@ -227,6 +240,8 @@
     $(document).on("click", "#btn-add", function () {
         resetStaffForm();
         $("#txtJoiningDate").val(new Date().toISOString().split("T")[0]);
+        $("#txtBirthDate").val(new Date().toISOString().split("T")[0]);
+        $("#txtAnniversaryDate").val(new Date().toISOString().split("T")[0]);
         $("#staffModalTitle").text("Add Staff");
         $("#staffModal").modal("show");
     });
@@ -269,11 +284,13 @@
                 DesignationId: Number($("#ddlDesignation").val() || 0),
                 AadharCardNo: $("#txtAadhar").val().trim(),
                 JoiningDate: $("#txtJoiningDate").val(),
+                BirthDate: $("#txtBirthDate").val(),
+                AnniversaryDate: $("#txtAnniversaryDate").val(),
+                IsActive: $("#switchIsActive").is(":checked"),
                 Salary: Number($("#txtSalary").val() || 0),
                 Photo: base64File ,
                 User_Name: $("#txtUserName").val().trim(),
                 Password: $("#txtPassword").val().trim(),
-
                 IsSuperUser: $("#switchIsSuperUser").is(":checked"),
                 IsAutoLogin: $("#switchIsAutoLogin").is(":checked"),
                 Bank_Name: $("#txtBankName").val().trim(),
@@ -282,7 +299,6 @@
                 Bank_AccountNo: $("#txtAccountNo").val().trim(),
                 Bank_AccountHolderName: $("#txtBankAccountHolderName").val().trim(),
                 Bank_UPI_Id: $("#txtBankUPIId").val().trim(),
-
                 ActionBy: sessionStorage.getItem("userId") ?? 0
             };
             // ---- API Call ----
@@ -359,6 +375,21 @@
             const dd = String(date.getDate()).padStart(2, '0');
             $('#txtJoiningDate').val(`${yyyy}-${mm}-${dd}`);
         }
+
+        if (rowData.BirthDate) {
+            const date = new Date(rowData.BirthDate);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            $('#txtBirthDate').val(`${yyyy}-${mm}-${dd}`);
+        }
+        if (rowData.AnniversaryDate) {
+            const date = new Date(rowData.AnniversaryDate);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            $('#txtAnniversaryDate').val(`${yyyy}-${mm}-${dd}`);
+        }
         $("#txtSalary").val(rowData.Salary);
 
         // Photo not prefilled in input type="file" for security reasons
@@ -383,6 +414,7 @@
 
         $("#switchIsSuperUser").prop("checked", rowData.IsSuperUser);
         $("#switchIsAutoLogin").prop("checked", rowData.IsAutoLogin);
+        $("#switchIsActive").prop("checked", rowData.IsActive);
 
         // Change modal title
         $("#staffModalTitle").text("Edit Staff");
@@ -471,7 +503,7 @@
     $("#staffId").val(0);
     $("#staffModalTitle").text("Add Staff");
     $("#staffModal input, #staffModal textarea").val("");
-    $("#switchIsSuperUser, #switchIsAutoLogin").prop("checked", false);
+    $("#switchIsSuperUser, #switchIsAutoLogin,#switchIsActive").prop("checked", false);
     }
 
     function fetchStaffData() {
@@ -556,7 +588,11 @@
             title: 'Auto Login',
             render: d => d ? `<span class="badge bg-info">Yes</span>` : `<span class="badge bg-secondary">No</span>`
         },
-       
+         {
+            data: 'IsActive',
+            title: 'IsActive',
+            render: d => d ? `<span class="badge bg-info">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+        },
         {
             data: null,
             title: 'Actions',

@@ -41,7 +41,6 @@ public class EventDutyAssignmentController : MasterController
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
-                cmd.Parameters.AddWithValue("@EventId", request.EventId == 0 ? 0 : request.EventId);
                 cmd.Parameters.AddWithValue("@StaffId", request.StaffId == 0 ? 0 : request.StaffId);
 
                 con.Open();
@@ -54,7 +53,7 @@ public class EventDutyAssignmentController : MasterController
                 list.Add(new EventDutyAssignmentModel
                 {
                     Id = Convert.ToInt64(row["Id"]),
-                    EventId = Convert.ToInt64(row["EventId"]),
+                    BookingId = Convert.ToInt64(row["BookingId"]),
                     StaffId = Convert.ToInt64(row["StaffId"]),
                     DutyRoleId = Convert.ToInt64(row["DutyRoleId"]),
 
@@ -62,6 +61,11 @@ public class EventDutyAssignmentController : MasterController
                     DutyEndTime = row["DutyEndTime"] == DBNull.Value ? null : Convert.ToString(row["DutyEndTime"]),
 
                     Remarks = Convert.ToString(row["Remarks"]),
+                    StaffName = Convert.ToString(row["StaffName"]),
+                    RoleName = Convert.ToString(row["RoleName"]),
+                    StatusName = Convert.ToString(row["StatusName"]),
+                    EventName = Convert.ToString(row["EventName"]),
+
                     StatusId = row["StatusId"] == DBNull.Value ? null : Convert.ToInt64(row["StatusId"])
                 });
             }
@@ -80,8 +84,6 @@ public class EventDutyAssignmentController : MasterController
             return StatusCode(500, apiResponse);
         }
     }
-
-
 
     // ===========================
     // 2. SAVE EVENT DUTY ASSIGNMENT
@@ -105,7 +107,7 @@ public class EventDutyAssignmentController : MasterController
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 cmd.Parameters.AddWithValue("@Id", model.Id);
-                cmd.Parameters.AddWithValue("@EventId", model.EventId);
+                cmd.Parameters.AddWithValue("@BookingId", model.BookingId);
                 cmd.Parameters.AddWithValue("@StaffId", model.StaffId);
                 cmd.Parameters.AddWithValue("@DutyRoleId", model.DutyRoleId);
 

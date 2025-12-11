@@ -468,40 +468,53 @@
                                 </a>
                             </li>
 
-                            <li class="dropdown">
-                                <a class="dropdown-item @(currentController == "DutyManagement" ? "active" : "")" href="#" data-bs-toggle="dropdown">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="briefcase"></span> Duty Management
-                                    </div>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(currentController == "DutyManagement" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown">
+
+                                    <span class="feather-icon me-2" data-feather="briefcase"></span>
+                                    Duty Management
                                 </a>
 
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item" href="/DutyRoleMaster/Index">Duty Role Master</a>
+                                        <a class="dropdown-item d-flex align-items-center" href="/DutyRoleMaster/Index">
+                                            <span class="me-2" data-feather="users"></span> Duty Role Master
+                                        </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="/DutyAssignment/Index">Duty Assignment</a>
+                                        <a class="dropdown-item d-flex align-items-center" href="/EventDutyAssignment/Index">
+                                            <span class="me-2" data-feather="check-square"></span> Duty Assignment
+                                        </a>
                                     </li>
                                 </ul>
                             </li>
 
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(currentController == "TaskManagement" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown">
 
-                            <li class="dropdown">
-                                <a class="dropdown-item @(currentController == "TaskManagement" ? "active" : "")" href="#" data-bs-toggle="dropdown">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="clipboard"></span> Task Management
-                                    </div>
+                                    <span class="feather-icon me-2" data-feather="clipboard"></span>
+                                    Task Management
                                 </a>
 
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item" href="/TaskCategoryMaster/Index">Task Category Master</a>
+                                        <a class="dropdown-item d-flex align-items-center" href="/TaskCategoryMaster/Index">
+                                            <span class="me-2" data-feather="layers"></span> Task Category Master
+                                        </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item" href="/TaskManager/Index">Task Manager</a>
+                                        <a class="dropdown-item d-flex align-items-center" href="/TaskMaster/Index">
+                                            <span class="me-2" data-feather="clipboard"></span> Task Master
+                                        </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item" href="/TaskComments/Index">Task Comments</a>
+                                        <a class="dropdown-item d-flex align-items-center" href="/TaskComments/Index">
+                                            <span class="me-2" data-feather="message-square"></span> Task Comments
+                                        </a>
                                     </li>
                                 </ul>
                             </li>

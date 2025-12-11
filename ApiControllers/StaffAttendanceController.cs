@@ -57,6 +57,8 @@ public class StaffAttendanceController : MasterController
                     AttendanceId = row["AttendanceId"] == DBNull.Value ? null : Convert.ToInt64(row["AttendanceId"]),
                     StaffId = Convert.ToInt64(row["StaffId"]),
                     StaffName = Convert.ToString(row["StaffName"]),
+                    AttendanceDateFormat = row["AttendanceDateFormat"] == DBNull.Value ? null : Convert.ToString(row["AttendanceDateFormat"]),
+                    DayName = Convert.ToString(row["DayName"]),
 
                     AttendanceDate = row["AttendanceDate"] == DBNull.Value ? null : Convert.ToString(row["AttendanceDate"]),
                     CheckInTime = row["CheckInTime"] == DBNull.Value ? null : Convert.ToString(row["CheckInTime"]),
