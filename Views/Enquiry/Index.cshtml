@@ -387,10 +387,10 @@
 
                     <!-- Submit -->
                     <div class="col-12 text-end">
-                        <button type="button" class="btn btn-outline-danger d-none" id="deleteDealBtn">
+                        <button type="button" class="btn btn-action-xs btn-outline-danger d-none" id="deleteDealBtn">
                             <i class="fa fa-trash"></i> Delete
                         </button>
-                        <button type="submit" class="btn btn-outline-warning" id="saveDealBtn">
+                        <button type="submit" class="btn btn-action-xs btn-outline-warning" id="saveDealBtn">
                             <i class="fa fa-save"></i> Save Enquiry
                         </button>
                     </div>
@@ -501,6 +501,15 @@
 <!-- Modal: Follow up modal-->
 <!-- Follow-Up Modal -->
 <style>
+    #followupModal .text-secondary {
+        font-weight: 600;
+        color: #6c757d !important;
+    }
+
+    #followupModal span {
+        font-size: 14px;
+    }
+
     /* Compact modal UI */
     #followupModal .modal-body,
     #followupModal .modal-header,
@@ -558,64 +567,80 @@
                 <input type="hidden" id="hfFollowUpId" value="0">
 
                 <!-- SECTION 1 : INQUIRY DETAILS (Display Only) -->
-                <div class="mb-2 pb-2 border-bottom">
+                <div class="small">
 
-                    <h6 class="fw-bold text-primary mb-2">Inquiry Details</h6>
+                    <!-- Row 1 -->
+                    <div class="row mb-1">
 
-                    <div class="row g-1 small">
-
-                        <div class="col-4">
-                            <label class="form-label">Enquirer</label>
-                            <div class="form-control-plaintext fw-bold">PA ALL GROUP BY DIVYESH SIR</div>
+                        <!-- Long Field -->
+                        <div class="col-md-5">
+                            <span class="text-secondary fw-semibold">Enquirer:</span>
+                            <span class="fw-bold" id="inqName">PA ALL GROUP BY DIVYESH SIR</span>
                         </div>
 
-                        <div class="col-2">
-                            <label class="form-label">Contact</label>
-                            <div class="form-control-plaintext">0000000000</div>
+                        <!-- Short Field -->
+                        <div class="col-md-2">
+                            <span class="text-secondary fw-semibold">Contact:</span>
+                            <span id="inqContact">0000000000</span>
                         </div>
 
-                        <div class="col-2">
-                            <label class="form-label">Slot</label>
-                            <div class="form-control-plaintext">FD</div>
+                        <!-- Short Field -->
+                        <div class="col-md-1">
+                            <span class="text-secondary fw-semibold">Slot:</span>
+                            <span id="inqSlot">FD</span>
                         </div>
 
-                        <div class="col-2">
-                            <label class="form-label">Pax</label>
-                            <div class="form-control-plaintext">150</div>
+                        <!-- Short Field -->
+                        <div class="col-md-1">
+                            <span class="text-secondary fw-semibold">Pax:</span>
+                            <span id="inqPax">150</span>
                         </div>
 
-                        <div class="col-2">
-                            <label class="form-label">Event</label>
-                            <div class="form-control-plaintext">Meeting</div>
+                        <!-- Long Field -->
+                        <div class="col-md-3">
+                            <span class="text-secondary fw-semibold">Event:</span>
+                            <span id="inqEvent">Meeting</span>
                         </div>
-
-                        <div class="col-3">
-                            <label class="form-label">Event Date</label>
-                            <div class="form-control-plaintext">18-Jun-2025</div>
-                        </div>
-
-                        <div class="col-3">
-                            <label class="form-label">Halls</label>
-                            <div class="form-control-plaintext">RAMA, SITA</div>
-                        </div>
-
-                        <div class="col-3">
-                            <label class="form-label">Email</label>
-                            <div class="form-control-plaintext">XYZ</div>
-                        </div>
-
-                        <div class="col-3">
-                            <label class="form-label">Address</label>
-                            <div class="form-control-plaintext">SURAT</div>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">Note</label>
-                            <div class="form-control-plaintext">NO NOTE</div>
-                        </div>
-
                     </div>
+
+                    <!-- Row 2 -->
+                    <div class="row mb-1">
+
+                        <!-- Short Field -->
+                        <div class="col-md-3">
+                            <span class="text-secondary fw-semibold">Event Date:</span>
+                            <span id="inqEventDate">18-Jun-2025</span>
+                        </div>
+
+                        <!-- Short Field -->
+                        <div class="col-md-3">
+                            <span class="text-secondary fw-semibold">Halls:</span>
+                            <span id="inqHalls">RAMA, SITA</span>
+                        </div>
+
+                        <!-- Long Field -->
+                        <div class="col-md-4">
+                            <span class="text-secondary fw-semibold">Email:</span>
+                            <span id="inqEmail">XYZ@gmail.com</span>
+                        </div>
+
+                        <!-- Long Field -->
+                        <div class="col-md-4">
+                            <span class="text-secondary fw-semibold">Address:</span>
+                            <span id="inqAddress">SURAT</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 3 Full Width -->
+                    <div class="row mb-1">
+                        <div class="col-md-12">
+                            <span class="text-secondary fw-semibold">Note:</span>
+                            <span id="inqNote">NO NOTE</span>
+                        </div>
+                    </div>
+
                 </div>
+
 
                 <!-- SECTION 2: Follow-Up Form -->
                 <div class="mb-2 pb-2 border-bottom">
@@ -1304,12 +1329,8 @@
                         });
                     }
                 },
-                error: function (xhr) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error!",
-                        text: xhr.responseText || "Something went wrong while fetching deal data."
-                    });
+                error: function (xhr, error, status) {
+                    handleApiError(xhr, error, status, "EnquiryId Fetch Fail");
                 },
                 complete: function () {
                     //hideLoader();
