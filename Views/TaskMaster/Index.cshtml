@@ -1,0 +1,394 @@
+﻿@{
+    ViewData["Title"] = "Task Master";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-12">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Task Manager</h4>
+                        <button class="btn btn-outline-warning" id="btn-add-task">
+                            <i class="fa fa-plus-circle"></i> Add Task
+                        </button>
+                    </div>
+
+                    <div id="tableTask">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="TaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="TaskModalTitle">Add Task</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="TaskId" value="0" />
+
+                <div class="row g-3">
+
+                    <div class="col-12">
+                        <label class="form-label">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" id="TaskTitle" class="form-control" placeholder="Enter Task Title" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Task Description</label>
+                        <textarea id="TaskDescription" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Category</label>
+                        <select id="TaskCategoryId" class="form-select"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Assigned To</label>
+                        <select id="TaskAssignedTo" class="form-select">
+                            <option value="0">--Select AssignedTo--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Assigned By</label>
+                        <select id="TaskAssignedBy" class="form-select">
+                            <option value="0">--Select AssignedBy--</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select id="TaskStatusId" class="form-select"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Priority Level</label>
+                        <select id="PriorityLevel" class="form-select">
+                            <option value="0">--Select--</option>
+                           
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="StartDate" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" id="DueDate" class="form-control" />
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning" id="btnSaveTask">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">Delete Task</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <h4>Are you sure?</h4>
+                <p class="text-muted">This task will be deleted permanently.</p>
+
+                <div class="mt-3 d-flex gap-2 justify-content-center">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-outline-danger" id="delete-task">Yes, Delete</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function () {
+
+    loadTaskData();
+    loadCategoryDropdown();
+    loadStatusDropdown();
+    loadStaffDropdown();
+
+    // ➤ ADD TASK BUTTON
+    $("#btn-add-task").click(function () {
+        if (sessionStorage.getItem("CanAdd") !== "true")
+            return Swal.fire("Access Denied", "You cannot Add.", "error");
+
+        resetTaskForm();
+        $("#TaskModalTitle").text("Add Task");
+        $("#TaskModal").modal("show");
+    });
+
+    // ➤ SAVE TASK
+    $("#btnSaveTask").click(function () {
+
+        let title = $("#TaskTitle").val().trim();
+        if (!title) return Swal.fire("Validation", "Task Title required!", "warning");
+
+        const payload = {
+            Id: Number($("#TaskId").val() || 0),
+            TaskTitle: title,
+            TaskDescription: $("#TaskDescription").val().trim(),
+            CategoryId: $("#TaskCategoryId").val() || null,
+            AssignedTo: $("#TaskAssignedTo").val() || null,
+            AssignedBy: sessionStorage.getItem("userId"), // current user
+            PriorityLevel: $("#PriorityLevel").val() || null,
+            StartDate: $("#StartDate").val() || null,
+            DueDate: $("#DueDate").val() || null,
+            CompletedDate: null,
+            StatusId: $("#TaskStatusId").val() || null,
+            ActionBy: sessionStorage.getItem("userId")
+        };
+
+        $.ajax({
+            url: "/api/TaskMaster/SaveTaskMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === "Success") {
+                    Swal.fire("Success", res.message, "success");
+                    $("#TaskModal").modal("hide");
+                    loadTaskData();
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+            },
+            error: handleApiError
+        });
+    });
+
+    // ➤ EDIT BUTTON
+    $(document).on("click", ".btn-task-edit", function () {
+
+        if (sessionStorage.getItem("CanEdit") !== "true")
+            return Swal.fire("Access Denied", "You cannot Edit.", "error");
+
+        let row = $("#tableTask table").DataTable().row($(this).closest("tr")).data();
+
+        resetTaskForm();
+
+        $("#TaskId").val(row.Id);
+        $("#TaskTitle").val(row.TaskTitle);
+        $("#TaskDescription").val(row.TaskDescription);
+        $("#TaskCategoryId").val(row.CategoryId);
+        $("#TaskAssignedTo").val(row.AssignedTo);
+        $("#TaskStatusId").val(row.StatusId);
+        $("#PriorityLevel").val(row.PriorityLevel);
+        $("#StartDate").val(row.StartDate);
+        $("#DueDate").val(row.DueDate);
+
+        $("#TaskModalTitle").text("Edit Task");
+        $("#TaskModal").modal("show");
+    });
+
+    // ➤ DELETE OPEN MODAL
+    $(document).on("click", ".btn-task-delete", function () {
+
+        if (sessionStorage.getItem("CanDelete") !== "true")
+            return Swal.fire("Access Denied", "You cannot Delete.", "error");
+
+        let row = $("#tableTask table").DataTable().row($(this).closest("tr")).data();
+
+        $("#deleteTaskModal").data("id", row.Id).modal("show");
+    });
+
+    // ➤ CONFIRM DELETE
+    $("#delete-task").click(function () {
+
+        let id = $("#deleteTaskModal").data("id");
+
+        const payload = {
+            Id: id,
+            ActionBy: sessionStorage.getItem("userId")
+        };
+
+        $.ajax({
+            url: "/api/TaskMaster/DeleteTaskMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                Swal.fire("Success", "Task deleted!", "success");
+                $("#deleteTaskModal").modal("hide");
+                loadTaskData();
+            },
+            error: handleApiError
+        });
+    });
+
+});
+
+// RESET FORM
+function resetTaskForm() {
+    $("#TaskId").val(0);
+    $("#TaskTitle").val("");
+    $("#TaskDescription").val("");
+    $("#TaskCategoryId").val("");
+    $("#TaskAssignedTo").val("");
+    $("#TaskStatusId").val("");
+    $("#PriorityLevel").val("");
+    $("#StartDate").val("");
+    $("#DueDate").val("");
+}
+
+// LOAD TASK DATA
+function loadTaskData() {
+
+    let filter = {
+        Id: 0,
+        AssignedTo: 0,
+        CategoryId: 0,
+        StatusId: 0
+    };
+
+    $.ajax({
+        url: "/api/TaskMaster/GetTaskMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(filter),
+        success: function (res) {
+            renderTaskTable(res.data);
+        },
+        error: handleApiError
+    });
+}
+
+// RENDER TASK TABLE
+function renderTaskTable(data) {
+
+    if ($.fn.dataTable.isDataTable("#tableTask table")) {
+        $("#tableTask table").DataTable().destroy();
+    }
+
+    data.forEach((x, i) => x.srno = i + 1);
+
+    $("#tableTask table").DataTable({
+        data: data,
+        columns: [
+            { data: "srno", title: "Sr No" },
+            { data: "TaskTitle", title: "Title" },
+            { data: "TaskDescription", title: "Description" },
+            { data: "StartDate", title: "Start" },
+            { data: "DueDate", title: "Due" },
+            { data: "PriorityLevel", title: "Priority" },
+            {
+                data: null,
+                title: "Actions",
+                render: () => `
+                        <button class="btn btn-outline-warning btn-action-xs btn-task-edit">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-action-xs btn-task-delete">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `
+            }
+        ]
+    });
+}
+
+function loadCategoryDropdown() {
+    $.ajax({
+        url: "/api/TaskCategoryMaster/GetTaskCategoryMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            let ddl = $("#TaskCategoryId");
+            ddl.empty().append(`<option value="">Select</option>`);
+            res.data.forEach(x => {
+                ddl.append(`<option value="${x.Id}">${x.CategoryName}</option>`);
+            });
+        }
+    });
+}
+
+function loadStatusDropdown() {
+    $.ajax({
+        url: "/api/StatusMaster/GetStatusMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, StatusType: "TASK" }),
+        success: function (res) {
+            let ddl = $("#TaskStatusId");
+            ddl.empty().append(`<option value="">Select</option>`);
+            res.data.forEach(x => {
+                ddl.append(`<option value="${x.Id}">${x.StatusName}</option>`);
+            });
+        }
+    });
+}
+
+function loadStaffDropdown() {
+    $.ajax({
+        url: '/api/StaffMaster/GetStaffMaster',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: 0, StatusType: "Attendance" }),
+        success: function (res) {
+
+            const staff = res?.data || [];
+
+            // Option list generate
+            const options = staff
+                .map(x => `<option value="${x.Id}">${x.Name}</option>`)
+                .join('');
+
+            // Dono dropdown me same options set
+            $('#TaskAssignedTo').html(options);
+            $('#TaskAssignedBy').html(options);
+        }
+    });
+}
+
+function loadStatusDropdown() {
+    $.ajax({
+        url: "/api/StatusMaster/GetStatusMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, StatusType: "TASK" }),
+        success: function (res) {
+            let ddl = $("#TaskStatusId");
+            ddl.empty().append(`<option value="">Select</option>`);
+            res.data.forEach(x => {
+                ddl.append(`<option value="${x.Id}">${x.StatusName}</option>`);
+            });
+        }
+    });
+}
+
+</script>
