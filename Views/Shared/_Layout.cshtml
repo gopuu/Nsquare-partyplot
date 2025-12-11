@@ -92,6 +92,17 @@
         #tableMain table.dataTable td {
             line-height: 1.1 !important;
         }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+        .dropdown-submenu {
+            top: 0;
+            left: 100%;
+            margin-left: .1rem;
+        }
+
     </style>
 
   </head>
@@ -276,7 +287,13 @@
                                     </div>
                                 </a>
                             </li>
-                            
+                            <li>
+                                <a class="dropdown-item @(currentController == "StatusMaster" ? "active" : "")" href="/StatusMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="activity"></span>Status Master
+                                    </div>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -406,13 +423,7 @@
                                     </div>
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "StatusMaster" ? "active" : "")" href="/StatusMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="activity"></span>Status Master
-                                    </div>
-                                </a>
-                            </li>
+                            
                             <li>
                                 <a class="dropdown-item @(currentController == "LeaveTypeMaster" ? "active" : "")" href="/LeaveTypeMaster">
                                     <div class="dropdown-item-wrapper">
@@ -455,6 +466,44 @@
                                         <span class="me-2 uil" data-feather="file-text"></span>Staff Documents
                                     </div>
                                 </a>
+                            </li>
+
+                            <li class="dropdown">
+                                <a class="dropdown-item @(currentController == "DutyManagement" ? "active" : "")" href="#" data-bs-toggle="dropdown">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="briefcase"></span> Duty Management
+                                    </div>
+                                </a>
+
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="/DutyRoleMaster/Index">Duty Role Master</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/DutyAssignment/Index">Duty Assignment</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+
+                            <li class="dropdown">
+                                <a class="dropdown-item @(currentController == "TaskManagement" ? "active" : "")" href="#" data-bs-toggle="dropdown">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="clipboard"></span> Task Management
+                                    </div>
+                                </a>
+
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="/TaskCategoryMaster/Index">Task Category Master</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/TaskManager/Index">Task Manager</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/TaskComments/Index">Task Comments</a>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                     </li>
