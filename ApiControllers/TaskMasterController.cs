@@ -190,4 +190,59 @@ public class TaskMasterController : MasterController
             return StatusCode(500, apiResponse);
         }
     }
+
+
+    [HttpPost]
+    [Route("GetPriorityLevels")]
+    public IActionResult GetPriorityLevels([FromBody] GetPriorityLevelsRequest request)
+    {
+        apiResponse apiResponse = new apiResponse();
+        List<PriorityLevelModel> list = new List<PriorityLevelModel>();
+
+        try
+        {
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult errorResult))
+                return errorResult;
+
+            DataTable dt = new DataTable();
+
+            using (SqlConnection con = new SqlConnection(connStr))
+            using (SqlCommand cmd = new SqlCommand("GetPriorityLevels", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                // Only pass Id if required (kept for consistency)
+                cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(new PriorityLevelModel
+                {
+                    Id = Convert.ToInt64(row["Id"]),
+                    PriorityLevel = Convert.ToInt32(row["PriorityLevel"]),
+                    PriorityName = Convert.ToString(row["PriorityName"])
+                });
+            }
+
+            apiResponse.message = "Priority levels fetched successfully!";
+            apiResponse.data = list;
+            apiResponse.status = "Success";
+            return Ok(apiResponse);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.status = "Error";
+            return StatusCode(500, apiResponse);
+        }
+    }
+
+
 }

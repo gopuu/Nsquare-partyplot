@@ -1,5 +1,17 @@
 ﻿namespace ERPAdmin.Models
 {
+    public class GetPriorityLevelsRequest
+    {
+        public long Id { get; set; }  // Optional; 0 = fetch all
+    }
+
+    public class PriorityLevelModel
+    {
+        public long Id { get; set; }
+        public int PriorityLevel { get; set; }     // 1 = High, 2 = Medium, 3 = Low
+        public string? PriorityName { get; set; }
+    }
+
     public class TaskMaster
     {
         public long Id { get; set; }
