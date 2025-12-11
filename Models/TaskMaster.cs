@@ -69,6 +69,8 @@
     {
         public long Id { get; set; }
         public string? TaskTitle { get; set; }
+        public string? CategoryName { get; set; }
+        public string? StatusName { get; set; }
         public string? TaskDescription { get; set; }
 
         public long? CategoryId { get; set; }

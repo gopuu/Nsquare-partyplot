@@ -13,7 +13,7 @@
             <div class="col-12 col-xxl-12">
                 <div class="mb-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 text-warning">Task Manager</h4>
+                        <h4 class="mb-0 text-warning">Task Master</h4>
                         <button class="btn btn-outline-warning" id="btn-add-task">
                             <i class="fa fa-plus-circle"></i> Add Task
                         </button>
@@ -44,12 +44,12 @@
 
                 <div class="row g-3">
 
-                    <div class="col-12">
+                    <div class="col-6">
                         <label class="form-label">Task Title <span class="text-danger">*</span></label>
                         <input type="text" id="TaskTitle" class="form-control" placeholder="Enter Task Title" />
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-6">
                         <label class="form-label">Task Description</label>
                         <textarea id="TaskDescription" class="form-control" rows="3"></textarea>
                     </div>
@@ -97,10 +97,15 @@
                         <input type="date" id="DueDate" class="form-control" />
                     </div>
 
+                    <div class="col-md-4">
+                        <label class="form-label">Completed Date</label>
+                        <input type="date" id="CompletedDate" class="form-control" />
+                    </div>
+
                 </div>
             </div>
 
-            <div class="modal-footer d-flex justify-content-between">
+            <div class="modal-footer d-flex">
                 <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                 <button class="btn btn-outline-warning" id="btnSaveTask">Save</button>
             </div>
@@ -110,24 +115,25 @@
 </div>
 
 
-<div class="modal fade" id="deleteTaskModal" tabindex="-1">
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
-            <div class="modal-header bg-danger">
-                <h5 class="modal-title text-white">Delete Task</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
             </div>
-
-            <div class="modal-body text-center">
-                <h4>Are you sure?</h4>
-                <p class="text-muted">This task will be deleted permanently.</p>
-
-                <div class="mt-3 d-flex gap-2 justify-content-center">
-                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-outline-danger" id="delete-task">Yes, Delete</button>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
                 </div>
-
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
             </div>
         </div>
     </div>
@@ -141,6 +147,8 @@ $(document).ready(function () {
     loadCategoryDropdown();
     loadStatusDropdown();
     loadStaffDropdown();
+    loadPriorityLevelDropdown();
+    setDefaultDates();
 
     // ➤ ADD TASK BUTTON
     $("#btn-add-task").click(function () {
@@ -162,14 +170,14 @@ $(document).ready(function () {
             Id: Number($("#TaskId").val() || 0),
             TaskTitle: title,
             TaskDescription: $("#TaskDescription").val().trim(),
-            CategoryId: $("#TaskCategoryId").val() || null,
-            AssignedTo: $("#TaskAssignedTo").val() || null,
-            AssignedBy: sessionStorage.getItem("userId"), // current user
-            PriorityLevel: $("#PriorityLevel").val() || null,
-            StartDate: $("#StartDate").val() || null,
-            DueDate: $("#DueDate").val() || null,
-            CompletedDate: null,
-            StatusId: $("#TaskStatusId").val() || null,
+            CategoryId: $("#TaskCategoryId").val(),
+            AssignedTo: $("#TaskAssignedTo").val(),
+            AssignedBy: $("#TaskAssignedBy").val(), // current user
+            PriorityLevel: $("#PriorityLevel").val(),
+            StartDate: $("#StartDate").val(),
+            DueDate: $("#DueDate").val(),
+            CompletedDate:$("#CompletedDate").val(),
+            StatusId: $("#TaskStatusId").val(),
             ActionBy: sessionStorage.getItem("userId")
         };
 
@@ -178,14 +186,23 @@ $(document).ready(function () {
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
-            success: function (res) {
-                if (res.status === "Success") {
-                    Swal.fire("Success", res.message, "success");
-                    $("#TaskModal").modal("hide");
-                    loadTaskData();
-                } else {
-                    Swal.fire("Error", res.message, "error");
-                }
+                success: function (res) {
+        if (res.status === "Success") {
+            Swal.fire({
+                position: "top-end",
+                icon: "success",
+                title: "Saved!",
+                showConfirmButton: false,
+                timer: 1200
+            });
+            // Modal hide & reload after small delay
+            setTimeout(() => {
+                $("#TaskModal").modal("hide");
+                loadTaskData();
+            }, 1200);
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
             },
             error: handleApiError
         });
@@ -195,10 +212,9 @@ $(document).ready(function () {
     $(document).on("click", ".btn-task-edit", function () {
 
         if (sessionStorage.getItem("CanEdit") !== "true")
-            return Swal.fire("Access Denied", "You cannot Edit.", "error");
+           return Swal.fire("Access Denied", "You cannot Edit.", "error");
 
         let row = $("#tableTask table").DataTable().row($(this).closest("tr")).data();
-
         resetTaskForm();
 
         $("#TaskId").val(row.Id);
@@ -206,36 +222,51 @@ $(document).ready(function () {
         $("#TaskDescription").val(row.TaskDescription);
         $("#TaskCategoryId").val(row.CategoryId);
         $("#TaskAssignedTo").val(row.AssignedTo);
+        $("#TaskAssignedBy").val(row.AssignedBy);
         $("#TaskStatusId").val(row.StatusId);
         $("#PriorityLevel").val(row.PriorityLevel);
-        $("#StartDate").val(row.StartDate);
-        $("#DueDate").val(row.DueDate);
-
+       
+        if (row.StartDate) {
+            const date = new Date(row.StartDate);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            $('#StartDate').val(`${yyyy}-${mm}-${dd}`);
+        }
+        if (row.DueDate) {
+            const date = new Date(row.DueDate);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            $('#DueDate').val(`${yyyy}-${mm}-${dd}`);
+        }
+        if (row.CompletedDate) {
+            const date = new Date(row.CompletedDate);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            $('#CompletedDate').val(`${yyyy}-${mm}-${dd}`);
+        }
         $("#TaskModalTitle").text("Edit Task");
         $("#TaskModal").modal("show");
     });
 
     // ➤ DELETE OPEN MODAL
     $(document).on("click", ".btn-task-delete", function () {
-
         if (sessionStorage.getItem("CanDelete") !== "true")
-            return Swal.fire("Access Denied", "You cannot Delete.", "error");
+        return Swal.fire("Access Denied", "You cannot Delete.", "error");
 
         let row = $("#tableTask table").DataTable().row($(this).closest("tr")).data();
-
-        $("#deleteTaskModal").data("id", row.Id).modal("show");
+            $("#deleteRecordModal").data("id", row.Id).modal("show");
     });
 
     // ➤ CONFIRM DELETE
-    $("#delete-task").click(function () {
-
-        let id = $("#deleteTaskModal").data("id");
-
+    $("#delete-record").click(function () {
+       let id = $("#deleteRecordModal").data("id");
         const payload = {
             Id: id,
             ActionBy: sessionStorage.getItem("userId")
         };
-
         $.ajax({
             url: "/api/TaskMaster/DeleteTaskMaster",
             type: "POST",
@@ -243,7 +274,7 @@ $(document).ready(function () {
             data: JSON.stringify(payload),
             success: function (res) {
                 Swal.fire("Success", "Task deleted!", "success");
-                $("#deleteTaskModal").modal("hide");
+                $("#deleteRecordModal").modal("hide");
                 loadTaskData();
             },
             error: handleApiError
@@ -261,21 +292,19 @@ function resetTaskForm() {
     $("#TaskAssignedTo").val("");
     $("#TaskStatusId").val("");
     $("#PriorityLevel").val("");
-    $("#StartDate").val("");
-    $("#DueDate").val("");
+   
 }
 
 // LOAD TASK DATA
 function loadTaskData() {
-
-    let filter = {
+   let filter = {
         Id: 0,
         AssignedTo: 0,
         CategoryId: 0,
         StatusId: 0
     };
 
-    $.ajax({
+   $.ajax({
         url: "/api/TaskMaster/GetTaskMaster",
         type: "POST",
         contentType: "application/json",
@@ -302,8 +331,36 @@ function renderTaskTable(data) {
             { data: "srno", title: "Sr No" },
             { data: "TaskTitle", title: "Title" },
             { data: "TaskDescription", title: "Description" },
-            { data: "StartDate", title: "Start" },
-            { data: "DueDate", title: "Due" },
+            { data: "CategoryName", title: "Category" },
+            { data: "StatusName", title: "Status" },
+            
+            {
+                data: "StartDate",
+                title: "Start Date",
+                render: function(d) {
+                    if (!d) return '';
+                    let date = new Date(d);
+                    return date.toLocaleDateString(); // shows only date
+                }
+            },
+            {
+                data: "DueDate",
+                title: "Due Date",
+                render: function(d) {
+                    if (!d) return '';
+                    let date = new Date(d);
+                    return date.toLocaleDateString(); // shows only date
+                }
+            },
+                {
+                    data: "CompletedDate",
+                    title: "Completed Date",
+                    render: function(d) {
+                        if (!d) return '';
+                        let date = new Date(d);
+                        return date.toLocaleDateString(); // shows only date
+                    }
+                },
             { data: "PriorityLevel", title: "Priority" },
             {
                 data: null,
@@ -329,7 +386,7 @@ function loadCategoryDropdown() {
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
             let ddl = $("#TaskCategoryId");
-            ddl.empty().append(`<option value="">Select</option>`);
+                ddl.empty().append(`<option value="">--Select Category--</option>`);
             res.data.forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.CategoryName}</option>`);
             });
@@ -345,7 +402,7 @@ function loadStatusDropdown() {
         data: JSON.stringify({ Id: 0, StatusType: "TASK" }),
         success: function (res) {
             let ddl = $("#TaskStatusId");
-            ddl.empty().append(`<option value="">Select</option>`);
+            ddl.empty().append(`<option value="">--Select Status--</option>`);
             res.data.forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.StatusName}</option>`);
             });
@@ -363,32 +420,41 @@ function loadStaffDropdown() {
 
             const staff = res?.data || [];
 
-            // Option list generate
-            const options = staff
-                .map(x => `<option value="${x.Id}">${x.Name}</option>`)
-                .join('');
+            // Default + Staff list
+            const options =
+                `<option value="">-- Select Staff --</option>` +
+                staff.map(x => `<option value="${x.Id}">${x.Name}</option>`).join('');
 
-            // Dono dropdown me same options set
+            // Same options in both dropdowns
             $('#TaskAssignedTo').html(options);
             $('#TaskAssignedBy').html(options);
         }
     });
 }
 
-function loadStatusDropdown() {
+function loadPriorityLevelDropdown() {
     $.ajax({
-        url: "/api/StatusMaster/GetStatusMaster",
+        url: "/api/TaskMaster/GetPriorityLevels",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, StatusType: "TASK" }),
         success: function (res) {
-            let ddl = $("#TaskStatusId");
+            let ddl = $("#PriorityLevel");
             ddl.empty().append(`<option value="">Select</option>`);
             res.data.forEach(x => {
-                ddl.append(`<option value="${x.Id}">${x.StatusName}</option>`);
+                    ddl.append(`<option value="${x.Id}">${x.PriorityName}</option>`);
             });
         }
     });
 }
+
+function setDefaultDates() {
+    const today = new Date().toISOString().split("T")[0];  // yyyy-mm-dd format
+
+    $("#StartDate").val(today);
+    $("#DueDate").val(today);
+    $("#CompletedDate").val(today);
+}
+
 
 </script>

@@ -48,6 +48,8 @@
         public long? StatusId { get; set; }
         public string? StaffName { get; set; }
         public string? StatusName { get; set; }
+        public string? AttendanceDateFormat { get; set; }
+        public string? DayName { get; set; }
 
     }
 
