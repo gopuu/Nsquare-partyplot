@@ -1,0 +1,305 @@
+﻿@{
+    ViewData["Title"] = "UserRights";
+    Layout = "_Layout";
+}
+
+<style>
+    .page-content {
+        padding-top: 90px !important;
+    }
+
+    #rightsTabs .nav-link {
+        font-size: 13px;
+        padding: 6px 12px;
+        font-weight: 600;
+    }
+
+    table th, table td {
+        vertical-align: middle;
+        font-size: 13px;
+        padding: 0.5rem 0.5rem;
+    }
+
+    table th {
+        background: #f4f4f4;
+        font-weight: 800;
+    }
+
+    #rightsTabs {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+
+        #rightsTabs .nav-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        #rightsTabs .nav-link {
+            width: 100%;
+            border: none;
+            color: #0d6efd;
+            padding: 2px 5px;
+            border-radius: 0;
+            font-weight: bold;
+        }
+
+            #rightsTabs .nav-link.active {
+                background: #ff8c00;
+                color: white;
+                border-bottom: 3px solid #cc6e00;
+            }
+
+    .tab-pane {
+        height: 350px;
+        padding-right: 6px;
+    }
+    /* Hover effect */
+    #rightsTabs .nav-link:not(.active):hover {
+        background-color: rgba(0,0,0,0.05);
+        color: #ff8c00;
+    }
+
+</style>
+
+@*UserRights*@
+<div class="container-fluid page-content">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center py-2 px-3">
+                <!-- LEFT TITLE -->
+                <h5 class="mb-0">User Rights Master</h5>
+                <!-- RIGHT SIDE DROPDOWN + BUTTON -->
+                <div class="d-flex gap-3">
+                    <select id="ddlStaff" class="form-select form-select-sm">
+                    </select>
+                    <button class="btn btn-outline-warning btn-sm" id="btnSave">Save</button>
+                </div>
+
+            </div>
+        <div class="card-body">
+            <!-- 🔵 FIXED RIGHT TABS -->
+            <ul class="nav nav-tabs mt-3" id="rightsTabs" role="tablist">
+                <!-- JS will inject tabs -->
+            </ul>
+            <!-- 🔵 TAB CONTENT -->
+            <div class="tab-content p-3 border border-top-0" id="rightsTabsContent">
+                <!-- JS will inject table -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+       loadStaffDropdown();
+       fetchUserRights();
+       $("#ddlStaff").change(function () {
+            let staffid = $(this).val(); 
+            //console.log("staffid:", staffid);
+            if (staffid !== "0") {
+                fetchUserRights(staffid); 
+            } else {
+                $('.list').empty(); 
+            }
+        });
+    });
+
+    function loadStaffDropdown(selectedId = null) {
+              $.ajax({
+                url: "/api/StaffMaster/GetStaffMaster",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ Id: 0 }),
+                success: function (response) {
+                let ddl = $("#ddlStaff");
+                ddl.empty().append(`<option value="">-- Select Staff --</option>`);
+                    response.data.forEach(staff => {
+                    ddl.append(`<option value="${staff.Id}">${staff.Name}</option>`);
+                });
+
+                if (selectedId) ddl.val(selectedId);
+                },
+                error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Failed to load dropdown data");
+                }
+            });
+    }
+
+    function fetchUserRights(staffId = 0) {
+        $('#btn-loader').show();
+        const payload = {
+        StaffId: staffId
+        };
+        $.ajax({
+            url: "/api/UserRights/GetUserRightsList",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+
+            success: function (response) {
+                const result = response.data || [];
+                renderUserRightsTabs(result);   // 🔵 MAIN FUNCTION
+            },
+
+            error: function (xhr, status, error) {
+                console.error("Error fetching user rights:", error);
+            },
+
+            complete: function () {
+                $('#btn-loader').hide();
+            }
+        });
+    }
+
+    function renderUserRightsTabs(data) {
+
+        const fixedTabs = [
+            "Dashboard",
+            "Company",
+            "Client",
+            "Inventory",
+            "Master",
+            "Finance",
+            "Report",
+            "Staff"
+        ];
+
+        const tabMenu = $("#rightsTabs");
+        const tabContent = $("#rightsTabsContent");
+
+        tabMenu.html("");
+        tabContent.html("");
+
+        if (!data || data.length === 0) {
+            tabContent.html(`<p class="text-center text-danger">No Rights Found</p>`);
+            return;
+        }
+
+        fixedTabs.forEach((tabName, index) => {
+
+            const clean = tabName.replace(/\s+/g, '');
+            const tabId = "tab_" + clean;
+            const contentId = "content_" + clean;
+            const activeClass = index === 0 ? "active" : "";
+
+            // TAB BUTTON
+            tabMenu.append(`
+            <li class="nav-item" role="presentation">
+                <button class="nav-link ${activeClass}"
+                    id="${tabId}"
+                    data-bs-toggle="tab"
+                    data-bs-target="#${contentId}"
+                    type="button" role="tab">
+                    ${tabName}
+                </button>
+            </li>
+            `);
+
+            const group = data.find(x => (x.GroupTitle || "").toLowerCase() === tabName.toLowerCase());
+            const modules = group ? group.UserRights : [];
+
+            let rows = "";
+            let sr = 0;
+
+            modules.forEach(m => {
+                rows += `
+                <tr>
+                    <td class="text-center">${++sr}</td>
+                    <td>${m.ModuleName}</td>
+
+                    <td class="text-center">
+                        <input type="checkbox" class="chkAdd_${clean}" ${m.CanAdd ? "checked" : ""}>
+                    </td>
+
+                    <td class="text-center">
+                        <input type="checkbox" class="chkEdit_${clean}" ${m.CanEdit ? "checked" : ""}>
+                    </td>
+
+                    <td class="text-center">
+                        <input type="checkbox" class="chkDelete_${clean}" ${m.CanDelete ? "checked" : ""}>
+                    </td>
+
+                    <td class="text-center">
+                        <input type="checkbox" class="chkView_${clean}" ${m.CanView ? "checked" : ""}>
+                    </td>
+                </tr>
+                `;
+            });
+
+            // TAB CONTENT + SELECT ALL CHECKBOXES
+               tabContent.append(`
+                <div class="tab-pane fade show ${activeClass}" id="${contentId}" role="tabpanel">
+
+                    <!-- 🔵 SCROLLABLE TABLE WRAPPER -->
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+
+                        <table class="table table-bordered table-striped mb-0">
+                            <thead class="bg-200 text-900">
+                                <tr>
+                                    <th style="width:60px">Sr</th>
+                                    <th>Module Name</th>
+
+                                    <th class="text-center">
+                                        <input type="checkbox" class="selectAllAdd" data-group="${clean}">
+                                        Add
+                                    </th>
+                                    <th class="text-center">
+                                        <input type="checkbox" class="selectAllEdit" data-group="${clean}">
+                                        Edit
+                                    </th>
+                                    <th class="text-center">
+                                        <input type="checkbox" class="selectAllDelete" data-group="${clean}">
+                                        Delete
+                                    </th>
+                                    <th class="text-center">
+                                        <input type="checkbox" class="selectAllView" data-group="${clean}">
+                                        View
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                </div>
+                `);
+
+
+        });
+
+        attachSelectAllEvents();   // 🔥 IMP: call handler
+    }
+
+    function attachSelectAllEvents() {
+
+        // ADD — select all
+        $(document).on("change", ".selectAllAdd", function () {
+            const group = $(this).data("group");
+            $(".chkAdd_" + group).prop("checked", this.checked);
+        });
+
+        // EDIT — select all
+        $(document).on("change", ".selectAllEdit", function () {
+            const group = $(this).data("group");
+            $(".chkEdit_" + group).prop("checked", this.checked);
+        });
+
+        // DELETE — select all
+        $(document).on("change", ".selectAllDelete", function () {
+            const group = $(this).data("group");
+            $(".chkDelete_" + group).prop("checked", this.checked);
+        });
+
+        // VIEW — select all
+        $(document).on("change", ".selectAllView", function () {
+            const group = $(this).data("group");
+            $(".chkView_" + group).prop("checked", this.checked);
+        });
+    }
+
+</script>

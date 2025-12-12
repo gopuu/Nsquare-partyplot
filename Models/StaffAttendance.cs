@@ -31,6 +31,7 @@
         public string? CheckInTime { get; set; }
         public string? CheckOutTime { get; set; }
         public long? StatusId { get; set; }
+        
     }
     public class DeleteStaffAttendanceRequest
     {

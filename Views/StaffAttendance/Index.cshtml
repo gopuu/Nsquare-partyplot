@@ -9,29 +9,59 @@
 
 <div class="content">
     <div class="pb-1">
-        <div class="row g-2">
-            <div class="col-12 col-xxl-8">
-                <div class="mb-12">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 text-warning">StaffAttendance</h4>
-                        <button class="btn btn-outline-warning" id="btn-add">
-                            <i class="fa fa-plus-circle"></i> Add StaffAttendance
-                        </button>
-                    </div>
+        <div class="row align-items-center g-2">
+            <!-- Title on left -->
+            <div class="col-auto">
+                <h4 class="mb-0 text-warning">Staff Attendance</h4>
+            </div>
 
-                    <div id="tableAttendance">
-                        <table class="table table-striped table-bordered" style="width:100%"></table>
-                    </div>
+            <!-- Push filters and buttons to right -->
+            <div class="col d-flex justify-content-end align-items-center gap-2">
+                <!-- Status -->
+                <div class="col-auto">
+                    <label class="form-label mb-0">Status</label>
+                    <select id="ddlStatus" class="form-select form-select-sm">
+                        <option value="0">All</option>
+                    </select>
+                </div>
 
+                <!-- Staff -->
+                <div class="col-auto">
+                    <label class="form-label mb-0">Staff</label>
+                    <select id="ddlStaff" class="form-select form-select-sm">
+                        <option value="0">All</option>
+                    </select>
+                </div>
+
+                <!-- From Date -->
+                <div class="col-auto">
+                    <label class="form-label mb-0">From</label>
+                    <input type="date" id="txtfromdate" class="form-control form-control-sm">
+                </div>
+
+                <!-- To Date -->
+                <div class="col-auto">
+                    <label class="form-label mb-0">To</label>
+                    <input type="date" id="txttodate" class="form-control form-control-sm">
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-auto d-flex gap-1 mt-5">
+                    <button class="btn btn-outline-warning btn-sm btn-edit"><i class="fa fa-edit"></i> Edit</button>
+                    <button class="btn btn-outline-warning btn-sm d-none" id="btnSaveAttendance">Save</button>
                 </div>
             </div>
+        </div>
+
+        <!-- Table -->
+        <div id="tableAttendance" class="mt-2">
+            <table class="table table-striped table-bordered" style="width:100%"></table>
         </div>
     </div>
 </div>
 
-
 <!-- ADD / EDIT STAFF ATTENDANCE MODAL -->
-<div class="modal fade" id="attendanceModal" tabindex="-1">
+@* <div class="modal fade" id="attendanceModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
@@ -74,8 +104,7 @@
             </div>
         </div>
     </div>
-</div>
-
+</div> *@
 
 <!-- DELETE MODAL -->
 <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
@@ -104,47 +133,40 @@
 <!-- END MODAL -->
 
 <script>
-$(document).ready(function () {
-    fetchAttendanceData();
-    loadStaffDropdown();
-    loadStatusDropdown();
+    $(document).ready(function () {
+        
+         $("#btnSaveAttendance").on("click", function () {
+        let table = $('#tableAttendance table').DataTable();
+        let rows = table.rows().data().toArray();
+        let attendanceList = [];
 
-    // ADD Button
-    $(document).on('click', '#btn-add', function () {
-        const canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
-        if (!canAdd) {
-            Swal.fire("Access Denied", "You do not have permission to Add.", "error");
-         return;
-        }
-        resetAttendanceForm();
-        $('#attendanceModalTitle').text('Add Attendance');
-        $('#attendanceModal').modal('show');
-    });
+        rows.forEach(r => {
+            let rowId = r.AttendanceId; // ✅ fix here
 
-    // SAVE Attendance
-    $('#btnSaveAttendance').on('click', function () {
-        const staffId = Number($('#ddlStaff').val() || 0);
-        const statusId = Number($('#ddlStatus').val() || 0);
-        const date = $('#txtAttendanceDate').val();
-        const checkIn = $('#txtCheckInTime').val();
-        const checkOut = $('#txtCheckOutTime').val();
+            let checkIn = $(`input.checkin-time[data-id='${rowId}']`).val();
+            let checkOut = $(`input.checkout-time[data-id='${rowId}']`).val();
+            let status = $(`select.duty-status[data-id='${rowId}']`).val();
+            
+            if ((checkIn && checkIn.trim() !== "") ||
+          (checkOut && checkOut.trim() !== "") ||
+          (status && status != "0")) {
+            attendanceList.push({
+                Id: r.AttendanceId,
+                StaffId: r.StaffId,
+                AttendanceDate: r.AttendanceDateFormat,
+                CheckInTime: checkIn || null,
+                CheckOutTime: checkOut || null,
+                StatusId: Number(status || 0)
+            });
+          }
+        });
 
-        if (!staffId || !statusId || !date) {
-        Swal.fire("Validation", "Staff, Status & Date are required!", "warning");
-        return;
-        }
-
-        const payload = {
-        Id: Number($('#attendanceId').val() || 0),
-        StaffId: staffId,
-        AttendanceDate: date,
-        CheckInTime: checkIn || null,
-        CheckOutTime: checkOut || null,
-        StatusId: statusId,
-        ActionBy: sessionStorage.getItem('userId') ?? 0
+        let payload = {
+            AttendanceList: attendanceList,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
-        $('#btnSaveAttendance').prop("disabled", true);
+        console.log("Payload Sending:", payload);
 
         $.ajax({
             url: "/api/StaffAttendance/SaveStaffAttendance",
@@ -152,208 +174,193 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                if (res?.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
-                    $('#attendanceModal').modal('hide');
-                    fetchAttendanceData();
-                } else {
-                    Swal.fire("Error", res?.message || "Save failed", "error");
-                }
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Saved!",
+                    showConfirmButton: false,
+                    timer: 900
+                });
+
+                disableAttendanceInputs(); // disable inputs after save
+                $(".btn-edit").removeClass("d-none");
+                $("#btnSaveAttendance").addClass("d-none");
             },
-            complete: function () {
-                $('#btnSaveAttendance').prop("disabled", false);
+            error: function(err){
+                console.error(err);
+                Swal.fire("Error","Attendance not saved","error");
             }
         });
     });
 
-    $(document).on('click', '.btn-edit', function () {
-        const canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
-        if (!canEdit) {
-            Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
+        $(document).on("click", ".btn-edit", function () {
+
+        // Enable all inputs
+        $("#tableAttendance input, #tableAttendance select").prop("disabled", false);
+
+        // Hide Edit → Show Save
+        $(".btn-edit").addClass("d-none");
+        $("#btnSaveAttendance").removeClass("d-none");
+    });
+
+        // $(document).on('click', '.btn-edit', function () {
+        //     const canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
+        //     if (!canEdit) {
+        //         Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
+        //         return;
+        //     }
+
+        //     const table = $('#tableAttendance table').DataTable();
+        //     const rowData = table.row($(this).closest('tr')).data();
+        //     resetAttendanceForm();
+
+        //     $('#attendanceId').val(rowData.Id);
+        //     $('#ddlStaff').val(rowData.StaffId);
+
+        //     // Format date for <input type="date">
+        //     if (rowData.AttendanceDate) {
+        //         const date = new Date(rowData.AttendanceDate);
+        //         const yyyy = date.getFullYear();
+        //         const mm = String(date.getMonth() + 1).padStart(2, '0');
+        //         const dd = String(date.getDate()).padStart(2, '0');
+        //         $('#txtAttendanceDate').val(`${yyyy}-${mm}-${dd}`);
+        //     }
+
+        //     // Format time for <input type="time">
+        //     if (rowData.CheckInTime) {
+        //         const timeIn = new Date(rowData.CheckInTime);
+        //         const hh = String(timeIn.getHours()).padStart(2, '0');
+        //         const mi = String(timeIn.getMinutes()).padStart(2, '0');
+        //         $('#txtCheckInTime').val(`${hh}:${mi}`);
+        //     }
+
+        //     if (rowData.CheckOutTime) {
+        //         const timeOut = new Date(rowData.CheckOutTime);
+        //         const hh = String(timeOut.getHours()).padStart(2, '0');
+        //         const mi = String(timeOut.getMinutes()).padStart(2, '0');
+        //         $('#txtCheckOutTime').val(`${hh}:${mi}`);
+        //     }
+
+        //     $('#ddlStatus').val(rowData.StatusId);
+
+        //     $('#attendanceModalTitle').text("Edit Attendance");
+        //     $('#attendanceModal').modal('show');
+        // });
+
+        // Delete button click
+        $(document).on('click', '.btn-delete', function () {
+            const canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
+            if (!canDelete) {
+            Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
             return;
-        }
-
-        const table = $('#tableAttendance table').DataTable();
-        const rowData = table.row($(this).closest('tr')).data();
-        resetAttendanceForm();
-
-        $('#attendanceId').val(rowData.Id);
-        $('#ddlStaff').val(rowData.StaffId);
-
-        // Format date for <input type="date">
-        if (rowData.AttendanceDate) {
-            const date = new Date(rowData.AttendanceDate);
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            $('#txtAttendanceDate').val(`${yyyy}-${mm}-${dd}`);
-        }
-
-        // Format time for <input type="time">
-        if (rowData.CheckInTime) {
-            const timeIn = new Date(rowData.CheckInTime);
-            const hh = String(timeIn.getHours()).padStart(2, '0');
-            const mi = String(timeIn.getMinutes()).padStart(2, '0');
-            $('#txtCheckInTime').val(`${hh}:${mi}`);
-        }
-
-        if (rowData.CheckOutTime) {
-            const timeOut = new Date(rowData.CheckOutTime);
-            const hh = String(timeOut.getHours()).padStart(2, '0');
-            const mi = String(timeOut.getMinutes()).padStart(2, '0');
-            $('#txtCheckOutTime').val(`${hh}:${mi}`);
-        }
-
-        $('#ddlStatus').val(rowData.StatusId);
-
-        $('#attendanceModalTitle').text("Edit Attendance");
-        $('#attendanceModal').modal('show');
-    });
-
-    // Delete button click
-    $(document).on('click', '.btn-delete', function () {
-        const canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
-        if (!canDelete) {
-        Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
-        return;
-        }
-        let table = $('#tableAttendance  table').DataTable();
-        let rowData = table.row($(this).closest('tr')).data();
-        $("#deleteRecordModal")
-        .data("id", rowData.Id)
-        .modal("show");
-    });
-
-    // Confirm Delete
-    $("#delete-record").click(function () {
-        let id = $("#deleteRecordModal").data("id");
-        let payload = {
-        Id: id,
-        ActionBy: sessionStorage.getItem("userId") ?? 0
-        };
-        $('#btn-loader').show();
-        $.ajax({
-            url: "/api/StaffAttendance/DeleteStaffAttendance",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload),
-            success: function (response) {
-                if (typeof response === "string") {
-                    response = JSON.parse(response);
-                }
-                if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Leave Type Deleted!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
-                } else {
-                    Swal.fire("Delete Failed", response.message, "error");
-                }
-                $("#deleteRecordModal").modal("hide");
-                 fetchAttendanceData(); // reload updated list
-            },
-            error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Delete Leave Type Error");
-            },
-            complete: function () {
-                $('#btn-loader').hide();
             }
+            let table = $('#tableAttendance  table').DataTable();
+            let rowData = table.row($(this).closest('tr')).data();
+            $("#deleteRecordModal")
+            .data("id", rowData.Id)
+            .modal("show");
         });
-    });
 
-    });
-
-    // RESET FORM
-    function resetAttendanceForm() {
-        $('#attendanceId').val(0);
-        $('#ddlStaff').val('');
-        $('#txtAttendanceDate').val('');
-        $('#txtCheckInTime').val('');
-        $('#txtCheckOutTime').val('');
-        $('#ddlStatus').val('');
-    }
-
-    // FETCH ATTENDANCE DATA
-    function fetchAttendanceData() {
-        $.ajax({
-            url: "/api/StaffAttendance/GetStaffAttendance",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ Id: 0 }),
-            success: function (res) {
-                renderAttendanceTable(res?.data || []);
-            }
-        });
-    }
-
-    // RENDER DATATABLE
-    function renderAttendanceTable(data) {
-        if ($.fn.dataTable.isDataTable('#tableAttendance table')) {
-            $('#tableAttendance table').DataTable().clear().destroy();
-        }
-        data.forEach((x, i) => x.srno = i + 1);
-        $('#tableAttendance table').DataTable({
-            data: data,
-            columns: [
-                { data: "srno", title: "Sr No" },
-                { data: "StaffName", title: "Staff" },
-                {
-                    data: "AttendanceDateFormat",   // your API date field
-                    title: "Date",
-                    render: function (d) {
-                        if (!d) return '';
-
-                        let date = new Date(d);
-
-                        // Format Date (dd/mm/yyyy OR local format)
-                        let formattedDate = date.toLocaleDateString();
-
-                        // Get Day Name (Monday, Tuesday…)
-                        let dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-
-                        return `${formattedDate} (${dayName})`;
+        // Confirm Delete
+        $("#delete-record").click(function () {
+            let id = $("#deleteRecordModal").data("id");
+            let payload = {
+            Id: id,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+            $('#btn-loader').show();
+            $.ajax({
+                url: "/api/StaffAttendance/DeleteStaffAttendance",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (typeof response === "string") {
+                        response = JSON.parse(response);
                     }
-                 },
-                {
-                    data: "CheckInTime",
-                    title: "Check In",
-                    render: function(d) {
-                        if (!d) return '';
-                        let date = new Date(d);
-                        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // shows only time HH:MM
+                    if (response.status === "Success") {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Leave Type Deleted!",
+                            showConfirmButton: false,
+                            timer: 1000
+                        });
+                    } else {
+                        Swal.fire("Delete Failed", response.message, "error");
                     }
+                    $("#deleteRecordModal").modal("hide");
+                        fetchAttendanceData(); // reload updated list
                 },
-                {
-                    data: "CheckOutTime",
-                    title: "Check Out",
-                    render: function(d) {
-                        if (!d) return '';
-                        let date = new Date(d);
-                        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    }
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Leave Type Error");
                 },
-                { data: "StatusName", title: "Status" },
-                    {
-                        data: null,
-                        title: "Actions",
-                        render: () => `
-                         <button class="btn btn-outline-warning btn-sm btn-edit  btn-action-xs"><i class="fa fa-edit"></i></button>
-                         <button class="btn btn-outline-danger btn-sm btn-delete  btn-action-xs"><i class="fa fa-trash"></i></button>`
+                complete: function () {
+                    $('#btn-loader').hide();
                 }
-            ]
+            });
         });
+    });
 
+  // RESET FORM
+  function resetAttendanceForm() {
+            $('#attendanceId').val(0);
+            $('#ddlStaff').val('');
+            $('#txtAttendanceDate').val('');
+            $('#txtCheckInTime').val('');
+            $('#txtCheckOutTime').val('');
+            $('#ddlStatus').val('');
+        }
+      
+</script>
+
+
+<script>
+    let statusList = [];
+
+    // Helper: convert HH:MM AM/PM to 24-hour format (for input type=time)
+          function convertTo24Hour(timeStr) {
+        if (!timeStr) return ""; // handle null/undefined/empty
+
+        // Expecting format like "09:05 AM"
+        const parts = timeStr.trim().split(' ');
+        if (parts.length !== 2) return ""; // invalid format
+
+        let [time, modifier] = parts;
+        if (!modifier) return "";
+
+        let [hours, minutes] = time.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return "";
+
+        modifier = modifier.toUpperCase();
+
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
 
-    // LOAD STAFF DROPDOWN
+
+    $(document).ready(function () {
+        // 1️⃣ Set default dates (today)
+        let today = new Date().toISOString().split('T')[0];
+        $("#txtfromdate, #txttodate").val(today);
+
+        // 2️⃣ Load dropdowns
+        loadStaffDropdown();
+        loadStatusDropdown().then(() => {
+            fetchAttendanceData();
+        });
+
+        // 3️⃣ Change events to refresh table
+        $("#ddlStaff, #ddlStatus, #txtfromdate, #txttodate").on("change", function(){
+            fetchAttendanceData();
+        });
+    });
+
+    // ----------------------
+    // Load Staff Dropdown
+    // ----------------------
     function loadStaffDropdown() {
         $.ajax({
             url: '/api/StaffMaster/GetStaffMaster',
@@ -362,25 +369,119 @@ $(document).ready(function () {
             data: JSON.stringify({ Id: 0, StatusType: "Attendance" }),
             success: function (res) {
                 const staff = res?.data || [];
-                $('#ddlStaff').html(staff.map(x => `<option value="${x.Id}">${x.Name}</option>`));
+                $('#ddlStaff').append(staff.map(x => `<option value="${x.Id}">${x.Name}</option>`));
             }
         });
     }
 
-    // LOAD STATUS DROPDOWN
+    // ----------------------
+    // Load Status Dropdown
+    // ----------------------
     function loadStatusDropdown() {
+        return new Promise((resolve) => {
+            $.ajax({
+                url: '/api/StatusMaster/GetStatusMaster',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Id: 0, StatusType: "Attendance" }),
+                success: function (res) {
+                    statusList = res?.data || [];
+                    $('#ddlStatus').append(statusList.map(s => `<option value="${s.Id}">${s.StatusName}</option>`));
+                    resolve();
+                },
+                error: function () {
+                    statusList = [];
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // ----------------------
+    // Fetch Attendance Data
+    // ----------------------
+    function fetchAttendanceData() {
+        let staffId = parseInt($("#ddlStaff").val()) || 0;
+        let statusId = parseInt($("#ddlStatus").val()) || 0;
+        let fromDate = $("#txtfromdate").val();
+        let toDate = $("#txttodate").val();
+
         $.ajax({
-            url: '/api/StatusMaster/GetStatusMaster',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ Id: 0, StatusType: "Attendance" }),
+            url: "/api/StaffAttendance/GetStaffAttendance",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                StaffId: staffId,
+                StatusId: statusId,
+                FromDate: fromDate,
+                ToDate: toDate
+            }),
             success: function (res) {
-                const status = res?.data || [];
-                $('#ddlStatus').html(status.map(x => `<option value="${x.Id}">${x.StatusName}</option>`));
+                renderAttendanceTable(res?.data || []);
             }
         });
     }
 
+    // ----------------------
+    // Render DataTable
+    // ----------------------
+    function renderAttendanceTable(data) {
+        if ($.fn.dataTable.isDataTable('#tableAttendance table')) {
+            $('#tableAttendance table').DataTable().clear().destroy();
+        }
 
+        data.forEach((x, i) => x.srno = i + 1);
+
+        $('#tableAttendance table').DataTable({
+            data: data,
+            columns: [
+                { data: "srno", title: "Sr No" },
+                { data: "StaffName", title: "Staff" },
+                { data: "AttendanceId", title: "AttendanceId", visible:false },
+                {
+                    data: "AttendanceDateFormat",
+                    title: "Date",
+                    render: function (d) {
+                        if (!d) return '';
+                        let date = new Date(d);
+                        let formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                        let dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                        return `${formattedDate} (${dayName})`;
+                    }
+                },
+                {
+                    data: "CheckInTime",
+                    title: "Check In",
+                    render: function(d, type, row){
+                        let val = d ? convertTo24Hour(d) : '';
+                        return `<input type="time" class="form-control checkin-time" value="${val}" data-id="${row.AttendanceId}"/>`;
+                    }
+                },
+                {
+                    data: "CheckOutTime",
+                    title: "Check Out",
+                    render: function(d, type, row){
+                        let val = d ? convertTo24Hour(d) : '';
+                        return `<input type="time" class="form-control checkout-time" value="${val}" data-id="${row.AttendanceId}"/>`;
+                    }
+                },
+                {
+                    data: "StatusId",
+                    title: "Status",
+                    render: function(d, type, row){
+                        let options = `<option value="">-- Select Status --</option>`;
+                        options += statusList.map(s => `<option value="${s.Id}" ${s.Id==d ? "selected" : ""}>${s.StatusName}</option>`).join('');
+                        return `<select class="form-select duty-status" data-id="${row.AttendanceId}">${options}</select>`;
+                    }
+                }
+            ]
+        });
+
+        disableAttendanceInputs(); // optional: disable editing by default
+    }
+
+    // Optional helper to disable all inputs initially
+    function disableAttendanceInputs(){
+        $('.checkin-time, .checkout-time, .duty-status').prop('disabled', true);
+    }
 </script>
-
