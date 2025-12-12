@@ -24,9 +24,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0">Booking Calendar</h4>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary btn-sm" id="bookmapBtn">Bookmap</button>
+                            <button class="btn btn-outline-primary btn-sm d-none" id="bookmapBtn">Bookmap</button>
                             <button class="btn btn-outline-secondary btn-sm" id="toggleViewBtn">List View</button>
-                            <button class="btn btn-dark btn-sm">Block</button>
+                            <button class="btn btn-dark btn-sm d-none">Block</button>
                             <select class="form-select form-select-sm" id="yearSelect" style="width: 100px;"></select>
                             <div class="btn-group" id="monthButtons"></div>
                         </div>
@@ -558,10 +558,10 @@
                             </h5>
                         </div>
                         <div class="col-md-6 text-end">
-                            <button class="btn btn-danger btn-sm me-2" id="btnDownloadPDF">
+                            <button class="btn btn-info btn-sm me-2" id="btnDownloadPDF">
                                 <i class="fa-solid fa-file-pdf me-1"></i> Download Function Prospect
                             </button>
-                            <button class="btn btn-warning btn-sm" id="btnPrintProspect">
+                            <button class="btn btn-info btn-sm" id="btnPrintProspect">
                                 <i class="fa-solid fa-print me-1"></i> Print Function Prospect
                             </button>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -587,7 +587,7 @@
                             <i class="fa-solid fa-truck me-1"></i> Vendor Work Orders (0)
                         </button>
 
-                        <button type="button" class="btn btn-outline-warning btn-sm" id="btnEdit">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnEdit">
                             <i class="fa-solid fa-pen-to-square me-1"></i> Edit
                         </button>
 
@@ -890,7 +890,7 @@
                                     <i class="fa-solid fa-list me-1"></i> View Primary AddOns
                                 </button>
 
-                                <button type="button" id="bookingReport_btnEditAddress" class="btn btn-outline-warning btn-sm">
+                                <button type="button" id="bookingReport_btnEditAddress" class="btn btn-outline-primary btn-sm">
                                     <i class="fa-solid fa-location-dot me-1"></i> Edit Primary Address
                                 </button>
 
@@ -965,7 +965,7 @@
                         <i class="fa-solid fa-bullhorn me-1"></i> Request Feedback
                     </button>
 
-                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnCancelBooking">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnCancelBooking">
                         <i class="fa-solid fa-xmark me-1"></i> Cancel Booking
                     </button>
 
@@ -1126,7 +1126,6 @@
         }
 
 </style>
-
 <!-- paymentModal -- END -->
 
 <!--MAIN JS -- START-->
@@ -1250,16 +1249,32 @@
     function loadEnquiryList() {
         //showLoader();
         $.ajax({
-            url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
+            url: "/api/EnquiryDeal/GetEnquiryDealList",
             type: "GET",
             success: function (response) {
                 //console.log("enquiry list response:", response);
                 if (response.status === "Success") {
                     let options = `<option value="0">-- Select Client --</option>`; // default option
                     $.each(response.data, function (index, item) {
-                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                        options += `
+                               <option
+                                   value="${item.Id}"
+                                   data-name="${item.Name || ''}"
+                                   data-email="${item.Email || ''}"
+                                   data-address="${item.Address || ''}"
+                                   data-contact="${item.Contact || ''}"
+                               >${item.Name} (${item.Contact})</option>`;
                     });
                     $("#clientEnquiryDropdown").html(options);
+
+                    $("#clientEnquiryDropdown").on("change", function () {
+                        const selected = $(this).find(":selected");
+
+                        $("#clientName").val(selected.data("name") || "");
+                        $("#clientEmail").val(selected.data("email") || "");
+                        $("#clientAddress").val(selected.data("address") || "");
+                        $("#clientContact").val(selected.data("contact") || "");
+                    });
                 } else {
                     $("#clientEnquiryDropdown").html(`<option value="0">No Enquiry Client Found</option>`);
                 }
@@ -1498,7 +1513,6 @@
         const row = $(this).closest(".food-block");
         calculateFoodRowTotals(row);
     });
-
 
     // ✅ STEP 4: Build modal dynamically
     function renderMenuItems(menuData) {
@@ -2134,7 +2148,7 @@
     // -----------------------------
     // Async helper: fetch calendar days from API
     // -----------------------------
-    function generateDaysAsync(year, month) {
+    function generateDays(year, month) {
         return new Promise((resolve) => {
             const req = {
                 Year: year,
@@ -2147,6 +2161,7 @@
                 contentType: "application/json",
                 data: JSON.stringify(req),
                 success: function (res) {
+                    console.log("GetEnquiryCalendarMock res:", res);
                     try {
                         if (res && res.status === "Success" && Array.isArray(res.data)) {
                             const days = res.data.map(item => {
@@ -2165,7 +2180,7 @@
                             return;
                         }
                     } catch (err) {
-                        console.error("generateDaysAsync.parseError:", err);
+                        console.error("generateDays.parseError:", err);
                     }
 
                     // fallback: return empty days (no enquiries)
@@ -2198,150 +2213,6 @@
         return days;
     }
 
-    // -----------------------------
-    // Make renderBoard async and await days
-    // -----------------------------
-    async function renderBoard(bookingData = null) {
-        try {
-            board.innerHTML = "";
-
-            // 1. WAIT for enquiry calendar
-            cachedDays = await generateDaysAsync(selectedYear, selectedMonth);
-
-            // 2. Pre-generate shift data
-            cachedShiftData = {};
-            banquetHallsList.forEach(hall => {
-                cachedShiftData[hall.Id] = cachedDays.map(d => generateShiftDataPerDay(d.dateObj));
-            });
-
-            // 3. HEADER (works fine)
-            const dateRow = document.createElement("div");
-            dateRow.className = "row-wrapper";
-
-            const headerLabel = document.createElement("div");
-            headerLabel.className = "text-center";
-            headerLabel.style.minWidth = "80px";
-            headerLabel.innerHTML = `<div class="fw-bold">${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-2">Enquiries</div>`;
-            dateRow.appendChild(headerLabel);
-
-            // 4. DATE CELLS (works fine)
-            cachedDays.forEach(d => {
-                const cell = document.createElement("div");
-                cell.className = "text-center small fw-bold border rounded p-1 bg-light day-cell";
-
-                const badge = document.createElement("span");
-                badge.className = "badge badge-enquiries border border-dark text-black bg-white";
-                badge.style.fontSize = "0.6rem";
-                badge.innerText = d.enquiries;
-
-                if (Array.isArray(d.enquiryList) && d.enquiryList.length > 0) {
-                    badge.dataset.enquiryList = JSON.stringify(d.enquiryList);
-                }
-
-                cell.innerHTML = `${d.date}<br><span class="text-muted" style="font-size:0.6rem">${d.day}</span><br>`;
-                cell.appendChild(badge);
-                dateRow.appendChild(cell);
-            });
-
-            board.appendChild(dateRow);
-
-            // 5. 🔥 ADD THIS ENTIRE BLOCK BACK (YOU MISSED THIS)
-            renderResourceRows(bookingData);
-
-            // 6. Tooltip + other UI initializations (YOU MISSED THESE)
-            enableEnquiryTooltips();
-            attachShiftClickListeners();
-            renderListViewTable();
-            adjustFontSizeForDays(cachedDays.length);
-            attachColumnHoverListeners();
-
-        } catch (err) {
-            console.error("renderBoard error:", err);
-        }
-    }
-    function renderResourceRows(bookingData) {
-
-        banquetHallsList.forEach(hall => {
-            const row = document.createElement("div");
-            row.className = "row-wrapper align-items-center";
-
-            // hall name cell
-            const nameCell = document.createElement("div");
-            nameCell.className = "text-center rounded p-2 name-cell";
-            nameCell.innerText = hall.HallName;
-            row.appendChild(nameCell);
-
-            // each day cells
-            cachedShiftData[hall.Id].forEach((shiftArr, dayIndex) => {
-                const cell = document.createElement("div");
-                cell.className = "border rounded p-1 text-center day-cell";
-
-                const cellDate = cachedDays[dayIndex].dateObj;
-                const today = new Date();
-                today.setHours(0,0,0,0);
-
-                let isToday = false;
-
-                if (cellDate < today) cell.classList.add("bg-secondary","text-white");
-                else if (cellDate.toDateString() === today.toDateString()) {
-                    cell.classList.add("bg-success","text-white");
-                    isToday = true;
-                }
-                else cell.classList.add("bg-success","text-white");
-
-                cell.innerHTML = shiftArr.map((color, i) => {
-
-                    let finalColor = isToday ? "success" : color;
-
-                    const shiftCode = shiftNames[i];
-                    const full = fullShiftName(shiftCode);
-
-                    // detect booking...
-                    let bookingId = 0; let eventName=""; let clientName=""; let clientContact=""; let eventRange="";
-                    if (Array.isArray(bookingData)) {
-                        for (const b of bookingData) {
-                            if (b.BanquetId === hall.Id && b.ShiftCode === shiftCode) {
-                                const dISO = `${selectedYear}-${String(selectedMonth+1).padStart(2,"0")}-${cachedDays[dayIndex].date}`;
-                                const cur = new Date(dISO);
-                                if (cur >= new Date(b.FromDate) && cur <= new Date(b.TillDate)) {
-                                    bookingId = b.BookingId;
-                                    eventName = b.Booking_TypeName;
-                                    clientName = b.Client_Name;
-                                    clientContact = b.Client_Contact;
-                                    eventRange = `${b.FromDate_Short} ${b.StartTime_Full} - ${b.TillDate_Short} ${b.EndTime_Full}`;
-                                    finalColor = "danger";
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    return `
-                        <div class="badge bg-${finalColor} d-block mb-1"
-                            data-bookingid="${bookingId}"
-                            data-eventname="${eventName}"
-                            data-clientname="${clientName}"
-                            data-clientcontact="${clientContact}"
-                            data-eventdaterange="${eventRange}"
-                            data-shift="${shiftCode}"
-                            data-shiftname="${full}">
-                            ${shiftCode}
-                        </div>`;
-                }).join("");
-
-                row.appendChild(cell);
-            });
-
-            board.appendChild(row);
-        });
-
-        setupShiftTooltip();  // your custom tooltip logic
-    }
-
-    //here5
-
-
-
     //Generate Shifts Colors for Days of Month
     function generateShiftDataPerDay(dateObj) {
         return shiftNames.map(()=>{
@@ -2354,13 +2225,13 @@
     }
 
     //main booking board
-    function renderBoard2(bookingData=null){
+    async function renderBoard(bookingData=null){
         console.log("renderBoard bookingData:", bookingData);
         //showLoader();
         //console.log("renderBoard banquetHallsList:", banquetHallsList);
         board.innerHTML="";
         //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
-        cachedDays = generateDays(selectedYear, selectedMonth);
+        cachedDays = await generateDays(selectedYear, selectedMonth);
         console.log("renderBoard cachedDays:", cachedDays);
 
         // Pre-generate shift data per resource per day
@@ -2643,6 +2514,7 @@
         adjustFontSizeForDays(cachedDays.length);
         attachColumnHoverListeners();
         enableEnquiryTooltips();
+        attachShiftClickListeners();
         //hideLoader();
     }
 
@@ -2702,7 +2574,6 @@
             }
         });
     }
-
 
     function adjustFontSizeForDays(daysCount){
         const scale = daysCount > 30 ? 0.65 : daysCount > 29 ? 0.7 : 0.75;
@@ -2959,7 +2830,7 @@
         const originalRenderBoard = renderBoard;
         return function(...args) {
             originalRenderBoard(...args);
-            attachShiftClickListeners();
+            //attachShiftClickListeners();
         }
     })();
 
@@ -3643,8 +3514,13 @@
 
                         // Services & Charges
                         $("#bookingReport_HallRent").text(data.Booking_HallRent || "0");
-                        $("#bookingReport_FoodAmount").text(data.JSON_FoodPackage[0].PackageCost || "0");
-                        $("#bookingReport_FoodRate").text(data.JSON_FoodPackage[0].PerPlate || "—");
+                        if (data.JSON_FoodPackage && data.JSON_FoodPackage.length > 0) {
+                            $("#bookingReport_FoodAmount").text(data.JSON_FoodPackage[0].PackageCost || "0");
+                            $("#bookingReport_FoodRate").text(data.JSON_FoodPackage[0].PerPlate || "—");
+                        } else {
+                            $("#bookingReport_FoodAmount").text("0");
+                            $("#bookingReport_FoodRate").text("—");
+                        }
 
                         // Payment Trail
                         $("#bookingReport_DealAmount").text(data.PaymentSummary_Total || "0");
@@ -3660,7 +3536,8 @@
                         // fillPaymentTrailTable(data.PaymentTrailList);
 
                         // Food Package and Selected Menu
-                        $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage[0].FoodPackageName || "—");
+                        $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
+
                         $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                         $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
 

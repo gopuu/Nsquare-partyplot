@@ -109,6 +109,7 @@
         public string? DiscussionNotes { get; set; }
         public string? InternalRemarks { get; set; }
         public string? CustomerRemarks { get; set; }
+        public string? FileUpload { get; set; }
 
         public long? AssignedTo { get; set; }
         public bool IsClosed { get; set; }

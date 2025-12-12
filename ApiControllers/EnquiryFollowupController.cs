@@ -1,7 +1,9 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ERPAdmin.Services;
 using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,14 +19,17 @@ namespace ERPAdmin.ApiControllers
     public class EnquiryFollowupController : MasterController
     {
         private string connString = string.Empty;
+        private readonly ImageUploadService _imageUploadService;
+        private readonly string domainUrl;
 
-        public EnquiryFollowupController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-                : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
-
+        public EnquiryFollowupController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
+            _imageUploadService = imageUploadService;
             //_configuration = configuration;
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
+            var request = httpContextAccessor.HttpContext?.Request;
+            domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
         [HttpPost]
@@ -140,7 +145,28 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();
-                    cmd.ExecuteNonQuery();
+                    long followUpId = Convert.ToInt64(cmd.ExecuteScalar());
+
+                    string latestImagePath = string.Empty;
+                    //photo upload
+                    if (model.FileUpload != string.Empty && model.FileUpload != null)
+                    {
+                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
+
+                        string folderPath = $"/uploads/org/{domain}/EnquiryFollowUp/EnquiryDealId_{model.EnquiryId}"; // Updated to include domain
+                        string fileName = $"FollowUpId_{followUpId}";
+                        _imageUploadService.DeleteImages(folderPath, fileName);
+                        model.FileUpload = _imageUploadService.UploadImage(model.FileUpload, folderPath, fileName, imgType);
+
+                        //update table
+                        SqlCommand cmd2 = new SqlCommand("SaveEnquiryFollowUp_FileUpload", con);
+                        cmd2.CommandType = CommandType.StoredProcedure;
+                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = followUpId;
+                        cmd2.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = model.FileUpload; // Kept max for nvarchar(max)
+                        cmd2.ExecuteNonQuery();
+
+                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/EnquiryFollowUp/EnquiryDealId_{model.EnquiryId}/{model.FileUpload}";
+                    }
                     con.Close();
                 }
 

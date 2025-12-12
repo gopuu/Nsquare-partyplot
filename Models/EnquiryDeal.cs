@@ -1,5 +1,10 @@
 ﻿namespace ERPAdmin.Models
 {
+    public class EnquiryDeal_request
+    {
+        public long Id { get; set; }
+    }
+
     public class DeleteEnquiryDeal : BaseClass
     {
         public long Id { get; set; }

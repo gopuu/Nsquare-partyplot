@@ -195,6 +195,56 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpGet]
+        [Route("GetCompanyInvoiceNumbers")]
+        public IActionResult GetCompanyInvoiceNumbers()
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                        out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetCompanyInvoiceNumbers", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            var result = new
+                            {
+                                GSTInvoiceNumber = reader["GSTInvoiceNumber"].ToString(),
+                                ProformaInvoiceNumber = reader["ProformaInvoiceNumber"].ToString(),
+                                ReceiptPrefix = reader["ReceiptPrefix"].ToString()
+                            };
+
+                            apiResponse.status = "Success";
+                            apiResponse.message = "Invoice numbers fetched successfully.";
+                            apiResponse.data = result;
+
+                            return Ok(apiResponse);
+                        }
+                    }
+                }
+
+                apiResponse.status = "Error";
+                apiResponse.message = "No record found.";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return Ok(apiResponse);
+            }
+        }
+
     }
 }
 //public class GetInvoiceSetupRequest
