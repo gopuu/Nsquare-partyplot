@@ -91,19 +91,83 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-       loadStaffDropdown();
-       fetchUserRights();
-       $("#ddlStaff").change(function () {
-            let staffid = $(this).val(); 
-            //console.log("staffid:", staffid);
-            if (staffid !== "0") {
-                fetchUserRights(staffid); 
-            } else {
-                $('.list').empty(); 
+$(document).ready(function () {
+    loadStaffDropdown();
+    fetchUserRights();
+
+    $("#rightsTabs").hide();
+    $("#rightsTabsContent").hide();
+    $("#ddlStaff").change(function () {
+        let staffId = $(this).val();
+        if (staffId) {
+            fetchUserRights(staffId);
+            $("#rightsTabs").show();
+            $("#rightsTabsContent").show();
+        } else {
+            $("#rightsTabs").hide();
+            $("#rightsTabsContent").hide();
+        }
+    });
+
+
+     $("#btnSave").click(function (e) {
+        e.preventDefault();
+
+        let staffId = $("#ddlStaff").val();
+        if (!staffId) {
+            Swal.fire("Warning", "Please select staff", "warning");
+            return;
+        }
+        // 🔁 Loop through ALL rows (all tabs)
+        let userRights = [];
+        let actionBy = sessionStorage.getItem("userId") || 0;
+
+        $('#rightsTabsContent table tbody tr').each(function () {
+            let moduleId = $(this).data("moduleid");
+            let canAdd = $(this).find('input.chkAdd_').prop('checked');
+            let canEdit = $(this).find('input.chkEdit_').prop('checked');
+            let canDelete = $(this).find('input.chkDelete_').prop('checked');
+            let canView = $(this).find('input.chkView_').prop('checked');
+
+
+            userRights.push({
+                StaffId: staffId,
+                ModuleId: moduleId,
+                ActionBy: actionBy,
+                CanAdd: canAdd,
+                CanEdit: canEdit,
+                CanDelete: canDelete,
+                CanView: canView
+            });
+        });
+        if (userRights.length === 0) {
+            Swal.fire("Info", "No rights to save", "info");
+            return;
+        }
+        let payload = {
+            StaffId: staffId,
+            UserRights: userRights
+        };
+        console.log("Saving Payload:", payload);
+        $('#btn-loader').show();
+        $.ajax({
+            url: "/api/UserRights/SaveUserRights",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                Swal.fire("Success", res.message, "success");
+            },
+            error: function () {
+                Swal.fire("Error", "Failed to save rights", "error");
+            },
+            complete: function () {
+                $('#btn-loader').hide();
             }
         });
     });
+
+});
 
     function loadStaffDropdown(selectedId = null) {
               $.ajax({
@@ -202,30 +266,27 @@
             let rows = "";
             let sr = 0;
 
-            modules.forEach(m => {
-                rows += `
-                <tr>
-                    <td class="text-center">${++sr}</td>
-                    <td>${m.ModuleName}</td>
+               modules.forEach(m => {
+                    rows += `
+                    <tr data-moduleid="${m.ModuleId}" data-staffid="${m.StaffId}">
+                        <td class="text-center">${++sr}</td>
+                        <td>${m.ModuleName}</td>
 
-                    <td class="text-center">
-                        <input type="checkbox" class="chkAdd_${clean}" ${m.CanAdd ? "checked" : ""}>
-                    </td>
+                        <td class="text-center">
+                            <input type="checkbox" class="chkAdd_${clean}" ${m.CanAdd ? "checked" : ""}>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" class="chkEdit_${clean}" ${m.CanEdit ? "checked" : ""}>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" class="chkDelete_${clean}" ${m.CanDelete ? "checked" : ""}>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" class="chkView_${clean}" ${m.CanView ? "checked" : ""}>
+                        </td>
+                    </tr>`;
+                });
 
-                    <td class="text-center">
-                        <input type="checkbox" class="chkEdit_${clean}" ${m.CanEdit ? "checked" : ""}>
-                    </td>
-
-                    <td class="text-center">
-                        <input type="checkbox" class="chkDelete_${clean}" ${m.CanDelete ? "checked" : ""}>
-                    </td>
-
-                    <td class="text-center">
-                        <input type="checkbox" class="chkView_${clean}" ${m.CanView ? "checked" : ""}>
-                    </td>
-                </tr>
-                `;
-            });
 
             // TAB CONTENT + SELECT ALL CHECKBOXES
                tabContent.append(`
