@@ -1287,8 +1287,10 @@
         sessionStorage.setItem("CanEdit", true);
         sessionStorage.setItem("CanDelete", true);
         sessionStorage.setItem("CanVew", true);
-        sessionStorage.setItem("userId", 1);
-    
+        var userid = 1;
+        sessionStorage.setItem("userId", userid);
+        fetchUserAccessData(userid);
+
         document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
             const subItems = dropdown.querySelectorAll('.dropdown-menu .dropdown-item');
 
@@ -1351,5 +1353,74 @@
             text: msg
         });
     }
+
+     //get User Rights
+    var userRightsData = null;
+    //Fetch Data
+    function fetchUserAccessData(userid) {
+        const inputData = {
+            StaffId: userid
+        };
+        $.ajax({
+            type: "POST",
+            url: "/api/UserRights/GetUserRightsList_ForLayout",
+            data: JSON.stringify(inputData),
+            contentType: "application/json",
+            dataType: "json",  
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("accept", "application/json");
+            },
+            success: function (response) {
+                console.log("Full Response:", response);
+                // ✅ response is already OBJECT
+                let userRightsData = response.data || [];
+                console.log("userRightsData:", userRightsData);
+                 validateUserAccessOfCurrentPage(userRightsData);
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Fetching User Rights Failed");
+                $('#btn-loader').hide();
+            }
+        });
+
+    }
+
+    //validate user access rights on load - if user access page directly via URL ------------ START ------------------------------------------------------
+    function validateUserAccessOfCurrentPage(userRightsData) {
+         // Get the current URL and remove the domain name
+        const currentUrl = window.location.pathname;
+        // Validate user rights using the Link property
+        const module = userRightsData.find(item => item.Link === currentUrl);
+
+        // If module is not found or the user does not have view rights, prevent access
+        if (!module || !module.CanView) {
+            var isSuperUser = sessionStorage.getItem('isSuperUser') ; 
+            Swal.fire({
+                icon: "error",
+                title: "Access Denied",
+                text: "You don't have permission access to this page. Please contact admin.",
+                confirmButtonText: "OK"
+            }).then(() => {
+                if (isSuperUser === "true") {
+                    if (window.location.pathname === "/Home/Dashboard") {
+                        //logoutUser();
+                    } else {
+                        window.location.href = "/Home/Dashboard"; // Redirect to Dashboard
+                    }
+                } else {
+                   
+                }
+
+            });
+        }
+        else
+        {
+            sessionStorage.setItem('Link', module.Link);
+            sessionStorage.setItem('CanAdd', module.CanAdd);
+            sessionStorage.setItem('CanEdit', module.CanEdit);
+            sessionStorage.setItem('CanDelete', module.CanDelete);
+       }
+    }
+    //validate user access rights on load - if user access page directly via URL ------------ END ------------------------------------------------------
 
 </script>

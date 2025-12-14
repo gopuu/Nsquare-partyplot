@@ -109,8 +109,7 @@ $(document).ready(function () {
         }
     });
 
-
-     $("#btnSave").click(function (e) {
+        $("#btnSave").click(function (e) {
         e.preventDefault();
 
         let staffId = $("#ddlStaff").val();
@@ -118,17 +117,17 @@ $(document).ready(function () {
             Swal.fire("Warning", "Please select staff", "warning");
             return;
         }
-        // 🔁 Loop through ALL rows (all tabs)
-        let userRights = [];
+
         let actionBy = sessionStorage.getItem("userId") || 0;
+        let userRights = [];
 
-        $('#rightsTabsContent table tbody tr').each(function () {
+        // 🔁 Loop ALL rows (ALL tabs)
+        $("#rightsTabsContent table tbody tr").each(function () {
             let moduleId = $(this).data("moduleid");
-            let canAdd = $(this).find('input.chkAdd_').prop('checked');
-            let canEdit = $(this).find('input.chkEdit_').prop('checked');
-            let canDelete = $(this).find('input.chkDelete_').prop('checked');
-            let canView = $(this).find('input.chkView_').prop('checked');
-
+            let canAdd    = $(this).find("input[type='checkbox']").eq(0).is(":checked");
+            let canEdit   = $(this).find("input[type='checkbox']").eq(1).is(":checked");
+            let canDelete = $(this).find("input[type='checkbox']").eq(2).is(":checked");
+            let canView   = $(this).find("input[type='checkbox']").eq(3).is(":checked");
 
             userRights.push({
                 StaffId: staffId,
@@ -156,7 +155,7 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.fire("Success", res.message, "success");
+                Swal.fire("Success", res.message || "User rights saved", "success");
             },
             error: function () {
                 Swal.fire("Error", "Failed to save rights", "error");
@@ -167,10 +166,11 @@ $(document).ready(function () {
         });
     });
 
+
 });
 
     function loadStaffDropdown(selectedId = null) {
-              $.ajax({
+             $.ajax({
                 url: "/api/StaffMaster/GetStaffMaster",
                 type: "POST",
                 contentType: "application/json",

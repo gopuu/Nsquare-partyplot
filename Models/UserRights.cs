@@ -3,13 +3,17 @@
     public class GetUserRightsRequest
     {
         public long StaffId { get; set; }
+        public string? Ex1 { get; set; }
+        public string? Ex2 { get; set; }
+        public string? Ex3 { get; set; }
     }
+   
     public class ModuleRights
     {
         public long ModuleId { get; set; }
         public string ModuleName { get; set; }
         public string Link { get; set; }
-        public long EmployeeId { get; set; }
+        public long StaffId { get; set; }
         public bool CanAdd { get; set; }
         public bool CanEdit { get; set; }
         public bool CanDelete { get; set; }

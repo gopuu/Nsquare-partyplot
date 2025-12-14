@@ -144,5 +144,77 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+
+        // POST: api/<UserRightsController>
+        [Route("GetUserRightsList_ForLayout")]
+        [HttpPost]
+        public IActionResult GetUserRightsList_ForLayout(GetUserRightsRequest userRightsFetch)
+        {
+            apiResponse apiResponse = new apiResponse();
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+
+                DataSet ds = new DataSet();
+                SqlDataAdapter adapter;
+                SqlConnection conn = new SqlConnection(connString);
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("GetUserRightsList_ForLayout", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@StaffId", SqlDbType.BigInt).Value = userRightsFetch.StaffId;
+                cmd.Parameters.AddWithValue("@Ex1", SqlDbType.NVarChar).Value = userRightsFetch.Ex1;
+                cmd.Parameters.AddWithValue("@Ex2", SqlDbType.NVarChar).Value = userRightsFetch.Ex2;
+                cmd.Parameters.AddWithValue("@Ex3", SqlDbType.NVarChar).Value = userRightsFetch.Ex3;
+                adapter = new SqlDataAdapter(cmd);
+                adapter.Fill(ds);
+
+                conn.Close();
+
+                DataTable dt = ds.Tables[0];
+                if (dt.Rows.Count > 0)
+                {
+                    List<ModuleRights> userRights = new List<ModuleRights>();
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        ModuleRights userRight = new ModuleRights();
+                        userRight.ModuleId = Convert.ToInt64(dr["ModuleId"]);
+                        userRight.ModuleName = Convert.ToString(dr["ModuleName"]) ?? "";
+                        userRight.Link = Convert.ToString(dr["Link"]) ?? "";
+                        userRight.StaffId = Convert.ToInt64(dr["StaffId"]);
+                        userRight.CanAdd = Convert.ToBoolean(dr["CanAdd"]);
+                        userRight.CanEdit = Convert.ToBoolean(dr["CanEdit"]);
+                        userRight.CanDelete = Convert.ToBoolean(dr["CanDelete"]);
+                        userRight.CanView = Convert.ToBoolean(dr["CanView"]);
+
+                        userRight.IsAddNeeded = Convert.ToBoolean(dr["IsAddNeeded"]);
+                        userRight.IsEditNeeded = Convert.ToBoolean(dr["IsEditNeeded"]);
+                        userRight.IsDeleteNeeded = Convert.ToBoolean(dr["IsDeleteNeeded"]);
+                        userRight.IsViewNeeded = Convert.ToBoolean(dr["IsViewNeeded"]);
+                        userRights.Add(userRight);
+                    }
+                    apiResponse.data = userRights;
+                    apiResponse.message = "UserRights fetched successfully!";
+                }
+                else
+                {
+                    apiResponse.data = null;
+                    apiResponse.message = "No Data found!";
+                }
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                //Log Error
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+                return Ok(apiResponse);
+            }
+        }
+
     }
 }
