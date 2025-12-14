@@ -225,6 +225,8 @@
     {
         public long? MenuItem_Id { get; set; } = null;
         public string? MenuItem_Name { get; set; } = null;
+        public long? MenuHeader_Id { get; set; } = null;
+        public string? MenuHeader_Name { get; set; } = null;
         public bool? MenuItem_IsAdded { get; set; } = null;
     }
     public class GetFoodPackage_AddOns

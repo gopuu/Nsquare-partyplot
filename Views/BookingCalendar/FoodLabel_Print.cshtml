@@ -5,7 +5,8 @@
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
 <link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Dancing+Script&family=Bebas+Neue&family=Roboto&family=Poppins&family=Lobster&family=Merriweather&family=Pacifico&display=swap" rel="stylesheet" crossorigin="">
+                                
 <!-- Main -->
 <div class="content">
     <div class="pb-5">
@@ -20,84 +21,347 @@
 </div>
 
 <script>
+    /*************************************************
+     * STATIC DEFAULTS (Replace via API later)
+     *************************************************/
+    let LABEL_SETTINGS = {
+        fontFamily: "Dancing Script",
+        fontSize: 24
+    };
+
+    /*************************************************
+     * LABEL DIMENSIONS (STATIC NOW, API LATER)
+     *************************************************/
+    let LABEL_DIMENSIONS = {
+        width: 180,   // px
+        height: 90,   // px
+        minFontSize: 10,
+        maxFontSize: LABEL_SETTINGS.fontSize // start from selected font size
+    };
+
+    const FONT_FAMILY_MAP = {
+        "Arial": "Arial, sans-serif",
+        "Open Sans": "'Open Sans', sans-serif",
+        "Dancing Script": "'Dancing Script', cursive",
+        "Bebas Neue": "'Bebas Neue', sans-serif",
+        "Roboto": "'Roboto', sans-serif",
+        "Poppins": "'Poppins', sans-serif",
+        "Lobster": "'Lobster', cursive",
+        "Merriweather": "'Merriweather', serif",
+        "Pacifico": "'Pacifico', cursive"
+    };
+
     let FOOD_PACKAGE_DATA = [];
+
+    function calculateFontSize(text) {
+
+        const baseSize = LABEL_DIMENSIONS.maxFontSize;
+        const length = text.length;
+
+        if (length <= 14) return baseSize;
+        if (length <= 20) return baseSize - 2;
+        if (length <= 28) return baseSize - 4;
+        if (length <= 36) return baseSize - 6;
+
+        return LABEL_DIMENSIONS.minFontSize;
+    }
+
+
+    /*************************************************
+     * PAGE LOAD
+     *************************************************/
     document.addEventListener("DOMContentLoaded", function () {
 
         const json = sessionStorage.getItem("FoodPackageData");
 
-        if (!json) {
-            console.warn("No food package data found in session.");
-            return;
+        if (json) {
+            FOOD_PACKAGE_DATA = JSON.parse(json);
+            //sessionStorage.removeItem("FoodPackageData");
         }
 
-        FOOD_PACKAGE_DATA = JSON.parse(json);
+        // Load label setup first
+        loadLabelSetup();
 
-        // ❌ Delete session after use
-        sessionStorage.removeItem("FoodPackageData");
-
-        renderFoodLabels(FOOD_PACKAGE_DATA);
+        // Initial render (fallback if API slow)
+        if (FOOD_PACKAGE_DATA.length > 0) {
+            renderFoodLabels(FOOD_PACKAGE_DATA);
+        }
     });
+    
+    function loadLabelSetup() {
+        var inputData = {
+            Id: 0
+        };
+        //showLoader();
+        $.ajax({
+            url: '/api/Company_FoodRate_LabelPrinting/GetCompanyFoodRateLabelPrinting',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(inputData),
+            success: function (res) {
+                console.log("GetCompanyFoodRateLabelPrinting res:", res);
 
+                if (res.status === "Success" && res.data) {
+
+                    //document.getElementById('label_id').value = res.data.Id || 0;
+
+                    /*************************************************
+                     * 1️⃣ FONT SETTINGS
+                     *************************************************/
+                    const apiFont = (res.data.FontName || "Dancing Script").trim();
+                    LABEL_SETTINGS.fontFamily = FONT_FAMILY_MAP[apiFont] || apiFont;
+
+                    LABEL_SETTINGS.fontSize = parseInt(res.data.FontSize) || 24;
+
+                    // Set UI controls
+                    //document.getElementById('fontSize').value = LABEL_SETTINGS.fontSize;
+
+                    // document.querySelectorAll('input[name="fontOption"]').forEach(radio => {
+                    //     radio.checked = (radio.value === LABEL_SETTINGS.fontFamily);
+                    // });
+
+                    /*************************************************
+                     * 2️⃣ LABEL DIMENSIONS (FROM API)
+                     *************************************************/
+                    // Example API values:
+                    // PlaqueSizeInches: "22 * 12"
+                    // PlaqueSizeCm: "9 * 6"
+                    // PlaqueSizeMm: "90 * 60"
+
+                    if (res.data.PlaqueSizeMm) {
+                        const [wMm, hMm] = res.data.PlaqueSizeMm.split('*').map(x => parseFloat(x.trim()));
+
+                        if (!isNaN(wMm) && !isNaN(hMm)) {
+                            // Convert mm → px (96 DPI approx)
+                            LABEL_DIMENSIONS.width = Math.round(wMm * 3.78);
+                            LABEL_DIMENSIONS.height = Math.round(hMm * 3.78);
+                        }
+                    }
+
+                    LABEL_DIMENSIONS.maxFontSize = LABEL_SETTINGS.fontSize;
+
+                    /*************************************************
+                     * 3️⃣ STATIC INFO DISPLAY
+                     *************************************************/
+                    // document.getElementById("sizeInches").innerHTML = res.data.PlaqueSizeInches || "";
+                    // document.getElementById("sizeCm").innerHTML = `${res.data.PlaqueSizeCm || ""} cm`;
+                    // document.getElementById("sizeMm").innerHTML = `${res.data.PlaqueSizeMm || ""} mm`;
+
+                    /*************************************************
+                     * 4️⃣ SINGLE LABEL PREVIEW
+                     *************************************************/
+                    // const preview = document.getElementById("labelPreview");
+                    // if (preview) {
+                    //     preview.style.fontFamily = LABEL_SETTINGS.fontFamily;
+                    //     preview.style.fontSize = LABEL_SETTINGS.fontSize + "px";
+                    // }
+
+                    /*************************************************
+                     * 5️⃣ RE-RENDER FOOD LABELS (IMPORTANT)
+                     *************************************************/
+                    if (Array.isArray(FOOD_PACKAGE_DATA) && FOOD_PACKAGE_DATA.length > 0) {
+                        renderFoodLabels(FOOD_PACKAGE_DATA);
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                printAllErrors(xhr,status, error, 'Failed to load label setup');
+            },
+            complete: function () {
+                //hideLoader();  // Hide after request completes (success or error)
+            }
+        });
+    }
+
+
+    /*************************************************
+     * RENDER FOOD LABELS
+     *************************************************/
     function renderFoodLabels(packages) {
 
         const container = document.getElementById("foodLabelContainer");
+        if (!container) return;
+
         container.innerHTML = "";
 
-        packages.forEach(pkg => {
+        packages.forEach((pkg, index) => {
 
-            // Package Title
-            const title = document.createElement("h5");
-            title.className = "mt-4 mb-2 text-danger fw-bold";
-            title.innerText = pkg.FoodPackageName;
-            container.appendChild(title);
+            /***********************
+             * PACKAGE CARD
+             ***********************/
+            const packageCard = document.createElement("div");
+            packageCard.className = "package-card";
 
-            // Grid Row
-            const row = document.createElement("div");
-            row.className = "row g-3";
+            /***********************
+             * HEADER (TITLE + TOGGLE)
+             ***********************/
+            const headerRow = document.createElement("div");
+            headerRow.className = "package-header mb-2";
 
-            pkg.MenuItemsList.forEach(item => {
+            const pkgTitle = document.createElement("h5");
+            pkgTitle.className = "text-danger fw-bold mb-0";
+            pkgTitle.innerText = pkg.FoodPackageName;
 
-                const col = document.createElement("div");
-                col.className = "col-md-2 col-sm-4 col-6"; // ✅ 6 per row
+            const toggleBtn = document.createElement("button");
+            toggleBtn.type = "button";
+            toggleBtn.className = "btn btn-sm btn-outline-secondary";
+            toggleBtn.innerText = "Hide";
 
-                col.innerHTML = `
-                    <div class="border p-2 text-center bg-white">
-                        <span class="food-label-preview"
-                              style="font-family:${getSelectedFont()};
-                                     font-size:${getSelectedFontSize()}px;">
-                            ${item}
-                        </span>
-                    </div>
-                `;
+            headerRow.appendChild(pkgTitle);
+            headerRow.appendChild(toggleBtn);
+            packageCard.appendChild(headerRow);
 
-                row.appendChild(col);
+            /***********************
+             * CONTENT WRAPPER (ANIMATED)
+             ***********************/
+            const packageContent = document.createElement("div");
+            packageContent.className = "package-content";
+
+            /***********************
+             * GROUP BY MenuHeader_Name
+             ***********************/
+            const groupedItems = {};
+
+            pkg.MenuItemsList
+                .filter(x => x.MenuItem_IsAdded === true)
+                .forEach(item => {
+                    if (!groupedItems[item.MenuHeader_Name]) {
+                        groupedItems[item.MenuHeader_Name] = [];
+                    }
+                    groupedItems[item.MenuHeader_Name].push(item);
+                });
+
+            /***********************
+             * RENDER HEADERS + LABELS
+             ***********************/
+            Object.keys(groupedItems).forEach(headerName => {
+
+                const header = document.createElement("h6");
+                header.className = "mt-3 mb-2 text-secondary fw-semibold";
+                header.innerText = headerName;
+                packageContent.appendChild(header);
+
+                const row = document.createElement("div");
+                row.className = "row g-3 mb-2";
+
+                groupedItems[headerName].forEach(item => {
+
+                    const col = document.createElement("div");
+                    col.className = "col-md-2 col-sm-4 col-6 d-flex justify-content-center";
+
+                    const fontSize = calculateFontSize(item.MenuItem_Name);
+
+                    col.innerHTML = `
+                        <div class="border bg-white d-flex align-items-center justify-content-center text-center"
+                             style="
+                                width:${LABEL_DIMENSIONS.width}px;
+                                height:${LABEL_DIMENSIONS.height}px;
+                             ">
+                            <span class="food-label-preview"
+                                  style="
+                                    font-family:${LABEL_SETTINGS.fontFamily};
+                                    font-size:${fontSize}px;
+                                    line-height:1.2;
+                                    word-break:break-word;
+                                    padding:4px;
+                                  ">
+                                ${item.MenuItem_Name}
+                            </span>
+                        </div>
+                    `;
+
+                    row.appendChild(col);
+                });
+
+                packageContent.appendChild(row);
             });
 
-            container.appendChild(row);
+            packageCard.appendChild(packageContent);
+            container.appendChild(packageCard);
+
+            /***********************
+             * SLIDE TOGGLE LOGIC
+             ***********************/
+            toggleBtn.addEventListener("click", function () {
+                const isCollapsed = packageContent.classList.contains("collapsed");
+                if (isCollapsed) {
+                    packageContent.classList.remove("collapsed");
+                    toggleBtn.innerText = "Hide";
+                } else {
+                    packageContent.classList.add("collapsed");
+                    toggleBtn.innerText = "Show";
+                }
+            });
         });
     }
 
+
+    /*************************************************
+     * FONT CONTROL HELPERS
+     *************************************************/
     function getSelectedFont() {
-        return document.querySelector('input[name="fontOption"]:checked')?.value
-            || 'Dancing Script';
+        return LABEL_SETTINGS.fontFamily;
     }
 
     function getSelectedFontSize() {
-        return document.getElementById("fontSize")?.value || 24;
+        return LABEL_SETTINGS.fontSize;
     }
 
     function updateAllFoodLabels() {
+
+        // Update static object (API-ready)
+        LABEL_SETTINGS.fontFamily = getSelectedFont();
+        LABEL_SETTINGS.fontSize = getSelectedFontSize();
+
         document.querySelectorAll(".food-label-preview").forEach(el => {
-            el.style.fontFamily = getSelectedFont();
-            el.style.fontSize = getSelectedFontSize() + "px";
+            el.style.fontFamily = LABEL_SETTINGS.fontFamily;
+            el.style.fontSize = LABEL_SETTINGS.fontSize + "px";
         });
     }
-
-    // Hook into existing controls
-    document.querySelectorAll('input[name="fontOption"]').forEach(radio => {
-        radio.addEventListener("change", updateAllFoodLabels);
-    });
-
-    document.getElementById("fontSize").addEventListener("change", updateAllFoodLabels);
-
 </script>
+
+<style>
+    /* Package Card */
+    .package-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 16px;
+        background-color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Animated content wrapper */
+    .package-content {
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.25s ease;
+        max-height: 3000px; /* enough for content */
+        opacity: 1;
+    }
+
+    /* Collapsed state */
+    .package-content.collapsed {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    /* Header row */
+    .package-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+.food-label-preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+@@media print {
+    .food-label-preview {
+        page-break-inside: avoid;
+    }
+}
+
+</style>
