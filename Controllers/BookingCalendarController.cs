@@ -8,5 +8,9 @@ namespace ERPAdmin.Controllers
         {
             return View();
         }
+        public IActionResult FoodLabel_Print()
+        {
+            return View();
+        }
     }
 }

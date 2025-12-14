@@ -579,9 +579,13 @@
                 <section class="mb-3 p-0">
                     <div class="d-flex flex-wrap gap-2">
 
-                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnFoodLabels">
+                        <button type="button"
+                                class="btn btn-outline-danger btn-sm"
+                                id="btnFoodLabels"
+                                data-foodpackage="">
                             <i class="fa-solid fa-utensils me-1"></i> Food Labels
                         </button>
+
 
                         <button type="button" class="btn btn-outline-success btn-sm" id="btnVendorWorkOrders">
                             <i class="fa-solid fa-truck me-1"></i> Vendor Work Orders (0)
@@ -2790,7 +2794,10 @@
                         .attr("data-shiftid", shift);              // FD, MO, etc.
                     $("#banquetDropdown").val(hallid);
                     setShiftTime(shift);
-                    $("#payment_duedate").val(dateiso);
+                    $("#PaymentDetails_DueDate").val(dateiso);
+
+                    $("#fromDate").val(dateiso).prop("disabled", true);
+                    $("#toDate").val(dateiso);
 
                     if(bookingid > 0){
                         var banquetId = 0;
@@ -3292,10 +3299,23 @@
         });
 
         // 🍽️ Food Labels
-        document.getElementById("btnFoodLabels").addEventListener("click", function () {
-            const bookingId = getBookingId();
-            console.log("🍽️ Food Labels clicked - Booking ID:", bookingId);
+        $("#btnFoodLabels").on("click", function () {
+            const foodPackageJson = $(this).data("foodpackage");
+            if (!foodPackageJson) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data Available',
+                    text: 'No food package data available.'
+                });
+                return;
+            }
+            // Store temporarily in sessionStorage
+            sessionStorage.setItem("FoodPackageData", foodPackageJson);
+            // Open label page
+            window.open("/BookingCalendar/FoodLabel_Print", "_blank");
         });
+
+
 
         // 🚚 Vendor Work Orders
         document.getElementById("btnVendorWorkOrders").addEventListener("click", function () {
@@ -3488,14 +3508,12 @@
                         $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                         $("#bookingReport_clientEmail").text(data.Client_Email || "—");
                         $("#bookingReport_clientBookedBy").text(data.Booked_By_EmpName || "—");
-                        $("#bookingReport_internalOfficeNote").html(
-                            data.OtherCharges_InternalOfficeNote && data.OtherCharges_InternalOfficeNote.trim() !== ""
+                        $("#bookingReport_internalOfficeNote").html(data.OtherCharges_InternalOfficeNote && data.OtherCharges_InternalOfficeNote.trim() !== ""
                                 ? data.OtherCharges_InternalOfficeNote
                                 : "— No internal notes available —"
                         );
 
-                        $("#bookingReport_bookingNoteCustomer").html(
-                            data.OtherCharges_BookingNoteForCustomer && data.OtherCharges_BookingNoteForCustomer.trim() !== ""
+                        $("#bookingReport_bookingNoteCustomer").html(data.OtherCharges_BookingNoteForCustomer && data.OtherCharges_BookingNoteForCustomer.trim() !== ""
                                 ? data.OtherCharges_BookingNoteForCustomer
                                 : "— No customer booking notes available —"
                         );
@@ -3517,9 +3535,14 @@
                         if (data.JSON_FoodPackage && data.JSON_FoodPackage.length > 0) {
                             $("#bookingReport_FoodAmount").text(data.JSON_FoodPackage[0].PackageCost || "0");
                             $("#bookingReport_FoodRate").text(data.JSON_FoodPackage[0].PerPlate || "—");
+                            //here contnue for food label
+                            // ✅ Store FULL package array in button as JSON
+                            $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
+                            $("#btnFoodLabels").prop("disabled", false);
                         } else {
                             $("#bookingReport_FoodAmount").text("0");
                             $("#bookingReport_FoodRate").text("—");
+                            $("#btnFoodLabels").prop("disabled", true);
                         }
 
                         // Payment Trail
@@ -3780,6 +3803,9 @@
         $("#foodPackageContainer .foodPackage_TotalValue").text("0");
         $("#addonItemsContainer").empty();
         $("#headerSummaryContainer").empty();
+
+        // ✅ Store FULL package array in button as JSON
+        $("#btnFoodLabels").data("foodpackage","");
 
         // Reset amounts to defaults
         resetOtherCharges(false);

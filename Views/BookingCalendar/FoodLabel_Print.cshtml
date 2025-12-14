@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Booking Calendar";
+    Layout = "_Layout";
+}
+<link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
+<script src="/assets2/js/bootstrap.bundle.min.js"></script>
+<link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
+
+<!-- Main -->
+<div class="content">
+    <div class="pb-5">
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="mb-12">
+                    <div class="container mt-3" id="foodLabelContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let FOOD_PACKAGE_DATA = [];
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const json = sessionStorage.getItem("FoodPackageData");
+
+        if (!json) {
+            console.warn("No food package data found in session.");
+            return;
+        }
+
+        FOOD_PACKAGE_DATA = JSON.parse(json);
+
+        // ❌ Delete session after use
+        sessionStorage.removeItem("FoodPackageData");
+
+        renderFoodLabels(FOOD_PACKAGE_DATA);
+    });
+
+    function renderFoodLabels(packages) {
+
+        const container = document.getElementById("foodLabelContainer");
+        container.innerHTML = "";
+
+        packages.forEach(pkg => {
+
+            // Package Title
+            const title = document.createElement("h5");
+            title.className = "mt-4 mb-2 text-danger fw-bold";
+            title.innerText = pkg.FoodPackageName;
+            container.appendChild(title);
+
+            // Grid Row
+            const row = document.createElement("div");
+            row.className = "row g-3";
+
+            pkg.MenuItemsList.forEach(item => {
+
+                const col = document.createElement("div");
+                col.className = "col-md-2 col-sm-4 col-6"; // ✅ 6 per row
+
+                col.innerHTML = `
+                    <div class="border p-2 text-center bg-white">
+                        <span class="food-label-preview"
+                              style="font-family:${getSelectedFont()};
+                                     font-size:${getSelectedFontSize()}px;">
+                            ${item}
+                        </span>
+                    </div>
+                `;
+
+                row.appendChild(col);
+            });
+
+            container.appendChild(row);
+        });
+    }
+
+    function getSelectedFont() {
+        return document.querySelector('input[name="fontOption"]:checked')?.value
+            || 'Dancing Script';
+    }
+
+    function getSelectedFontSize() {
+        return document.getElementById("fontSize")?.value || 24;
+    }
+
+    function updateAllFoodLabels() {
+        document.querySelectorAll(".food-label-preview").forEach(el => {
+            el.style.fontFamily = getSelectedFont();
+            el.style.fontSize = getSelectedFontSize() + "px";
+        });
+    }
+
+    // Hook into existing controls
+    document.querySelectorAll('input[name="fontOption"]').forEach(radio => {
+        radio.addEventListener("change", updateAllFoodLabels);
+    });
+
+    document.getElementById("fontSize").addEventListener("change", updateAllFoodLabels);
+
+</script>

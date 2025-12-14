@@ -28,7 +28,7 @@
         public long FromAccountId { get; set; }
         public long ToAccountId { get; set; }
         public decimal Amount { get; set; }
-        public DateTime TransferDate { get; set; }
+        public string? TransferDate { get; set; }
         public string? ReferenceNo { get; set; }
         public string? Notes { get; set; }
     }
