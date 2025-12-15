@@ -839,7 +839,14 @@
                                     <li class="nav-item"><a class="nav-link px-3 d-block" href="#!"> <span class="me-2 text-body align-bottom" data-feather="user-plus"></span>Add another account</a></li>
                                 </ul>
                                 <hr />
-                                <div class="px-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" href="#!"> <span class="me-2" data-feather="log-out"> </span>Sign out</a></div>
+                                <div class="px-3">
+                                    <a href="javascript:void(0)"
+                                       class="btn btn-phoenix-secondary d-flex flex-center w-100"
+                                       id="btnLogout">
+                                        <span class="me-2" data-feather="log-out"></span>
+                                        Sign out
+                                    </a>
+                                </div>
                                 <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1" href="#!">Cookies</a></div>
                             </div>
                         </div>
@@ -1281,14 +1288,15 @@
       document.getElementById("loaderOverlay").style.display = "none";
     }
 
+
     document.addEventListener("DOMContentLoaded", function () {
         //set session default
-        sessionStorage.setItem("CanAdd", true);
-        sessionStorage.setItem("CanEdit", true);
-        sessionStorage.setItem("CanDelete", true);
-        sessionStorage.setItem("CanVew", true);
-        var userid = 1;
-        sessionStorage.setItem("userId", userid);
+        // sessionStorage.setItem("CanAdd", true);
+        // sessionStorage.setItem("CanEdit", true);
+        // sessionStorage.setItem("CanDelete", true);
+        // sessionStorage.setItem("CanVew", true);
+        var userid = Number(sessionStorage.getItem("userId", userid));
+        //sessionStorage.setItem("userId", userid);
         fetchUserAccessData(userid);
 
         document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
@@ -1375,14 +1383,13 @@
                 // ✅ response is already OBJECT
                 let userRightsData = response.data || [];
                 console.log("userRightsData:", userRightsData);
-                 validateUserAccessOfCurrentPage(userRightsData);
+                validateUserAccessOfCurrentPage(userRightsData);
             },
             error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "Fetching User Rights Failed");
                 $('#btn-loader').hide();
             }
         });
-
     }
 
     //validate user access rights on load - if user access page directly via URL ------------ START ------------------------------------------------------
@@ -1403,12 +1410,16 @@
             }).then(() => {
                 if (isSuperUser === "true") {
                     if (window.location.pathname === "/Home/Dashboard") {
-                        //logoutUser();
+                        logoutUser();
                     } else {
                         window.location.href = "/Home/Dashboard"; // Redirect to Dashboard
                     }
                 } else {
-                   
+                    if (window.location.pathname === "/Home/Dashboard") {
+                        logoutUser();
+                    } else {
+                        window.location.href = "/Home/Dashboard"; // Redirect to Dashboard
+                    }
                 }
 
             });
@@ -1422,5 +1433,38 @@
        }
     }
     //validate user access rights on load - if user access page directly via URL ------------ END ------------------------------------------------------
+
+
+    // Handle the logout action
+    document.getElementById('btnLogout').addEventListener('click', function (e) {
+
+        e.preventDefault();  // Prevent default link behavior
+
+        const isautologinemployee = false; //sessionStorage.getItem('isautologinemployee') === 'true';
+        //console.log("logout isautologinemployee:", isautologinemployee);
+        if(isautologinemployee){
+            //PunchOut();
+        }
+        else{
+            logoutUser();
+        }
+    });
+
+    // Function to handle logout
+    function logoutUser() {
+        //var isSuperUser = (sessionStorage.getItem('isSuperUser')) === 'true' ? true : false; // || localStorage.getItem('isSuperUser')) === 'true' ? true : false;
+        // Clear session storage or local storage if needed
+        sessionStorage.clear();
+        localStorage.clear();
+
+        window.location.href = '/';
+        // if (isSuperUser) {
+        //     window.location.href = '/';
+        // }
+        // else {
+        //     window.location.href = '/Home/EmployeeLogin';
+        // }
+    }
+
 
 </script>

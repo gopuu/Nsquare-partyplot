@@ -80,14 +80,14 @@
                             <form id="loginForm">
                                 <div class="mb-3">
                                     <label class="form-label" for="UserName">Username or Email</label>
-                                    <input class="form-control" type="text" id="UserName" name="UserName" autofocus />
+                                    <input class="form-control" type="text" id="UserName" name="UserName" placeholder="UserName" autofocus />
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" for="password">Password</label>
                                     <div class="form-icon-container" data-password="data-password">
-                                        <input class="form-control form-icon-input pe-6" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" />
-                                        <span class="fas fa-key text-body fs-9 form-icon"></span>
-                                        <button class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
+                                        <input class="form-control" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" />
+@*                                         <span class="fas fa-key text-body fs-9 form-icon"></span>
+ *@                                        <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
                                             <span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span>
                                         </button>
                                     </div>
@@ -107,12 +107,14 @@
         </div>
     </div>
 </div>
-
-
-
-
 <script>
     $(document).ready(function () {
+        $('#Password').on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#loginForm').submit();
+            }
+        });
 
         // Handle form submission
         $('#loginForm').on('submit', function (e) {
@@ -134,10 +136,8 @@
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function (response) {
-                    console.log("responselogin:", response);
-
+                    console.log("response login:", response);
                     if (response.status === 'Success' && response.data !== null) {
-
                         sessionStorage.setItem('isSuperUser', response.data.issuperuser);
                         sessionStorage.setItem('userId', response.data.userid);
                         sessionStorage.setItem('userName', response.data.username);
@@ -154,12 +154,7 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    $('#btn-loader').hide();
-                    Swal.fire({
-                        icon: 'error', // Error icon
-                        title: 'Login failed',
-                        text: xhr.responseText, // Show the error message
-                    });
+                    handleApiError(xhr, status, error, 'Login failed');
                     // Handle any errors
                     $('#errorMessage').text('Login failed. Please try again.');
                 }
