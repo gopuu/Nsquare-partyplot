@@ -353,7 +353,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetPackage_MenuAndFoodItemsList")]
         public IActionResult GetPackage_MenuAndFoodItemsList([FromBody] GetPackage_MenuAndFoodItemsListRequest request)
@@ -416,7 +415,6 @@ namespace ERPAdmin.ApiControllers
         }
 
 
-        
         [HttpPost]
         [Route("GeneratePackageReport2")]
         public IActionResult GeneratePackageReport2([FromBody] PackageReportRequest request)

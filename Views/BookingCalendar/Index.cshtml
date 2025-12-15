@@ -1097,6 +1097,139 @@
         </div>
     </div>
 </div>
+<!-- paymentModal -- END -->
+
+<!-- VendorWorkOrderModal -- START -->
+<div class="modal fade" id="vendorWorkOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white">
+                    Add Vendor Work Order
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="vendorWorkOrderForm">
+
+                    <!-- Hidden Fields -->
+                    <input type="hidden" id="VendorWorkOrderId">
+                    <input type="hidden" id="VendorBookingId">
+
+                    <!-- ================= BASIC DETAILS ================= -->
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Service</label>
+                            <select class="form-select" id="VendorServiceId">
+                                <option value="">Select Service</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Vendor</label>
+                            <select class="form-select" id="VendorId">
+                                <option value="">Select Vendor</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Concern Person</label>
+                            <input type="text"
+                                   id="ConcernPerson"
+                                   class="form-control"
+                                   placeholder="Enter concern person">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">PO Date</label>
+                            <input type="date" id="PODate" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Event Date</label>
+                            <input type="date" id="EventDate" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Event Time</label>
+                            <input type="time" id="EventTime" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Slot</label>
+                            <select class="form-select" id="SlotId">
+                                <option value="">Select Slot</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea id="VendorNote"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Internal note (optional)"></textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- ================= PARTICULARS ================= -->
+                    <h6 class="text-primary mb-2">Work Order Particulars</h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle" id="vendorParticularsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:20%">Service</th>
+                                    <th style="width:10%">Qty</th>
+                                    <th style="width:15%">Amount</th>
+                                    <th style="width:15%">Total</th>
+                                    <th>Description</th>
+                                    <th style="width:5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            id="btnAddVendorParticular">
+                        + Add Row
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        id="btnSaveVendorWorkOrder">
+                    Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- VendorWorkOrderModal -- END -->
 
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
@@ -2808,6 +2941,7 @@
         const menuModal = document.getElementById('menuModal');
         const bookingReportModal = document.getElementById('bookingReportModal');
         const paymentModal = document.getElementById('paymentModal');
+        const vendorWorkOrderModal = document.getElementById('vendorWorkOrderModal');
 
         // Create booking modal instance manually
         const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -2859,6 +2993,27 @@
         });
         //hide/show PAYMENT MODAL ----- END --------------------------
 
+        //hide/show vendorWorkOrder MODAL ----- START --------------------------
+        vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
+            // Also hide backdrop manually
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.style.display = "none";
+        });
+
+        vendorWorkOrderModal.addEventListener('hidden.bs.modal', function () {
+            // Show booking modal visually again (no reset, same position)
+            bookingReportModal.classList.add("show");
+            bookingReportModal.style.display = "block";
+
+            // Show backdrop again
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.style.display = "block";
+        });
+        //hide/show PAYMENT MODAL ----- END --------------------------
 
         //hide/show MENU MODAL ----- START --------------------------
         menuModal.addEventListener('show.bs.modal', function () {
@@ -3227,13 +3382,21 @@
             window.open("/BookingCalendar/FoodLabel_Print", "_blank");
         });
 
-
-
-        // 🚚 Vendor Work Orders
+        // 🚚 Vendor Work Orders button click
         document.getElementById("btnVendorWorkOrders").addEventListener("click", function () {
             const bookingId = getBookingId();
             console.log("🚚 Vendor Work Orders clicked - Booking ID:", bookingId);
+    
+            // Optional: store bookingId in hidden field
+            document.getElementById("VendorBookingId").value = bookingId;
+            $("#vendorWorkOrderModal").modal("show");
+            bookingReportModal.hide();
         });
+        $("#btnSaveVendorWorkOrder").on("click", function () {
+            saveVendorWorkOrder();
+        });
+
+
 
         // ✏️ Edit
         document.getElementById("btnEdit").addEventListener("click", function () {
@@ -3269,7 +3432,7 @@
     });
 
     // GenerateWithoutPrice & GenerateWithPrice
-       function showReportOptions() {
+    function showReportOptions() {
 
         Swal.fire({
             title: "Select Report Type",
@@ -3331,8 +3494,6 @@
         }
         });
     }
-
-
 
     // 🧠 Helper to get the modal booking ID
     function getBookingId() {
@@ -3820,6 +3981,127 @@
         $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
     }
 
+    //Vendor work order
+    function saveVendorWorkOrder() {
+
+        let userId = parseInt(sessionStorage.getItem('userId') || 0);
+
+        // 🔹 1. Collect Vendor Work Order Data
+        const workOrderData = {
+            Id: parseInt($("#VendorWorkOrderId").val() || 0),
+            BookingId: parseInt($("#VendorBookingId").val() || 0),
+            ServiceId: parseInt($("#VendorServiceId").val() || 0),
+            VendorId: parseInt($("#VendorId").val() || 0),
+            ConcernPerson: $("#ConcernPerson").val(),
+            PODate: $("#PODate").val() || null,
+            EventDate: $("#EventDate").val() || null,
+            EventTime: $("#EventTime").val() || null,
+            SlotId: $("#SlotId").val() ? parseInt($("#SlotId").val()) : null,
+            Note: $("#VendorNote").val(),
+            ActionBy: userId
+        };
+
+        // 🔹 Basic Validation
+        if (!workOrderData.BookingId || !workOrderData.ServiceId || !workOrderData.VendorId) {
+            Swal.fire("Required", "Booking, Service and Vendor are mandatory.", "warning");
+            return;
+        }
+
+        // 🔹 2. Build Particulars JSON
+        const particulars = [];
+
+        $("#vendorParticularsTable tbody tr").each(function () {
+
+            const $row = $(this);
+
+            const service = $row.find(".vw-service").val();
+            const qty = parseFloat($row.find(".vw-qty").val() || 0);
+            const amount = parseFloat($row.find(".vw-amount").val() || 0);
+            const total = parseFloat($row.find(".vw-total").val() || 0);
+            const description = $row.find(".vw-description").val();
+
+            if (service) {
+                particulars.push({
+                    Service: service,
+                    Qty: qty,
+                    Amount: amount,
+                    Total: total,
+                    Description: description
+                });
+            }
+        });
+
+        if (particulars.length === 0) {
+            Swal.fire("Required", "Please add at least one work order particular.", "warning");
+            return;
+        }
+
+        // 🔹 3. Attach Particulars
+        workOrderData.Particulars = particulars;
+
+        console.log("🚚 Vendor Work Order JSON:", workOrderData);
+
+        // 🔹 4. AJAX SAVE
+        $.ajax({
+            url: "/api/BookingCalendar/SaveBookingCalendar_VendorWorkOrder",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(workOrderData),
+
+            beforeSend: function () {
+                $("#btnSaveVendorWorkOrder")
+                    .prop("disabled", true)
+                    .text("Saving...");
+            },
+
+            success: function (response) {
+
+                console.log("Vendor Work Order Save Response:", response);
+
+                if (response.status === "Success") {
+
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Vendor Work Order Saved!",
+                        showConfirmButton: false,
+                        timer: 900
+                    });
+
+                    // 🔹 Close modal
+                    const modalEl = document.getElementById("vendorWorkOrderModal");
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    // 🔹 Optional refresh hooks
+                    // loadVendorWorkOrders(workOrderData.BookingId);
+                    // updateVendorWorkOrderCount(workOrderData.BookingId);
+
+                } else {
+                    Swal.fire({
+                        title: "Save Failed",
+                        text: response.message,
+                        icon: "error"
+                    });
+                }
+            },
+
+            error: function (xhr) {
+                console.error("Vendor Work Order Save Error:", xhr.responseText);
+                Swal.fire({
+                    title: "Error",
+                    text: xhr.responseText,
+                    icon: "error"
+                });
+            },
+
+            complete: function () {
+                $("#btnSaveVendorWorkOrder")
+                    .prop("disabled", false)
+                    .text("Save");
+            }
+        });
+    }
 
 </script>
 <!--MAIN JS -- /END-->

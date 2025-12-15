@@ -1761,7 +1761,7 @@
                                 <!-- 5.5 Label Print -->
                                 <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Dancing+Script&family=Bebas+Neue&family=Roboto&family=Poppins&family=Lobster&family=Merriweather&family=Pacifico&display=swap" rel="stylesheet" crossorigin="">
                                 <div class="tab-pane fade" id="subtab-label-printing" role="tabpanel">
-                                    <div class="row">
+                                    <div class="row mt-4 align-items-stretch">
                                         <!-- Left Column -->
                                         <div class="col-md-6">
                                             <!-- Label Setup -->
@@ -1844,9 +1844,18 @@
                                         <!-- Right Column -->
                                         <div class="col-md-6">
                                             <h6 style="color:#a01463;">Preview</h6>
-                                            <div style="padding:20px; display:inline-block; border: 1px solid #000; background-color:#fff">
-                                                <!-- 🔑 Text Preview instead of image -->
-                                                <span id="labelPreview" style="font-family: 'Dancing Script', cursive; font-size: 24px;">
+                                            <div id="labelPreviewBox"
+                                                 style="
+                                                    padding:20px;
+                                                    display:inline-flex;
+                                                    align-items:center;
+                                                    justify-content:center;
+                                                    border:1px solid #000;
+                                                    background-color:#fff;
+                                                    box-sizing:border-box;
+                                                 ">
+                                                <span id="labelPreview"
+                                                      style="font-family:'Dancing Script', cursive; font-size:24px; white-space:nowrap;">
                                                     Cheeze Pizza
                                                 </span>
                                             </div>
@@ -6139,24 +6148,57 @@
                     });
 
                     // Static values with numbers only
-                    let sizeInInches = res.data.PlaqueSizeInches || ''; //'22 * 12';
-                    let sizeInCm = res.data.PlaqueSizeCm || ''; //'9 * 6';
-                    let sizeInMm = res.data.PlaqueSizeMm || ''; //'90 * 60';
-                    //let imgUrl = res.data.PreviewImagePath || '/assets2/img/image_icon.png';
+                    // ================= SIZE DATA =================
+                    let sizeInInches = res.data.PlaqueSizeInches || ''; // "22*12"
+                    let sizeInCm = res.data.PlaqueSizeCm || '';
+                    let sizeInMm = res.data.PlaqueSizeMm || '';
 
-                    // Fill the extracted values into the respective <span> tags
+                    // Fill UI text
                     document.getElementById("sizeInches").innerHTML = sizeInInches;
-                    document.getElementById("sizeCm").innerHTML = `${sizeInCm} cm`;
-                    document.getElementById("sizeMm").innerHTML = `${sizeInMm} mm`;
+                    document.getElementById("sizeCm").innerHTML = sizeInCm;
+                    document.getElementById("sizeMm").innerHTML = sizeInMm;
 
-                    //document.getElementById("labelPrintImageUrl").src = imgUrl;
+                    // ================= PREVIEW SIZE LOGIC =================
+                    const previewBox = document.getElementById("labelPreviewBox");
+                    const previewText = document.getElementById("labelPreview");
 
-                    // ✅ Apply font style & size to preview text
-                    const preview = document.getElementById("labelPreview");
-                    if (preview) {
-                        preview.style.fontFamily = font || "inherit";
-                        preview.style.fontSize = size ? `${size}px` : "16px";
+                    // Safety checks
+                    if (previewBox && sizeInInches) {
+
+                        // Accept formats: 22*12 | 22 x 12
+                        const [wIn, hIn] = sizeInInches
+                            .toLowerCase()
+                            .replace('x', '*')
+                            .split('*')
+                            .map(v => parseFloat(v.trim()));
+
+                        if (!isNaN(wIn) && !isNaN(hIn)) {
+
+                            const DPI = 96;                 // screen DPI
+                            const MAX_PREVIEW_WIDTH = 300;  // UI constraint
+
+                            // Actual size in px (real-world)
+                            const actualWidthPx = wIn * DPI;
+                            const actualHeightPx = hIn * DPI;
+
+                            // Scale down to fit UI
+                            const scale = Math.min(
+                                MAX_PREVIEW_WIDTH / actualWidthPx,
+                                1
+                            );
+
+                            // Apply scaled size
+                            previewBox.style.width  = `${actualWidthPx * scale}px`;
+                            previewBox.style.height = `${actualHeightPx * scale}px`;
+                        }
                     }
+
+                    // ================= FONT SETTINGS =================
+                    if (previewText) {
+                        previewText.style.fontFamily = font || "'Dancing Script', cursive";
+                        previewText.style.fontSize = size ? `${size}px` : "16px";
+                    }
+
                 }
             },
             error: function (xhr, status, error) {

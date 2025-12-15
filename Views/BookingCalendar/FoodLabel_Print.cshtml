@@ -1,7 +1,8 @@
 ﻿@{
-    ViewData["Title"] = "Booking Calendar";
+    ViewData["Title"] = "Label Print";
     Layout = "_Layout";
 }
+
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
 <link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
@@ -22,21 +23,23 @@
 
 <script>
     /*************************************************
-     * STATIC DEFAULTS (Replace via API later)
+     * STATIC DEFAULTS
      *************************************************/
     let LABEL_SETTINGS = {
-        fontFamily: "Dancing Script",
+        fontFamily: "'Dancing Script', cursive",
         fontSize: 24
     };
 
     /*************************************************
-     * LABEL DIMENSIONS (STATIC NOW, API LATER)
+     * LABEL DIMENSIONS (SINGLE SOURCE OF TRUTH)
      *************************************************/
     let LABEL_DIMENSIONS = {
-        width: 180,   // px
-        height: 90,   // px
+        realWidthPx: 180,
+        realHeightPx: 90,
+        previewWidthPx: 180,
+        previewHeightPx: 90,
         minFontSize: 10,
-        maxFontSize: LABEL_SETTINGS.fontSize // start from selected font size
+        maxFontSize: 24
     };
 
     const FONT_FAMILY_MAP = {
@@ -66,7 +69,6 @@
         return LABEL_DIMENSIONS.minFontSize;
     }
 
-
     /*************************************************
      * PAGE LOAD
      *************************************************/
@@ -87,92 +89,51 @@
             renderFoodLabels(FOOD_PACKAGE_DATA);
         }
     });
-    
+
     function loadLabelSetup() {
-        var inputData = {
-            Id: 0
-        };
-        //showLoader();
+
         $.ajax({
             url: '/api/Company_FoodRate_LabelPrinting/GetCompanyFoodRateLabelPrinting',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(inputData),
+            data: JSON.stringify({ Id: 0 }),
             success: function (res) {
-                console.log("GetCompanyFoodRateLabelPrinting res:", res);
 
-                if (res.status === "Success" && res.data) {
+                if (res.status !== "Success" || !res.data) return;
 
-                    //document.getElementById('label_id').value = res.data.Id || 0;
+                /*************************************************
+                 * FONT SETTINGS
+                 *************************************************/
+                const apiFont = (res.data.FontName || "Dancing Script").trim();
+                LABEL_SETTINGS.fontFamily =
+                    FONT_FAMILY_MAP[apiFont] || apiFont;
 
-                    /*************************************************
-                     * 1️⃣ FONT SETTINGS
-                     *************************************************/
-                    const apiFont = (res.data.FontName || "Dancing Script").trim();
-                    LABEL_SETTINGS.fontFamily = FONT_FAMILY_MAP[apiFont] || apiFont;
+                LABEL_SETTINGS.fontSize =
+                    parseInt(res.data.FontSize) || 24;
 
-                    LABEL_SETTINGS.fontSize = parseInt(res.data.FontSize) || 24;
+                LABEL_DIMENSIONS.maxFontSize = LABEL_SETTINGS.fontSize;
 
-                    // Set UI controls
-                    //document.getElementById('fontSize').value = LABEL_SETTINGS.fontSize;
+                /*************************************************
+                 * LABEL DIMENSIONS (SINGLE CALCULATION)
+                 *************************************************/
+                const dims = calculateLabelDimensions(
+                    res.data.PlaqueSizeInches
+                );
 
-                    // document.querySelectorAll('input[name="fontOption"]').forEach(radio => {
-                    //     radio.checked = (radio.value === LABEL_SETTINGS.fontFamily);
-                    // });
+                Object.assign(LABEL_DIMENSIONS, dims);
 
-                    /*************************************************
-                     * 2️⃣ LABEL DIMENSIONS (FROM API)
-                     *************************************************/
-                    // Example API values:
-                    // PlaqueSizeInches: "22 * 12"
-                    // PlaqueSizeCm: "9 * 6"
-                    // PlaqueSizeMm: "90 * 60"
-
-                    if (res.data.PlaqueSizeMm) {
-                        const [wMm, hMm] = res.data.PlaqueSizeMm.split('*').map(x => parseFloat(x.trim()));
-
-                        if (!isNaN(wMm) && !isNaN(hMm)) {
-                            // Convert mm → px (96 DPI approx)
-                            LABEL_DIMENSIONS.width = Math.round(wMm * 3.78);
-                            LABEL_DIMENSIONS.height = Math.round(hMm * 3.78);
-                        }
-                    }
-
-                    LABEL_DIMENSIONS.maxFontSize = LABEL_SETTINGS.fontSize;
-
-                    /*************************************************
-                     * 3️⃣ STATIC INFO DISPLAY
-                     *************************************************/
-                    // document.getElementById("sizeInches").innerHTML = res.data.PlaqueSizeInches || "";
-                    // document.getElementById("sizeCm").innerHTML = `${res.data.PlaqueSizeCm || ""} cm`;
-                    // document.getElementById("sizeMm").innerHTML = `${res.data.PlaqueSizeMm || ""} mm`;
-
-                    /*************************************************
-                     * 4️⃣ SINGLE LABEL PREVIEW
-                     *************************************************/
-                    // const preview = document.getElementById("labelPreview");
-                    // if (preview) {
-                    //     preview.style.fontFamily = LABEL_SETTINGS.fontFamily;
-                    //     preview.style.fontSize = LABEL_SETTINGS.fontSize + "px";
-                    // }
-
-                    /*************************************************
-                     * 5️⃣ RE-RENDER FOOD LABELS (IMPORTANT)
-                     *************************************************/
-                    if (Array.isArray(FOOD_PACKAGE_DATA) && FOOD_PACKAGE_DATA.length > 0) {
-                        renderFoodLabels(FOOD_PACKAGE_DATA);
-                    }
+                /*************************************************
+                 * RENDER LABELS
+                 *************************************************/
+                if (Array.isArray(FOOD_PACKAGE_DATA) && FOOD_PACKAGE_DATA.length > 0) {
+                    renderFoodLabels(FOOD_PACKAGE_DATA);
                 }
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr,status, error, 'Failed to load label setup');
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                printAllErrors(xhr, status, error, 'Failed to load label setup');
             }
         });
     }
-
 
     /*************************************************
      * RENDER FOOD LABELS
@@ -184,62 +145,44 @@
 
         container.innerHTML = "";
 
-        packages.forEach((pkg, index) => {
+        packages.forEach(pkg => {
 
-            /***********************
-             * PACKAGE CARD
-             ***********************/
             const packageCard = document.createElement("div");
             packageCard.className = "package-card";
 
-            /***********************
-             * HEADER (TITLE + TOGGLE)
-             ***********************/
+            /* HEADER */
             const headerRow = document.createElement("div");
             headerRow.className = "package-header mb-2";
 
-            const pkgTitle = document.createElement("h5");
-            pkgTitle.className = "text-danger fw-bold mb-0";
-            pkgTitle.innerText = pkg.FoodPackageName;
+            const title = document.createElement("h5");
+            title.className = "text-danger fw-bold mb-0";
+            title.innerText = pkg.FoodPackageName;
 
             const toggleBtn = document.createElement("button");
-            toggleBtn.type = "button";
             toggleBtn.className = "btn btn-sm btn-outline-secondary";
             toggleBtn.innerText = "Hide";
 
-            headerRow.appendChild(pkgTitle);
-            headerRow.appendChild(toggleBtn);
+            headerRow.append(title, toggleBtn);
             packageCard.appendChild(headerRow);
 
-            /***********************
-             * CONTENT WRAPPER (ANIMATED)
-             ***********************/
-            const packageContent = document.createElement("div");
-            packageContent.className = "package-content";
+            /* CONTENT */
+            const content = document.createElement("div");
+            content.className = "package-content";
 
-            /***********************
-             * GROUP BY MenuHeader_Name
-             ***********************/
             const groupedItems = {};
-
             pkg.MenuItemsList
-                .filter(x => x.MenuItem_IsAdded === true)
+                .filter(x => x.MenuItem_IsAdded)
                 .forEach(item => {
-                    if (!groupedItems[item.MenuHeader_Name]) {
-                        groupedItems[item.MenuHeader_Name] = [];
-                    }
+                    groupedItems[item.MenuHeader_Name] ??= [];
                     groupedItems[item.MenuHeader_Name].push(item);
                 });
 
-            /***********************
-             * RENDER HEADERS + LABELS
-             ***********************/
             Object.keys(groupedItems).forEach(headerName => {
 
                 const header = document.createElement("h6");
                 header.className = "mt-3 mb-2 text-secondary fw-semibold";
                 header.innerText = headerName;
-                packageContent.appendChild(header);
+                content.appendChild(header);
 
                 const row = document.createElement("div");
                 row.className = "row g-3 mb-2";
@@ -247,15 +190,16 @@
                 groupedItems[headerName].forEach(item => {
 
                     const col = document.createElement("div");
-                    col.className = "col-md-2 col-sm-4 col-6 d-flex justify-content-center";
+                    col.className ="col-auto d-flex justify-content-center";
 
                     const fontSize = calculateFontSize(item.MenuItem_Name);
 
                     col.innerHTML = `
-                        <div class="border bg-white d-flex align-items-center justify-content-center text-center"
+                        <div class="label-box border bg-white d-flex align-items-center justify-content-center text-center"
                              style="
-                                width:${LABEL_DIMENSIONS.width}px;
-                                height:${LABEL_DIMENSIONS.height}px;
+                                width:${LABEL_DIMENSIONS.previewWidthPx}px;
+                                height:${LABEL_DIMENSIONS.previewHeightPx}px;
+                                padding:20px; box-sizing:border-box;
                              ">
                             <span class="food-label-preview"
                                   style="
@@ -269,32 +213,63 @@
                             </span>
                         </div>
                     `;
-
                     row.appendChild(col);
                 });
 
-                packageContent.appendChild(row);
+                content.appendChild(row);
             });
 
-            packageCard.appendChild(packageContent);
+            packageCard.appendChild(content);
             container.appendChild(packageCard);
 
-            /***********************
-             * SLIDE TOGGLE LOGIC
-             ***********************/
-            toggleBtn.addEventListener("click", function () {
-                const isCollapsed = packageContent.classList.contains("collapsed");
-                if (isCollapsed) {
-                    packageContent.classList.remove("collapsed");
-                    toggleBtn.innerText = "Hide";
-                } else {
-                    packageContent.classList.add("collapsed");
-                    toggleBtn.innerText = "Show";
-                }
-            });
+            toggleBtn.onclick = () => {
+                content.classList.toggle("collapsed");
+                toggleBtn.innerText =
+                    content.classList.contains("collapsed") ? "Show" : "Hide";
+            };
         });
     }
 
+    function calculateLabelDimensions(plaqueSizeInches) {
+
+        const DPI = 96;
+
+        // 🔑 MUST MATCH SETUP PAGE
+        const SETUP_PREVIEW_MAX_WIDTH = 300;
+
+        let result = {
+            realWidthPx: 180,
+            realHeightPx: 90,
+            previewWidthPx: 180,
+            previewHeightPx: 90
+        };
+
+        if (!plaqueSizeInches) return result;
+
+        const [wIn, hIn] = plaqueSizeInches
+            .toLowerCase()
+            .replace('x', '*')
+            .split('*')
+            .map(v => parseFloat(v.trim()));
+
+        if (isNaN(wIn) || isNaN(hIn)) return result;
+
+        const realWidthPx  = wIn * DPI;
+        const realHeightPx = hIn * DPI;
+
+        const scale = Math.min(
+            SETUP_PREVIEW_MAX_WIDTH / realWidthPx,
+            1
+        );
+
+        // ✅ EXACT SAME PREVIEW SIZE AS SETUP PAGE
+        result.realWidthPx = Math.round(realWidthPx);
+        result.realHeightPx = Math.round(realHeightPx);
+        result.previewWidthPx = Math.round(realWidthPx * scale);
+        result.previewHeightPx = Math.round(realHeightPx * scale);
+
+        return result;
+    }
 
     /*************************************************
      * FONT CONTROL HELPERS
@@ -351,17 +326,10 @@
         justify-content: space-between;
         align-items: center;
     }
-.food-label-preview {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-@@media print {
+
     .food-label-preview {
-        page-break-inside: avoid;
+        word-break: break-word;
+        text-align: center;
     }
-}
 
 </style>
