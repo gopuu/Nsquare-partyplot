@@ -189,6 +189,89 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetDailyReportSummary")]
+        public IActionResult GetDailyReportSummary(
+        [FromBody] GetDailyReportSummaryRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                // 🔹 Validate connection
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                GetDailyReportSummaryResponse summary = null;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_GetDailyReportSummary", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@ReportDate",request?.ReportDate);
+
+                    con.Open();
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            summary = new GetDailyReportSummaryResponse
+                            {
+                                ReportDate = Convert.ToDateTime(reader["ReportDate"])
+                                                .ToString("yyyy-MM-dd"),
+
+                                TotalEvents_Today = Convert.ToInt32(reader["TotalEvents_Today"]),
+                                TotalEvents_TillDate = Convert.ToInt32(reader["TotalEvents_TillDate"]),
+
+                                Revenue_Today = Convert.ToDecimal(reader["Revenue_Today"]),
+                                Revenue_TillDate = Convert.ToDecimal(reader["Revenue_TillDate"]),
+
+                                GuestsServed_Today = Convert.ToInt32(reader["GuestsServed_Today"]),
+                                GuestsServed_TillDate = Convert.ToInt32(reader["GuestsServed_TillDate"]),
+
+                                Enquiries_Today = Convert.ToInt32(reader["Enquiries_Today"]),
+                                Enquiries_TillDate = Convert.ToInt32(reader["Enquiries_TillDate"]),
+
+                                UpcomingEvents_Count = Convert.ToInt32(reader["UpcomingEvents_Count"]),
+                                ExpectedMonthlyRevenue = Convert.ToDecimal(reader["ExpectedMonthlyRevenue"]),
+
+                                RawMaterialExpense_Today = Convert.ToDecimal(reader["RawMaterialExpense_Today"]),
+                                RawMaterialExpense_TillDate = Convert.ToDecimal(reader["RawMaterialExpense_TillDate"]),
+
+                                TotalExpense_Today = Convert.ToDecimal(reader["TotalExpense_Today"]),
+                                TotalExpense_TillDate = Convert.ToDecimal(reader["TotalExpense_TillDate"])
+                            };
+                        }
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Daily report summary fetched successfully!";
+                apiResponse.data = summary;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
 
 
         //UNUSED

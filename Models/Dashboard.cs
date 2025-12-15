@@ -47,6 +47,39 @@
     #endregion
 
 
+    #region daily summary
+    public class GetDailyReportSummaryRequest
+    {
+        public string? ReportDate { get; set; }
+    }
+    public class GetDailyReportSummaryResponse
+    {
+        public string ReportDate { get; set; }
+
+        public int TotalEvents_Today { get; set; }
+        public int TotalEvents_TillDate { get; set; }
+
+        public decimal Revenue_Today { get; set; }
+        public decimal Revenue_TillDate { get; set; }
+
+        public int GuestsServed_Today { get; set; }
+        public int GuestsServed_TillDate { get; set; }
+
+        public int Enquiries_Today { get; set; }
+        public int Enquiries_TillDate { get; set; }
+
+        public int UpcomingEvents_Count { get; set; }
+        public decimal ExpectedMonthlyRevenue { get; set; }
+
+        public decimal RawMaterialExpense_Today { get; set; }
+        public decimal RawMaterialExpense_TillDate { get; set; }
+
+        public decimal TotalExpense_Today { get; set; }
+        public decimal TotalExpense_TillDate { get; set; }
+    }
+
+    #endregion
+
     /*
     public class ProcessDto
     {
