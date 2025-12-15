@@ -64,4 +64,15 @@
         public long Id { get; set; }
     }
 
+    //SLOT MASTER
+    public class GetSlotMasterRequest
+    {
+        public long? Id { get; set; }
+    }
+    public class SlotMasterResponse
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+    }
+
 }

@@ -213,5 +213,60 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetBookingCalendar_VendorWorkOrder_SlotMaster")]
+        public IActionResult GetBookingCalendar_VendorWorkOrder_SlotMaster([FromBody] GetSlotMasterRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<SlotMasterResponse> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetBookingCalendar_VendorWorkOrder_SlotMaster", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", request.Id ?? 0);
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            list.Add(new SlotMasterResponse
+                            {
+                                Id = Convert.ToInt64(dr["Id"]),
+                                Name = Convert.ToString(dr["Name"])
+                            });
+                        }
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Slot master fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
     }
 }

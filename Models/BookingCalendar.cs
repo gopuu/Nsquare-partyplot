@@ -142,6 +142,7 @@
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public string? ShiftCode { get; set; }
+        public long? SlotId { get; set; }
         public bool GSTAccepted { get; set; }
         public long? BanquetId { get; set; }
         public string? BanquetName { get; set; }
@@ -203,6 +204,7 @@
         public string? Booked_By_EmpName { get; set; }
         public string? Booked_On { get; set; }
         public List<GetFoodPackage>? JSON_FoodPackage { get; set; }
+        public long? VendorWorkOrder_Count { get; set; }
     }
 
     public class GetFoodPackage

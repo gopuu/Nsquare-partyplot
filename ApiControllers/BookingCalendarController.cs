@@ -80,6 +80,7 @@ namespace ERPAdmin.ApiControllers
                         booking.EventDate = dr["EventDate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["EventDate"]).ToString("yyyy-MM-dd");
                         booking.EventDate_Format = dr["EventDate_Format"] == DBNull.Value ? "" : Convert.ToString(dr["EventDate_Format"]);
                         booking.ShiftCode = dr["ShiftCode"] == DBNull.Value ? "" : Convert.ToString(dr["ShiftCode"]);
+                        booking.SlotId = dr["SlotId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["SlotId"]);
                         booking.GSTAccepted = dr["GSTAccepted"] != DBNull.Value && Convert.ToBoolean(dr["GSTAccepted"]);
                         booking.BanquetId = dr["BanquetId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BanquetId"]);
                         booking.BanquetName = dr["BanquetName"] == DBNull.Value ? "" : Convert.ToString(dr["BanquetName"]);
@@ -139,6 +140,7 @@ namespace ERPAdmin.ApiControllers
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
                         booking.Booked_On = dr["Booked_On"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_On"]);
                         booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
+                        booking.VendorWorkOrder_Count = dr["VendorWorkOrder_Count"] == DBNull.Value ? 0 : Convert.ToInt64(dr["VendorWorkOrder_Count"]);
 
                         bookings.Add(booking);
                     }
