@@ -27,7 +27,7 @@ namespace ERPAdmin.Controllers
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "-1";
-            return View("Dashboard");
+            return View();
         }
 
         public IActionResult Dashboard()

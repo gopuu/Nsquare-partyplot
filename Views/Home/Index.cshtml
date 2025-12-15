@@ -1,17 +1,169 @@
 ﻿@{
     ViewData["Title"] = "Login";
-    Layout = "_Layout";
+    Layout = "_LayoutEmpty";
 }
 
-<div class="content">
-    <div class="pb-5">
-        <div class="row g-4">
-            <div class="col-12 col-xxl-6">
-                <div class="mb-12">
-                    <h2 class="mb-2">Login!</h2>
-                    <h5 class="text-body-tertiary fw-semibold">Login Page.</h5>
+<div class="container-fluid bg-body-tertiary dark__bg-gray-1200 min-vh-100 d-flex flex-center">
+    <div class="col-lg-9 col-xxl-7 py-3 position-relative">
+        <!-- Background shapes -->
+        <img class="bg-auth-circle-shape"
+             src="~/assets2/img/icons/illustrations/bg-shape.png"
+             alt="" width="250">
+        <img class="bg-auth-circle-shape-2"
+             src="~/assets2/img/icons/illustrations/shape-1.png"
+             alt="" width="150">
+        <div class="card overflow-hidden z-1 auth-card">
+            <div class="card-body p-0">
+                <div class="row g-0 h-100">
+                    <!-- ================= LEFT SIDE ================= -->
+                    <div class="col-md-5 text-center bg-card-gradient">
+                        <div class="position-relative p-4 pt-md-5 pb-md-7" data-bs-theme="light">
+                            <div class="bg-holder bg-auth-card-shape"
+                                 style="background-image:url('~/assets2/img/icons/illustrations/half-circle.png');">
+                            </div>
+                            <div class="z-1 position-relative">
+                                <a class="link-light mb-4 fs-4 fw-bolder d-inline-block" href="/">
+                                    <img class="img-fluid me-2"
+                                         src="~/assets2/img/TenXSoftware.png"
+                                         alt="Logo" />
+                                </a>
+
+                                <p class="opacity-75 text-white">
+                                    Driven By Purpose, Powered By Code
+                                </p>
+
+                                <p class="text-white fw-semi-bold mb-0">
+                                    <a class="text-white" href="https://www.nsquaresoftware.com" target="_blank">
+                                        <i class="fas fa-globe me-2"></i>www.nsquaresoftware.com
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Contact Info -->
+                        <div class="mt-3 mb-4 mt-md-4 mb-md-5" data-bs-theme="light">
+                            <p class="text-white">
+                                Need support?<br>
+                                <span class="opacity-75">Expert assistance is one call away.</span>
+                            </p>
+
+                            <p class="text-white fw-semi-bold mb-1">
+                                <a class="text-white me-3" href="tel:8980846250">
+                                    <i class="fas fa-phone-alt me-2"></i>8980846250
+                                </a>
+                                <a class="text-white" href="https://wa.me/918980846250" target="_blank">
+                                    <i class="fab fa-whatsapp me-2"></i>Chat
+                                </a>
+                            </p>
+
+                            <p class="text-white fw-semi-bold mb-1">
+                                <a class="text-white me-3" href="tel:9054296682">
+                                    <i class="fas fa-phone-alt me-2"></i>9054296682
+                                </a>
+                                <a class="text-white" href="https://wa.me/919054296682" target="_blank">
+                                    <i class="fab fa-whatsapp me-2"></i>Chat
+                                </a>
+                            </p>
+
+                            <p class="text-white fw-semi-bold mb-0">
+                                <a class="text-white" href="mailto:nsquaresoftwarsolution@gmail.com">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    nsquaresoftwarsolution@gmail.com
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- ================= RIGHT SIDE ================= -->
+                    <div class="col-md-7 d-flex flex-center">
+                        <div class="p-4 p-md-5 flex-grow-1">
+                            <h3 class="text-center mb-4">Sign In</h3>
+                            <!-- LOGIN FORM (unchanged logic) -->
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label" for="UserName">Username or Email</label>
+                                    <input class="form-control" type="text" id="UserName" name="UserName" autofocus />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="password">Password</label>
+                                    <div class="form-icon-container" data-password="data-password">
+                                        <input class="form-control form-icon-input pe-6" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" />
+                                        <span class="fas fa-key text-body fs-9 form-icon"></span>
+                                        <button class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
+                                            <span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <button class="btn btn-warning w-100 mb-3" type="submit">Sign In</button>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="text-danger text-center" id="errorMessage"></label>
+                                </div>
+                                <hr />
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+
+
+<script>
+    $(document).ready(function () {
+
+        // Handle form submission
+        $('#loginForm').on('submit', function (e) {
+            //$('#btn-loader').css('display', 'flex');
+            $('#btn-loader').show();
+            e.preventDefault(); // Prevent the form from submitting normally
+            var userName = $('#UserName').val();
+            var password = $('#Password').val();
+            // Prepare the data for the API request
+            var data = {
+                username: userName,
+                password: password,
+                fcm: ''
+            };
+            // Make AJAX request to login API
+            $.ajax({
+                url: '/api/User/Login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    console.log("responselogin:", response);
+
+                    if (response.status === 'Success' && response.data !== null) {
+
+                        sessionStorage.setItem('isSuperUser', response.data.issuperuser);
+                        sessionStorage.setItem('userId', response.data.userid);
+                        sessionStorage.setItem('userName', response.data.username);
+                        sessionStorage.setItem('userImage', response.data.userimage);
+                        sessionStorage.setItem('token', response.data.token);
+                        sessionStorage.setItem('companyid', response.data.companyid);
+                        sessionStorage.setItem('companyname', response.data.companyname);
+                        sessionStorage.setItem('companylogo', response.data.companylogo);
+
+                        window.location.href = '/Home/Dashboard';
+                    }
+                    else {
+                        $('#errorMessage').text(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('#btn-loader').hide();
+                    Swal.fire({
+                        icon: 'error', // Error icon
+                        title: 'Login failed',
+                        text: xhr.responseText, // Show the error message
+                    });
+                    // Handle any errors
+                    $('#errorMessage').text('Login failed. Please try again.');
+                }
+            });
+        });
+    });
+</script>
