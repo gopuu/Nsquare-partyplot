@@ -1391,7 +1391,7 @@
         const currentUrl = window.location.pathname;
         // Validate user rights using the Link property
         const module = userRightsData.find(item => item.Link === currentUrl);
-
+        console.log("module:", module);
         // If module is not found or the user does not have view rights, prevent access
         if (!module || !module.CanView) {
             var isSuperUser = sessionStorage.getItem('isSuperUser') ; 

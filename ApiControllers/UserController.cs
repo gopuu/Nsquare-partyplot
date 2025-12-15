@@ -1,12 +1,19 @@
 ﻿using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ExcelDataReader.Log;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data.SqlClient;
-using System.Data;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Humanizer;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Data;
+using System.Data.SqlClient;
+using System.Dynamic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ERPAdmin.ApiControllers
 {
@@ -16,11 +23,149 @@ namespace ERPAdmin.ApiControllers
     public class UserController : MasterController
     {
         private string connString = string.Empty;
+        private readonly string domainUrl;
+        private string httpProtocols = string.Empty;
 
         public UserController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
+            var request = httpContextAccessor.HttpContext?.Request;
+            domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+            httpProtocols = $"{request?.Scheme}://";
+
         }
+
+        [HttpPost]
+        [Route("Login")]
+        public IActionResult Login([FromBody] Login login)
+        {
+            apiResponse apiResponse = new apiResponse();
+                        
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("UserLogin", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("@Username", SqlDbType.NVarChar).Value = login.Username ?? "";
+                        cmd.Parameters.Add("@Password", SqlDbType.NVarChar).Value = login.Password ?? "";
+                        cmd.Parameters.Add("@FCM", SqlDbType.NVarChar).Value = login.Fcm ?? "";
+
+                        DataTable dt = new DataTable();
+                        SqlDataAdapter da = new SqlDataAdapter(cmd);
+
+                        conn.Open();
+                        da.Fill(dt);
+                        conn.Close();
+
+                        if (dt.Rows.Count == 0)
+                        {
+                            apiResponse.status = "Failed";
+                            apiResponse.message = "Username or password incorrect!";
+                            apiResponse.data = null;
+                            return Ok(apiResponse);
+                        }
+
+                        DataRow dr = dt.Rows[0];
+
+                        dynamic userDetail = new ExpandoObject();
+                        userDetail.userid = Convert.ToInt64(dr["UserId"]);
+                        userDetail.username = Convert.ToString(dr["Username"]) ?? "";
+
+                        userDetail.IsSuperUser = Convert.ToBoolean(dr["IsSuperUser"]);
+                        userDetail.Name = Convert.ToString(dr["Name"]) ?? "";
+                        userDetail.Emp_Code = Convert.ToString(dr["Emp_Code"]);
+                        userDetail.Address = Convert.ToString(dr["Address"]) ?? "";
+                        userDetail.PhoneNo = Convert.ToString(dr["PhoneNo"]);
+                        userDetail.Emergency_PhoneNo = Convert.ToString(dr["Emergency_PhoneNo"]) ?? "";
+                        userDetail.Email = Convert.ToString(dr["Email"]);
+                        userDetail.DesignationId = Convert.ToString(dr["DesignationId"]) ?? "";
+
+                        userDetail.AadharCardNo = Convert.ToString(dr["AadharCardNo"]);
+                        userDetail.JoiningDate = Convert.ToString(dr["JoiningDate"]) ?? "";
+                        userDetail.Salary = Convert.ToDecimal(dr["Salary"]);
+                        userDetail.Bank_Name = Convert.ToString(dr["Bank_Name"]) ?? "";
+                        userDetail.Bank_BranchName = Convert.ToString(dr["Bank_BranchName"]);
+                        userDetail.Bank_IFSC = Convert.ToString(dr["Bank_IFSC"]) ?? "";
+                        userDetail.Bank_AccountNo = Convert.ToString(dr["Bank_AccountNo"]);
+                        userDetail.Bank_AccountHolderName = Convert.ToString(dr["Bank_AccountHolderName"]) ?? "";
+                        userDetail.Bank_UPI_Id = Convert.ToString(dr["Bank_UPI_Id"]);
+                        userDetail.BirthDate = Convert.ToString(dr["BirthDate"]) ?? "";
+                        userDetail.AnniversaryDate = Convert.ToString(dr["AnniversaryDate"]);
+                        userDetail.IsAutoLogin = Convert.ToString(dr["IsAutoLogin"]) ?? "";
+
+                        userDetail.FCM = Convert.ToString(dr["FCM"]);
+                        userDetail.Company_Id = Convert.ToString(dr["Company_Id"]) ?? "";
+                        userDetail.Company_Name = Convert.ToString(dr["Company_Name"]);
+                        userDetail.Company_Logo = Convert.ToString(dr["Company_Logo"]) ?? "";
+
+                        // User Photo
+                        userDetail.userimage =
+                            dr["Photo"] != DBNull.Value && !string.IsNullOrEmpty(dr["Photo"].ToString())
+                            ? $"{domainUrl}uploads/org/{domain}/StaffMaster/Photo/{dr["Photo"]}"
+                            : $"{domainUrl}uploads/org/{domain}/StaffMaster/Photo/nsquare.png";
+
+                        // Company Info
+                        userDetail.companyid =
+                            dr["Company_Id"] != DBNull.Value ? Convert.ToInt64(dr["Company_Id"]) : 0;
+
+                        userDetail.companyname =
+                            dr["Company_Name"] != DBNull.Value
+                            ? dr["Company_Name"].ToString()
+                            : "NSquare";
+
+                        userDetail.companylogo = dr["Company_Logo"].ToString();
+                        userDetail.issuperuser = Convert.ToBoolean(dr["IsSuperUser"]);
+
+                        // ===== JWT TOKEN =====
+                        var tokenHandler = new JwtSecurityTokenHandler();
+                        var key = Encoding.ASCII.GetBytes("ERPADMIN975312498fhjfjh@ksjf&fkjbf#");
+
+                        var tokenDescriptor = new SecurityTokenDescriptor
+                        {
+                            Subject = new ClaimsIdentity(new[]
+                            {
+                        new Claim(ClaimTypes.NameIdentifier, userDetail.userid.ToString()),
+                        new Claim(ClaimTypes.Name, userDetail.username)
+                    }),
+                            Expires = DateTime.UtcNow.AddDays(7),
+                            Issuer = "ERP-API",
+                            Audience = "ERP-Mobile",
+                            SigningCredentials = new SigningCredentials(
+                                new SymmetricSecurityKey(key),
+                                SecurityAlgorithms.HmacSha256Signature)
+                        };
+
+                        var token = tokenHandler.CreateToken(tokenDescriptor);
+                        userDetail.token = tokenHandler.WriteToken(token);
+
+                        apiResponse.status = "Success";
+                        apiResponse.message = "Login success.";
+                        apiResponse.data = userDetail;
+
+                        return Ok(apiResponse);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse);
+            }
+        }
+
+
+
         /*
         // POST: api/<UserRightsController>
         [Route("GetUserRightsList")]
