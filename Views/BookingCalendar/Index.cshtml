@@ -2,6 +2,7 @@
     ViewData["Title"] = "Booking Calendar";
     Layout = "_Layout";
 }
+
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
 <link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
@@ -82,7 +83,7 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary">
-                <h5 class="modal-title text-white">Booking Details</h5>
+                <h5 class="modal-title text-white" id="title_bookingModal">Booking Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
@@ -284,7 +285,7 @@
 
                                     <!-- Addons Button + Total -->
                                     <div class="col-md-4 d-flex align-items-center justify-content-between">
-                                        <button type="button" class="btn btn-outline-success btn-sm me-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
+                                        <button type="button" class="btn btn-outline-success btn-sm me-2 foodPackage_AddOnItems" id="foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
                                             <i class="fa fa-check"></i> Addons
                                         </button>
                                         <span class="fw-bold">Total: <span class="foodPackage_TotalValue" id="foodPackage_TotalValue">0</span></span>
@@ -436,7 +437,7 @@
                         </div>
 
                         <!-- Payment Details -->
-                        <div class="col-md-12">
+                        <div class="col-md-12" id="Section_PaymentDetails">
                             <h6 class="text-primary">Payment Details</h6>
                             <div class="row g-2">
                                 <div class="col-md-3">
@@ -579,10 +580,7 @@
                 <section class="mb-3 p-0">
                     <div class="d-flex flex-wrap gap-2">
 
-                        <button type="button"
-                                class="btn btn-outline-danger btn-sm"
-                                id="btnFoodLabels"
-                                data-foodpackage="">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnFoodLabels" data-foodpackage="">
                             <i class="fa-solid fa-utensils me-1"></i> Food Labels
                         </button>
 
@@ -1386,9 +1384,9 @@
                         data: JSON.stringify(payload),
                         success: function (response) {
                             //console.log("response supplier:", response);
-                            $("#SlotId").html(`<option value="0">-- Select Slot --</option>`);
+                            $("#SlotId, #reschedule_SlotId").html(`<option value="0">-- Select Slot --</option>`);
                             response.data.forEach(s => {
-                                $("#SlotId").append(`<option value="${s.Id}">${s.Name}</option>`);
+                                $("#SlotId, #reschedule_SlotId").append(`<option value="${s.Id}">${s.Name}</option>`);
                             });
                         },
                         error: function (xhr, status, error) {
@@ -1402,6 +1400,181 @@
     </div>
 </div>
 <!-- VendorWorkOrderModal -- END -->
+
+<!-- Booking Reschedule Modal -- START -->
+<div class="modal fade" id="bookingRescheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0 rounded-3">
+
+            <!-- 🔹 Header -->
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="fa-solid fa-calendar-day me-2"></i>Reschedule Booking
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- 🔹 Hidden Booking Id -->
+            <input type="hidden" id="reschedule_BookingId" value="0">
+
+            <!-- 🔹 Body -->
+            <div class="modal-body bg-white">
+                <!-- Client Details (KEEP SAME) -->
+                <section class="mb-2 border rounded p-0">
+                    <h6 class="fw-bold border-bottom px-3 py-1 text-primary bg-light rounded-top mb-0">
+                        Client Details
+                    </h6>
+
+                    <div class="px-3 py-2">
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <p class="mb-1">
+                                    <strong>Client Name:</strong>
+                                    <span id="reschedule_clientName">—</span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Contact:</strong>
+                                    <span id="reschedule_clientContact">—</span>
+                                </p>
+                            </div>
+
+                            <div class="col-6">
+                                <p class="mb-1">
+                                    <strong>Email:</strong>
+                                    <span id="reschedule_clientEmail">—</span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Booked By:</strong>
+                                    <span id="reschedule_bookedBy">—</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- ===================== -->
+                <!-- Select New Date & Time -->
+                <!-- ===================== -->
+                <section class="border rounded p-3">
+                    <h6 class="fw-bold text-danger mb-3">
+                        Select New Date & Time
+                    </h6>
+
+                    <div class="row g-3">
+
+                        <!-- Banquet -->
+                        <div class="col-md-6">
+                            <label class="form-label">Banquets</label>
+                            <select class="form-select" id="reschedule_BanquetId">
+                                <option value="">Select Banquet</option>
+                            </select>
+                        </div>
+
+                        <!-- Slot -->
+                        <div class="col-md-6">
+                            <label class="form-label">Slot</label>
+                            <select class="form-select" id="reschedule_SlotId">
+                                <option value="">Select Slot</option>
+                            </select>
+                        </div>
+
+                        <!-- From Date -->
+                        <div class="col-md-6">
+                            <label class="form-label">From Date</label>
+                            <input type="date"
+                                   class="form-control bg-light"
+                                   id="reschedule_FromDate"
+                                   readonly>
+                        </div>
+
+                        <!-- Till Date -->
+                        <div class="col-md-6">
+                            <label class="form-label">Till Date</label>
+                            <input type="date"
+                                   class="form-control"
+                                   id="reschedule_TillDate">
+                        </div>
+
+                        <!-- Function Start Time -->
+                        <div class="col-md-6">
+                            <label class="form-label">Function Start Time</label>
+                            <div class="d-flex gap-1">
+                                <input type="number"
+                                       class="form-control"
+                                       placeholder="HH"
+                                       min="1"
+                                       max="12"
+                                       id="reschedule_startHour"
+                                       style="width: 90px;">
+                                <input type="number"
+                                       class="form-control"
+                                       placeholder="MM"
+                                       min="0"
+                                       max="59"
+                                       id="reschedule_startMinute"
+                                       style="width: 90px;">
+                                <select class="form-select"
+                                        id="reschedule_startAMPM"
+                                        style="width: 90px;">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Function End Time -->
+                        <div class="col-md-6">
+                            <label class="form-label">Function End Time</label>
+                            <div class="d-flex gap-1">
+                                <input type="number"
+                                       class="form-control"
+                                       placeholder="HH"
+                                       min="1"
+                                       max="12"
+                                       id="reschedule_endHour"
+                                       style="width: 90px;">
+                                <input type="number"
+                                       class="form-control"
+                                       placeholder="MM"
+                                       min="0"
+                                       max="59"
+                                       id="reschedule_endMinute"
+                                       style="width: 90px;">
+                                <select class="form-select"
+                                        id="reschedule_endAMPM"
+                                        style="width: 90px;">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- 🔹 Footer -->
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <div class="text-muted small">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Changing date/slot may affect availability.
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnSaveReschedule">
+                        <i class="fa-solid fa-check me-1"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Booking Reschedule Modal -- END -->
 
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
@@ -1441,9 +1614,7 @@
 <script>
     $(document).ready(function () {
         $("#btnwritrnote").click(function () {
-
             let editor = $(".Payment_editorsContainer");
-
             if (editor.is(":visible")) {
                 editor.hide();
                 $(this).val("Write Note");
@@ -1461,13 +1632,13 @@
       // { id: 3, name: "SITA" }
     ];
     //banquet hall details - dropdown -- START ----------------------
-    function fetchHallDetails(bookingData) {
+    function fetchHallDetails(bookingData, banquetId=0) {
         //showLoader();
         $.ajax({
             url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ Id: 0 }), // Get all halls
+            data: JSON.stringify({ Id: banquetId }), // Get all halls
             success: function(response) {
                 //console.log("Get Hall res:", response);
                 if (response.status === "Success" && response.data) {
@@ -1476,11 +1647,19 @@
                     $.each(response.data, function (index, item) {
                         options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
                     });
-                    $("#banquetDropdown").html(options);
+                    $("#banquetDropdown, #reschedule_BanquetId").html(options);
+                    // ✅ If banquetId is passed → select & STOP
+                    if (banquetId > 0) {
+                        $("#banquetDropdown, #reschedule_BanquetId")
+                            .val(String(banquetId))
+                            .trigger("change");
+
+                        return; // ❌ do not render board
+                    }
                     //console.log("fetchHall - passing bookingData:", bookingData);
                     renderBoard(bookingData);
                 } else {
-                    $("#banquetDropdown").html(`<option value="0">No Hall Found</option>`);
+                    $("#banquetDropdown, #reschedule_BanquetId").html(`<option value="0">No Hall Found</option>`);
                     //console.error('Failed to fetch hall details:', response.message);
                     // Swal.fire({
                     //     icon: 'error',
@@ -1490,13 +1669,13 @@
                 }
             },
             error: function (xhr, status, error) {
-                //printAllErrors(xhr,status, error, 'GetCompanyHallDetailsList');
+                printAllErrors(xhr,status, error, 'Failed to fetch hall details');
                 //console.error('Error fetching hall details:', xhr.responseText);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseText || 'Failed to fetch hall details.'
-                });
+                // Swal.fire({
+                //     icon: 'error',
+                //     title: 'Error',
+                //     text: xhr.responseText || 'Failed to fetch hall details.'
+                // });
             },
             complete: function () {
                 //hideLoader();  // Hide after request completes (success or error)
@@ -1509,7 +1688,7 @@
     //banquet hall details - dropdown -- END ----------------------
 
     //Lead reference - dropdown -- START ----------------------
-    function loadLeadSourceList() {
+    function loadLeadSourceList2() {
         //showLoader();
         $.ajax({
             url: "/api/LeadSource/GetLeadSourceList",
@@ -1521,12 +1700,7 @@
 
                     if (response.data && response.data.length > 0) {
                         $.each(response.data, function (index, item) {
-                            // Select the first item
-                            if (index === 0) {
-                                options += `<option value="${item.Id}" selected>${item.Name}</option>`;
-                            } else {
-                                options += `<option value="${item.Id}">${item.Name}</option>`;
-                            }
+                            options += `<option value="${item.Id}">${item.Name}</option>`;
                         });
                     } else {
                         options += `<option value="0">No Reference Found</option>`;
@@ -1552,6 +1726,32 @@
             }
         });
     }
+    function loadLeadSourceList(selectedId = null) {
+        $.ajax({
+            url: "/api/LeadSource/GetLeadSourceList",
+            type: "GET",
+            success: function (response) {
+                let options = `<option value="0">-- Select Reference --</option>`;
+
+                if (response.status === "Success" && response.data?.length > 0) {
+                    $.each(response.data, function (index, item) {
+                        options += `<option value="${item.Id}">${item.Name}</option>`;
+                    });
+                } else {
+                    options += `<option value="0">No Reference Found</option>`;
+                }
+
+                const ddl = $("#booking_leadReferenceDropdown");
+                ddl.html(options);
+
+                // ✅ select AFTER options are loaded
+                if (selectedId && selectedId != 0) {
+                    ddl.val(String(selectedId));
+                }
+            }
+        });
+    }
+
     //Lead reference - dropdown -- END ------------------------
 
     //Enquiry Client - dropdown -- START ----------------------
@@ -2855,25 +3055,6 @@
                     </td>`;
                 listTableBody.appendChild(tr);
             });
-
-            /*
-            resources.forEach(res=>{
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${d.date}-${monthNames[selectedMonth]}-${selectedYear}</td>
-                    <td>${d.day}</td>
-                    <td><span class="badge border border-dark text-black bg-white cursor-pointer">${d.enquiries}</span></td>
-                    <td>${res}</td>
-                    <td>
-                      ${cachedShiftData[res][index].map((color, i) => {
-                          const textColor = color === "light" ? "text-black" : "text-white";
-                          return `<span class="badge bg-${color} ${textColor}">${shiftNames[i]}</span>`;
-                      }).join(" / ")}
-                    </td>
-                    `;
-                listTableBody.appendChild(tr);
-            });
-            */
         });
     }
 
@@ -2920,59 +3101,23 @@
     const bookingReportModalEl = document.getElementById("bookingReportModal");
     const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 
+    // const bookingRescheduleModalEl = document.getElementById("bookingRescheduleModal");
+    // const bookingRescheduleModal = new bootstrap.Modal(bookingRescheduleModalEl);
+
+    // const addonChargeModalEl = document.getElementById("addonChargeModal");
+    // const addonModal = new bootstrap.Modal(addonChargeModalEl);
+
+    // const paymentModalEl = document.getElementById("paymentModal");
+    // const paymentModal = new bootstrap.Modal(paymentModalEl);
+
+    // const menuModalEl = document.getElementById("menuModal");
+    // const menuModal = new bootstrap.Modal(menuModalEl);
+
     document.getElementById("bookmapBtn").addEventListener("click", () => {
         location.reload();
         //console.log("add new booking");
         //bookingModal.show();
     });
-
-    // 1️⃣ Print "hello" whenever modal opens
-    // bookingModalEl.addEventListener('show.bs.modal', () => {
-    //     console.log("hello for add");
-    // });
-
-    // 2️⃣ Open modal when any shift badge is clicked
-    //const shiftNames = ["FD","MO","AF","EV","ON","BF","LN","HT","DN"]; // all possible shifts
-
-    /*
-    function attachShiftClickListeners2() {
-        document.querySelectorAll("#booking-board .badge, #listTable .badge").forEach(badge => {
-            badge.style.cursor = "pointer";
-            badge.addEventListener("click", () => {
-                const color = badge.className.match(/bg-([a-z]+)/)?.[1];
-                if (!color) return;
-
-                let cellDate = "";
-
-                // Case 1: Calendar View
-                if (badge.closest("#booking-board")) {
-                    const dayCell = badge.closest(".day-cell");
-                    if (dayCell) {
-                        // Extract correct date (numeric part) and day name
-                        const dateNumber = dayCell.innerHTML.match(/^\d+/)?.[0]; // get numeric date from start
-                        const dayName = dayCell.querySelector(".text-muted")?.textContent?.trim();
-                        if (dateNumber && dayName) {
-                            cellDate = `${dateNumber}-${monthNames[selectedMonth]}-${selectedYear} (${dayName})`;
-                        }
-                    }
-                }
-
-                // Case 2: List View
-                if (!cellDate && badge.closest("#listTable")) {
-                    const row = badge.closest("tr");
-                    if (row) {
-                        cellDate = row.querySelector("td")?.textContent?.trim();
-                    }
-                }
-
-                if (color !== legendColors.past ) { //&& color !== legendColors.available
-                    console.log(`edit booking: ${badge.textContent.trim()} | Date: ${cellDate}`);
-                    bookingModal.show();
-                }
-            });
-        });
-    }
-    */
 
     //shift/cell click event
     function attachShiftClickListeners() {
@@ -3021,9 +3166,11 @@
                         var eventDate = null;
                         var actionMode = "singleData";
                         loadBookingCalendar(bookingid, banquetId, eventDate, actionMode);
+                        $("#title_bookingModal").text("Edit Booking Details");
                     }
                     else {
                         //Open MODAL
+                        $("#title_bookingModal").text("Add Booking Details");
                         bookingModal.show();
                     }
                 }
@@ -3116,6 +3263,7 @@
         const menuModal = document.getElementById('menuModal');
         const bookingReportModal = document.getElementById('bookingReportModal');
         const paymentModal = document.getElementById('paymentModal');
+        const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
 
         // Create booking modal instance manually
         const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -3188,6 +3336,29 @@
             if (backdrop) backdrop.style.display = "block";
         });
         //hide/show PAYMENT MODAL ----- END --------------------------
+
+        //hide/show bookingModal MODAL ----- START --------------------------
+        let openedFromReport=false;
+        $("#bookingModal").on("hidden.bs.modal", function () {
+            if (openedFromReport) {
+                openedFromReport = false;
+                //$("#bookingReportModal").modal("show");
+                bookingReportModal.classList.add("show");
+                bookingReportModal.style.display = "block";
+            }
+        });
+        //hide/show bookingModal MODAL ----- END--------------------------
+
+        //hide/show bookingRescheduleModal MODAL ----- START --------------------------
+        $("#bookingRescheduleModal").on("hidden.bs.modal", function () {
+            if (openedFromReport) {
+                openedFromReport = false;
+                //$("#bookingReportModal").modal("show");
+                bookingReportModal.classList.add("show");
+                bookingReportModal.style.display = "block";
+            }
+        });
+        //hide/show bookingRescheduleModal MODAL ----- END--------------------------
 
         //hide/show MENU MODAL ----- START --------------------------
         menuModal.addEventListener('show.bs.modal', function () {
@@ -3576,18 +3747,34 @@
             saveVendorWorkOrder();
         });
 
-
-
         // ✏️ Edit
         document.getElementById("btnEdit").addEventListener("click", function () {
             const bookingId = getBookingId();
             console.log("✏️ Edit clicked - Booking ID:", bookingId);
+
+            openedFromReport = true;
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
+            // Load data
+            loadBookingCalendar(bookingId, 0, null, "editData");
+            $("#bookingModal").modal("show");
         });
 
         // 📅 Reschedule
         document.getElementById("btnReschedule").addEventListener("click", function () {
             const bookingId = getBookingId();
             console.log("📅 Reschedule clicked - Booking ID:", bookingId);
+
+            openedFromReport = true;
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
+            // Load data
+            loadBookingCalendar(bookingId, 0, null, "rescheduleData");
+            $("#bookingRescheduleModal").modal("show");
         });
 
         // 🔔 Post Booking Followups
@@ -3730,6 +3917,23 @@
         if (!num || isNaN(num)) return "0";
         return Number(num).toLocaleString("en-IN");
     }
+    
+    function setGSTSwitch(isGSTAccepted) {
+        const gstSwitch = document.getElementById("gstSwitch");
+        const gstText = document.getElementById("gstSwitchText");
+
+        gstSwitch.checked = !!isGSTAccepted;
+
+        if (gstSwitch.checked) {
+            gstText.textContent = "On";
+            gstText.classList.remove("text-danger");
+            gstText.classList.add("text-success");
+        } else {
+            gstText.textContent = "Off";
+            gstText.classList.remove("text-success");
+            gstText.classList.add("text-danger");
+        }
+    }
 
     function loadBookingCalendar(bookingId=0, banquetId=0, eventDate=null, actionMode="fullData") {
         var requestData = {
@@ -3752,6 +3956,7 @@
                         fetchHallDetails(data);
                     }
                     else if(actionMode === "singleData"){
+                        resetBooking();
                         data = data[0];
                         console.log("singleData - Booking API Response:", data);
                         $("#bookingReport_BookingId").val(bookingId);
@@ -3797,7 +4002,8 @@
                             // ✅ Store FULL package array in button as JSON
                             $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
                             $("#btnFoodLabels").prop("disabled", false);
-                        } else {
+                        } 
+                        else {
                             $("#bookingReport_FoodAmount").text("0");
                             $("#bookingReport_FoodRate").text("—");
                             $("#btnFoodLabels").prop("disabled", true);
@@ -3828,6 +4034,127 @@
                         //Open REPORT MODAL
                         bookingReportModal.show();
                     }
+                    else if(actionMode === "editData"){
+                        resetBooking();
+                        data = data[0];
+                        console.log("editData - Booking API Response:", data);
+                        $("#BookingId").val(bookingId);
+                        // 🟢 Update label content & attributes - using jQuery
+                        $("#label_date_shift")
+                            .text(`${data.EventDate_Format}, ${fullShiftName(data.ShiftCode)} Slot`)        // visible text
+                            .attr("data-eventdate", data.EventDate)           // yyyy-mm-dd
+                            .attr("data-shiftid", data.ShiftCode);              // FD, MO, etc.
+
+                        $("#gstSwitch").prop("checked", !!data.GSTAccepted).trigger("change");
+
+                        $("#banquetDropdown").val(data.BanquetId);
+                        $("#fromDate").val(data.FromDate);
+                        $("#toDate").val(data.TillDate);
+                        setTimeFrom24Hr(data.StartTime, "startHour", "startMinute", "startAMPM");
+                        setTimeFrom24Hr(data.EndTime, "endHour", "endMinute", "endAMPM");
+
+                        $("#clientEnquiryDropdown").val(data.Client_EnquiryId);
+                        $("#clientName").val(data.Client_Name);
+                        $("#clientAddress").val(data.Client_Address);
+                        $("#clientEmail").val(data.Client_Email);
+                        $("#clientContact").val(data.Client_Contact);
+                        $("#clientGSTIN").val(data.Client_GSTIN);
+                        $("#clientStateDropdown").val(data.Client_StateId);
+
+                        $("#booking_subEventDropdown").val(data.Booking_SubEventId);
+                        $("#booking_pax").val(data.Booking_PAX);
+                        $("#booking_hallRent").val(data.Booking_HallRent);
+                        $("#booking_gst").val(data.Booking_GST);
+                        //$("#booking_leadReferenceDropdown").val(data.Booking_LeadReferenceId);
+                        loadLeadSourceList(data.Booking_LeadReferenceId);
+    
+                        //menu type radio
+                        $("input[name='menuType']").prop("checked", false);
+                        $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change"); 
+
+                        var foodpackage = data.JSON_FoodPackage[0];
+                        $("#foodPackage_PackageDropdown").val(foodpackage.FoodPackageId);
+                        $("#foodPackage_RatePerPlate").val(foodpackage.PerPlate);
+                        $("#foodPackage_PackageCost").val(foodpackage.PackageCost);
+                        $("#foodPackage_Addons").val(foodpackage.Addons);
+                        $("#foodPackage_GST").val(foodpackage.GST);
+                        //AddOns btn
+                        //console.log("edit AddOnsList:", foodpackage.AddOnsList);
+                        var addOnsList = foodpackage.AddOnsList || [];
+                        $("#foodPackage_AddOnItems").data("selected-AddOnItems", addOnsList);
+                        // Update button UI
+                        if (addOnsList.length > 0) {
+                            $("#foodPackage_AddOnItems").html(`<i class="fa fa-check text-success"></i> Addons (${addOnsList.length})`);
+                        } else {
+                            $("#foodPackage_AddOnItems").html(`<i class="fa fa-check"></i> Addons`);
+                        }
+                        $("#foodPackage_TotalValue").text(foodpackage.TotalCharges);
+
+                        $("#BookingType").val(data.Booking_TypeId);
+                        $("#AgentCheck").prop("checked", !!foodpackage.TotalCharges);
+
+                        //othercharges
+                        $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
+                        $("#OtherCharges_Decoration_GST").val(data.OtherCharges_Decoration_GST);
+                        $("#OtherCharges_RoomCharges_Amount").val(data.OtherCharges_RoomCharges_Amount);
+                        $("#OtherCharges_RoomCharges_GST").val(data.OtherCharges_RoomCharges_GST);
+
+                        $("#OtherCharges_SoundSystem_Amount").val(data.OtherCharges_SoundSystem_Amount);
+                        $("#OtherCharges_SoundSystem_GST").val(data.OtherCharges_SoundSystem_GST);
+                        $("#OtherCharges_ProjectorScreen_Amount").val(data.OtherCharges_ProjectorScreen_Amount);
+                        $("#OtherCharges_ProjectorScreen_GST").val(data.OtherCharges_ProjectorScreen_GST);
+
+                        var quillCustomer = new Quill('#OtherCharges_customerEditor', {
+                            theme: 'snow'
+                        });
+                        var quillInternal = new Quill('#OtherCharges_internalEditor', {
+                            theme: 'snow'
+                        });
+                        quillCustomer.root.innerHTML = data.OtherCharges_BookingNoteForCustomer || "";
+                        quillInternal.root.innerHTML = data.OtherCharges_InternalOfficeNote || "";
+
+                        //payment summary
+                        $("#paymentSummary_TaxableAmount").text(formatAmount(data.PaymentSummary_TaxableAmount));
+                        $("#paymentSummary_CGST").text(formatAmount(data.PaymentSummary_CGST));
+                        $("#paymentSummary_SGST").text(formatAmount(data.PaymentSummary_SGST));
+                        $("#paymentSummary_IGST").text(formatAmount(data.PaymentSummary_IGST));
+                        $("#paymentSummary_Total").text(formatAmount(data.PaymentSummary_TotalAmount));
+                        // Booking Amount Type & Input
+                        $("#paymentSummary_BookingAmount_Type").val(data.PaymentSummary_BookingDiscount_Type_Id || 1).trigger("change");
+                        $("#paymentSummary_BookingAmount_Amount").val(data.PaymentSummary_BookingDiscount_Type_Amount || 0).trigger("input");
+                        // Booking Amount Calculated
+                        $("#paymentSummary_BookingAmount").text(formatAmount(data.PaymentSummary_BookingDiscount_Total));
+                        // Payable Amount
+                        $("#paymentSummary_payableAmount").text(formatAmount(data.PaymentSummary_PayableAmount));
+
+                        $("#Section_PaymentDetails").hide();
+                    }
+                    else if(actionMode === "rescheduleData"){
+                        //resetBooking();
+                        data = data[0];
+                        console.log("rescheduleData - Booking API Response:", data);
+
+                        /* ------------------------------------Hidden Booking Id--------------------------------- */
+                        $("#reschedule_BookingId").val(bookingId);
+
+                        /* ------------------------------------Client Details (Read-only)------------------------ */
+                        $("#reschedule_clientName").text(data.Client_Name || "—");
+                        $("#reschedule_clientContact").text(data.Client_Contact || "—");
+                        $("#reschedule_clientEmail").text(data.Client_Email || "—");
+                        $("#reschedule_bookedBy").text(data.Booked_By_EmpName || "—");
+
+                        /* ------------------------------------Banquet & Slot------------------------------------ */
+                        $("#reschedule_BanquetId").val(data.BanquetId).trigger("change");
+                        $("#reschedule_SlotId").val(data.SlotId).trigger("change");
+
+                        /* ------------------------------------Dates-------------------------------------------- */
+                        $("#reschedule_FromDate").val(data.FromDate);     // readonly
+                        $("#reschedule_TillDate").val(data.TillDate);
+
+                        /* ------------------------------------Time--------------------------------------------- */
+                        setTimeFrom24Hr(data.StartTime, "reschedule_startHour", "reschedule_startMinute", "reschedule_startAMPM");
+                        setTimeFrom24Hr(data.EndTime, "reschedule_endHour", "reschedule_endMinute", "reschedule_endAMPM");
+                    }
                 }
                 else {
                     console.warn("API returned error:", response.message);
@@ -3851,8 +4178,29 @@
         });
     }
 
+    function setTimeFrom24Hr(time24, hourId, minuteId, ampmId) {
+        if (!time24) return;
+
+        let [hh, mm] = time24.split(":").map(Number);
+
+        const ampm = hh >= 12 ? "PM" : "AM";
+        hh = hh % 12 || 12;
+
+        // 🔹 Pad with leading zero
+        const hourStr = hh.toString().padStart(2, "0");
+        const minuteStr = mm.toString().padStart(2, "0");
+
+        $("#" + hourId).val(hourStr);
+        $("#" + minuteId).val(minuteStr);
+        $("#" + ampmId).val(ampm);
+    }
+
+    function formatAmount(val) {
+        return Number(val || 0).toFixed(2);
+    }
+
     function saveBooking() {
-        const form = $("#bookingForm");
+        //const form = $("#bookingForm");
         const $label = $("#label_date_shift");
 
         let userId = parseInt( sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
@@ -4024,7 +4372,14 @@
                     resetBooking();
                     loadBookingCalendar();
                     //CLOSE MODAL
-                    bookingModal.hide();
+                    //bookingModal.hide();
+                    $("#bookingModal").modal("hide");
+                    if(bookingData.BookingId > 0){
+                        var banquetId = 0;
+                        var eventDate = null;
+                        var actionMode = "singleData";
+                        loadBookingCalendar(bookingData.BookingId, banquetId, eventDate, actionMode);
+                    }
                 }
                 else {
                     Swal.fire({
@@ -4067,6 +4422,7 @@
 
         // Reset amounts to defaults
         resetOtherCharges(false);
+        $("#Section_PaymentDetails").show();
 
         console.log("Booking form reset completed.");
     }
