@@ -273,16 +273,16 @@ $(document).ready(function () {
                         <td>${m.ModuleName}</td>
 
                         <td class="text-center">
-                            <input type="checkbox" class="chkAdd_${clean}" ${m.CanAdd ? "checked" : ""}>
+                                <input type="checkbox" class="chkAdd_${clean}" ${m.CanAdd ? "checked" : ""}${!m.IsAddNeeded ? "hidden" : ""}>
                         </td>
                         <td class="text-center">
-                            <input type="checkbox" class="chkEdit_${clean}" ${m.CanEdit ? "checked" : ""}>
+                                <input type="checkbox" class="chkEdit_${clean}" ${m.CanEdit ? "checked" : ""}${!m.IsEditNeeded ? "hidden" : ""}>
                         </td>
                         <td class="text-center">
-                            <input type="checkbox" class="chkDelete_${clean}" ${m.CanDelete ? "checked" : ""}>
+                                <input type="checkbox" class="chkDelete_${clean}" ${m.CanDelete ? "checked" : ""}${!m.IsDeleteNeeded ? "hidden" : ""}>
                         </td>
                         <td class="text-center">
-                            <input type="checkbox" class="chkView_${clean}" ${m.CanView ? "checked" : ""}>
+                                <input type="checkbox" class="chkView_${clean}" ${m.CanView ? "checked" : ""}${!m.IsViewNeeded ? "hidden" : ""}>
                         </td>
                     </tr>`;
                 });

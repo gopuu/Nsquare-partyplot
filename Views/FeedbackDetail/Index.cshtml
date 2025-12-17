@@ -1,0 +1,100 @@
+﻿@{
+    ViewData["Title"] = "Feedback Detail";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-12">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Feedback Detail</h4>
+                      
+                    </div>
+
+                    <div id="tableMain">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function () {
+    var feedbackId = 0;
+    fetchFeedbackData(feedbackId);
+});
+
+function fetchFeedbackData(feedbackId) {
+    $.ajax({
+        url: '/api/Feedback/GetFeedback',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ FeedbackId: feedbackId }),
+        success: function (res) {
+            if (res && res.status === "Success") {
+                let data = res.data?.Responses || [];
+                renderFeedbackTable(data);
+            } else {
+                Swal.fire("Error", res.message || "No data", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Feedback Error");
+        }
+    });
+}
+
+function renderFeedbackTable(data) {
+    if ($.fn.dataTable.isDataTable('#tableMain table')) {
+        $('#tableMain table').DataTable().clear().destroy();
+    }
+    if (!data || data.length === 0) {
+        $('#tableMain table').DataTable({
+            data: [],
+            columns: [
+                { title: 'Sr. No.' },
+                { title: 'Step Id' },
+                { title: 'Option Id' },
+                { title: 'Text Response' },
+                { title: 'Created At' }
+            ]
+        });
+        return;
+    }
+    // Sr No add
+    data.forEach((x, i) => x.srno = i + 1);
+    $('#tableMain table').DataTable({
+        data: data,
+        columns: [
+            { data: 'srno', title: 'Sr. No.', className: 'text-center' },
+            { data: 'StepId', title: 'Step' },
+            { data: 'OptionId', title: 'Option' },
+            {
+                data: 'TextResponse',
+                title: 'Text',
+                render: d => d ? d : '-'
+            },
+            {
+                data: 'Created_At',
+                title: 'Created At',
+                render: d => d ? moment(d).format('DD-MM-YYYY HH:mm') : '-'
+            }
+        ],
+        pageLength: 10,
+        ordering: true,
+        searching: true,
+        lengthChange: false
+    });
+}
+
+</script>

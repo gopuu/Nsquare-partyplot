@@ -1,0 +1,254 @@
+﻿@{
+    ViewData["Title"] = "Asset Category Master";
+    Layout = "_Layout";
+}
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-12">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">Asset Category Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add Asset Category
+                        </button>
+                    </div>
+                    <div id="tableAssetCategory">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="assetCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="assetCategoryModalTitle">
+                    Add Asset Category
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="assetCategoryId" value="0">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" id="assetCategoryName" class="form-control"
+                               placeholder="Enter Asset Category Name">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Code</label>
+                        <input type="text" id="assetCategoryCode" class="form-control"
+                               placeholder="Enter Code">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea id="assetCategoryDescription" class="form-control"
+                                  placeholder="Enter Description"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-end">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning" id="btnSaveAssetCategory">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteRecordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white">Delete Confirmation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Are you sure?</h4>
+                <p class="text-muted">Delete this asset category?</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-outline-danger" id="delete-record">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function () {
+    fetchAssetCategoryData();
+
+    // ADD
+    $("#btn-add").click(function () {
+        resetAssetCategoryFields();
+        $("#assetCategoryModalTitle").text("Add Asset Category");
+        $("#assetCategoryModal").modal("show");
+    });
+
+    // SAVE
+    $("#btnSaveAssetCategory").click(function () {
+        if ($("#assetCategoryName").val().trim() === "") {
+            Swal.fire("Validation", "Name is required", "warning");
+            return;
+        }
+        let payload = {
+            Id: $("#assetCategoryId").val(),
+            Name: $("#assetCategoryName").val().trim(),
+            Code: $("#assetCategoryCode").val().trim(),
+            Description: $("#assetCategoryDescription").val().trim(),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        $.ajax({
+                url: "/api/AssetCategory/SaveAssetCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function () {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Saved!",
+                    showConfirmButton: false,
+                    timer: 900
+                });
+                $("#assetCategoryModal").modal("hide");
+                fetchAssetCategoryData();
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save AssetCategory Error");
+            }
+        });
+    });
+
+    // EDIT
+    $(document).on("click", ".btn-edit", function () {
+        let table = $("#tableAssetCategory table").DataTable();
+        let data = table.row($(this).closest("tr")).data();
+
+        $("#assetCategoryId").val(data.Id);
+        $("#assetCategoryName").val(data.Name);
+        $("#assetCategoryCode").val(data.Code);
+        $("#assetCategoryDescription").val(data.Description);
+
+        $("#assetCategoryModalTitle").text("Edit Asset Category");
+        $("#assetCategoryModal").modal("show");
+    });
+
+    // DELETE
+    $(document).on("click", ".btn-delete", function () {
+        let table = $("#tableAssetCategory table").DataTable();
+        let data = table.row($(this).closest("tr")).data();
+
+        $("#deleteRecordModal").data("id", data.Id).modal("show");
+    });
+
+    $("#delete-record").click(function () {
+
+        let payload = {
+            Id: $("#deleteRecordModal").data("id"),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+
+        $.ajax({
+            url: "/api/AssetCategory/DeleteAssetCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function () {
+                Swal.fire("Deleted!", "Record deleted successfully", "success");
+                $("#deleteRecordModal").modal("hide");
+                fetchAssetCategoryData();
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Delete AssetCategory Error");
+            }
+        });
+    });
+});
+
+    // ================= FETCH & RENDER =================== //
+    function fetchAssetCategoryData() {
+        $.ajax({
+                url: "/api/AssetCategory/GetAssetCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: 0 }),
+            success: function (res) {
+                console.log("API RESPONSE:", res);
+                if (res && res.status === "Success" && Array.isArray(res.data)) {
+                    renderAssetCategoryTable(res.data);
+                } else {
+                    renderAssetCategoryTable([]); // empty table
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Fetch AssetCategory Error");
+            }
+        });
+    }
+
+    function renderAssetCategoryTable(data) {
+        if (!Array.isArray(data)) {
+            data = [];
+        }
+        if ($.fn.dataTable.isDataTable("#tableAssetCategory table")) {
+            $("#tableAssetCategory table").DataTable().clear().destroy();
+        }
+        data.forEach((x, i) => x.srno = i + 1);
+        $("#tableAssetCategory table").DataTable({
+            data: data,
+            columns: [
+                { data: "srno", title: "Sr. No.", className: "text-center" },
+                { data: "Name", title: "Name" },
+                { data: "Code", title: "Code" },
+                {
+                    data: "Description",
+                    title: "Description",
+                    render: d => d ? d : "-"
+                },
+                {
+                    data: null,
+                    title: "Actions",
+                    orderable: false,
+                    render: () => `
+                        <button class="btn btn-outline-warning btn-action-xs btn-edit">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-action-xs btn-delete">
+                            <i class="fa fa-trash"></i>
+                        </button>`
+                }
+            ],
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: false
+        });
+    }
+
+
+function resetAssetCategoryFields() {
+    $("#assetCategoryId").val(0);
+    $("#assetCategoryName").val("");
+    $("#assetCategoryCode").val("");
+    $("#assetCategoryDescription").val("");
+}
+</script>
+
