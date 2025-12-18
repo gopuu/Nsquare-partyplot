@@ -160,12 +160,10 @@ $(document).ready(function () {
     });
 
     $("#delete-record").click(function () {
-
         let payload = {
             Id: $("#deleteRecordModal").data("id"),
             ActionBy: sessionStorage.getItem("userId") ?? 0
         };
-
         $.ajax({
             url: "/api/AssetCategory/DeleteAssetCategoryMaster",
             type: "POST",
@@ -243,12 +241,13 @@ $(document).ready(function () {
         });
     }
 
-
-function resetAssetCategoryFields() {
+    function resetAssetCategoryFields() {
     $("#assetCategoryId").val(0);
     $("#assetCategoryName").val("");
     $("#assetCategoryCode").val("");
     $("#assetCategoryDescription").val("");
 }
+
+    
 </script>
 

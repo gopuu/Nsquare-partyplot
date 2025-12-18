@@ -573,20 +573,24 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
                                    href="#" role="button" data-bs-toggle="dropdown">
-
                                     <span class="feather-icon me-2" data-feather="briefcase"></span>
                                     AssetMaster
                                 </a>
 
                                 <ul class="dropdown-menu">
                                     <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="/AssetMaster/Index">
+                                            <span class="me-2" data-feather="box"></span> Asset Master
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a class="dropdown-item d-flex align-items-center" href="/AssetCategoryMaster/Index">
-                                            <span class="me-2" data-feather="users"></span> Asset Category Master
+                                            <span class="me-2" data-feather="layers"></span> Asset Category Master
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center" href="/AssetSubCategoryMaster/Index">
-                                            <span class="me-2" data-feather="check-square"></span> Asset SubCategory Master
+                                            <span class="me-2" data-feather="list"></span> Asset SubCategory Master
                                         </a>
                                     </li>
                                 </ul>
