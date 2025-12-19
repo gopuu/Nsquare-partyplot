@@ -108,6 +108,7 @@
     </div>
 </div>
 <script>
+
     $(document).ready(function () {
         $('#Password').on('keydown', function (e) {
             if (e.key === 'Enter') {
@@ -118,8 +119,6 @@
 
         // Handle form submission
         $('#loginForm').on('submit', function (e) {
-            //$('#btn-loader').css('display', 'flex');
-            $('#btn-loader').show();
             e.preventDefault(); // Prevent the form from submitting normally
             var userName = $('#UserName').val();
             var password = $('#Password').val();
@@ -157,6 +156,9 @@
                     handleApiError(xhr, status, error, 'Login failed');
                     // Handle any errors
                     $('#errorMessage').text('Login failed. Please try again.');
+                },
+                complete: function () {
+                    ajaxActiveCount++;
                 }
             });
         });

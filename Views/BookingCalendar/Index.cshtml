@@ -3031,7 +3031,7 @@
         DN: { start: "07:00 PM", end: "11:00 PM" }
     };
 
-    function renderListViewTable(){
+    function renderListViewTable2(){
         listTableBody.innerHTML="";
         cachedDays.forEach((d,index)=>{
             banquetHallsList.forEach(hall=>{
@@ -3057,6 +3057,104 @@
             });
         });
     }
+
+    function renderListViewTable(bookingData = null) {
+
+        listTableBody.innerHTML = "";
+
+        cachedDays.forEach((d, dayIndex) => {
+
+            const yyyy = selectedYear;
+            const mm = String(selectedMonth + 1).padStart(2, "0");
+            const dd = String(d.date).padStart(2, "0");
+
+            const dateStr_Display = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;
+            const dateStr_ISO = `${yyyy}-${mm}-${dd}`;
+            const currentDate = new Date(dateStr_ISO);
+
+            banquetHallsList.forEach(hall => {
+
+                // Build shift badges for this hall + date
+                const shiftBadges = cachedShiftData[hall.Id][dayIndex].map((color, i) => {
+
+                    let finalColor = color;
+                    let bookingId = 0;
+                    let eventName = "";
+                    let clientName = "";
+                    let clientContact = "";
+                    let eventDateRange = "";
+
+                    const shiftCode = shiftNames[i];
+                    const shiftFull = fullShiftName(shiftCode);
+
+                    // 🔍 Check bookingData (same logic as board)
+                    if (Array.isArray(bookingData)) {
+                        for (const booking of bookingData) {
+                            if (
+                                booking.BanquetId === hall.Id &&
+                                booking.ShiftCode === shiftCode
+                            ) {
+                                const fromDate = new Date(booking.FromDate);
+                                const tillDate = new Date(booking.TillDate);
+
+                                if (currentDate >= fromDate && currentDate <= tillDate) {
+                                    finalColor = "danger";
+                                    bookingId = booking.BookingId;
+                                    eventName = booking.Booking_TypeName;
+                                    clientName = booking.Client_Name;
+                                    clientContact = booking.Client_Contact;
+                                    eventDateRange =
+                                        booking.FromDate_Short + " " +
+                                        booking.StartTime_Full + " - " +
+                                        booking.TillDate_Short + " " +
+                                        booking.EndTime_Full;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    const textColor = finalColor === "light" ? "text-black" : "text-white";
+
+                    return `
+                        <span class="badge bg-${finalColor} ${textColor} me-1 mb-1"
+                              data-bookingid="${bookingId}"
+                              data-eventname="${eventName}"
+                              data-clientname="${clientName}"
+                              data-clientcontact="${clientContact}"
+                              data-eventdaterange="${eventDateRange}"
+                              data-shift="${shiftCode}"
+                              data-shiftname="${shiftFull}"
+                              data-date="${dateStr_Display}"
+                              data-date_iso="${dateStr_ISO}"
+                              data-hallid="${hall.Id}"
+                              data-hallname="${hall.HallName}">
+                            ${shiftCode}
+                        </span>`;
+                }).join("");
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${dateStr_Display}</td>
+                    <td>${d.day}</td>
+                    <td class="text-center">
+                        <span class="badge border border-dark text-black bg-white cursor-pointer">
+                            ${d.enquiries}
+                        </span>
+                    </td>
+                    <td>${hall.HallName}</td>
+                    <td>
+                        <div class="badge-container">
+                            ${shiftBadges}
+                        </div>
+                    </td>
+                `;
+
+                listTableBody.appendChild(tr);
+            });
+        });
+    }
+
 
     function attachColumnHoverListeners() {
         const rows = document.querySelectorAll(".row-wrapper");
@@ -4818,3 +4916,81 @@
     fixTimeInput('endHour','endMinute');
 </script>
 <!-- Time format  --END- Include Flatpickr CSS & JS -->
+
+<!--Reschedule-->
+<script>
+    function to24Hour(hour, minute, ampm) {
+        hour = parseInt(hour, 10);
+        minute = parseInt(minute || 0, 10);
+
+        if (ampm === "PM" && hour !== 12) hour += 12;
+        if (ampm === "AM" && hour === 12) hour = 0;
+
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    }
+    $("#btnSaveReschedule").on("click", function () {
+
+        const bookingId = Number($("#reschedule_BookingId").val());
+
+        if (!bookingId) {
+            Swal.fire("Invalid", "Booking Id missing.", "warning");
+            return;
+        }
+
+        // 🔹 Build Start & End Time (24-hour)
+        const startTime = to24Hour(
+            $("#reschedule_startHour").val(),
+            $("#reschedule_startMinute").val(),
+            $("#reschedule_startAMPM").val()
+        );
+
+        const endTime = to24Hour(
+            $("#reschedule_endHour").val(),
+            $("#reschedule_endMinute").val(),
+            $("#reschedule_endAMPM").val()
+        );
+
+        // 🔹 Build payload (match API model)
+        const payload = {
+            BookingId: bookingId,
+            BanquetId: Number($("#reschedule_BanquetId").val()) || null,
+            SlotId: Number($("#reschedule_SlotId").val()) || null,
+            FromDate: $("#reschedule_FromDate").val() || null,
+            TillDate: $("#reschedule_TillDate").val() || null,
+            StartTime: startTime || null,
+            EndTime: endTime || null,
+            ShiftCode: null, // optional (can be derived from slot if needed)
+            ActionBy: Number(sessionStorage.getItem("userId")) || 0
+        };
+
+        console.log("Reschedule Payload:", payload);
+
+        // 🔹 Call API
+        $.ajax({
+            url: "/api/BookingCalendar/SaveBookingCalendar_Reschedule",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+
+            success: function (res) {
+                if (res.status === "Success") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Rescheduled",
+                        text: res.message
+                    }).then(() => {
+                        $("#bookingRescheduleModal").modal("hide");
+                        // refresh calendar / board here if needed
+                        loadBookingCalendar();
+                    });
+                } else {
+                    Swal.fire("Error", res.message || "Failed to reschedule booking.", "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Reschedule Save failed");
+            }
+        });
+    });
+
+</script>

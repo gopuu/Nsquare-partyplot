@@ -416,7 +416,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GeneratePackageReport2")]
         public IActionResult GeneratePackageReport2([FromBody] PackageReportRequest request)
@@ -1003,7 +1002,6 @@ namespace ERPAdmin.ApiControllers
 
             return $"{domainUrl}/uploads/org/{domain}/PackageReports/{fileName}";
         }
-
 
         [HttpPost]
         [Route("GeneratePackageReport")]
@@ -1639,6 +1637,61 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //Reschedule
+        [HttpPost]
+        [Route("SaveBookingCalendar_Reschedule")]
+        public IActionResult SaveBookingCalendar_Reschedule([FromBody] SaveBookingCalendarReschedule model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                // 🔹 Validate connection setup
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult)){
+                    return errorResult;
+                }
+
+                long bookingId = 0;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SaveBookingCalendar_Reschedule", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    // 🔹 Required
+                    cmd.Parameters.AddWithValue("@BookingId", model.BookingId);
+
+                    // 🔹 Optional params
+                    cmd.Parameters.AddWithValue("@BanquetId", model.BanquetId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SlotId", model.SlotId ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@FromDate", model.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TillDate", model.TillDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@StartTime", model.StartTime ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EndTime", model.EndTime ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ShiftCode", model.ShiftCode ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Action_By", model.ActionBy);
+
+                    // 🔹 Execute
+                    con.Open();
+                    bookingId = Convert.ToInt64(cmd.ExecuteScalar());
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.data = new { BookingId = bookingId };
+                apiResponse.message = "Booking rescheduled successfully!";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
 
     }
 }

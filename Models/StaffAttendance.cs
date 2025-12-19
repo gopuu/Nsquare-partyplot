@@ -41,12 +41,12 @@
 
     public class StaffAttendanceModel
     {
-        public long? AttendanceId { get; set; }
+        public long AttendanceId { get; set; }
         public long StaffId { get; set; }
         public string? AttendanceDate { get; set; }
         public string? CheckInTime { get; set; }
         public string? CheckOutTime { get; set; }
-        public long? StatusId { get; set; }
+        public long StatusId { get; set; }
         public string? StaffName { get; set; }
         public string? StatusName { get; set; }
         public string? AttendanceDateFormat { get; set; }

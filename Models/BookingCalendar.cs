@@ -1,5 +1,22 @@
 ﻿namespace ERPAdmin.Models
 {
+    //Reschedule
+    public class SaveBookingCalendarReschedule : BaseClass
+    {
+        public long BookingId { get; set; }
+
+        public long? BanquetId { get; set; }
+        public long? SlotId { get; set; }
+
+        public string? FromDate { get; set; }     // yyyy-MM-dd
+        public string? TillDate { get; set; }     // yyyy-MM-dd
+        public string? StartTime { get; set; }    // HH:mm
+        public string? EndTime { get; set; }      // HH:mm
+
+        public string? ShiftCode { get; set; }
+
+    }
+
     //Get Calendar mock
     public class GetEnquiryCalendarMock_Request
     {

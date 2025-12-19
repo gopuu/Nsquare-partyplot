@@ -96,9 +96,9 @@ namespace ERPAdmin.ApiControllers
                 SqlCommand cmd = new SqlCommand("SaveBanquetType", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 // Retrieve and assign parameters
-                cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id > 0 ? model.Id : 0;
-                cmd.Parameters.Add("@name", SqlDbType.NVarChar, 500).Value = model.Name ?? string.Empty;
-                cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = model.ActionBy;
+                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id > 0 ? model.Id : 0;
+                cmd.Parameters.Add("@Name", SqlDbType.NVarChar, 500).Value = model.Name ?? string.Empty;
+                cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();

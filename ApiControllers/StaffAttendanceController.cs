@@ -54,17 +54,18 @@ public class StaffAttendanceController : MasterController
             {
                 list.Add(new StaffAttendanceModel
                 {
-                    AttendanceId = row["AttendanceId"] == DBNull.Value ? null : Convert.ToInt64(row["AttendanceId"]),
+                    AttendanceId = row["AttendanceId"] == DBNull.Value ? 0 : Convert.ToInt64(row["AttendanceId"]),
+
                     StaffId = Convert.ToInt64(row["StaffId"]),
                     StaffName = Convert.ToString(row["StaffName"]),
+                    AttendanceDate = row["AttendanceDate"] == DBNull.Value ? null : Convert.ToDateTime(row["AttendanceDate"]).ToString("yyyy-MM-dd"),
                     AttendanceDateFormat = row["AttendanceDateFormat"] == DBNull.Value ? null : Convert.ToString(row["AttendanceDateFormat"]),
                     DayName = Convert.ToString(row["DayName"]),
 
-                    AttendanceDate = row["AttendanceDate"] == DBNull.Value ? null : Convert.ToString(row["AttendanceDate"]),
-                    CheckInTime = row["CheckInTime"] == DBNull.Value ? null : Convert.ToString(row["CheckInTime"]),
-                    CheckOutTime = row["CheckOutTime"] == DBNull.Value ? null : Convert.ToString(row["CheckOutTime"]),
+                    CheckInTime = row["CheckInTime"] == DBNull.Value ? "" : Convert.ToString(row["CheckInTime"]),
+                    CheckOutTime = row["CheckOutTime"] == DBNull.Value ? "" : Convert.ToString(row["CheckOutTime"]),
 
-                    StatusId = row["StatusId"] == DBNull.Value ? null : Convert.ToInt64(row["StatusId"]),
+                    StatusId = row["StatusId"] == DBNull.Value ? 0 : Convert.ToInt64(row["StatusId"]),
                     StatusName = Convert.ToString(row["StatusName"])
                 });
             }
@@ -113,8 +114,8 @@ public class StaffAttendanceController : MasterController
                 resultStatus = Convert.ToInt64(cmd.ExecuteScalar() ?? 1);
             }
 
-            apiResponse.message = "Bulk attendance saved successfully!";
-            apiResponse.data = new { Status = resultStatus };
+            apiResponse.message = "Attendance Saved!";
+            apiResponse.data = null; // new { Status = resultStatus };
             apiResponse.status = "Success";
             return Ok(apiResponse);
         }
@@ -122,7 +123,7 @@ public class StaffAttendanceController : MasterController
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.message = ex.Message;
             apiResponse.status = "Error";
             return StatusCode(500, apiResponse);
         }

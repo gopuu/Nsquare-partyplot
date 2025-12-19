@@ -46,9 +46,8 @@
                 </div>
 
                 <!-- Buttons -->
-                <div class="col-auto d-flex gap-1 mt-5">
-                    <button class="btn btn-outline-warning btn-sm btn-edit"><i class="fa fa-edit"></i> Edit</button>
-                    <button class="btn btn-outline-warning btn-sm d-none" id="btnSaveAttendance">Save</button>
+                <div class="col-auto d-flex gap-1 mt-4">
+                    <button class="btn btn-outline-warning btn-sm" id="btnSaveAttendance">Save</button>
                 </div>
             </div>
         </div>
@@ -59,52 +58,6 @@
         </div>
     </div>
 </div>
-
-<!-- ADD / EDIT STAFF ATTENDANCE MODAL -->
-@* <div class="modal fade" id="attendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title text-white" id="attendanceModalTitle">Add Attendance</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="attendanceId" value="0" />
-
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Staff <span class="text-danger">*</span></label>
-                        <select id="ddlStaff" class="form-select"></select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Attendance Date <span class="text-danger">*</span></label>
-                        <input type="date" id="txtAttendanceDate" class="form-control">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Check In Time</label>
-                        <input type="time" id="txtCheckInTime" class="form-control">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Check Out Time</label>
-                        <input type="time" id="txtCheckOutTime" class="form-control">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select id="ddlStatus" class="form-select"></select>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-outline-warning" id="btnSaveAttendance">Save</button>
-            </div>
-        </div>
-    </div>
-</div> *@
 
 <!-- DELETE MODAL -->
 <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
@@ -132,76 +85,106 @@
 </div>
 <!-- END MODAL -->
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <script>
     $(document).ready(function () {
-        
-         $("#btnSaveAttendance").on("click", function () {
-        let table = $('#tableAttendance table').DataTable();
-        let rows = table.rows().data().toArray();
-        let attendanceList = [];
+        // 1️⃣ Set default dates (today)
+        let today = new Date().toISOString().split('T')[0];
+        $("#txtfromdate, #txttodate").val(today);
 
-        rows.forEach(r => {
-            let rowId = r.AttendanceId; // ✅ fix here
-
-            let checkIn = $(`input.checkin-time[data-id='${rowId}']`).val();
-            let checkOut = $(`input.checkout-time[data-id='${rowId}']`).val();
-            let status = $(`select.duty-status[data-id='${rowId}']`).val();
-            
-            if ((checkIn && checkIn.trim() !== "") ||
-          (checkOut && checkOut.trim() !== "") ||
-          (status && status != "0")) {
-            attendanceList.push({
-                Id: r.AttendanceId,
-                StaffId: r.StaffId,
-                AttendanceDate: r.AttendanceDateFormat,
-                CheckInTime: checkIn || null,
-                CheckOutTime: checkOut || null,
-                StatusId: Number(status || 0)
-            });
-          }
+        // 2️⃣ Load dropdowns
+        loadStaffDropdown();
+        loadStatusDropdown().then(() => {
+            fetchAttendanceData();
         });
 
-        let payload = {
-            AttendanceList: attendanceList,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
-        };
+        // 3️⃣ Change events to refresh table
+        $("#ddlStaff, #ddlStatus, #txtfromdate, #txttodate").on("change", function(){
+            fetchAttendanceData();
+        });
 
-        console.log("Payload Sending:", payload);
+        //keep status selecte when time changes & when status=0
+        $(document).on("change", ".checkin-time, .checkout-time", function () {
+            let row = $(this).closest("tr");
+            let statusDropdown = row.find(".duty-status");
+            let currentStatus = Number(statusDropdown.val() || 0);
 
-        $.ajax({
-            url: "/api/StaffAttendance/SaveStaffAttendance",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload),
-            success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
-
-                disableAttendanceInputs(); // disable inputs after save
-                $(".btn-edit").removeClass("d-none");
-                $("#btnSaveAttendance").addClass("d-none");
-            },
-            error: function(err){
-                console.error(err);
-                Swal.fire("Error","Attendance not saved","error");
+            // If status is empty or 0, auto-select Present
+            if (currentStatus === 0) {
+                let presentId = getPresentStatusId();
+                if (presentId > 0) {
+                    statusDropdown.val(presentId);
+                }
             }
         });
-    });
 
-        $(document).on("click", ".btn-edit", function () {
+        $("#btnSaveAttendance").on("click", function () {
+            let table = $('#tableAttendance table').DataTable();
+            let attendanceList = [];
 
-        // Enable all inputs
-        $("#tableAttendance input, #tableAttendance select").prop("disabled", false);
+            table.rows().every(function () {
+                let rowData = this.data();          // original row object
+                let rowNode = this.node();          // actual <tr> element
 
-        // Hide Edit → Show Save
-        $(".btn-edit").addClass("d-none");
-        $("#btnSaveAttendance").removeClass("d-none");
-    });
+                // let checkInTime  = $(rowNode).find('.checkin-time').val();
+                // let checkOutTime = $(rowNode).find('.checkout-time').val();
+                let checkInTime  = $(rowNode).find('.checkin-time-hidden').val();
+                let checkOutTime = $(rowNode).find('.checkout-time-hidden').val();
+                let statusId     = Number($(rowNode).find('.duty-status').val());
+
+                // ✅ pass only rows that have some data
+                //if (checkInTime || checkOutTime || statusId) {
+                    attendanceList.push({
+                        Id: rowData.AttendanceId,
+                        StaffId: rowData.StaffId,
+                        AttendanceDate: rowData.AttendanceDate,
+                        CheckInTime: checkInTime || null,
+                        CheckOutTime: checkOutTime || null,
+                        StatusId: statusId || null
+                    });
+                //}
+            });
+            // If no rows have valid data, show a message to the user
+            if (attendanceList.length === 0) {
+                Swal.fire({
+                    icon: "info",
+                    title: "No Changes Detected",
+                    text: "No attendance data has been updated."
+                });
+                return;
+            }
+
+            let payload = {
+                AttendanceList: attendanceList,
+                ActionBy: Number(sessionStorage.getItem("userId")) ?? 0
+            };
+
+            console.log("Payload Sending:", payload);
+
+            $.ajax({
+                url: "/api/StaffAttendance/SaveStaffAttendance",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved!",
+                        showConfirmButton: false,
+                        timer: 900
+                    });
+                    fetchAttendanceData();
+                },
+                error: function(xhr, status, error){
+                    handleApiError(xhr, status, error, "Attendance not saved");
+                    // console.error(err);
+                    // Swal.fire("Error","Attendance not saved","error");
+                }
+            });
+        });
 
         // $(document).on('click', '.btn-edit', function () {
         //     const canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
@@ -302,61 +285,18 @@
         });
     });
 
-  // RESET FORM
-  function resetAttendanceForm() {
-            $('#attendanceId').val(0);
-            $('#ddlStaff').val('');
-            $('#txtAttendanceDate').val('');
-            $('#txtCheckInTime').val('');
-            $('#txtCheckOutTime').val('');
-            $('#ddlStatus').val('');
-        }
-      
-</script>
 
-
-<script>
-    let statusList = [];
-
-    // Helper: convert HH:MM AM/PM to 24-hour format (for input type=time)
-          function convertTo24Hour(timeStr) {
-        if (!timeStr) return ""; // handle null/undefined/empty
-
-        // Expecting format like "09:05 AM"
-        const parts = timeStr.trim().split(' ');
-        if (parts.length !== 2) return ""; // invalid format
-
-        let [time, modifier] = parts;
-        if (!modifier) return "";
-
-        let [hours, minutes] = time.split(':').map(Number);
-        if (isNaN(hours) || isNaN(minutes)) return "";
-
-        modifier = modifier.toUpperCase();
-
-        if (modifier === 'PM' && hours < 12) hours += 12;
-        if (modifier === 'AM' && hours === 12) hours = 0;
-
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    // RESET FORM
+    function resetAttendanceForm() {
+        $('#attendanceId').val(0);
+        $('#ddlStaff').val('');
+        $('#txtAttendanceDate').val('');
+        $('#txtCheckInTime').val('');
+        $('#txtCheckOutTime').val('');
+        $('#ddlStatus').val('');
     }
-
-
-    $(document).ready(function () {
-        // 1️⃣ Set default dates (today)
-        let today = new Date().toISOString().split('T')[0];
-        $("#txtfromdate, #txttodate").val(today);
-
-        // 2️⃣ Load dropdowns
-        loadStaffDropdown();
-        loadStatusDropdown().then(() => {
-            fetchAttendanceData();
-        });
-
-        // 3️⃣ Change events to refresh table
-        $("#ddlStaff, #ddlStatus, #txtfromdate, #txttodate").on("change", function(){
-            fetchAttendanceData();
-        });
-    });
+      
+    let statusList = [];
 
     // ----------------------
     // Load Staff Dropdown
@@ -397,12 +337,17 @@
         });
     }
 
+    function getPresentStatusId() {
+        let present = statusList.find(s => s.StatusName.toLowerCase() === "present");
+        return present ? present.Id : 0;
+    }
+
     // ----------------------
     // Fetch Attendance Data
     // ----------------------
     function fetchAttendanceData() {
-        let staffId = parseInt($("#ddlStaff").val()) || 0;
-        let statusId = parseInt($("#ddlStatus").val()) || 0;
+        let staffId = Number($("#ddlStaff").val()) || 0;
+        let statusId = Number($("#ddlStatus").val()) || 0;
         let fromDate = $("#txtfromdate").val();
         let toDate = $("#txttodate").val();
 
@@ -417,6 +362,7 @@
                 ToDate: toDate
             }),
             success: function (res) {
+                console.log("Attendance Data:", res);
                 renderAttendanceTable(res?.data || []);
             }
         });
@@ -437,51 +383,110 @@
             columns: [
                 { data: "srno", title: "Sr No" },
                 { data: "StaffName", title: "Staff" },
-                { data: "AttendanceId", title: "AttendanceId", visible:false },
                 {
-                    data: "AttendanceDateFormat",
                     title: "Date",
-                    render: function (d) {
-                        if (!d) return '';
-                        let date = new Date(d);
-                        let formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                        let dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-                        return `${formattedDate} (${dayName})`;
+                    data: null,
+                    render: function (data, type, row) {
+                        let date = row.AttendanceDateFormat || "";
+                        let day  = row.DayName ? ` (${row.DayName})` : "";
+                        return date + day;
                     }
                 },
                 {
                     data: "CheckInTime",
                     title: "Check In",
-                    render: function(d, type, row){
-                        let val = d ? convertTo24Hour(d) : '';
-                        return `<input type="time" class="form-control checkin-time" value="${val}" data-id="${row.AttendanceId}"/>`;
+                    render: function (d, type, row) {
+                        return `
+                            <input type="text"
+                                   class="form-control checkin-time timepicker"
+                                   data-id="${row.AttendanceId}"
+                                   value="${d || ''}">
+                            <input type="hidden"
+                                   class="checkin-time-hidden"
+                                   value="${d || ''}">
+                        `;
                     }
                 },
                 {
                     data: "CheckOutTime",
                     title: "Check Out",
-                    render: function(d, type, row){
-                        let val = d ? convertTo24Hour(d) : '';
-                        return `<input type="time" class="form-control checkout-time" value="${val}" data-id="${row.AttendanceId}"/>`;
+                    render: function (d, type, row) {
+                        return `
+                            <input type="text"
+                                   class="form-control checkout-time timepicker"
+                                   data-id="${row.AttendanceId}"
+                                   value="${d || ''}">
+                            <input type="hidden"
+                                   class="checkout-time-hidden"
+                                   value="${d || ''}">
+                        `;
                     }
                 },
                 {
                     data: "StatusId",
                     title: "Status",
-                    render: function(d, type, row){
-                        let options = `<option value="">-- Select Status --</option>`;
-                        options += statusList.map(s => `<option value="${s.Id}" ${s.Id==d ? "selected" : ""}>${s.StatusName}</option>`).join('');
-                        return `<select class="form-select duty-status" data-id="${row.AttendanceId}">${options}</select>`;
+                    render: function (d, type, row) {
+
+                        let options = `<option value="0">-- Select Status --</option>`;
+                        options += statusList
+                            .map(s => `<option value="${s.Id}" ${s.Id == d ? "selected" : ""}>${s.StatusName}</option>`)
+                            .join('');
+
+                        return `
+                            <div class="d-flex gap-1 align-items-center">
+                                <select class="form-select duty-status"
+                                        data-id="${row.AttendanceId}">
+                                    ${options}
+                                </select>
+
+                                <button type="button" class="btn btn-outline-danger btn-action-xs clear-time" title="Clear Check In, Check Out & Status">✕</button>
+                            </div>
+                        `;
                     }
                 }
             ]
         });
-
-        disableAttendanceInputs(); // optional: disable editing by default
     }
 
-    // Optional helper to disable all inputs initially
-    function disableAttendanceInputs(){
-        $('.checkin-time, .checkout-time, .duty-status').prop('disabled', true);
+    function initTimePickers() {
+        flatpickr(".timepicker", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "h:i K",   // UI → 03:14 PM
+            time_24hr: false,
+            minuteIncrement: 1,
+            onChange: function (selectedDates, dateStr, instance) {
+                let row = $(instance.input).closest("tr");
+
+                // Convert to 24-hour for hidden field
+                let time24 = instance.formatDate(selectedDates[0], "H:i");
+
+                if ($(instance.input).hasClass("checkin-time")) {
+                    row.find(".checkin-time-hidden").val(time24);
+                } else {
+                    row.find(".checkout-time-hidden").val(time24);
+                }
+            }
+        });
     }
+    $('#tableAttendance table').on('draw.dt', function () {
+        initTimePickers();
+    });
+
+    $(document).on("click", ".clear-time", function () {
+
+        let row = $(this).closest("tr");
+
+        // Clear visible inputs
+        row.find(".checkin-time").val("");
+        row.find(".checkout-time").val("");
+
+        // Clear hidden (24-hr) values
+        row.find(".checkin-time-hidden").val("");
+        row.find(".checkout-time-hidden").val("");
+
+        row.find(".duty-status").val("0");
+    });
+
+
 </script>
