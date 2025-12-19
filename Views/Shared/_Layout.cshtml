@@ -187,7 +187,21 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "FeedbackCRM" ? "active" : "")" href="/FeedbackCRM">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="message-square"></span>Feedback
+                                        <span class="me-2 uil" data-feather="message-square"></span>Dashboard Feedback
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "FeedbackForm" ? "active" : "")" href="/FeedbackForm">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Form
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "FeedbackDetail" ? "active" : "")" href="/FeedbackDetail">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Detail 
                                     </div>
                                 </a>
                             </li>
@@ -554,6 +568,32 @@
                                         <span class="me-2 uil" data-feather="user-plus"></span>UserRights
                                     </div>
                                 </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown">
+                                    <span class="feather-icon me-2" data-feather="briefcase"></span>
+                                    AssetMaster
+                                </a>
+
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="/AssetMaster/Index">
+                                            <span class="me-2" data-feather="box"></span> Asset Master
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="/AssetCategoryMaster/Index">
+                                            <span class="me-2" data-feather="layers"></span> Asset Category Master
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="/AssetSubCategoryMaster/Index">
+                                            <span class="me-2" data-feather="list"></span> Asset SubCategory Master
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                     </li>
@@ -1275,6 +1315,8 @@
     <script src="/assets2/vendors/leaflet.tilelayer.colorfilter/leaflet-tilelayer-colorfilter.min.js"></script>
     <script src="/assets2/vendors/echarts/echarts.min.js"></script>
     <script src="/assets2/js/ecommerce-dashboard.js"></script>
+    @RenderSection("Scripts", required: false)
+
   </body>
 
 </html>
