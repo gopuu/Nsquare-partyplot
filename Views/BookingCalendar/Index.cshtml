@@ -26,7 +26,7 @@
                         <h4 class="mb-0">Booking Calendar</h4>
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-primary btn-sm d-none" id="bookmapBtn">Bookmap</button>
-                            <button class="btn btn-outline-secondary btn-sm" id="toggleViewBtn">List View</button>
+                            <button class="btn btn-outline-secondary btn-sm d-none" id="toggleViewBtn">List View</button>
                             <button class="btn btn-dark btn-sm d-none">Block</button>
                             <select class="form-select form-select-sm" id="yearSelect" style="width: 100px;"></select>
                             <div class="btn-group" id="monthButtons"></div>
@@ -596,7 +596,7 @@
                             <i class="fa-solid fa-calendar-day me-1"></i> Reschedule
                         </button>
 
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnPostBookingFollowups">
+                        <button type="button" class="btn btn-outline-primary btn-sm d-none" id="btnPostBookingFollowups">
                             <i class="fa-solid fa-bell me-1"></i> Post Booking Followups (0)
                         </button>
 
@@ -604,7 +604,7 @@
                             <i class="fa-solid fa-list-check me-1"></i> Prepare Order (PO)
                         </button>
 
-                        <button type="button" class="btn btn-outline-success btn-sm" id="btnExportBooking">
+                        <button type="button" class="btn btn-outline-success btn-sm d-none" id="btnExportBooking">
                             <i class="fa-solid fa-file-export me-1"></i> Export Booking
                         </button>
 
@@ -883,19 +883,19 @@
                             </h6>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" id="bookingReport_btnReviseMenu" class="btn btn-outline-primary btn-sm">
+                                <button type="button" id="bookingReport_btnReviseMenu" class="btn btn-outline-primary btn-sm d-none">
                                     <i class="fa-solid fa-pen-to-square me-1"></i> Revise Primary Menu
                                 </button>
 
-                                <button type="button" id="bookingReport_btnViewAddOns" class="btn btn-outline-success btn-sm">
+                                <button type="button" id="bookingReport_btnViewAddOns" class="btn btn-outline-success btn-sm d-none">
                                     <i class="fa-solid fa-list me-1"></i> View Primary AddOns
                                 </button>
 
-                                <button type="button" id="bookingReport_btnEditAddress" class="btn btn-outline-primary btn-sm">
+                                <button type="button" id="bookingReport_btnEditAddress" class="btn btn-outline-primary btn-sm d-none">
                                     <i class="fa-solid fa-location-dot me-1"></i> Edit Primary Address
                                 </button>
 
-                                <button type="button" id="bookingReport_btnAddPackage" class="btn btn-outline-danger btn-sm">
+                                <button type="button" id="bookingReport_btnAddPackage" class="btn btn-outline-danger btn-sm d-none">
                                     <i class="fa-solid fa-plus me-1"></i> Add Food Package
                                 </button>
                             </div>
@@ -1075,7 +1075,7 @@
                             <input type="date" id="NextDueDate" class="form-control">
                         </div>
                         <div class="col-md-12 mb-3">
-                            <input type="button" id="btnwritrnote" class="btn btn-primary" value="Writer Note">
+                            <input type="button" id="btnwritrnote" class="btn btn-outline-primary" value="Writer Note">
                             <div class="Payment_editorsContainer" style="display:none;">
                                 <!-- Hidden text editor -->
                                 <div class="col-md-12" id="noteEditor">
@@ -1384,9 +1384,10 @@
                         data: JSON.stringify(payload),
                         success: function (response) {
                             //console.log("response supplier:", response);
-                            $("#SlotId, #reschedule_SlotId").html(`<option value="0">-- Select Slot --</option>`);
+                            const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
+                            $slotDropdowns.html(`<option value="0">-- Select Slot --</option>`);
                             response.data.forEach(s => {
-                                $("#SlotId, #reschedule_SlotId").append(`<option value="${s.Id}">${s.Name}</option>`);
+                                $slotDropdowns.append(`<option value="${s.Id}">${s.Name}</option>`);
                             });
                         },
                         error: function (xhr, status, error) {
@@ -1575,6 +1576,159 @@
     </div>
 </div>
 <!-- Booking Reschedule Modal -- END -->
+
+<!-- PREPARE ORDER Modal -- START -->
+<div class="modal fade" id="prepareOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white fw-bold" id="lblPrepareOrder">Create / Edit Prepare Order</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Hidden -->
+            <input type="hidden" id="PO_BookingId">
+            <input type="hidden" id="PO_EnquiryDealId">
+            <input type="hidden" id="PO_Id">
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <!-- Header Fields -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <label>Client</label>
+                        <input class="form-control" id="PO_ClientName" disabled>
+                    </div>
+
+                    <div class="col-md-1">
+                        <label>Pax</label>
+                        <input type="number" class="form-control" id="PO_Pax" disabled>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>PO Number</label>
+                        <input class="form-control" id="PO_No">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>PO Date</label>
+                        <input type="date" class="form-control" id="PO_Date">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>Event Date</label>
+                        <input type="date" class="form-control" id="PO_EventDate" disabled>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>Slot</label>
+                        <select class="form-select" id="PO_Slot" disabled></select>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Food Items -->
+                <h6 class="text-primary">
+                    Select food items to be prepared for
+                    <span id="PO_Pax_lbl">0</span> pax
+                </h6>
+
+                <div id="foodItemsContainer" class="d-flex flex-wrap gap-3 mt-2"></div>
+
+                <div class="mt-3">
+                    <label>Note</label>
+                    <textarea class="form-control" id="PO_Notes" rows="3"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="savePrepareOrder()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<style>
+.food-header {
+    font-weight: 600;
+    display: block;
+    width: 100%;
+    clear: both;        /* force new row */
+}
+</style>
+<!-- PREPARE ORDER Modal -- END -->
+
+<!-- PREPARE ORDER Modal -- formula -- START -->
+<div class="modal fade" id="formulaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info">
+                <h6 class="modal-title">
+                    Add Formula – <span id="formulaFoodName"></span>
+                </h6>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <input type="hidden" id="hfFormulaFoodItemId">
+
+            <div class="modal-body">
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <input type="checkbox" id="chkFormulaNotRequired">
+                    <label>Formula Not Required</label>
+
+                    <label class="ms-auto">For</label>
+                    <input type="number" id="txtFormulaPeople"
+                           class="form-control" style="width:90px" value="1">
+                    <label>People</label>
+                </div>
+
+                <table class="table table-bordered" id="tblIngredients">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ingredient name</th>
+                            <th width="120">Qty</th>
+                            <th width="120">Unit</th>
+                            <th width="40"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <button class="btn btn-sm btn-success" onclick="addIngredientRow()">
+                    + Add new
+                </button>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveFormula()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<style>
+    .food-item-name {
+        cursor: pointer;
+        user-select: none;
+    }
+
+        .food-item-name:hover {
+            text-decoration: underline;
+        }
+
+</style>
+
+<!-- PREPARE ORDER Modal -- formula -- END -->
 
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
@@ -1959,6 +2113,7 @@
                         title: "Menu Items Not Found",
                         text: "No menu items found for this package."
                     });
+                     $(this).val("0");
                 }
             },
             error: function () {
@@ -3199,18 +3354,6 @@
     const bookingReportModalEl = document.getElementById("bookingReportModal");
     const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 
-    // const bookingRescheduleModalEl = document.getElementById("bookingRescheduleModal");
-    // const bookingRescheduleModal = new bootstrap.Modal(bookingRescheduleModalEl);
-
-    // const addonChargeModalEl = document.getElementById("addonChargeModal");
-    // const addonModal = new bootstrap.Modal(addonChargeModalEl);
-
-    // const paymentModalEl = document.getElementById("paymentModal");
-    // const paymentModal = new bootstrap.Modal(paymentModalEl);
-
-    // const menuModalEl = document.getElementById("menuModal");
-    // const menuModal = new bootstrap.Modal(menuModalEl);
-
     document.getElementById("bookmapBtn").addEventListener("click", () => {
         location.reload();
         //console.log("add new booking");
@@ -3447,7 +3590,7 @@
         });
         //hide/show bookingModal MODAL ----- END--------------------------
 
-        //hide/show bookingRescheduleModal MODAL ----- START --------------------------
+        //hide bookingRescheduleModal MODAL ----- START --------------------------
         $("#bookingRescheduleModal").on("hidden.bs.modal", function () {
             if (openedFromReport) {
                 openedFromReport = false;
@@ -3456,7 +3599,42 @@
                 bookingReportModal.style.display = "block";
             }
         });
-        //hide/show bookingRescheduleModal MODAL ----- END--------------------------
+        //hide bookingRescheduleModal MODAL ----- END--------------------------
+
+        //hide prepareOrderModal MODAL ----- START --------------------------
+        $("#prepareOrderModal").on("hidden.bs.modal", function () {
+            //console.log("openedFromReport:", openedFromReport);
+            if (openedFromReport & !openedFromPrepareOrder) {
+                openedFromReport = false;
+                //$("#bookingReportModal").modal("show");
+                bookingReportModal.classList.add("show");
+                bookingReportModal.style.display = "block";
+            }
+        });
+        //hide prepareOrderModal MODAL ----- END--------------------------
+        
+        //hide Formula MODAL ----- START --------------------------
+        $("#formulaModal").on("hidden.bs.modal", function () {
+            if (openedFromPrepareOrder) {
+                openedFromPrepareOrder = false;
+                setTimeout(() => {
+                    $("#prepareOrderModal").modal("show");
+                }, 200);
+            }
+        });
+        //hide Formula MODAL ----- END--------------------------
+
+        //hide cancelBookingModal MODAL ----- START --------------------------
+        $("#cancelBookingModal").on("hidden.bs.modal", function () {
+            //console.log("openedFromReport:", openedFromReport);
+            if (openedFromReport) {
+                openedFromReport = false;
+                //$("#bookingReportModal").modal("show");
+                bookingReportModal.classList.add("show");
+                bookingReportModal.style.display = "block";
+            }
+        });
+        //hide cancelBookingModal MODAL ----- END--------------------------
 
         //hide/show MENU MODAL ----- START --------------------------
         menuModal.addEventListener('show.bs.modal', function () {
@@ -3643,10 +3821,9 @@
         // ❌ Cancel Booking
         document.getElementById("btnCancelBooking").addEventListener("click", function () {
             const bookingId = getBookingId();
-            let userId = parseInt( sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0 );
+            //let userId = parseInt( sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0 );
 
             console.log("❌ Cancel Booking clicked - Booking ID:", bookingId);
-
             if (!bookingId || bookingId == 0) {
                 Swal.fire({
                     icon: "warning",
@@ -3655,6 +3832,11 @@
                 });
                 return;
             }
+            openedFromReport = true;
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
             $("#cancelBookingModal").modal("show");
         });
 
@@ -3876,15 +4058,22 @@
         });
 
         // 🔔 Post Booking Followups
-        document.getElementById("btnPostBookingFollowups").addEventListener("click", function () {
-            const bookingId = getBookingId();
-            console.log("🔔 Post Booking Followups clicked - Booking ID:", bookingId);
-        });
+        // document.getElementById("btnPostBookingFollowups").addEventListener("click", function () {
+        //     const bookingId = getBookingId();
+        //     console.log("🔔 Post Booking Followups clicked - Booking ID:", bookingId);
+        // });
 
         // 📋 Prepare Order (PO)
         document.getElementById("btnPrepareOrder").addEventListener("click", function () {
             const bookingId = getBookingId();
             console.log("📋 Prepare Order (PO) clicked - Booking ID:", bookingId);
+            openedFromReport = true;
+            // Just hide visually (do not destroy modal state)
+            bookingReportModal.classList.remove("show");
+            bookingReportModal.style.display = "none";
+
+            //Load Data
+            loadPrepareOrderByBooking(bookingId);
         });
 
         // 📤 Export Booking
@@ -3895,6 +4084,378 @@
 
         //BOOKING REPORT MODAL ---- END  -------------------------------------------------
     });
+    let openedFromPrepareOrder = false;
+    function loadPrepareOrderByBooking(bookingId) {
+        var payload = {
+            BookingId: bookingId,
+            PrepareOrderId: 0   // always 0 in this case
+        };
+        $.ajax({
+            url: "/api/BookingCalendar_PrepareOrder/GetBookingCalendar_PrepareOrder",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                console.log("prepareOrder - Booking API Response:", res);
+                if (!res || res.status !== "Success" || !res.data) {
+                    console.warn("No prepare order data found");
+                    return;
+                }
+                const po = res.data;
+                const foodItems = res.data.FoodItems || [];
+
+                /* ------------------------------------
+                   Hidden Fields
+                ------------------------------------ */
+                $("#PO_BookingId").val(bookingId);
+                $("#PO_Id").val(po?.Id || 0);
+                $("#PO_EnquiryDealId").val(po?.EnquiryDealId || 0);
+
+                /* ------------------------------------
+                   Header / Client Details
+                ------------------------------------ */
+                // Vendor name might come from another API – keeping safe
+                $("#PO_ClientName").val(po?.EnquiryDealName || "—");
+
+                $("#PO_Pax").val(po?.PAX || 0);
+                $("#PO_Pax_lbl").text(po?.PAX || 0);
+
+                /* ------------------------------------
+                   PO Fields
+                ------------------------------------ */
+                $("#PO_No").val(po?.PONumber || "");
+                $("#PO_Date").val(po?.PODate || "");
+                $("#PO_EventDate").val(po?.EventDate || "");
+                $("#PO_Slot").val(po?.SlotId || "");
+                $("#PO_Notes").val(po?.Notes || "");
+
+                /* ------------------------------------
+                   Food Items (Edit Mode)
+                ------------------------------------ */
+                bindFoodItemsForEdit(foodItems);
+
+                /* ------ Open Modal ----- */
+                $("#lblPrepareOrder").text("Prepare Order");
+
+
+                $("#prepareOrderModal").modal("show");
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Failed to load prepare order");
+            }
+        });
+    }
+    let foodItemState = {};
+    function bindFoodItemsForEdit(foodItemsFromApi) {
+
+        foodItemState = {}; // reset ONCE here
+
+        foodItemsFromApi.forEach(fi => {
+            foodItemState[fi.FoodItemId] = {
+                PrepareOrderFoodItemId: fi.PrepareOrderFoodItemId || 0,
+                PrepareOrderId: fi.PrepareOrderId || 0,
+
+                FoodItemId: fi.FoodItemId,
+                FoodItemName: fi.FoodItemName,
+
+                HeaderId: fi.HeaderId,
+                HeaderName: fi.HeaderName,
+
+                IsAdded: fi.IsAdded === true,
+                FoodFormula: fi.FoodFormula?.[0] || null
+            };
+        });
+
+        renderFoodItems(); // render AFTER state ready
+    }
+    function renderFoodItems() {
+
+        const container = $("#foodItemsContainer");
+        container.empty();
+
+        // destroy old tooltips safely
+        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+
+        // group by header
+        const grouped = {};
+        Object.values(foodItemState).forEach(item => {
+            const header = item.HeaderName?.trim() || "Food Items";
+            grouped[header] ??= [];
+            grouped[header].push(item);
+        });
+
+        Object.keys(grouped).forEach(header => {
+
+            container.append(`
+                <div class="food-header w-100 mt-1 mb-1">
+                    ${header}
+                </div>
+            `);
+
+            const itemsRow = $('<div class="d-flex flex-wrap gap-4 ps-3 mb-1"></div>');
+
+            grouped[header].forEach(item => {
+                const hasFormula =
+                        item.FoodFormula &&
+                        item.FoodFormula.IsFormulaRequired === true &&
+                        item.FoodFormula.Ingredients &&
+                        item.FoodFormula.Ingredients.length > 0;
+                // Tooltip only when formula is missing
+                const tooltipAttr = hasFormula
+                    ? ''
+                    : 'data-bs-toggle="tooltip" title="Empty formula"';
+
+                itemsRow.append(`
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               ${item.IsAdded ? "checked" : ""}
+                               onchange="toggleFoodItem(${item.FoodItemId}, this.checked)">
+
+                        <span class="food-item-name"
+                              ${tooltipAttr}
+                              onclick="openFormulaModal(${item.FoodItemId}, '${escapeHtml(item.FoodItemName)}')">
+                            ${item.FoodItemName}
+                        </span>
+                    </div>
+                `);
+            });
+
+            container.append(itemsRow);
+        });
+
+        // enable tooltips ONLY on spans
+        new bootstrap.Tooltip(document.body, {
+            selector: '.food-item-name[data-bs-toggle="tooltip"]'
+        });
+    }
+    $("#PO_Pax").on("input", function () {
+        $("#PO_Pax_lbl").text($(this).val());
+    });
+    function toggleFoodItem(foodItemId, isChecked) {
+        if (!foodItemState[foodItemId]) return;
+        foodItemState[foodItemId].IsAdded = isChecked;
+    }
+    function openFormulaModal(foodItemId, foodName) {
+
+        const item = foodItemState[foodItemId];
+        if (!item) return;
+
+        $("#formulaFoodName").text(foodName);
+        $("#hfFormulaFoodItemId").val(foodItemId);
+
+        const f = item.FoodFormula;
+
+        $("#chkFormulaNotRequired").prop("checked", f?.IsFormulaRequired === false);
+        $("#txtFormulaPeople").val(f?.PeopleCount || 1);
+
+        $("#tblIngredients tbody").empty();
+
+        if (f?.Ingredients?.length > 0) {
+            f.Ingredients.forEach(i => addIngredientRow(i));
+        }
+
+        openedFromPrepareOrder = true;
+        $("#prepareOrderModal").modal("hide");
+        setTimeout(() => {
+            $("#formulaModal").modal("show");
+        }, 200);
+    }
+    function addIngredientRow(data = {}) {
+        $("#tblIngredients tbody").append(`
+            <tr>
+                <td>
+                    <input class="form-control ing-name" placeholder="Ingredient name" value="${data.IngredientName || ''}">
+                </td>
+
+                <td>
+                    <input type="number" class="form-control ing-qty" min="0" step="0.01" value="${data.Quantity || ''}">
+                </td>
+
+                <td>
+                    <select class="form-select ing-unit">
+                        ${getUnitOptionsHtml(data.UnitMaster_Id)}
+                    </select>
+                </td>
+
+                <td class="text-center">
+                    <i class="fa fa-trash text-danger"
+                       style="cursor:pointer"
+                       onclick="$(this).closest('tr').remove()"></i>
+                </td>
+            </tr>
+        `);
+    }
+    $("#chkFormulaNotRequired").on("change", function () {
+        const disabled = $(this).is(":checked");
+
+        $("#txtFormulaPeople").prop("disabled", disabled);
+        $("#tblIngredients :input").prop("disabled", disabled);
+    });
+    function saveFormula() {
+        const foodItemId = $("#hfFormulaFoodItemId").val();
+        if (!foodItemState[foodItemId]) return;
+
+        let ingredients = [];
+        if (!$("#chkFormulaNotRequired").is(":checked")) {
+            $("#tblIngredients tbody tr").each(function () {
+                const name = $(this).find(".ing-name").val()?.trim();
+                const qty = parseFloat($(this).find(".ing-qty").val());
+                const unit = $(this).find(".ing-unit").val();
+
+                if (!name || isNaN(qty) || qty <= 0) return;
+
+                ingredients.push({
+                    IngredientName: name,
+                    Quantity: Number(qty),
+                    UnitMaster_Id: Number(unit)
+                });
+            });
+        }
+
+        console.log("before foodItemState:", foodItemState);
+        foodItemState[foodItemId].FoodFormula = {
+            PeopleCount: parseInt($("#txtFormulaPeople").val()) || 1,
+            IsFormulaRequired: !$("#chkFormulaNotRequired").is(":checked"),
+            Ingredients: ingredients
+        };
+        console.log("after foodItemState:", foodItemState);
+        $("#formulaModal").modal("hide");
+    }
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return "";
+
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function savePrepareOrder() {
+
+        let userId = Number(sessionStorage.getItem('userId') || 0);
+
+        // Build FoodItems payload exactly as SP expects
+        const foodItemsPayload = Object.values(foodItemState)
+            .map(item => {
+                let formula = null;
+
+                // Only attach formula object if it exists
+                if (item.FoodFormula) {
+                    formula = {
+                        PeopleCount: item.FoodFormula.PeopleCount || 1,
+                        IsFormulaRequired: item.FoodFormula.IsFormulaRequired === true,
+                        Ingredients: (item.FoodFormula.Ingredients || []).map(i => ({
+                            IngredientName: i.IngredientName,
+                            Quantity: i.Quantity,
+                            UnitMasterId: i.UnitMaster_Id   // matches SP
+                        }))
+                    };
+                }
+
+                return {
+                    FoodItemId: item.FoodItemId,
+                    IsAdded: item.IsAdded === true,   // ✅ true OR false
+                    FoodFormula: formula              // may be null
+                };
+            });
+
+        const payload = {
+            Id: Number($("#PO_Id").val() || 0),
+            BookingId: Number($("#PO_BookingId").val()||0),
+            EnquiryDealId: Number($("#PO_EnquiryDealId").val() || 0),
+            PAX: $("#PO_Pax").val(),
+            PONumber: $("#PO_No").val(),
+            PODate: $("#PO_Date").val(),
+            EventDate: $("#PO_EventDate").val(),
+            SlotId: Number($("#PO_Slot").val() || 0),
+            Notes: $("#PO_Notes").val(),
+            Action_By: userId,
+            FoodItems: foodItemsPayload
+        };
+
+        console.log("Save Prepare Order Payload:", payload);
+
+        $.ajax({
+            url: "/api/BookingCalendar_PrepareOrder/SaveBookingCalendar_PrepareOrder",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            beforeSend: function () {
+                $("#btnSavePrepareOrder")
+                    .prop("disabled", true)
+                    .text("Saving...");
+            },
+            success: function (response) {
+                if (response.status === "Success") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Prepare Order Saved",
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                    // Close modal safely
+                    $("#prepareOrderModal").modal("hide");
+                }
+                else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Save Failed",
+                        text: response.message
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Prepare Order Save Error");
+            },
+            complete: function () {
+                $("#btnSavePrepareOrder")
+                    .prop("disabled", false)
+                    .text("Save");
+            }
+        });
+    }
+
+
+    let unitMasterList = [];
+    fetchUnitMaster();
+    function fetchUnitMaster() {
+
+        return $.ajax({
+            url: "/api/UnitMaster/GetUnitMasterList",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: 0 })
+        }).then(function (response) {
+
+            console.log("UnitMaster Response:", response);
+
+            if (response.status === "Success") {
+                unitMasterList = response.data || [];
+            } else {
+                unitMasterList = [];
+            }
+
+        }).catch(function (xhr, status, error) {
+            handleApiError(xhr, status, error, "UnitMaster Fetch Error");
+            unitMasterList = [];
+        });
+    }
+    function getUnitOptionsHtml(selectedUnitId) {
+        let options = `<option value="">-- Select Unit --</option>`;
+        unitMasterList.forEach(u => {
+            options += `
+                <option value="${u.Id}" ${u.Id == selectedUnitId ? "selected" : ""}>
+                    ${u.UnitName}
+                </option>
+            `;
+        });
+        return options;
+    }
+
+    //Prepare Order & Formula -- END ---------------------------------------------
 
     // GenerateWithoutPrice & GenerateWithPrice
     function showReportOptions() {
@@ -3909,12 +4470,12 @@
             cancelButtonText: "Close",
         }).then((result) => {
 
-        if (result.isConfirmed) {
-            generateReport(true);  // With Price
-        }
-        else if (result.isDenied) {
-            generateReport(false); // Without Price
-        }
+            if (result.isConfirmed) {
+                generateReport(true);  // With Price
+            }
+            else if (result.isDenied) {
+                generateReport(false); // Without Price
+            }
 
         });
     }
@@ -4099,12 +4660,12 @@
                             //here contnue for food label
                             // ✅ Store FULL package array in button as JSON
                             $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
-                            $("#btnFoodLabels").prop("disabled", false);
+                            //$("#btnFoodLabels").prop("disabled", false);
                         } 
                         else {
                             $("#bookingReport_FoodAmount").text("0");
                             $("#bookingReport_FoodRate").text("—");
-                            $("#btnFoodLabels").prop("disabled", true);
+                            //$("#btnFoodLabels").prop("disabled", true);
                         }
 
                         // Payment Trail
@@ -4686,19 +5247,14 @@
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify(workOrderData),
-
             beforeSend: function () {
                 $("#btnSaveVendorWorkOrder")
                     .prop("disabled", true)
                     .text("Saving...");
             },
-
             success: function (response) {
-
                 console.log("Vendor Work Order Save Response:", response);
-
                 if (response.status === "Success") {
-
                     Swal.fire({
                         position: "top-end",
                         icon: "success",

@@ -150,9 +150,11 @@
                     }
                     else {
                         $('#errorMessage').text(response.message);
+                        ajaxActiveCount--;
                     }
                 },
                 error: function (xhr, status, error) {
+                    ajaxActiveCount--;
                     handleApiError(xhr, status, error, 'Login failed');
                     // Handle any errors
                     $('#errorMessage').text('Login failed. Please try again.');

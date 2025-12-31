@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using DocumentFormat.OpenXml.Office.CoverPageProps;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
@@ -1068,6 +1069,8 @@ namespace ERPAdmin.ApiControllers
                         report.EventType = dr["EventType"].ToString();
                         report.CompanyName = dr["CompanyName"].ToString();
                         report.CompanyAddress = dr["CompanyAddress"].ToString();
+                        report.CompanyState = dr["CompanyState"].ToString();
+                        report.CompanyLogo = dr["CompanyLogo"].ToString();
                         report.Email = dr["Email"].ToString();
                         report.HowReached = dr["HowReached"].ToString();
                         report.Reference = dr["Reference"].ToString();
@@ -1132,7 +1135,8 @@ namespace ERPAdmin.ApiControllers
             headerTable.SetWidths(new float[] { 1f, 3f });
 
             // Logo
-            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", "banquatlogo.png");
+            string companyLogo = report.CompanyLogo;
+            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", companyLogo);
             if (System.IO.File.Exists(logoPath))
             {
                 iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(logoPath);
@@ -1145,9 +1149,13 @@ namespace ERPAdmin.ApiControllers
             Font headerFontBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
             Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
             PdfPTable companyTable = new PdfPTable(1) { WidthPercentage = 100 };
-            companyTable.AddCell(new PdfPCell(new Phrase("Ramayana Restro & Banquets", headerFontBold)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
-            companyTable.AddCell(new PdfPCell(new Phrase("1st Floor, Crossway Mall, Above Croma, Near Ramchowk, Ghoddod Road, Surat", headerFont)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
-            companyTable.AddCell(new PdfPCell(new Phrase("State: Gujarat", headerFont)) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_RIGHT });
+            string propertyName = report.Property;
+            string companyAddress = report.CompanyAddress;
+            string companyState = report.CompanyState;
+
+            companyTable.AddCell(new PdfPCell(new Phrase(propertyName, headerFontBold)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
+            companyTable.AddCell(new PdfPCell(new Phrase(companyAddress, headerFont)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
+            companyTable.AddCell(new PdfPCell(new Phrase($"State: {companyState}", headerFont)) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_RIGHT });
             PdfPCell textCell = new PdfPCell(companyTable) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_RIGHT, VerticalAlignment = Element.ALIGN_MIDDLE };
             headerTable.AddCell(textCell);
             doc.Add(headerTable);
@@ -1702,33 +1710,36 @@ public class PackageReportRequest
     public bool IsWithPrice { get; set; }
 }
 
-public class BookingReportModel
+public class 
+    BookingReportModel
 {
     public long BookingId { get; set; }
-    public string BookingRef { get; set; }
-    public string ClientName { get; set; }
-    public string ContactNumber { get; set; }
-    public string EventDate { get; set; }
-    public string Property { get; set; }
+    public string? BookingRef { get; set; }
+    public string? ClientName { get; set; }
+    public string? ContactNumber { get; set; }
+    public string? EventDate { get; set; }
+    public string? Property { get; set; }
     public int Pax { get; set; }
-    public string Hall { get; set; }
-    public string Slot { get; set; }
-    public string Timing { get; set; }
-    public string BookedOn { get; set; }
-    public string EventType { get; set; }
-    public string CompanyName { get; set; }
-    public string CompanyAddress { get; set; }
-    public string Email { get; set; }
-    public string HowReached { get; set; }
-    public string ReachUs { get; set; }
-    public string Reference { get; set; }
-    public string UpdatedBy { get; set; }
-    public string UpdatedOn { get; set; }
-    public string Comment { get; set; }
-    public string PrimaryPackage { get; set; }
-    public string RatePerPlate { get; set; }
+    public string? Hall { get; set; }
+    public string? Slot { get; set; }
+    public string? Timing { get; set; }
+    public string? BookedOn { get; set; }
+    public string? EventType { get; set; }
+    public string? CompanyName { get; set; }
+    public string? CompanyAddress { get; set; }
+    public string? CompanyState { get; set; }
+    public string? CompanyLogo { get; set; }
+    public string? Email { get; set; }
+    public string? HowReached { get; set; }
+    public string? ReachUs { get; set; }
+    public string? Reference { get; set; }
+    public string? UpdatedBy { get; set; }
+    public string? UpdatedOn { get; set; }
+    public string? Comment { get; set; }
+    public string? PrimaryPackage { get; set; }
+    public string? RatePerPlate { get; set; }
     
-    public string Mukhwas { get; set; }
+    public string? Mukhwas { get; set; }
     public decimal PackageRate { get; set; }
     public decimal PackageAmount { get; set; }
     public decimal TotalPaid { get; set; }
@@ -1736,8 +1747,7 @@ public class BookingReportModel
     public decimal BookingDiscount { get; set; }
     public decimal CashDiscount { get; set; }
     public decimal PayableAmount { get; set; }
-
-    public List<PackageItem> PackageItems { get; set; }
+    public List<PackageItem>? PackageItems { get; set; }
 }
 
 public class PackageItem
