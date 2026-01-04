@@ -192,13 +192,6 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item @(currentController == "FeedbackForm" ? "active" : "")" href="/FeedbackForm">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Form
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
                                 <a class="dropdown-item @(currentController == "FeedbackDetail" ? "active" : "")" href="/FeedbackDetail">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="file-text"></span>Feedback Detail 
@@ -1337,6 +1330,19 @@
 
     function hideLoader() {
       document.getElementById("loaderOverlay").style.display = "none";
+    }
+
+    function encodeValue(value) {
+        return btoa(value.toString())
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    function decodeValue(encoded) {
+        encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+        while (encoded.length % 4) encoded += '=';
+        return atob(encoded);
     }
 
     document.addEventListener("DOMContentLoaded", function () {

@@ -48,34 +48,45 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetFeedbackFormData", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
                     con.Open();
+
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
+                        string iconBasePath = $"{domainUrl}assets2/img/Feedback/";
+
                         while (dr.Read())
                         {
-                            // Deserialize options JSON into strongly typed model list
-                            var optionList = JsonConvert.DeserializeObject<List<FeedbackOptionModel>>(
-                                dr["Options"]?.ToString() ?? "[]"
-                            );
+                            // Deserialize options JSON
+                            var optionsJson = dr["Options"]?.ToString();
+                            var options = string.IsNullOrWhiteSpace(optionsJson)
+                                ? new List<FeedbackOptionModel>()
+                                : JsonConvert.DeserializeObject<List<FeedbackOptionModel>>(optionsJson)
+                                  ?? new List<FeedbackOptionModel>();
 
-                            var step = new FeedbackStepModel
+                            // Prefix icon path
+                            foreach (var option in options)
                             {
-                                StepId = Convert.ToInt64(dr["StepId"]),
-                                StepName = dr["StepName"].ToString(),
+                                if (!string.IsNullOrWhiteSpace(option.IconUrl))
+                                {
+                                    option.IconUrl = iconBasePath + option.IconUrl;
+                                }
+                            }
+
+                            // Create step model
+                            steps.Add(new FeedbackStepModel
+                            {
+                                StepId = dr["StepId"] != DBNull.Value ? Convert.ToInt64(dr["StepId"]) : 0,
+                                StepName = dr["StepName"]?.ToString(),
                                 StepTitle = dr["StepTitle"]?.ToString(),
                                 StepDescription = dr["StepDescription"]?.ToString(),
-                                StepOrder = Convert.ToInt32(dr["StepOrder"]),
-                                IsMultiSelect = Convert.ToBoolean(dr["IsMultiSelect"]),
-                                HasTextBox = Convert.ToBoolean(dr["HasTextBox"]),
-                                Options = optionList
-                            };
-
-                            steps.Add(step);
+                                StepOrder = dr["StepOrder"] != DBNull.Value ? Convert.ToInt32(dr["StepOrder"]) : 0,
+                                IsMultiSelect = dr["IsMultiSelect"] != DBNull.Value && Convert.ToBoolean(dr["IsMultiSelect"]),
+                                HasTextBox = dr["HasTextBox"] != DBNull.Value && Convert.ToBoolean(dr["HasTextBox"]),
+                                Options = options
+                            });
                         }
                     }
                 }
-
                 response.status = "Success";
                 response.message = "Feedback form loaded.";
                 response.data = steps;
@@ -96,18 +107,19 @@ namespace ERPAdmin.ApiControllers
             apiResponse response = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                     return errorResult;
 
                 // Convert to JSON for SP
-                string jsonData = JsonConvert.SerializeObject(request);
+                string jsonData = JsonConvert.SerializeObject(request.Responses);
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveFeedback", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    cmd.Parameters.Add("@CustomerName", SqlDbType.NVarChar).Value = request.CustomerName;
+                    cmd.Parameters.Add("@WhatsappNo", SqlDbType.NVarChar).Value = request.WhatsappNo;
                     cmd.Parameters.Add("@JsonData", SqlDbType.NVarChar).Value = jsonData;
 
                     con.Open();
