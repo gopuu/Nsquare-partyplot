@@ -67,10 +67,11 @@
 
 
     //SAVE
-
     public class SaveFeedbackRequest
     {
-        public long? Created_By { get; set; }
+        public long? BookingId { get; set; }
+        public string? CustomerName { get; set; }
+        public string? WhatsappNo { get; set; }
         public List<FeedbackResponseRequest>? Responses { get; set; }
     }
 
