@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Report Booking";
+    Layout = "_Layout";
+}
+
+<style>
+    .report-container {
+        height: calc(100vh - 120px); /* layout header + footer adjust */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<div class="report-container">
+    <button class="btn btn-lg btn-primary" onclick="DownloadBookingReport()">
+        <i class="fas fa-file-pdf me-2"></i> Download Report
+    </button>
+</div>
+
+@section Scripts {
+
+    <script src="~/assets2/js/report_booking/report_booking.js" asp-append-version="true"></script>
+}
