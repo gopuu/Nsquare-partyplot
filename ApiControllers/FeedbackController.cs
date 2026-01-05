@@ -155,6 +155,7 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetFeedback([FromBody] GetFeedbackRequest request)
         {
             apiResponse response = new apiResponse();
+
             try
             {
                 if (!TryGetConnectionAndDomain(
@@ -162,7 +163,7 @@ namespace ERPAdmin.ApiControllers
                     out string connString, out string domain, out IActionResult errorResult))
                     return errorResult;
 
-                dynamic feedbackData = null;
+                object feedbackData = null;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetFeedback", con))
@@ -177,9 +178,10 @@ namespace ERPAdmin.ApiControllers
                         {
                             feedbackData = new
                             {
-                                FeedbackId = Convert.ToInt64(dr["FeedbackId"]),
-                                Created_At = dr["Created_At"].ToString(),
-                                Created_By = dr["Created_By"],
+                                CustomerName = dr["CustomerName"]?.ToString(),
+                                WhatsappNo = dr["WhatsappNo"]?.ToString(),
+                                Booking_SubEventName = dr["Booking_SubEventName"]?.ToString(),
+                                Created_At_Format = dr["Created_At_Format"].ToString(),
                                 Responses = JsonConvert.DeserializeObject(dr["Responses"]?.ToString() ?? "[]")
                             };
                         }
@@ -194,7 +196,7 @@ namespace ERPAdmin.ApiControllers
                 else
                 {
                     response.status = "Success";
-                    response.message = "Feedback loaded.";
+                    response.message = "Feedback loaded successfully.";
                     response.data = feedbackData;
                 }
             }
@@ -206,6 +208,7 @@ namespace ERPAdmin.ApiControllers
 
             return Ok(response);
         }
+
 
         [HttpGet]
         [Route("GetDashboard_Feedback_Count")]

@@ -42,12 +42,22 @@ function fetchFeedbackData(feedbackId) {
         data: JSON.stringify({ FeedbackId: feedbackId }),
         success: function (res) {
             if (res && res.status === "Success") {
-                let data = res.data?.Responses || [];
-                renderFeedbackTable(data);
+
+                let responses = res.data?.Responses;
+
+                // 🔥 parse string JSON
+                if (typeof responses === "string") {
+                    responses = JSON.parse(responses);
+                }
+
+                console.log("Parsed Responses:", responses);
+                renderFeedbackTable(responses);
+
             } else {
                 Swal.fire("Error", res.message || "No data", "error");
             }
         },
+
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetch Feedback Error");
         }
@@ -63,8 +73,9 @@ function renderFeedbackTable(data) {
             data: [],
             columns: [
                 { title: 'Sr. No.' },
-                { title: 'Step Id' },
-                { title: 'Option Id' },
+                { title: 'Customer Name' },
+                { title: 'Whatsapp No' },
+                { title : 'Booking SubEvent Name' },
                 { title: 'Text Response' },
                 { title: 'Created At' }
             ]
@@ -77,15 +88,16 @@ function renderFeedbackTable(data) {
         data: data,
         columns: [
             { data: 'srno', title: 'Sr. No.', className: 'text-center' },
-            { data: 'StepId', title: 'Step' },
-            { data: 'OptionId', title: 'Option' },
+            { data: 'CustomerName', title: 'Customer Name' },
+            { data: 'WhatsappNo', title: 'Whatsapp No' },
+            { data: 'Booking_SubEventName', title: 'Booking SubEvent Name' },
             {
-                data: 'TextResponse',
-                title: 'Text',
+                data: 'Responses',
+                title: 'Text Response',
                 render: d => d ? d : '-'
             },
             {
-                data: 'Created_At',
+                    data: 'Created_At_Format',
                 title: 'Created At',
                 render: d => d ? moment(d).format('DD-MM-YYYY HH:mm') : '-'
             }
