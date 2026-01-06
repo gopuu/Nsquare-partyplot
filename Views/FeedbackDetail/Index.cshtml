@@ -43,70 +43,73 @@ function fetchFeedbackData(feedbackId) {
         success: function (res) {
             if (res && res.status === "Success") {
 
-                let responses = res.data?.Responses;
+                let tableData = res.data;   // 👈 FULL DATA OBJECT
 
-                // 🔥 parse string JSON
-                if (typeof responses === "string") {
-                    responses = JSON.parse(responses);
-                }
-
-                console.log("Parsed Responses:", responses);
-                renderFeedbackTable(responses);
+                console.log("Table Data:", tableData);
+                renderFeedbackTable(tableData);
 
             } else {
                 Swal.fire("Error", res.message || "No data", "error");
             }
         },
-
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetch Feedback Error");
         }
     });
 }
+    function renderFeedbackTable(data) {
 
-function renderFeedbackTable(data) {
-    if ($.fn.dataTable.isDataTable('#tableMain table')) {
-        $('#tableMain table').DataTable().clear().destroy();
-    }
-    if (!data || data.length === 0) {
+        // ✅ ensure array
+        if (!Array.isArray(data)) {
+            if (data && data.data && Array.isArray(data.data)) {
+                data = data.data;
+            } else {
+                data = [];
+            }
+        }
+
+        if ($.fn.dataTable.isDataTable('#tableMain table')) {
+            $('#tableMain table').DataTable().clear().destroy();
+        }
+
+        if (data.length === 0) {
+            $('#tableMain table').DataTable({
+                data: [],
+                columns: [
+                    { title: 'Sr. No.' },
+                    { title: 'Customer Name' },
+                    { title: 'Whatsapp No' },
+                    { title: 'Booking SubEvent Name' },
+                    { title: 'Text Response' },
+                    { title: 'Created At' }
+                ]
+            });
+            return;
+        }
+
+        // ✅ safe now
+        data.forEach((x, i) => x.srno = i + 1);
+
         $('#tableMain table').DataTable({
-            data: [],
+            data: data,
             columns: [
-                { title: 'Sr. No.' },
-                { title: 'Customer Name' },
-                { title: 'Whatsapp No' },
-                { title : 'Booking SubEvent Name' },
-                { title: 'Text Response' },
-                { title: 'Created At' }
+                { data: 'srno', title: 'Sr. No.', className: 'text-center' },
+                { data: 'CustomerName', title: 'Customer Name' },
+                { data: 'WhatsappNo', title: 'Whatsapp No' },
+                { data: 'Booking_SubEventName', title: 'Booking SubEvent Name' },
+                {
+                    data: 'Responses',
+                    title: 'Text Response',
+                    render: d => d ? d : '-'
+                },
+                {
+                    data: 'Created_At_Format',
+                    title: 'Created At',
+                    render: d => d ? moment(d).format('DD-MM-YYYY HH:mm') : '-'
+                }
             ]
         });
-        return;
     }
-    // Sr No add
-    data.forEach((x, i) => x.srno = i + 1);
-    $('#tableMain table').DataTable({
-        data: data,
-        columns: [
-            { data: 'srno', title: 'Sr. No.', className: 'text-center' },
-            { data: 'CustomerName', title: 'Customer Name' },
-            { data: 'WhatsappNo', title: 'Whatsapp No' },
-            { data: 'Booking_SubEventName', title: 'Booking SubEvent Name' },
-            {
-                data: 'Responses',
-                title: 'Text Response',
-                render: d => d ? d : '-'
-            },
-            {
-                    data: 'Created_At_Format',
-                title: 'Created At',
-                render: d => d ? moment(d).format('DD-MM-YYYY HH:mm') : '-'
-            }
-        ],
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: false
-    });
-}
+
 
 </script>
