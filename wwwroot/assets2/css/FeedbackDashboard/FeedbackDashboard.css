@@ -1,0 +1,280 @@
+﻿body {
+    background: #f4f6fa;
+}
+
+.emoji_icon{
+    width:90%;
+    height:90%;
+
+}
+
+.metric-card {
+    border-radius: 18px;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: all .3s ease;
+    
+}
+
+.metric-width {
+    width: 365px;
+}
+
+.metric-card:hover {
+    transform: translateY(-6px);
+}
+
+.metric-top {
+    height: 6px;
+}
+
+.emoji_icon {
+    width: 32px;
+    height: 32px;
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+}
+
+.metric-title {
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+/* Gradients */
+.bg-feedback {
+    background: linear-gradient(90deg,#6366f1,#8b5cf6);
+}
+
+.bg-rating {
+    background: linear-gradient(90deg,#fbbf24,#f97316);
+}
+
+.bg-ai {
+    background: linear-gradient(90deg,#2dd4bf,#06b6d4);
+}
+
+.bg-positive {
+    background: linear-gradient(90deg,#34d399,#16a34a);
+}
+
+.bg-negative {
+    background: linear-gradient(90deg,#fb7185,#dc2626);
+}
+
+.bg-neutral {
+    background: linear-gradient(90deg,#9ca3af,#4b5563);
+}
+
+
+.category-card {
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border: none;
+}
+
+.rating-row {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.category-name {
+    font-weight: 600;
+}
+
+.avg-box {
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+    width: 90px;
+}
+
+.avg-title {
+    font-size: 11px;
+}
+
+.avg-value {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.avg-sub {
+    font-size: 10px;
+}
+
+.rating-stat {
+    text-align: center;
+    font-size: 20px;
+}
+
+    .rating-stat span {
+        font-weight: 700;
+        display: block;
+    }
+
+    .rating-stat small {
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    .rating-stat.positive {
+        color: #16a34a;
+    }
+
+    .rating-stat.neutral {
+        color: #ca8a04;
+    }
+
+    .rating-stat.negative {
+        color: #dc2626;
+    }
+
+.rating-breakdown-card {
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border: none;
+}
+
+.rating-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 220px;
+    padding: 10px 10px 0;
+}
+
+.rating-col {
+    text-align: center;
+    width: 18%;
+}
+
+.bar {
+    width: 36px;
+    background: #93c5fd;
+    border-radius: 8px;
+    margin: 0 auto 8px;
+}
+
+    .bar.highlight {
+        background: #60a5fa;
+    }
+
+.emoji {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.percent {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.count {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.rating-time-card {
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border: none;
+}
+
+.time-chart {
+    display: flex;
+    gap: 16px;
+    height: 240px;
+}
+
+.emoji-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 20px;
+    padding: 8px 0;
+}
+
+.spike-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+    flex: 1;
+    border-left: 2px solid #e5e7eb;
+    padding-left: 18px;
+}
+
+.spike {
+    width: 6px;
+    border-radius: 6px;
+    background: linear-gradient( 180deg, #22d3ee, #0ea5e9 );
+    opacity: 0.85;
+}
+
+    .spike:hover {
+        opacity: 1;
+        background: linear-gradient(180deg,#38bdf8,#0284c7);
+    }
+
+.date-row {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 42px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.stat-card {
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    border: none;
+}
+
+.top-bar {
+    height: 6px;
+    width: 100%;
+    display: block;
+    border-radius: 18px 18px 0 0;
+}
+
+.bg-purple {
+    background: linear-gradient(90deg,#6a5af9,#8b7cf6);
+}
+
+.bg-orange {
+    background: linear-gradient(90deg,#ff9800,#ffb74d);
+}
+
+.bg-teal {
+    background: linear-gradient(90deg,#00bcd4,#4dd0e1);
+}
+
+.stat-card p {
+    margin-bottom: 6px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.stat-card h2 {
+    font-weight: 700;
+}
+
