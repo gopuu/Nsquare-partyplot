@@ -309,4 +309,135 @@ new Chart(ctx3, {
     }
 });
 
+$(document).ready(function () {
+    barChart();
+     $(window).resize(function () {
+        window.barChart.redraw();
+        
+    });
+});
+function barChart() {
+    window.barChart = Morris.Bar({
+        element: 'bar-chart',
+        data: [
+            { y: 'Jan', a: 100, b: 90 },
+            { y: 'Feb', a: 75, b: 65 },
+            { y: 'Mar', a: 50, b: 40 },
+            { y: 'Apr', a: 60, b: 55 },
+            { y: 'May', a: 70, b: 60 },
+            { y: 'Jun', a: 75, b: 65 },
+            { y: 'Jul', a: 50, b: 40 },
+            { y: 'Aug', a: 75, b: 65 },
+            { y: 'Sep', a: 85, b: 75 },
+            { y: 'Oct', a: 90, b: 80 },
+            { y: 'Nov', a: 95, b: 85 },
+            { y: 'Dec', a: 100, b: 90 }
+        ],
+
+        xkey: 'y',
+        ykeys: ['a', 'b'],
+        labels: ['Series A', 'Series B'],
+
+        /* 🎨 Multi color (series-wise) */
+        barColors: ['#1e88e5', '#ff3321'],
+
+        /* 👇 IMPORTANT for showing all months */
+        xLabelAngle: 45,        // rotate labels
+        xLabelMargin: 10,
+        gridTextSize: 11,
+
+        barGap: 4,
+        barSizeRatio: 0.55,
+
+        resize: true,
+        redraw: true,
+        hideHover: 'auto'
+    });
+}
+
+
+// lead chart
+
+// Load the Visualization API and the corechart package.
+google.charts.load('current', { 'packages': ['corechart'] });
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.charts.setOnLoadCallback(drawChart);
+
+// Callback that creates and populates a data table,
+// instantiates the pie chart, passes in the data and
+// draws it.
+function drawChart() {
+
+    // Create the data table.
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Job Listings');
+    data.addColumn('number', 'Jobs');
+    data.addRows([
+        ['GOjobs', 33],
+        ['Vault', 29],
+        ['Freshjobs', 28],
+        ['TweetMyJob', 27],
+        ['US Jobs', 21],
+        ['Monster', 20],
+        ['CareerBuilder', 43],
+        ['JobCircle', 18],
+        ['Careercast', 10],
+        ['Indeed', 12],
+        ['Dice', 12]
+
+
+    ]);
+
+    // Set chart options
+    var options = {
+        'title': 'Job listings that closely relate to your resume in Indiana',
+        'width': 1000,
+        'height': 800
+    };
+
+    // Instantiate and draw our chart, passing in some options.
+    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+    chart.draw(data, options);
+}
+
+//here1
+
+// init the google charts
+google.charts.load("current", { packages: ["corechart"] });
+
+// create a callback function that render the chart
+google.charts.setOnLoadCallback(() => {
+    drawPieChart();
+});
+function drawPieChart() {
+    var data = new google.visualization.DataTable();
+    // indicates the placeholder's column
+    data.addColumn("string", "Topping");
+
+    // indicates that the percentage should be inserted in each piece of the graph
+    data.addColumn("number", "slices");
+
+    // set the title and the charts options (width / height)
+    let options = {
+        title: "Source of Lead",
+        width: 500,
+        height: 500
+    };
+
+    // insert the data
+    data.addRows([
+        ["Kids", 6],
+        ["Under Legal Age", 8],
+        ["Over Legal Age", 20]
+    ]);
+
+    // select the pie_div
+    let pieDiv = document.querySelector(".pie-chart");
+    let chart = new google.visualization.PieChart(pieDiv);
+    chart.draw(data, options);
+}
+
+    
+
 

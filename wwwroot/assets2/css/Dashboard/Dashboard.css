@@ -1,9 +1,10 @@
-﻿.stat-box {
-    border-radius: 16px;
-    padding: 18px;
-    height: 100%;
-    box-shadow: 0 12px 25px rgba(0,0,0,.06);
-    position: relative;
+﻿
+.stat-box {
+border-radius: 16px;
+padding: 18px;
+height: 100%;
+box-shadow: 0 12px 25px rgba(0,0,0,.06);
+position: relative;
 }
 
 .stat-top {
@@ -14,9 +15,9 @@
 }
 
 /* Text */
-.label {
+    .label {
     font-size: 14px;
-    color: #6c757d;
+    color: #1f1f1f;
     margin-bottom: 4px;
 }
 
@@ -39,15 +40,15 @@
     margin: 10px 0;
 }
 
-    .progress-line .new {
-        width: 65%;
-        background: #6a5af9;
-    }
+.progress-line .new {
+    width: 65%;
+    background: #6a5af9;
+}
 
-    .progress-line .repeat {
-        width: 35%;
-        background: #f4b400;
-    }
+.progress-line .repeat {
+    width: 35%;
+    background: #f4b400;
+}
 
 /* Backgrounds */
 .bg-mint {
@@ -67,6 +68,7 @@
 }
 
 /* Accent colors */
+
 .mint {
     background: #20c997;
 }
@@ -102,39 +104,36 @@
     z-index: 1000;
 }
 
-    /* Arrow */
-    .info-tooltip::before {
-        content: "";
-        position: absolute;
-        top: -8px;
-        left: 20px;
-        border-width: 8px;
-        border-style: solid;
-        border-color: transparent transparent #1f1f1f transparent;
-    }
+/* Arrow */
+.info-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 20px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent #1f1f1f transparent;
+}
 
-    .info-tooltip h6 {
-        font-size: 14px;
-        margin-bottom: 8px;
-    }
+.info-tooltip h6 {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
 
-    .info-tooltip ul {
-        padding-left: 18px;
-        margin: 0;
-    }
+.info-tooltip ul {
+    padding-left: 18px;
+    margin: 0;
+}
 
-    .info-tooltip li {
-        margin-bottom: 6px;
-    }
+.info-tooltip li {
+    margin-bottom: 6px;
+}
 
 /* Hover effect */
 .info-wrapper:hover .info-tooltip {
     opacity: 1;
     visibility: visible;
 }
-
-
-
 
 .comparison-card {
     background: #fff;
@@ -276,9 +275,9 @@
     transition: 0.2s ease-in-out;
 }
 
-    .dashboard-widget:hover {
-        transform: translateY(-4px);
-    }
+.dashboard-widget:hover {
+    transform: translateY(-4px);
+}
 
 .widget-icon {
     width: 48px;
@@ -306,7 +305,7 @@
     background: #fff;
     border-radius: 8px;
     padding: 12px;
-    height: 320px; /* 🔹 same height for all */
+    height: 320px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -320,10 +319,53 @@
 
 .chart-box canvas {
     max-width: 100% !important;
-    max-height: 240px !important; /* 🔹 medium size */
+    max-height: 240px !important;*/ /* 🔹 medium size */
+}
+
+#Leadchart {
+    height: 500px;
+    width: 500px;
+}
+
+.img_review{
+    height:150px;
+    
+}
+
+.img_Integration {
+    height: 150px;
+    
 }
 
 
+/* bar chart 2 color */
+
+
+.morris-hover {
+    position: absolute;
+    z-index: 1000;
+}
+
+
+.morris-hover.morris-default-style {
+    border-radius: 10px;
+    padding: 6px;
+    color: #330867;
+    background: rgb(255, 255, 255, 1.00);
+    border: solid 2px rgba(230, 230, 230, 0.8);
+    font-family: sans-serif;
+    font-size: 12px;
+    text-align: center;
+}
+
+.morris-hover.morris-default-style .morris-hover-row-label {
+    font-weight: bold;
+    margin: 0.25em 0;
+}
+.morris-hover.morris-default-style .morris-hover-point {
+    white-space: nowrap;
+    margin: 0.1em 0;
+}
 
 
 
