@@ -1,4 +1,4 @@
-﻿namespace ERPAdmin.ApiControllers
+﻿namespace ERPAdmin.Models
 {
     public class GetAssetRequest
     {

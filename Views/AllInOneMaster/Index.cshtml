@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "AllInOne Master";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-12 col-xxl-12">
+                <div class="mb-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 text-warning">All In One Master</h4>
+                        <button class="btn btn-outline-warning" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add All In One
+                        </button>
+                    </div>
+
+                    <div id="tableAllInOne">
+                        <table class="table table-striped table-bordered" style="width:100%"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="allInOneModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="allInOneModalTitle">
+                    Add All In One
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="allInOneId" value="0">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">
+                            Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="allInOneTitle" class="form-control"
+                               placeholder="Enter Title">
+                    </div>
+                     <div class="col-12">
+                        <label class="form-label">
+                            Link <span class="text-danger">*</span>
+                        </label>
+                       <textarea id="allInOneLink" class="form-control"  placeholder="Enter Link"   rows="3"></textarea>
+
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Image</label>
+                        <input type="file"
+                               id="allInOneImage"
+                               class="form-control"
+                               accept=".png,.jpg,.jpeg">
+                        <small class="text-danger d-none" id="imgError">
+                            Only PNG or JPG images are allowed.
+                        </small>
+                    </div>
+
+                </div>
+                <div class="mb-2">
+                    <img id="allInOneImagePreview"
+                         src=""
+                         alt="AllInOne Image"
+                         style="max-width:120px; display:none; border:1px solid #ddd; padding:4px;">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <button class="btn btn-outline-warning" id="btnSaveAllInOne">
+                    Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+
+@section Scripts {
+
+    <script src="/assets2/js/AllInOne/AllInOneMaster.js"></script>
+ }

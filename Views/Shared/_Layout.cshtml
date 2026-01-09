@@ -169,9 +169,23 @@
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
-                                <a class="dropdown-item @(currentController == "BookingCalendar" ? "active" : "")" href="/BookingCalendar">
+                                <a class="dropdown-item @(currentController == "BookingCalendar" ? "active" : "") d-none" href="/BookingCalendar">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="calendar"></span>Manage Bookings
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "AllInOneMaster" ? "active" : "")" href="/AllInOneMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="message-square"></span>All In One Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "AllInOneLink" ? "active" : "")" href="/AllInOneLink">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="message-square"></span>All In One Link
                                     </div>
                                 </a>
                             </li>

@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "All In One Link";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+@section Styles {
+
+    <link href="~/assets2/css/allinonelink/allinonelink.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/assets2/js/allinonelink/allinonelink.js" asp-append-version="true"></script>
+
+}
+
+<div class="container-fluid page-content">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow border-0 profile-card d-flex flex-column">
+
+                <!-- 🔵 Gradient Header -->
+                <div class="profile-header text-center">
+                    <div class="logo-box">
+                        <img src="~/assets2/img/banquatlogo-modified.png" class="img_logo">
+                    </div>
+                    <h4 class="mt-3 mb-0 text-white fw-bold">
+                        Ramayana Restro &amp; Banquets
+                    </h4>
+                    <small class="text-white">Owner</small>
+                    <h6 class="mt-3 mb-0 text-white fw-bold">
+                        Ramayana Restro & Banquets
+                    </h6>
+                </div>
+
+                <!-- ⚪ SCROLLABLE BODY -->
+                <div class="card-body text-center flex-grow-1 scroll-body">
+                    <div id="allInOneGrid" class="row g-4 justify-content-center">
+                        <!-- API DATA WILL COME HERE -->
+                    </div>
+                </div>
+
+                <!-- 🔽 FIXED FOOTER -->
+                <div class="card-footer text-center footer-section">
+                    <div class="cta-box mb-3">
+                        <h5 class="fw-bold text-white mb-1">
+                            Your Moments, Our Grandeur
+                        </h5>
+                    </div>
+
+                    <div class="footer-divider"></div>
+
+                    <small class="footer-credit">
+                        Developed with ❤️ by <strong>Nsquare Software Solution</strong>
+                    </small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
