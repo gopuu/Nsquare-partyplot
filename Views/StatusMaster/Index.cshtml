@@ -6,6 +6,10 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+
+}
 
 <div class="content">
     <div class="pb-1">
@@ -272,8 +276,8 @@ function renderStatusTable(data) {
             data: null,
                 title: "Actions",
                 render: () => `
-                    <button class="btn btn-outline-warning btn-sm btn-edit-status  btn-action-xs"><i class="fa fa-edit"></i></button>
-                    <button class="btn btn-outline-danger btn-sm btn-delete  btn-action-xs"><i class="fa fa-trash"></i></button>
+                    <button class="btn btn-outline-warning btn-sm btn-edit-status  btn-action-xss"><i class="fa fa-edit"></i></button>
+                    <button class="btn btn-outline-danger btn-sm btn-delete  btn-action-xss"><i class="fa fa-trash"></i></button>
                  `
             }
         ]

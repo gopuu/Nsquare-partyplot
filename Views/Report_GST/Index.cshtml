@@ -3,21 +3,25 @@
     Layout = "_Layout";
 }
 
-<style>
-    .report-container {
-        height: calc(100vh - 120px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
 
-<div class="report-container">
-    <button class="btn btn-lg btn-primary" onclick="DownloadGSTReport()">
-        <i class="fas fa-file-pdf me-2"></i> Download Report
-    </button>
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Invoice  Date</label>
+                <input type="date" id="invoice-date" class="form-control">
+            </div>
+
+            <div class="col mt-5">
+                <button class="btn btn-danger"
+                        onclick="DownloadGSTReport(event)">
+                    <i class="fas fa-download"></i>
+
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
-
 @section Scripts {
     <script src="~/assets2/js/report_gst/report_gst.js" asp-append-version="true"></script>
 }

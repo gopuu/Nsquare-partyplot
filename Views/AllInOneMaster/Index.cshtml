@@ -6,6 +6,10 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+
+}
 
 <div class="content">
     <div class="pb-1">
@@ -64,19 +68,20 @@
                         <input type="file"
                                id="allInOneImage"
                                class="form-control"
-                               accept=".png,.jpg,.jpeg">
+                               accept="image/png,image/jpeg"
+                               onchange="previewAllInOneImage(this)">
+
                         <small class="text-danger d-none" id="imgError">
                             Only PNG or JPG images are allowed.
                         </small>
                     </div>
 
+                    <div class="mb-2 mt-2">
+                        <img id="allInOneImagePreview"
+                             style="max-width:120px; border:1px solid #ddd; padding:4px; display:none;" />
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <img id="allInOneImagePreview"
-                         src=""
-                         alt="AllInOne Image"
-                         style="max-width:120px; display:none; border:1px solid #ddd; padding:4px;">
-                </div>
+              
             </div>
 
             <div class="modal-footer">

@@ -3,19 +3,18 @@
     Layout = "_Layout";
 }
 
-<style>
-    .report-container {
-        height: calc(100vh - 120px); /* layout header + footer adjust */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col mt-5">
+                <button class="btn btn-danger"
+                        onclick="DownloadProfitLossReport(event)">
+                    <i class="fas fa-download"></i>
 
-<div class="report-container">
-    <button class="btn btn-lg btn-primary" onclick="DownloadProfitLossReport()">
-        <i class="fas fa-file-pdf me-2"></i> Download Report
-    </button>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

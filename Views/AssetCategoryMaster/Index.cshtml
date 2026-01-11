@@ -226,10 +226,10 @@ $(document).ready(function () {
                     title: "Actions",
                     orderable: false,
                     render: () => `
-                        <button class="btn btn-outline-warning btn-action-xs btn-edit">
+                        <button class="btn btn-outline-warning btn-action-xss btn-edit">
                             <i class="fa fa-edit"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-action-xs btn-delete">
+                        <button class="btn btn-outline-danger btn-action-xss btn-delete">
                             <i class="fa fa-trash"></i>
                         </button>`
                 }
@@ -250,4 +250,10 @@ $(document).ready(function () {
 
     
 </script>
+
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+
+}
+
 

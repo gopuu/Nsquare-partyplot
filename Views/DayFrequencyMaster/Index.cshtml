@@ -5,6 +5,10 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+
+}
 
 <!-- MAIN -->
 <div class="content">
@@ -370,10 +374,10 @@
                     render: function (data, type, row) {
                         return `
                         <div class="d-flex flex-column flex-sm-row gap-2">
-                            <button class="btn btn-outline-warning btn-sm me-1 mb-0 btn-action-xs btn-edit">
+                            <button class="btn btn-outline-warning btn-sm me-1 mb-0 btn-action-xss btn-edit">
                                 <i class="fa fa-edit"></i>
                             </button>
-                            <button class="btn btn-outline-danger btn-sm me-1 mb-0 btn-action-xs btn-delete">
+                            <button class="btn btn-outline-danger btn-sm me-1 mb-0 btn-action-xss btn-delete">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </div>
@@ -383,8 +387,7 @@
             ],
             columnDefs: [
                 {
-                    targets: 0,        // Sr. No. column index
-                    className: "text-center"
+                    targets: 0
                 }
             ],
             stateSave: false,

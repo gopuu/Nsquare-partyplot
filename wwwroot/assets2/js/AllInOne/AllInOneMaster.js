@@ -106,24 +106,32 @@
         $("#allInOneModal").modal("show");
     });
 
-    $("#allInOneImage").on("change", function () {
+    function previewAllInOneImage(input) {
 
-        var file = this.files[0];
-        var errorMsg = $("#imgError");
+        if (!input.files || !input.files[0]) return;
 
-        errorMsg.addClass("d-none");
+        const file = input.files[0];
+        const preview = document.getElementById("allInOneImagePreview");
+        const error = document.getElementById("imgError");
 
-        if (!file) return;
-
-        var allowedTypes = ["image/png", "image/jpeg"];
+        const allowedTypes = ["image/png", "image/jpeg"];
 
         if (!allowedTypes.includes(file.type)) {
-            errorMsg.removeClass("d-none");
-            this.value = ""; // clear file
+            error.classList.remove("d-none");
+            input.value = "";
+            preview.style.display = "none";
             return;
         }
-    });
 
+        error.classList.add("d-none");
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;   // ✅ FULL base64
+            preview.style.display = "block"; // ✅ FORCE SHOW
+        };
+        reader.readAsDataURL(file);
+    }
 
 
     // 🗑 Delete (confirm)
@@ -206,10 +214,10 @@ function renderAllInOneTable(data) {
                 data: null,
                 title: "Actions",
                 render: () => `
-                    <button class="btn btn-outline-warning btn-action-xs btn-edit">
+                    <button class="btn btn-outline-warning btn-action-xss btn-edit">
                         <i class="fa fa-edit"></i>
                     </button>
-                    <button class="btn btn-outline-danger btn-action-xs btn-delete">
+                    <button class="btn btn-outline-danger btn-action-xss btn-delete">
                         <i class="fa fa-trash"></i>
                     </button>
                 `

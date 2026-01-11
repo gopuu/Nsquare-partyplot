@@ -1,4 +1,13 @@
-﻿function DownloadRevenueLossReport() {
+﻿
+$(document).ready(function () {
+    loadEventTypeDropdown();
+
+    let today = new Date().toISOString().split('T')[0];
+    $("#to-date").val(today);
+    $("#from-date").val(today);
+});
+
+function DownloadRevenueLossReport() {
 
     fetch('/api/Report/DownloadRevenueLossReport', {
         method: 'GET',
@@ -27,3 +36,71 @@
             alert("Error while downloading PDF");
         });
 }
+function loadEventTypeDropdown(selectedId = "") {
+    $.ajax({
+        url: "/api/EventType/GetEventTypeListForDropdown",
+        type: "GET",
+        success: function (response) {
+
+            let dropdown = $("#ddlEventType");
+            dropdown.empty();
+
+            dropdown.append(`<option value="">-- Select Event Type --</option>`);
+
+            if (response.status === "Success" && response.data.length > 0) {
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                            ${item.Name}
+                        </option>`
+                    );
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Event Type");
+        }
+    });
+}
+function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
+
+    let dropdown = $("#ddlEventSubType");
+
+    dropdown.prop("disabled", true);
+    dropdown.empty();
+    dropdown.append(`<option value="">-- Select Event Sub Type --</option>`);
+
+    if (!eventTypeId) return;
+
+    $.ajax({
+        url: "/api/EventSubType/GetEventSubTypeListForDropdown",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            EventTypeId: eventTypeId
+        }),
+        success: function (response) {
+
+            if (response.status === "Success" && response.data.length > 0) {
+
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                            ${item.Name}
+                        </option>`
+                    );
+                });
+
+                dropdown.prop("disabled", false);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Event Sub Type");
+        }
+    });
+}
+
+$("#ddlEventType").on("change", function () {
+    let eventTypeId = $(this).val();
+    loadEventSubTypeDropdown(eventTypeId);
+});

@@ -1,4 +1,12 @@
-﻿function DownloadGSTReport() {
+﻿$(document).ready(function () {
+   
+    let today = new Date().toISOString().split('T')[0];
+    $("#invoice-date").val(today);
+
+});
+
+
+function DownloadGSTReport() {
 
     fetch('/api/Report/DownloadGSTReport', {
         method: 'GET',

@@ -1,0 +1,72 @@
+﻿/* ================= TABLE ================= */
+.table {
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+/* Header */
+.table thead th {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+    background-color: #f8f9fa;
+    color: #1f2937;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Body cells */
+.table tbody td {
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    vertical-align: middle;
+    padding: 10px 10px;
+}
+
+table.table.dataTable tbody tr {
+    background-color: #ffffff;
+    height:30px!important;
+    text-align:left!important;
+}
+
+table.table.dataTable tbody tr:nth-child(even) {
+    background-color: #fbfdff;
+}
+
+/* Remove uneven borders */
+.table-bordered > :not(caption) > * {
+    border-width: 0 0 1px 0;
+}
+
+
+/* ================= ACTION BUTTONS ================= */
+.btn-action-xss {
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.table .btn i {
+    font-size: 14px;
+}
+
+/* ================= DATATABLE UI ================= */
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_filter label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #3b82f6 !important;
+    color: #fff !important;
+    border: none;
+}

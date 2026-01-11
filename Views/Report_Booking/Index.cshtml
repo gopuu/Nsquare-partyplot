@@ -3,22 +3,64 @@
     Layout = "_Layout";
 }
 
-<style>
-    .report-container {
-        height: calc(100vh - 120px); /* layout header + footer adjust */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <!-- Dropdown 1 -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Event Type</label>
+                <select id="ddlEventType" class="form-select">
+                    <option value="">-- Select Event Type --</option>
+                </select>
 
-<div class="report-container">
-    <button class="btn btn-lg btn-primary" onclick="DownloadBookingReport()">
-        <i class="fas fa-file-pdf me-2"></i> Download Report
-    </button>
+            </div>
+
+            <!-- Dropdown 2 -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Event Sub-type</label>
+                <select id="ddlEventSubType" class="form-select" disabled>
+                    <option value="">-- Select Event Sub Type --</option>
+                </select>
+            </div>
+
+            <!-- Dropdown 3 -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">
+                    Hall Name
+                </label>
+                <select id="ddlCompanyHall" class="form-select">
+                    <option value="">-- Select Hall --</option>
+                </select>
+
+            </div>
+
+            <!-- From Date -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Event Date</label>
+                <input type="date" id="event-date" class="form-control">
+            </div>
+
+          
+            <div class="col mt-5">
+                <button class="btn btn-danger"
+                        onclick="DownloadBookingReport(event)">
+                    <i class="fas fa-download"></i>
+                    
+                </button>
+
+            </div>
+
+        </div>
+    </div>
 </div>
+
 
 @section Scripts {
 
     <script src="~/assets2/js/report_booking/report_booking.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+    <link href="~/assets2/css/report_booking/report_booking.css" rel="stylesheet" />
+
 }

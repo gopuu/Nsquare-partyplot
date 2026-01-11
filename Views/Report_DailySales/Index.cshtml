@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Report Daily Sales";
+    Layout = "_Layout";
+}
+
+
+
+<div class="content">
+    <div class="pb-1">
+        <div class="row g-2">
+            <div class="col mt-5">
+                <button class="btn btn-danger"
+                        onclick="DownloadDailySalesReport(event)">
+                    <i class="fas fa-download"></i>
+                    
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/assets2/js/report_dailysales/report_dailysales.js" asp-append-version="true"></script>
+}

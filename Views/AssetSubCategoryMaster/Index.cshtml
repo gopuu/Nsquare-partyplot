@@ -89,6 +89,10 @@
     </div>
 </div>
 
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+
+}
 
 <script>
 $(document).ready(function () {
@@ -217,10 +221,10 @@ function renderTable(data) {
                 title: "Action",
                 orderable: false,
                 render: () => `
-                    <button class="btn btn-outline-warning btn-edit btn-action-xs">
+                    <button class="btn btn-outline-warning btn-edit btn-action-xss">
                         <i class="fa fa-edit"></i>
                     </button>
-                    <button class="btn btn-outline-danger btn-delete btn-action-xs">
+                    <button class="btn btn-outline-danger btn-delete btn-action-xss">
                         <i class="fa fa-trash"></i>
                     </button>`
             }
