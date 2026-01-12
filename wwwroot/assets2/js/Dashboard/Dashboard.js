@@ -1,6 +1,28 @@
 ﻿
 $(document).ready(function () {
     loadDashboardWidgets();
+    setCurrentMonthDates();
+    function setCurrentMonthDates() {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        $("#fromDate").val(formatDate(firstDay));
+        $("#toDate").val(formatDate(lastDay));
+    }
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;   // ✅ IMPORTANT
+    }   
+
+    $("#btnReset").click(function () {
+        $("#fromDate").val("");
+        $("#toDate").val("");
+        loadDashboardSummary();
+    });
+
 });
 
 function loadDashboardWidgets() {
@@ -10,17 +32,46 @@ function loadDashboardWidgets() {
         contentType: "application/json",
         success: function (res) {
             if (res.status === "Success") {
+                // Parse the JSON string returned by the API
+                //let statsJson = res.data.DashboardStats;
                 let statsJson = JSON.parse(res.data.DashboardStats);
-                //renderDashboardWidgets(statsJson);
-                console.log("statsJson fetchdata:", statsJson);
+                console.log("statsJson:", statsJson);
+
+                // 🔥 FORCE NUMBER CONVERSION
+                const totalSales = Number(statsJson.TotalSales) || 0;
+                const totalEvents = Number(statsJson.TotalEvents) || 0;
+                const totalCustomers = Number(statsJson.TotalCustomer) || 0;
+
+                //console.log("totalSales", totalSales);
+                //console.log("totalEvents", totalEvents);
+                //console.log("totalCustomers", totalCustomers);
+
+                $("#totalSales").text(
+                    "₹ " + totalSales.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })
+                );
+                $("#totalEvents").text(totalEvents.toLocaleString("en-IN"));
+                $("#totalCustomers").text(totalCustomers.toLocaleString("en-IN"));
+                console.log("Dashboard Stats Fetched:", statsJson);
+
+                // Re-initialize Bootstrap tooltips
+                var tooltipTriggerList = [].slice.call(
+                    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                );
+                tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
+
+            } else {
+                console.warn("API returned error:", res.message);
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, title = "Error loading widgets!");
+            console.error("AJAX Error:", status, error, xhr.responseText);
+            alert("Error loading dashboard widgets! " + error);
         }
     });
 }
-
 function renderDashboardWidgets(stats) {
 
     const container = $("#dashboard-widgets");
@@ -439,5 +490,10 @@ function drawPieChart() {
 }
 
     
+$(document).on("click", "#btnSummary", function () {
+    console.log("Summary icon clicked ✔");
+});
+
+
 
 

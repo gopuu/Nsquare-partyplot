@@ -243,7 +243,7 @@ namespace ERPAdmin.ApiControllers
                                 Link = Convert.ToString(dr["Link"]),
                                 Image = dr["Image"] != DBNull.Value
                                     ? $"{domainUrl}/uploads/org/{domain}/AllInOne/{dr["Image"]}"
-                                    : string.Empty
+                                    : "/assets2/img/image_default.png"
                             });
                         }
                     }

@@ -206,7 +206,7 @@ function renderAllInOneTable(data) {
                 data: "Image", title: "Image",
                 render: function (d) {
                     return d
-                        ? `<img src="${d}" class="rounded" width="40" height="40" />`
+                        ? `<img src="${d}" class="rounded_img"/>`
                         : `<span class="text-muted">No Image</span>`;
                 }
             },

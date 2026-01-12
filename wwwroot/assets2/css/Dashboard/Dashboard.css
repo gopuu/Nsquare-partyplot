@@ -337,16 +337,12 @@ position: relative;
     
 }
 
-
 /* bar chart 2 color */
-
 
 .morris-hover {
     position: absolute;
     z-index: 1000;
 }
-
-
 .morris-hover.morris-default-style {
     border-radius: 10px;
     padding: 6px;
@@ -357,7 +353,6 @@ position: relative;
     font-size: 12px;
     text-align: center;
 }
-
 .morris-hover.morris-default-style .morris-hover-row-label {
     font-weight: bold;
     margin: 0.25em 0;
@@ -366,6 +361,29 @@ position: relative;
     white-space: nowrap;
     margin: 0.1em 0;
 }
+
+.summary-icon-btn {
+    width: 30px;
+    height: 30px;
+     
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.summary-icon-btn i {
+    font-size: 18px;
+}
+/*
+.summary-icon-btn:hover {
+    background-color: #0d6efd;
+    color:white;
+}*/
+
+
+
 
 
 

@@ -163,7 +163,7 @@ namespace ERPAdmin.ApiControllers
                     out string connString, out string domain, out IActionResult errorResult))
                     return errorResult;
 
-                object feedbackData = null;
+                List<FeedbackData> feedbackList = new List<FeedbackData>();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetFeedback", con))
@@ -174,21 +174,26 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        if (dr.Read())
+                        while (dr.Read())
                         {
-                            feedbackData = new
+                            feedbackList.Add(new FeedbackData
                             {
                                 CustomerName = dr["CustomerName"]?.ToString(),
                                 WhatsappNo = dr["WhatsappNo"]?.ToString(),
                                 Booking_SubEventName = dr["Booking_SubEventName"]?.ToString(),
-                                Created_At_Format = dr["Created_At_Format"].ToString(),
-                                Responses = JsonConvert.DeserializeObject(dr["Responses"]?.ToString() ?? "[]")
-                            };
+                                Created_At_Format = dr["Created_At_Format"]?.ToString(),
+
+                                Responses = JsonConvert.DeserializeObject<List<FeedbackResponse>>(
+                                    dr["Responses"]?.ToString() ?? "[]"
+                                )
+                            });
                         }
                     }
+
+
                 }
 
-                if (feedbackData == null)
+                if (feedbackList == null)
                 {
                     response.status = "Error";
                     response.message = "Feedback not found.";
@@ -197,7 +202,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     response.status = "Success";
                     response.message = "Feedback loaded successfully.";
-                    response.data = feedbackData;
+                    response.data = feedbackList;
                 }
             }
             catch (Exception ex)

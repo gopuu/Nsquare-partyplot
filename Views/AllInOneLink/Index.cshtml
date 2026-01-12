@@ -1,23 +1,224 @@
 ﻿@{
     ViewData["Title"] = "All In One Link";
-    Layout = "_Layout";
+    Layout = null;
 }
 
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
 
-@section Styles {
-    
-    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin=""></script>
 
-    <link href="~/assets2/css/allinonelink/allinonelink.css" rel="stylesheet" />
-}
+<link href="/assets2/css/theme-rtl.min.css" type="text/css" rel="stylesheet" id="style-rtl">
+<link href="/assets2/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
+<link href="/assets2/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
+<link href="/assets2/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
+<link href="/assets2/vendors/leaflet/leaflet.css" rel="stylesheet">
 
-@section Scripts {
-    <script src="~/assets2/js/allinonelink/allinonelink.js" asp-append-version="true"></script>
 
-}
+
+<style>
+    .page-content {
+        margin-top: 7rem !important;
+        margin-bottom: 7rem !important;
+    }
+
+    .card-body {
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    /* Gradient Header */
+    .profile-header {
+        padding: 35px 15px 50px;
+        background: linear-gradient(180deg, #065f46, #34d399);
+        position: relative;
+    }
+
+    /* Logo */
+    .logo-box {
+        width: 110px;
+        height: 110px;
+        background: #ffffff;
+        border-radius: 50%;
+        margin: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+
+    .img_logo {
+        width: 115px;
+    }
+
+    /* White Body */
+    .card-body {
+        padding-top: 60px;
+        padding-bottom: 60px;
+        background: #ffffff;
+    }
+
+    /* Push body down under logo */
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        bottom: -40px;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: #ffffff;
+        border-radius: 100% 100% 0 0;
+    }
+
+
+    /* 🔷 Footer container */
+    .footer-section {
+        background: linear-gradient(180deg, #065f46, #34d399);
+        border-top: 1px solid #e6e9f0;
+        box-shadow: inset 0 8px 12px -10px rgba(0, 0, 0, 0.15);
+        padding: 18px 15px;
+    }
+
+
+    /* ✨ CTA Box */
+    .cta-box h6 {
+        color: #ffffff;
+    }
+
+    .cta-box p {
+        color: #e6e9f0;
+        font-size: 14px;
+    }
+
+    /* ➖ Divider */
+    .footer-divider {
+        height: 1px;
+        width: 100%;
+        background: linear-gradient(to right, transparent, #d0d5dd, transparent);
+        margin: 18px 0;
+    }
+
+    /* 👨‍💻 Credit */
+    .footer-credit {
+        font-size: 15px;
+        color: #ffffff;
+    }
+
+
+
+    .allinone-item {
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .allinone-item img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-bottom: 8px;
+    }
+
+    .allinone-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+    }
+
+    .allinone-item:hover .allinone-title {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+
+
+    /*datatable css */
+
+    /* ================= TABLE ================= */
+    .table {
+        border-collapse: separate !important;
+        border-spacing: 0;
+    }
+
+        /* Header */
+        .table thead th {
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px 10px;
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Body cells */
+        .table tbody td {
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            vertical-align: middle;
+            padding: 10px 10px;
+        }
+
+    table.table.dataTable tbody tr {
+        background-color: #ffffff;
+        height: 30px !important;
+        text-align: left !important;
+    }
+
+        table.table.dataTable tbody tr:nth-child(even) {
+            background-color: #fbfdff;
+        }
+
+    /* Remove uneven borders */
+    .table-bordered > :not(caption) > * {
+        border-width: 0 0 1px 0;
+    }
+
+
+    /* ================= ACTION BUTTONS ================= */
+    .btn-action-xss {
+        padding: 5px;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .table .btn i {
+        font-size: 14px;
+    }
+
+    /* ================= DATATABLE UI ================= */
+    .dataTables_wrapper .dataTables_length label,
+    .dataTables_wrapper .dataTables_filter label {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #3b82f6 !important;
+        color: #fff !important;
+        border: none;
+    }
+
+    table.table.dataTable tbody th {
+        padding-left: 1px !important;
+    }
+
+
+    /* Sr No column – proper left/right space */
+    table.table.dataTable tbody tr td:first-child {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+</style>
+
 
 <div class="container-fluid page-content">
     <div class="row justify-content-center">
@@ -56,11 +257,66 @@
                     <div class="footer-divider"></div>
 
                     <small class="footer-credit">
-                        Developed with ❤️ by <strong>Nsquare Software Solution</strong>
+                        Developed with ❤️ by @@
+                        <a href="https://nsquaresoftware.in"
+                           target="_blank"
+                           class="footer-link text-white">
+                            <strong class="text-white">Nsquare Software Solution</strong>
+                        </a>
                     </small>
+
                 </div>
 
             </div>
         </div>
     </div>
 </div>
+
+<script>
+        $(document).ready(function () {
+            loadAllInOneLinks();
+    });
+
+    function loadAllInOneLinks() {
+        $.ajax({
+            url: "/api/AllInOneMaster/GetAllInOneLinkMaster",
+            type: "POST",
+            contentType: "application/json",
+            success: function (res) {
+
+                if (res.status !== "Success") return;
+
+                let html = "";
+
+                res.data.forEach(item => {
+                    html += `
+                <div class="col-4 col-md-4">
+                    <div class="allinone-item"
+                            onclick="openLink('${item.Link}')">
+
+                        <img src="${item.Image || '/assets2/img/default-icon.png'}"
+                                alt="${item.Title}" />
+
+                        <div class="allinone-title">
+                            ${item.Title}
+                        </div>
+                    </div>
+                </div>
+                `;
+                });
+
+                $("#allInOneGrid").html(html);
+            },
+            error: function (err) {
+                console.error("AllInOne API error", err);
+            }
+        });
+    }
+
+    function openLink(url) {
+        if (url && url !== "#") {
+            window.open(url, "_blank");
+        }
+    }
+
+</script>

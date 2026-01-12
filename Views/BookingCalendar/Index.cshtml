@@ -3879,8 +3879,12 @@
 
         // 🖨️ Print Function Prospect
         document.getElementById("btnEventForm").addEventListener("click", function () {
-            const bookingId = getBookingId();
-            console.log("🖨️ Print Function Prospect clicked - Booking ID:", bookingId);
+                const link = document.createElement("a");
+                link.href = "/assets2/Pdf/Eventform.pdf";
+                link.download = "EventForm.pdf";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
         });
 
         // Open payment modal safely
@@ -5720,5 +5724,10 @@ Your feedback helps us improve our service.`;
             }
         });
     });
+
+
+    
+
+    
 
 </script>

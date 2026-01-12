@@ -106,5 +106,23 @@
         public bool HasTextBox { get; set; }
         public List<FeedbackOptionModel> Options { get; set; }
     }
+    public class FeedbackData
+    {
+        public string CustomerName { get; set; }
+        public string WhatsappNo { get; set; }
+        public string Booking_SubEventName { get; set; }
+        public string Created_At_Format { get; set; }
+        public List<FeedbackResponse> Responses { get; set; }
+    }
+
+    public class FeedbackResponse
+    {
+        public long ResponseId { get; set; }
+        public long StepId { get; set; }
+        public long? OptionId { get; set; }
+        public string TextResponse { get; set; }
+        public DateTime Created_At { get; set; }
+    }
+
 
 }

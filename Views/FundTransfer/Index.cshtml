@@ -22,7 +22,7 @@
                         </button>
                     </div>
 
-                    <div id="tableFundTransfer">
+                    <div id="tableMain">
                         <table class="table table-striped table-bordered" style="width:100%"></table>
                     </div>
 
@@ -200,7 +200,7 @@ $(document).ready(function () {
     resetFundTransferForm(); // Clear previous modal values
 
     // Get DataTable instance
-    var table = $('#tableFundTransfer table').DataTable();
+        var table = $('#tableMain table').DataTable();
 
     // Get clicked row data
     var row = $(this).closest('tr');
@@ -245,7 +245,7 @@ $(document).ready(function () {
     // Delete button click in table
     $(document).on("click", ".btn-delete", function () {
         // Get DataTable instance
-        var table = $("#tableFundTransfer table").DataTable(); // make sure this matches your table id
+            var table = $("#tableMain table").DataTable(); // make sure this matches your table id
         var rowData = table.row($(this).closest("tr")).data();
         if (!rowData || !rowData.Id) {
             Swal.fire("Error", "Unable to get selected row data.", "error");
@@ -375,14 +375,14 @@ function fetchFundTransfers(fromAccountId = 0, toAccountId = 0, fromDate = "", t
 
 function renderFundTransferTable(data) {
 
-    if ($.fn.dataTable.isDataTable("#tableFundTransfer table")) {
-        $("#tableFundTransfer table").DataTable().destroy();
+        if ($.fn.dataTable.isDataTable("#tableMain table")) {
+            $("#tableMain table").DataTable().destroy();
     }
 
     // add Sr.No dynamically
     data.forEach((x, i) => x.srno = i + 1);
 
-    $("#tableFundTransfer table").DataTable({
+        $("#tableMain table").DataTable({
         data: data,
         columns: [
             { data: "srno", title: "Sr. No." },

@@ -6,6 +6,8 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+<!-- Moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 @section Styles {
     <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
 
@@ -45,6 +47,7 @@ function fetchFeedbackData(feedbackId) {
         contentType: 'application/json',
         data: JSON.stringify({ FeedbackId: feedbackId }),
         success: function (res) {
+                console.log("res Data:", res);
             if (res && res.status === "Success") {
 
                 let tableData = res.data;   // 👈 FULL DATA OBJECT
@@ -64,13 +67,13 @@ function fetchFeedbackData(feedbackId) {
     function renderFeedbackTable(data) {
 
         // ✅ ensure array
-        if (!Array.isArray(data)) {
-            if (data && data.data && Array.isArray(data.data)) {
-                data = data.data;
-            } else {
-                data = [];
-            }
-        }
+        // if (!Array.isArray(data)) {
+        //     if (data && data.data && Array.isArray(data.data)) {
+        //         data = data.data;
+        //     } else {
+        //         data = [];
+        //     }
+        // }
 
         if ($.fn.dataTable.isDataTable('#tableMain table')) {
             $('#tableMain table').DataTable().clear().destroy();
@@ -80,7 +83,7 @@ function fetchFeedbackData(feedbackId) {
             $('#tableMain table').DataTable({
                 data: [],
                 columns: [
-                    { title: 'Sr. No.' },
+                    { title: '#' },
                     { title: 'Customer Name' },
                     { title: 'Whatsapp No' },
                     { title: 'Booking SubEvent Name' },
@@ -97,19 +100,24 @@ function fetchFeedbackData(feedbackId) {
         $('#tableMain table').DataTable({
             data: data,
             columns: [
-                { data: 'srno', title: 'Sr. No.', className: 'text-center' },
+                { data: 'srno', title: '#', className: 'text-center' },
                 { data: 'CustomerName', title: 'Customer Name' },
                 { data: 'WhatsappNo', title: 'Whatsapp No' },
                 { data: 'Booking_SubEventName', title: 'Booking SubEvent Name' },
                 {
                     data: 'Responses',
                     title: 'Text Response',
-                    render: d => d ? d : '-'
+                    render: function (d) {
+                        if (!d || d.length === 0) return '-';
+
+                        return d.map(r => r.TextResponse || '')
+                                .filter(x => x)
+                                .join('<br>');
+                    }
                 },
                 {
                     data: 'Created_At_Format',
-                    title: 'Created At',
-                    render: d => d ? moment(d).format('DD-MM-YYYY HH:mm') : '-'
+                    title: 'Created At'
                 }
             ]
         });

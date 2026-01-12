@@ -23,7 +23,7 @@
                         </button>
                     </div>
 
-                    <div id="tableIncome">
+                    <div id="tableMain">
                         <table class="table table-striped table-bordered" style="width:100%"></table>
                     </div>
 
@@ -149,7 +149,7 @@ $(document).ready(function () {
 
     // Edit
     $(document).on("click", ".btn-edit", function () {
-        let table = $("#tableIncome table").DataTable();
+            let table = $("#tableMain table").DataTable();
         let data = table.row($(this).closest("tr")).data();
 
         $("#incomeCategoryId").val(data.Id);
@@ -162,7 +162,7 @@ $(document).ready(function () {
 
     // Delete
     $(document).on("click", ".btn-delete", function () {
-        let table = $("#tableIncome table").DataTable();
+            let table = $("#tableMain table").DataTable();
         let row = table.row($(this).closest("tr")).data();
 
         $("#deleteRecordModal").data("id", row.Id).modal("show");
@@ -216,13 +216,13 @@ function fetchData() {
 
 function renderTable(data) {
 
-if ($.fn.dataTable.isDataTable("#tableIncome table")) {
-    $("#tableIncome table").DataTable().destroy();
+    if ($.fn.dataTable.isDataTable("#tableMain table")) {
+        $("#tableMain table").DataTable().destroy();
 }
 
 data.forEach((x, i) => x.srno = i + 1);
 
-$("#tableIncome table").DataTable({
+    $("#tableMain table").DataTable({
     data: data,
     columns: [
         { data: "srno", title: "Sr. No." },

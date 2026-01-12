@@ -36,6 +36,7 @@
     <link href="/assets2/css/css2.css?family=Nunito+Sans:wght@300;400;600;700;800;900&amp;display=swap" rel="stylesheet" crossorigin="">
     <link href="/assets2/vendors/simplebar/simplebar.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets2/unicons.iconscout.com/release/v4.0.8/css/line.css">
+
     <link href="/assets2/css/theme-rtl.min.css" type="text/css" rel="stylesheet" id="style-rtl">
     <link href="/assets2/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
     <link href="/assets2/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
@@ -119,7 +120,7 @@
                     <div class="d-flex align-items-center">
                         <div class="d-flex align-items-center">
                             <img src="/assets2/img/icons/infinity_logo1.png" alt="infinity" width="27" />
-                            <h5 class="logo-text ms-2 d-none d-sm-block" style="color:#003399">Infinity</h5>
+                            <h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>
                         </div>
                     </div>
                 </a>
@@ -175,13 +176,7 @@
                                     </div>
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "AllInOneMaster" ? "active" : "")" href="/AllInOneMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="message-square"></span>All In One Master
-                                    </div>
-                                </a>
-                            </li>
+                           
                             <li>
                                 <a class="dropdown-item @(currentController == "AllInOneLink" ? "active" : "")" href="/AllInOneLink">
                                     <div class="dropdown-item-wrapper">
@@ -312,6 +307,13 @@
                                 <a class="dropdown-item @(currentController == "StatusMaster" ? "active" : "")" href="/StatusMaster">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="activity"></span>Status Master
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "AllInOneMaster" ? "active" : "")" href="/AllInOneMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="message-square"></span>All In One Master
                                     </div>
                                 </a>
                             </li>
@@ -876,8 +878,11 @@
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                        <div class="avatar avatar-l ">
+                        @* <div class="avatar avatar-l ">
                             <img class="rounded-circle imgUserProfile" alt="" />
+                        </div> *@
+                        <div class="avatar avatar-xl">
+                            <img class="rounded-circle userAvatar" id="imgUserProfile1" src="/assets/img/team/avatar.png" alt="User" />
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
@@ -885,7 +890,7 @@
                             <div class="card-body p-0">
                                 <div class="text-center pt-4 pb-3">
                                     <div class="avatar avatar-xl ">
-                                        <img class="rounded-circle mb-2 imgUserProfile"
+                                        <img class="rounded-circle mb-2 userAvatar"
                                                  src=""
                                                  alt="User Image"
                                                  width="80"
@@ -1387,10 +1392,27 @@
         if (userName) {
             $("#lblUserName").text(userName);
         }
+
         // Set user image
-        if (userImage) {
-            $(".imgUserProfile").attr("src", userImage);
-        }
+        // if (userImage) {
+        //     $(".imgUserProfile").attr("src", userImage);
+        // }
+
+        let defaultImage =`https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=random`;
+
+        // Select ALL avatars
+        let avatarImgs = document.querySelectorAll(".userAvatar");
+        avatarImgs.forEach(function (img) {
+            // Primary image
+            img.src = userImage && userImage.trim() !== ""
+                ? userImage
+                : defaultImage;
+            // Fallback if image fails
+            img.onerror = function () {
+                this.onerror = null; // prevent loop
+                this.src = defaultImage;
+            };
+        });
 
         var userid = Number(sessionStorage.getItem("userId", userid));
         //sessionStorage.setItem("userId", userid);
@@ -1563,5 +1585,17 @@
         // }
     }
 
+    $(document).ready(function () {
 
+        let companyName = sessionStorage.getItem("companyname");
+
+        // Condition check
+        if (companyName && companyName.trim() !== "") {
+            $("#companyName").text(companyName);
+        } else {
+            $("#companyName").text("Infinity"); // default
+        }
+
+        console.log("Company Names:", companyName);
+    });
 </script>

@@ -106,9 +106,10 @@ namespace ERPAdmin.ApiControllers
 
                         // User Photo
                         userDetail.userimage =
-                            dr["Photo"] != DBNull.Value && !string.IsNullOrEmpty(dr["Photo"].ToString())
-                            ? $"{domainUrl}uploads/org/{domain}/StaffMaster/Photo/{dr["Photo"]}"
-                            : $"{domainUrl}uploads/org/{domain}/StaffMaster/Photo/nsquare.png";
+                                 dr["Photo"] != DBNull.Value &&
+                                 !string.IsNullOrWhiteSpace(dr["Photo"].ToString())
+                                 ? $"{domainUrl}uploads/org/{domain}/StaffMaster/Photo/{dr["Photo"]}"
+                                 : string.Empty;
 
                         // Company Info
                         userDetail.companyid =

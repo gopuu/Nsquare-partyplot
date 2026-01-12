@@ -34,6 +34,20 @@
         public decimal? BookingAmount { get; set; }
     }
 
+    public class DashboardSummaryVM
+    {
+        public decimal TotalSales { get; set; }
+        public int TotalEvents { get; set; }
+        public int TotalCustomerVisits { get; set; }
+    }
+
+    public class DashboardSummaryRequest
+    {
+        public int? Month { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+    }
+
     #endregion
 
     #region Get Dashboard Widget Counts
