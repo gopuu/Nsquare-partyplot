@@ -8,11 +8,6 @@
 
 }
 
-
-@* 
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
- *@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -49,15 +44,18 @@
 
                                         <!-- Month Filter -->
                                         <div class="dropdown mt-1">
-                                            <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2 dropdown-toggle"
+                                            <button class="btn btn-outline-secondary btn-sm fw-bold  dropdown-toggle"
                                                     type="button" id="sortByDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Filter : This Month
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
-                                                <li><a class="dropdown-item sort-option" data-value="today" href="#">Today</a></li>
-                                                <li><a class="dropdown-item sort-option" data-value="week" href="#">This Week</a></li>
-                                                <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
-                                                <li><a class="dropdown-item sort-option" data-value="year" href="#">This Year</a></li>
+                                                <li><a class="dropdown-item sort-option active" data-value="yesterday" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="thismonth" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
                                             </ul>
                                         </div>
 
@@ -194,40 +192,148 @@
                             <!---------- chart start ---------->
                             <div class="row g-3">
                                 <div class="col-md-4 text-center">
-                                    <div class="chart-box">
-                                        <canvas id="jobPie"></canvas>
-                                        <div class="chart-label">Corporate Event vs Family Events</div>
+                                    <div class="chart-box position-relative">
+                                        <!-- small dropdown -->
+                                        <div class="dropdown chart-filter">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="jobChartFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- chart -->
+                                        <canvas id="jobPie" class="mt-3"></canvas>
+
+                                        <!-- label -->
+                                        <div class="chart-label">
+                                            Corporate Event vs Family Events
+                                        </div>
                                     </div>
                                 </div>
 
+
                                 <div class="col-md-4 text-center">
-                                    <div class="chart-box">
-                                        <canvas id="eventPie"></canvas>
+                                    <div class="chart-box position-relative">
+                                        <!-- small dropdown -->
+                                        <div class="dropdown chart-filter">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="jobChartFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+                                        <canvas id="eventPie" class="mt-3"></canvas>
                                         <div class="chart-label">Corporate & Sub type of Event</div>
                                     </div>
                                 </div>
 
                                 <div class="col-md-4 text-center">
-                                    <div class="chart-box">
-                                        <canvas id="salesPie"></canvas>
+                                    <div class="chart-box position-relative">
+                                        <!-- small dropdown -->
+                                        <div class="dropdown chart-filter">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="jobChartFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+                                        <canvas id="salesPie" class="mt-3"></canvas>
                                         <div class="chart-label">Family & Subtype of Event </div>
                                     </div>
                                 </div>
                             </div>
                             <!---------- chart end ---------->
+                            <div class="row gap-3 py-5">
+                                <div class="chart-box1 position-relative">
+                                    <!-- small dropdown -->
+                                    <div class="col-md-12">
+                                        <div class="dropdown chart-filter">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="jobChartFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div id="bar-chart"></div>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+                                        <div id="bar-chart" class="mt-4"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row gap-2">
+
+                            <div class="row gap-4 py-5">
                                 <div class="col-md-4">
+                                    <div class="dropdown chart-filter">
+                                        <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                type="button"
+                                                id="jobChartFilter"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            This Month
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                            <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                            <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                        </ul>
+                                    </div>
                                     <div class='pie-chart'></div>
                                 </div>
                                 <div class="col-md-4 align-content-between shadow">
-                                    <img src="~/assets2/img/banquet_img.png" class="img_review"/>
-                               
+                                    <img src="~/assets2/img/banquet_img.png" class="img_review" />
+
                                     <img src="~/assets2/img/banquet_img1.png" class="img_Integration" />
                                 </div>
                             </div>
@@ -237,7 +343,7 @@
             </div>
 
             <!-- Dynamic Widgets -->
-            <div  class="row g-3"></div>
+            <div class="row g-3"></div>
         </div>
     </div>
 </div>

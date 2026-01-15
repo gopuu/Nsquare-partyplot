@@ -311,6 +311,16 @@ position: relative;
     align-items: center;
 }
 
+.chart-box1 {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    height: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .chart-box h6 {
     font-weight: 600;
     font-size: 14px;
@@ -319,7 +329,7 @@ position: relative;
 
 .chart-box canvas {
     max-width: 100% !important;
-    max-height: 240px !important;*/ /* 🔹 medium size */
+    max-height: 240px !important;
 }
 
 #Leadchart {
@@ -376,11 +386,36 @@ position: relative;
 .summary-icon-btn i {
     font-size: 18px;
 }
-/*
-.summary-icon-btn:hover {
-    background-color: #0d6efd;
-    color:white;
-}*/
+
+.chart-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+
+/* dropdown position */
+.chart-filter {
+    position: absolute;
+    top: 5px;
+    right: 12px;
+    z-index: 10;
+}
+
+/* small button */
+.btn-xs {
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 20px;
+}
+
+.chart-label {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
 
 
 

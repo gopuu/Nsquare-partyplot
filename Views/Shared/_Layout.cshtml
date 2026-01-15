@@ -15,7 +15,7 @@
     <!-- ===============================================-->
     <title>@ViewBag.Title - Infinity</title>
 
-    <!-- ===============================================-->
+    <!-- =======================================ass========-->
     <!--    Favicons-->
     <!-- ===============================================-->
     <link rel="apple-touch-icon" sizes="180x180" href="/assets2/img/favicons/infinity_apple-touch-icon.png">
@@ -94,16 +94,20 @@
             line-height: 1.1 !important;
         }
 
-        .dropdown-submenu {
+       /*  .dropdown-submenu {
             position: relative;
         }
-
         .dropdown-submenu {
             top: 0;
             left: 100%;
             margin-left: .1rem;
-        }
+        } */
 
+        .infinitylogo_img{
+            height:70px;
+            width:100%;
+
+        }
     </style>
 
   </head>
@@ -119,9 +123,9 @@
                 <a class="navbar-brand me-1 me-sm-3" href="/Home/Dashboard">
                     <div class="d-flex align-items-center">
                         <div class="d-flex align-items-center">
-                            <img src="/assets2/img/icons/infinity_logo1.png" alt="infinity" width="27" />
-                            <h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>
-                        </div>
+                            <img src="/assets2/img/icons/infinity_logo1.png" alt="infinity" class="infinitylogo_img" />
+@*                             <h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>
+ *@                        </div>
                     </div>
                 </a>
             </div>
@@ -601,12 +605,15 @@
 
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
-                                   href="#" role="button" data-bs-toggle="dropdown">
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
                                     <span class="feather-icon me-2" data-feather="briefcase"></span>
                                     Asset Master
                                 </a>
-
-                                <ul class="dropdown-menu">
+                                <!-- LEFT side dropdown -->
+                                <ul class="dropdown-menu dropdown-menu-start dropdown-left">
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center" href="/AssetMaster/Index">
                                             <span class="me-2" data-feather="box"></span> Asset Master
@@ -623,18 +630,42 @@
                                         </a>
                                     </li>
                                 </ul>
+
+                            </li>
+
+                            <li class="dropdown">
+                                <a class="dropdown-item dropdown-toggle" id="stock" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                    <div class="dropdown-item-wrapper"><span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span><span><span class="me-2 uil" data-feather="dollar-sign"></span>Stock</span></div>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="apps/stock/stock-details.html">
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Stock details</div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="apps/stock/portfolio.html">
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Portfolio</div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="apps/stock/watchlist.html">
+                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Watchlist</div>
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- Infinity Centre -->
-                    @* <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-lightbulb-alt"></span>Infinity Centre
-                        </a>
-                        <ul class="dropdown-menu navbar-dropdown-caret">
-                        </ul>
-                    </li> *@
+                <!-- Infinity Centre -->
+                @* <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <span class="uil fs-8 me-2 uil-lightbulb-alt"></span>Infinity Centre
+                    </a>
+                    <ul class="dropdown-menu navbar-dropdown-caret">
+                    </ul>
+                </li> *@
                 </ul>
             </div>
             <ul class="navbar-nav navbar-nav-icons flex-row">
@@ -1306,6 +1337,28 @@
     </div>
     <!--/ Loader Overlay -->
     <style>
+       /*  /* left side dropdown 
+        .dropdown-left {
+            left: auto !important;
+            right: 100% !important;
+            top: 0;
+            margin-right: 1px;
+            border-radius: 12px;
+            min-width: 220px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        /* optional arrow 
+        .dropdown-left::before {
+            content: "";
+            position: absolute;
+            top: 16px;
+            right: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent transparent #fff;
+        } */
+
         /* Loader overlay */
         #loaderOverlay {
             position: fixed;
@@ -1338,24 +1391,24 @@
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
-    <script src="/assets2/vendors/popper/popper.min.js"></script>
-    <script src="/assets2/vendors/bootstrap/bootstrap.min.js"></script>
-    <script src="/assets2/vendors/anchorjs/anchor.min.js"></script>
+    <script src="~/assets2/vendors/popper/popper.min.js"></script>
+    <script src="~/assets2/vendors/bootstrap/bootstrap.min.js"></script>
+    <script src="~/assets2/vendors/anchorjs/anchor.min.js"></script>
 
-    <script src="/assets2/vendors/is/is.min.js"></script>
-    <script src="/assets2/vendors/fontawesome/all.min.js"></script>
-    <script src="/assets2/vendors/lodash/lodash.min.js"></script>
-    <script src="/assets2/vendors/list.js/list.min.js"></script>
-    <script src="/assets2/vendors/feather-icons/feather.min.js"></script>
-    <script src="/assets2/vendors/dayjs/dayjs.min.js"></script>
-    <script src="/assets2/vendors/prism/prism.js"></script>
-    <script src="/assets2/js/phoenix.js"></script>
+    <script src="~/assets2/vendors/is/is.min.js"></script>
+    <script src="~/assets2/vendors/fontawesome/all.min.js"></script>
+    <script src="~/assets2/vendors/lodash/lodash.min.js"></script>
+    <script src="~/assets2/vendors/list.js/list.min.js"></script>
+    <script src="~/assets2/vendors/feather-icons/feather.min.js"></script>
+    <script src="~/assets2/vendors/dayjs/dayjs.min.js"></script>
+    <script src="~/assets2/vendors/prism/prism.js"></script>
+    <script src="~/assets2/js/phoenix.js"></script>
 
-    <script src="/assets2/vendors/leaflet/leaflet.js"></script>
-    <script src="/assets2/vendors/leaflet.markercluster/leaflet.markercluster.js"></script>
-    <script src="/assets2/vendors/leaflet.tilelayer.colorfilter/leaflet-tilelayer-colorfilter.min.js"></script>
-    <script src="/assets2/vendors/echarts/echarts.min.js"></script>
-    <script src="/assets2/js/ecommerce-dashboard.js"></script>
+    <script src="~/assets2/vendors/leaflet/leaflet.js"></script>
+    <script src="~/assets2/vendors/leaflet.markercluster/leaflet.markercluster.js"></script>
+    <script src="~/assets2/vendors/leaflet.tilelayer.colorfilter/leaflet-tilelayer-colorfilter.min.js"></script>
+    <script src="~/assets2/vendors/echarts/echarts.min.js"></script>
+    <script src="~/assets2/js/ecommerce-dashboard.js"></script>
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
 
@@ -1577,6 +1630,7 @@
         localStorage.clear();
 
         window.location.href = '/';
+
         // if (isSuperUser) {
         //     window.location.href = '/';
         // }
@@ -1585,17 +1639,15 @@
         // }
     }
 
-    $(document).ready(function () {
+    // $(document).ready(function () {
+    //let companyName = sessionStorage.getItem("companyname");
+    // // Condition check
+    // if (companyName && companyName.trim() !== "") {
+    //     $("#companyName").text(companyName);
+    // } else {
+    //     $("#companyName").text("Infinity"); // default
+    // }
+    // console.log("Company Names:", companyName);
+    //});
 
-        let companyName = sessionStorage.getItem("companyname");
-
-        // Condition check
-        if (companyName && companyName.trim() !== "") {
-            $("#companyName").text(companyName);
-        } else {
-            $("#companyName").text("Infinity"); // default
-        }
-
-        console.log("Company Names:", companyName);
-    });
 </script>
