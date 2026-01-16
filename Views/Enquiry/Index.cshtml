@@ -55,7 +55,7 @@
                             <div class="d-flex justify-content-end align-items-center gap-2">
 
                                 <!-- Add Process -->
-                                <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2"
+                                <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2 d-none"
                                         data-bs-toggle="modal" data-bs-target="#processModal" id="btnProcess">
                                     + Process
                                 </button>
@@ -109,61 +109,6 @@
     </div>
 </div>
 
-<!-- Modal: Add Process -->
-<div class="modal fade" id="processModal" tabindex="-1" aria-labelledby="processModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <!-- Made modal larger -->
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title text-white" id="processModalLabel">Process Master</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <!-- Form -->
-                <form id="processForm" class="d-flex align-items-start gap-2">
-                    <input type="hidden" id="processId" value="0">
-
-                    <!-- Process Name -->
-                    <div class="flex-grow-1 d-flex flex-column">
-                        <label for="processName" class="form-label">Process Name</label>
-                        <input type="text" class="form-control mt-1" id="processName">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter event type</div>
-                    </div>
-
-                    <!-- Index No -->
-                    <div class="d-flex flex-column" style="width: 120px;">
-                        <label for="indexNo" class="form-label">Step</label>
-                        <input type="number" class="form-control mt-1" id="processIndexNo" step="1" min="0">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter step no</div>
-                    </div>
-
-                    <!-- Button aligned at bottom -->
-                    <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
-                    </div>
-                </form>
-
-                <!-- Table -->
-                <div class="table-responsive mt-2">
-                    <table class="table table-bordered table-striped align-middle" id="processTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 10%;" class="text-center">Sr No</th>
-                                <th style="width: 55%;">Name</th>
-                                <th style="width: 15%;" class="text-center">Steps</th>
-                                <th style="width: 20%;" class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be filled via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal: Add Deal -->
 <div class="modal fade" id="dealModal" tabindex="-1" aria-labelledby="dealModalLabel" aria-hidden="true">
@@ -1944,16 +1889,7 @@
             // You can keep additional logic here if needed
         });
 
-        let openedFromDeal = false; // track source
-
-        // Open from Deal Modal (+ button)
-        $(document).on("click", "#openProcessModal, #btnProcess", function () {
-            openedFromDeal = true; // mark flag
-            $("#dealModal").modal("hide"); // hide deal modal
-            $("#processModal").modal("show");
-            resetProcessForm();
-        });
-
+        let openedFromDeal = false;
 
         // When Process Modal closes
         // $("#processModal").on("hidden.bs.modal", function () {
@@ -2075,143 +2011,7 @@
         //date filter
 
 
-        //PROCESS MASTER -- START --------------------------------------------------------------------
-        // Add Process
-        document.getElementById("processForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            if (!validateProcessForm()) {
-                console.log("Validation failed");
-                return;
-            }
-
-            //////showLoader()()();
-
-            let id = $("#processId").val();
-            let name = $("#processName").val();
-            let indexno = $("#processIndexNo").val();
-
-            var inputData =
-            {
-                Id: id,
-                Name: name ,
-                IndexNo: indexno,
-                ActionBy: userId
-            };
-            $.ajax({
-                url: "/api/Process/SaveProcess",   // your API for saving
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(inputData),
-                success: function (response) {
-                    if (response.status === "Success") {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Saved!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
-                        resetProcessForm();
-                        loadProcessList();
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: response.message
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: "Error saving process."
-                    });
-                },
-                complete: function () {
-                    //hideLoader();
-                }
-            });
-
-        });
-
-        // Edit Process
-        $(document).on("click", ".edit-btn", function () {
-            let row = $(this).closest("tr");
-            let id = row.data("id");
-            let name = row.find("td:eq(1)").text();
-            let indexno = row.find("td:eq(2)").text();
-
-            resetProcessForm();
-            $("#processId").val(id);
-            $("#processName").val(name);
-            $("#processIndexNo").prop("disabled", false).val(indexno);
-        });
-
-        // Delete Process
-        $(document).on("click", ".delete-btn", function () {
-            let row = $(this).closest("tr");
-            let id = row.data("id");
-
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Do you really want to delete this process?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    //////showLoader()()();
-
-                    var inputData =
-                    {
-                        Id: id,
-                        ActionBy: userId // set actual logged-in user id
-                    }
-
-                    $.ajax({
-                        url: "/api/Process/DeleteProcess",
-                        type: "POST", // backend expects POST
-                        contentType: "application/json; charset=utf-8",
-                        data: JSON.stringify(inputData),
-                        success: function (response) {
-                            if (response.status === "Success") {
-                                Swal.fire({
-                                    position: "top-end",
-                                    icon: "success",
-                                    title: "Deleted!",
-                                    showConfirmButton: false,
-                                    timer: 900
-                                });
-                                loadProcessList();
-                            } else {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: response.message
-                                });
-                            }
-                        },
-                        error: function () {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Error deleting process."
-                            });
-                        },
-                        complete: function () {
-                            //hideLoader();
-                        }
-                    });
-                }
-            });
-        });
-        //PROCESS MASTER -- END -----------------------------------------------------------------------
-
+       
         // Enquiry/Deal -- START --------------------------------------------------------------------
         // Save Deal Form
         document.getElementById("saveDealBtn").addEventListener("click", function (e) {
@@ -2763,92 +2563,7 @@
         //EVENT LEAD SOURCE MASTER -- END ----------------------------------------------------------------------
     });
 
-    // Load process list from API
-    var last_processIndexNo = 0;
-    function loadProcessList() {
-        ////showLoader()();
-        $.ajax({
-            url: "/api/Process/GetProcessList",   // adjust path if needed
-            type: "GET",
-            success: function (response) {
-                console.log("process response:", response);
-                if (response.status === "Success") {
-                    let rows = "";
-                    let srNo = 1;
-                    let options = `<option value="0">-- Select --</option>`; // default option
-                    
-                    $.each(response.data, function (index, item) {
-                        rows += `
-                            <tr data-id="${item.Id}">
-                                <td class="text-center">${srNo++}</td>
-                                <td>${item.Name}</td>
-                                <td class="text-center">${item.IndexNo}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-btn">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-action-xs delete-btn">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                        // dropdown options
-                        options += `<option value="${item.Id}">${item.Name}</option>`;
-                        last_processIndexNo = item.IndexNo;
-                        //console.log("loop - last_processIndexNo:", last_processIndexNo);
-                    });
-                    //console.log("process options:", options);
-                    $("#processTable tbody").html(rows);
-                    $("#dealProcess").html(options);
-                } else {
-                    $("#processTable tbody").html(
-                        `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
-                    );
-                    $("#dealProcess").html(`<option value="0">No Process Found</option>`); // reset dropdown
-                }
-            },
-            error: function () {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Error fetching process list.",
-                    confirmButtonText: "OK",
-                });
-            },
-            complete: function () {
-                //hideLoader();
-            }
-        });
-    }
-
-    // Reset Process Form
-    function resetProcessForm() {
-        $("#processForm")[0].reset();   // clear input fields
-        $("#processId").val(0);         // reset hidden ID to 0
-        $("#processIndexNo").prop("disabled", true).val(parseInt(last_processIndexNo) + 1);
-        // Reset error message
-        $("#processName").siblings(".error-msg").addClass("d-none");
-    }
-
-    // ✅ Validation Function for Event Type Form
-    function validateProcessForm() {
-        let isValid = true;
-
-        let name = $("#processName").val().trim();
-
-        // Reset error message
-        $("#processName").siblings(".error-msg").addClass("d-none");
-
-        // Validate Event Type Name
-        if (name === "" || name === null) {
-            $("#processName").siblings(".error-msg").removeClass("d-none").text("Please enter Process Name");
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
+   
     // Load event type list from API
     function loadEventTypeList() {
         ////showLoader()();

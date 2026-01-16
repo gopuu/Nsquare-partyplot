@@ -133,7 +133,7 @@
                 <ul class="navbar-nav navbar-nav-top" data-dropdown-on-hover="data-dropdown-on-hover">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="uil fs-8 me-2 uil-chart-pie"></span>Home</a>
-                        <ul class="dropdown-menu navbar-dropdown-caret">
+                        <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item @(currentController == "Home" ? "active" : "")" href="/Home/Dashboard">
                                     <div class="dropdown-item-wrapper">
@@ -141,13 +141,7 @@
                                     </div>
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "Company" ? "active" : "")" href="/Company">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="briefcase"></span>Company
-                                    </div>
-                                </a>
-                            </li>
+                            
                         </ul>
                     </li>
 
@@ -321,6 +315,13 @@
                                     </div>
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "ProcessMaster" ? "active" : "")" href="/ProcessMaster">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2" data-feather="git-branch"></span>Process Master
+                                    </div>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -414,39 +415,41 @@
                     <!-- Reports -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-file-alt"></span>Reports
+                            Reports  
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
-                            <li><a class="dropdown-item @(currentController == "Reports" ? "active" : "")" href="/Report_Booking"><div class="dropdown-item-wrapper">Booking Report</div></a></li>
+                            <li><a class="dropdown-item @(currentController == "Reports" ? "active" : "")" href="/Report_Booking"><div class="dropdown-item-wrapper"> <i class="fa-solid fa-calendar-check me-2"></i> Booking Report</div></a></li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle @(currentController == "RevenueReport" ? "active" : "")"
                                    href="#" role="button" data-bs-toggle="dropdown">
-                                    <span class="feather-icon me-2"></span>
-                                    Revenue Report
+                                    <i class="fa-solid fa-chart-line me-2"></i>
+                                    Revenue Report 
+                                    <i class="fa-solid fa-angle-right ms-auto"></i>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center" href="/Report_DailySales">
-                                            <span class="me-2"></span> Daily Sales Report
+                                            <span class="me-2"></span>  <i class="fa-solid fa-calendar-day me-2"></i> Daily Sales Report
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center" href="/Report_MonthlySales">
-                                            <span class="me-2"></span>Monthly Sales Report
+                                            <span class="me-2"></span> <i class="fa-solid fa-calendar-days me-2"></i>
+                                            Monthly Sales Report
                                         </a>
                                     </li>
                                    
                                 </ul>
                             </li>
 
-                            <li><a class="dropdown-item" href="/Report_GST"><div class="dropdown-item-wrapper">GST Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_RevenueLoss"><div class="dropdown-item-wrapper">Revenue Loss Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_Purchase"><div class="dropdown-item-wrapper">Purchase Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_FoodWastage"><div class="dropdown-item-wrapper">Food Wastage Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_Expense"><div class="dropdown-item-wrapper">Expense Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_ProfitLoss"><div class="dropdown-item-wrapper">Profit & Loss Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_Cashflow"><div class="dropdown-item-wrapper">Cashflow Report</div></a></li>
-                            <li><a class="dropdown-item" href="/Report_Modification"><div class="dropdown-item-wrapper">Modification Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_GST"><div class="dropdown-item-wrapper"><i class="fa-solid fa-file-invoice-dollar me-2"></i> GST Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_RevenueLoss"><div class="dropdown-item-wrapper"><i class="fa-solid fa-arrow-trend-down me-2"></i> Revenue Loss Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_Purchase"><div class="dropdown-item-wrapper"><i class="fa-solid fa-cart-shopping me-2"></i> Purchase Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_FoodWastage"><div class="dropdown-item-wrapper"><i class="fa-solid fa-trash me-2"></i> Food Wastage Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_Expense"><div class="dropdown-item-wrapper"><i class="fa-solid fa-money-bill-wave me-2"></i> Expense Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_ProfitLoss"><div class="dropdown-item-wrapper"><i class="fa-solid fa-scale-balanced me-2"></i> Profit & Loss Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_Cashflow"><div class="dropdown-item-wrapper"><i class="fa-solid fa-coins me-2"></i> Cashflow Report</div></a></li>
+                            <li><a class="dropdown-item" href="/Report_Modification"><div class="dropdown-item-wrapper"><i class="fa-solid fa-pen-to-square me-2"></i> Modification Report</div></a></li>
                         </ul>
                     </li>
 
@@ -521,6 +524,7 @@
 
                                     <span class="feather-icon me-2" data-feather="briefcase"></span>
                                     Duty Management
+                                    <i class="fa-solid fa-angle-right ms-auto"></i>
                                 </a>
 
                                 <ul class="dropdown-menu">
@@ -540,9 +544,9 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle @(currentController == "TaskManagement" ? "active" : "")"
                                    href="#" role="button" data-bs-toggle="dropdown">
-
                                     <span class="feather-icon me-2" data-feather="clipboard"></span>
                                     Task Management
+                                    <i class="fa-solid fa-angle-right ms-auto"></i>
                                 </a>
 
                                 <ul class="dropdown-menu">
@@ -602,16 +606,29 @@
                                     </div>
                                 </a>
                             </li>
-
+                            <li>
+                                <a class="dropdown-item @(currentController == "Company" ? "active" : "")" href="/Company">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="briefcase"></span>Company
+                                    </div>
+                                </a>
+                            </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
+                                <a class="nav-link dropdown-toggle d-flex align-items-center @(currentController == "AssetCategory" ? "active" : "")"
                                    href="#"
                                    role="button"
                                    data-bs-toggle="dropdown"
                                    aria-expanded="false">
-                                    <span class="feather-icon me-2" data-feather="briefcase"></span>
-                                    Asset Master
+
+                                    <span class="d-flex align-items-center">
+                                        <span class="feather-icon me-2" data-feather="briefcase"></span>
+                                        Asset Master
+                                    </span>
+
+                                    <!-- Arrow icon last me -->
+                                    <i class="fa-solid fa-angle-right ms-auto"></i>
                                 </a>
+
                                 <!-- LEFT side dropdown -->
                                 <ul class="dropdown-menu dropdown-menu-start dropdown-left">
                                     <li>
@@ -630,30 +647,15 @@
                                         </a>
                                     </li>
                                 </ul>
-
                             </li>
 
-                            <li class="dropdown">
-                                <a class="dropdown-item dropdown-toggle" id="stock" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                    <div class="dropdown-item-wrapper"><span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span><span><span class="me-2 uil" data-feather="dollar-sign"></span>Stock</span></div>
+                            <li>
+                                <a class="dropdown-item @(currentController == "help&Support" ? "active" : "")" href="/HelpSupport">
+                                    <div class="dropdown-item-wrapper">
+                                     <i class="fa-solid fa-diagram-project me-2"></i>
+                                        Help & Support
+                                    </div>
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" href="apps/stock/stock-details.html">
-                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Stock details</div>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="apps/stock/portfolio.html">
-                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Portfolio</div>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="apps/stock/watchlist.html">
-                                            <div class="dropdown-item-wrapper"><span class="me-2 uil"></span>Watchlist</div>
-                                        </a>
-                                    </li>
-                                </ul>
                             </li>
                         </ul>
                     </li>

@@ -186,7 +186,7 @@ namespace ERPAdmin.ApiControllers
         //    }
         //}
 
-        [HttpGet]
+        [HttpPost]
         [Route("DownloadBookingReport")]
         public IActionResult DownloadBookingReport()
         {
@@ -336,12 +336,23 @@ namespace ERPAdmin.ApiControllers
                 Directory.CreateDirectory(folder);
 
                 string fileName = $"Booking_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                System.IO.File.WriteAllBytes(Path.Combine(folder, fileName), stream.ToArray());
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "Booking_Report_*.pdf");
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fileStream);
+                }
+
+                string fileUrl = $"/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
-                response.data = new { FileUrl = $"{Request.Scheme}://{Request.Host}/reports/{fileName}" };
+                response.data = new { FileUrl = fileUrl };
+
                 return Ok(response);
+
             }
             catch (Exception ex)
             {
@@ -351,7 +362,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("DownloadDailySalesReport")]
         public IActionResult DownloadDailySalesReport()
         {
@@ -496,11 +507,21 @@ namespace ERPAdmin.ApiControllers
                 Directory.CreateDirectory(folder);
 
                 string fileName = $"DailySales_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                System.IO.File.WriteAllBytes(Path.Combine(folder, fileName), stream.ToArray());
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "DailySales_Report_*.pdf");
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fileStream);
+                }
+
+                string fileUrl = $"/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
-                response.data = new { FileUrl = $"{Request.Scheme}://{Request.Host}/reports/{fileName}" };
+                response.data = new { FileUrl = fileUrl };
+
                 return Ok(response);
             }
             catch (Exception ex)

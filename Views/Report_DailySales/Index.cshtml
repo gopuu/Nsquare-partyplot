@@ -3,21 +3,30 @@
     Layout = "_Layout";
 }
 
-
-
 <div class="content">
     <div class="pb-1">
         <div class="row g-2">
             <div class="col mt-5">
                 <button class="btn btn-danger"
-                        onclick="DownloadDailySalesReport(event)">
+                        onclick="ViewDailySalesReport('downloadPDF')">
                     <i class="fas fa-download"></i>
                     
                 </button>
             </div>
+            <div class="card-body pt-0">
+
+                <!-- PDF Preview Container -->
+                <div id="pdfPreviewContainer" style="border: 1px solid #ddd; padding: 10px; width: 100%; min-height: 600px; height: calc(100vh - 100px); overflow: auto;">
+                    <p style="text-align: center; color: gray;">PDF Preview will appear here...</p>
+                </div>
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+            </div>
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
 @section Scripts {
