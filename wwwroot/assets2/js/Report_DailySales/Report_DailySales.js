@@ -43,7 +43,7 @@ $(document).ready(function () {
 
 function ViewDailySalesReport(actionName = "viewPDF") {
     $('#btn-loader').show();
-    const url = '/api/Report/DownloadDailySalesReport';
+    const url = '/api/Report/Report_DailySalesDetails';
     fetch(url, {
         method: 'POST',
         headers: {
@@ -91,7 +91,7 @@ function ViewDailySalesReport(actionName = "viewPDF") {
     })
     .catch(error => {
         $('#btn-loader').hide();
-        console.error("Error fetching GST report:", error);
+        console.error("Error fetching DailySales report:", error);
         Swal.fire({
             title: "Download Fail",
             text: error.message,
