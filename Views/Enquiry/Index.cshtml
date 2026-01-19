@@ -73,11 +73,25 @@
                                         Sort By: This Month
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
-                                        <li><a class="dropdown-item sort-option" data-value="today" href="#">Today</a></li>
-                                        <li><a class="dropdown-item sort-option" data-value="week" href="#">This Week</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
                                         <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item sort-option" data-value="year" href="#">This Year</a></li>
+                                         <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+
+
                                     </ul>
+                                   @*  <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
+                                        <li><a class="dropdown-item sort-option active" data-value="yesterday" href="#">Yesterday</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                        <li><a class="dropdown-item sort-option active" data-value="month" href="#">This Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+                                    </ul> *@
                                 </div>
 
                                 <!-- Amount Filters -->
@@ -1869,7 +1883,7 @@
 
     // Initial load
     document.addEventListener("DOMContentLoaded", function () {
-        loadProcessList();
+        //loadProcessList();
         loadEventTypeList();
         loadBanquetHallList();
         loadLeadSourceList();

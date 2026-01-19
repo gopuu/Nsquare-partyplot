@@ -394,7 +394,17 @@ position: relative;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
+.pie-chart {
+    position: relative;
+    z-index: 1;
+}
 
+.pie-chart-filter {
+    position: absolute;
+    top: 8px;
+    right: 25px;
+    z-index: 10;
+}
 /* dropdown position */
 .chart-filter {
     position: absolute;

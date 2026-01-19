@@ -1,4 +1,6 @@
-﻿using ERPAdmin.Helper;
+﻿using ClosedXML.Excel;
+using ERPAdmin.Helper;
+using ERPAdmin.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
@@ -25,166 +27,7 @@ namespace ERPAdmin.ApiControllers
         }
 
 
-        //[HttpGet]
-        //[Route("DownloadBookingReport")]
-        //public IActionResult DownloadBookingReport()
-        //{
-        //    apiResponse response = new apiResponse();
-
-        //    try
-        //    {
-        //        using var stream = new MemoryStream();
-
-        //        Document document = new Document(PageSize.A4, 30, 30, 40, 70);
-
-        //        PdfWriter writer = PdfWriter.GetInstance(document, stream);
-        //        writer.CloseStream = false;
-
-        //        writer.PageEvent = new PdfPageEvents("Admin");
-        //        document.Open();
-
-        //         /* ================= HEADER ================= */
-        //        PdfPTable headerTable = new PdfPTable(2);
-        //        headerTable.WidthPercentage = 100;
-        //        headerTable.SetWidths(new float[] { 20f, 80f });
-        //        headerTable.SpacingAfter = 15f;   // 👈 TABLE SE GAP
-
-        //        BaseColor headerBg = new BaseColor(245, 247, 250);
-        //        BaseColor borderColor = new BaseColor(200, 200, 200);
-
-        //        // LOGO
-        //        string logoPath = Path.Combine(
-        //            _env.WebRootPath,
-        //            "assets2",
-        //            "img",
-        //            "banquatlogo1.png"
-        //        );
-
-        //        Image logo = Image.GetInstance(logoPath);
-        //        logo.ScaleToFit(70f, 70f);
-
-        //        PdfPCell logoCell = new PdfPCell(logo)
-        //        {
-        //            Border = Rectangle.BOTTOM_BORDER,
-        //            BorderColor = borderColor,
-        //            BackgroundColor = headerBg,
-        //            Padding = 10,
-        //            HorizontalAlignment = Element.ALIGN_LEFT,
-        //            VerticalAlignment = Element.ALIGN_MIDDLE
-        //        };
-
-        //        // COMPANY DETAILS
-        //        Font companyFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
-        //        Font addressFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY);
-        //        Font reportFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
-
-        //        PdfPCell detailCell = new PdfPCell
-        //        {
-        //            Border = Rectangle.BOTTOM_BORDER,
-        //            BorderColor = borderColor,
-        //            BackgroundColor = headerBg,
-        //            Padding = 10,
-        //            HorizontalAlignment = Element.ALIGN_CENTER,   // 👈 CELL CENTER
-        //            VerticalAlignment = Element.ALIGN_MIDDLE
-        //        };
-
-        //        // Paragraphs with CENTER alignment
-        //        Paragraph pCompany = new Paragraph("Nsquare Software Solution", companyFont);
-        //        pCompany.Alignment = Element.ALIGN_CENTER;
-
-        //        Paragraph pAddress = new Paragraph("Surat, Gujarat", addressFont);
-        //        pAddress.Alignment = Element.ALIGN_CENTER;
-
-        //        Paragraph pReport = new Paragraph("BOOKING REPORT", reportFont);
-        //        pReport.Alignment = Element.ALIGN_CENTER;
-
-        //        detailCell.AddElement(pCompany);
-        //        detailCell.AddElement(pAddress);
-        //        detailCell.AddElement(pReport);
-
-        //        headerTable.AddCell(logoCell);
-        //        headerTable.AddCell(detailCell);
-        //        document.Add(headerTable);
-        //        //document.Add(new Paragraph("\n\n"));
-
-        //        /* ================= TABLE ================= */
-        //        PdfPTable table = new PdfPTable(8);
-        //        table.WidthPercentage = 100;
-        //        table.SetWidths(new float[] { 2f, 2f, 2f, 2f, 2f, 2f, 2f, 2f });
-        //        table.SpacingBefore = 5f;
-
-        //        Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-        //        Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
-        //        BaseColor thColor = new BaseColor(0, 121, 182);
-
-        //        string[] headers = { "Sr. No", "A1", "A2", "A3", "A4", "A5", "A6", "A7" };
-        //        foreach (var h in headers)
-        //        {
-        //            PdfPCell cell = new PdfPCell(new Phrase(h, thFont))
-        //            {
-        //                BackgroundColor = thColor,
-        //                HorizontalAlignment = Element.ALIGN_CENTER,
-        //                VerticalAlignment = Element.ALIGN_MIDDLE,
-        //                Padding = 6
-        //            };
-        //            table.AddCell(cell);
-        //        }
-
-        //        table.HeaderRows = 1;        
-        //        table.SplitLate = false;   
-        //        table.SplitRows = true;     
-        //        //table.SpacingAfter = 30f;   
-
-        //        // STATIC DATA
-        //        int srNo = 1;
-
-        //        for (int i = 1; i <= 100; i++)
-        //        {
-        //            table.AddCell(new PdfPCell(new Phrase(srNo.ToString(), tdFont))
-        //            {
-        //                HorizontalAlignment = Element.ALIGN_CENTER
-        //            });
-
-        //            table.AddCell(new PdfPCell(new Phrase("Data 1", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 2", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 3", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 4", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 5", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 6", tdFont)));
-        //            table.AddCell(new PdfPCell(new Phrase("Data 7", tdFont)));
-
-        //            srNo++; 
-        //        }
-        //        document.Add(table);
-        //        document.Close();
-
-        //        /* ================= SAVE FILE ================= */
-
-        //        string folderPath = Path.Combine(_env.WebRootPath, "reports");
-        //        if (!Directory.Exists(folderPath))
-        //            Directory.CreateDirectory(folderPath);
-
-        //        string fileName = $"Booking_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-        //        string filePath = Path.Combine(folderPath, fileName);
-
-        //        System.IO.File.WriteAllBytes(filePath, stream.ToArray());
-
-        //        string fileUrl = $"{Request.Scheme}://{Request.Host}/reports/{fileName}";
-
-        //        response.status = "Success";
-        //        response.message = "Report Generated";
-        //        response.data = new { FileUrl = fileUrl };
-
-        //        return Ok(response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.status = "Fail";
-        //        response.message = ex.Message;
-        //        response.data = new { FileUrl = "" };
-        //        return Ok(response);
-        //    }
-        //}
+        
 
         [HttpPost]
         [Route("DownloadBookingEventReport")]
@@ -948,6 +791,108 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("DownloadBookingReport_Excel")]
+        public IActionResult DownloadBookingReport_Excel([FromBody] BookingReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                // === Fetch Data from DB ===
+                DataSet dsReport = new DataSet();
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using (SqlCommand cmd = new SqlCommand("Report_GetBookingDetails", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId);
+                        cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId);
+                        cmd.Parameters.AddWithValue("@HallId", request.HallId);
+                        cmd.Parameters.AddWithValue("@EventDate", request.EventDate ?? (object)DBNull.Value);
+
+                        new SqlDataAdapter(cmd).Fill(dsReport);
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                // === Create Excel ===
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("BookingReport");
+
+                // === Headers ===
+                int colCount = headerTableDB.Columns.Count;
+                worksheet.Cell(1, 1).Value = "Sr. No";
+                worksheet.Cell(1, 1).Style.Font.Bold = true;
+                worksheet.Cell(1, 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                worksheet.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    worksheet.Cell(1, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    worksheet.Cell(1, i + 2).Style.Font.Bold = true;
+                    worksheet.Cell(1, i + 2).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    worksheet.Cell(1, i + 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // === Data Rows ===
+                int row = 2;
+                int srNo = 1;
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    worksheet.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                    {
+                        worksheet.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                    }
+
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                // === Save File ===
+                string reportsDir = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "reports");
+                if (!Directory.Exists(reportsDir))
+                    Directory.CreateDirectory(reportsDir);
+
+                Utils.deleteOldFiles(reportsDir, "BookingReport_*.xlsx");
+
+                string fileName = $"BookingReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                string filePath = Path.Combine(reportsDir, fileName);
+
+                workbook.SaveAs(filePath);
+
+                string fileUrl = $"{domainUrl}/uploads/org/{domain}/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Booking Report Excel generated successfully.";
+                response.data = new { FileUrl = fileUrl };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = "Error generating Excel: " + ex.Message;
+                response.data = null;
+                return Ok(response);
+            }
+        }
+
+
+
+
+        [HttpPost]
         [Route("Report_DailySalesDetails")]
         public IActionResult Report_DailySalesDetails()
         {
@@ -1116,6 +1061,106 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+
+        [HttpPost]
+        [Route("Report_DailySalesDetails_Excel")]
+        public IActionResult Report_DailySalesDetails_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    using SqlCommand cmd = new SqlCommand("Report_GetDailySales", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Daily Sales");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ===== Report Title =====
+                ws.Cell(1, 1).Value = reportName;
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ===== Header =====
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ===== Data =====
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ===== Save =====
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "DailySales_Report_*.xlsx");
+
+                string fileName = $"DailySales_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                workbook.SaveAs(filePath);
+
+                response.status = "Success";
+                response.message = "Daily Sales Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+
 
         [HttpPost]
         [Route("Report_MonthlySalesDetails")]
@@ -1287,6 +1332,101 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("Report_MonthlySalesDetails_Excel")]
+        public IActionResult Report_MonthlySalesDetails_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetMonthlySales", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Monthly Sales");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ===== Report Title =====
+                ws.Cell(1, 1).Value = reportName;
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ===== Header =====
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ===== Data =====
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ===== Save =====
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "MonthlySales_Report_*.xlsx");
+
+                string fileName = $"MonthlySales_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Monthly Sales Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
 
         [HttpPost]
         [Route("Report_RevenueLoss")]
@@ -1447,6 +1587,106 @@ namespace ERPAdmin.ApiControllers
                 response.status = "Success";
                 response.message = "Report Generated";
                 response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_RevenueLoss_Excel")]
+        public IActionResult Report_RevenueLoss_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Revenue Loss");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ================= REPORT TITLE =================
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ================= HEADER =================
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor =
+                    ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ================= DATA =================
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.xlsx");
+
+                string fileName =
+                    $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Revenue Loss Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -1627,6 +1867,118 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("Report_GSTDetails_Excel")]
+        public IActionResult Report_GSTDetails_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    using SqlCommand cmd = new SqlCommand("Report_GetGSTDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+           
+
+                using var wb = new ClosedXML.Excel.XLWorkbook();
+                var ws = wb.Worksheets.Add("GST Report");
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                int totalColumns = dataTableDB.Columns.Count + 1;
+
+                // ===== Report Title =====
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, totalColumns).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+
+                int headerRow = 2;
+                int colIndex = 1;
+
+                // 🔹 SR NO
+                ws.Cell(headerRow, colIndex).Value = "Sr. No";
+                ws.Cell(headerRow, colIndex).Style.Font.Bold = true;
+                colIndex++;
+
+                // 🔹 HEADERS
+                foreach (DataColumn col in headerTableDB.Columns)
+                {
+                    ws.Cell(headerRow, colIndex).Value =
+                        headerTableDB.Rows[0][col.ColumnName].ToString();
+                    ws.Cell(headerRow, colIndex).Style.Font.Bold = true;
+                    colIndex++;
+                }
+
+                // 🔹 DATA
+                int rowIndex = headerRow + 1;
+                int srNo = 1;
+
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    ws.Cell(rowIndex, 1).Value = srNo++;
+
+                    colIndex = 2;
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        ws.Cell(rowIndex, colIndex).Value = row[col]?.ToString() ?? "-";
+                        colIndex++;
+                    }
+
+                    rowIndex++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"GST_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    wb.SaveAs(stream);
+                }
+
+                string fileUrl = $"/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Excel Generated";
+                response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
 
         private PdfPCell CreateHeaderCell(string text, Font font, BaseColor bgColor)
         {
@@ -1819,6 +2171,103 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("Report_Purchase_Excel")]
+        public IActionResult Report_Purchase_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Purchase Report");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ================= TITLE =================
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ================= HEADER =================
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ================= DATA =================
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Purchase_Report_*.xlsx");
+
+                string fileName = $"Purchase_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Purchase Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+
+        [HttpPost]
         [Route("Report_FoodWastage")]
         public IActionResult Report_FoodWastage()
         {
@@ -1976,6 +2425,130 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Report Generated";
+                response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_FoodWastage_Excel")]
+        public IActionResult Report_FoodWastage_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+
+                    // 🔹 Report Data
+                    using SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                // ================= EXCEL CREATION =================
+                using var wb = new ClosedXML.Excel.XLWorkbook();
+                var ws = wb.Worksheets.Add("Food Wastage Report");
+
+                int colCount = headerTableDB.Columns.Count + 1; // + Sr No
+                int rowIndex = 1;
+
+                
+
+                // ================= REPORT NAME =================
+                ws.Cell(rowIndex, 1).Value = reportName.ToUpper();
+                ws.Range(rowIndex, 1, rowIndex, colCount).Merge();
+                ws.Cell(rowIndex, 1).Style.Font.Bold = true;
+                ws.Cell(rowIndex, 1).Style.Font.FontSize = 14;
+                ws.Cell(rowIndex, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+                rowIndex += 2;
+
+                // ================= TABLE HEADER =================
+                int colIndex = 1;
+
+                ws.Cell(rowIndex, colIndex).Value = "Sr. No";
+                ws.Cell(rowIndex, colIndex).Style.Font.Bold = true;
+                ws.Cell(rowIndex, colIndex).Style.Fill.BackgroundColor =
+                    ClosedXML.Excel.XLColor.FromArgb(0, 121, 182);
+                ws.Cell(rowIndex, colIndex).Style.Font.FontColor =
+                    ClosedXML.Excel.XLColor.White;
+                colIndex++;
+
+                foreach (DataColumn col in headerTableDB.Columns)
+                {
+                    ws.Cell(rowIndex, colIndex).Value =
+                        headerTableDB.Rows[0][col.ColumnName].ToString();
+                    ws.Cell(rowIndex, colIndex).Style.Font.Bold = true;
+                    ws.Cell(rowIndex, colIndex).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.FromArgb(0, 121, 182);
+                    ws.Cell(rowIndex, colIndex).Style.Font.FontColor =
+                        ClosedXML.Excel.XLColor.White;
+                    colIndex++;
+                }
+
+                rowIndex++;
+
+                // ================= TABLE DATA =================
+                int srNo = 1;
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    ws.Cell(rowIndex, 1).Value = srNo++;
+                    colIndex = 2;
+
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        ws.Cell(rowIndex, colIndex).Value =
+                            row[col]?.ToString() ?? "-";
+                        colIndex++;
+                    }
+                    rowIndex++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE FILE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "FoodWastage_Report_*.xlsx");
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    wb.SaveAs(stream);
+                }
+
+                string fileUrl = $"/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Excel Generated";
                 response.data = new { FileUrl = fileUrl };
                 return Ok(response);
             }
@@ -2157,6 +2730,109 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("Report_Expense_Excel")]
+        public IActionResult Report_Expense_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Expense Report");
+
+                int colCount = headerTableDB.Columns.Count + 1; // Sr No
+
+                // ===== REPORT TITLE =====
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, colCount).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ===== HEADER =====
+                int headerRow = 3;
+
+                ws.Cell(headerRow, 1).Value = "Sr. No";
+                ws.Cell(headerRow, 1).Style.Font.Bold = true;
+                ws.Cell(headerRow, 1).Style.Fill.BackgroundColor =
+                    ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < headerTableDB.Columns.Count; i++)
+                {
+                    ws.Cell(headerRow, i + 2).Value =
+                        headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(headerRow, i + 2).Style.Font.Bold = true;
+                    ws.Cell(headerRow, i + 2).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ===== DATA =====
+                int row = headerRow + 1;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ===== SAVE =====
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Expense_Report_*.xlsx");
+
+                string fileName = $"Expense_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Expense Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+
+
+        [HttpPost]
         [Route("Report_ProfitLoss")]
         public IActionResult Report_ProfitLoss()
         {
@@ -2315,6 +2991,104 @@ namespace ERPAdmin.ApiControllers
                 response.status = "Success";
                 response.message = "Report Generated";
                 response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_ProfitLoss_Excel")]
+        public IActionResult Report_ProfitLoss_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    new SqlDataAdapter(
+                        new SqlCommand("Report_GetProfitLossDetail", con)
+                        {
+                            CommandType = CommandType.StoredProcedure
+                        }
+                    ).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new XLWorkbook();
+                var ws = workbook.Worksheets.Add("ProfitLoss");
+
+                int row = 1;
+
+                // ================= REPORT TITLE =================
+                var titleRange = ws.Range(row, 1, row, dataTableDB.Columns.Count + 1);
+                titleRange.Merge();
+                titleRange.Value = reportName;
+
+                titleRange.Style.Font.Bold = true;
+                titleRange.Style.Font.FontSize = 14;
+                titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                row += 2;
+
+                // ================= HEADER =================
+                ws.Cell(row, 1).Value = "Sr No";
+                ws.Cell(row, 1).Style.Font.Bold = true;
+
+                for (int i = 0; i < headerTableDB.Columns.Count; i++)
+                {
+                    ws.Cell(row, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(row, i + 2).Style.Font.Bold = true;
+                }
+
+                row++;
+
+                // ================= DATA =================
+                int srNo = 1;
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"ProfitLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                workbook.SaveAs(filePath);
+
+                response.status = "Success";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
                 return Ok(response);
             }
             catch (Exception ex)
@@ -2496,6 +3270,105 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("Report_Cashflow_Excel")]
+        public IActionResult Report_Cashflow_Excel()
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Cashflow");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ================= REPORT TITLE =================
+                ws.Cell(1, 1).Value = reportName;
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ================= HEADER =================
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor =
+                    ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ================= DATA =================
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Cashflow_Report_*.xlsx");
+
+                string fileName = $"Cashflow_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Cashflow Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+
+        [HttpPost]
         [Route("Report_Modification")]
         public IActionResult Report_Modification()
         {
@@ -2664,8 +3537,106 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("Report_Modification_Excel")]
+        public IActionResult Report_Modification_Excel()
+        {
+            apiResponse response = new apiResponse();
 
-       
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetModificationDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Modification");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ================= REPORT TITLE =================
+                ws.Cell(1, 1).Value = reportName;
+                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ================= HEADER =================
+                ws.Cell(3, 1).Value = "Sr. No";
+                ws.Cell(3, 1).Style.Font.Bold = true;
+                ws.Cell(3, 1).Style.Fill.BackgroundColor =
+                    ClosedXML.Excel.XLColor.LightBlue;
+
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 2).Style.Font.Bold = true;
+                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ================= DATA =================
+                int row = 4;
+                int srNo = 1;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    ws.Cell(row, 1).Value = srNo++;
+
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Modification_Report_*.xlsx");
+
+                string fileName = $"Modification_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Modification Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+
+
         public class PdfPageEvents : PdfPageEventHelper
         {
             private readonly string _username;

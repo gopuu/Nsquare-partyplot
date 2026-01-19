@@ -309,28 +309,33 @@
                             </div>
 
                             <div class="row gap-4 py-5">
-                                <div class="col-md-4">
-                                    <div class="dropdown chart-filter">
+                                <div class="col-md-4 position-relative">
+
+                                    <!-- Filter -->
+                                    <div class="dropdown pie-chart-filter">
                                         <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
                                                 type="button"
                                                 id="jobChartFilter"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false">
+                                                data-bs-toggle="dropdown">
                                             This Month
                                         </button>
 
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                            <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                            <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                            <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                            <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                            <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            <li><a class="dropdown-item">Yesterday</a></li>
+                                            <li><a class="dropdown-item">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item active">This Month</a></li>
+                                            <li><a class="dropdown-item">Last Month</a></li>
+                                            <li><a class="dropdown-item">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item">Custom Range</a></li>
                                         </ul>
                                     </div>
-                                    <div class='pie-chart'></div>
+
+                                    <!-- Chart -->
+                                    <div class="pie-chart"></div>
+
                                 </div>
+
                                 <div class="col-md-4 align-content-between shadow">
                                     <img src="~/assets2/img/banquet_img.png" class="img_review" />
 

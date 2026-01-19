@@ -3,61 +3,79 @@ $(document).ready(function () {
     ViewFoodWastageReport("viewPDF");
 });
 
+
 function ViewFoodWastageReport(actionName = "viewPDF") {
+
     $('#btn-loader').show();
-    const url = '/api/Report/Report_FoodWastage';
+
+    let url = "";
+
+    if (actionName === "downloadExcel") {
+        url = "/api/Report/Report_FoodWastage_Excel";
+    } else {
+        // viewPDF OR downloadPDF
+        url = "/api/Report/Report_FoodWastage";
+    }
+
     fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-            'Accept': 'application/json'
+            "Accept": "application/json"
         }
     })
-        .then(async response => {
-            // 🔐 SAFETY CHECK
-            if (!response.ok) {
-                throw new Error("Server error : " + response.status);
-            }
-            const text = await response.text();
+    .then(async response => {
 
-            if (!text) {
-                throw new Error("Empty response from server");
-            }
-            return JSON.parse(text);
-        })
-        .then(result => {
-            $('#btn-loader').hide();
-            if (result.status !== 'Success' || !result.data || !result.data.FileUrl) {
-                Swal.fire({
-                    title: "Download Fail",
-                    text: result.message || "No report URL returned",
-                    icon: "error"
-                });
-                return;
-            }
-            const fileUrl = result.data.FileUrl;
-            if (actionName === 'downloadPDF') {
-                const link = document.createElement('a');
-                link.href = fileUrl;
-                link.download = 'FoodWastage_Report.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                document.getElementById('pdfPreviewContainer').innerHTML = `
-    <iframe 
-        src="${fileUrl}" 
-        style="width:100%;height:100%;border:none;">
-    </iframe>
-`;
-            }
-        })
-        .catch(error => {
-            $('#btn-loader').hide();
-            console.error("Error fetching FoodWastage report:", error);
-            Swal.fire({
-                title: "Download Fail",
-                text: error.message,
-                icon: "error"
-            });
-        });
+        if (!response.ok)
+            throw new Error("Server error : " + response.status);
+
+        const text = await response.text();
+        if (!text)
+            throw new Error("Empty response from server");
+
+        return JSON.parse(text);
+    })
+    .then(result => {
+
+        $('#btn-loader').hide();
+
+        if (result.status !== "Success" || !result.data?.FileUrl) {
+            Swal.fire("Download Fail", result.message || "No file found", "error");
+            return;
+        }
+
+        const fileUrl = result.data.FileUrl;
+
+        // 🔹 VIEW PDF
+        if (actionName === "viewPDF") {
+
+            document.getElementById("pdfPreviewContainer").innerHTML = `
+                <iframe src="${fileUrl}"
+                        style="width:100%; height:100%; border:none;">
+                </iframe>
+            `;
+
+        }
+        // 🔹 DOWNLOAD PDF / EXCEL
+        else {
+
+            const link = document.createElement("a");
+            link.href = fileUrl;
+
+            link.download =
+                actionName === "downloadExcel"
+                    ? "FoodWastage_Report.xlsx"
+                    : "FoodWastage_Report.pdf";
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })
+    .catch(error => {
+
+        $('#btn-loader').hide();
+
+        Swal.fire("Fail", error.message, "error");
+        console.error(error);
+    });
 }

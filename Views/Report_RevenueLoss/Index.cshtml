@@ -9,59 +9,59 @@
 
             <!-- ================= CARD HEADER ================= -->
             <div class="card-header">
-                <div class="row align-items-end">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
 
-                    <!-- LEFT : TITLE -->
-                    <div class="col-md-3">
-                        <h3 class="mb-0 fw-semibold">
-                            Revenue Loss Report
-                        </h3>
-                    </div>
-                    <!-- RIGHT : FILTERS + DOWNLOAD -->
-                    <div class="col-md-9">
-                        <div class="row g-2 justify-content-end align-items-end">
+                    <!-- TITLE -->
+                    <h4 class="mb-0 fw-semibold me-auto">
+                        Revenue Loss Report
+                    </h4>
 
-                            <!-- From Date -->
-                            <div class="col-md-2">
-                               
-                                <input type="date" id="from-date" class="form-control">
-                            </div>
+                    <!-- FROM DATE -->
+                    <input type="date" id="from-date" class="form-control w-auto">
 
-                            <!-- To Date -->
-                            <div class="col-md-2">
-                               
-                                <input type="date" id="to-date" class="form-control">
-                            </div>
+                    <!-- TO DATE -->
+                    <input type="date" id="to-date" class="form-control w-auto">
 
-                            <!-- Event Type -->
-                            <div class="col-md-3">
-                               
-                                <select id="ddlEventType" class="form-select">
-                                    <option value="">-- Select Event Type --</option>
-                                </select>
-                            </div>
-
-                            <!-- Event Sub-type -->
-                            <div class="col-md-3">
-                               
-                                <select id="ddlEventSubType" class="form-select" disabled>
-                                    <option value="">-- Select Event Sub Type --</option>
-                                </select>
-                            </div>
-
-                            <!-- Download Button -->
-                            <div class="col-md-auto">
-                                <button class="btn btn-danger"
-                                        onclick="ViewRevenueLossReport('downloadPDF')">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-
-                        </div>
+                    <!-- FILTER DROPDOWN -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary fw-bold dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">
+                            Filter : This Month
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item">Yesterday</a></li>
+                            <li><a class="dropdown-item">Last 7 Days</a></li>
+                            <li><a class="dropdown-item">Last 30 Days</a></li>
+                            <li><a class="dropdown-item active">This Month</a></li>
+                            <li><a class="dropdown-item">Last Month</a></li>
+                            <li><a class="dropdown-item">Last 12 Months</a></li>
+                            <li><a class="dropdown-item">Custom Range</a></li>
+                        </ul>
                     </div>
 
+                    <!-- EVENT TYPE -->
+                    <select id="ddlEventType" class="form-select w-auto">
+                        <option>-- Event Type --</option>
+                    </select>
+
+                    <!-- EVENT SUB TYPE -->
+                    <select id="ddlEventSubType" class="form-select w-auto">
+                        <option>-- Event Sub Type --</option>
+                    </select>
+
+                    <!-- DOWNLOAD -->
+                    <button class="btn btn-outline-warning"
+                            onclick="ViewRevenueLossReport('downloadPDF')">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+
+                    <button class="btn btn-outline-warning"
+                            onclick="ViewRevenueLossReport('downloadExcel')">
+                        <i class="fas fa-file-excel"></i>
+                    </button>
                 </div>
             </div>
+
 
             <!-- ================= CARD BODY ================= -->
             <div class="card-body pt-2">

@@ -461,31 +461,25 @@ google.charts.load("current", { packages: ["corechart"] });
 google.charts.setOnLoadCallback(() => {
     drawPieChart();
 });
+
 function drawPieChart() {
-    var data = new google.visualization.DataTable();
-    // indicates the placeholder's column
-    data.addColumn("string", "Topping");
-
-    // indicates that the percentage should be inserted in each piece of the graph
-    data.addColumn("number", "slices");
-
-    // set the title and the charts options (width / height)
-    let options = {
-        title: "Source of Lead",
-        width: 500,
-        height: 500
-    };
-
-    // insert the data
-    data.addRows([
+    var data = google.visualization.arrayToDataTable([
+        ["Type", "Count"],
         ["Kids", 6],
         ["Under Legal Age", 8],
         ["Over Legal Age", 20]
     ]);
 
-    // select the pie_div
-    let pieDiv = document.querySelector(".pie-chart");
-    let chart = new google.visualization.PieChart(pieDiv);
+    let options = {
+        title: "Source of Lead",
+        chartArea: { width: "90%", height: "80%" },
+        legend: { position: "bottom" }
+    };
+
+    let chart = new google.visualization.PieChart(
+        document.querySelector(".pie-chart")
+    );
+
     chart.draw(data, options);
 }
 

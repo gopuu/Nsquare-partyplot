@@ -2,7 +2,7 @@
     loadEventTypeDropdown();
     loadCompanyHallDropdown();
     ViewBookingReport("viewPDF");
-   
+
     let today = new Date().toISOString().split('T')[0];
     $("#event-date").val(today);
 
@@ -17,7 +17,7 @@ function loadEventTypeDropdown(selectedId = "") {
             let dropdown = $("#ddlEventType");
             dropdown.empty();
 
-            dropdown.append(`<option value="">-- Select Event Type --</option>`);
+            dropdown.append(`<option value="">-- Event Type --</option>`);
 
             if (response.status === "Success" && response.data.length > 0) {
                 response.data.forEach(item => {
@@ -113,38 +113,111 @@ function loadCompanyHallDropdown(selectedId = "") {
 }
 
 
+//function ViewBookingReport(actionName = "viewPDF") {
+//    $('#btn-loader').show();
+//    const url = '/api/Report/DownloadBookingReport';
+
+//    fetch(url, {
+//        method: 'POST',
+//        headers: {
+//            'Accept': 'application/json'
+//        }
+//    })
+//    .then(async response => {
+
+//        // 🔐 SAFETY CHECK
+//        if (!response.ok) {
+//            throw new Error("Server error : " + response.status);
+//        }
+
+//        const text = await response.text();
+
+//        if (!text) {
+//            throw new Error("Empty response from server");
+//        }
+
+//        return JSON.parse(text);
+//    })
+//    .then(result => {
+
+//        $('#btn-loader').hide();
+
+//        if (result.status !== 'Success' || !result.data || !result.data.FileUrl) {
+//            Swal.fire({
+//                title: "Download Fail",
+//                text: result.message || "No report URL returned",
+//                icon: "error"
+//            });
+//            return;
+//        }
+
+//        const fileUrl = result.data.FileUrl;
+
+//        if (actionName === 'downloadPDF') {
+//            const link = document.createElement('a');
+//            link.href = fileUrl;
+//            link.download = 'Booking_Report.pdf';
+//            document.body.appendChild(link);
+//            link.click();
+//            document.body.removeChild(link);
+//        } else {
+//            document.getElementById('pdfPreviewContainer').innerHTML = `
+//            <iframe
+//                src="${fileUrl}"
+//                style="width:100%;height:100%;border:none;">
+//            </iframe>
+//        `;
+//        }
+//    })
+//    .catch(error => {
+
+//        $('#btn-loader').hide();
+//        console.error("Error fetching GST report:", error);
+
+//        Swal.fire({
+//            title: "Download Fail",
+//            text: error.message,
+//            icon: "error"
+//        });
+//    });
+//}
+
+// Common function to fetch report
+
 function ViewBookingReport(actionName = "viewPDF") {
     $('#btn-loader').show();
-    const url = '/api/Report/DownloadBookingReport';
+
+    const inputData = {
+        EventTypeId: 0,
+        EventSubTypeId: 0,
+        HallId: 0,
+        EventDate: null
+    };
+
+    const url = (actionName === "downloadExcel")
+        ? "/api/Report/DownloadBookingReport_Excel"
+        : "/api/Report/DownloadBookingReport";
 
     fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-            'Accept': 'application/json'
-        }
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(inputData)
     })
     .then(async response => {
-
-        // 🔐 SAFETY CHECK
-        if (!response.ok) {
-            throw new Error("Server error : " + response.status);
-        }
-
+        if (!response.ok) throw new Error("Server error: " + response.status);
         const text = await response.text();
-
-        if (!text) {
-            throw new Error("Empty response from server");
-        }
-
+        if (!text) throw new Error("Empty response from server");
         return JSON.parse(text);
     })
     .then(result => {
-
         $('#btn-loader').hide();
 
-        if (result.status !== 'Success' || !result.data || !result.data.FileUrl) {
+        if (result.status !== "Success" || !result.data?.FileUrl) {
             Swal.fire({
-                title: "Download Fail",
+                title: "Fail",
                 text: result.message || "No report URL returned",
                 icon: "error"
             });
@@ -153,36 +226,35 @@ function ViewBookingReport(actionName = "viewPDF") {
 
         const fileUrl = result.data.FileUrl;
 
-        if (actionName === 'downloadPDF') {
-            const link = document.createElement('a');
+        if (actionName === "viewPDF") {
+            document.getElementById("pdfPreviewContainer").innerHTML = `
+            <iframe src="${fileUrl}" style="width:100%;height:100%;border:none;"></iframe>
+        `;
+        } else {
+            const link = document.createElement("a");
             link.href = fileUrl;
-            link.download = 'Booking_Report.pdf';
+
+            if (actionName === "downloadPDF") {
+                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
+            } else if (actionName === "downloadExcel") {
+                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
+            }
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        } else {
-            document.getElementById('pdfPreviewContainer').innerHTML = `
-            <iframe 
-                src="${fileUrl}" 
-                style="width:100%;height:100%;border:none;">
-            </iframe>
-        `;
         }
     })
     .catch(error => {
-
         $('#btn-loader').hide();
-        console.error("Error fetching GST report:", error);
-
+        console.error("Error fetching Booking report:", error);
         Swal.fire({
-            title: "Download Fail",
+            title: "Fail",
             text: error.message,
             icon: "error"
         });
     });
 }
-
-
 
 
 

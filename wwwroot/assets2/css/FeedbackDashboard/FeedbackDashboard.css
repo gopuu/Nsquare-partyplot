@@ -2,6 +2,19 @@
     background: #f4f6fa;
 }
 
+.chart-filter {
+    position: absolute;
+   
+    right: 12px;
+    z-index: 10;
+}
+
+.btn-xs {
+    padding: 2px 8px;
+    
+    border-radius: 20px;
+}
+
 .emoji_icon{
     width:90%;
     height:90%;
@@ -89,15 +102,22 @@
 }
 
 .rating-row {
-    display: grid;
-    grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr;
+    display: flex;
     align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid #f1f1f1;
+    gap: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
 }
 
 .category-name {
     font-weight: 600;
+    width: 150px; /* fixed width for alignment */
+}
+.header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Title left, dropdown right */
+    margin-bottom: 20px;
 }
 
 .avg-box {
@@ -105,7 +125,9 @@
     border-radius: 10px;
     padding: 8px;
     text-align: center;
-    width: 90px;
+    width: 90px; /* fixed width */
+    background-color: #16a34a; /* green */
+    flex-shrink: 0;
 }
 
 .avg-title {
@@ -115,6 +137,7 @@
 .avg-value {
     font-size: 20px;
     font-weight: 700;
+    line-height: 1;
 }
 
 .avg-sub {
@@ -124,6 +147,8 @@
 .rating-stat {
     text-align: center;
     font-size: 20px;
+    width: 60px; /* fixed width for all stats */
+    flex-shrink: 0;
 }
 
     .rating-stat span {
