@@ -649,14 +649,7 @@
                                 </ul>
                             </li>
 
-                            <li>
-                                <a class="dropdown-item @(currentController == "help&Support" ? "active" : "")" href="/HelpSupport">
-                                    <div class="dropdown-item-wrapper">
-                                     <i class="fa-solid fa-diagram-project me-2"></i>
-                                        Help & Support
-                                    </div>
-                                </a>
-                            </li>
+                            
                         </ul>
                     </li>
 
@@ -668,6 +661,58 @@
                     <ul class="dropdown-menu navbar-dropdown-caret">
                     </ul>
                 </li> *@
+
+                    <!-- Help -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                            <span class="uil fs-8 me-2 uil-setting"></span>Help
+                        </a>
+                        <ul class="dropdown-menu navbar-dropdown-caret">
+                            <li>
+                                <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket 
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "SupportTicketType" ? "active" : "")" href="/SupportTicketType">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="tag"></span>Support Ticket Type
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "SupportTicketStatus" ? "active" : "")" href="/SupportTicketStatus">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="activity"></span>Support Ticket Status
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "SupportTicketPriority" ? "active" : "")" href="/SupportTicketPriority">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Priority
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(currentController == "SupportTicketAssignment" ? "active" : "")" href="/SupportTicketAssignment">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Assignment
+                                    </div>
+                                </a>
+                            </li>
+
+                            <li class="d-none">
+                                <a class="dropdown-item @(currentController == "SupportTicketAttachment" ? "active" : "")" href="/SupportTicketAttachment">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Attachment
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
             <ul class="navbar-nav navbar-nav-icons flex-row">

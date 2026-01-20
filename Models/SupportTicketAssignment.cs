@@ -34,8 +34,13 @@
     {
         public long Id { get; set; }
         public long TicketId { get; set; }
+        public string? TicketDisplay { get; set; }
         public long AssignedTo { get; set; }
         public long AssignedBy { get; set; }
+        public string? Title {get; set; }
+        public string? AssignedToName { get; set; }
+        public string? AssignedByName { get; set; }
+        public string? TicketNumber { get; set; }
         public DateTime AssignedOn { get; set; }
         public bool IsActive { get; set; }
     }

@@ -39,7 +39,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Id", request.Id);
-                    cmd.Parameters.AddWithValue("@TicketId", request.TicketId);
+                    //cmd.Parameters.AddWithValue("@TicketId", request.TicketId);
 
                     con.Open();
                     SqlDataReader dr = cmd.ExecuteReader();
@@ -52,6 +52,11 @@ namespace ERPAdmin.ApiControllers
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         TicketId = Convert.ToInt64(row["TicketId"]),
+                        TicketDisplay = row["TicketDisplay"].ToString(),
+                        TicketNumber = row["TicketNumber"].ToString(),
+                        Title = row["Title"].ToString(),
+                        AssignedToName = row["AssignedToName"].ToString(),
+                        AssignedByName = row["AssignedByName"].ToString(),
                         AssignedTo = Convert.ToInt64(row["AssignedTo"]),
                         AssignedBy = Convert.ToInt64(row["AssignedBy"]),
                         AssignedOn = Convert.ToDateTime(row["AssignedOn"]),

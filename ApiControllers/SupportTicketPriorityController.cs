@@ -74,7 +74,8 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        // ========================= SAVE (INSERT / UPDATE) =========================
+        
+
         [HttpPost]
         [Route("SaveSupportTicketPriority")]
         public IActionResult SaveSupportTicketPriority([FromBody] SaveSupportTicketPriorityRequest model)
@@ -87,13 +88,14 @@ namespace ERPAdmin.ApiControllers
                     out string connString, out string domain, out IActionResult errorResult))
                     return errorResult;
 
-                long rowId = 0;
+                long updatedId = 0;
+                string dbStatus = "Success";
+                string dbMessage = "";
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveSupportTicketPriority", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
                     cmd.Parameters.AddWithValue("@Id", model.Id);
                     cmd.Parameters.AddWithValue("@Code", model.Code);
                     cmd.Parameters.AddWithValue("@Name", model.Name);
@@ -101,25 +103,31 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();
-                    rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            updatedId = Convert.ToInt64(dr["UpdatedId"]);
+                            dbStatus = Convert.ToString(dr["Status"]);
+                            dbMessage = Convert.ToString(dr["Message"]);
+                        }
+                    }
                 }
 
-                apiResponse.status = "Success";
-                apiResponse.message = model.Id > 0
-                    ? "Support ticket priority updated successfully!"
-                    : "Support ticket priority added successfully!";
-                apiResponse.data = new { PriorityId = rowId };
+                apiResponse.status = dbStatus;
+                apiResponse.message = dbMessage;
+                apiResponse.data = new { StatusId = updatedId };
 
-                return Ok(apiResponse);
+                return Ok(apiResponse); // 🔥 Always 200 OK
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = "Something went wrong. Please try again.";
 
-                return Ok(apiResponse);
+                return Ok(apiResponse); // 🔥 STILL 200 OK
             }
         }
 
