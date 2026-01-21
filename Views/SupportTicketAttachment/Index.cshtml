@@ -6,7 +6,10 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" asp-append-version="true"/>
 
+}
 
 <!-- MAIN -->
 <div class="content">
@@ -36,7 +39,7 @@
         <div class="modal-content">
 
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title" id="AttachmentModalTitle">Add Attachment</h5>
+                <h5 class="modal-title text-white" id="AttachmentModalTitle">Add Support Ticket Attachment</h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
@@ -51,6 +54,8 @@
                 <div class="mb-3">
                     <label class="form-label">File <span class="text-danger">*</span></label>
                     <input type="file" id="AttachmentFile" class="form-control" />
+                </div>
+                <div>
                     <input type="hidden" id="existingAttachmentPath" />
 
                     <a id="btnViewAttachment"
@@ -58,7 +63,6 @@
                        target="_blank">
                         <i class="fa fa-eye"></i> View Existing File
                     </a>
-
                 </div>
             </div>
 
@@ -70,9 +74,6 @@
         </div>
     </div>
 </div>
-
-
-
 
 
 <!-- DELETE MODAL -->

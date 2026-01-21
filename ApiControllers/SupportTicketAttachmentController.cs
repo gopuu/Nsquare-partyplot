@@ -57,12 +57,14 @@ namespace ERPAdmin.ApiControllers
                         Id = Convert.ToInt64(row["Id"]),
                         TicketId = Convert.ToInt64(row["TicketId"]),
                         FileName = Convert.ToString(row["FileName"]),
-                        FilePath = Convert.ToString(row["FilePath"]),
-                        ActionBy = Convert.ToInt64(row["ActionBy"]),
-                        CreatedDate = Convert.ToDateTime(row["CreatedDate"])
+                        TicketDisplay = Convert.ToString(row["TicketDisplay"]),
+
+                        FilePath = row["FilePath"] != DBNull.Value
+                            && !string.IsNullOrEmpty(row["FilePath"].ToString())
+                            ? $"{domainUrl}/uploads/org/{domain}/SupportTicket/Ticket_{row["TicketId"]}/{row["FilePath"]}"
+                            : string.Empty
                     });
                 }
-
                 response.status = "Success";
                 response.message = "Ticket attachments fetched successfully!";
                 response.data = list;

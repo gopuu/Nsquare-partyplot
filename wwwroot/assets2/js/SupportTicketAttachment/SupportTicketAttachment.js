@@ -6,76 +6,143 @@
 
 $("#btn-add").click(function () {
     resetAttachmentForm();
-    $("#AttachmentModalTitle").text("Add Attachment");
+    $("#AttachmentModalTitle").text("Add Support Ticket Attachment");
     $("#AttachmentModal").modal("show");
 });
 
+//$(document).on("click", "#btnSaveAttachment", function () {
+
+//    // ---- Validation ----
+//    const ticketId = $("#ddlTicket").val();
+//    let fileInput = $("#AttachmentFile").get(0);
+//    let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+//    if (!ticketId) {
+//        Swal.fire("Validation", "Ticket is required", "warning");
+//        return;
+//    }
+//    // ---- Convert to base64 WITHOUT metadata ----
+//    function getBase64WithoutMeta(file, callback) {
+//        let reader = new FileReader();
+//        reader.onload = function (e) {
+//            let base64 = e.target.result.split(',')[1]; // 🔥 remove data:image/...;base64,
+//            callback(base64);
+//        };
+//        reader.readAsDataURL(file);
+//    }
+
+//    // ---- Save Attachment API Call ----
+//    function saveAttachment(base64File) {
+
+//        const payload = {
+//            Id: Number($("#AttachmentId").val() || 0),
+//            TicketId: Number($("#ddlTicket").val()),
+//            FileName: $("#AttachmentFile")[0]?.files[0]?.name || "",
+//            FilePath: base64File,   // null allowed for edit
+//            ActionBy: sessionStorage.getItem("userId") ?? 0
+//        };
+
+//        $.ajax({
+//            url: "/api/SupportTicketAttachment/SaveSupportTicketAttachment",
+//            type: "POST",
+//            contentType: "application/json",
+//            data: JSON.stringify(payload),
+//            success: function (res) {
+//                if (res.status === "Success") {
+//                    Swal.fire({
+//                        icon: "success",
+//                        title: "Saved!",
+//                        timer: 1200,
+//                        showConfirmButton: false,
+//                        position: "top-end"
+//                    });
+//                    $("#AttachmentModal").modal("hide");
+//                    loadAttachmentData();
+//                } else {
+//                    Swal.fire("Error", res?.message || "Save failed", "error");
+//                }
+//            },
+//            error: function (xhr, status, error) {
+//                console.log("Error:", xhr);
+//                Swal.fire("API Error", "Something went wrong.", "error");
+//            },
+
+//        });
+//    }
+
+
+//// ---- File exists → convert → save ----
+//getBase64WithoutMeta(file, function (base64File) {
+//    saveAttachment(base64File);
+//});
+//});
+
 $(document).on("click", "#btnSaveAttachment", function () {
 
-    // ---- Validation ----
     const ticketId = $("#ddlTicket").val();
     let fileInput = $("#AttachmentFile").get(0);
     let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+    let existingPath = $("#existingAttachmentPath").val();
 
     if (!ticketId) {
         Swal.fire("Validation", "Ticket is required", "warning");
         return;
     }
-    // ---- Convert to base64 WITHOUT metadata ----
-    function getBase64WithoutMeta(file, callback) {
-        let reader = new FileReader();
-        reader.onload = function (e) {
-            let base64 = e.target.result.split(',')[1]; // 🔥 remove data:image/...;base64,
-            callback(base64);
-        };
-        reader.readAsDataURL(file);
+
+    // 🔹 ADD → File mandatory
+    if ($("#AttachmentId").val() == 0 && !file) {
+        Swal.fire("Validation", "File is required", "warning");
+        return;
     }
 
-    // ---- Save Attachment API Call ----
-    function saveAttachment(base64File) {
-
-        const payload = {
-            Id: Number($("#AttachmentId").val() || 0),
-            TicketId: Number($("#ddlTicket").val()),
-            FileName: $("#AttachmentFile")[0]?.files[0]?.name || "",
-            FilePath: base64File,   // null allowed for edit
-            ActionBy: sessionStorage.getItem("userId") ?? 0
-        };
-
-        $.ajax({
-            url: "/api/SupportTicketAttachment/SaveSupportTicketAttachment",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload),
-            success: function (res) {
-                if (res.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved!",
-                        timer: 1200,
-                        showConfirmButton: false,
-                        position: "top-end"
-                    });
-                    $("#AttachmentModal").modal("hide");
-                    loadAttachmentData();
-                } else {
-                    Swal.fire("Error", res?.message || "Save failed", "error");
-                }
-            },
-            error: function (xhr, status, error) {
-                console.log("Error:", xhr);
-                Swal.fire("API Error", "Something went wrong.", "error");
-            },
-        
-        });
+    // ---- SAVE WITHOUT FILE (EDIT CASE) ----
+    if (!file) {
+        saveAttachment(null);
+        return;
     }
 
+    // ---- Convert to base64 ----
+    let reader = new FileReader();
+    reader.onload = function (e) {
+        let base64 = e.target.result.split(',')[1];
+        saveAttachment(base64);
+    };
+    reader.readAsDataURL(file);
+});
 
-// ---- File exists → convert → save ----
-getBase64WithoutMeta(file, function (base64File) {
-    saveAttachment(base64File);
-});
-});
+function saveAttachment(base64File) {
+
+    const payload = {
+        Id: Number($("#AttachmentId").val() || 0),
+        TicketId: Number($("#ddlTicket").val()),
+        FileName: $("#AttachmentFile")[0]?.files[0]?.name || "",
+        FilePath: base64File,  
+        ActionBy: sessionStorage.getItem("userId") ?? 0
+    };
+
+    $.ajax({
+        url: "/api/SupportTicketAttachment/SaveSupportTicketAttachment",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status === "Success") {
+                Swal.fire({
+                    icon: "success",
+                    title: "Saved!",
+                    timer: 1200,
+                    showConfirmButton: false,
+                    position: "top-end"
+                });
+                $("#AttachmentModal").modal("hide");
+                loadAttachmentData();
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        }
+    });
+}
+
 
 $(document).on("click", ".btn-edit-attachment", function () {
 
@@ -113,7 +180,7 @@ $(document).on("click", ".btn-edit-attachment", function () {
     }
 
     // ---- Modal UI ----
-    $("#AttachmentModalTitle").text("Edit Attachment");
+    $("#AttachmentModalTitle").text("Edit Support Ticket Attachment");
     $("#AttachmentModal").modal("show");
 });
 
@@ -130,7 +197,6 @@ function loadAttachmentData() {
     });
 }
 
-
 function renderAttachmentTable(data) {
 
     if ($.fn.dataTable.isDataTable("#tableAttachments table")) {
@@ -143,17 +209,25 @@ function renderAttachmentTable(data) {
         data: data,
         columns: [
             { data: "srno", title: "Sr No" },
-            { data: "FileName", title: "File Name" },
+            //{ data: "FileName", title: "File Name" },
+            { data: "TicketDisplay", title: "Ticket" },
             {
                 data: "FilePath",
                 title: "Preview",
-                render: d => `<a href="${d}" target="_blank">View</a>`
+                orderable: false,
+                render: function (d) {
+                    return renderPreview(d);
+                }
             },
             {
                 data: null,
                 title: "Action",
+                orderable: false,
                 render: function () {
                     return `
+                        <button class="btn btn-outline-warning btn-sm btn-edit-attachment me-1">
+                            <i class="fa fa-edit"></i>
+                        </button>
                         <button class="btn btn-outline-danger btn-sm btn-delete">
                             <i class="fa fa-trash"></i>
                         </button>`;
@@ -163,16 +237,18 @@ function renderAttachmentTable(data) {
     });
 }
 
+
+
 $(document).on("click", ".btn-delete", function () {
     let table = $("#tableAttachments table").DataTable();
     let data = table.row($(this).closest("tr")).data();
 
-    $("#deleteAttachmentModal").data("id", data.Id).modal("show");
+    $("#deleteRecordModal").data("id", data.Id).modal("show");
 });
 
-$("#btnDeleteAttachment").click(function () {
+$("#delete-record").click(function () {
 
-    let id = $("#deleteAttachmentModal").data("id");
+    let id = $("#deleteRecordModal").data("id");
 
     $.ajax({
         url: "/api/SupportTicketAttachment/DeleteSupportTicketAttachment",
@@ -185,7 +261,7 @@ $("#btnDeleteAttachment").click(function () {
         success: function (res) {
             if (res.status === "Success") {
                 Swal.fire("Deleted", res.message, "success");
-                $("#deleteAttachmentModal").modal("hide");
+                $("#deleteRecordModal").modal("hide");
                 loadAttachmentData();
             }
         }
@@ -217,4 +293,49 @@ function resetAttachmentForm() {
     $("#AttachmentFile").val("");
 }
 
+function renderPreview(filePath) {
 
+    if (!filePath) return "-";
+
+    let type = getFileType(filePath);
+
+    switch (type) {
+
+        case "image":
+            return `
+                <a href="${filePath}" target="_blank">
+                    <img src="${filePath}"
+                         style="width:60px;height:60px;object-fit:cover;border-radius:4px"/>
+                </a>`;
+
+        case "pdf":
+            return `
+                <a href="${filePath}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-file-pdf"></i> View PDF
+                </a>`;
+
+        case "doc":
+            return `
+                <a href="${filePath}" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="fa fa-download"></i> Download
+                </a>`;
+
+        default:
+            return `
+                <a href="${filePath}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                    View File
+                </a>`;
+    }
+}
+
+function getFileType(url) {
+    if (!url) return "unknown";
+
+    let ext = url.split('.').pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+    if (ext === "pdf") return "pdf";
+    if (["doc", "docx", "xls", "xlsx", "csv"].includes(ext)) return "doc";
+
+    return "unknown";
+}

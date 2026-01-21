@@ -3,6 +3,7 @@ using ERPAdmin.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
 using System.Net.NetworkInformation;
@@ -62,7 +63,9 @@ namespace ERPAdmin.ApiControllers
                         StatusName = row["StatusName"].ToString(),
                         Title = row["Title"].ToString(),
                         Description = row["Description"].ToString(),
-                        IsClosed = Convert.ToBoolean(row["IsClosed"])
+                        IsClosed = Convert.ToBoolean(row["IsClosed"]),
+                        AttachmentDetails = JsonConvert.DeserializeObject<List<SupportTicketAttachment>>(row["AttachmentDetails"].ToString())
+
                     });
                 }
 
@@ -113,7 +116,11 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Description", model.Description);
                     cmd.Parameters.AddWithValue("@IsClosed", model.IsClosed);
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
-
+                    cmd.Parameters.AddWithValue("@AttachmentDetails",
+                        model.AttachmentDetails != null
+                            ? JsonConvert.SerializeObject(model.AttachmentDetails)
+                            : (object)DBNull.Value
+                    );
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
@@ -125,11 +132,9 @@ namespace ERPAdmin.ApiControllers
                         }
                     }
                 }
-
                 apiResponse.status = dbStatus;
                 apiResponse.message = dbMessage;
                 apiResponse.data = new { StatusId = updatedId };
-
                 return Ok(apiResponse);
               
             }

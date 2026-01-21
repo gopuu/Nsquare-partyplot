@@ -1912,6 +1912,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const bookingReportModal = document.getElementById('bookingReportModal');
     const paymentModal = document.getElementById('paymentModal');
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
+    const foodwestageModal = document.getElementById('foodWastageModal');
 
     // Create booking modal instance manually
     const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -1962,6 +1963,34 @@ document.addEventListener("DOMContentLoaded", function () {
         if (backdrop) backdrop.style.display = "block";
     });
     //hide/show PAYMENT MODAL ----- END --------------------------
+
+
+
+    //hide/show FoodWastage MODAL ----- START --------------------------
+    foodwestageModal.addEventListener('show.bs.modal', function () {
+        console.log("foodWastageModal SHOW");
+        // Just hide visually (do not destroy modal state)
+        bookingReportModal.classList.remove("show");
+        bookingReportModal.style.display = "none";
+
+        // Also hide backdrop manually
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "none";
+    });
+
+    foodwestageModal.addEventListener('hidden.bs.modal', function () {
+        console.log("foodWastageModal HIDE");
+        // Show booking modal visually again (no reset, same position)
+        bookingReportModal.classList.add("show");
+        bookingReportModal.style.display = "block";
+
+        // Show backdrop again
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "block";
+    });
+    //hide/show FoodWastage MODAL ----- END --------------------------
+
+
 
     //hide/show vendorWorkOrder MODAL ----- START --------------------------
     vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
@@ -2253,6 +2282,53 @@ document.addEventListener("DOMContentLoaded", function () {
         //document.body.appendChild(link);
         //link.click();
         //document.body.removeChild(link);
+    });
+
+    // Open foodwestage modal safely
+    document.getElementById('btnFoodWestage').addEventListener('click', function () {
+        const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
+        console.log("💳 Enter Food Westage clicked - Booking ID:", bookingId);
+        $("#tblFoodWastage tbody").empty();
+        $("#txtTotalWastage").val("0.00");
+
+        $.ajax({
+            url: "/api/FoodWastage/GetFoodWastageByBookingId",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ bookingId: bookingId }),
+            success: function (res) {
+                if (res.status !== "Success") {
+                    alert(res.message);
+                    return;
+                }
+                let total = 0;
+                res.data.forEach((item, index) => {
+                    let wastage = parseFloat(item.WastageKg || 0);
+                    total += wastage;
+                    let row = `
+                    <tr>
+                        <td class="ps-2">${index + 1}</td>
+                        <td>
+                            ${item.MenuItem_Name}
+                            <input type="hidden" class="menuItemId" value="${item.MenuItem_Id}">
+                        </td>
+                        <td>
+                            <input type="number"
+                                   class="form-control text-end wastageInput"
+                                   value="${wastage}"
+                                   min="0"
+                                   step="0.01">
+                        </td>
+                    </tr>
+                `;
+
+                $("#tblFoodWastage tbody").append(row);
+                });
+                $("#txtTotalWastage").val(total.toFixed(2));
+                $("#foodWastageModal").modal("show");
+            }
+        });
+
     });
 
     // Open payment modal safely
@@ -3276,6 +3352,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change");
 
                     var foodpackage = data.JSON_FoodPackage[0];
+
                     $("#foodPackage_PackageDropdown").val(foodpackage.FoodPackageId);
                     $("#foodPackage_RatePerPlate").val(foodpackage.PerPlate);
                     $("#foodPackage_PackageCost").val(foodpackage.PackageCost);
@@ -3581,6 +3658,12 @@ function saveBooking() {
                     var banquetId = 0;
                     var eventDate = null;
                     var actionMode = "singleData";
+                    //console.log(
+                    //    "BookingId:", bookingData.BookingId,
+                    //    "BanquetId:", banquetId,
+                    //    "EventDate:", eventDate,
+                    //    "ActionMode:", actionMode
+                    //);
                     loadBookingCalendar(bookingData.BookingId, banquetId, eventDate, actionMode);
                 }
             }
@@ -3836,4 +3919,85 @@ function saveVendorWorkOrder() {
         }
     });
 }
+
+
+$("#btnSaveFoodWastage").on("click", function () {
+
+    const bookingId = (typeof getBookingId === "function") ? getBookingId() : 0;
+    const userId = sessionStorage.getItem('userId');
+
+    if (!bookingId || bookingId <= 0) {
+        alert("Invalid booking");
+        return;
+    }
+
+    let foodList = [];
+    let isValid = true;
+
+    $("#tblFoodWastage tbody tr").each(function () {
+
+        let menuItemId = parseInt($(this).find(".menuItemId").val());
+        let wastageKg = parseFloat($(this).find(".wastageInput").val());
+
+        if (isNaN(wastageKg) || wastageKg < 0) {
+            alert("Wastage cannot be negative");
+            isValid = false;
+            return false; // break loop
+        }
+
+        foodList.push({
+            foodmenuid: menuItemId,
+            weightinkg: wastageKg
+        });
+    });
+
+    if (!isValid) return;
+
+    let payload = {
+        BookingId: bookingId,
+        UserId: userId,
+        FoodJson: JSON.stringify(foodList)
+    };
+
+    console.log("📦 Save Food Wastage Payload:", payload);
+
+    $.ajax({
+        url: "/api/FoodWastage/SaveFoodWastage",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res?.status === "Success") {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Saved",
+                    showConfirmButton: false,
+                    timer: 1000
+                });
+                $('#LevelModal').modal('hide');
+                loadLevelMasterData();
+            } else {
+                Swal.fire("Error", res?.message || "Save Failed!", "error");
+            }
+
+            $("#foodWastageModal").modal("hide");
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Save Level Error");
+        }
+    });
+});
+
+$(document).on("input", ".wastageInput", function () {
+    let total = 0;
+    $(".wastageInput").each(function () {
+        let val = parseFloat($(this).val());
+        if (!isNaN(val)) {
+            total += val;
+        }
+    });
+
+    $("#txtTotalWastage").val(total.toFixed(2));
+});
 

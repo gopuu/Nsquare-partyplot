@@ -988,6 +988,9 @@
                     <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteBooking">
                         <i class="fa-solid fa-trash me-1"></i> Delete Booking
                     </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnFoodWestage">
+                        <i class="fa-solid fa-bowl-food me-1"></i> FoodWestage
+                    </button>
                 </div>
             </div>
 
@@ -1831,6 +1834,49 @@
 </style>
 <!-- paymentModal -- END -->
 
+<!-- foodWastage -- START -->
+<div class="modal fade" id="foodWastageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Food Wastage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <table class="table table-bordered" id="tblFoodWastage">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th>Item Name</th>
+                            <th style="width:30%">Wastage (Kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr class="table-secondary">
+                            <th colspan="2" class="text-end">Total Wastage (Kg)</th>
+                            <th>
+                                <input type="text" class="form-control text-end"
+                                       id="txtTotalWastage"
+                                       value="0.00"
+                                       readonly>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary" id="btnSaveFoodWastage">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- food Wastage Modal -- formula -- END -->
 
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">

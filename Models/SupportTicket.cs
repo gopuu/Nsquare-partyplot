@@ -16,6 +16,8 @@
         public string? Description { get; set; }
         public bool IsClosed { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public List<SupportTicketAttachment> AttachmentDetails { get; set; } = new();
     }
 
     // ================= GET =================
@@ -36,6 +38,14 @@
         public string? Title { get; set; }
         public string? Description { get; set; }
         public bool IsClosed { get; set; }
+        public List<SupportTicketAttachmentDto> AttachmentDetails { get; set; }
+
+    }
+
+    public class SupportTicketAttachmentDto
+    {
+        public string? FileName { get; set; }
+        public string? FilePath { get; set; }
     }
 
     // ================= DELETE =================

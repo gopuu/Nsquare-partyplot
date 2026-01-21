@@ -5,8 +5,9 @@
         public long Id { get; set; }
         public long TicketId { get; set; }
         public string? FileName { get; set; }
+
         public string? FilePath { get; set; }
-        public string? FileType { get; set; }
+        public string? TicketDisplay { get; set; }
         public long ActionBy { get; set; }
         public DateTime CreatedDate { get; set; }
     }
