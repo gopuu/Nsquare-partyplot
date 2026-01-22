@@ -25,22 +25,40 @@ $(document).ready(function () {
 
 });
 
+let selectedMonthDuration = "thismonth"; // default
+
+$(".sort-option").on("click", function (e) {
+    e.preventDefault();
+
+    selectedMonthDuration = $(this).data("value"); // 👈 user ka selection
+
+    $("#sortByDropdown").text("Filter : " + $(this).text());
+
+    loadDashboardWidgets(); // 🔥 API call
+});
+
 function loadDashboardWidgets() {
+    let requestObj = {
+        MonthDuration: selectedMonthDuration, // eg: thismonth, lastmonth
+        FromDate: $("#fromDate").val(),        // yyyy-mm-dd
+        ToDate: $("#toDate").val()             // yyyy-mm-dd
+    };
+
     $.ajax({
-        url: "/api/Dashboard/GetDashboardWidgetCounts",
+        url: "/api/Dashboard/GetDashboardWidgetCounts2",
         type: "POST",
         contentType: "application/json",
+        data: JSON.stringify(requestObj),
         success: function (res) {
             if (res.status === "Success") {
                 // Parse the JSON string returned by the API
-                //let statsJson = res.data.DashboardStats;
-                let statsJson = JSON.parse(res.data.DashboardStats);
-                console.log("statsJson:", statsJson);
+                //let statsJson = JSON.parse(res.data.DashboardStats);
+                console.log("Dashboard Stats:", res.data);
 
                 // 🔥 FORCE NUMBER CONVERSION
-                const totalSales = Number(statsJson.TotalSales) || 0;
-                const totalEvents = Number(statsJson.TotalEvents) || 0;
-                const totalCustomers = Number(statsJson.TotalCustomer) || 0;
+                const totalSales = Number(res.data.TotalSales) || 0;
+                const totalEvents = Number(res.data.TotalEvents) || 0;
+                const totalCustomers = Number(res.data.TotalCustomer) || 0;
 
                 //console.log("totalSales", totalSales);
                 //console.log("totalEvents", totalEvents);
@@ -54,7 +72,7 @@ function loadDashboardWidgets() {
                 );
                 $("#totalEvents").text(totalEvents.toLocaleString("en-IN"));
                 $("#totalCustomers").text(totalCustomers.toLocaleString("en-IN"));
-                console.log("Dashboard Stats Fetched:", statsJson);
+                console.log("Dashboard Stats Fetched:", res.data);
 
                 // Re-initialize Bootstrap tooltips
                 var tooltipTriggerList = [].slice.call(
@@ -200,8 +218,6 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 })
-
-
 
 // chart 1
 const ctx = document.getElementById('jobPie');

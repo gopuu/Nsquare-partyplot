@@ -3,6 +3,10 @@
     Layout = "_Layout";
 }
 
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
 <link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
@@ -23,10 +27,10 @@
         color: #25D366;
     }
 
-    .btnWhatsapp:hover {
-        background-color: #25D366;
-        color: #fff;
-    }
+        .btnWhatsapp:hover {
+            background-color: #25D366;
+            color: #fff;
+        }
 </style>
 
 
@@ -536,7 +540,6 @@
     </div>
 </div>
 <!--AddOns -- MODAL -- END -->
-
 <!--Menu Item-- MODAL -- START -->
 <div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -558,7 +561,6 @@
     </div>
 </div>
 <!--Menu Item-- MODAL -- END -->
-
 <!-- Booking Info Modal -- START -->
 <div class="modal fade" id="bookingReportModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -998,7 +1000,6 @@
     </div>
 </div>
 <!-- Booking Info Modal -- END -->
-
 <!-- CANCEL BOOKING MODAL -- START -->
 <div class="modal fade" id="cancelBookingModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1024,7 +1025,6 @@
     </div>
 </div>
 <!-- CANCEL BOOKING MODAL -- END -->
-
 <!-- paymentModal -- START -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1059,7 +1059,7 @@
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Transaction </label>
+                            <label class="form-label">Transaction Id </label>
                             <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
                         </div>
 
@@ -1109,11 +1109,32 @@
                 <button class="btn btn-outline-secondary" type="reset">Reset</button>
                 <button class="btn btn-outline-primary" id="btnSavePayment">Save</button>
             </div>
+            <!-- Payment History Table -->
+            <div class="px-3 pb-3">
+                <hr />
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-primary mb-0">
+                        Payment History
+                    </h6>
+
+                    <button class="btn btn-success btn-download-all">
+                        <i class="fas fa-download"></i> Download All
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <div id="tblPaymentHistory">
+                        <table class="table table-sm table-bordered align-middle mb-0 w-0">
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 <!-- paymentModal -- END -->
-
 <!-- VendorWorkOrderModal -- START -->
 <div class="modal fade" id="vendorWorkOrderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -1419,7 +1440,6 @@
     </div>
 </div>
 <!-- VendorWorkOrderModal -- END -->
-
 <!-- Booking Reschedule Modal -- START -->
 <div class="modal fade" id="bookingRescheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1594,7 +1614,6 @@
     </div>
 </div>
 <!-- Booking Reschedule Modal -- END -->
-
 <!-- PREPARE ORDER Modal -- START -->
 <div class="modal fade" id="prepareOrderModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -1674,15 +1693,14 @@
     </div>
 </div>
 <style>
-.food-header {
-    font-weight: 600;
-    display: block;
-    width: 100%;
-    clear: both;        /* force new row */
-}
+    .food-header {
+        font-weight: 600;
+        display: block;
+        width: 100%;
+        clear: both; /* force new row */
+    }
 </style>
 <!-- PREPARE ORDER Modal -- END -->
-
 <!-- PREPARE ORDER Modal -- formula -- START -->
 <div class="modal fade" id="formulaModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1746,7 +1764,6 @@
 
 </style>
 <!-- PREPARE ORDER Modal -- formula -- END -->
-
 <!-- feedbackModal -- START -->
 <div class="modal fade" id="feedbackModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -1799,7 +1816,6 @@
     </div>
 </div>
 <!-- feedbackModal -- END -->
-
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
 <style>
@@ -1833,19 +1849,17 @@
 
 </style>
 <!-- paymentModal -- END -->
-
 <!-- foodWastage -- START -->
 <div class="modal fade" id="foodWastageModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">Food Wastage</h5>
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">Food Wastage</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                <table class="table table-bordered" id="tblFoodWastage">
+                <table class="table table-bordered food-wastage-table" id="tblFoodWastage">
                     <thead class="table-light">
                         <tr>
                             <th style="width:5%">#</th>
@@ -1869,18 +1883,18 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-primary" id="btnSaveFoodWastage">Save</button>
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-primary" id="btnSaveFoodWastage">Save</button>
             </div>
 
         </div>
     </div>
 </div>
 <!-- food Wastage Modal -- formula -- END -->
-
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">
 <style>
+
     /* Custom size labels in the dropdown */
     .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
     .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before {

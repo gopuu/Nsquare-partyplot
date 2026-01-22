@@ -1895,10 +1895,13 @@ var vendorWorkOrder_eventTime = 0;
 var vendorWorkOrder_slotId = 0;
 // Initial Load
 document.addEventListener("DOMContentLoaded", function () {
+    const bookingId = getBookingId();
+
     populateYearDropdown();
     //populateMonthButtons();
     //fetchHallDetails();
     loadBookingCalendar();
+    loadPaymentHistory(bookingId);
     loadLeadSourceList();
     loadEnquiryList();
     loadStateList();
@@ -3039,6 +3042,7 @@ function savePrepareOrder() {
 }
 
 
+
 let unitMasterList = [];
 fetchUnitMaster();
 function fetchUnitMaster() {
@@ -3975,8 +3979,8 @@ $("#btnSaveFoodWastage").on("click", function () {
                     showConfirmButton: false,
                     timer: 1000
                 });
-                $('#LevelModal').modal('hide');
-                loadLevelMasterData();
+                $('#foodWastageModal').modal('hide');
+                 loadBookingCalendar();
             } else {
                 Swal.fire("Error", res?.message || "Save Failed!", "error");
             }
@@ -3984,7 +3988,7 @@ $("#btnSaveFoodWastage").on("click", function () {
             $("#foodWastageModal").modal("hide");
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Save Level Error");
+            handleApiError(xhr, status, error, "Save foodWastage Error");
         }
     });
 });
@@ -3997,7 +4001,213 @@ $(document).on("input", ".wastageInput", function () {
             total += val;
         }
     });
-
     $("#txtTotalWastage").val(total.toFixed(2));
 });
+
+
+$("#btnSavePayment").click(function () {
+
+    const bookingId = getBookingId();
+
+    // 🔹 Get values
+   // let bookingId = Number($("#paymentBookingId").val() || 0);
+    let modeId = Number($("#PaymentDetails_Mode").val());
+    let paymentDate = $("#paymentDate").val();
+    let paymentTime = $("#paymentTime").val();
+    let txnId = $("#paymentTxn").val();
+    let chequeBank = $("#paymentChequebank").val();
+    let chequeNo = $("#paymentChequeNo").val();
+    let chequeDate = $("#paymentChequeDate").val();
+    let amount = Number($("#paymentAmount").val());
+    let dueBalance = Number($("#paymentDueBalance").val());
+    let nextDueDate = $("#NextDueDate").val();
+
+    // 🔹 Basic Validation
+    if (!bookingId) {
+        Swal.fire("Validation", "Booking Id missing!", "warning");
+        return;
+    }
+    if (!paymentDate) {
+        Swal.fire("Validation", "Payment date is required!", "warning");
+        return;
+    }
+    if (!amount || amount <= 0) {
+        Swal.fire("Validation", "Valid amount is required!", "warning");
+        return;
+    }
+
+    // 🔹 Payload (matches SaveBooking_Payments procedure)
+    const payload = {
+        BookingId: bookingId,
+        ModeId: modeId,
+        DateOfPayment: paymentDate,
+        PaymentTime: paymentTime || null,
+        TxnId: txnId || null,
+        ChequeBank: chequeBank || null,
+        ChequeNo: chequeNo || null,
+        ChequeDate: chequeDate || null,
+        Amount: amount,
+        DueBalance: dueBalance || 0,
+        NextDueDate: nextDueDate || null,
+        ActionBy: sessionStorage.getItem("userId") ?? "0"
+    };
+
+    console.log("Save Payment Payload :", payload);
+
+    $("#btnSavePayment").prop("disabled", true);
+
+    $.ajax({
+        url: "/api/Booking_Payments/SaveBookingPayment", // 🔁 API URL
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            if (response?.status === "Success") {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Payment saved successfully!",
+                    showConfirmButton: false,
+                    timer: 1200
+                });
+
+                $("#paymentForm")[0].reset();
+                $("#PaymentModal").modal("hide");
+
+                // 🔁 Reload payment list if needed
+                loadBookingCalendar();
+
+            } else {
+                Swal.fire("Error", response?.message || "Save failed!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Save Payment Error");
+        },
+        complete: function () {
+            $("#btnSavePayment").prop("disabled", false);
+        }
+    });
+});
+
+// ----------------- FETCH PAYMENT DATA -----------------
+function loadPaymentHistory(bookingId) {
+    const payload = {
+        PaymentId: 0,      
+        BookingId: bookingId        
+    };
+
+    $.ajax({
+        url: "/api/Booking_Payments/GetBookingPayments",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res?.status === "Success") {
+                renderPaymentTable(res.data || []);
+            } else {
+                Swal.fire("Error", res?.message || "Failed to fetch payments!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("API Error:", error, xhr.responseText);
+            Swal.fire("Error", "Server error fetching payments!", "error");
+        }
+    });
+}
+
+// ----------------- RENDER TABLE -----------------
+function renderPaymentTable(data) {
+
+    // Destroy existing DataTable if exists
+    if ($.fn.dataTable && $.fn.dataTable.isDataTable("#tblPaymentHistory table")) {
+        $("#tblPaymentHistory table").DataTable().destroy();
+    }
+
+    // Add serial numbers
+    data.forEach((item, i) => item.srno = i + 1);
+    $("#tblPaymentHistory table").DataTable({
+        data: data,
+        autoWidth: false, 
+        columns: [
+            { data: "srno", title: "#", width: "60px" },
+            { data: "TxnId", title: "Txn Id", className: "text-end" },
+            { data: "PaymentDateTimeFormat", title: "Date & Time" },
+            {
+                data: "Amount",
+                title: "Amount (₹)",
+                className: "text-end",
+                render: $.fn.dataTable.render.number(',', '.', 2, '₹ ')
+            },
+            {
+                data: null,
+                title: "Action",
+                className: "text-center",
+                render: function (row) {
+                    return `<button class="btn btn-sm btn-outline-primary btn-download" data-id="${row.PaymentId}">
+                                <i class="fas fa-download"></i>
+                            </button>`;
+                }
+            }
+        ],
+        pageLength: 5,
+        ordering: true,
+        searching: false
+    });
+}
+
+// ----------------- OPTIONAL: Download button click -----------------
+$(document).on("click", ".btn-download", function () {
+    let paymentId = $(this).data("id");
+    let bookingId = getBookingId();
+
+    $.ajax({
+        url: "/api/Booking_Payments/DownloadPaymentReceipt",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ PaymentId: paymentId, BookingId: bookingId }),
+        success: function (res) {
+            if (res.status === "Success") {
+
+                let link = document.createElement("a");
+                link.href = res.data.FileUrl;
+                link.download = "";   // 👈 force download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        }
+    });
+});
+
+$(document).on("click", ".btn-download-all", function () {
+    let paymentId = 0;
+    let bookingId = getBookingId();
+
+    $.ajax({
+        url: "/api/Booking_Payments/DownloadAllPaymentReceipt",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ PaymentId: paymentId, BookingId: bookingId }),
+        success: function (res) {
+            if (res.status === "Success") {
+
+                let link = document.createElement("a");
+                link.href = res.data.FileUrl;
+                link.download = "";   // 👈 force download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        }
+    });
+});
+
+
 

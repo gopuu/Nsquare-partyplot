@@ -30,7 +30,9 @@
 
 $(document).ready(function () {
     let today = new Date().toISOString().split('T')[0];
-    $("#invoice-date").val(today);
+    $("#to-date").val(today);
+    $("#from-date").val(today);
+
     ViewGSTReport("viewPDF");
 });
 
@@ -45,8 +47,14 @@ function ViewGSTReport(actionName = "viewPDF") {
     fetch(url, {
         method: "POST",
         headers: {
-            "Accept": "application/json"
-        }
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            FromDate: $("#from-date").val(),
+            ToDate: $("#to-date").val(),
+            FilterDuration: selectedMonthDuration
+        })
     })
         .then(async response => {
             if (!response.ok)
@@ -89,3 +97,16 @@ function ViewGSTReport(actionName = "viewPDF") {
             Swal.fire("Fail", error.message, "error");
         });
 }
+
+let selectedMonthDuration = "thismonth";
+
+$(".sort-option").on("click", function (e) {
+    e.preventDefault();
+
+    $(".sort-option").removeClass("active");
+    $(this).addClass("active");
+
+    selectedMonthDuration = $(this).data("value");
+
+    $("#sortByDropdown").text("Filter : " + $(this).text());
+});

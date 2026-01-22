@@ -48,6 +48,15 @@
         public string? ToDate { get; set; }
     }
 
+    public class DashboardWidgetCountsRequest
+    {
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+
+        public string? ToDate { get; set; }
+
+    }
+
     #endregion
 
     #region Get Dashboard Widget Counts
@@ -57,6 +66,13 @@
         public string? Chart_CorporateVsFamily { get; set; }
         public string? Chart_CorporateSubTypes { get; set; }
         public string? Chart_FamilySubTypes { get; set; }
+    }
+
+    public class DashboardWidgetCounts
+    {
+        public int? TotalSales { get; set; }
+        public int? TotalCustomer { get; set; }
+        public int? TotalEvents { get; set; }
     }
     #endregion
 

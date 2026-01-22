@@ -4,7 +4,8 @@
     ViewBookingReport("viewPDF");
 
     let today = new Date().toISOString().split('T')[0];
-    $("#event-date").val(today);
+    $("#to-date").val(today);
+    $("#from-date").val(today);
 
 });
 
@@ -188,10 +189,12 @@ function ViewBookingReport(actionName = "viewPDF") {
     $('#btn-loader').show();
 
     const inputData = {
-        EventTypeId: 0,
-        EventSubTypeId: 0,
-        HallId: 0,
-        EventDate: null
+        EventTypeId: parseInt($("#ddlEventType").val()) || 0,
+        EventSubTypeId: parseInt($("#ddlEventSubType").val()) || 0,
+        HallId: parseInt($("#ddlCompanyHall").val()) || 0,
+        FromDate: $("#from-date").val(),
+        ToDate: $("#to-date").val(),
+        FilterDuration: selectedMonthDuration // thismonth / lastmonth / customrange
     };
 
     const url = (actionName === "downloadExcel")
@@ -201,8 +204,8 @@ function ViewBookingReport(actionName = "viewPDF") {
     fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Content-Type": "application/json"
         },
         body: JSON.stringify(inputData)
     })
@@ -256,5 +259,16 @@ function ViewBookingReport(actionName = "viewPDF") {
     });
 }
 
+let selectedMonthDuration = "thismonth";
+
+$(".sort-option").on("click", function (e) {
+    e.preventDefault();
+
+    $(".sort-option").removeClass("active");
+    $(this).addClass("active");
+    selectedMonthDuration = $(this).data("value");
+
+    $("#sortByDropdown").text("Filter : " + $(this).text());
+});
 
 

@@ -190,6 +190,56 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("GetDashboardWidgetCounts2")]
+        public IActionResult GetDashboardWidgetCounts2(DashboardWidgetCountsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardWidgetCounts result = new DashboardWidgetCounts();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                { return errorResult; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_Widgetcount", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    result.TotalSales = Convert.ToInt32(row["TotalSales"]);
+                    result.TotalCustomer = Convert.ToInt32(row["TotalCustomer"]);
+                    result.TotalEvents = Convert.ToInt32(row["TotalEvents"]);
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard widgets fetched successfully.";
+                apiResponse.data = result;
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("GetDailyReportSummary")]
         public IActionResult GetDailyReportSummary(
         [FromBody] GetDailyReportSummaryRequest request)

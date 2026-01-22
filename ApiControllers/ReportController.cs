@@ -1,10 +1,13 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -616,7 +619,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("DownloadBookingReport")]
-        public IActionResult DownloadBookingReport()
+        public IActionResult DownloadBookingReport(BookingReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -655,11 +658,13 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetBookingDetails", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@EventTypeId", 0);
-                    cmd.Parameters.AddWithValue("@EventSubTypeId", 0);
-                    cmd.Parameters.AddWithValue("@HallId", 0);
-                    cmd.Parameters.AddWithValue("@EventDate", DBNull.Value);
-
+                    cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId);
+                    cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId);
+                    cmd.Parameters.AddWithValue("@HallId", request.HallId);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+               
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -812,7 +817,9 @@ namespace ERPAdmin.ApiControllers
                         cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId);
                         cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId);
                         cmd.Parameters.AddWithValue("@HallId", request.HallId);
-                        cmd.Parameters.AddWithValue("@EventDate", request.EventDate ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                        cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                        cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
 
                         new SqlDataAdapter(cmd).Fill(dsReport);
                     }
@@ -894,7 +901,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_DailySalesDetails")]
-        public IActionResult Report_DailySalesDetails()
+        public IActionResult Report_DailySalesDetails(DailySalesDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -933,6 +940,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetDailySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1064,7 +1075,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_DailySalesDetails_Excel")]
-        public IActionResult Report_DailySalesDetails_Excel()
+        public IActionResult Report_DailySalesDetails_Excel(DailySalesDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1085,6 +1096,10 @@ namespace ERPAdmin.ApiControllers
 
                     using SqlCommand cmd = new SqlCommand("Report_GetDailySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1164,7 +1179,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_MonthlySalesDetails")]
-        public IActionResult Report_MonthlySalesDetails()
+        public IActionResult Report_MonthlySalesDetails(MonthlySalesDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1203,6 +1218,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetMonthlySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1334,7 +1353,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_MonthlySalesDetails_Excel")]
-        public IActionResult Report_MonthlySalesDetails_Excel()
+        public IActionResult Report_MonthlySalesDetails_Excel(MonthlySalesDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1354,6 +1373,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetMonthlySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1430,7 +1453,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_RevenueLoss")]
-        public IActionResult Report_RevenueLoss()
+        public IActionResult Report_RevenueLoss(RevenueLossRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1469,6 +1492,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1599,7 +1626,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_RevenueLoss_Excel")]
-        public IActionResult Report_RevenueLoss_Excel()
+        public IActionResult Report_RevenueLoss_Excel(RevenueLossRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1619,6 +1646,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1700,7 +1731,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_GSTDetails")]
-        public IActionResult Report_GSTDetails()
+        public IActionResult Report_GSTDetails(GSTDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1739,6 +1770,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetGSTDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1869,7 +1904,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_GSTDetails_Excel")]
-        public IActionResult Report_GSTDetails_Excel()
+        public IActionResult Report_GSTDetails_Excel(GSTDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1892,6 +1927,10 @@ namespace ERPAdmin.ApiControllers
 
                     using SqlCommand cmd = new SqlCommand("Report_GetGSTDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2003,7 +2042,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Purchase")]
-        public IActionResult Report_Purchase()
+        public IActionResult Report_Purchase(PurchaseDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2042,6 +2081,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2172,7 +2215,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Purchase_Excel")]
-        public IActionResult Report_Purchase_Excel()
+        public IActionResult Report_Purchase_Excel(PurchaseDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2192,6 +2235,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2269,7 +2316,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_FoodWastage")]
-        public IActionResult Report_FoodWastage()
+        public IActionResult Report_FoodWastage(FoodWastageDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2308,6 +2355,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2438,7 +2489,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_FoodWastage_Excel")]
-        public IActionResult Report_FoodWastage_Excel()
+        public IActionResult Report_FoodWastage_Excel(FoodWastageDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2463,6 +2514,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report Data
                     using SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2562,7 +2617,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Expense")]
-        public IActionResult Report_Expense()
+        public IActionResult Report_Expense(ExpenseDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2601,6 +2656,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2731,7 +2790,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Expense_Excel")]
-        public IActionResult Report_Expense_Excel()
+        public IActionResult Report_Expense_Excel(ExpenseDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2751,6 +2810,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -2834,7 +2897,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_ProfitLoss")]
-        public IActionResult Report_ProfitLoss()
+        public IActionResult Report_ProfitLoss(ProfitLossDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2873,6 +2936,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -3003,7 +3070,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_ProfitLoss_Excel")]
-        public IActionResult Report_ProfitLoss_Excel()
+        public IActionResult Report_ProfitLoss_Excel(ProfitLossDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3021,12 +3088,13 @@ namespace ERPAdmin.ApiControllers
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_GetProfitLossDetail", con)
-                        {
-                            CommandType = CommandType.StoredProcedure
-                        }
-                    ).Fill(dsReport);
+                    using SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
                 if (dsReport.Tables.Count < 3)
@@ -3102,7 +3170,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Cashflow")]
-        public IActionResult Report_Cashflow()
+        public IActionResult Report_Cashflow([FromBody] CashflowDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3141,6 +3209,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -3271,7 +3343,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Cashflow_Excel")]
-        public IActionResult Report_Cashflow_Excel()
+        public IActionResult Report_Cashflow_Excel(CashflowDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3291,6 +3363,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 

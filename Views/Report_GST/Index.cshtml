@@ -22,26 +22,34 @@
                     <!-- RIGHT : DATE + BUTTON -->
                     <div class="col-md-6">
                         <div class="d-flex justify-content-end gap-2">
-                            <div style="width: 200px;">
-                                <input type="date"
-                                       id="invoice-date"
-                                       class="form-control">
+                            <div class="col-auto">
+                                <input type="date" id="from-date" class="form-control form-control-sm">
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-sm fw-bold  dropdown-toggle"
-                                        type="button" id="sortByDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Filter : This Month
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
-                                    <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
-                                    <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
-                                    <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
-                                </ul>
+
+                            <div class="col-auto">
+                                <input type="date" id="to-date" class="form-control form-control-sm">
                             </div>
+
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm fw-bold dropdown-toggle"
+                                            type="button" id="sortByDropdown"
+                                            data-bs-toggle="dropdown">
+                                        Filter : This Month
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                        <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <div class="d-flex align-items-end gap-2">
                                 <div class="col-md-auto">
                                     <button class="btn btn-outline-warning"

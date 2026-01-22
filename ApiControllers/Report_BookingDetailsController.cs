@@ -52,8 +52,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@EventTypeId", SqlDbType.BigInt).Value = request.EventTypeId;
                     cmd.Parameters.Add("@EventSubTypeId", SqlDbType.BigInt).Value = request.EventSubTypeId;
                     cmd.Parameters.Add("@HallId", SqlDbType.BigInt).Value = request.HallId;
-                    cmd.Parameters.Add("@EventDate", SqlDbType.NVarChar)
-                                  .Value = (object)request.EventDate ?? DBNull.Value;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
 
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
