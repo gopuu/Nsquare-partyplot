@@ -57,6 +57,12 @@
 
     }
 
+    public class EventTypePieChart
+    {
+        public string? EventLabel { get; set; }
+        public int EventCount { get; set; }
+    }
+
     #endregion
 
     #region Get Dashboard Widget Counts

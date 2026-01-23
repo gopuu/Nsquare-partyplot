@@ -322,7 +322,188 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetBookingEventTypeCount")]
+        public IActionResult GetBookingEventTypeCount(DashboardWidgetCountsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<EventTypePieChart> result = new List<EventTypePieChart>();
 
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("GetBookingEventTypeCount", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object)request.ToDate ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        result.Add(new EventTypePieChart
+                        {
+                            EventLabel = dr["eventLabel"].ToString(),
+                            EventCount = Convert.ToInt32(dr["eventcount"])
+                        });
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Event type pie chart data fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetBookingSubEventTypeCorporate")]
+        public IActionResult GetBookingSubEventTypeCorporate([FromBody] DashboardWidgetCountsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<EventTypePieChart> result = new List<EventTypePieChart>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("GetBookingSubEventTypeCorporate", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object)request.ToDate ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        result.Add(new EventTypePieChart
+                        {
+                            EventLabel = dr["EventSubTypeName"].ToString(), 
+                            EventCount = Convert.ToInt32(dr["SubTypeCount"]) 
+                        });
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Corporate Event sub-type pie chart data fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                // 🔹 Log error (your custom logger)
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
+
+
+        [HttpPost]
+        [Route("GetBookingSubEventTypeFamilyFunction")]
+        public IActionResult GetBookingSubEventTypeFamilyFunction([FromBody] DashboardWidgetCountsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<EventTypePieChart> result = new List<EventTypePieChart>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("GetBookingSubEventType_FamilyFunction", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object)request.ToDate ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        result.Add(new EventTypePieChart
+                        {
+                            EventLabel = dr["EventSubTypeName"].ToString(),
+                            EventCount = Convert.ToInt32(dr["SubTypeCount"])
+                        });
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Corporate Event sub-type pie chart data fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                // 🔹 Log error (your custom logger)
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
 
         //UNUSED
         /*

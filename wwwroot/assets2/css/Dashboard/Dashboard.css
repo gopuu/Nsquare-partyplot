@@ -259,8 +259,7 @@ position: relative;
 
 .chart-label {
     border-top: 3px solid #eee;
-    padding-top: 8px;
-    margin-top:15px;
+    padding-top: 5px;
 
 }
 
@@ -309,7 +308,9 @@ position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
+
 }
+
 
 .chart-box1 {
     background: #fff;
@@ -328,8 +329,8 @@ position: relative;
 }
 
 .chart-box canvas {
-    max-width: 100% !important;
-    max-height: 240px !important;
+    max-width: 90% !important;
+    max-height: 250px !important;
 }
 
 #Leadchart {
@@ -421,11 +422,27 @@ position: relative;
 }
 
 .chart-label {
-    margin-top: 10px;
+    
     font-size: 13px;
     font-weight: 600;
     color: #444;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

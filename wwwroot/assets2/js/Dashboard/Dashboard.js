@@ -1,41 +1,126 @@
 ﻿
 $(document).ready(function () {
-    loadDashboardWidgets();
     setCurrentMonthDates();
-    function setCurrentMonthDates() {
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-        $("#fromDate").val(formatDate(firstDay));
-        $("#toDate").val(formatDate(lastDay));
-    }
-    function formatDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;   // ✅ IMPORTANT
-    }   
-
-    $("#btnReset").click(function () {
-        $("#fromDate").val("");
-        $("#toDate").val("");
-        loadDashboardSummary();
-    });
+    loadDashboardWidgets();
+    loadJobPieChart();
+    loadEventPieChart();
+    loadSalesPieChart();
 
 });
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-let selectedMonthDuration = "thismonth"; // default
+    $("#fromDate").val(formatDate(firstDay));
+    $("#toDate").val(formatDate(lastDay));
+}
+function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;   // ✅ IMPORTANT
+} 
+
+
+let selectedMonthDuration = "thismonth"; // ✅ default
 
 $(".sort-option").on("click", function (e) {
     e.preventDefault();
 
-    selectedMonthDuration = $(this).data("value"); // 👈 user ka selection
+    let newFilter = $(this).data("value");
+
+    // agar same filter, kuch mat karo
+    if (selectedMonthDuration === newFilter) return;
+
+    selectedMonthDuration = newFilter;
+
+    // dropdown active class manage
+    $(".sort-option").removeClass("active");
+    $(this).addClass("active");
 
     $("#sortByDropdown").text("Filter : " + $(this).text());
 
-    loadDashboardWidgets(); // 🔥 API call
+    // --------------------------
+    // MonthDuration ke hisab se From/To date set karna
+    // --------------------------
+    let today = new Date();
+    let fromDate, toDate;
+
+    if (selectedMonthDuration === "thismonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    } else if (selectedMonthDuration === "lastmonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    } else if (selectedMonthDuration === "days") { // Last 7 Days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 6);
+        toDate = today;
+    } else if (selectedMonthDuration === "lastdays") { // Last 30 Days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 29);
+        toDate = today;
+    } else if (selectedMonthDuration === "yesterday") {
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 1);
+        toDate = fromDate;
+    } else if (selectedMonthDuration === "12months") {
+        fromDate = new Date(today);
+        fromDate.setMonth(today.getMonth() - 12);
+        toDate = today;
+    } else if (selectedMonthDuration === "customrange") {
+        // custom range me datepicker pe user select karega
+        return loadDashboardWidgets();
+    }
+
+    // Date format yyyy-mm-dd
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // Set the datepickers
+    $("#fromDate").val(formatDate(fromDate));
+    $("#toDate").val(formatDate(toDate));
+
+    // 🔥 Load data
+    loadDashboardWidgets();
 });
+
+
+$("#fromDate, #toDate").on("change", function () {
+
+    let fromDate = $("#fromDate").val();
+    let toDate = $("#toDate").val();
+
+    if (fromDate && toDate) {
+        selectedMonthDuration = "customrange";
+
+        $("#sortByDropdown").text("Filter : Custom Range");
+        $(".sort-option").removeClass("active");
+
+        loadDashboardWidgets(); // 🔥
+    }
+});
+
+
+$("#btnReset").on("click", function () {
+    selectedMonthDuration = "thismonth";
+
+    $("#fromDate").val("");
+    $("#toDate").val("");
+
+    $("#sortByDropdown").text("Filter : This Month");
+
+    $(".sort-option").removeClass("active");
+    $('.sort-option[data-value="thismonth"]').addClass("active");
+
+    loadDashboardWidgets();
+});
+
 
 function loadDashboardWidgets() {
     let requestObj = {
@@ -43,6 +128,7 @@ function loadDashboardWidgets() {
         FromDate: $("#fromDate").val(),        // yyyy-mm-dd
         ToDate: $("#toDate").val()             // yyyy-mm-dd
     };
+    console.log("requestObj DashboardWidgets:", requestObj);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardWidgetCounts2",
@@ -219,162 +305,384 @@ tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 })
 
-// chart 1
-const ctx = document.getElementById('jobPie');
-new Chart(ctx, {
-    type: 'pie',
-    data: {
-        labels: [
-            'GoJobs',
-            'Vault',
-            'Freshjobs',
-            'TweetMyJob',
-            'US Jobs',
-            'Monster',
-            'CareerBuilder',
-            'JobCircle',
-            'Careercast',
-            'Indeed'
-        ],
-        datasets: [{
-            data: [13, 11.5, 11.1, 10.7, 8.3, 7.9, 17, 7.1, 4, 4.7],
-            backgroundColor: [
-                '#3366cc',
-                '#dc3912',
-                '#ff9900',
-                '#109618',
-                '#990099',
-                '#0099c6',
-                '#dd4477',
-                '#66aa00',
-                '#b82e2e',
-                '#316395'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        plugins: {
-            legend: {
-                position: 'right',
-                labels: {
-                    generateLabels(chart) {
-                        const data = chart.data;
-                        return data.labels.map((label, i) => {
-                            return {
+
+let jobPieChart = null;
+function loadJobPieChart() {
+
+    let requestObj = {
+        MonthDuration: selectedMonthDuration,
+        FromDate: $("#fromDate").val() || null,
+        ToDate: $("#toDate").val() || null
+    };
+
+    $.ajax({
+        url: "/api/Dashboard/GetBookingEventTypeCount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestObj),
+        success: function (res) {
+            console.log("pie res:",res);
+            if (res.status !== "Success") {
+                console.warn(res.message);
+                return;
+            }
+
+            let labels = [];
+            let values = [];
+
+            res.data.forEach(item => {
+                labels.push(item.EventLabel);
+                values.push(item.EventCount);
+            });
+            debugger
+            renderJobPieChart(labels, values);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "pie api Error");
+        },
+    });
+}
+function renderJobPieChart(labels, values) {
+    debugger
+    const ctx = document.getElementById('jobPie');
+
+    // 🔁 destroy old chart
+    if (jobPieChart) {
+        jobPieChart.destroy();
+    }
+
+    jobPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    '#3366cc', '#dc3912', '#ff9900',
+                    '#109618', '#990099', '#0099c6',
+                    '#dd4477', '#66aa00', '#b82e2e'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        generateLabels(chart) {
+                            const data = chart.data;
+                            return data.labels.map((label, i) => ({
+                                text: `${label} (${data.datasets[0].data[i]})`,
+                                fillStyle: data.datasets[0].backgroundColor[i]
+                            }));
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value) => value
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+$(".chart-filter-pie .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-pie .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    selectedMonthDuration = $(this).text().toLowerCase().replaceAll(" ", "");
+
+    $("#jobChartFilter").text($(this).text());
+
+    loadJobPieChart(); // 🔥 reload chart
+});
+
+
+let eventPieChart; // 🔹 store chart instance globally
+
+// 🔹 Function to render chart
+function renderEventPieChart(labels, values) {
+    const ctx = document.getElementById('eventPie');
+
+    // Destroy old chart if exists
+    if (eventPieChart) eventPieChart.destroy();
+
+    eventPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    '#1abc9c',   // teal
+                    '#3498db',   // blue
+                    '#9b59b6',   // purple
+                    '#e67e22',   // orange
+                    '#e74c3c',   // red
+                    '#95a5a6'    // gray
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        generateLabels(chart) {
+                            const data = chart.data;
+                            return data.labels.map((label, i) => ({
+                                text: `${label} - ${data.datasets[0].data[i]}`,
+                                fillStyle: data.datasets[0].backgroundColor[i]
+                            }));
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value) => value
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // make sure you include plugin
+    });
+}
+
+// 🔹 Function to load data via AJAX
+function loadEventPieChart(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    $.ajax({
+        url: '/api/Dashboard/GetBookingSubEventTypeCorporate',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+                const labels = response.data.map(x => x.EventLabel);
+                const values = response.data.map(x => x.EventCount);
+
+                renderEventPieChart(labels, values);
+            } else {
+                // empty chart
+                renderEventPieChart([], []);
+            }
+        },
+        error: function (err) {
+            console.error("Error loading pie chart data:", err);
+        }
+    });
+}
+
+
+// 🔹 Dropdown click event
+$(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-eventPie .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+    $("#jobChartFilter").text($(this).text());
+
+    loadEventPieChart(filterText); 
+});
+
+let salesPieChart; // global chart instance
+
+// 🔹 Function to render chart
+function renderSalesPieChart(labels, values) {
+    const ctx = document.getElementById('salesPie');
+
+    if (salesPieChart) salesPieChart.destroy(); // destroy old chart
+
+    salesPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    '#0d6efd',   // Bootstrap Blue
+                    '#20c997',   // Teal
+                    '#ffc107',   // Yellow
+                    '#fd7e14',   // Orange
+                    '#6c757d'    // Gray
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            cutout: '65%',
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        generateLabels(chart) {
+                            const data = chart.data;
+                            return data.labels.map((label, i) => ({
                                 text: `${label} (${data.datasets[0].data[i]}%)`,
                                 fillStyle: data.datasets[0].backgroundColor[i]
-                            };
-                        });
+                            }));
+                        }
                     }
-                }
-            },
-            datalabels: {
-                color: '#fff',
-                font: {
-                    weight: 'bold',
-                    size: 12
                 },
-                formatter: (value) => value + '%'
+                datalabels: {
+                    display: false
+                }
             }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+// 🔹 Function to load data via AJAX
+function loadSalesPieChart(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    $.ajax({
+        url: '/api/Dashboard/GetBookingSubEventTypeFamilyFunction', // your API route
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+                const labels = response.data.map(x => x.EventLabel);
+                const values = response.data.map(x => x.EventCount);
+
+                renderSalesPieChart(labels, values);
+            } else {
+                // empty chart
+                renderSalesPieChart([], []);
+            }
+        },
+        error: function (err) {
+            console.error("Error loading sales pie chart data:", err);
         }
-    },
-    plugins: [ChartDataLabels]
+    });
+}
+
+
+// 🔹 Dropdown click event
+$(".chart-filter-salepie .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-salepie .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+    $("#salesChartFilter").text($(this).text());
+
+    // map dropdown to MonthDuration (or custom date logic)
+    loadSalesPieChart(filterText);
 });
 
 
 // chart 2
-const ctx2 = document.getElementById('eventPie');
-new Chart(ctx2, {
-    type: 'pie',
-    data: {
-        labels: [
-            'Corporate Events',
-            'Family Events',
-            'Birthday',
-            'Wedding',
-            'Conference',
-            'Other'
-        ],
-        datasets: [{
-            data: [32, 24, 15, 18, 7, 4],
-            backgroundColor: [
-                '#1abc9c',   // teal
-                '#3498db',   // blue
-                '#9b59b6',   // purple
-                '#e67e22',   // orange
-                '#e74c3c',   // red
-                '#95a5a6'    // gray
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        plugins: {
-            legend: {
-                position: 'right',
-                labels: {
-                    generateLabels(chart) {
-                        const data = chart.data;
-                        return data.labels.map((label, i) => ({
-                            text: `${label} - ${data.datasets[0].data[i]}%`,
-                            fillStyle: data.datasets[0].backgroundColor[i]
-                        }));
-                    }
-                }
-            },
-            datalabels: {
-                display: false
-            }
-        }
-    }
-});
+//const ctx2 = document.getElementById('eventPie');
+//new Chart(ctx2, {
+//    type: 'pie',
+//    data: {
+//        labels: [
+//            'Corporate Events',
+//            'Family Events',
+//            'Birthday',
+//            'Wedding',
+//            'Conference',
+//            'Other'
+//        ],
+//        datasets: [{
+//            data: [32, 24, 15, 18, 7, 4],
+//            backgroundColor: [
+//                '#1abc9c',   // teal
+//                '#3498db',   // blue
+//                '#9b59b6',   // purple
+//                '#e67e22',   // orange
+//                '#e74c3c',   // red
+//                '#95a5a6'    // gray
+//            ],
+//            borderWidth: 1
+//        }]
+//    },
+//    options: {
+//        plugins: {
+//            legend: {
+//                position: 'right',
+//                labels: {
+//                    generateLabels(chart) {
+//                        const data = chart.data;
+//                        return data.labels.map((label, i) => ({
+//                            text: `${label} - ${data.datasets[0].data[i]}%`,
+//                            fillStyle: data.datasets[0].backgroundColor[i]
+//                        }));
+//                    }
+//                }
+//            },
+//            datalabels: {
+//                display: false
+//            }
+//        }
+//    }
+//});
 
  // chart 3
-const ctx3 = document.getElementById('salesPie');
-new Chart(ctx3, {
-    type: 'doughnut',
-    data: {
-        labels: [
-            'Online',
-            'Direct',
-            'Partner',
-            'Referral',
-            'Other'
-        ],
-        datasets: [{
-            data: [38, 22, 18, 12, 10],
-            backgroundColor: [
-                '#0d6efd',   // Bootstrap Blue
-                '#20c997',   // Teal
-                '#ffc107',   // Yellow
-                '#fd7e14',   // Orange
-                '#6c757d'    // Gray
-            ],
-            borderWidth: 2
-        }]
-    },
-    options: {
-        cutout: '65%',
-        plugins: {
-            legend: {
-                position: 'right',
-                labels: {
-                    generateLabels(chart) {
-                        const data = chart.data;
-                        return data.labels.map((label, i) => ({
-                            text: `${label} (${data.datasets[0].data[i]}%)`,
-                            fillStyle: data.datasets[0].backgroundColor[i]
-                        }));
-                    }
-                }
-            },
-            datalabels: {
-                display: false
-            }
-        }
-    }
-});
+//const ctx3 = document.getElementById('salesPie');
+//new Chart(ctx3, {
+//    type: 'doughnut',
+//    data: {
+//        labels: [
+//            'Online',
+//            'Direct',
+//            'Partner',
+//            'Referral',
+//            'Other'
+//        ],
+//        datasets: [{
+//            data: [38, 22, 18, 12, 10],
+//            backgroundColor: [
+//                '#0d6efd',   // Bootstrap Blue
+//                '#20c997',   // Teal
+//                '#ffc107',   // Yellow
+//                '#fd7e14',   // Orange
+//                '#6c757d'    // Gray
+//            ],
+//            borderWidth: 2
+//        }]
+//    },
+//    options: {
+//        cutout: '65%',
+//        plugins: {
+//            legend: {
+//                position: 'right',
+//                labels: {
+//                    generateLabels(chart) {
+//                        const data = chart.data;
+//                        return data.labels.map((label, i) => ({
+//                            text: `${label} (${data.datasets[0].data[i]}%)`,
+//                            fillStyle: data.datasets[0].backgroundColor[i]
+//                        }));
+//                    }
+//                }
+//            },
+//            datalabels: {
+//                display: false
+//            }
+//        }
+//    }
+//});
 
 $(document).ready(function () {
     barChart();
