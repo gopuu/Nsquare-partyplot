@@ -5,7 +5,11 @@ $(document).ready(function () {
     loadJobPieChart();
     loadEventPieChart();
     loadSalesPieChart();
+    loadYearDropdown();
 
+    const currentYear = new Date().getFullYear();
+    renderBarChart(currentYear);
+    $("#yearDropdown").text(currentYear);
 });
 function setCurrentMonthDates() {
     const today = new Date();
@@ -334,7 +338,7 @@ function loadJobPieChart() {
                 labels.push(item.EventLabel);
                 values.push(item.EventCount);
             });
-            debugger
+           
             renderJobPieChart(labels, values);
         },
         error: function (xhr, status, error) {
@@ -343,7 +347,7 @@ function loadJobPieChart() {
     });
 }
 function renderJobPieChart(labels, values) {
-    debugger
+    
     const ctx = document.getElementById('jobPie');
 
     // 🔁 destroy old chart
@@ -684,51 +688,69 @@ $(".chart-filter-salepie .dropdown-item").on("click", function (e) {
 //    }
 //});
 
-$(document).ready(function () {
-    barChart();
-     $(window).resize(function () {
-        window.barChart.redraw();
+//$(document).ready(function () {
+//    barChart();
+//     $(window).resize(function () {
+//        window.barChart.redraw();
         
-    });
-});
-function barChart() {
-    window.barChart = Morris.Bar({
-        element: 'bar-chart',
-        data: [
-            { y: 'Jan', a: 100, b: 90 },
-            { y: 'Feb', a: 75, b: 65 },
-            { y: 'Mar', a: 50, b: 40 },
-            { y: 'Apr', a: 60, b: 55 },
-            { y: 'May', a: 70, b: 60 },
-            { y: 'Jun', a: 75, b: 65 },
-            { y: 'Jul', a: 50, b: 40 },
-            { y: 'Aug', a: 75, b: 65 },
-            { y: 'Sep', a: 85, b: 75 },
-            { y: 'Oct', a: 90, b: 80 },
-            { y: 'Nov', a: 95, b: 85 },
-            { y: 'Dec', a: 100, b: 90 }
-        ],
+//    });
+//});
+//function barChart() {
+//    window.barChart = Morris.Bar({
+//        element: 'bar-chart',
+//        data: [
+//            { y: 'Jan', a: 100, b: 90 },
+//            { y: 'Feb', a: 75, b: 65 },
+//            { y: 'Mar', a: 50, b: 40 },
+//            { y: 'Apr', a: 60, b: 55 },
+//            { y: 'May', a: 70, b: 60 },
+//            { y: 'Jun', a: 75, b: 65 },
+//            { y: 'Jul', a: 50, b: 40 },
+//            { y: 'Aug', a: 75, b: 65 },
+//            { y: 'Sep', a: 85, b: 75 },
+//            { y: 'Oct', a: 90, b: 80 },
+//            { y: 'Nov', a: 95, b: 85 },
+//            { y: 'Dec', a: 100, b: 90 }
+//        ],
 
-        xkey: 'y',
-        ykeys: ['a', 'b'],
-        labels: ['Series A', 'Series B'],
+//        xkey: 'y',
+//        ykeys: ['a', 'b'],
+//        labels: ['Series A', 'Series B'],
 
-        /* 🎨 Multi color (series-wise) */
-        barColors: ['#1e88e5', '#ff3321'],
+//        /* 🎨 Multi color (series-wise) */
+//        barColors: ['#1e88e5', '#ff3321'],
 
-        /* 👇 IMPORTANT for showing all months */
-        xLabelAngle: 45,        // rotate labels
-        xLabelMargin: 10,
-        gridTextSize: 11,
+//        /* 👇 IMPORTANT for showing all months */
+//        xLabelAngle: 45,        // rotate labels
+//        xLabelMargin: 10,
+//        gridTextSize: 11,
 
-        barGap: 4,
-        barSizeRatio: 0.55,
+//        barGap: 4,
+//        barSizeRatio: 0.55,
 
-        resize: true,
-        redraw: true,
-        hideHover: 'auto'
-    });
-}
+//        resize: true,
+//        redraw: true,
+//        hideHover: 'auto'
+//    });
+//}
+
+//$(document).ready(function () {
+//   // loadYearDropdown(); // populate year dropdown
+//    let selectedYear = new Date().getFullYear();
+//    renderBarChart(selectedYear);
+
+//    // Handle year selection
+//    $(document).on('click', '#yearDropdownMenu li a', function () {
+//        selectedYear = $(this).data('year');
+//        $('#yearDropdown').text(selectedYear);
+//        renderBarChart(selectedYear);
+//    });
+
+//    $(window).resize(function () {
+//        if (window.barChart) window.barChart.redraw();
+//    });
+//});
+
 
 
 // lead chart
@@ -782,22 +804,57 @@ function drawChart() {
 google.charts.load("current", { packages: ["corechart"] });
 
 // create a callback function that render the chart
-google.charts.setOnLoadCallback(() => {
-    drawPieChart();
-});
+//google.charts.setOnLoadCallback(() => {
+//    drawPieChart();
+//});
+google.charts.setOnLoadCallback(loadLeadSourcePieChart);
+function loadLeadSourcePieChart(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardLeadSourceCount",
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (response) {
+            console.log("piechart lead data:", response);
+            if (response.status === "Success" && response.data.length > 0) {
+                drawLeadSourcePieChart(response.data);
+            } else {
+                drawLeadSourcePieChart([]);
+            }
+        },
+        error: function (err) {
+            console.error("Error loading sales pie chart data:", err);
+        }
+    });
+}
 
-function drawPieChart() {
-    var data = google.visualization.arrayToDataTable([
-        ["Type", "Count"],
-        ["Kids", 6],
-        ["Under Legal Age", 8],
-        ["Over Legal Age", 20]
-    ]);
+function drawLeadSourcePieChart(apiData) {
+
+    let chartArray = [["Lead Source", "Count"]];
+
+    apiData.forEach(item => {
+        chartArray.push([
+            item.LeadSourceName,   // 👈 EXACT property name
+            item.LeadSourceCount
+        ]);
+    });
+
+    // Handle empty data
+    if (chartArray.length === 1) {
+        chartArray.push(["No Data", 1]);
+    }
+
+    var data = google.visualization.arrayToDataTable(chartArray);
 
     let options = {
-        title: "Source of Lead",
+        title: "Lead Source",
         chartArea: { width: "90%", height: "80%" },
-        legend: { position: "bottom" }
+        legend: { position: "bottom" },
+        pieHole: 0.4
     };
 
     let chart = new google.visualization.PieChart(
@@ -807,10 +864,174 @@ function drawPieChart() {
     chart.draw(data, options);
 }
 
+$(".pie-chart-filter .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".pie-chart-filter .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+    $("#jobChartFilter").text($(this).text());
+
+    loadLeadSourcePieChart(filterText);
+});
+
+//function drawPieChart() {
+//    var data = google.visualization.arrayToDataTable([
+//        ["Type", "Count"],
+//        ["Kids", 6],
+//        ["Under Legal Age", 8],
+//        ["Over Legal Age", 20]
+//    ]);
+
+//    let options = {
+//        title: "Source of Lead",
+//        chartArea: { width: "90%", height: "80%" },
+//        legend: { position: "bottom" }
+//    };
+
+//    let chart = new google.visualization.PieChart(
+//        document.querySelector(".pie-chart")
+//    );
+
+//    chart.draw(data, options);
+//}
     
 $(document).on("click", "#btnSummary", function () {
     console.log("Summary icon clicked ✔");
 });
+function loadYearDropdown() {
+    $.ajax({
+        url: "/api/YearMaster/GetYearList",
+        type: "GET",
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+
+                let html = "";
+
+                // 🔹 FIRST OPTION → This Year
+                //html += `
+                //    <li>
+                //        <a class="dropdown-item year-option active"
+                //           href="#"
+                //           data-id="0"
+                //           data-year="-">
+                //           This Year
+                //        </a>
+                //    </li>`;
+
+                // 🔹 API YEARS
+                response.data.forEach(function (item) {
+                    html += `
+                        <li>
+                            <a class="dropdown-item year-option"
+                               href="#"
+                               data-id="${item.Id}"
+                               data-year="${item.YearName}">
+                               ${item.YearName}
+                            </a>
+                        </li>`;
+                });
+
+                $("#yearDropdownMenu").html(html);
+
+                // 🔹 Default button text
+                $("#yearDropdown").text("This Year");
+            }
+        },
+        error: function (err) {
+            console.error("Error loading year list", err);
+        }
+    });
+}
+
+// Render Bar Chart
+function renderBarChart(year) {
+    
+    $.ajax({
+        url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            SelectedYear: year,
+            IsThisYear: year === new Date().getFullYear()
+        }),
+        success: function (res) {
+            if (res.status === 'Success') {
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const currentMonth = new Date().getMonth(); // 0–11
+
+                const dataMap = {};
+                res.data.forEach(d => {
+                    dataMap[d.MonthNo] = d;
+                });
+
+                const chartData = months.map((m, i) => {
+                    const d = dataMap[i + 1];
+                    const TotalAmount = d && d.TotalAmount ? d.TotalAmount : 0; // instead of 0
+                    const BookingQty = d && d.BookingQty ? d.BookingQty : 0; // instead of 0
+                    const TotalEvents = d && d.TotalEvents ? d.TotalEvents : 0; // instead of 0
+                    const FamilyEvents = d && d.TotalFamilyFunctionCount ? d.TotalFamilyFunctionCount : 0;
+                    const CorporateEvents = d && d.TotalCorporateCount ? d.TotalCorporateCount : 0;
+
+                    return { y: m, TotalAmount ,BookingQty, TotalEvents, FamilyEvents, CorporateEvents };
+                });
+
+
+                $('#bar-chart').empty();
+
+                Morris.Bar({
+                    element: 'bar-chart',
+                    data: chartData,
+                    xkey: 'y',
+                    ykeys: ['TotalEvents', 'FamilyEvents', 'CorporateEvents'], // all 3 bars
+                    labels: ['Total Events', 'Family Functions', 'Corporate Events'],
+                    barColors: ['#f39c12', '#8e44ad', '#e74c3c'],
+                    hideHover: 'auto',
+                    resize: true,
+                    xLabelAngle: 45,
+                    barGap: 4,
+                    barSizeRatio: 0.55,
+                    hoverCallback: function (index, options, content, row) {
+                        return `
+                            <strong>${row.y} (${year})</strong><br/>
+                            Booking Qty: ${row.BookingQty}<br/>
+                            Total Amount: ${row.TotalAmount}<br/>
+                            <span style="color:#f39c12;">Total Events: ${row.TotalEvents}</span><br/>
+                            <span style="color:#8e44ad;">Family Functions: ${row.FamilyEvents}</span><br/>
+                            <span style="color:#e74c3c;">Corporate Events: ${row.CorporateEvents}</span>
+                        `;
+                    }
+                });
+            }
+        }
+    });
+
+}
+
+
+$(document).on("click", ".year-option", function (e) {
+    e.preventDefault();
+
+    $(".year-option").removeClass("active");
+    $(this).addClass("active");
+
+    let yearText = $(this).data("year");
+    let selectedYear;
+
+    if (yearText === "thisyear") {
+        selectedYear = new Date().getFullYear();
+        $("#yearDropdown").text("This Year");
+    } else {
+        selectedYear = parseInt(yearText);
+        $("#yearDropdown").text(yearText);
+    }
+
+    console.log("Selected Year:", selectedYear);
+
+    renderBarChart(selectedYear);
+});
+
 
 
 

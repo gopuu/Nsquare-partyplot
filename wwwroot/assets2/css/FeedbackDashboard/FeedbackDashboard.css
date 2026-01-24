@@ -65,7 +65,7 @@
 }
 
 .metric-value {
-    font-size: 30px;
+    font-size: 16px;
     font-weight: 700;
 }
 
@@ -134,15 +134,7 @@
     font-size: 11px;
 }
 
-.avg-value {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1;
-}
 
-.avg-sub {
-    font-size: 10px;
-}
 
 .rating-stat {
     text-align: center;
@@ -303,3 +295,79 @@
     font-weight: 700;
 }
 
+
+
+
+.category-rating-row {
+    display: flex;
+    align-items: center;
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.category-name {
+    width: 20%;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Avg Rating Green Box */
+.avg-rating-box {
+    width: 18%;
+    background: #28a745;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+.avg-text {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.avg-value {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.avg-sub {
+    font-size: 11px;
+}
+
+/* Feedback section */
+.feedback-box {
+    width: 62%;
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.feedback-item img {
+    width: 26px;
+    margin-bottom: 4px;
+}
+
+.feedback-item .count {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.feedback-item .label {
+    font-size: 12px;
+    color: #777;
+}
+
+/* Color matching */
+.feedback-item.positive .count {
+    color: #28a745;
+}
+
+.feedback-item.neutral .count {
+    color: #f0ad4e;
+}
+
+.feedback-item.negative .count {
+    color: #dc3545;
+}

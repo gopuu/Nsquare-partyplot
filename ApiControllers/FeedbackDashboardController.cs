@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
 using ERPAdmin.Models;
+using System.Text.Json;
 
 namespace ERPAdmin.ApiControllers
 {
@@ -21,6 +22,78 @@ namespace ERPAdmin.ApiControllers
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
+
+
+        [HttpPost]
+        [Route("GetDashboardFeedbackCounts")]
+        public IActionResult GetDashboardFeedbackCounts([FromBody] DashboardFeedbackRequest request)
+        {
+            var apiResponse = new apiResponse();
+            var result = new DashboardFeedbackCounts();
+
+            try
+            {
+                // Get connection string and domain
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_Count", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // Pass parameters
+                        cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
+                        cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                        cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+
+                        con.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            if (dr.Read())
+                            {
+                                // Total Feedback Count
+                                result.TotalFeedback = dr["TotalFeedback"] != DBNull.Value ? Convert.ToInt32(dr["TotalFeedback"]) : 0;
+
+                                // Avg Rating
+                                result.AvgRatingOutOf5 = dr["AvgRatingOutOf5"]?.ToString() ?? "0%";
+
+                                // JSON Feedback Report
+                                var feedbackJson = dr["JSON_FeedbackReport"]?.ToString();
+                                if (!string.IsNullOrEmpty(feedbackJson))
+                                    result.JSON_FeedbackReport = JsonSerializer.Deserialize<FeedbackReport>(feedbackJson);
+
+                                // JSON Category Wise Rating
+                                var categoryJson = dr["JSON_CategoryWiseRating"]?.ToString();
+                                if (!string.IsNullOrEmpty(categoryJson))
+                                    result.JSON_CategoryWiseRating = JsonSerializer.Deserialize<List<CategoryRating>>(categoryJson);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard feedback counts fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                // Return 200 OK even on error if you want consistency
+                return Ok(apiResponse);
+            }
+        }
+
+
+
 
         [HttpPost]
         [Route("GetFeedbackInsightSummaryCount")]

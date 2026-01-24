@@ -40,4 +40,39 @@
         public int NeutralCount { get; set; }
         public int NegativeCount { get; set; }
     }
+
+    public class DashboardFeedbackRequest
+    {
+        public string? MonthDuration { get; set; }  // e.g., "ThisMonth", "LastMonth"
+        public string? FromDate { get; set; }       // optional: "2026-01-01"
+        public string? ToDate { get; set; }         // optional: "2026-01-24"
+    }
+
+    public class DashboardFeedbackCounts
+    {
+        public int TotalFeedback { get; set; }
+        public string? AvgRatingOutOf5 { get; set; }
+        public FeedbackReport JSON_FeedbackReport { get; set; }
+        public List<CategoryRating> JSON_CategoryWiseRating { get; set; }
+    }
+
+    public class FeedbackReport
+    {
+        public string? Positive { get; set; }
+        public string? Neutral { get; set; }
+        public string? Negative { get; set; }
+    }
+
+    public class CategoryRating
+    {
+        public string? CategoryName { get; set; }
+        public string? AvgRating { get; set; }
+        public int PositiveCount { get; set; }
+        public string? PositiveIcon { get; set; }
+        public int NeutralCount { get; set; }
+        public string? NeutralIcon { get; set; }
+        public int NegativeCount { get; set; }
+        public string? NegativeIcon { get; set; }
+    }
+
 }

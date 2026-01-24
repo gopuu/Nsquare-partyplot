@@ -266,7 +266,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue("@ReportDate",request?.ReportDate);
+                    cmd.Parameters.AddWithValue("@ReportDate", request?.ReportDate);
 
                     con.Open();
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -417,8 +417,8 @@ namespace ERPAdmin.ApiControllers
                     {
                         result.Add(new EventTypePieChart
                         {
-                            EventLabel = dr["EventSubTypeName"].ToString(), 
-                            EventCount = Convert.ToInt32(dr["SubTypeCount"]) 
+                            EventLabel = dr["EventSubTypeName"].ToString(),
+                            EventCount = Convert.ToInt32(dr["SubTypeCount"])
                         });
                     }
                     con.Close();
@@ -504,6 +504,160 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(200, apiResponse);
             }
         }
+
+
+        [HttpPost]
+        [Route("GetDashboardLeadSourceCount")]
+        public IActionResult GetDashboardLeadSourceCount([FromBody] DashboardWidgetCountsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<LeadSourcePieChart> result = new List<LeadSourcePieChart>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand(
+                        "Dashboard_LeadSourcecount", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue(
+                        "@MonthDuration",
+                        (object)request.MonthDuration ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue(
+                        "@FromDate",
+                        (object)request.FromDate ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue(
+                        "@ToDate",
+                        (object)request.ToDate ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        result.Add(new LeadSourcePieChart
+                        {
+                            LeadSourceName = dr["LeadSourceName"].ToString(),
+                            LeadSourceCount = Convert.ToInt32(
+                                dr["LeadSourceCount"])
+                        });
+                    }
+
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message =
+                    "Lead source pie chart data fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(
+                    ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetDashboardEventSummaryYearWise")]
+        public IActionResult GetDashboardEventSummaryYearWise([FromBody] DashboardEventSummaryRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<DashboardEventSummaryResponse> result = new List<DashboardEventSummaryResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd =
+                    new SqlCommand("Dashboard_EventSummary_YearWise", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue(
+                        "@SelectedYear",
+                        request.SelectedYear);
+
+                    con.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            result.Add(new DashboardEventSummaryResponse
+                            {
+                                MonthName = dr["MonthName"].ToString(),
+                                Year = Convert.ToInt32(dr["Year"]),
+                                MonthNo = Convert.ToInt32(dr["MonthNo"]),
+
+                                TotalEvents =
+                                    Convert.ToInt32(dr["TotalEvents"]),
+                                TotalFamilyFunctionCount =
+                                    Convert.ToInt32(dr["TotalFamilyFunctionCount"]),
+                                TotalCorporateCount =
+                                    Convert.ToInt32(dr["TotalCorporateCount"]),
+
+                                BookingQty =
+                                    Convert.ToInt32(dr["BookingQty"]),
+                                TotalAmount =
+                                    Convert.ToDecimal(dr["TotalAmount"])
+                            });
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message =
+                    "Month wise event summary fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(
+                    ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
+
+
+
 
         //UNUSED
         /*

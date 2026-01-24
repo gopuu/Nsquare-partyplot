@@ -63,6 +63,32 @@
         public int EventCount { get; set; }
     }
 
+    public class LeadSourcePieChart
+    {
+        public string? LeadSourceName { get; set; }
+        public int LeadSourceCount { get; set; }
+    }
+
+    public class DashboardEventSummaryResponse
+    {
+        public string? MonthName { get; set; }
+        public int Year { get; set; }
+        public int MonthNo { get; set; }
+
+        public int TotalEvents { get; set; }
+        public int TotalFamilyFunctionCount { get; set; }
+        public int TotalCorporateCount { get; set; }
+
+        public int BookingQty { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+
+    public class DashboardEventSummaryRequest
+    {
+        public int? SelectedYear { get; set; }   // ex: 2026
+    }
+
+
     #endregion
 
     #region Get Dashboard Widget Counts
