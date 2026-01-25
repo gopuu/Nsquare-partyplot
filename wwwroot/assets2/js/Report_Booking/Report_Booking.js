@@ -1,12 +1,123 @@
-﻿$(document).ready(function () {
+﻿let selectedMonthDuration = "thismonth";
+
+$(document).ready(function () {
     loadEventTypeDropdown();
     loadCompanyHallDropdown();
-    ViewBookingReport("viewPDF");
+    ViewBookingReport();
     setCurrentMonthDates();
-    //let today = new Date().toISOString().split('T')[0];
-    //$("#to-date").val(today);
-    //$("#from-date").val(today);
 
+    $("#ddlEventType").on("change", function () {
+        let eventTypeId = $(this).val();
+        loadEventSubTypeDropdown(eventTypeId);
+        ViewBookingReport("viewPDF");
+    });
+
+    $("#ddlEventSubType").on("change", function () {
+        ViewBookingReport("viewPDF");
+    });
+
+    $("#ddlCompanyHall").on("change", function () {
+        ViewBookingReport("viewPDF");
+    });
+
+    $(".sort-option").on("click", function (e) {
+        e.preventDefault();
+
+        let newFilter = $(this).data("value");
+
+        // agar same filter, kuch mat karo
+        if (selectedMonthDuration === newFilter) return;
+
+        selectedMonthDuration = newFilter;
+
+        // dropdown active class manage
+        $(".sort-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#sortByDropdown").text("Filter : " + $(this).text());
+
+        // --------------------------
+        // MonthDuration ke hisab se From/To date set karna
+        // --------------------------
+        let today = new Date();
+        let fromDate, toDate;
+
+        if (selectedMonthDuration === "thismonth") {
+            fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else if (selectedMonthDuration === "lastmonth") {
+            fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+        } else if (selectedMonthDuration === "days") { // Last 7 Days
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - 6);
+            toDate = today;
+        } else if (selectedMonthDuration === "lastdays") { // Last 30 Days
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - 29);
+            toDate = today;
+        } else if (selectedMonthDuration === "yesterday") {
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - 1);
+            toDate = fromDate;
+        } else if (selectedMonthDuration === "12months") {
+            fromDate = new Date(today);
+            fromDate.setMonth(today.getMonth() - 12);
+            toDate = today;
+        } else if (selectedMonthDuration === "customrange") {
+            // custom range me datepicker pe user select karega
+            return ViewBookingReport("viewPDF");
+
+        }
+
+        // Set the datepickers
+        $("#fromDate").val(formatDate(fromDate));
+        $("#toDate").val(formatDate(toDate));
+
+        // 🔥 Load data
+        ViewBookingReport("viewPDF");
+
+    });
+
+    // Open / Toggle filter panel
+    $("#btnOpenFilter").on("click", function (e) {
+        e.stopPropagation();
+        $("#filterPanel").toggleClass("d-none");
+    });
+
+    // Close button
+    $("#btnCloseFilter").on("click", function () {
+        $("#filterPanel").addClass("d-none");
+    });
+
+    // Prevent inside click from bubbling
+    $("#filterPanel").on("click", function (e) {
+        e.stopPropagation();
+    });
+
+    // Close on outside click
+    $(document).on("click", function () {
+        $("#filterPanel").addClass("d-none");
+    });
+
+    // Apply Filter
+    $("#btnApplyFilter").on("click", function () {
+        $("#filterPanel").addClass("d-none");
+        ViewBookingReport();
+    });
+
+    // Reset Filter
+    $("#btnResetFilter").on("click", function () {
+
+        $("#ddlEventType").val("");
+        $("#ddlEventSubType").val("").prop("disabled", true);
+        $("#ddlCompanyHall").val("");
+        $("#fromDate").val("");
+        $("#toDate").val("");
+        $("#quickRange").val("");
+
+        ViewBookingReport();
+    });
 });
 
 function loadEventTypeDropdown(selectedId = "") {
@@ -35,7 +146,6 @@ function loadEventTypeDropdown(selectedId = "") {
         }
     });
 }
-
 function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
 
     let dropdown = $("#ddlEventSubType");
@@ -73,21 +183,6 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
         }
     });
 }
-
-
-$("#ddlEventType").on("change", function () {
-    let eventTypeId = $(this).val();
-    loadEventSubTypeDropdown(eventTypeId);
-    ViewBookingReport("viewPDF");
-
-});
-$("#ddlEventSubType").on("change", function () {
-    ViewBookingReport("viewPDF");
-});
-$("#ddlCompanyHall").on("change", function () {
-    ViewBookingReport("viewPDF");
-});
-
 function loadCompanyHallDropdown(selectedId = "") {
 
     $.ajax({
@@ -120,79 +215,6 @@ function loadCompanyHallDropdown(selectedId = "") {
         }
     });
 }
-
-
-//function ViewBookingReport(actionName = "viewPDF") {
-//    $('#btn-loader').show();
-//    const url = '/api/Report/DownloadBookingReport';
-
-//    fetch(url, {
-//        method: 'POST',
-//        headers: {
-//            'Accept': 'application/json'
-//        }
-//    })
-//    .then(async response => {
-
-//        // 🔐 SAFETY CHECK
-//        if (!response.ok) {
-//            throw new Error("Server error : " + response.status);
-//        }
-
-//        const text = await response.text();
-
-//        if (!text) {
-//            throw new Error("Empty response from server");
-//        }
-
-//        return JSON.parse(text);
-//    })
-//    .then(result => {
-
-//        $('#btn-loader').hide();
-
-//        if (result.status !== 'Success' || !result.data || !result.data.FileUrl) {
-//            Swal.fire({
-//                title: "Download Fail",
-//                text: result.message || "No report URL returned",
-//                icon: "error"
-//            });
-//            return;
-//        }
-
-//        const fileUrl = result.data.FileUrl;
-
-//        if (actionName === 'downloadPDF') {
-//            const link = document.createElement('a');
-//            link.href = fileUrl;
-//            link.download = 'Booking_Report.pdf';
-//            document.body.appendChild(link);
-//            link.click();
-//            document.body.removeChild(link);
-//        } else {
-//            document.getElementById('pdfPreviewContainer').innerHTML = `
-//            <iframe
-//                src="${fileUrl}"
-//                style="width:100%;height:100%;border:none;">
-//            </iframe>
-//        `;
-//        }
-//    })
-//    .catch(error => {
-
-//        $('#btn-loader').hide();
-//        console.error("Error fetching GST report:", error);
-
-//        Swal.fire({
-//            title: "Download Fail",
-//            text: error.message,
-//            icon: "error"
-//        });
-//    });
-//}
-
-// Common function to fetch report
-
 function ViewBookingReport(actionName = "viewPDF") {
     $('#btn-loader').show();
 
@@ -205,160 +227,74 @@ function ViewBookingReport(actionName = "viewPDF") {
         FilterDuration: selectedMonthDuration
     };
 
-
     const url = (actionName === "downloadExcel")
         ? "/api/Report/DownloadBookingReport_Excel"
         : "/api/Report/DownloadBookingReport";
 
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(inputData)
-    })
-    .then(async response => {
-        if (!response.ok) throw new Error("Server error: " + response.status);
-        const text = await response.text();
-        if (!text) throw new Error("Empty response from server");
-        return JSON.parse(text);
-    })
-    .then(result => {
-        $('#btn-loader').hide();
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(inputData),
+        success: function (result) {
 
-        if (result.status !== "Success" || !result.data?.FileUrl) {
-            Swal.fire({
-                title: "Fail",
-                text: result.message || "No report URL returned",
-                icon: "error"
-            });
-            return;
-        }
-        if (!result.data || result.data.HasData === false) {
-            document.getElementById("pdfPreviewContainer").innerHTML = `
-            <div class="text-center text-muted py-5">
-                <i class="bi bi-info-circle fs-1"></i><br/>
-                <b>No data found</b>
-            </div>`;
-            return;
-        }
-        const fileUrl = result.data.FileUrl;
-
-        if (actionName === "viewPDF") {
-            document.getElementById("pdfPreviewContainer").innerHTML = `
-            <iframe src="${fileUrl}" style="width:100%;height:100%;border:none;"></iframe>
-        `;
-        } else {
-            const link = document.createElement("a");
-            link.href = fileUrl;
-
-            if (actionName === "downloadPDF") {
-                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
-            } else if (actionName === "downloadExcel") {
-                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
+            if (result.status !== "Success" || !result.data || !result.data.FileUrl) {
+                Swal.fire({
+                    title: "Fail",
+                    text: result.message || "No report URL returned",
+                    icon: "error"
+                });
+                return;
             }
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (result.data.HasData === false) {
+                $("#pdfPreviewContainer").html(`
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-info-circle fs-1"></i><br/>
+                        <b>No data found</b>
+                    </div>
+                `);
+                return;
+            }
+
+            var fileUrl = result.data.FileUrl;
+
+            if (actionName === "viewPDF") {
+                $("#pdfPreviewContainer").html(`<iframe src="${fileUrl}" style="width:100%;height:100%;border:none;"></iframe>`);
+            }
+            else {
+
+                var link = document.createElement("a");
+                link.href = fileUrl;
+
+                if (actionName === "downloadPDF") {
+                    link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
+                } else if (actionName === "downloadExcel") {
+                    link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
+                }
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching Booking report")
         }
-    })
-    .catch(error => {
-        $('#btn-loader').hide();
-        console.error("Error fetching Booking report:", error);
-        Swal.fire({
-            title: "Fail",
-            text: error.message,
-            icon: "error"
-        });
     });
+
+
 }
 
-let selectedMonthDuration = "thismonth";
+// Date format yyyy-mm-dd
+function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
 
-$(".sort-option").on("click", function (e) {
-    e.preventDefault();
-
-    let newFilter = $(this).data("value");
-
-    // agar same filter, kuch mat karo
-    if (selectedMonthDuration === newFilter) return;
-
-    selectedMonthDuration = newFilter;
-
-    // dropdown active class manage
-    $(".sort-option").removeClass("active");
-    $(this).addClass("active");
-
-    $("#sortByDropdown").text("Filter : " + $(this).text());
-
-    // --------------------------
-    // MonthDuration ke hisab se From/To date set karna
-    // --------------------------
-    let today = new Date();
-    let fromDate, toDate;
-
-    if (selectedMonthDuration === "thismonth") {
-        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    } else if (selectedMonthDuration === "lastmonth") {
-        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
-    } else if (selectedMonthDuration === "days") { // Last 7 Days
-        fromDate = new Date(today);
-        fromDate.setDate(today.getDate() - 6);
-        toDate = today;
-    } else if (selectedMonthDuration === "lastdays") { // Last 30 Days
-        fromDate = new Date(today);
-        fromDate.setDate(today.getDate() - 29);
-        toDate = today;
-    } else if (selectedMonthDuration === "yesterday") {
-        fromDate = new Date(today);
-        fromDate.setDate(today.getDate() - 1);
-        toDate = fromDate;
-    } else if (selectedMonthDuration === "12months") {
-        fromDate = new Date(today);
-        fromDate.setMonth(today.getMonth() - 12);
-        toDate = today;
-    } else if (selectedMonthDuration === "customrange") {
-        // custom range me datepicker pe user select karega
-        return ViewBookingReport("viewPDF");
-
-    }
-
-    // Date format yyyy-mm-dd
-    function formatDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    // Set the datepickers
-    $("#fromDate").val(formatDate(fromDate));
-    $("#toDate").val(formatDate(toDate));
-
-    // 🔥 Load data
-    ViewBookingReport("viewPDF");
-
-});
-
-
-$("#fromDate, #toDate").on("change", function () {
-
-    let fromDate = $("#fromDate").val();
-    let toDate = $("#toDate").val();
-
-    if (fromDate && toDate) {
-        selectedMonthDuration = "customrange";
-
-        $("#sortByDropdown").text("Filter : Custom Range");
-        $(".sort-option").removeClass("active");
-
-        ViewBookingReport("viewPDF");
-    }
-});
 function setCurrentMonthDates() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -367,5 +303,4 @@ function setCurrentMonthDates() {
     $("#fromDate").val(formatDate(firstDay));
     $("#toDate").val(formatDate(lastDay));
 }
-
 

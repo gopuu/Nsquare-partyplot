@@ -616,7 +616,6 @@ namespace ERPAdmin.ApiControllers
             return cell;
         }
 
-
         [HttpPost]
         [Route("DownloadBookingReport")]
         public IActionResult DownloadBookingReport(BookingReportRequest request)
@@ -625,11 +624,7 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext, Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                 {
                     return errorResult;
                 }
@@ -638,9 +633,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 30, 30, 40, 70);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -650,8 +642,7 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
+                    new SqlDataAdapter(new SqlCommand("Report_PageHeader_GetCompany", con)
                         { CommandType = CommandType.StoredProcedure }
                     ).Fill(dtCompany);
 
@@ -673,12 +664,18 @@ namespace ERPAdmin.ApiControllers
                     throw new Exception("Report data not found");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString() ?? string.Empty;
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                string companyName = dtCompany.Rows[0]["CompanyName"].ToString() ?? string.Empty;
+                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString() ?? string.Empty;
+                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString() ?? string.Empty;
+                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString() ?? string.Empty;
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? string.Empty;
+
+                writer.PageEvent = new PdfPageEvents(userName);
+
+                document.Open();
+
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
@@ -705,37 +702,28 @@ namespace ERPAdmin.ApiControllers
                     HorizontalAlignment = Element.ALIGN_CENTER
                 };
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
                 document.Add(headerTable);
-               // document.Add(new Paragraph("\n"));
+                // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
-                Font reportTitleFont = FontFactory.GetFont(
-                    FontFactory.HELVETICA_BOLD,
-                    14,
-                    BaseColor.BLACK
-                );
+                Font reportTitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK);
 
                 Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
                 {
                     Alignment = Element.ALIGN_CENTER,
                     //SpacingBefore = 10f,
-                    SpacingAfter = 18f
+                    SpacingAfter = 12f
                 };
 
                 document.Add(reportTitle);
 
-
                 // ================= TABLE =================
-                // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -747,18 +735,14 @@ namespace ERPAdmin.ApiControllers
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
                 // ---- Header ----
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
+                //table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                 {
-                    table.AddCell(CreateHeaderCell(
-                        headerTableDB.Rows[0][i].ToString(),
-                        thFont,
-                        thColor
-                    ));
+                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString() ?? string.Empty, thFont, thColor));
                 }
 
                 table.HeaderRows = 1;
+
 
                 // ---- NO DATA FOUND CONDITION ----
                 if (dataTableDB.Rows.Count == 0)
@@ -780,20 +764,25 @@ namespace ERPAdmin.ApiControllers
                 else
                 {
                     // ---- DATA ROWS ----
-                    int srNo = 1;
                     foreach (DataRow row in dataTableDB.Rows)
                     {
-                        table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
-                        foreach (DataColumn col in dataTableDB.Columns)
+                        for (int i = 0; i < dataTableDB.Columns.Count; i++)
                         {
-                            table.AddCell(
-                                CreateBodyCell(row[col]?.ToString() ?? "-", tdFont)
-                            );
+                            int alignment = Element.ALIGN_LEFT; // default
+
+                            // Column index based alignment
+                            if (i == 0 || i == 5)          // 1st & 6th column
+                                alignment = Element.ALIGN_CENTER;
+                            else if (i == 7)               // 8th column
+                                alignment = Element.ALIGN_RIGHT;
+
+                            if (i == 0)          // 1st column
+                                table.AddCell(CreateBodyCell(row[i]?.ToString() ?? "-", tdFont, alignment, 2f));
+                            else
+                                table.AddCell(CreateBodyCell(row[i]?.ToString() ?? "-", tdFont, alignment));
                         }
                     }
                 }
-
                 document.Add(table);
 
                 document.Close();
@@ -929,8 +918,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
-
 
 
         [HttpPost]
@@ -2060,17 +2047,21 @@ namespace ERPAdmin.ApiControllers
                 BackgroundColor = bgColor,
                 HorizontalAlignment = Element.ALIGN_CENTER,
                 VerticalAlignment = Element.ALIGN_MIDDLE,
-                Padding = 6
+                Padding = 6,
+                BorderColor = new BaseColor(220, 220, 220), // light gray
+                BorderWidth = 0.5f
             };
         }
 
-        private PdfPCell CreateBodyCell(string text, Font font, int align = Element.ALIGN_LEFT)
+        private PdfPCell CreateBodyCell(string text, Font font, int align = Element.ALIGN_LEFT, float padding = 4f)
         {
             return new PdfPCell(new Phrase(text, font))
             {
                 HorizontalAlignment = align,
                 VerticalAlignment = Element.ALIGN_MIDDLE,
-                Padding = 5
+                Padding = padding,
+                BorderColor = new BaseColor(220, 220, 220), // light gray
+                BorderWidth = 0.5f
             };
         }
 
@@ -3782,7 +3773,7 @@ namespace ERPAdmin.ApiControllers
 
                 cb.ShowTextAligned(
                     Element.ALIGN_LEFT,
-                    "UserName : Admin",
+                    $"User : {_username}",
                     document.Left,
                     textY,
                     0

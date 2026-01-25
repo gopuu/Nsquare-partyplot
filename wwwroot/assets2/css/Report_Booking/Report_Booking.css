@@ -1,1 +1,37 @@
-﻿
+﻿.filter-panel {
+    position: absolute;
+    top: 38px;
+    right: 0;
+    width: 260px;
+    background: #fff;
+    border-radius: 6px;
+    z-index: 1050;
+}
+
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-body {
+    padding: 10px;
+}
+
+.filter-footer {
+    padding: 8px 10px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+.card-header {
+    overflow: visible !important;
+}
+
+.card {
+    overflow: visible;
+}
