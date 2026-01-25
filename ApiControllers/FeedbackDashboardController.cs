@@ -92,6 +92,59 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetDashboardRatingBreakdown")]
+        public IActionResult GetDashboardRatingBreakdown([FromBody] DashboardFeedbackRequest request)
+        {
+            var apiResponse = new apiResponse();
+            var result = new RatingBreakdownResponse();
+
+            try
+            {
+                // 🔹 Get connection & domain
+                if (!TryGetConnectionAndDomain(ControllerContext,Request,out string connString,out string domain,out IActionResult errorResult))
+                    return errorResult;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_RatingBreakdown", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            var json = dr["JSON_RatingBreakdown"]?.ToString();
+                            if (!string.IsNullOrEmpty(json))
+                            {
+                                result.RatingBreakdown = JsonSerializer.Deserialize<List<RatingBreakdownItem>>(json);
+                            }
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard rating breakdown fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);   // ✅ 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse);   // ✅ 200 even on error
+            }
+        }
 
 
 

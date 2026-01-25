@@ -663,7 +663,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@HallId", request.HallId);
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.FilterDuration);
                
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -734,6 +734,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
+                // ================= TABLE =================
                 int columnCount = dataTableDB.Columns.Count + 1;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
@@ -745,23 +746,56 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
+                // ---- Header ----
                 table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
 
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
-                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
+                {
+                    table.AddCell(CreateHeaderCell(
+                        headerTableDB.Rows[0][i].ToString(),
+                        thFont,
+                        thColor
+                    ));
+                }
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
-                foreach (DataRow row in dataTableDB.Rows)
+                // ---- NO DATA FOUND CONDITION ----
+                if (dataTableDB.Rows.Count == 0)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
+                    Font noDataFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.RED);
 
-                    foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    PdfPCell noDataCell = new PdfPCell(
+                        new Phrase("No Data Found", noDataFont)
+                    )
+                    {
+                        Colspan = columnCount,
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 12f,
+                        BackgroundColor = BaseColor.WHITE
+                    };
+
+                    table.AddCell(noDataCell);
+                }
+                else
+                {
+                    // ---- DATA ROWS ----
+                    int srNo = 1;
+                    foreach (DataRow row in dataTableDB.Rows)
+                    {
+                        table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
+
+                        foreach (DataColumn col in dataTableDB.Columns)
+                        {
+                            table.AddCell(
+                                CreateBodyCell(row[col]?.ToString() ?? "-", tdFont)
+                            );
+                        }
+                    }
                 }
 
                 document.Add(table);
+
                 document.Close();
 
                 // ================= SAVE =================
@@ -819,7 +853,7 @@ namespace ERPAdmin.ApiControllers
                         cmd.Parameters.AddWithValue("@HallId", request.HallId);
                         cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                         cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
-                        cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+                        cmd.Parameters.AddWithValue("@MonthDuration", request.FilterDuration);
 
                         new SqlDataAdapter(cmd).Fill(dsReport);
                     }

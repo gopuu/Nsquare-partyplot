@@ -2,10 +2,10 @@
     loadEventTypeDropdown();
     loadCompanyHallDropdown();
     ViewBookingReport("viewPDF");
-
-    let today = new Date().toISOString().split('T')[0];
-    $("#to-date").val(today);
-    $("#from-date").val(today);
+    setCurrentMonthDates();
+    //let today = new Date().toISOString().split('T')[0];
+    //$("#to-date").val(today);
+    //$("#from-date").val(today);
 
 });
 
@@ -78,6 +78,14 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
 $("#ddlEventType").on("change", function () {
     let eventTypeId = $(this).val();
     loadEventSubTypeDropdown(eventTypeId);
+    ViewBookingReport("viewPDF");
+
+});
+$("#ddlEventSubType").on("change", function () {
+    ViewBookingReport("viewPDF");
+});
+$("#ddlCompanyHall").on("change", function () {
+    ViewBookingReport("viewPDF");
 });
 
 function loadCompanyHallDropdown(selectedId = "") {
@@ -192,10 +200,11 @@ function ViewBookingReport(actionName = "viewPDF") {
         EventTypeId: parseInt($("#ddlEventType").val()) || 0,
         EventSubTypeId: parseInt($("#ddlEventSubType").val()) || 0,
         HallId: parseInt($("#ddlCompanyHall").val()) || 0,
-        FromDate: $("#from-date").val(),
-        ToDate: $("#to-date").val(),
-        FilterDuration: selectedMonthDuration // thismonth / lastmonth / customrange
+        FromDate: $("#fromDate").val() || null,
+        ToDate: $("#toDate").val() || null,
+        FilterDuration: selectedMonthDuration
     };
+
 
     const url = (actionName === "downloadExcel")
         ? "/api/Report/DownloadBookingReport_Excel"
@@ -226,7 +235,14 @@ function ViewBookingReport(actionName = "viewPDF") {
             });
             return;
         }
-
+        if (!result.data || result.data.HasData === false) {
+            document.getElementById("pdfPreviewContainer").innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-info-circle fs-1"></i><br/>
+                <b>No data found</b>
+            </div>`;
+            return;
+        }
         const fileUrl = result.data.FileUrl;
 
         if (actionName === "viewPDF") {
@@ -264,11 +280,92 @@ let selectedMonthDuration = "thismonth";
 $(".sort-option").on("click", function (e) {
     e.preventDefault();
 
+    let newFilter = $(this).data("value");
+
+    // agar same filter, kuch mat karo
+    if (selectedMonthDuration === newFilter) return;
+
+    selectedMonthDuration = newFilter;
+
+    // dropdown active class manage
     $(".sort-option").removeClass("active");
     $(this).addClass("active");
-    selectedMonthDuration = $(this).data("value");
 
     $("#sortByDropdown").text("Filter : " + $(this).text());
+
+    // --------------------------
+    // MonthDuration ke hisab se From/To date set karna
+    // --------------------------
+    let today = new Date();
+    let fromDate, toDate;
+
+    if (selectedMonthDuration === "thismonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    } else if (selectedMonthDuration === "lastmonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    } else if (selectedMonthDuration === "days") { // Last 7 Days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 6);
+        toDate = today;
+    } else if (selectedMonthDuration === "lastdays") { // Last 30 Days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 29);
+        toDate = today;
+    } else if (selectedMonthDuration === "yesterday") {
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 1);
+        toDate = fromDate;
+    } else if (selectedMonthDuration === "12months") {
+        fromDate = new Date(today);
+        fromDate.setMonth(today.getMonth() - 12);
+        toDate = today;
+    } else if (selectedMonthDuration === "customrange") {
+        // custom range me datepicker pe user select karega
+        return ViewBookingReport("viewPDF");
+
+    }
+
+    // Date format yyyy-mm-dd
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // Set the datepickers
+    $("#fromDate").val(formatDate(fromDate));
+    $("#toDate").val(formatDate(toDate));
+
+    // 🔥 Load data
+    ViewBookingReport("viewPDF");
+
 });
+
+
+$("#fromDate, #toDate").on("change", function () {
+
+    let fromDate = $("#fromDate").val();
+    let toDate = $("#toDate").val();
+
+    if (fromDate && toDate) {
+        selectedMonthDuration = "customrange";
+
+        $("#sortByDropdown").text("Filter : Custom Range");
+        $(".sort-option").removeClass("active");
+
+        ViewBookingReport("viewPDF");
+    }
+});
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    $("#fromDate").val(formatDate(firstDay));
+    $("#toDate").val(formatDate(lastDay));
+}
 
 

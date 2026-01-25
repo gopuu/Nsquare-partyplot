@@ -1,8 +1,10 @@
 ﻿$(document).ready(function () {
     //loadFeedbackInsightSummary();
     loadFeedbackCounts("thismonth", "", "");
-    loadRatingDistribution();
-    //loadCategoryRatings();
+   // loadRatingDistribution();
+    loadCategoryWiseRatings("thismonth");
+    loadRatingBreakdown("thismonth");
+
 });
 
 //function loadFeedbackInsightSummary() {
@@ -58,38 +60,38 @@
 //    });
 //}
 
-function loadRatingDistribution() {
+//function loadRatingDistribution() {
 
-    $.ajax({
-        url: '/api/FeedbackDashboard/GetRatingDistributionSummary',
-        type: 'POST',
-        success: function (res) {
-            console.log("res here1:",res);
+//    $.ajax({
+//        url: '/api/FeedbackDashboard/GetRatingDistributionSummary',
+//        type: 'POST',
+//        success: function (res) {
+//            console.log("res here1:",res);
 
-            if (res.status !== "Success" || !Array.isArray(res.data)) {
-                console.warn(res.message);
-                return;
-            }
+//            if (res.status !== "Success" || !Array.isArray(res.data)) {
+//                console.warn(res.message);
+//                return;
+//            }
 
-            $('.rating-chart .rating-col').each(function (index) {
+//            $('.rating-chart .rating-col').each(function (index) {
 
-                let item = res.data[index];
-                if (!item) return;
-                console.log("item here1:", item);
+//                let item = res.data[index];
+//                if (!item) return;
+//                console.log("item here1:", item);
 
-                // BAR HEIGHT (max 100%)
-                let barHeight = Math.round(item.RatingPercent * 1.3);
+//                // BAR HEIGHT (max 100%)
+//                let barHeight = Math.round(item.RatingPercent * 1.3);
 
-                $(this).find('.bar').css('height', barHeight + 'px');
-                $(this).find('.percent').text(item.RatingPercent + '%');
-                $(this).find('.count').text(item.RatingCount + ' Ratings');
-            });
-        },
-        error: function (err) {
-            console.error("AJAX Error", err);
-        }
-    });
-}
+//                $(this).find('.bar').css('height', barHeight + 'px');
+//                $(this).find('.percent').text(item.RatingPercent + '%');
+//                $(this).find('.count').text(item.RatingCount + ' Ratings');
+//            });
+//        },
+//        error: function (err) {
+//            console.error("AJAX Error", err);
+//        }
+//    });
+//}
 
 //function loadCategoryRatings() {
 //    $.ajax({
@@ -163,25 +165,38 @@ function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate
                 } else {
                     $("#valPositive, #valNegative, #valNeutral").text("0%");
                 }
-
-                /* =======================
-                   ⭐ CATEGORY WISE RATING ⭐
-                ======================= */
-                if (data.JSON_CategoryWiseRating && data.JSON_CategoryWiseRating.length > 0) {
-                    renderCategoryRatings(data.JSON_CategoryWiseRating);
-                } else {
-                    $("#rating-container").html(
-                        "<div class='text-muted text-center'>No category data</div>"
-                    );
-                }
-
-            } else {
-                resetFeedbackUI();
             }
+                
         },
         error: function (err) {
             console.error("Error loading feedback counts:", err);
             resetFeedbackUI();
+        }
+    });
+}
+
+function loadCategoryWiseRatings(monthDuration = "thismonth", fromDate = null, toDate = null) {
+
+    $.ajax({
+        url: "/api/FeedbackDashboard/GetDashboardFeedbackCounts",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (res) {
+
+            if (res.status !== "Success" || !res.data || !res.data.JSON_CategoryWiseRating) {
+                $("#rating-container").html("<div class='text-muted text-center'>No data found</div>");
+                return;
+            }
+
+            renderCategoryRatings(res.data.JSON_CategoryWiseRating);
+        },
+        error: function () {
+            $("#rating-container").html("<div class='text-danger text-center'>Error loading data</div>");
         }
     });
 }
@@ -268,3 +283,95 @@ function resetFeedbackUI() {
         "<div class='text-muted text-center'>No data</div>"
     );
 }
+
+$(".chart-filter-rating .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-rating .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const filterText = $(this).text();
+    $("#jobChartFilter").text(filterText);
+
+    const monthDuration = filterText.toLowerCase().replaceAll(" ", "");
+
+    loadCategoryWiseRatings(monthDuration);
+});
+
+
+function loadRatingBreakdown(monthDuration = "thismonth", fromDate = null, toDate = null) {
+
+    $.ajax({
+        url: "/api/FeedbackDashboard/GetDashboardRatingBreakdown",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (res) {
+
+            console.log("Rating Breakdown API:", res);
+
+            if (
+                res.status !== "Success" ||
+                !res.data ||
+                !res.data.ratingBreakdown ||
+                res.data.ratingBreakdown.length === 0
+            ) {
+                $("#ratingBreakdownContainer").html(
+                    "<div class='text-muted text-center w-100'>No data found</div>"
+                );
+                return;
+            }
+
+            renderRatingBreakdown(res.data.ratingBreakdown);
+        },
+        error: function () {
+            $("#ratingBreakdownContainer").html(
+                "<div class='text-danger text-center w-100'>Error loading data</div>"
+            );
+        }
+    });
+}
+
+function renderRatingBreakdown(list) {
+
+    let html = "";
+
+    list.forEach(item => {
+
+        const percentValue = parseFloat(item.Percentage) || 0;
+
+        html += `
+        <div class="rating-col text-center">
+
+            <div class="bar ${item.RatingValue === 5 ? 'highlight' : ''}"
+                 style="height:${percentValue}%">
+            </div>
+
+            <div class="emoji">
+                <img src="${item.IconUrl}" width="28">
+            </div>
+
+            <div class="percent">${item.Percentage}</div>
+            <div class="count">${item.Count} Ratings</div>
+        </div>`;
+    });
+
+    $("#ratingBreakdownContainer").html(html);
+}
+
+$(".chart-filter-RatingBreakdown .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-RatingBreakdown .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const text = $(this).text();
+    $("#ratingBreakdownFilter").text(text);
+
+    const duration = text.toLowerCase().replaceAll(" ", "");
+    loadRatingBreakdown(duration);
+});

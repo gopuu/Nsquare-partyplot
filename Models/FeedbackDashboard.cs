@@ -41,6 +41,20 @@
         public int NegativeCount { get; set; }
     }
 
+    public class RatingBreakdownResponse
+    {
+        public List<RatingBreakdownItem> RatingBreakdown { get; set; }
+    }
+
+    public class RatingBreakdownItem
+    {
+        public int RatingValue { get; set; }
+        public string? RatingLabel { get; set; }
+        public string? IconUrl { get; set; }
+        public int Count { get; set; }
+        public string? Percentage { get; set; }
+    }
+
     public class DashboardFeedbackRequest
     {
         public string? MonthDuration { get; set; }  // e.g., "ThisMonth", "LastMonth"

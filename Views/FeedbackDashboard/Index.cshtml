@@ -124,7 +124,7 @@
                                 <span class="fw-bold">
                                     Category wise rating
                                 </span>
-                                <div class="dropdown chart-filter">
+                                <div class="dropdown chart-filter-rating">
                                     <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
                                             type="button"
                                             id="jobChartFilter"
@@ -156,10 +156,10 @@
                                 <span class="fw-bold">
                                     Rating Breakdown
                                 </span>
-                                <div class="dropdown chart-filter">
+                                <div class="dropdown chart-filter-RatingBreakdown">
                                     <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
                                             type="button"
-                                            id="jobChartFilter"
+                                            id="ratingBreakdownFilter"
                                             data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                         This Month
@@ -177,48 +177,8 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="rating-chart d-flex justify-content-between align-items-end">
-
-                                    <!-- Very Poor -->
-                                    <div class="rating-col text-center">
-                                        <div class="bar"></div>
-                                        <div class="emoji">😡</div>
-                                        <div class="percent">0%</div>
-                                        <div class="count">0 Ratings</div>
-                                    </div>
-
-                                    <!-- Poor -->
-                                    <div class="rating-col text-center">
-                                        <div class="bar"></div>
-                                        <div class="emoji">😟</div>
-                                        <div class="percent">0%</div>
-                                        <div class="count">0 Ratings</div>
-                                    </div>
-
-                                    <!-- Average -->
-                                    <div class="rating-col text-center">
-                                        <div class="bar"></div>
-                                        <div class="emoji">😐</div>
-                                        <div class="percent">0%</div>
-                                        <div class="count">0 Ratings</div>
-                                    </div>
-
-                                    <!-- Good -->
-                                    <div class="rating-col text-center">
-                                        <div class="bar"></div>
-                                        <div class="emoji">🙂</div>
-                                        <div class="percent">0%</div>
-                                        <div class="count">0 Ratings</div>
-                                    </div>
-
-                                    <!-- Excellent -->
-                                    <div class="rating-col text-center">
-                                        <div class="bar highlight"></div>
-                                        <div class="emoji">😍</div>
-                                        <div class="percent">0%</div>
-                                        <div class="count">0 Ratings</div>
-                                    </div>
-
+                                <div id="ratingBreakdownContainer"
+                                     class="rating-chart d-flex justify-content-between align-items-end">
                                 </div>
                             </div>
 
