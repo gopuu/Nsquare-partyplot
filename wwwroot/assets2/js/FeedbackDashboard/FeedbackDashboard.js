@@ -1,136 +1,12 @@
 ﻿$(document).ready(function () {
-    //loadFeedbackInsightSummary();
     loadFeedbackCounts("thismonth", "", "");
-   // loadRatingDistribution();
     loadCategoryWiseRatings("thismonth");
     loadRatingBreakdown("thismonth");
+    loadRatingsOverTime("thismonth");
 
 });
 
-//function loadFeedbackInsightSummary() {
 
-//    $.ajax({
-//        url: '/api/FeedbackDashboard/GetFeedbackInsightSummaryCount',
-//        type: 'POST',
-//        contentType: 'application/json',
-//        success: function (res) {
-
-//            if (res.status !== "Success" || !res.data) {
-//                console.warn(res.message);
-//                return;
-//            }
-
-//            let data = res.data;
-
-//            /* ===== METRIC CARDS ===== */
-//            if (data.MetricCards && data.MetricCards.length > 0) {
-
-//                data.MetricCards.forEach(item => {
-
-//                    switch (item.MetricKey) {
-//                        case "feedback":
-//                            $('#lblTotalFeedback').text(item.MetricTitle);
-//                            $('#valTotalFeedback').text(item.MetricValue);
-//                            break;
-
-//                        case "rating":
-//                            $('#lblAvgRating').text(item.MetricTitle);
-//                            $('#valAvgRating').text(item.MetricValue);
-//                            break;
-
-//                        case "ai":
-//                            $('#lblAI').text(item.MetricTitle);
-//                            $('#valAI').text(item.MetricValue);
-//                            break;
-//                    }
-//                });
-//            }
-
-//            /* ===== SENTIMENT ===== */
-//            if (data.Sentiment) {
-//                $('#valPositive').text(data.Sentiment.Positive + '%');
-//                $('#valNegative').text(data.Sentiment.Negative + '%');
-//                $('#valNeutral').text(data.Sentiment.Neutral + '%');
-//            }
-
-//        },
-//        error: function (err) {
-//            console.error("AJAX Error", err);
-//        }
-//    });
-//}
-
-//function loadRatingDistribution() {
-
-//    $.ajax({
-//        url: '/api/FeedbackDashboard/GetRatingDistributionSummary',
-//        type: 'POST',
-//        success: function (res) {
-//            console.log("res here1:",res);
-
-//            if (res.status !== "Success" || !Array.isArray(res.data)) {
-//                console.warn(res.message);
-//                return;
-//            }
-
-//            $('.rating-chart .rating-col').each(function (index) {
-
-//                let item = res.data[index];
-//                if (!item) return;
-//                console.log("item here1:", item);
-
-//                // BAR HEIGHT (max 100%)
-//                let barHeight = Math.round(item.RatingPercent * 1.3);
-
-//                $(this).find('.bar').css('height', barHeight + 'px');
-//                $(this).find('.percent').text(item.RatingPercent + '%');
-//                $(this).find('.count').text(item.RatingCount + ' Ratings');
-//            });
-//        },
-//        error: function (err) {
-//            console.error("AJAX Error", err);
-//        }
-//    });
-//}
-
-//function loadCategoryRatings() {
-//    $.ajax({
-//        url: '/api/FeedbackDashboard/GetCategoryRatingSummary', // your API endpoint
-//        type: 'POST',
-//        success: function (res) {
-//            if (res.status !== "Success" || !Array.isArray(res.data)) {
-//                console.warn(res.message);
-//                return;
-//            }
-
-//            let container = $('#rating-container');
-//            container.empty(); // clear existing rows
-
-//            res.data.forEach(function (item) {
-//                let rowHtml = `
-//                    <div class="rating-row">
-//                        <div class="category-name">${item.CategoryName}</div>
-//                        <div class="avg-box bg-success">
-//                            <div class="avg-title">Avg Rating</div>
-//                            <div class="avg-value">${item.AvgRating.toFixed(2)}</div>
-//                            <div class="avg-sub">Out of 5</div>
-//                        </div>
-//                        <div class="rating-stat positive">😊 <span>${item.PositiveCount}</span> <small>Positive</small></div>
-//                        <div class="rating-stat neutral">😐 <span>${item.NeutralCount}</span> <small>Neutral</small></div>
-//                        <div class="rating-stat negative">☹️ <span>${item.NegativeCount}</span> <small>Negative</small></div>
-//                    </div>
-//                `;
-//                container.append(rowHtml);
-//            });
-//        },
-//        error: function (err) {
-//            console.error("AJAX Error", err);
-//        }
-//    });
-//}
-
-
-// 🔹 Function to load feedback counts via AJAX
 function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate = null) {
 
     $.ajax({
@@ -317,16 +193,14 @@ function loadRatingBreakdown(monthDuration = "thismonth", fromDate = null, toDat
             if (
                 res.status !== "Success" ||
                 !res.data ||
-                !res.data.ratingBreakdown ||
-                res.data.ratingBreakdown.length === 0
+                !Array.isArray(res.data.RatingBreakdown)
             ) {
                 $("#ratingBreakdownContainer").html(
                     "<div class='text-muted text-center w-100'>No data found</div>"
                 );
                 return;
             }
-
-            renderRatingBreakdown(res.data.ratingBreakdown);
+            renderRatingBreakdown(res.data.RatingBreakdown);
         },
         error: function () {
             $("#ratingBreakdownContainer").html(
@@ -348,14 +222,14 @@ function renderRatingBreakdown(list) {
         <div class="rating-col text-center">
 
             <div class="bar ${item.RatingValue === 5 ? 'highlight' : ''}"
-                 style="height:${percentValue}%">
+                 style="height:${percentValue.toFixed(2)}%">
             </div>
 
             <div class="emoji">
                 <img src="${item.IconUrl}" width="28">
             </div>
 
-            <div class="percent">${item.Percentage}</div>
+            <div class="percent">${formatPercent(item.Percentage)}</div>
             <div class="count">${item.Count} Ratings</div>
         </div>`;
     });
@@ -375,3 +249,106 @@ $(".chart-filter-RatingBreakdown .dropdown-item").on("click", function (e) {
     const duration = text.toLowerCase().replaceAll(" ", "");
     loadRatingBreakdown(duration);
 });
+
+
+function loadRatingsOverTime(monthDuration = "thismonth") {
+
+    $.ajax({
+        url: "/api/FeedbackDashboard/GetDashboardRatingsOverTime",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: null,
+            ToDate: null
+        }),
+        success: function (res) {
+
+            console.log("Ratings Over Time:", res);
+
+            if (
+                res.status !== "Success" ||
+                !res.data ||
+                !Array.isArray(res.data.RatingsOverTime)
+            ) {
+                $("#ratingSpikeArea").html("");
+                $("#ratingDateRow").html("");
+                return;
+            }
+
+            renderRatingSpikes(res.data.RatingsOverTime);
+        }
+    });
+}
+
+function renderRatingSpikes(list) {
+
+    const monthMap = {};
+
+    // 🔹 Merge all ratings → month-wise total
+    list.forEach(rating => {
+        rating.Data.forEach(d => {
+
+            const dateObj = new Date(d.Date);
+            const monthKey =
+                dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, "0");
+
+            monthMap[monthKey] = (monthMap[monthKey] || 0) + d.Count;
+        });
+    });
+
+    const months = Object.keys(monthMap).sort();
+    const values = Object.values(monthMap);
+
+    if (months.length === 0) {
+        $("#ratingSpikeArea").html("");
+        $("#ratingDateRow").html("");
+        return;
+    }
+
+    const maxValue = Math.max(...values);
+    const maxHeight = 200;
+
+    let spikeHtml = "";
+    let dateHtml = "";
+
+    months.forEach(key => {
+
+        const height = maxValue === 0
+            ? 4
+            : (monthMap[key] / maxValue) * maxHeight;
+
+        spikeHtml += `
+            <div class="spike" style="height:${height}px"></div>
+        `;
+
+        dateHtml += `<span>${formatMonth(key)}</span>`;
+    });
+
+    $("#ratingSpikeArea").html(spikeHtml);
+    $("#ratingDateRow").html(dateHtml);
+}
+
+$(".chart-filter-ratingtime .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    $(".chart-filter-ratingtime .dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const text = $(this).text();
+    const duration = $(this).data("duration");
+
+    $("#ratingTimeFilter").text(text);
+
+    loadRatingsOverTime(duration);
+});
+function formatMonthLabel(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short" });
+}
+function formatMonth(monthKey) {
+    const [year, month] = monthKey.split("-");
+    const date = new Date(year, month - 1, 1);
+
+    return date.toLocaleDateString("en-US", { month: "short" });
+}

@@ -3,26 +3,58 @@
     Layout = "_Layout";
 }
 
-<div class="content">
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-12">
-            <button class="btn btn-outline-success px-5">+ Credit</button>
-            <button class="btn btn-outline-danger me-3 px-5">- Debit</button>
+@section Styles {
+    <link href="~/assets2/css/financedashboard/financedashboard.css" rel="stylesheet" asp-append-version="true" />
+
+}
+
+<div class="content">
+    <div class="row g-3 mb-4 align-items-center">
+        <div class="col d-flex align-items-center">
+            <!-- Buttons first -->
+            <button class="btn btn-outline-success px-5 me-2">+ Credit</button>
+            <button class="btn btn-outline-danger px-5">- Debit</button>
+        </div>
+
+        <div class="col d-flex justify-content-end">
+            <!-- Dropdown last -->
+            <div class="dropdown chart-filter-finance">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                        type="button"
+                        id="jobChartFilter"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    This Month
+                </button>
+
+                <ul class="dropdown-menu shadow-sm" aria-labelledby="jobChartFilter">
+                    <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                    <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                    <li><a class="dropdown-item active" href="#">This Month</a></li>
+                    <li><a class="dropdown-item" href="#">Last Month</a></li>
+                    <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                    <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 
+
     <!-- ================= TOP FINANCEw KPIs ================= -->
     <div class="row g-3 mb-4">
+
         <!-- Total Revenue -->
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h6 class="fw-semibold">Total Revenue</h6>
                     <h3 class="text-success mt-2">
-                        <i class="fa fa-inr me-1"></i> 12,45,000
+                        <i class="fa fa-inr me-1"></i>
+                        <span id="txtTotalRevenue">0</span>
                     </h3>
-                    <small class="text-muted">Current Month</small>
+                    <small class="text-muted" id="lblRevenueDuration">Current Month</small>
                 </div>
             </div>
         </div>
@@ -33,7 +65,8 @@
                 <div class="card-body">
                     <h6 class="fw-semibold">Outstanding Receivables</h6>
                     <h3 class="text-warning mt-2">
-                        <i class="fa fa-inr me-1"></i> 3,20,000
+                        <i class="fa fa-inr me-1"></i>
+                        <span id="txtOutstanding">0</span>
                     </h3>
                     <small class="text-muted">Pending from clients</small>
                 </div>
@@ -46,7 +79,8 @@
                 <div class="card-body">
                     <h6 class="fw-semibold">Total Expenses</h6>
                     <h3 class="text-danger mt-2">
-                        <i class="fa fa-inr me-1"></i> 7,80,000
+                        <i class="fa fa-inr me-1"></i>
+                        <span id="txtExpenses">0</span>
                     </h3>
                     <small class="text-muted">Purchases + Vendors</small>
                 </div>
@@ -59,7 +93,8 @@
                 <div class="card-body">
                     <h6 class="fw-semibold">Net Profit</h6>
                     <h3 class="text-primary mt-2">
-                        <i class="fa fa-inr me-1"></i> 4,65,000
+                        <i class="fa fa-inr me-1"></i>
+                        <span id="txtNetProfit">0</span>
                     </h3>
                     <small class="text-muted">After all expenses</small>
                 </div>
@@ -68,6 +103,7 @@
 
     </div>
 
+
     <!-- ================= PAYMENT STATUS ================= -->
     <div class="row g-3 mb-4">
 
@@ -75,30 +111,50 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold mb-3">Payment Collection Status</h6>
+                    <div class="col d-flex justify-content-between">
+                        <h6 class="fw-semibold mb-3">Payment Collection Status</h6>
+                        <div class="dropdown chart-filter-Payment">
+                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                    type="button"
+                                    id="PaymentChartFilter"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                This Month
+                            </button>
 
+                            <ul class="dropdown-menu shadow-sm" aria-labelledby="PaymentChartFilter">
+                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Paid</span>
-                        <span class="text-success">₹ 8,90,000</span>
+                        <span class="text-success">₹ <span id="txtPaidAmount">0</span></span>
                     </div>
                     <div class="progress mb-3">
-                        <div class="progress-bar bg-success" style="width:70%"></div>
+                        <div id="barPaid" class="progress-bar bg-success"></div>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-2">
+                    @* <div class="d-flex justify-content-between mb-2">
                         <span>Partial</span>
-                        <span class="text-warning">₹ 2,10,000</span>
-                    </div>
-                    <div class="progress mb-3">
-                        <div class="progress-bar bg-warning" style="width:17%"></div>
-                    </div>
+                        <span class="text-warning">₹ <span id="txtPartialAmount">0</span></span>
+                    </div> *@
+                    @* <div class="progress mb-3">
+                        <div id="barPartial" class="progress-bar bg-warning"></div>
+                    </div> *@
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Pending</span>
-                        <span class="text-danger">₹ 1,45,000</span>
+                        <span class="text-danger">₹ <span id="txtPendingAmount">0</span></span>
                     </div>
                     <div class="progress">
-                        <div class="progress-bar bg-danger" style="width:13%"></div>
+                        <div id="barPending" class="progress-bar bg-danger"></div>
                     </div>
 
                 </div>
@@ -106,7 +162,7 @@
         </div>
 
         <!-- Upcoming Payments -->
-        <div class="col-md-6">
+        @*  <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h6 class="fw-semibold mb-3">Upcoming Payments (Next 7 Days)</h6>
@@ -128,6 +184,42 @@
 
                 </div>
             </div>
+        </div> *@
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="col d-flex justify-content-between">
+                        <h6 class="fw-semibold mb-3">Upcoming Payments (Next 7 Days)</h6>
+                        <div class="dropdown chart-filter-finance">
+                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                    type="button"
+                                    id="UpcomingChartFilter"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                This Month
+                            </button>
+
+                            <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
+                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <ul class="list-group list-group-flush" id="upcomingPaymentsList">
+                        <li class="list-group-item text-muted text-center">
+                            Loading...
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
         </div>
 
     </div>
@@ -139,8 +231,28 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold mb-3">Vendor Payables</h6>
+                    <div class="col d-flex justify-content-between">
+                        <h6 class="fw-semibold mb-3">Vendor Payables</h6>
+                        <div class="dropdown chart-filter-Vendor">
+                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                    type="button"
+                                    id="VendorChartFilter"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                This Month
+                            </button>
 
+                            <ul class="dropdown-menu shadow-sm" aria-labelledby="VendorChartFilter">
+                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                            </ul>
+                        </div>
+                    </div>
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -149,21 +261,9 @@
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="vendorPayablesBody">
                             <tr>
-                                <td>Food Supplier</td>
-                                <td>₹ 1,50,000</td>
-                                <td><span class="badge bg-warning">Pending</span></td>
-                            </tr>
-                            <tr>
-                                <td>Decorator</td>
-                                <td>₹ 80,000</td>
-                                <td><span class="badge bg-danger">Overdue</span></td>
-                            </tr>
-                            <tr>
-                                <td>Sound & Lights</td>
-                                <td>₹ 40,000</td>
-                                <td><span class="badge bg-warning">Pending</span></td>
+                                <td colspan="3" class="text-muted text-center">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -172,8 +272,9 @@
             </div>
         </div>
 
+
         <!-- Top Revenue Events -->
-        <div class="col-md-6">
+        @*  <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h6 class="fw-semibold mb-3">Top Revenue Events</h6>
@@ -195,8 +296,49 @@
 
                 </div>
             </div>
+        </div> *@
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="col d-flex justify-content-between">
+                        <h6 class="fw-semibold mb-3">Top Revenue Events</h6>
+                        <div class="dropdown chart-filter-Revenue">
+                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                    type="button"
+                                    id="RevenueChartFilter"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                This Month
+                            </button>
+
+                            <ul class="dropdown-menu shadow-sm" aria-labelledby="RevenueChartFilter">
+                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush" id="topRevenueEventsList">
+                        <li class="list-group-item text-muted text-center">
+                            Loading...
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
         </div>
 
     </div>
 
 </div>
+
+
+@section Scripts {
+
+    <script src="~/assets2/js/financedashboard/financedashboard.js" asp-append-version="true"></script>
+
+}

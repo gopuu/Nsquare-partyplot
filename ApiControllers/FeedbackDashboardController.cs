@@ -122,8 +122,14 @@ namespace ERPAdmin.ApiControllers
                             var json = dr["JSON_RatingBreakdown"]?.ToString();
                             if (!string.IsNullOrEmpty(json))
                             {
-                                result.RatingBreakdown = JsonSerializer.Deserialize<List<RatingBreakdownItem>>(json);
+                                result.RatingBreakdown =
+                                    JsonSerializer.Deserialize<List<RatingBreakdownItem>>(json);
                             }
+                            else
+                            {
+                                result.RatingBreakdown = new List<RatingBreakdownItem>();
+                            }
+
                         }
                     }
                 }
@@ -350,6 +356,70 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetDashboardRatingsOverTime")]
+        public IActionResult GetDashboardRatingsOverTime([FromBody] DashboardFeedbackRequest request)
+        {
+            var apiResponse = new apiResponse();
+            var result = new RatingsOverTimeResponse();
+
+            try
+            {
+                // 🔹 Get connection & domain
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_RatingsOverTime", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            var json = dr["JSON_RatingsOverTime"]?.ToString();
+
+                            if (!string.IsNullOrEmpty(json))
+                            {
+                                result.RatingsOverTime =
+                                    JsonSerializer.Deserialize<List<RatingsOverTimeItem>>(json);
+                            }
+                            else
+                            {
+                                result.RatingsOverTime = new List<RatingsOverTimeItem>();
+                            }
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard ratings over time fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);   // ✅ always 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse);   // ✅ consistent response
+            }
+        }
 
     }
 }
