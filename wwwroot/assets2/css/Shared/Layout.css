@@ -1,0 +1,41 @@
+﻿.btn-action-xs {
+    padding: 7px !important; /* smaller padding */
+    font-size: 12px !important; /* reduce font size */
+    line-height: 1 !important;
+}
+
+    .btn-action-xs i {
+        font-size: 12px !important; /* shrink icon */
+    }
+/* Reduce top & bottom padding for all table cells */
+#tableMain table.dataTable tbody td,
+#tableMain table.dataTable thead th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+/* Optional: reduce left/right padding too */
+#tableMain table.dataTable td,
+#tableMain table.dataTable th {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+}
+
+/* Reduce row height further by shrinking line-height */
+#tableMain table.dataTable td {
+    line-height: 1.1 !important;
+}
+
+/*  .dropdown-submenu {
+            position: relative;
+        }
+        .dropdown-submenu {
+            top: 0;
+            left: 100%;
+            margin-left: .1rem;
+        } */
+
+.infinitylogo_img {
+    height: 70px;
+    width: 100%;
+}

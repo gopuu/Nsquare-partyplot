@@ -1,102 +1,118 @@
-﻿
-$(document).ready(function () {
-    let today = new Date().toISOString().split('T')[0];
-    $("#to-date").val(today);
-    $("#from-date").val(today);
-    ViewFoodWastageReport("viewPDF");
-});
+﻿let selectedMonthDuration = "thismonth";
 
+$(document).ready(function () {
+
+    setCurrentMonthDates();
+    ViewFoodWastageReport("viewPDF");
+
+    $(".sort-option").on("click", function () {
+
+        $(".sort-option").removeClass("active");
+        $(this).addClass("active");
+
+        selectedMonthDuration = $(this).data("value");
+        $("#sortByDropdown").text($(this).text());
+
+        applyQuickRange();
+        ViewFoodWastageReport("viewPDF");
+    });
+
+    $("#btnApplyFilter").on("click", function () {
+        ViewFoodWastageReport("viewPDF");
+    });
+
+    $("#btnResetFilter").on("click", function () {
+        setCurrentMonthDates();
+        selectedMonthDuration = "thismonth";
+        ViewFoodWastageReport("viewPDF");
+    });
+
+    $("#from-date, #to-date").on("change", function () {
+        selectedMonthDuration = "customrange";
+        $("#sortByDropdown").text("Custom Range");
+        $(".sort-option").removeClass("active");
+        ViewFoodWastageReport("viewPDF");
+    });
+});
 
 function ViewFoodWastageReport(actionName = "viewPDF") {
 
-    $('#btn-loader').show();
-
-    let url = "";
-
-    if (actionName === "downloadExcel") {
-        url = "/api/Report/Report_FoodWastage_Excel";
-    } else {
-        url = "/api/Report/Report_FoodWastage";
-    }
+    const url = (actionName === "downloadExcel")
+        ? "/api/Report/Report_FoodWastage_Excel"
+        : "/api/Report/Report_FoodWastage";
 
     fetch(url, {
         method: "POST",
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             FromDate: $("#from-date").val(),
             ToDate: $("#to-date").val(),
             FilterDuration: selectedMonthDuration
         })
     })
-    .then(async response => {
+        .then(r => r.json())
+        .then(result => {
 
-        if (!response.ok)
-            throw new Error("Server error : " + response.status);
+            if (result.status !== "Success" || !result.data?.FileUrl) {
+                Swal.fire("Fail", result.message || "No data found", "error");
+                return;
+            }
 
-        const text = await response.text();
-        if (!text)
-            throw new Error("Empty response from server");
-
-        return JSON.parse(text);
-    })
-    .then(result => {
-
-        $('#btn-loader').hide();
-
-        if (result.status !== "Success" || !result.data?.FileUrl) {
-            Swal.fire("Download Fail", result.message || "No file found", "error");
-            return;
-        }
-
-        const fileUrl = result.data.FileUrl;
-
-        // 🔹 VIEW PDF
-        if (actionName === "viewPDF") {
-
-            document.getElementById("pdfPreviewContainer").innerHTML = `
-                <iframe src="${fileUrl}"
-                        style="width:100%; height:100%; border:none;">
-                </iframe>
-            `;
-
-        }
-        // 🔹 DOWNLOAD PDF / EXCEL
-        else {
-
-            const link = document.createElement("a");
-            link.href = fileUrl;
-
-            link.download =
-                actionName === "downloadExcel"
+            if (actionName === "viewPDF") {
+                $("#pdfPreviewContainer").html(
+                    `<iframe src="${result.data.FileUrl}" style="width:100%;height:100%;border:none;"></iframe>`
+                );
+            } else {
+                const link = document.createElement("a");
+                link.href = result.data.FileUrl;
+                link.download = actionName === "downloadExcel"
                     ? "FoodWastage_Report.xlsx"
                     : "FoodWastage_Report.pdf";
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    })
-    .catch(error => {
-
-        $('#btn-loader').hide();
-
-        Swal.fire("Fail", error.message, "error");
-        console.error(error);
-    });
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
 }
 
-let selectedMonthDuration = "thismonth";
+function setCurrentMonthDates() {
+    const today = new Date();
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-$(".sort-option").on("click", function (e) {
-    e.preventDefault();
+    $("#from-date").val(formatDate(first));
+    $("#to-date").val(formatDate(last));
+}
 
-    $(".sort-option").removeClass("active");
-    $(this).addClass("active");
+function applyQuickRange() {
+    const today = new Date();
+    let from, to = today;
 
-    selectedMonthDuration = $(this).data("value");
+    switch (selectedMonthDuration) {
+        case "thismonth":
+            from = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case "lastmonth":
+            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            to = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+        case "days":
+            from = new Date(today.setDate(today.getDate() - 6));
+            break;
+        case "lastdays":
+            from = new Date(today.setDate(today.getDate() - 29));
+            break;
+        case "yesterday":
+            from = to = new Date(today.setDate(today.getDate() - 1));
+            break;
+        default:
+            return;
+    }
 
-    $("#sortByDropdown").text("Filter : " + $(this).text());
-});
+    $("#from-date").val(formatDate(from));
+    $("#to-date").val(formatDate(to));
+}
+
+function formatDate(d) {
+    return d.toISOString().split("T")[0];
+}

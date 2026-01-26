@@ -6,12 +6,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<div class="content">
+<div class="content p-1 pt-11">
     <div class="pb-1">
         <div class="card shadow-sm">
 
             <!-- ================= CARD HEADER ================= -->
-            <div class="card-header bg-warning">
+            <div class="card-header bg-warning p-1">
                 <div class="row align-items-center">
 
                     <!-- LEFT : REPORT TITLE -->
@@ -22,63 +22,6 @@
                     <!-- RIGHT : FILTER + DOWNLOAD -->
                     <div class="col-md-9">
                         <div class="row g-2 align-items-center justify-content-end flex-nowrap">
-
-                            <!-- FILTER BUTTON -->
-                            <div class="col-auto position-relative">
-                                <button type="button"
-                                        class="btn btn-outline-light btn-sm fw-bold"
-                                        id="btnOpenFilter">
-                                    <i class="fas fa-filter me-1"></i> Filter
-                                </button>
-
-                                <!-- FILTER PANEL -->
-                                <div id="filterPanel" class="filter-panel shadow d-none">
-                                    <div class="filter-header">
-                                        <span class="text-warning">Filters</span>
-                                        <button type="button" class="btn-close btn-sm" id="btnCloseFilter"></button>
-                                    </div>
-
-                                    <div class="filter-body">
-
-                                        <div class="mb-2">
-                                            <label class="form-label">Event Type</label>
-                                            <select id="ddlEventType" class="form-select form-select-sm">
-                                                <option value="">All</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label">Event Sub Type</label>
-                                            <select id="ddlEventSubType" class="form-select form-select-sm" disabled>
-                                                <option value="">All</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label">Hall</label>
-                                            <select id="ddlCompanyHall" class="form-select form-select-sm">
-                                                <option value="">All</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label">From Date</label>
-                                            <input type="date" id="fromDate" class="form-control form-control-sm">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label">To Date</label>
-                                            <input type="date" id="toDate" class="form-control form-control-sm">
-                                        </div>
-
-                                    </div>
-
-                                    <div class="filter-footer">
-                                        <button class="btn btn-sm btn-outline-secondary" id="btnResetFilter">Reset</button>
-                                        <button class="btn btn-sm btn-warning" id="btnApplyFilter">Apply</button>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- DOWNLOAD DROPDOWN (ONLY ONE) -->
                             <div class="col-auto">
@@ -115,17 +58,67 @@
             </div>
 
             <!-- ================= CARD BODY ================= -->
-            <div class="card-body pt-0">
-                <div id="pdfPreviewContainer"
-                     style="border:1px solid #ddd;
-                            padding:0px;
-                            width:100%;
-                            min-height:600px;
-                            height:calc(100vh - 180px);
-                            overflow:auto;">
-                    <p class="text-center text-muted">
-                        PDF Preview will appear here...
-                    </p>
+            <div class="card-body p-0">
+                <div class="report-layout">
+
+                    <!-- PDF VIEWER -->
+                    <div class="pdf-area">
+                        <div id="pdfPreviewContainer">
+                            <p class="text-center text-muted">
+                                PDF Preview will appear here...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- FILTER PANEL (FIXED RIGHT) -->
+                    <div class="filter-area">
+                        <div id="filterPanel" class="filter-panel-static">
+                            <div class="filter-header">
+                                <span class="text-warning">Filters</span>
+                            </div>
+
+                            <div class="filter-body">
+
+                                <div class="mb-2">
+                                    <label class="form-label">Event Type</label>
+                                    <select id="ddlEventType" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">Event Sub Type</label>
+                                    <select id="ddlEventSubType" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">Hall</label>
+                                    <select id="ddlCompanyHall" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="fromDate" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="toDate" class="form-control form-control-sm">
+                                </div>
+
+                            </div>
+
+                            <div class="filter-footer">
+                                <button id="btnResetFilter" class="btn btn-sm btn-outline-secondary">Reset</button>
+                                <button id="btnApplyFilter" class="btn btn-sm btn-warning">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

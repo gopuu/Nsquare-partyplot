@@ -1,6 +1,6 @@
 ﻿let selectedMonthDuration = "thismonth";
 
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function () {
     loadEventTypeDropdown();
     loadCompanyHallDropdown();
     ViewBookingReport();
@@ -79,30 +79,30 @@ $(document).ready(function () {
 
     });
 
-    // Open / Toggle filter panel
-    $("#btnOpenFilter").on("click", function (e) {
-        e.stopPropagation();
-        $("#filterPanel").toggleClass("d-none");
-    });
-
-    // Close button
-    $("#btnCloseFilter").on("click", function () {
-        $("#filterPanel").addClass("d-none");
-    });
 
     // Prevent inside click from bubbling
     $("#filterPanel").on("click", function (e) {
         e.stopPropagation();
     });
 
-    // Close on outside click
-    $(document).on("click", function () {
-        $("#filterPanel").addClass("d-none");
+    // Close on outside click 
+    $(document).on("click", function (e) {
+
+        // ❌ Do NOT close filter if click is inside dropdown
+        if ($(e.target).closest(".dropdown, .dropdown-menu").length > 0) {
+            return;
+        }
+
+        // ❌ Do NOT close filter if click is inside filter panel
+        if ($(e.target).closest("#filterPanel").length > 0) {
+            return;
+        }
+        //$("#filterPanel").addClass("d-none");
     });
 
     // Apply Filter
     $("#btnApplyFilter").on("click", function () {
-        $("#filterPanel").addClass("d-none");
+        //$("#filterPanel").addClass("d-none");
         ViewBookingReport();
     });
 

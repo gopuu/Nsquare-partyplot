@@ -29,8 +29,98 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
+        #region Useful Methods
+        private PdfPCell Cell(string text, Font font, int align = Element.ALIGN_LEFT, int colspan = 1, float height = 25)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
+            cell.Colspan = colspan;
+            cell.FixedHeight = height;
+            cell.HorizontalAlignment = align;
+            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            cell.Padding = 6;
+            cell.Border = Rectangle.BOX;
+            return cell;
+        }
+        PdfPCell CreateTitleWithSpaceCell(string title, Font titleFont, float height)
+        {
+            PdfPTable inner = new PdfPTable(1);
+            inner.WidthPercentage = 100;
 
-        
+            // 🔸 Title (TOP)
+            PdfPCell titleCell = new PdfPCell(new Phrase(title, titleFont))
+            {
+                Border = Rectangle.BOTTOM_BORDER,
+                Padding = 4,
+                HorizontalAlignment = Element.ALIGN_CENTER
+            };
+            inner.AddCell(titleCell);
+
+            // 🔸 Empty Space for VALUE
+            PdfPCell valueCell = new PdfPCell(new Phrase(" "))
+            {
+                MinimumHeight = height,
+                Border = Rectangle.NO_BORDER
+            };
+            inner.AddCell(valueCell);
+
+            return new PdfPCell(inner)
+            {
+                Padding = 0
+            };
+        }
+        private PdfPCell CreateCell(string text, Font font, int align = Element.ALIGN_LEFT, int colspan = 1, BaseColor bg = null)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
+            cell.Colspan = colspan;
+            cell.HorizontalAlignment = align;
+            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            cell.Padding = 4;
+            cell.Border = Rectangle.BOX;
+
+            if (bg != null)
+                cell.BackgroundColor = bg;
+
+            return cell;
+        }
+        public static PdfPCell CreateCell2(string text, Font font, int hAlign = Element.ALIGN_LEFT, int colspan = 1, float fixedHeight = 0, int border = Rectangle.BOX)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.HorizontalAlignment = hAlign;
+            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            cell.Colspan = colspan;
+            cell.Padding = 5;
+            cell.Border = border;
+
+            if (fixedHeight > 0)
+                cell.FixedHeight = fixedHeight;
+
+            return cell;
+        }
+        private PdfPCell CreateHeaderCell(string text, Font font, BaseColor bgColor)
+        {
+            return new PdfPCell(new Phrase(text, font))
+            {
+                BackgroundColor = bgColor,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_MIDDLE,
+                Padding = 6,
+                BorderColor = new BaseColor(220, 220, 220), // light gray
+                BorderWidth = 0.5f
+            };
+        }
+        private PdfPCell CreateBodyCell(string text, Font font, int align = Element.ALIGN_LEFT, float padding = 4f)
+        {
+            return new PdfPCell(new Phrase(text, font))
+            {
+                HorizontalAlignment = align,
+                VerticalAlignment = Element.ALIGN_MIDDLE,
+                Padding = padding,
+                BorderColor = new BaseColor(220, 220, 220), // light gray
+                BorderWidth = 0.5f
+            };
+        }
+        #endregion
+
 
         [HttpPost]
         [Route("DownloadBookingEventReport")]
@@ -527,93 +617,6 @@ namespace ERPAdmin.ApiControllers
                 response.message = ex.Message;
                 return Ok(response);
             }
-        }
-
-        private PdfPCell Cell(
-                         string text,
-                         Font font,
-                         int align = Element.ALIGN_LEFT,
-                         int colspan = 1,
-                         float height = 25)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
-            cell.Colspan = colspan;
-            cell.FixedHeight = height;
-            cell.HorizontalAlignment = align;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Padding = 6;
-            cell.Border = Rectangle.BOX;
-            return cell;
-        }
-
-        PdfPCell CreateTitleWithSpaceCell(string title, Font titleFont, float height)
-        {
-            PdfPTable inner = new PdfPTable(1);
-            inner.WidthPercentage = 100;
-
-            // 🔸 Title (TOP)
-            PdfPCell titleCell = new PdfPCell(new Phrase(title, titleFont))
-            {
-                Border = Rectangle.BOTTOM_BORDER,
-                Padding = 4,
-                HorizontalAlignment = Element.ALIGN_CENTER
-            };
-            inner.AddCell(titleCell);
-
-            // 🔸 Empty Space for VALUE
-            PdfPCell valueCell = new PdfPCell(new Phrase(" "))
-            {
-                MinimumHeight = height,
-                Border = Rectangle.NO_BORDER
-            };
-            inner.AddCell(valueCell);
-
-            return new PdfPCell(inner)
-            {
-                Padding = 0
-            };
-        }
-
-
-        private PdfPCell CreateCell(
-                         string text,
-                         Font font,
-                         int align = Element.ALIGN_LEFT,
-                         int colspan = 1,
-                         BaseColor bg = null)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
-            cell.Colspan = colspan;
-            cell.HorizontalAlignment = align;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Padding = 4;
-            cell.Border = Rectangle.BOX;
-
-            if (bg != null)
-                cell.BackgroundColor = bg;
-
-            return cell;
-        }
-
-        public static PdfPCell CreateCell2(
-                                string text,
-                                Font font,
-                                int hAlign = Element.ALIGN_LEFT,
-                                int colspan = 1,
-                                float fixedHeight = 0,
-                                int border = Rectangle.BOX)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text, font));
-            cell.HorizontalAlignment = hAlign;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Colspan = colspan;
-            cell.Padding = 5;
-            cell.Border = border;
-
-            if (fixedHeight > 0)
-                cell.FixedHeight = fixedHeight;
-
-            return cell;
         }
 
         [HttpPost]
@@ -1195,8 +1198,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
-
 
         [HttpPost]
         [Route("Report_MonthlySalesDetails")]
@@ -2038,31 +2039,6 @@ namespace ERPAdmin.ApiControllers
                 response.message = ex.Message;
                 return Ok(response);
             }
-        }
-
-        private PdfPCell CreateHeaderCell(string text, Font font, BaseColor bgColor)
-        {
-            return new PdfPCell(new Phrase(text, font))
-            {
-                BackgroundColor = bgColor,
-                HorizontalAlignment = Element.ALIGN_CENTER,
-                VerticalAlignment = Element.ALIGN_MIDDLE,
-                Padding = 6,
-                BorderColor = new BaseColor(220, 220, 220), // light gray
-                BorderWidth = 0.5f
-            };
-        }
-
-        private PdfPCell CreateBodyCell(string text, Font font, int align = Element.ALIGN_LEFT, float padding = 4f)
-        {
-            return new PdfPCell(new Phrase(text, font))
-            {
-                HorizontalAlignment = align,
-                VerticalAlignment = Element.ALIGN_MIDDLE,
-                Padding = padding,
-                BorderColor = new BaseColor(220, 220, 220), // light gray
-                BorderWidth = 0.5f
-            };
         }
 
         [HttpPost]
@@ -3736,70 +3712,68 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
-
-        public class PdfPageEvents : PdfPageEventHelper
-        {
-            private readonly string _username;
-
-            public PdfPageEvents(string username)
-            {
-                _username = username;
-            }
-
-            Font footerFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY);
-            BaseColor lineColor = new BaseColor(180, 180, 180);
-
-            public override void OnEndPage(PdfWriter writer, Document document)
-            {
-                PdfContentByte cb = writer.DirectContent;
-
-                float lineY = document.Bottom - 5;   // 👈 LINE position
-                float textY = document.Bottom - 20;  // 👈 FOOTER TEXT position
-
-                // ================= LINE (BORDER) =================
-                cb.SetLineWidth(0.5f);
-                cb.SetColorStroke(BaseColor.GRAY);
-                cb.MoveTo(document.Left, lineY);
-                cb.LineTo(document.Right, lineY);
-                cb.Stroke();
-
-                // ================= FOOTER TEXT =================
-                cb.BeginText();
-
-                BaseFont bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
-                cb.SetFontAndSize(bf, 8);
-                cb.SetColorFill(BaseColor.DARK_GRAY);
-
-                cb.ShowTextAligned(
-                    Element.ALIGN_LEFT,
-                    $"User : {_username}",
-                    document.Left,
-                    textY,
-                    0
-                );
-
-                cb.ShowTextAligned(
-                    Element.ALIGN_CENTER,
-                    "Page " + writer.PageNumber,
-                    (document.Left + document.Right) / 2,
-                    textY,
-                    0
-                );
-
-                cb.ShowTextAligned(
-                    Element.ALIGN_RIGHT,
-                    DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt"),
-                    document.Right,
-                    textY,
-                    0
-                );
-
-                cb.EndText();
-            }
-
-
-        }
-
     }
+}
+
+public class PdfPageEvents : PdfPageEventHelper
+{
+    private readonly string _username;
+
+    public PdfPageEvents(string username)
+    {
+        _username = username;
+    }
+
+    Font footerFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY);
+    BaseColor lineColor = new BaseColor(180, 180, 180);
+
+    public override void OnEndPage(PdfWriter writer, Document document)
+    {
+        PdfContentByte cb = writer.DirectContent;
+
+        float lineY = document.Bottom - 5;   // 👈 LINE position
+        float textY = document.Bottom - 20;  // 👈 FOOTER TEXT position
+
+        // ================= LINE (BORDER) =================
+        cb.SetLineWidth(0.5f);
+        cb.SetColorStroke(BaseColor.GRAY);
+        cb.MoveTo(document.Left, lineY);
+        cb.LineTo(document.Right, lineY);
+        cb.Stroke();
+
+        // ================= FOOTER TEXT =================
+        cb.BeginText();
+
+        BaseFont bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
+        cb.SetFontAndSize(bf, 8);
+        cb.SetColorFill(BaseColor.DARK_GRAY);
+
+        cb.ShowTextAligned(
+            Element.ALIGN_LEFT,
+            $"User : {_username}",
+            document.Left,
+            textY,
+            0
+        );
+
+        cb.ShowTextAligned(
+            Element.ALIGN_CENTER,
+            "Page " + writer.PageNumber,
+            (document.Left + document.Right) / 2,
+            textY,
+            0
+        );
+
+        cb.ShowTextAligned(
+            Element.ALIGN_RIGHT,
+            DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt"),
+            document.Right,
+            textY,
+            0
+        );
+
+        cb.EndText();
+    }
+
+
 }

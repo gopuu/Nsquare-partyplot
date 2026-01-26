@@ -63,53 +63,7 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin=""></script>
     <!--sweert alert-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!--STYLE DATATABLE ACTIONS BUTTON-->
-    <style>
-        .btn-action-xs {
-            padding: 7px !important; /* smaller padding */
-            font-size: 12px !important; /* reduce font size */
-            line-height: 1 !important;
-        }
-
-        .btn-action-xs i {
-            font-size: 12px !important; /* shrink icon */
-        }
-        /* Reduce top & bottom padding for all table cells */
-        #tableMain table.dataTable tbody td,
-        #tableMain table.dataTable thead th {
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
-        }
-
-        /* Optional: reduce left/right padding too */
-        #tableMain table.dataTable td,
-        #tableMain table.dataTable th {
-            padding-left: 6px !important;
-            padding-right: 6px !important;
-        }
-
-        /* Reduce row height further by shrinking line-height */
-        #tableMain table.dataTable td {
-            line-height: 1.1 !important;
-        }
-
-       /*  .dropdown-submenu {
-            position: relative;
-        }
-        .dropdown-submenu {
-            top: 0;
-            left: 100%;
-            margin-left: .1rem;
-        } */
-
-        .infinitylogo_img{
-            height:70px;
-            width:100%;
-
-        }
-    </style>
-
+    <link rel="stylesheet" href="~/assets2/css/Shared/Layout.css" asp-append-version="true" />
   </head>
 
 <body>
@@ -241,7 +195,7 @@
                     <!-- Master -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-cog"></span>Master
+                            <span class="uil fs-8 me-2 uil-database"></span>Master
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
@@ -325,11 +279,10 @@
                         </ul>
                     </li>
 
-
                     <!-- Accounting & Finance -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-invoice"></span>Finance
+                            <span class="uil fs-8 me-2 uil-rupee-sign"></span>Finance
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
@@ -413,35 +366,47 @@
                     </li>
 
                     <!-- Reports -->
-                    <li class="nav-item dropdown">
+                    <li class="nav-item dropdown" id="report_NavBar">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            Reports  
+                            <span class="uil fs-8 me-2 uil-invoice"></span>Reports
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li><a class="dropdown-item @(currentController == "Reports" ? "active" : "")" href="/Report_Booking"><div class="dropdown-item-wrapper"> <i class="fa-solid fa-calendar-check me-2"></i> Booking Report</div></a></li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(currentController == "RevenueReport" ? "active" : "")"
-                                   href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-chart-line me-2"></i>
-                                    Revenue Report 
-                                    <i class="fa-solid fa-angle-right ms-auto"></i>
+                            <li class="dropdown">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "RevenueReport" ? "active" : "")"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <i class="fa-solid fa-chart-line me-2"></i>
+                                            Revenue Report
+                                        </span>
+                                    </div>
                                 </a>
+
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/Report_DailySales">
-                                            <span class="me-2"></span>  <i class="fa-solid fa-calendar-day me-2"></i> Daily Sales Report
+                                        <a class="dropdown-item" href="/Report_DailySales">
+                                            <div class="dropdown-item-wrapper">
+                                                <i class="fa-solid fa-calendar-day me-2"></i>
+                                                Daily Sales Report
+                                            </div>
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/Report_MonthlySales">
-                                            <span class="me-2"></span> <i class="fa-solid fa-calendar-days me-2"></i>
-                                            Monthly Sales Report
+                                        <a class="dropdown-item" href="/Report_MonthlySales">
+                                            <div class="dropdown-item-wrapper">
+                                                <i class="fa-solid fa-calendar-days me-2"></i>
+                                                Monthly Sales Report
+                                            </div>
                                         </a>
                                     </li>
-                                   
                                 </ul>
                             </li>
-
                             <li><a class="dropdown-item" href="/Report_GST"><div class="dropdown-item-wrapper"><i class="fa-solid fa-file-invoice-dollar me-2"></i> GST Report</div></a></li>
                             <li><a class="dropdown-item" href="/Report_RevenueLoss"><div class="dropdown-item-wrapper"><i class="fa-solid fa-arrow-trend-down me-2"></i> Revenue Loss Report</div></a></li>
                             <li><a class="dropdown-item" href="/Report_Purchase"><div class="dropdown-item-wrapper"><i class="fa-solid fa-cart-shopping me-2"></i> Purchase Report</div></a></li>
@@ -517,54 +482,83 @@
                                     </div>
                                 </a>
                             </li>
+                            <!--DutyManagement-->
+                            <li class="dropdown">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "DutyManagement" ? "active" : "")"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
 
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(currentController == "DutyManagement" ? "active" : "")"
-                                   href="#" role="button" data-bs-toggle="dropdown">
-
-                                    <span class="feather-icon me-2" data-feather="briefcase"></span>
-                                    Duty Management
-                                    <i class="fa-solid fa-angle-right ms-auto"></i>
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="feather-icon me-2" data-feather="briefcase"></span>
+                                            Duty Management
+                                        </span>
+                                    </div>
                                 </a>
 
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/DutyRoleMaster/Index">
-                                            <span class="me-2" data-feather="users"></span> Duty Role Master
+                                        <a class="dropdown-item" href="/DutyRoleMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="users"></span>
+                                                Duty Role Master
+                                            </div>
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/EventDutyAssignment/Index">
-                                            <span class="me-2" data-feather="check-square"></span> Duty Assignment
+                                        <a class="dropdown-item" href="/EventDutyAssignment/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="check-square"></span>
+                                                Duty Assignment
+                                            </div>
                                         </a>
                                     </li>
                                 </ul>
                             </li>
 
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(currentController == "TaskManagement" ? "active" : "")"
-                                   href="#" role="button" data-bs-toggle="dropdown">
-                                    <span class="feather-icon me-2" data-feather="clipboard"></span>
-                                    Task Management
-                                    <i class="fa-solid fa-angle-right ms-auto"></i>
+                            <li class="dropdown">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "TaskManagement" ? "active" : "")"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="feather-icon me-2" data-feather="clipboard"></span>
+                                            Task Management
+                                        </span>
+                                    </div>
                                 </a>
 
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/TaskCategoryMaster/Index">
-                                            <span class="me-2" data-feather="layers"></span> Task Category Master
+                                        <a class="dropdown-item" href="/TaskCategoryMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="layers"></span>
+                                                Task Category Master
+                                            </div>
                                         </a>
                                     </li>
 
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/TaskMaster/Index">
-                                            <span class="me-2" data-feather="clipboard"></span> Task Master
+                                        <a class="dropdown-item" href="/TaskMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="clipboard"></span>
+                                                Task Master
+                                            </div>
                                         </a>
                                     </li>
 
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/TaskComments/Index">
-                                            <span class="me-2" data-feather="message-square"></span> Task Comments
+                                        <a class="dropdown-item" href="/TaskComments/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="message-square"></span>
+                                                Task Comments
+                                            </div>
                                         </a>
                                     </li>
                                 </ul>
@@ -613,59 +607,67 @@
                                     </div>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center @(currentController == "AssetCategory" ? "active" : "")"
+                            <li class="dropdown">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
                                    href="#"
-                                   role="button"
                                    data-bs-toggle="dropdown"
-                                   aria-expanded="false">
+                                   data-bs-auto-close="outside">
 
-                                    <span class="d-flex align-items-center">
-                                        <span class="feather-icon me-2" data-feather="briefcase"></span>
-                                        Asset Master
-                                    </span>
-
-                                    <!-- Arrow icon last me -->
-                                    <i class="fa-solid fa-angle-right ms-auto"></i>
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="feather-icon me-2" data-feather="package"></span>
+                                            Manage Assets
+                                        </span>
+                                    </div>
                                 </a>
 
-                                <!-- LEFT side dropdown -->
-                                <ul class="dropdown-menu dropdown-menu-start dropdown-left">
+                                <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/AssetMaster/Index">
-                                            <span class="me-2" data-feather="box"></span> Asset Master
+                                        <a class="dropdown-item" href="/AssetMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="box"></span>
+                                                Asset Master
+                                            </div>
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/AssetCategoryMaster/Index">
-                                            <span class="me-2" data-feather="layers"></span> Asset Category Master
+                                        <a class="dropdown-item" href="/AssetCategoryMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="layers"></span>
+                                                Category Master
+                                            </div>
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center" href="/AssetSubCategoryMaster/Index">
-                                            <span class="me-2" data-feather="list"></span> Asset SubCategory Master
+                                        <a class="dropdown-item" href="/AssetSubCategoryMaster/Index">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="list"></span>
+                                                SubCategory Master
+                                            </div>
                                         </a>
                                     </li>
                                 </ul>
                             </li>
 
-                            
                         </ul>
                     </li>
 
-                <!-- Infinity Centre -->
-                @* <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                        <span class="uil fs-8 me-2 uil-lightbulb-alt"></span>Infinity Centre
-                    </a>
-                    <ul class="dropdown-menu navbar-dropdown-caret">
-                    </ul>
-                </li> *@
+                    <!-- Infinity Centre -->
+                    @* <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                            <span class="uil fs-8 me-2 uil-lightbulb-alt"></span>Infinity Centre
+                        </a>
+                        <ul class="dropdown-menu navbar-dropdown-caret">
+                        </ul>
+                    </li> *@
 
                     <!-- Help -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-setting"></span>Help
+                            <span class="uil fs-8 me-2 uil-question-circle"></span>Help
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
@@ -675,6 +677,7 @@
                                     </div>
                                 </a>
                             </li>
+                            @*
                             <li class="d-none">
                                 <a class="dropdown-item @(currentController == "SupportTicketType" ? "active" : "")" href="/SupportTicketType">
                                     <div class="dropdown-item-wrapper">
@@ -711,6 +714,7 @@
                                     </div>
                                 </a>
                             </li>
+                            *@
                         </ul>
                     </li>
                 </ul>
@@ -1464,243 +1468,8 @@
     <script src="~/assets2/js/ecommerce-dashboard.js"></script>
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
-
+    <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
+    
   </body>
 
 </html>
-
-<script>
-    function showLoader() {
-      document.getElementById("loaderOverlay").style.display = "flex";
-    }
-
-    function hideLoader() {
-      document.getElementById("loaderOverlay").style.display = "none";
-    }
-
-    function encodeValue(value) {
-        return btoa(value.toString())
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-    }
-
-    function decodeValue(encoded) {
-        encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-        while (encoded.length % 4) encoded += '=';
-        return atob(encoded);
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const userName = sessionStorage.getItem("userName");
-        const userImage = sessionStorage.getItem("userImage") || "/assets/img/user.png";
-        // Set user name
-        if (userName) {
-            $("#lblUserName").text(userName);
-        }
-
-        // Set user image
-        // if (userImage) {
-        //     $(".imgUserProfile").attr("src", userImage);
-        // }
-
-        let defaultImage =`https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=random`;
-
-        // Select ALL avatars
-        let avatarImgs = document.querySelectorAll(".userAvatar");
-        avatarImgs.forEach(function (img) {
-            // Primary image
-            img.src = userImage && userImage.trim() !== ""
-                ? userImage
-                : defaultImage;
-            // Fallback if image fails
-            img.onerror = function () {
-                this.onerror = null; // prevent loop
-                this.src = defaultImage;
-            };
-        });
-
-        var userid = Number(sessionStorage.getItem("userId", userid));
-        //sessionStorage.setItem("userId", userid);
-        fetchUserAccessData(userid);
-
-        document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
-            const subItems = dropdown.querySelectorAll('.dropdown-menu .dropdown-item');
-
-            if (subItems.length === 1) {
-                const mainLink = dropdown.querySelector('.nav-link');
-                const onlySubLink = subItems[0].getAttribute('href');
-
-                // Disable dropdown behavior
-                mainLink.removeAttribute('data-bs-toggle');
-                mainLink.removeAttribute('role');
-                mainLink.removeAttribute('aria-expanded');
-                mainLink.classList.remove('dropdown-toggle');
-
-                // Make parent clickable
-                mainLink.setAttribute('href', onlySubLink);
-            }
-        });
-    });
-
-    let ajaxActiveCount = 0;
-
-    $(document).ajaxStart(function () {
-        ajaxActiveCount++;
-        console.log("ajaxActiveCount START:", ajaxActiveCount);
-        showLoader();
-    });
-
-    $(document).ajaxStop(function () {
-        ajaxActiveCount--;
-        if (ajaxActiveCount <= 0) {
-            ajaxActiveCount = 0;
-            hideLoader();
-        }
-        console.log("ajaxActiveCount STOP:", ajaxActiveCount);
-    });
-
-    function handleApiError(xhr, status, error, title="Info!") {
-
-        console.log("API Error:", xhr.responseText);
-
-        let msg = "Something went wrong!";
-
-        try {
-            // Parse JSON response safely
-            let resp = JSON.parse(xhr.responseText);
-
-            // If message exists, show that only
-            if (resp && resp.message) {
-                msg = resp.message;
-            }
-        } catch (e) {
-            // If JSON parse fails, fallback to raw text
-            msg = xhr.responseText;
-        }
-
-        // Show SweetAlert Error
-        Swal.fire({
-            icon: "info",
-            title: title,
-            text: msg
-        });
-    }
-
-     //get User Rights
-    var userRightsData = null;
-    //Fetch Data
-    function fetchUserAccessData(userid) {
-        const inputData = {
-            StaffId: userid
-        };
-        $.ajax({
-            type: "POST",
-            url: "/api/UserRights/GetUserRightsList_ForLayout",
-            data: JSON.stringify(inputData),
-            contentType: "application/json",
-            dataType: "json",  
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("accept", "application/json");
-            },
-            success: function (response) {
-                console.log("Full Response:", response);
-                // ✅ response is already OBJECT
-                let userRightsData = response.data || [];
-                console.log("userRightsData:", userRightsData);
-                validateUserAccessOfCurrentPage(userRightsData);
-            },
-            error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Fetching User Rights Failed");
-                $('#btn-loader').hide();
-            }
-        });
-    }
-
-    //validate user access rights on load - if user access page directly via URL ------------ START ------------------------------------------------------
-    function validateUserAccessOfCurrentPage(userRightsData) {
-         // Get the current URL and remove the domain name
-        const currentUrl = window.location.pathname;
-        // Validate user rights using the Link property
-        const module = userRightsData.find(item => item.Link === currentUrl);
-        console.log("module:", module);
-        // If module is not found or the user does not have view rights, prevent access
-        if (!module || !module.CanView) {
-            var isSuperUser = sessionStorage.getItem('isSuperUser') ; 
-            Swal.fire({
-                icon: "error",
-                title: "Access Denied",
-                text: "You don't have permission access to this page. Please contact admin.",
-                confirmButtonText: "OK"
-            }).then(() => {
-                if (isSuperUser === "true") {
-                    if (window.location.pathname === "/Home/Dashboard") {
-                        logoutUser();
-                    } else {
-                        window.location.href = "/Home/Dashboard"; // Redirect to Dashboard
-                    }
-                } else {
-                    if (window.location.pathname === "/Home/Dashboard") {
-                        logoutUser();
-                    } else {
-                        window.location.href = "/Home/Dashboard"; // Redirect to Dashboard
-                    }
-                }
-
-            });
-        }
-        else
-        {
-            sessionStorage.setItem('Link', module.Link);
-            sessionStorage.setItem('CanAdd', module.CanAdd);
-            sessionStorage.setItem('CanEdit', module.CanEdit);
-            sessionStorage.setItem('CanDelete', module.CanDelete);
-       }
-    }
-    //validate user access rights on load - if user access page directly via URL ------------ END ------------------------------------------------------
-
-
-    // Handle the logout action
-    document.getElementById('btnLogout').addEventListener('click', function (e) {
-
-        e.preventDefault();  // Prevent default link behavior
-
-        const isautologinemployee = false; //sessionStorage.getItem('isautologinemployee') === 'true';
-        //console.log("logout isautologinemployee:", isautologinemployee);
-        if(isautologinemployee){
-            //PunchOut();
-        }
-        else{
-            logoutUser();
-        }
-    });
-
-    // Function to handle logout
-    function logoutUser() {
-        //var isSuperUser = (sessionStorage.getItem('isSuperUser')) === 'true' ? true : false; // || localStorage.getItem('isSuperUser')) === 'true' ? true : false;
-        // Clear session storage or local storage if needed
-        sessionStorage.clear();
-        localStorage.clear();
-
-        window.location.href = '/';
-
-        // if (isSuperUser) {
-        //     window.location.href = '/';
-        // }
-        // else {
-        //     window.location.href = '/Home/EmployeeLogin';
-        // }
-    }
-
-    // $(document).ready(function () {
-    //let companyName = sessionStorage.getItem("companyname");
-    // // Condition check
-    // if (companyName && companyName.trim() !== "") {
-    //     $("#companyName").text(companyName);
-    // } else {
-    //     $("#companyName").text("Infinity"); // default
-    // }
-    // console.log("Company Names:", companyName);
-    //});
-
-</script>

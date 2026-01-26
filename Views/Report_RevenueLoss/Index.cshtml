@@ -1,80 +1,132 @@
 ﻿@{
-    ViewData["Title"] = "Report RevenueLoss";
+    ViewData["Title"] = "Revenue Loss Report";
     Layout = "_Layout";
 }
 
-<div class="content">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<div class="content p-1 pt-11">
     <div class="pb-1">
         <div class="card shadow-sm">
 
             <!-- ================= CARD HEADER ================= -->
-            <div class="card-header">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="card-header bg-warning p-1">
+                <div class="row align-items-center">
 
                     <!-- TITLE -->
-                    <h4 class="mb-0 fw-semibold me-auto">
-                        Revenue Loss Report
-                    </h4>
-
-                    <!-- FROM DATE -->
-                    <input type="date" id="fromDate" class="form-control w-auto">
-
-                    <!-- TO DATE -->
-                    <input type="date" id="toDate" class="form-control w-auto">
-
-                    <!-- FILTER DROPDOWN -->
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary fw-bold dropdown-toggle"
-                                type="button" data-bs-toggle="dropdown">
-                            Filter : This Month
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item">Yesterday</a></li>
-                            <li><a class="dropdown-item">Last 7 Days</a></li>
-                            <li><a class="dropdown-item">Last 30 Days</a></li>
-                            <li><a class="dropdown-item active">This Month</a></li>
-                            <li><a class="dropdown-item">Last Month</a></li>
-                            <li><a class="dropdown-item">Last 12 Months</a></li>
-                            <li><a class="dropdown-item">Custom Range</a></li>
-                        </ul>
+                    <div class="col-md-4">
+                        <h4 class="mb-0 fw-semibold text-white">
+                            Revenue Loss Report
+                        </h4>
                     </div>
 
-                    <!-- EVENT TYPE -->
-                    <select id="ddlEventType" class="form-select w-auto">
-                        <option>-- Event Type --</option>
-                    </select>
-
-                    <!-- EVENT SUB TYPE -->
-                    <select id="ddlEventSubType" class="form-select w-auto">
-                        <option>-- Event Sub Type --</option>
-                    </select>
-
                     <!-- DOWNLOAD -->
-                    <button class="btn btn-outline-warning"
-                            onclick="ViewRevenueLossReport('downloadPDF')">
-                        <i class="fas fa-file-pdf"></i>
-                    </button>
+                    <div class="col-md-8 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light btn-sm dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-download"></i>
+                            </button>
 
-                    <button class="btn btn-outline-warning"
-                            onclick="ViewRevenueLossReport('downloadExcel')">
-                        <i class="fas fa-file-excel"></i>
-                    </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item"
+                                       onclick="ViewRevenueLossReport('downloadPDF')">
+                                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       onclick="ViewRevenueLossReport('downloadExcel')">
+                                        <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-
             <!-- ================= CARD BODY ================= -->
-            <div class="card-body pt-2">
-                <div id="pdfPreviewContainer"
-                     style="border: 1px solid #ddd;
-                            padding: 10px;
-                            width: 100%;
-                            min-height: 600px;
-                            height: calc(100vh - 180px);
-                            overflow: auto;">
-                    <p class="text-center text-muted">
-                        PDF Preview will appear here...
-                    </p>
+            <div class="card-body p-0">
+                <div class="report-layout">
+
+                    <!-- REPORT VIEW -->
+                    <div class="pdf-area">
+                        <div id="pdfPreviewContainer">
+                            <p class="text-center text-muted">
+                                PDF Preview will appear here...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- FILTER PANEL -->
+                    <div class="filter-area">
+                        <div class="filter-panel-static">
+
+                            <div class="filter-header">
+                                <span class="text-warning">Filters</span>
+                            </div>
+
+                            <div class="filter-body">
+
+                                <div class="mb-2">
+                                    <label class="form-label">Event Type</label>
+                                    <select id="ddlEventType" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">Event Sub Type</label>
+                                    <select id="ddlEventSubType" class="form-select form-select-sm" disabled>
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="fromDate" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="toDate" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">Quick Range</label>
+                                    <div class="dropdown w-100">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100"
+                                                id="sortByDropdown"
+                                                data-bs-toggle="dropdown">
+                                            This Month
+                                        </button>
+
+                                        <ul class="dropdown-menu w-100">
+                                            <li><a class="dropdown-item sort-option" data-value="yesterday">Yesterday</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="days">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="lastdays">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item sort-option active" data-value="thismonth">This Month</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="lastmonth">Last Month</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="12months">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="customrange">Custom Range</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="filter-footer">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnResetFilter">Reset</button>
+                                <button class="btn btn-sm btn-warning" id="btnApplyFilter">Apply</button>
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -82,14 +134,10 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-
 @section Scripts {
     <script src="~/assets2/js/report_revenueloss/report_revenueloss.js" asp-append-version="true"></script>
-
 }
 
-
-
+@section Styles {
+    <link href="~/assets2/css/report_revenueloss/report_revenueloss.css" rel="stylesheet" asp-append-version="true" />
+}
