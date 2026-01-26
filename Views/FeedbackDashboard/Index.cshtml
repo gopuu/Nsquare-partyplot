@@ -189,10 +189,10 @@
                         <div class="card rating-time-card mt-4">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                                 <span class="fw-bold">Ratings over time</span>
-                                <div class="dropdown chart-filter">
+                                <div class="dropdown chart-filter-ratingtime">
                                     <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
                                             type="button"
-                                            id="jobChartFilter"
+                                            id="ratingTimeFilter"
                                             data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                         This Month
@@ -209,9 +209,7 @@
                                     </ul>
                                 </div>
                             </div>
-
                             <div class="card-body">
-
                                 <div class="time-chart">
 
                                     <!-- Emoji Scale -->
@@ -222,33 +220,11 @@
                                         <div>😟</div>
                                         <div>😢</div>
                                     </div>
-
                                     <!-- Chart Area -->
-                                    <div class="spike-area">
-                                        <div class="spike" style="height:120px"></div>
-                                        <div class="spike" style="height:150px"></div>
-                                        <div class="spike" style="height:180px"></div>
-                                        <div class="spike" style="height:90px"></div>
-                                        <div class="spike" style="height:200px"></div>
-                                        <div class="spike" style="height:160px"></div>
-                                        <div class="spike" style="height:140px"></div>
-                                        <div class="spike" style="height:190px"></div>
-                                    </div>
-
+                                    <div class="spike-area" id="ratingSpikeArea"></div>
                                 </div>
-
                                 <!-- Dates -->
-                                <div class="date-row">
-                                    <span>Oct</span>
-                                    <span>Nov</span>
-                                    <span>Dec</span>
-                                    <span>Jan</span>
-                                    <span>Feb</span>
-                                    <span>Mar</span>
-                                    <span>Apr</span>
-                                    <span>May</span>
-                                </div>
-
+                                <div class="date-row" id="ratingDateRow"></div>
                             </div>
                         </div>
                     </div>

@@ -493,14 +493,24 @@ function loadEventPieChart(monthDuration = "thismonth", fromDate = null, toDate 
 $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
     e.preventDefault();
 
+    // Remove active class from all
     $(".chart-filter-eventPie .dropdown-item").removeClass("active");
+
+    // Add active to clicked item
     $(this).addClass("active");
 
-    const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
-    $("#jobChartFilter").text($(this).text());
+    // Update the button text
+    const selectedText = $(this).text();
+    $("#eventPieChartFilter").text(selectedText);
 
-    loadEventPieChart(filterText); 
+    // Optional: store selected value for chart
+    const selectedValue = $(this).data("value"); // e.g., "yesterday", "thismonth"
+    selectedMonthDuration = selectedValue;
+
+    // Call your chart update
+    loadEventPieChart(selectedValue);
 });
+
 
 let salesPieChart; // global chart instance
 
@@ -588,7 +598,7 @@ $(".chart-filter-salepie .dropdown-item").on("click", function (e) {
     $(this).addClass("active");
 
     const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
-    $("#salesChartFilter").text($(this).text());
+    $("#salepieChartFilter").text($(this).text());
 
     // map dropdown to MonthDuration (or custom date logic)
     loadSalesPieChart(filterText);
@@ -871,7 +881,7 @@ $(".pie-chart-filter .dropdown-item").on("click", function (e) {
     $(this).addClass("active");
 
     const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
-    $("#jobChartFilter").text($(this).text());
+    $("#filterChartFilter").text($(this).text());
 
     loadLeadSourcePieChart(filterText);
 });
@@ -936,7 +946,7 @@ function loadYearDropdown() {
                 $("#yearDropdownMenu").html(html);
 
                 // 🔹 Default button text
-                $("#yearDropdown").text("This Year");
+               // $("#yearDropdown").text("This Year");
             }
         },
         error: function (err) {

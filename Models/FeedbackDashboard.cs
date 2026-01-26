@@ -54,6 +54,29 @@
         public int Count { get; set; }
         public string? Percentage { get; set; }
     }
+    public class DashboardPaymentCollectionStatus
+    {
+        public decimal PaidAmount { get; set; }
+        public decimal PartialAmount { get; set; }
+        public decimal PendingAmount { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+    public class UpcomingPaymentItem
+    {
+        public string? EventName { get; set; }
+        public decimal Amount { get; set; }
+    }
+    public class VendorPayableItem
+    {
+        public string? VendorName { get; set; }
+        public decimal PendingAmount { get; set; }
+        public string? Status { get; set; }
+    }
+    public class TopRevenueEventItem
+    {
+        public string? EventName { get; set; }
+        public decimal Amount { get; set; }
+    }
 
     public class DashboardFeedbackRequest
     {
@@ -87,6 +110,24 @@
         public string? NeutralIcon { get; set; }
         public int NegativeCount { get; set; }
         public string? NegativeIcon { get; set; }
+    }
+
+    public class RatingsOverTimeResponse
+    {
+        public List<RatingsOverTimeItem> RatingsOverTime { get; set; }
+    }
+
+    public class RatingsOverTimeItem
+    {
+        public int RatingValue { get; set; }
+        public string? RatingLabel { get; set; }
+        public string? IconUrl { get; set; }
+        public List<RatingsOverTimePoint> Data { get; set; }
+    }
+    public class RatingsOverTimePoint
+    {
+        public DateTime Date { get; set; }
+        public int Count { get; set; }
     }
 
 }
