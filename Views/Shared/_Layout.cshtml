@@ -129,13 +129,13 @@
                                 </a>
                             </li>
 
-                            <li>
+                            @* <li>
                                 <a class="dropdown-item @(currentController == "AllInOneLink" ? "active" : "")" href="/AllInOneLink">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="message-square"></span>All In One Link
                                     </div>
                                 </a>
-                            </li>
+                            </li> *@
                         </ul>
                     </li>
 
@@ -189,93 +189,6 @@
                                     </div>
                                 </a>
                             </li>
-                        </ul>
-                    </li>
-
-                    <!-- Master -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-database"></span>Master
-                        </a>
-                        <ul class="dropdown-menu navbar-dropdown-caret">
-                            @* <li>
-                                <a class="dropdown-item @(currentController == "State" ? "active" : "")" href="/State">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="map"></span>State Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "City" ? "active" : "")" href="/City">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="map-pin"></span>City Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "RawMaterialsMaster" ? "active" : "")" href="/RawMaterialsMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="package"></span>Raw Materials Master
-                                    </div>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item @(currentController == "UnitMaster" ? "active" : "")" href="/UnitMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="sliders"></span>Unit Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "ItemCategoryMaster" ? "active" : "")" href="/ItemCategoryMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="layers"></span>Item Category Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "DayFrequencyMaster" ? "active" : "")" href="/DayFrequencyMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="repeat"></span>Frequency Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "Supplier" ? "active" : "")" href="/Supplier">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="users"></span>Supplier Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "InvoiceTemplateMaster" ? "active" : "")" href="/InvoiceTemplateMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="file-text"></span>Invoice Template Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "StatusMaster" ? "active" : "")" href="/StatusMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="activity"></span>Status Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "AllInOneMaster" ? "active" : "")" href="/AllInOneMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="message-square"></span>All In One Master
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "ProcessMaster" ? "active" : "")" href="/ProcessMaster">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2" data-feather="git-branch"></span>Process Master
-                                    </div>
-                                </a>
-                            </li> *@
                         </ul>
                     </li>
 
@@ -607,7 +520,8 @@
                                     </div>
                                 </a>
                             </li>
-                            @* <li class="dropdown">
+                            @* 
+                            <li class="dropdown">
                                 <a class="dropdown-item dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
                                    href="#"
                                    data-bs-toggle="dropdown"
@@ -651,12 +565,13 @@
                                     </li>
                                 </ul>
                             </li> *@
-                            <li class="nav-item dropdown">
-                            <li class="dropdown dropdown-submenu dropstart modules-parent">
-                                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-angle-left"></i> Masters
+                            <li class="dropdown dropdown-submenu dropstart modules-parent master_link">
+                                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span><span class="uil fs-8 me-2 uil-setting"></span>Masters</span>
+                                    </div>
                                 </a>
-
                                 <ul class="dropdown-menu modules-mega-menu py-3">
                                     <div class="container-fluid">
                                         <div class="row gx-4">
@@ -665,7 +580,7 @@
                                             <div class="col-md-3">
                                                 <div class="dropdown-item-group mb-2">
                                                     <span class="me-2" data-feather="box"></span>
-                                                    <h6 class="dropdown-item-title">Asset Master</h6>
+                                                    <h6 class="dropdown-item-title fw-bold">Asset Master</h6>
                                                 </div>
                                                 <a class="dropdown-link" href="/AssetMaster/Index">Asset Master</a>
                                                 <a class="dropdown-link" href="/AssetCategoryMaster/Index">Category Master</a>
@@ -676,7 +591,7 @@
                                             <div class="col-md-3">
                                                 <div class="dropdown-item-group mb-2">
                                                     <span class="me-2" data-feather="credit-card"></span>
-                                                    <h6 class="dropdown-item-title">Account Master</h6>
+                                                    <h6 class="dropdown-item-title fw-bold">Account Master</h6>
                                                 </div>
                                                 <a class="dropdown-link" href="/PaymentMode">Payment Mode Master</a>
                                                 <a class="dropdown-link" href="/AccountType">Account Type Master</a>
@@ -692,7 +607,7 @@
                                             <div class="col-md-3">
                                                 <div class="dropdown-item-group mb-2">
                                                     <span class="me-2" data-feather="users"></span>
-                                                    <h6 class="dropdown-item-title">Staff Master</h6>
+                                                    <h6 class="dropdown-item-title fw-bold">Staff Master</h6>
                                                 </div>
                                                 <a class="dropdown-link" href="/LevelMaster">Level Master</a>
                                                 <a class="dropdown-link" href="/DesignationMaster">Designation Master</a>
@@ -704,7 +619,7 @@
                                             <div class="col-md-3">
                                                 <div class="dropdown-item-group mb-2">
                                                     <span class="me-2" data-feather="layers"></span>
-                                                    <h6 class="dropdown-item-title">General</h6>
+                                                    <h6 class="dropdown-item-title fw-bold">General</h6>
                                                 </div>
                                                 <a class="dropdown-link" href="/State">State Master</a>
                                                 <a class="dropdown-link" href="/City">City Master</a>
@@ -1452,6 +1367,38 @@
         </div>
     </a>
     <!--/NEED TO REMOVE - CUSTOMIZE-->
+
+    <!--All in One Link-->
+    <!-- Floating WhatsApp Link Button -->
+    <div id="allInOneFab" title="Send All-In-One Link">
+        <i class="fa-brands fa-whatsapp"></i>
+    </div>
+    <!-- All In One Link Modal -->
+    <div id="allInOneModal" class="aio-modal d-none">
+        <h6 class="mb-2 fw-bold">Send Link</h6>
+
+        <input type="text" id="aioName" class="form-control form-control-sm mb-2" placeholder="Customer Name">
+        <div class="input-group mb-1">
+            <span class="input-group-text" id="countryCode">+91</span>
+            <input type="tel"
+                   id="aioMobile"
+                   class="form-control form-control-sm"
+                   placeholder="WhatsApp Number"
+                   inputmode="numeric"
+                   pattern="[0-9]*">
+        </div>
+        <!-- Error message -->
+        <div id="aioMobileError" class="text-danger small d-none">
+            Please enter WhatsApp number
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-light btn-sm" id="btnCloseAio">Cancel</button>
+            <button class="btn btn-success btn-sm fw-bold" id="btnSendAio">Send</button>
+        </div>
+    </div>
+    <!--/All in One Link-->
+
     <!-- Loader Overlay -->
     <div id="loaderOverlay">
         <div class="spinner"></div>

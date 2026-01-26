@@ -1,4 +1,65 @@
-﻿.btn-action-xs {
+﻿/*All-In-One Link*/
+/* Floating button */
+#allInOneFab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px; /* ← move to right */
+    width: 48px;
+    height: 48px;
+    background: #25D366;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1050;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+
+#allInOneFab svg {
+        width: 22px;
+        height: 22px;
+    }
+
+/* Small modal */
+.aio-modal {
+    position: fixed;
+    bottom: 80px;
+    right: 20px; /* ← align with button */
+    width: 260px;
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 1051;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+}
+.aio-modal {
+    transform-origin: bottom right;
+    animation: scaleIn 0.15s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/*All-In-One Link*/
+
+.master_link > .dropdown-toggle::before,
+.master_link > .dropdown-toggle::after {
+    display: none !important;
+}
+
+.btn-action-xs {
     padding: 7px !important; /* smaller padding */
     font-size: 12px !important; /* reduce font size */
     line-height: 1 !important;

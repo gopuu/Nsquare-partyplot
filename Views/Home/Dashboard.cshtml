@@ -83,7 +83,7 @@
                             <!---------- card start ---------->
                             <div class="row g-4 py-4">
                                 <!-- Card 1 : Total Sales -->
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="stat-box bg-mint">
                                         <div class="stat-top mint"></div>
                                         <div class="stat-body">
@@ -101,7 +101,7 @@
                                 </div>
 
                                 <!-- Card 2 : Total Orders -->
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
@@ -119,7 +119,7 @@
                                 </div>
 
                                 <!-- Card 3 : Customers -->
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="stat-box bg-sky">
                                         <div class="stat-top sky"></div>
                                         <div class="stat-body">
@@ -140,6 +140,56 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Card 4 : Events Lost -->
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-danger-light">
+                                        <div class="stat-top danger-light"></div>
+                                        <div class="stat-body">
+                                            <span data-bs-toggle="tooltip"
+                                                  data-bs-html="true"
+                                                  class="text-white"
+                                                  data-bs-placement="bottom"
+                                                  title="<b>Events Lost</b><br>
+                                                         By default filter: <b>This Month</b><br>
+                                                         Includes cancelled, rejected, and unconfirmed events">
+                                                Events Lost <i class="bi bi-info-circle text-danger"></i>
+                                            </span>
+
+                                            <h3 class="value text-white" id="totalEventsLost">10</h3>
+
+                                            <small class="text-secondary">Cancelled / Rejected Events</small>
+                                        </div>
+                                    </div>
+                                    <style>
+                                        /* Light Red Background */
+                                        .bg-danger-light {
+                                            background: #fff5f5;
+                                            border: 1px solid #f5c2c7;
+                                        }
+
+                                        /* Top Accent Strip */
+                                        .stat-top.danger-light {
+                                            background: linear-gradient(90deg, #f87171, #ef4444);
+                                        }
+
+                                        /* Value Styling */
+                                        .stat-box.bg-danger-light .value {
+                                            font-weight: 700;
+                                            margin-top: 8px;
+                                        }
+
+                                        /* Hover Effect */
+                                        .stat-box.bg-danger-light:hover {
+                                            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.15);
+                                            transform: translateY(-2px);
+                                            transition: all 0.2s ease-in-out;
+                                        }
+
+                                    </style>
+                                </div>
+
+
                             </div>
                             <!---------- card end ---------->
                             <!---------- graph start ---------->

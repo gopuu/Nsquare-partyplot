@@ -69,6 +69,74 @@ document.addEventListener("DOMContentLoaded", function () {
             mainLink.setAttribute('href', onlySubLink);
         }
     });
+    
+    //All In One Link -- START
+    feather.replace();
+
+    const fab = document.getElementById("allInOneFab");
+    const modal = document.getElementById("allInOneModal");
+
+    fab.addEventListener("click", function () {
+        modal.classList.toggle("d-none");
+    });
+
+    document.getElementById("btnCloseAio").addEventListener("click", function () {
+        modal.classList.add("d-none");
+    });
+
+    function validateAioMobile() {
+        const mobile = $("#aioMobile").val().trim();
+
+        if (!mobile) {
+            showError("Please enter WhatsApp number");
+            return false;
+        }
+
+        if (mobile.length !== 10) {
+            showError("Enter a valid 10-digit number");
+            return false;
+        }
+
+        hideError();
+        return true;
+    }
+
+    function showError(msg) {
+        $("#aioMobileError").text(msg).removeClass("d-none");
+    }
+
+    function hideError() {
+        $("#aioMobileError").addClass("d-none");
+    }
+    
+    //Hide Error While Typing (Auto)
+    $("#aioMobile").on("input", function () {
+        const val = $(this).val().trim();
+        if (val.length === 10) {
+            hideError();
+        }
+    });
+
+    document.getElementById("btnSendAio").addEventListener("click", function () {
+        if (!validateAioMobile()) {
+            return;
+        }
+
+        const name = document.getElementById("aioName").value.trim();
+        const countryCode = document.getElementById("countryCode").innerText.replace("+", "");
+        const mobile = document.getElementById("aioMobile").value.trim();
+        const fullNumber = countryCode + mobile;
+
+        // 🔗 Your All-In-One link
+        const link = `${window.location.origin}/AllInOneLink?name=${encodeURIComponent(name)}`;
+        const message = `Hi ${name || ""},\nPlease check this link:\n${link}`;
+
+        const whatsappUrl = `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, "_blank");
+
+        modal.classList.add("d-none");
+    });
+    //All In One Link -- END
 });
 
 let ajaxActiveCount = 0;

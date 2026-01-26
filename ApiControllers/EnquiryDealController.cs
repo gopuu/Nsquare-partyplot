@@ -380,6 +380,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Duration", SqlDbType.NVarChar, 20).Value = request.Duration;
                     cmd.Parameters.Add("@FromAmount", SqlDbType.Decimal).Value = request.FromAmount;
                     cmd.Parameters.Add("@ToAmount", SqlDbType.Decimal).Value = request.ToAmount;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.NVarChar, 20).Value = request.FromDate;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.NVarChar, 20).Value = request.ToDate;
 
                     con.Open();
                     using (SqlDataReader reader = cmd.ExecuteReader())

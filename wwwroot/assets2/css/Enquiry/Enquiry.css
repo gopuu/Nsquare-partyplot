@@ -1,0 +1,195 @@
+﻿
+.picker-transition {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 1;
+}
+
+.picker-hide {
+    opacity: 0;
+    transform: translateY(-5px); /* subtle move */
+}
+
+.process-board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* exactly 6 equal columns */
+    gap: 15px;
+}
+
+.process-column {
+    width: 100%;
+}
+
+.followup-row {
+    cursor: pointer;
+    border-top: 1px solid #eee;
+}
+
+.followup-row:hover {
+    background-color: #f6f6f6;
+}
+
+/*<!-- Follow-Up Modal -->*/
+#followupModal .text-secondary {
+    font-weight: 600;
+    color: #6c757d !important;
+}
+
+#followupModal span {
+    font-size: 14px;
+}
+
+/* Compact modal UI */
+#followupModal .modal-body,
+#followupModal .modal-header,
+#followupModal .modal-footer {
+    padding: 10px 15px;
+}
+
+#followupModal .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+#followupModal .form-control,
+#followupModal .form-select {
+    padding: 3px 6px !important;
+    font-size: 0.78rem !important;
+    height: 28px;
+}
+
+#txtDiscussionNotes {
+    height: 120px !important; /* or any height you want */
+    padding: 6px !important;
+    line-height: 1.3;
+    resize: vertical; /* allow user to expand */
+}
+
+
+#followupHistoryTable th,
+#followupHistoryTable td {
+    font-size: 0.75rem !important;
+    padding: 4px 6px !important;
+}
+
+#followupHistoryWrapper {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+
+/*<!-- Clock Time Design -- Delas - > START TIME & END TIME -- START -->*/
+
+.custom-clock-picker {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 230px;
+    background: #fff;
+    z-index: 10;
+    transform: translateY(8px);
+}
+
+.clock-face {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    margin: 0 auto;
+}
+
+.clock-number {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    line-height: 32px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: 0.2s ease;
+    top: 42%;
+    left: 40%;
+    transform: rotate(calc(30deg * var(--i))) translateY(-70px) rotate(calc(-30deg * var(--i)));
+}
+
+.clock-number:hover {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.clock-hand {
+    position: absolute;
+    left: 50%;
+    transform-origin: bottom center;
+    transition: 0.3s ease;
+}
+
+.hour-hand {
+    top: 50px;
+    height: 40px;
+    width: 3px;
+    background-color: #6c757d;
+}
+
+.minute-hand {
+    top: 30px;
+    height: 60px;
+    width: 2px;
+    background-color: #6c757d;
+}
+
+.active-hand {
+    background-color: #0d6efd !important;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.6);
+}
+
+.center-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #0d6efd;
+    border-radius: 50%;
+    top: 85px;
+    left: 85px;
+}
+
+.btn.active {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+}
+
+#clockPicker::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: 25px;
+    width: 14px;
+    height: 14px;
+    background: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #dee2e6;
+    border-top: 1px solid #dee2e6;
+}
+
+/* 💡 Text highlight glow */
+.active-text {
+    color: #0d6efd !important;
+    text-shadow: 0 0 5px rgba(13, 110, 253, 0.6);
+    transition: all 0.3s ease;
+}
+
+.inactive-text {
+    color: #333 !important;
+    text-shadow: none;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+
