@@ -42,19 +42,19 @@
     <link href="/assets2/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
     <link href="/assets2/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
     <script>
-      var phoenixIsRTL = window.config.config.phoenixIsRTL;
-      if (phoenixIsRTL) {
-        var linkDefault = document.getElementById('style-default');
-        var userLinkDefault = document.getElementById('user-style-default');
-        linkDefault.setAttribute('disabled', true);
-        userLinkDefault.setAttribute('disabled', true);
-        document.querySelector('html').setAttribute('dir', 'rtl');
-      } else {
-        var linkRTL = document.getElementById('style-rtl');
-        var userLinkRTL = document.getElementById('user-style-rtl');
-        linkRTL.setAttribute('disabled', true);
-        userLinkRTL.setAttribute('disabled', true);
-      }
+        var phoenixIsRTL = window.config.config.phoenixIsRTL;
+        if (phoenixIsRTL) {
+          var linkDefault = document.getElementById('style-default');
+          var userLinkDefault = document.getElementById('user-style-default');
+          linkDefault.setAttribute('disabled', true);
+          userLinkDefault.setAttribute('disabled', true);
+          document.querySelector('html').setAttribute('dir', 'rtl');
+        } else {
+          var linkRTL = document.getElementById('style-rtl');
+          var userLinkRTL = document.getElementById('user-style-rtl');
+          linkRTL.setAttribute('disabled', true);
+          userLinkRTL.setAttribute('disabled', true);
+        }
     </script>
     <link href="/assets2/vendors/leaflet/leaflet.css" rel="stylesheet">
     <link href="/assets2/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
@@ -64,7 +64,7 @@
     <!--sweert alert-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="~/assets2/css/Shared/Layout.css" asp-append-version="true" />
-  </head>
+</head>
 
 <body>
     <!-- ===============================================-->
@@ -78,7 +78,7 @@
                     <div class="d-flex align-items-center">
                         <div class="d-flex align-items-center">
                             <img src="/assets2/img/icons/infinity_logo1.png" alt="infinity" class="infinitylogo_img" />
-@*                             <h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>
+                            @*                             <h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>
  *@                        </div>
                     </div>
                 </a>
@@ -95,7 +95,7 @@
                                     </div>
                                 </a>
                             </li>
-                            
+
                         </ul>
                     </li>
 
@@ -128,7 +128,7 @@
                                     </div>
                                 </a>
                             </li>
-                           
+
                             <li>
                                 <a class="dropdown-item @(currentController == "AllInOneLink" ? "active" : "")" href="/AllInOneLink">
                                     <div class="dropdown-item-wrapper">
@@ -155,7 +155,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "FeedbackDetail" ? "active" : "")" href="/FeedbackDetail">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Detail 
+                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Detail
                                     </div>
                                 </a>
                             </li>
@@ -198,7 +198,7 @@
                             <span class="uil fs-8 me-2 uil-database"></span>Master
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
-                            <li>
+                            @* <li>
                                 <a class="dropdown-item @(currentController == "State" ? "active" : "")" href="/State">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="map"></span>State Master
@@ -275,7 +275,7 @@
                                         <span class="me-2" data-feather="git-branch"></span>Process Master
                                     </div>
                                 </a>
-                            </li>
+                            </li> *@
                         </ul>
                     </li>
 
@@ -292,7 +292,7 @@
                                     </div>
                                 </a>
                             </li>
-                            <li>
+                            @*  <li>
                                 <a class="dropdown-item @(currentController == "PaymentMode" ? "active" : "")" href="/PaymentMode">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="credit-card"></span>Payment Mode Master
@@ -340,7 +340,7 @@
                                         <span class="me-2 uil" data-feather="arrow-down-circle"></span>Expense SubCategory Master
                                     </div>
                                 </a>
-                            </li>
+                            </li> *@
                             <li>
                                 <a class="dropdown-item @(currentController == "IncomeTransactions" ? "active" : "")" href="/IncomeTransactions">
                                     <div class="dropdown-item-wrapper">
@@ -424,7 +424,7 @@
                             <span class="uil fs-8 me-2 uil-user-circle"></span>Staff
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
-                            <li>
+                            @* <li>
                                 <a class="dropdown-item @(currentController == "LevelMaster" ? "active" : "")" href="/LevelMaster">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="sliders"></span>Level Master
@@ -452,7 +452,7 @@
                                         <span class="me-2 uil" data-feather="users"></span>Staff Master
                                     </div>
                                 </a>
-                            </li>
+                            </li> *@
                             <li>
                                 <a class="dropdown-item @(currentController == "StaffDocuments" ? "active" : "")" href="/StaffDocuments">
                                     <div class="dropdown-item-wrapper">
@@ -607,7 +607,7 @@
                                     </div>
                                 </a>
                             </li>
-                            <li class="dropdown">
+                            @* <li class="dropdown">
                                 <a class="dropdown-item dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
                                    href="#"
                                    data-bs-toggle="dropdown"
@@ -650,10 +650,82 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </li>
+                            </li> *@
+                            <li class="nav-item dropdown">
+                            <li class="dropdown dropdown-submenu dropstart modules-parent">
+                                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa-solid fa-angle-left"></i> Masters
+                                </a>
 
-                        </ul>
+                                <ul class="dropdown-menu modules-mega-menu py-3">
+                                    <div class="container-fluid">
+                                        <div class="row gx-4">
+
+                                            <!-- Asset Master -->
+                                            <div class="col-md-3">
+                                                <div class="dropdown-item-group mb-2">
+                                                    <span class="me-2" data-feather="box"></span>
+                                                    <h6 class="dropdown-item-title">Asset Master</h6>
+                                                </div>
+                                                <a class="dropdown-link" href="/AssetMaster/Index">Asset Master</a>
+                                                <a class="dropdown-link" href="/AssetCategoryMaster/Index">Category Master</a>
+                                                <a class="dropdown-link" href="/AssetSubCategoryMaster/Index">SubCategory Master</a>
+                                            </div>
+
+                                            <!-- Account Master -->
+                                            <div class="col-md-3">
+                                                <div class="dropdown-item-group mb-2">
+                                                    <span class="me-2" data-feather="credit-card"></span>
+                                                    <h6 class="dropdown-item-title">Account Master</h6>
+                                                </div>
+                                                <a class="dropdown-link" href="/PaymentMode">Payment Mode Master</a>
+                                                <a class="dropdown-link" href="/AccountType">Account Type Master</a>
+                                                <a class="dropdown-link" href="/AccountMaster">Account Master</a>
+                                                <a class="dropdown-link" href="/ExpenseCategoryMaster">Expense Category Master</a>
+                                                <a class="dropdown-link" href="/IncomeCategoryMaster">Income Category Master</a>
+                                                <a class="dropdown-link" href="/IncomeSubCategoryMaster">Income SubCategory Master</a>
+                                                <a class="dropdown-link" href="/ExpenseSubCategoryMaster">Expense SubCategory Master</a>
+
+                                            </div>
+
+                                            <!-- Staff Master -->
+                                            <div class="col-md-3">
+                                                <div class="dropdown-item-group mb-2">
+                                                    <span class="me-2" data-feather="users"></span>
+                                                    <h6 class="dropdown-item-title">Staff Master</h6>
+                                                </div>
+                                                <a class="dropdown-link" href="/LevelMaster">Level Master</a>
+                                                <a class="dropdown-link" href="/DesignationMaster">Designation Master</a>
+                                                <a class="dropdown-link" href="/LeaveTypeMaster">Leave Type Master</a>
+                                                <a class="dropdown-link" href="/StaffMaster">Staff Master</a>
+                                            </div>
+
+                                            <!-- Other Masters -->
+                                            <div class="col-md-3">
+                                                <div class="dropdown-item-group mb-2">
+                                                    <span class="me-2" data-feather="layers"></span>
+                                                    <h6 class="dropdown-item-title">General</h6>
+                                                </div>
+                                                <a class="dropdown-link" href="/State">State Master</a>
+                                                <a class="dropdown-link" href="/City">City Master</a>
+                                                <a class="dropdown-link" href="/RawMaterialsMaster">Raw Materials Master</a>
+                                                <a class="dropdown-link" href="/UnitMaster">Unit Master</a>
+                                                <a class="dropdown-link" href="/ItemCategoryMaster">Item Category</a>
+                                                <a class="dropdown-link" href="/DayFrequencyMaster">Frequency Master</a>
+                                                <a class="dropdown-link" href="/Supplier">Supplier Master</a>
+                                                <a class="dropdown-link" href="/StatusMaster">Status Master</a>
+                                                <a class="dropdown-link" href="/InvoiceTemplateMaster">Invoice Template Master</a>
+                                                <a class="dropdown-link" href="/AllInOneMaster">All In One Master</a>
+                                                <a class="dropdown-link" href="/ProcessMaster">Process Master</a>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </ul>
+                            </li>
                     </li>
+
 
                     <!-- Infinity Centre -->
                     @* <li class="nav-item dropdown">
@@ -673,7 +745,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket 
+                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket
                                     </div>
                                 </a>
                             </li>
@@ -723,12 +795,12 @@
                 <li class="nav-item d-none">
                     <div class="theme-control-toggle fa-icon-wait px-2">
                         <input class="form-check-input ms-0 theme-control-toggle-input" type="checkbox" data-theme-control="phoenixTheme" value="dark" id="themeControlToggle" />
-                        <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" 
-                        data-bs-title="Switch theme" style="height:32px;width:32px;">
+                        <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left"
+                               data-bs-title="Switch theme" style="height:32px;width:32px;">
                             <span class="icon" data-feather="moon"></span>
                         </label>
-                        <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" 
-                        data-bs-placement="left" data-bs-title="Switch theme" style="height:32px;width:32px;">
+                        <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip"
+                               data-bs-placement="left" data-bs-title="Switch theme" style="height:32px;width:32px;">
                             <span class="icon" data-feather="sun"></span>
                         </label>
                     </div>
@@ -973,10 +1045,10 @@
                                 <div class="text-center pt-4 pb-3">
                                     <div class="avatar avatar-xl ">
                                         <img class="rounded-circle mb-2 userAvatar"
-                                                 src=""
-                                                 alt="User Image"
-                                                 width="80"
-                                                 height="80" />
+                                             src=""
+                                             alt="User Image"
+                                             width="80"
+                                             height="80" />
                                     </div>
                                     <h6 class="mt-2 text-body-emphasis" id="lblUserName"></h6>
 
@@ -1306,7 +1378,6 @@
     </main><!-- ===============================================-->
     <!--    End of Main Content-->
     <!-- ===============================================-->
-
     <!--NEED TO REMOVE - CUSTOMIZE-->
     <div class="offcanvas offcanvas-end settings-panel border-0" id="settings-offcanvas" tabindex="-1" aria-labelledby="settings-offcanvas">
         <div class="offcanvas-header align-items-start border-bottom flex-column border-translucent">
@@ -1381,39 +1452,98 @@
         </div>
     </a>
     <!--/NEED TO REMOVE - CUSTOMIZE-->
-
     <!-- Loader Overlay -->
     <div id="loaderOverlay">
         <div class="spinner"></div>
     </div>
     <!--/ Loader Overlay -->
     <style>
-       /*  /* left side dropdown 
-        .dropdown-left {
+
+        /*  /* required for nested dropdown
+                                .dropdown-submenu {
+                                    position: relative;
+                                } */
+
+        /* Modules mega menu → LEFT open */
+        .modules-mega-menu {
+            top: 0 !important;
+            right: 95% !important; /* LEFT side */
             left: auto !important;
-            right: 100% !important;
-            top: 0;
-            margin-right: 1px;
-            border-radius: 12px;
-            min-width: 220px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            margin-right: 10px;
+            width: 950px; /* adjust as needed */
+            transform: none !important;
         }
 
-        /* optional arrow 
-        .dropdown-left::before {
-            content: "";
-            position: absolute;
-            top: 16px;
-            right: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: transparent transparent transparent #fff;
-        } */
+        /* parent fix */
+        .modules-parent {
+            position: relative;
+        }
+
+        /* mega menu positioning */
+        .modules-mega-menu {
+            width: 720px;
+            right: 100%;
+            left: auto;
+            top: 0;
+            margin-right: 12px;
+            transform: none !important;
+        }
+
+        /* keep menu open while hovering inside */
+        .modules-parent:hover > .dropdown-menu {
+            display: block;
+        }
+
+        /* style */
+        .dropdown-item-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dropdown-item-title {
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .dropdown-link {
+            display: block;
+            padding: 6px 0 6px 28px;
+            color: #344050;
+            text-decoration: none;
+        }
+
+            .dropdown-link:hover {
+                color: #0d6efd;
+            }
+
+
+
+        /*  /* left side dropdown
+                                .dropdown-left {
+                                    left: auto !important;
+                                    right: 100% !important;
+                                    top: 0;
+                                    margin-right: 1px;
+                                    border-radius: 12px;
+                                    min-width: 220px;
+                                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                                }
+
+                                /* optional arrow
+                                .dropdown-left::before {
+                                    content: "";
+                                    position: absolute;
+                                    top: 16px;
+                                    right: -6px;
+                                    border-width: 6px;
+                                    border-style: solid;
+                                    border-color: transparent transparent transparent #fff;
+                                } */
 
         .avatar img, .avatar .avatar-name {
-            height:70%;
-            width:70%;
-
+            height: 70%;
+            width: 70%;
         }
 
         /* Loader overlay */
@@ -1424,7 +1554,7 @@
             width: 100%;
             height: 100%;
             background: rgba(200, 200, 200, 0.7); /* light transparent gray */
-            display: none;  /* flex; */ /* show by default */
+            display: none; /* flex; */ /* show by default */
             justify-content: center;
             align-items: center;
             z-index: 9999;
@@ -1441,8 +1571,13 @@
         }
 
         @@keyframes spin {
-            0% {transform: rotate(0deg);}
-            100% {transform: rotate(360deg);}
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
     <!-- ===============================================-->
@@ -1469,7 +1604,25 @@
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
     <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
-    
-  </body>
+    <script>
+        document.querySelectorAll('.modules-parent').forEach(item => {
+
+            let timeout;
+
+            item.addEventListener('mouseenter', () => {
+                clearTimeout(timeout);
+                item.querySelector('.dropdown-menu').classList.add('show');
+            });
+
+            item.addEventListener('mouseleave', () => {
+                timeout = setTimeout(() => {
+                    item.querySelector('.dropdown-menu').classList.remove('show');
+                }, 300); // delay so user can move mouse safely
+            });
+
+        });
+    </script>
+
+</body>
 
 </html>
