@@ -1,4 +1,5 @@
-﻿function showLoader() {
+﻿
+function showLoader() {
     document.getElementById("loaderOverlay").style.display = "flex";
 }
 
@@ -287,13 +288,23 @@ function logoutUser() {
     // }
 }
 
-// $(document).ready(function () {
-//let companyName = sessionStorage.getItem("companyname");
-// // Condition check
-// if (companyName && companyName.trim() !== "") {
-//     $("#companyName").text(companyName);
-// } else {
-//     $("#companyName").text("Infinity"); // default
-// }
-// console.log("Company Names:", companyName);
-//});
+//USER PROFLE
+(function () {
+    const toggle = document.getElementById("navbarDropdownUser");
+    const menu = toggle?.nextElementSibling;
+
+    if (!toggle || !menu) return;
+
+    toggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        menu.classList.toggle("show");
+    });
+
+    document.addEventListener("click", function () {
+        menu.classList.remove("show");
+    });
+
+    menu.addEventListener("click", function (e) {
+        e.stopPropagation(); // keep open when clicking inside
+    });
+})();

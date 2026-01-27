@@ -1,4 +1,5 @@
 ﻿let selectedMonthDuration = "thismonth";
+const HEADER_KEY = "printWithHeader";
 
 document.addEventListener("DOMContentLoaded", function () {
     loadEventTypeDropdown();
@@ -118,8 +119,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         ViewBookingReport();
     });
-});
 
+    // WITH HEADER -- START ------------
+    // Restore value on page load
+    const saved = sessionStorage.getItem(HEADER_KEY);
+    if (saved !== null) {
+        document.getElementById("toggleWithHeader").checked = (saved === "true");
+    }
+
+    // On toggle change
+    document.getElementById("toggleWithHeader").addEventListener("change", function () {
+        const isChecked = this.checked;
+        sessionStorage.setItem(HEADER_KEY, isChecked);
+
+        console.log("With Header:", isChecked); // 🔹 print value
+        ViewBookingReport();
+    });
+    // WITH HEADER -- END ------------
+
+});
 function loadEventTypeDropdown(selectedId = "") {
     $.ajax({
         url: "/api/EventType/GetEventTypeListForDropdown",
@@ -218,13 +236,17 @@ function loadCompanyHallDropdown(selectedId = "") {
 function ViewBookingReport(actionName = "viewPDF") {
     $('#btn-loader').show();
 
+    const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
+    console.log("With Header:", withHeader);
+
     const inputData = {
         EventTypeId: parseInt($("#ddlEventType").val()) || 0,
         EventSubTypeId: parseInt($("#ddlEventSubType").val()) || 0,
         HallId: parseInt($("#ddlCompanyHall").val()) || 0,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration
+        FilterDuration: selectedMonthDuration,
+        WithHeader: withHeader
     };
 
     const url = (actionName === "downloadExcel")

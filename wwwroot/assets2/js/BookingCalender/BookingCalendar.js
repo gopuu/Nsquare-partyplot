@@ -24,7 +24,8 @@ document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click
             editorsInitialized = true;
         }
 
-    } else {
+    }
+    else {
         container.style.display = 'none';
     }
 });
@@ -173,7 +174,6 @@ $("#btnSaveReschedule").on("click", function () {
 });
 
 
-
 $(document).ready(function () {
     $("#btnwritrnote").click(function () {
         let editor = $(".Payment_editorsContainer");
@@ -250,44 +250,6 @@ function fetchHallDetails(bookingData, banquetId = 0) {
 //banquet hall details - dropdown -- END ----------------------
 
 //Lead reference - dropdown -- START ----------------------
-function loadLeadSourceList2() {
-    //showLoader();
-    $.ajax({
-        url: "/api/LeadSource/GetLeadSourceList",
-        type: "GET",
-        success: function (response) {
-            //console.log("leadSource response:", response);
-            if (response.status === "Success") {
-                let options = `<option value="0">-- Select Reference --</option>`; // default option
-
-                if (response.data && response.data.length > 0) {
-                    $.each(response.data, function (index, item) {
-                        options += `<option value="${item.Id}">${item.Name}</option>`;
-                    });
-                } else {
-                    options += `<option value="0">No Reference Found</option>`;
-                }
-                $("#booking_leadReferenceDropdown").html(options);
-            } else {
-                $("#booking_leadReferenceDropdown").html(`<option value="0">No Reference Found</option>`);
-            }
-        },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching lead source list.",
-                confirmButtonText: "OK",
-            });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
-        }
-    });
-}
 function loadLeadSourceList(selectedId = null) {
     $.ajax({
         url: "/api/LeadSource/GetLeadSourceList",
@@ -2251,40 +2213,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 🖨️ Print Function Prospect
     document.getElementById("btnEventForm").addEventListener("click", function () {
-        //const bookingId = getBookingId();
+        const bookingId = getBookingId();
         //console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
+        $.ajax({
+            url: '/api/Report/DownloadBookingEventReport',
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify({
+                BookingId: bookingId
+            }),
+            success: function (res) {
 
-        fetch('/api/Report/DownloadBookingEventReport', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "Success" && res.data.FileUrl) {
-                const link = document.createElement('a');
-                link.href = res.data.FileUrl;
-                link.download = '';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                if (res.status === "Success" && res.data && res.data.FileUrl) {
 
-            } else {
-                alert("PDF Not generate");
+                    const link = document.createElement("a");
+                    link.href = res.data.FileUrl;
+                    link.download = "";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                }
+                else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Failed',
+                        text: 'PDF not generated',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Error while downloading PDF");
             }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Error while downloading PDF");
         });
-
-        //const link = document.createElement("a");
-        //link.href = "/assets2/Pdf/Eventform.pdf";
-        //link.download = "EventForm.pdf";
-        //document.body.appendChild(link);
-        //link.click();
-        //document.body.removeChild(link);
     });
 
     // Open foodwestage modal safely
@@ -2301,7 +2264,12 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify({ bookingId: bookingId }),
             success: function (res) {
                 if (res.status !== "Success") {
-                    alert(res.message);
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Failed',
+                        text: res.message || 'Failed to get FoodWastage',
+                        confirmButtonText: 'OK'
+                    });
                     return;
                 }
                 let total = 0;
@@ -4159,13 +4127,19 @@ function renderPaymentTable(data) {
 // ----------------- OPTIONAL: Download button click -----------------
 $(document).on("click", ".btn-download", function () {
     let paymentId = $(this).data("id");
-    let bookingId = getBookingId();
+    let bookingId = 0; // getBookingId();
+    let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
 
+    var payload = {
+        PaymentId: paymentId,
+        BookingId: bookingId,
+        ActionBy: actionBy
+    };
     $.ajax({
         url: "/api/Booking_Payments/DownloadPaymentReceipt",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ PaymentId: paymentId, BookingId: bookingId }),
+        data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
 
@@ -4179,6 +4153,9 @@ $(document).on("click", ".btn-download", function () {
             } else {
                 Swal.fire("Error", res.message, "error");
             }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Download Receipt Failed")
         }
     });
 });
@@ -4186,12 +4163,18 @@ $(document).on("click", ".btn-download", function () {
 $(document).on("click", ".btn-download-all", function () {
     let paymentId = 0;
     let bookingId = getBookingId();
+    let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
 
+    var payload = {
+        PaymentId: paymentId,
+        BookingId: bookingId,
+        ActionBy: actionBy
+    };
     $.ajax({
-        url: "/api/Booking_Payments/DownloadAllPaymentReceipt",
+        url: "/api/Booking_Payments/DownloadPaymentReceipt",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ PaymentId: paymentId, BookingId: bookingId }),
+        data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
 
@@ -4205,6 +4188,9 @@ $(document).on("click", ".btn-download-all", function () {
             } else {
                 Swal.fire("Error", res.message, "error");
             }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Download All-Receipt Failed")
         }
     });
 });

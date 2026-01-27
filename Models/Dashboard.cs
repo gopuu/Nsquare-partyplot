@@ -102,9 +102,11 @@
 
     public class DashboardWidgetCounts
     {
-        public int? TotalSales { get; set; }
-        public int? TotalCustomer { get; set; }
-        public int? TotalEvents { get; set; }
+        public decimal? TotalSales { get; set; }
+        public long? TotalCustomer { get; set; }
+        public long? TotalEvents { get; set; }
+        public long? EventLostCount { get; set; }
+        public decimal? TotalEventsLost { get; set; }
     }
     #endregion
 

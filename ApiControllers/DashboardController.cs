@@ -219,9 +219,11 @@ namespace ERPAdmin.ApiControllers
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
-                    result.TotalSales = Convert.ToInt32(row["TotalSales"]);
-                    result.TotalCustomer = Convert.ToInt32(row["TotalCustomer"]);
-                    result.TotalEvents = Convert.ToInt32(row["TotalEvents"]);
+                    result.TotalSales = Convert.ToDecimal(row["TotalSales"]);
+                    result.TotalCustomer = Convert.ToInt64(row["TotalCustomer"]);
+                    result.TotalEvents = Convert.ToInt64(row["TotalEvents"]);
+                    result.EventLostCount = Convert.ToInt64(row["EventLostCount"]);
+                    result.TotalEventsLost = Convert.ToDecimal(row["TotalEventsLost"]);
                 }
 
                 apiResponse.status = "Success";

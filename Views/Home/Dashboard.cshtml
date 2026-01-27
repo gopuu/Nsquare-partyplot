@@ -87,15 +87,17 @@
                                     <div class="stat-box bg-mint">
                                         <div class="stat-top mint"></div>
                                         <div class="stat-body">
-                                            <span data-bs-toggle="tooltip"
+                                            <span class="kpi-tooltip"
+                                                  data-bs-toggle="tooltip"
                                                   data-bs-html="true"
                                                   data-bs-placement="bottom"
-                                                  title="<b>Total Sales</b><br> By default filter: <b>This Month</b><br> All valid orders included">
-                                                Total Sales <i class="bi bi-info-circle"></i>
+                                                  data-tooltip-title="Total Sales"
+                                                  data-tooltip-desc="All valid orders included">
+                                                Total Sales <!-- <i class="fa-solid fa-circle-info"></i> -->
                                             </span>
 
                                             <h3 class="value" id="totalSales"></h3>
-                                            <span class="sub">Last 12 Months</span>
+                                            <span class="sub">In This Month</span>
                                         </div>
                                     </div>
                                 </div>
@@ -105,15 +107,16 @@
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
-                                            <span data-bs-toggle="tooltip"
+                                            <span class="kpi-tooltip"
+                                                  data-bs-toggle="tooltip"
                                                   data-bs-html="true"
                                                   data-bs-placement="bottom"
-                                                  title="<b>Total Events</b><br> By default filter: <b>This Month</b><br>
-                                                        All valid orders included">
-                                                Total Events <i class="bi bi-info-circle"></i>
+                                                  data-tooltip-title="Total Events"
+                                                  data-tooltip-desc="All valid orders included">
+                                                Total Events <!-- <i class="fa-solid fa-circle-info"></i> -->
                                             </span>
                                             <h3 class="value" id="totalEvents"></h3>
-                                            <span class="sub">Completed Orders</span>
+                                            <span class="sub">In This Month</span>
                                         </div>
                                     </div>
                                 </div>
@@ -123,42 +126,37 @@
                                     <div class="stat-box bg-sky">
                                         <div class="stat-top sky"></div>
                                         <div class="stat-body">
-                                            <span data-bs-toggle="tooltip"
+                                            <span class="kpi-tooltip"
+                                                  data-bs-toggle="tooltip"
                                                   data-bs-html="true"
                                                   data-bs-placement="bottom"
-                                                  title="<b>Total Customer Visits</b><br> By default filter: <b>This Month</b><br>
-                                                        All valid orders included">
-                                                Total Customer Visits <i class="bi bi-info-circle"></i>
+                                                  data-tooltip-title="Total Customer Visits"
+                                                  data-tooltip-desc="All valid orders included">
+                                                Total Customer Visits <!-- <i class="fa-solid fa-circle-info"></i> -->
                                             </span>
-
                                             <h3 class="value" id="totalCustomers"></h3>
-                                            @* <div class="progress-line">
-                                                <span class="new"></span>
-                                                <span class="repeat"></span>
-                                            </div> *@
-                                            <small>New vs Repeat</small>
+                                            <span class="sub">In This Month</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Card 4 : Events Lost -->
                                 <div class="col-md-3">
-                                    <div class="stat-box bg-danger-light">
-                                        <div class="stat-top danger-light"></div>
+                                    <div class="stat-box bg-lavender">
+                                        <div class="stat-top lavender"></div>
                                         <div class="stat-body">
-                                            <span data-bs-toggle="tooltip"
+                                            <span class="kpi-tooltip text-danger"
+                                                  data-bs-toggle="tooltip"
                                                   data-bs-html="true"
-                                                  class="text-white"
                                                   data-bs-placement="bottom"
-                                                  title="<b>Events Lost</b><br>
-                                                         By default filter: <b>This Month</b><br>
-                                                         Includes cancelled, rejected, and unconfirmed events">
-                                                Events Lost <i class="bi bi-info-circle text-danger"></i>
+                                                  data-tooltip-title="Events Lost"
+                                                  data-tooltip-desc="Includes cancelled, rejected, and unconfirmed events">
+                                                Events Lost <span id="eventLostCount">(0)</span>
+                                                <!-- <i class="fa-solid fa-circle-info"></i> -->
                                             </span>
+                                            <h3 class="value text-danger" id="totalEventsLost">₹ 0</h3>
 
-                                            <h3 class="value text-white" id="totalEventsLost">10</h3>
-
-                                            <small class="text-secondary">Cancelled / Rejected Events</small>
+                                            <span class="sub">Cancelled / Rejected Events In This Month</span>
                                         </div>
                                     </div>
                                     <style>
@@ -188,12 +186,10 @@
 
                                     </style>
                                 </div>
-
-
                             </div>
                             <!---------- card end ---------->
                             <!---------- graph start ---------->
-                            <div class="row g-4 py-4">
+                            <div class="row g-4 py-4 d-none">
                                 <div class="col-md-6">
                                     <div class="comparison-card">
                                         <h5 class="text-center mb-4">Comparative Insights</h5>
@@ -409,7 +405,6 @@
     <script src="~/assets2/js/dashboard/dashboard.js" asp-append-version="true"></script>
 
 }
-
 
 @* 
 <div class="content">

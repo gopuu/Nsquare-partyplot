@@ -170,8 +170,8 @@ namespace ERPAdmin.ApiControllers
 
 
         [HttpPost]
-        [Route("DownloadPaymentReceipt")]
-        public IActionResult DownloadPaymentReceipt(PaymentReceiptRequest request)
+        [Route("DownloadPaymentReceipt2")]
+        public IActionResult DownloadPaymentReceipt2(PaymentReceiptRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -347,18 +347,14 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadAllPaymentReceipt")]
-        public IActionResult DownloadAllPaymentReceipt(PaymentReceiptRequest request)
+        [Route("DownloadPaymentReceipt")]
+        public IActionResult DownloadPaymentReceipt(PaymentReceiptRequest request)
         {
             apiResponse response = new apiResponse();
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString,
-                    out string domain,
-                    out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                 {
                     return errorResult;
                 }
@@ -367,9 +363,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 30, 30, 40, 70);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataTable dtReceipt = new DataTable();
@@ -379,10 +372,16 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // -------- COMPANY --------
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    using (SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+                            da.Fill(dtCompany);
+                        }
+                    }
 
                     // -------- RECEIPTS (UNION ALL) --------
                     using (SqlCommand cmd = new SqlCommand("Report_PaymentReceipt", con))
@@ -402,6 +401,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyPhone = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString();
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 // ================= LOOP: EACH RECEIPT =================
                 foreach (DataRow r in dtReceipt.Rows)
@@ -502,7 +505,14 @@ namespace ERPAdmin.ApiControllers
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 Directory.CreateDirectory(folder);
 
-                string fileName = $"PaymentReceipt_All_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string fileName;
+                if (request.PaymentId > 0)
+                {
+                    fileName = $"PaymentReceipt_PId_{request.PaymentId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                }
+                else {
+                    fileName = $"PaymentReceipt_BId_{request.BookingId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                }
                 string filePath = Path.Combine(folder, fileName);
 
                 using (FileStream fs = new FileStream(filePath, FileMode.Create))

@@ -3,39 +3,13 @@
     Layout = "_Layout";
 }
 
-<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-<script src="/assets2/js/jquery.dataTables.min.js"></script>
-<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
-
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" /> 
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
-<script src="/assets2/js/bootstrap.bundle.min.js"></script>
-<link href="/assets2/css/custom/bookingcalendar.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<!--Booking View MODAL-->
-<style>
-    .card-body .d-flex:hover {
-        background-color: #f8f9fa;
-        transition: 0.15s ease-in-out;
-    }
-</style>
-
-<!--WhatsApp Brand Color -->
-<style>
-    .btnWhatsapp {
-        border-color: #25D366;
-        color: #25D366;
-    }
-
-        .btnWhatsapp:hover {
-            background-color: #25D366;
-            color: #fff;
-        }
-</style>
-
+<link rel="stylesheet" href="~/assets2/css/BookingCalendar/BookingCalendar.css" asp-append-version="true" />
 
 <!-- Main -->
-<div class="content">
+<div class="content bc-scope">
     <div class="pb-5">
         <div class="row g-4">
             <div class="col-12">
@@ -540,6 +514,7 @@
     </div>
 </div>
 <!--AddOns -- MODAL -- END -->
+
 <!--Menu Item-- MODAL -- START -->
 <div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -561,13 +536,14 @@
     </div>
 </div>
 <!--Menu Item-- MODAL -- END -->
+
 <!-- Booking Info Modal -- START -->
 <div class="modal fade" id="bookingReportModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0 rounded-3">
 
             <!-- 🔹 Header -->
-            <div class="modal-header bg-primary py-3 text-white">
+            <div class="modal-header bg-primary py-2 text-white">
                 <div class="container-fluid">
                     <div class="row w-100">
                         <div class="col-md-6 d-flex align-items-center">
@@ -987,12 +963,18 @@
                         <i class="fa-solid fa-xmark me-1"></i> Cancel Booking
                     </button>
 
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteBooking">
+                    <button type="button"
+                            class="btn btn-danger btn-sm"
+                            id="btnDeleteBooking">
                         <i class="fa-solid fa-trash me-1"></i> Delete Booking
                     </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnFoodWestage">
-                        <i class="fa-solid fa-bowl-food me-1"></i> FoodWestage
+
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            id="btnFoodWestage">
+                        <i class="fa-solid fa-bowl-food me-1"></i> Food Wastage
                     </button>
+
                 </div>
             </div>
 
@@ -1000,6 +982,7 @@
     </div>
 </div>
 <!-- Booking Info Modal -- END -->
+
 <!-- CANCEL BOOKING MODAL -- START -->
 <div class="modal fade" id="cancelBookingModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1025,11 +1008,12 @@
     </div>
 </div>
 <!-- CANCEL BOOKING MODAL -- END -->
+
 <!-- paymentModal -- START -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title text-white">Add Payment Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1135,6 +1119,7 @@
     </div>
 </div>
 <!-- paymentModal -- END -->
+
 <!-- VendorWorkOrderModal -- START -->
 <div class="modal fade" id="vendorWorkOrderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -1440,6 +1425,7 @@
     </div>
 </div>
 <!-- VendorWorkOrderModal -- END -->
+
 <!-- Booking Reschedule Modal -- START -->
 <div class="modal fade" id="bookingRescheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1614,6 +1600,7 @@
     </div>
 </div>
 <!-- Booking Reschedule Modal -- END -->
+
 <!-- PREPARE ORDER Modal -- START -->
 <div class="modal fade" id="prepareOrderModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -1692,15 +1679,8 @@
         </div>
     </div>
 </div>
-<style>
-    .food-header {
-        font-weight: 600;
-        display: block;
-        width: 100%;
-        clear: both; /* force new row */
-    }
-</style>
 <!-- PREPARE ORDER Modal -- END -->
+
 <!-- PREPARE ORDER Modal -- formula -- START -->
 <div class="modal fade" id="formulaModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1752,18 +1732,8 @@
         </div>
     </div>
 </div>
-<style>
-    .food-item-name {
-        cursor: pointer;
-        user-select: none;
-    }
-
-        .food-item-name:hover {
-            text-decoration: underline;
-        }
-
-</style>
 <!-- PREPARE ORDER Modal -- formula -- END -->
+
 <!-- feedbackModal -- START -->
 <div class="modal fade" id="feedbackModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -1816,39 +1786,11 @@
     </div>
 </div>
 <!-- feedbackModal -- END -->
+
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
-<style>
-    .enquiry-tooltip {
-        position: absolute;
-        display: none;
-        background: #ffffff;
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-size: 0.75rem;
-        min-width: 180px;
-        max-width: 240px;
-        z-index: 999999;
-        border: 1px solid #ddd;
-    }
-
-        .enquiry-tooltip table {
-            width: 100%;
-            margin: 0;
-        }
-
-        .enquiry-tooltip th {
-            background: #f8f9fa;
-            font-weight: bold;
-            padding: 4px;
-        }
-
-        .enquiry-tooltip td {
-            padding: 3px 4px;
-        }
-
-</style>
 <!-- paymentModal -- END -->
+
 <!-- foodWastage -- START -->
 <div class="modal fade" id="foodWastageModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -1891,88 +1833,15 @@
     </div>
 </div>
 <!-- food Wastage Modal -- formula -- END -->
+
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">
-<style>
-
-    /* Custom size labels in the dropdown */
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before {
-        content: '10px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before {
-        content: '12px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before {
-        content: '14px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before {
-        content: '16px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before {
-        content: '18px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before {
-        content: '20px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before {
-        content: '24px';
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="30px"]::before,
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="30px"]::before {
-        content: '30px';
-    }
-
-    /* Optional: make dropdown text preview actual size */
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before {
-        font-size: 10px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before {
-        font-size: 12px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before {
-        font-size: 14px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before {
-        font-size: 16px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before {
-        font-size: 18px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before {
-        font-size: 20px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before {
-        font-size: 24px;
-    }
-
-    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="30px"]::before {
-        font-size: 30px;
-    }
-</style>
 <script src="/assets2/js/quill.js"></script>
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+<script src="/assets2/js/bootstrap.bundle.min.js"></script>
 
 @section Scripts {
-
     <script src="~/assets2/js/bookingcalender/bookingcalendar.js" asp-append-version="true"></script>
 }
 

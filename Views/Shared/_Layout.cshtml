@@ -71,7 +71,7 @@
     <!--    Main Content-->
     <!-- ===============================================-->
     <main class="main" id="top">
-        <nav class="navbar navbar-top fixed-top navbar-expand-lg" id="navbarTop" style="display:none;">
+        <nav class="navbar navbar-top fixed-top navbar-expand-lg" id="navbarTop" style="display:none;" data-navbar-appearance="darker">
             <div class="navbar-logo">
                 <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTopCollapse" aria-controls="navbarTopCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
                 <a class="navbar-brand me-1 me-sm-3" href="/Home/Dashboard">
@@ -85,8 +85,10 @@
             </div>
             <div class="collapse navbar-collapse navbar-top-collapse order-1 order-lg-0 justify-content-center" id="navbarTopCollapse">
                 <ul class="navbar-nav navbar-nav-top" data-dropdown-on-hover="data-dropdown-on-hover">
+
+                    <!-- Home -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="uil fs-8 me-2 uil-chart-pie"></span>Home</a>
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="uil fs-8 me-2 uil-chart-pie"></span>Home</a>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item @(currentController == "Home" ? "active" : "")" href="/Home/Dashboard">
@@ -95,13 +97,12 @@
                                     </div>
                                 </a>
                             </li>
-
                         </ul>
                     </li>
 
                     <!-- Lead Management -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-users-alt"></span>Lead
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -117,7 +118,7 @@
 
                     <!-- Booking Calendar -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-calendar-alt"></span>Booking
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -141,7 +142,7 @@
 
                     <!-- Feedback & CRM -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-comment-alt"></span>CRM
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -164,7 +165,7 @@
 
                     <!-- Inventory Management -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-box"></span>Inventory
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -194,7 +195,7 @@
 
                     <!-- Accounting & Finance -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-rupee-sign"></span>Finance
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -280,7 +281,7 @@
 
                     <!-- Reports -->
                     <li class="nav-item dropdown" id="report_NavBar">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-invoice"></span>Reports
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -333,7 +334,7 @@
 
                     <!-- Staff -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-user-circle"></span>Staff
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -481,7 +482,7 @@
 
                     <!-- Settings / Configuration -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-setting"></span>Settings
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -520,51 +521,6 @@
                                     </div>
                                 </a>
                             </li>
-                            @* 
-                            <li class="dropdown">
-                                <a class="dropdown-item dropdown-toggle @(currentController == "AssetCategory" ? "active" : "")"
-                                   href="#"
-                                   data-bs-toggle="dropdown"
-                                   data-bs-auto-close="outside">
-
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
-                                        <span>
-                                            <span class="feather-icon me-2" data-feather="package"></span>
-                                            Manage Assets
-                                        </span>
-                                    </div>
-                                </a>
-
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" href="/AssetMaster/Index">
-                                            <div class="dropdown-item-wrapper">
-                                                <span class="me-2" data-feather="box"></span>
-                                                Asset Master
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" href="/AssetCategoryMaster/Index">
-                                            <div class="dropdown-item-wrapper">
-                                                <span class="me-2" data-feather="layers"></span>
-                                                Category Master
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" href="/AssetSubCategoryMaster/Index">
-                                            <div class="dropdown-item-wrapper">
-                                                <span class="me-2" data-feather="list"></span>
-                                                SubCategory Master
-                                            </div>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li> *@
                             <li class="dropdown dropdown-submenu dropstart modules-parent master_link">
                                 <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <div class="dropdown-item-wrapper">
@@ -639,69 +595,13 @@
                                     </div>
                                 </ul>
                             </li>
-                    </li>
-
-
-                    <!-- Infinity Centre -->
-                    @* <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-lightbulb-alt"></span>Infinity Centre
-                        </a>
-                        <ul class="dropdown-menu navbar-dropdown-caret">
-                        </ul>
-                    </li> *@
-
-                    <!-- Help -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-question-circle"></span>Help
-                        </a>
-                        <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket
+                                        <span class="me-2 uil" data-feather="briefcase"></span>Help
                                     </div>
                                 </a>
                             </li>
-                            @*
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "SupportTicketType" ? "active" : "")" href="/SupportTicketType">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="tag"></span>Support Ticket Type
-                                    </div>
-                                </a>
-                            </li>
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "SupportTicketStatus" ? "active" : "")" href="/SupportTicketStatus">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="activity"></span>Support Ticket Status
-                                    </div>
-                                </a>
-                            </li>
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "SupportTicketPriority" ? "active" : "")" href="/SupportTicketPriority">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Priority
-                                    </div>
-                                </a>
-                            </li>
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "SupportTicketAssignment" ? "active" : "")" href="/SupportTicketAssignment">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Assignment
-                                    </div>
-                                </a>
-                            </li>
-
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "SupportTicketAttachment" ? "active" : "")" href="/SupportTicketAttachment">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="alert-circle"></span>Support Ticket Attachment
-                                    </div>
-                                </a>
-                            </li>
-                            *@
                         </ul>
                     </li>
                 </ul>
@@ -945,8 +845,12 @@
                         </div>
                     </div>
                 </li>
+                <!-- USER PROFILE-->
                 <li class="nav-item dropdown">
-                    <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link lh-1 pe-0 profile-toggle"
+                       id="navbarDropdownUser"
+                       href="javascript:void(0)"
+                       role="button">
                         @* <div class="avatar avatar-l ">
                             <img class="rounded-circle imgUserProfile" alt="" />
                         </div> *@
@@ -954,7 +858,7 @@
                             <img class="rounded-circle userAvatar" id="imgUserProfile1" src="/assets/img/team/avatar.png" alt="User" />
                         </div>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
+                    <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border profile-dropdown">
                         <div class="card position-relative border-0">
                             <div class="card-body p-0">
                                 <div class="text-center pt-4 pb-3">
@@ -1404,129 +1308,6 @@
         <div class="spinner"></div>
     </div>
     <!--/ Loader Overlay -->
-    <style>
-
-        /*  /* required for nested dropdown
-                                .dropdown-submenu {
-                                    position: relative;
-                                } */
-
-        /* Modules mega menu → LEFT open */
-        .modules-mega-menu {
-            top: 0 !important;
-            right: 95% !important; /* LEFT side */
-            left: auto !important;
-            margin-right: 10px;
-            width: 950px; /* adjust as needed */
-            transform: none !important;
-        }
-
-        /* parent fix */
-        .modules-parent {
-            position: relative;
-        }
-
-        /* mega menu positioning */
-        .modules-mega-menu {
-            width: 720px;
-            right: 100%;
-            left: auto;
-            top: 0;
-            margin-right: 12px;
-            transform: none !important;
-        }
-
-        /* keep menu open while hovering inside */
-        .modules-parent:hover > .dropdown-menu {
-            display: block;
-        }
-
-        /* style */
-        .dropdown-item-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .dropdown-item-title {
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .dropdown-link {
-            display: block;
-            padding: 6px 0 6px 28px;
-            color: #344050;
-            text-decoration: none;
-        }
-
-            .dropdown-link:hover {
-                color: #0d6efd;
-            }
-
-
-
-        /*  /* left side dropdown
-                                .dropdown-left {
-                                    left: auto !important;
-                                    right: 100% !important;
-                                    top: 0;
-                                    margin-right: 1px;
-                                    border-radius: 12px;
-                                    min-width: 220px;
-                                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-                                }
-
-                                /* optional arrow
-                                .dropdown-left::before {
-                                    content: "";
-                                    position: absolute;
-                                    top: 16px;
-                                    right: -6px;
-                                    border-width: 6px;
-                                    border-style: solid;
-                                    border-color: transparent transparent transparent #fff;
-                                } */
-
-        .avatar img, .avatar .avatar-name {
-            height: 70%;
-            width: 70%;
-        }
-
-        /* Loader overlay */
-        #loaderOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(200, 200, 200, 0.7); /* light transparent gray */
-            display: none; /* flex; */ /* show by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        /* Loader spinner */
-        .spinner {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #0d6efd;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-
-        @@keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
@@ -1550,6 +1331,7 @@
     <script src="~/assets2/js/ecommerce-dashboard.js"></script>
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
+
     <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
     <script>
         document.querySelectorAll('.modules-parent').forEach(item => {

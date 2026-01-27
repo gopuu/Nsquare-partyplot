@@ -10,6 +10,7 @@ $(document).ready(function () {
     const currentYear = new Date().getFullYear();
     renderBarChart(currentYear);
     $("#yearDropdown").text(currentYear);
+
 });
 function setCurrentMonthDates() {
     const today = new Date();
@@ -31,12 +32,10 @@ let selectedMonthDuration = "thismonth"; // ✅ default
 
 $(".sort-option").on("click", function (e) {
     e.preventDefault();
-
     let newFilter = $(this).data("value");
 
     // agar same filter, kuch mat karo
     if (selectedMonthDuration === newFilter) return;
-
     selectedMonthDuration = newFilter;
 
     // dropdown active class manage
@@ -44,6 +43,7 @@ $(".sort-option").on("click", function (e) {
     $(this).addClass("active");
 
     $("#sortByDropdown").text("Filter : " + $(this).text());
+    $(".sub").text("In " + $(this).text());
 
     // --------------------------
     // MonthDuration ke hisab se From/To date set karna
@@ -54,36 +54,34 @@ $(".sort-option").on("click", function (e) {
     if (selectedMonthDuration === "thismonth") {
         fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
         toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    } else if (selectedMonthDuration === "lastmonth") {
+    } 
+    else if (selectedMonthDuration === "lastmonth") {
         fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         toDate = new Date(today.getFullYear(), today.getMonth(), 0);
-    } else if (selectedMonthDuration === "days") { // Last 7 Days
+    }
+    else if (selectedMonthDuration === "days") { // Last 7 Days
         fromDate = new Date(today);
         fromDate.setDate(today.getDate() - 6);
         toDate = today;
-    } else if (selectedMonthDuration === "lastdays") { // Last 30 Days
+    }
+    else if (selectedMonthDuration === "lastdays") { // Last 30 Days
         fromDate = new Date(today);
         fromDate.setDate(today.getDate() - 29);
         toDate = today;
-    } else if (selectedMonthDuration === "yesterday") {
+    }
+    else if (selectedMonthDuration === "yesterday") {
         fromDate = new Date(today);
         fromDate.setDate(today.getDate() - 1);
         toDate = fromDate;
-    } else if (selectedMonthDuration === "12months") {
+    }
+    else if (selectedMonthDuration === "12months") {
         fromDate = new Date(today);
         fromDate.setMonth(today.getMonth() - 12);
         toDate = today;
-    } else if (selectedMonthDuration === "customrange") {
+    }
+    else if (selectedMonthDuration === "customrange") {
         // custom range me datepicker pe user select karega
         return loadDashboardWidgets();
-    }
-
-    // Date format yyyy-mm-dd
-    function formatDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
     }
 
     // Set the datepickers
@@ -104,12 +102,13 @@ $("#fromDate, #toDate").on("change", function () {
         selectedMonthDuration = "customrange";
 
         $("#sortByDropdown").text("Filter : Custom Range");
+        $(".sub").text("In Custom Range");
+
         $(".sort-option").removeClass("active");
 
         loadDashboardWidgets(); // 🔥
     }
 });
-
 
 $("#btnReset").on("click", function () {
     selectedMonthDuration = "thismonth";
@@ -118,6 +117,7 @@ $("#btnReset").on("click", function () {
     $("#toDate").val("");
 
     $("#sortByDropdown").text("Filter : This Month");
+    $(".sub").text("In This Month");
 
     $(".sort-option").removeClass("active");
     $('.sort-option[data-value="thismonth"]').addClass("active");
@@ -149,10 +149,8 @@ function loadDashboardWidgets() {
                 const totalSales = Number(res.data.TotalSales) || 0;
                 const totalEvents = Number(res.data.TotalEvents) || 0;
                 const totalCustomers = Number(res.data.TotalCustomer) || 0;
-
-                //console.log("totalSales", totalSales);
-                //console.log("totalEvents", totalEvents);
-                //console.log("totalCustomers", totalCustomers);
+                const eventLostCount = Number(res.data.EventLostCount) || 0;
+                const totalEventsLost = Number(res.data.TotalEventsLost) || 0;
 
                 $("#totalSales").text(
                     "₹ " + totalSales.toLocaleString("en-IN", {
@@ -160,8 +158,18 @@ function loadDashboardWidgets() {
                         maximumFractionDigits: 2
                     })
                 );
+
                 $("#totalEvents").text(totalEvents.toLocaleString("en-IN"));
                 $("#totalCustomers").text(totalCustomers.toLocaleString("en-IN"));
+
+                $("#totalEventsLost").text(
+                    "₹ " + totalEventsLost.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })
+                );
+                $("#eventLostCount").text("(" + eventLostCount + ")");
+
                 console.log("Dashboard Stats Fetched:", res.data);
 
                 // Re-initialize Bootstrap tooltips

@@ -1,5 +1,11 @@
 ﻿namespace ERPAdmin.Models
 {
+    //DownloadBookingEventReport
+    public class DownloadBookingEventReportRequest //: BaseClass
+    {
+        public long BookingId { get; set; }
+    }
+
     //Reschedule
     public class SaveBookingCalendarReschedule : BaseClass
     {

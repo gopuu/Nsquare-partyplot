@@ -8,6 +8,7 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
+        public bool? WithHeader { get; set; }
 
     }
 
@@ -18,7 +19,7 @@
         public string? FilterDuration { get; set; }
     }
 
-    public class PaymentReceiptRequest
+    public class PaymentReceiptRequest : BaseClass
     {
         public long? PaymentId { get; set; }
         public long? BookingId { get; set; }
