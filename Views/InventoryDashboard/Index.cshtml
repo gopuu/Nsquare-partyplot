@@ -22,28 +22,41 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0 fw-semibold">Key Statistics</h6>
                         <div class="d-flex align-items-center gap-2">
-                            <select class="form-select form-select-sm w-auto" id="keyStatsFilter">
-                                <option value="today">Today</option>
-                                <option value="lastWeek">Last Week</option>
-                                <option value="lastMonth">Last Month</option>
-                            </select>
-                            <i class="fa fa-info-circle text-muted" data-bs-toggle="tooltip" title="Key statistics for the selected period"></i>
+                            <div class="dropdown mr-4 chart-filter-Statistics">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                        type="button"
+                                        id="jobChartFilter"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    This Month
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="jobChartFilter">
+                                    <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                    <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                    <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                    <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                    <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                    <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded bg-warning text-white">
                         <span>Total Sales</span>
-                        <span><i class="fa fa-inr me-1"></i>33,716</span>
+                        <span><i class="fa fa-inr me-1"></i><span id="totalSales">0</span></span>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded bg-light">
                         <span>Purchase</span>
-                        <span><i class="fa fa-inr me-1"></i>0</span>
+                        <span><i class="fa fa-inr me-1"></i><span id="totalPurchase">0</span></span>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
                         <span>Wastage</span>
-                        <span><i class="fa fa-inr me-1"></i>0</span>
+                        <span><i class="fa fa-inr me-1"></i><span id="totalWastage">0</span></span>
                     </div>
                 </div>
             </div>
@@ -58,18 +71,31 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-semibold mb-0 text-start">COGS</h6>
                         <div class="d-flex align-items-center gap-2">
-                            <select class="form-select form-select-sm w-auto" id="cogsFilter">
-                                <option value="today">Today</option>
-                                <option value="lastWeek">Last Week</option>
-                                <option value="lastMonth">Last Month</option>
-                            </select>
-                            <i class="fa fa-info-circle text-muted" data-bs-toggle="tooltip" title="Cost of Goods Sold"></i>
+                            <div class="dropdown mr-4 chart-filter-COGS">
+
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                    type="button"
+                                    id="COGSChartFilter"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                This Month
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="COGSChartFilter">
+                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                            </ul>
                         </div>
                     </div>
-
+                    </div>
                     <!-- 🔹 Centered Content -->
                     <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center">
-                        <h3 class="mb-1"><i class="fa fa-inr me-1"></i>1,93,616.67</h3>
+                        <h3 class="mb-1"><i class="fa fa-inr me-1"></i><span id="WorthofStockConsumed"> 1,93,616.67</span></h3>
                         <p class="text-muted mb-0 small">Worth of Stock Consumed</p>
                     </div>
 
@@ -90,7 +116,9 @@
 
                     <!-- 🔹 Centered Content -->
                     <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center">
-                        <h2 class="fw-bold text-danger mb-1">12</h2>
+                        <h2 class="fw-bold text-danger mb-1">
+                            <span id="pendingpurchases">12</span>
+                        </h2>
                         <p class="text-muted small mb-0">PO's</p>
                     </div>
 
@@ -116,7 +144,7 @@
 
                     <!-- 🔹 Centered Content -->
                     <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center">
-                        <h2 class="fw-bold text-success mb-1">0</h2>
+                        <h2 class="fw-bold text-success mb-1"> <span id="pendingapprovals">0</span> </h2>
                         <p class="text-muted small mb-0">PO's</p>
                     </div>
 
@@ -148,7 +176,7 @@
         </div>
 
         <!-- 🟢 Widget 1: Stock Level -->
-        <script>
+      @*   <script>
             const stockData = [
               { name: "500ml Butter Milk", count: 25, category: "dairy" },
               { name: "Cream Milk", count: 18, category: "dairy" },
@@ -201,7 +229,7 @@
             document.getElementById("categoryFilter").addEventListener("change", function () {
               renderStockList(this.value);
             });
-        </script>
+        </script> *@
 
         <!-- 🧾 Widget 2: Supplier List -->
         <div class="col-md-6">
@@ -213,7 +241,7 @@
                     <div class="supplier-list" style="max-height: 300px; overflow-y: auto;">
 
                         <!-- Supplier 1 -->
-                        <div class="supplier mb-3">
+                       @*  <div class="supplier mb-3">
                             <div class="d-flex justify-content-between align-items-center border-bottom py-2 bg-light px-2 rounded">
                                 <div class="d-flex align-items-center">
                                     <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="#supplier1">-</button>
@@ -289,7 +317,7 @@
                                 <p class="mb-1 small">Water Bottle - 30</p>
                                 <p class="mb-1 small">Lassi - 6</p>
                             </div>
-                        </div>
+                        </div> *@
 
                     </div>
                 </div>
@@ -297,7 +325,7 @@
         </div>
 
         <!-- 🧾 Widget 2: Supplier List -->
-        <script>
+       @*  <script>
             // ✅ Toggle supplier details (+/-)
             document.querySelectorAll('.toggle-btn').forEach(btn => {
               btn.addEventListener('click', function () {
@@ -315,8 +343,12 @@
                 console.log("Raise PO clicked for:", supplierName);
               });
             });
-        </script>
+        </script> *@
 
     </div>
 </div>
 
+@section Scripts {
+    <script src="~/assets2/js/inventorydashboard/inventorydashboard.js" asp-append-version="true"></script>
+
+}
