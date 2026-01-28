@@ -91,6 +91,37 @@
 
     #endregion
 
+    #region Comparative insights
+    public class MonthlyPnLChartRequest
+    {
+        public string Filter { get; set; } // last3months, last6months, etc.
+    }
+    public class MonthlyPnLChartResponse
+    {
+        public string MonthKey { get; set; }
+
+        public decimal Revenue { get; set; }
+        public decimal Purchase { get; set; }
+        public decimal Salary { get; set; }
+        public decimal Rent { get; set; }
+        public decimal Electricity { get; set; }
+        public decimal Gas { get; set; }
+        public decimal OtherExpense { get; set; }
+
+        public decimal ProfitAndLoss { get; set; }
+
+        public decimal PurchasePercent { get; set; }
+        public decimal SalaryPercent { get; set; }
+        public decimal RentPercent { get; set; }
+        public decimal ElectricityPercent { get; set; }
+        public decimal GasPercent { get; set; }
+        public decimal OtherExpensePercent { get; set; }
+        public decimal ProfitPercent { get; set; }
+    }
+
+    #endregion
+
+
     #region Get Dashboard Widget Counts
     public class DashboardWidgetCountsResponse
     {

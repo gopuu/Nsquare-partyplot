@@ -658,89 +658,84 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
-
-
-        //UNUSED
-        /*
-        [HttpGet]
-        [Route("GetProcessListWithDeals")]
-        public IActionResult GetProcessListWithDeals()
+        [HttpPost]
+        [Route("GetMonthlyPnLChart")]
+        public IActionResult GetMonthlyPnLChart([FromBody] MonthlyPnLChartRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-            List<ProcessDto> processes = new List<ProcessDto>();
+            List<MonthlyPnLChartResponse> result = new List<MonthlyPnLChartResponse>();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
                 {
                     return errorResult;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("GetProcessListWithDeals", con))
+                using (SqlCommand cmd =
+                    new SqlCommand("Report_GetMonthlyPnLChart", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue(
+                        "@Filter",
+                        request.Filter);
+
                     con.Open();
 
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        // ======================
-                        // 1) Read Process List
-                        // ======================
-                        while (reader.Read())
+                        while (dr.Read())
                         {
-                            ProcessDto process = new ProcessDto();
-                            process.Id = reader.GetInt32(reader.GetOrdinal("ProcessId"));
-                            process.Name = reader.GetString(reader.GetOrdinal("ProcessName"));
-                            process.TotalDeals = reader.GetInt32(reader.GetOrdinal("TotalDeals"));
-                            process.TotalAmount = reader.GetDecimal(reader.GetOrdinal("TotalAmount"));
-                            process.CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")).ToString("dd-MM-yyyy HH:mm:ss");
-                            process.Deals = new List<DealDto>();
-                            processes.Add(process);
-                        }
-
-                        // ======================
-                        // 2) Read Deals
-                        // ======================
-                        if (reader.NextResult())
-                        {
-                            while (reader.Read())
+                            result.Add(new MonthlyPnLChartResponse
                             {
+                                MonthKey = dr["MonthKey"].ToString(),
 
-                                DealDto deal = new DealDto();
-                                deal.Id = reader.GetInt32(reader.GetOrdinal("DealId"));
-                                deal.Title = reader.GetString(reader.GetOrdinal("Title"));
-                                deal.Customer = reader.GetString(reader.GetOrdinal("Customer"));
-                                deal.Amount = reader.GetDecimal(reader.GetOrdinal("Amount"));
-                                deal.Date = reader.GetString(reader.GetOrdinal("DealDate"));
+                                Revenue = Convert.ToDecimal(dr["Revenue"]),
+                                Purchase = Convert.ToDecimal(dr["Purchase"]),
+                                Salary = Convert.ToDecimal(dr["Salary"]),
+                                Rent = Convert.ToDecimal(dr["Rent"]),
+                                Electricity = Convert.ToDecimal(dr["Electricity"]),
+                                Gas = Convert.ToDecimal(dr["Gas"]),
+                                OtherExpense = Convert.ToDecimal(dr["OtherExpense"]),
 
-                                int processId = reader.GetInt32(reader.GetOrdinal("ProcessId"));
-                                ProcessDto parent = processes.FirstOrDefault(p => p.Id == processId);
-                                if (parent != null)
-                                {
-                                    parent.Deals.Add(deal);
-                                }
-                            }
+                                ProfitAndLoss = Convert.ToDecimal(dr["ProfitAndLoss"]),
+
+                                PurchasePercent = Convert.ToDecimal(dr["PurchasePercent"]),
+                                SalaryPercent = Convert.ToDecimal(dr["SalaryPercent"]),
+                                RentPercent = Convert.ToDecimal(dr["RentPercent"]),
+                                ElectricityPercent = Convert.ToDecimal(dr["ElectricityPercent"]),
+                                GasPercent = Convert.ToDecimal(dr["GasPercent"]),
+                                OtherExpensePercent = Convert.ToDecimal(dr["OtherExpensePercent"]),
+                                ProfitPercent = Convert.ToDecimal(dr["ProfitPercent"])
+                            });
                         }
                     }
                 }
 
-                apiResponse.message = "Processes fetched successfully!";
-                apiResponse.data = processes;
                 apiResponse.status = "Success";
+                apiResponse.message = "Monthly Profit & Loss chart data fetched successfully.";
+                apiResponse.data = result;
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error details: " + ex.Message;
-                apiResponse.data = null;
                 apiResponse.status = "Error";
-                return StatusCode(500, apiResponse);
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
             }
         }
-        */
+
     }
 }
