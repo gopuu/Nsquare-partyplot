@@ -187,6 +187,51 @@
                                     </style>
                                 </div>
                             </div>
+                            <!---------- bar chart start ---------->
+                            <!-- Filter Dropdown -->
+                            <div class="row gap-3 py-5">
+                                <div class="position-relative">
+                                    <!-- small dropdown -->
+                                    <div class="col-md-12">
+                                        <div class="card shadow-sm border-0">
+
+                                            <!-- Card Header -->
+                                            <div class="card-header bg-white border-0">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h4 class="mb-0">Comparative Insights</h4>
+
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                                type="button"
+                                                                id="pnlFilterBtn"
+                                                                data-bs-toggle="dropdown">
+                                                            Last 3 Months
+                                                        </button>
+
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last3months')">Last 3 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last4months')">Last 4 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last5months')">Last 5 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last6months')">Last 6 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last12months')">Last 12 Months</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card Body -->
+                                            <div class="card-body">
+                                                
+                                                    <canvas id="pnlCategoryChart" height="120"></canvas>
+                                                
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!---------- bar chart end ---------->
                             <!---------- card end ---------->
                             <!---------- graph start ---------->
                             <div class="row g-4 py-4 d-none">
@@ -384,7 +429,7 @@
 
                                 </div>
 
-                               @*  <div class="col-md-4 align-content-between shadow">
+                                @*  <div class="col-md-4 align-content-between shadow">
                                     <img src="~/assets2/img/banquet_img.png" class="img_review" />
 
                                     <img src="~/assets2/img/banquet_img1.png" class="img_Integration" />

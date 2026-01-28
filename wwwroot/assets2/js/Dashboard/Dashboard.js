@@ -6,6 +6,7 @@ $(document).ready(function () {
     loadEventPieChart();
     loadSalesPieChart();
     loadYearDropdown();
+    loadPnLChart("last3months");
 
     const currentYear = new Date().getFullYear();
     renderBarChart(currentYear);
@@ -26,7 +27,6 @@ function formatDate(date) {
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;   // ✅ IMPORTANT
 } 
-
 
 let selectedMonthDuration = "thismonth"; // ✅ default
 
@@ -124,8 +124,6 @@ $("#btnReset").on("click", function () {
 
     loadDashboardWidgets();
 });
-
-
 function loadDashboardWidgets() {
     let requestObj = {
         MonthDuration: selectedMonthDuration, // eg: thismonth, lastmonth
@@ -1051,6 +1049,134 @@ $(document).on("click", ".year-option", function (e) {
 });
 
 
+
+
+
+function loadPnLChart(filter) {
+
+    const monthCount = filter.replace("last", "").replace("months", "");
+    $("#pnlFilterBtn").text(`Last ${monthCount} Months`);
+   // console.log("pnl inputdata:", filter);
+    $.ajax({
+        url: "/api/Dashboard/GetMonthlyPnLChart",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Filter: filter }),
+        success: function (res) {
+            console.log("pnl res:", res);
+
+            if (res.status !== "Success" || !res.data || res.data.length === 0) {
+                alert("No data found");
+                return;
+            }
+            // THIS WAS MISSING
+            buildPnLCategoryMonthChart(res.data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "PnL API Error");
+        }
+    });
+}
+
+const PNL_CATEGORIES = [
+    { key: "Revenue", percent: null, color: "#ff9800" },
+    { key: "Purchase", percent: "PurchasePercent", color: "#f44336" },
+    { key: "Salary", percent: "SalaryPercent", color: "#9c27b0" },
+    { key: "Rent", percent: "RentPercent", color: "#4caf50" },
+    { key: "Electricity", percent: "ElectricityPercent", color: "#03a9f4" },
+    { key: "Gas", percent: "GasPercent", color: "#795548" },
+    { key: "OtherExpense", percent: "OtherExpensePercent", color: "#607d8b" },
+    { key: "ProfitAndLoss", percent: "ProfitPercent", color: "#000000" }
+];
+
+function buildPnLCategoryMonthChart(apiData) {
+
+    const months = apiData.map(x => x.MonthKey ? x.MonthKey.split('-')[0] : '');
+
+    // X-axis labels
+    const labels = [];
+    PNL_CATEGORIES.forEach(cat => {
+        months.forEach(m => labels.push(`${cat.key} ${m}`));
+    });
+
+    const datasets = PNL_CATEGORIES.map((cat, catIndex) => {
+
+        const data = [];
+        const percentData = [];
+
+        PNL_CATEGORIES.forEach(c2 => {
+            apiData.forEach(row => {
+                if (c2.key === cat.key) {
+                    data.push(row[cat.key]);
+                    percentData.push(cat.percent ? row[cat.percent] : null);
+                } else {
+                    data.push(0);
+                    percentData.push(null);
+                }
+            });
+        });
+
+        return {
+            label: cat.key,
+            data: data,
+            backgroundColor: cat.color,
+            _percentData: percentData   // custom store for tooltip
+        };
+    });
+
+    renderPnLCategoryChart(labels, datasets);
+}
+
+
+let pnlCategoryChart;
+
+function renderPnLCategoryChart(labels, datasets) {
+
+    if (pnlCategoryChart) pnlCategoryChart.destroy();
+
+    pnlCategoryChart = new Chart(
+        document.getElementById("pnlCategoryChart"),
+        {
+            type: "bar",
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const ds = ctx.dataset;
+                                const val = ctx.raw || 0;
+                                const pct = ds._percentData?.[ctx.dataIndex];
+
+                                if (pct !== null && pct !== undefined) {
+                                    return `${ds.label}: ₹${val.toLocaleString()} (${pct}%)`;
+                                }
+                                return `${ds.label}: ₹${val.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            callback: function (value, index) {
+                                const label = this.getLabelForValue(index);
+                                return label.split(" ")[1]; // Jan Feb Mar
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => "₹ " + v.toLocaleString()
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
 
 
 

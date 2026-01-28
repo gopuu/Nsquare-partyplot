@@ -704,9 +704,8 @@ namespace ERPAdmin.ApiControllers
                                 Electricity = Convert.ToDecimal(dr["Electricity"]),
                                 Gas = Convert.ToDecimal(dr["Gas"]),
                                 OtherExpense = Convert.ToDecimal(dr["OtherExpense"]),
-
                                 ProfitAndLoss = Convert.ToDecimal(dr["ProfitAndLoss"]),
-
+ 
                                 PurchasePercent = Convert.ToDecimal(dr["PurchasePercent"]),
                                 SalaryPercent = Convert.ToDecimal(dr["SalaryPercent"]),
                                 RentPercent = Convert.ToDecimal(dr["RentPercent"]),
