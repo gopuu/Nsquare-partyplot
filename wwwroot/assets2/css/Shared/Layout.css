@@ -1,4 +1,108 @@
-﻿/*All-In-One Link*/
+﻿/*MASTER color - start*/
+.master_link .dropdown-link span {
+    width: 200px;
+    height: 16px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+.master_link .dropdown-link span[data-feather] {
+    min-width: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.master_link .asset_masterMenu span {
+    color: #0d6efd; /* Bootstrap Primary Blue */
+}
+
+.master_link .finance_masterMenu span {
+    color: #198754; /* Bootstrap Success Green */
+}
+.master_link .staff_masterMenu span {
+    color: #6f42c1; /* Bootstrap Purple */
+}
+.master_link .inventory_masterMenu span {
+    color: #6c757d; /* Bootstrap gray */
+}
+.master_link .general_masterMenu span {
+    color: #fd7e14; /* Bootstrap Orange */
+}
+
+.master_link .dropdown-link:hover span {
+    transform: translateX(2px);
+}
+.master_link .dropdown-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.master_link .menu-text {
+    display: inline-block;
+    width: 180px; /* 🔧 fixed label width */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.master_link .dropdown-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 0;
+    background: currentColor;
+    transition: height 0.2s ease;
+    transform: translateY(-50%);
+}
+
+.master_link .dropdown-link:hover::before {
+    height: 60%;
+}
+.master_link .dropdown-link::after {
+    content: "";
+    flex: 1;
+}
+.finance_masterMenu:hover {
+    background-color: rgba(25, 135, 84, 0.08);
+}
+
+.staff_masterMenu:hover {
+    background-color: rgba(111, 66, 193, 0.08);
+}
+
+.asset_masterMenu:hover {
+    background-color: rgba(13, 110, 253, 0.08);
+}
+
+.inventory_masterMenu:hover {
+    background-color: rgba(108, 117, 125, 0.08);
+}
+
+.general_masterMenu:hover {
+    background-color: rgba(253, 126, 20, 0.08);
+}
+
+.inventory_masterMenu {
+    position: relative;
+}
+
+.inventory_masterMenu::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    width: 3px;
+    height: 60%;
+    background-color: #6c757d;
+    border-radius: 2px;
+}
+
+/*MASTER color - end*/
+
+/*All-In-One Link*/
 /* Floating button */
 #allInOneFab {
     position: fixed;
@@ -112,19 +216,9 @@
     top: 0 !important;
     right: 95% !important; /* LEFT side */
     left: auto !important;
-    margin-right: 10px;
     width: 950px; /* adjust as needed */
     transform: none !important;
-}
-
-/* mega menu positioning */
-.modules-parent .modules-mega-menu {
-    width: 720px;
-    right: 100%;
-    left: auto;
-    top: 0;
     margin-right: 12px;
-    transform: none !important;
 }
 
 /* keep menu open while hovering inside */
