@@ -691,7 +691,6 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= EXTRACT DATA =================
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString() ?? string.Empty;
-
                 string companyName = dtCompany.Rows[0]["CompanyName"].ToString() ?? string.Empty;
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString() ?? string.Empty;
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString() ?? string.Empty;
@@ -1041,8 +1040,14 @@ namespace ERPAdmin.ApiControllers
                 detailCell.AddElement(new Paragraph(companyphoneNo,
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
+                //headerTable.AddCell(detailCell);
+                //document.Add(headerTable);
+
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -1318,7 +1323,12 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
+
+                //document.Add(headerTable);
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -1592,7 +1602,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -1870,7 +1883,11 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
+                //document.Add(headerTable);
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2160,7 +2177,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2434,7 +2454,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2622,7 +2645,7 @@ namespace ERPAdmin.ApiControllers
 
                 Utils.deleteOldFiles(folder, "FoodWastage_Report_*.xlsx");
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     wb.SaveAs(stream);
                 }
@@ -2735,7 +2758,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3015,7 +3041,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3288,7 +3317,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3473,7 +3505,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Modification")]
-        public IActionResult Report_Modification()
+        public IActionResult Report_Modification(ModificationRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3512,6 +3544,10 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Report
                     using SqlCommand cmd = new SqlCommand("Report_GetModificationDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -3560,7 +3596,10 @@ namespace ERPAdmin.ApiControllers
                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
-                document.Add(headerTable);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3642,7 +3681,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("Report_Modification_Excel")]
-        public IActionResult Report_Modification_Excel()
+        public IActionResult Report_Modification_Excel(ModificationRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3662,6 +3701,10 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using SqlCommand cmd = new SqlCommand("Report_GetModificationDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 

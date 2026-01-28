@@ -326,3 +326,4 @@ function setCurrentMonthDates() {
     $("#toDate").val(formatDate(lastDay));
 }
 
+

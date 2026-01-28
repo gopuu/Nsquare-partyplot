@@ -212,7 +212,7 @@ function loadSuppliersWithItems() {
 
 function renderSuppliers(data) {
 
-    const container = $("#supplierList");
+    const container = $(".supplier-list");
     container.empty();
 
     const grouped = {};
@@ -255,9 +255,6 @@ function renderSuppliers(data) {
         `);
     }
 }
-
-
-
 
 
 $(document).on("click", ".toggle-btn", function () {

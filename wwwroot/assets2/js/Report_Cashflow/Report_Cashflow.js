@@ -1,4 +1,5 @@
 ﻿let selectedMonthDuration = "thismonth";
+const HEADER_KEY = "printWithHeader";
 
 $(document).ready(function () {
 
@@ -33,9 +34,29 @@ $(document).ready(function () {
         $(".sort-option").removeClass("active");
         ViewCashflowReport("viewPDF");
     });
+    // WITH HEADER -- START ------------
+    // Restore value on page load
+    const saved = sessionStorage.getItem(HEADER_KEY);
+    if (saved !== null) {
+        document.getElementById("toggleWithHeader").checked = (saved === "true");
+    }
+
+    // On toggle change
+    document.getElementById("toggleWithHeader").addEventListener("change", function () {
+        const isChecked = this.checked;
+        sessionStorage.setItem(HEADER_KEY, isChecked);
+
+        console.log("With Header:", isChecked); // 🔹 print value
+        ViewCashflowReport();
+    });
+    // WITH HEADER -- END ------------
 });
 
 function ViewCashflowReport(actionName = "viewPDF") {
+    $('#btn-loader').show();
+
+    const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
+    console.log("With Header:", withHeader);
 
     const url = (actionName === "downloadExcel")
         ? "/api/Report/Report_Cashflow_Excel"
@@ -47,7 +68,8 @@ function ViewCashflowReport(actionName = "viewPDF") {
         body: JSON.stringify({
             FromDate: $("#from-date").val(),
             ToDate: $("#to-date").val(),
-            FilterDuration: selectedMonthDuration
+            FilterDuration: selectedMonthDuration,
+            WithHeader: withHeader
         })
     })
         .then(r => r.json())

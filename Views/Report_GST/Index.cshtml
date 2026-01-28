@@ -9,50 +9,62 @@
 <div class="content p-1 pt-11">
     <div class="pb-1">
         <div class="card shadow-sm">
-
             <!-- ================= CARD HEADER ================= -->
             <div class="card-header bg-warning p-1">
                 <div class="row align-items-center">
-
                     <!-- TITLE -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h4 class="mb-0 fw-semibold text-white">
                             GST Report
                         </h4>
                     </div>
 
                     <!-- DOWNLOAD -->
-                    <div class="col-md-8 text-end">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-light btn-sm dropdown-toggle"
-                                    data-bs-toggle="dropdown">
-                                <i class="fas fa-download"></i>
-                            </button>
+                    <div class="col-md-9">
+                        <div class="row g-2 align-items-center justify-content-end flex-nowrap">
+                            <!--WIth Header-->
+                            <div class="col-auto d-flex align-items-center gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="toggleWithHeader">
+                                    <label class="form-check-label fw-semibold text-white"
+                                           for="toggleWithHeader">
+                                        With Header
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- ACTIONS -->
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-light btn-sm dropdown-toggle"
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-download"></i>
+                                    </button>
 
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item"
-                                       onclick="ViewGSTReport('downloadPDF')">
-                                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item"
-                                       onclick="ViewGSTReport('downloadExcel')">
-                                        <i class="fas fa-file-excel text-success me-2"></i> Excel
-                                    </a>
-                                </li>
-                            </ul>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewGSTReport('downloadPDF')">
+                                                <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewGSTReport('downloadExcel')">
+                                                <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-
             <!-- ================= CARD BODY ================= -->
             <div class="card-body p-0">
                 <div class="report-layout">
-
                     <!-- REPORT VIEW -->
                     <div class="pdf-area">
                         <div id="pdfPreviewContainer">
@@ -61,27 +73,21 @@
                             </p>
                         </div>
                     </div>
-
                     <!-- FILTER PANEL -->
                     <div class="filter-area">
                         <div class="filter-panel-static">
-
                             <div class="filter-header">
                                 <span class="text-warning">Filters</span>
                             </div>
-
                             <div class="filter-body">
-
                                 <div class="mb-2">
                                     <label class="form-label">From Date</label>
                                     <input type="date" id="from-date" class="form-control form-control-sm">
                                 </div>
-
                                 <div class="mb-2">
                                     <label class="form-label">To Date</label>
                                     <input type="date" id="to-date" class="form-control form-control-sm">
                                 </div>
-
                                 <div class="mb-2">
                                     <label class="form-label">Quick Range</label>
                                     <div class="dropdown w-100">
@@ -104,18 +110,14 @@
                                 </div>
 
                             </div>
-
                             <div class="filter-footer">
                                 <button class="btn btn-sm btn-outline-secondary" id="btnResetFilter">Reset</button>
                                 <button class="btn btn-sm btn-warning" id="btnApplyFilter">Apply</button>
                             </div>
-
                         </div>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </div>
 </div>
