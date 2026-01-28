@@ -9,43 +9,56 @@
 <div class="content p-1 pt-11">
     <div class="pb-1">
         <div class="card shadow-sm">
-
             <!-- ================= CARD HEADER ================= -->
             <div class="card-header bg-warning p-1">
                 <div class="row align-items-center">
-
                     <!-- TITLE -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h4 class="mb-0 fw-semibold text-white">
                             Expense Report
                         </h4>
                     </div>
-
                     <!-- DOWNLOAD -->
-                    <div class="col-md-8 text-end">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-light btn-sm dropdown-toggle"
-                                    data-bs-toggle="dropdown">
-                                <i class="fas fa-download"></i>
-                            </button>
+                    <div class="col-md-9">
+                        <div class="row g-2 align-items-center justify-content-end flex-nowrap">
+                            <!--WIth Header-->
+                            <div class="col-auto d-flex align-items-center gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="toggleWithHeader">
+                                    <label class="form-check-label fw-semibold text-white"
+                                           for="toggleWithHeader">
+                                        With Header
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- ACTIONS -->
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-light btn-sm dropdown-toggle"
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-download"></i>
+                                    </button>
 
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item"
-                                       onclick="ViewExpenseReport('downloadPDF')">
-                                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item"
-                                       onclick="ViewExpenseReport('downloadExcel')">
-                                        <i class="fas fa-file-excel text-success me-2"></i> Excel
-                                    </a>
-                                </li>
-                            </ul>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewExpenseReport('downloadPDF')">
+                                                <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewExpenseReport('downloadExcel')">
+                                                <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 

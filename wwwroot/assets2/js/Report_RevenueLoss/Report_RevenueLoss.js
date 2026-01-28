@@ -1,4 +1,5 @@
 ﻿let selectedMonthDuration = "thismonth";
+const HEADER_KEY = "printWithHeader";
 
 $(document).ready(function () {
 
@@ -45,6 +46,24 @@ $(document).ready(function () {
         $(".sort-option").removeClass("active");
         ViewRevenueLossReport("viewPDF");
     });
+
+    // WITH HEADER -- START ------------
+    // Restore value on page load
+    const saved = sessionStorage.getItem(HEADER_KEY);
+    if (saved !== null) {
+        document.getElementById("toggleWithHeader").checked = (saved === "true");
+    }
+
+    // On toggle change
+    document.getElementById("toggleWithHeader").addEventListener("change", function () {
+        const isChecked = this.checked;
+        sessionStorage.setItem(HEADER_KEY, isChecked);
+
+        console.log("With Header:", isChecked); // 🔹 print value
+        ViewRevenueLossReport();
+    });
+    // WITH HEADER -- END ------------
+
 });
 
 function loadEventTypeDropdown(selectedId = "") {
@@ -112,6 +131,10 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
 }
 
 function ViewRevenueLossReport(actionName = "viewPDF") {
+    $('#btn-loader').show();
+
+    const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
+    console.log("With Header:", withHeader);
 
     const url = (actionName === "downloadExcel")
         ? "/api/Report/Report_RevenueLoss_Excel"
@@ -123,7 +146,8 @@ function ViewRevenueLossReport(actionName = "viewPDF") {
         body: JSON.stringify({
             FromDate: $("#fromDate").val(),
             ToDate: $("#toDate").val(),
-            FilterDuration: selectedMonthDuration
+            FilterDuration: selectedMonthDuration,
+            WithHeader: withHeader
         })
     })
         .then(r => r.json())
