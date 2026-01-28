@@ -80,7 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-
     // Prevent inside click from bubbling
     $("#filterPanel").on("click", function (e) {
         e.stopPropagation();
