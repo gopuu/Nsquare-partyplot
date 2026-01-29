@@ -1863,7 +1863,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //populateMonthButtons();
     //fetchHallDetails();
     loadBookingCalendar();
-    loadPaymentHistory(bookingId);
+    //loadPaymentHistory(bookingId);
     loadLeadSourceList();
     loadEnquiryList();
     loadStateList();
@@ -1874,7 +1874,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const addonModal = document.getElementById('addonChargeModal');
     const bookingModal = document.getElementById('bookingModal');
     const menuModal = document.getElementById('menuModal');
-    const bookingReportModal = document.getElementById('bookingReportModal');
+    //const bookingReportModal = document.getElementById('bookingReportModal');
     const paymentModal = document.getElementById('paymentModal');
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
     const foodwestageModal = document.getElementById('foodWastageModal');
@@ -2307,6 +2307,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
         console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
         $("#paymentModal").modal("show");
+        loadPaymentHistory(bookingId);
         //paymentModalInstance.show();
     });
 
@@ -3972,22 +3973,20 @@ $(document).on("input", ".wastageInput", function () {
     $("#txtTotalWastage").val(total.toFixed(2));
 });
 
-
 $("#btnSavePayment").click(function () {
-
     const bookingId = getBookingId();
-
     // 🔹 Get values
-   // let bookingId = Number($("#paymentBookingId").val() || 0);
-    let modeId = Number($("#PaymentDetails_Mode").val());
+    // let bookingId = Number($("#paymentBookingId").val() || 0);
+    let modeId = Number($("#PaymentModal_Mode").val());
+    let accountId = Number($("#PaymentModal_Account").val());
     let paymentDate = $("#paymentDate").val();
     let paymentTime = $("#paymentTime").val();
     let txnId = $("#paymentTxn").val();
     let chequeBank = $("#paymentChequebank").val();
     let chequeNo = $("#paymentChequeNo").val();
     let chequeDate = $("#paymentChequeDate").val();
-    let amount = Number($("#paymentAmount").val());
-    let dueBalance = Number($("#paymentDueBalance").val());
+    let amount = Number($("#paymentAmount").val() || 0);
+    let dueBalance = Number($("#paymentDueBalance").val() || 0);
     let nextDueDate = $("#NextDueDate").val();
 
     // 🔹 Basic Validation
@@ -4008,6 +4007,7 @@ $("#btnSavePayment").click(function () {
     const payload = {
         BookingId: bookingId,
         ModeId: modeId,
+        AccountId: accountId,
         DateOfPayment: paymentDate,
         PaymentTime: paymentTime || null,
         TxnId: txnId || null,
@@ -4017,7 +4017,7 @@ $("#btnSavePayment").click(function () {
         Amount: amount,
         DueBalance: dueBalance || 0,
         NextDueDate: nextDueDate || null,
-        ActionBy: sessionStorage.getItem("userId") ?? "0"
+        ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
     };
 
     console.log("Save Payment Payload :", payload);
@@ -4043,7 +4043,8 @@ $("#btnSavePayment").click(function () {
                 $("#PaymentModal").modal("hide");
 
                 // 🔁 Reload payment list if needed
-                loadBookingCalendar();
+                //loadBookingCalendar();
+                loadPaymentHistory(bookingId);
 
             } else {
                 Swal.fire("Error", response?.message || "Save failed!", "error");
@@ -4059,18 +4060,80 @@ $("#btnSavePayment").click(function () {
 });
 
 // ----------------- FETCH PAYMENT DATA -----------------
+loadAccountDropdown();
+function loadAccountDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            const ddl = $("#PaymentModal_Account");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data.forEach(acc => {
+                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}</option>`);
+                });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Account Dropdown Error");
+        }
+    });
+}
+
+loadPaymentModeDropdown();
+function loadPaymentModeDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/PaymentMode/GetPaymentMode",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("payment mode res:", res);
+            const ddl = $("#PaymentModal_Mode, #PaymentDetails_Mode");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data
+                    .filter(x => x.IsActive)
+                    .forEach(pm => {
+                        ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
+                        `);
+                    });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Mode Dropdown Error");
+        }
+    });
+}
+
+
 function loadPaymentHistory(bookingId) {
     const payload = {
         PaymentId: 0,      
         BookingId: bookingId        
     };
-
+    console.log("loadPaymentHistory payload:", payload);
     $.ajax({
         url: "/api/Booking_Payments/GetBookingPayments",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
+            console.log("Booking_Payments res:", res);
             if (res?.status === "Success") {
                 renderPaymentTable(res.data || []);
             } else {
@@ -4078,8 +4141,7 @@ function loadPaymentHistory(bookingId) {
             }
         },
         error: function (xhr, status, error) {
-            console.error("API Error:", error, xhr.responseText);
-            Swal.fire("Error", "Server error fetching payments!", "error");
+            handleApiError(xhr, status, error, "Fetch Payments Error");
         }
     });
 }

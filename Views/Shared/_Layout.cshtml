@@ -15,7 +15,7 @@
     <!-- ===============================================-->
     <title>@ViewBag.Title - Infinity</title>
 
-    <!-- =======================================ass========-->
+    <!-- ===============================================-->
     <!--    Favicons-->
     <!-- ===============================================-->
     <link rel="apple-touch-icon" sizes="180x180" href="/assets2/img/favicons/infinity_apple-touch-icon.png">
@@ -143,7 +143,7 @@
                     <!-- Feedback & CRM -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                            <span class="uil fs-8 me-2 uil-comment-alt"></span>CRM
+                            <span class="uil fs-8 me-2 uil-star"></span>CRM
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
                             <li>
@@ -156,7 +156,23 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "FeedbackDetail" ? "active" : "")" href="/FeedbackDetail">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="file-text"></span>Feedback Detail
+                                        <span class="me-2 uil" data-feather="star"></span>Feedback Detail
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Customer Invoice -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                            <span class="uil fs-8 me-2 uil-file-alt"></span>Invoice
+                        </a>
+                        <ul class="dropdown-menu navbar-dropdown-caret">
+                            <li>
+                                <a class="dropdown-item @(currentController == "CustomerInvoice" ? "active" : "")" href="/CustomerInvoice">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="message-square"></span>Invoice
                                     </div>
                                 </a>
                             </li>

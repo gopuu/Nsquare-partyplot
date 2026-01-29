@@ -436,11 +436,6 @@
                                 <div class="col-md-3">
                                     <label>Mode</label>
                                     <select class="form-select" id="PaymentDetails_Mode">
-                                        <option value="1">Cash</option>
-                                        <option value="2">Cheque</option>
-                                        <option value="3">Online</option>
-                                        <option value="4">Credit/Debit CCard</option>
-                                        <option value="5">discount</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -542,26 +537,12 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0 rounded-3">
 
-            <!-- 🔹 Header -->
+            <!-- HEADER -->
             <div class="modal-header bg-primary py-2 text-white">
-                <div class="container-fluid">
-                    <div class="row w-100">
-                        <div class="col-md-6 d-flex align-items-center">
-                            <h5 class="modal-title mb-0 fw-bold text-white">
-                                <i class="fa-solid fa-calendar-check me-2 text-white"></i>Booking Information
-                            </h5>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <button class="btn btn-info btn-sm me-2" id="btnDownloadPDF">
-                                <i class="fa-solid fa-file-pdf me-1"></i> Function Prospect
-                            </button>
-                            <button class="btn btn-info btn-sm" id="btnEventForm">
-                                <i class="fa-solid fa-download me-1"></i> Event Form
-                            </button>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
+                <h5 class="modal-title text-white" id="bookingModalTitle">
+                    <i class="fa-solid fa-calendar-check me-2 text-white"></i>Booking Summary
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <!-- 🔹 Hidden booking id -->
@@ -1022,22 +1003,23 @@
                     <div class="row">
                         <input type="hidden" id="paymentBookingId">
 
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Mode</label>
-                            <select class="form-select" id="PaymentDetails_Mode">
-                                <option value="1">Cash</option>
-                                <option value="2">Cheque</option>
-                                <option value="3">Online</option>
-                                <option value="4">Credit/Debit CCard</option>
-                                <option value="5">discount</option>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Account</label>
+                            <select class="form-select" id="PaymentModal_Account">
                             </select>
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Mode</label>
+                            <select class="form-select" id="PaymentModal_Mode">
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Date Of Payment</label>
                             <input type="date" id="paymentDate" class="form-control">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label class="form-label">Payment Time</label>
                             <input type="time" id="paymentTime" class="form-control">
                         </div>
@@ -1064,12 +1046,12 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Amount</label>
-                            <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount">
+                            <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount" min="0" step="1">
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Due Balance</label>
-                            <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance">
+                            <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -1077,7 +1059,7 @@
                             <input type="date" id="NextDueDate" class="form-control">
                         </div>
                         <div class="col-md-12 mb-3">
-                            <input type="button" id="btnwritrnote" class="btn btn-outline-primary" value="Writer Note">
+                            <input type="button" id="btnwritrnote" class="btn btn-outline-primary btn-sm" value="Writer Note">
                             <div class="Payment_editorsContainer" style="display:none;">
                                 <!-- Hidden text editor -->
                                 <div class="col-md-12" id="noteEditor">
@@ -1090,8 +1072,8 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" type="reset">Reset</button>
-                <button class="btn btn-outline-primary" id="btnSavePayment">Save</button>
+                <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
+                <button class="btn btn-sm btn-primary" id="btnSavePayment">Save</button>
             </div>
             <!-- Payment History Table -->
             <div class="px-3 pb-3">
@@ -1101,7 +1083,7 @@
                         Payment History
                     </h6>
 
-                    <button class="btn btn-success btn-download-all">
+                    <button class="btn btn-success btn-sm btn-download-all">
                         <i class="fas fa-download"></i> Download All
                     </button>
                 </div>

@@ -53,6 +53,7 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = model.BookingId;
                     cmd.Parameters.Add("@ModeId", SqlDbType.BigInt).Value = model.ModeId;
+                    cmd.Parameters.Add("@AccountId", SqlDbType.BigInt).Value = model.AccountId;
                     cmd.Parameters.Add("@DateOfPayment", SqlDbType.VarChar).Value = model.DateOfPayment;
                     cmd.Parameters.Add("@PaymentTime", SqlDbType.VarChar).Value = (object)model.PaymentTime ?? DBNull.Value;
                     cmd.Parameters.Add("@TxnId", SqlDbType.VarChar).Value = (object)model.TxnId ?? DBNull.Value;
@@ -89,7 +90,6 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
 
         [HttpPost]
         [Route("GetBookingPayments")]
@@ -136,8 +136,8 @@ namespace ERPAdmin.ApiControllers
                             BookingId = Convert.ToInt64(row["BookingId"]),
                             ModeId = Convert.ToInt64(row["ModeId"]),
                             DateOfPayment = row["DateOfPayment"].ToString(),
+                            PaymentTime = row["PaymentTime"].ToString(),
                             PaymentDateTimeFormat = row["PaymentDateTimeFormat"].ToString(),
-                            PaymentTime = row["PaymentTime"] == DBNull.Value ? null : (TimeSpan?)row["PaymentTime"],
                             TxnId = Convert.ToString(row["TxnId"]),
                             ChequeBank = Convert.ToString(row["ChequeBank"]),
                             ChequeNo = Convert.ToString(row["ChequeNo"]),
@@ -146,7 +146,6 @@ namespace ERPAdmin.ApiControllers
                             DueBalance = Convert.ToDecimal(row["DueBalance"]),
                             NextDueDate = row["NextDueDate"].ToString()
                         };
-
                         list.Add(model);
                     }
                 }
@@ -167,7 +166,6 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
 
         [HttpPost]
         [Route("DownloadPaymentReceipt2")]
@@ -532,6 +530,5 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
     }
 }

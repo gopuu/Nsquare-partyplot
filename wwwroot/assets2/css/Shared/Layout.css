@@ -1,4 +1,9 @@
-﻿/*MASTER color - start*/
+﻿/* Extra Extra Large Modal */
+.modal-xxl {
+    max-width: 98%; /* or 1320px */
+}
+
+/*MASTER color - start*/
 .master_link .dropdown-link span {
     width: 200px;
     height: 16px;
@@ -169,6 +174,12 @@
     line-height: 1 !important;
 }
 
+.btn-action-xs2 {
+    padding: 4px !important; /* smaller padding */
+    font-size: 10px !important; /* reduce font size */
+    line-height: 1 !important;
+}
+
     .btn-action-xs i {
         font-size: 12px !important; /* shrink icon */
     }
@@ -270,8 +281,8 @@
 
 /* Loader spinner */
 #loaderOverlay .spinner {
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid #0d6efd;
+    border: 8px solid #fff3cd; /* light warning background ring (optional) */
+    border-top: 8px solid #ffc107; /* Bootstrap warning color */
     border-radius: 50%;
     width: 60px;
     height: 60px;
