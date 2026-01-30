@@ -38,6 +38,7 @@
     public class SaveCustomerInvoiceRequest : BaseClass
     {
         public long Id { get; set; }
+        public long BookingId { get; set; }
 
         public string? InvoiceNo { get; set; }
         public string? ProformaInvoiceNo { get; set; }
@@ -155,7 +156,12 @@
     #region CustomerInvoice By Id
     public class CustomerInvoiceRequest_Id
     {
-        public long Id { get; set; }
+        public long BookingId { get; set; }
+        public string? InvoiceNo { get; set; }
+        public string? ProformaInvoiceNo { get; set; }
+        //public string? GSTInvoiceNo { get; set; }
+
+        //public long Id { get; set; }
     }
     public class CustomerInvoiceItem_Id
     {

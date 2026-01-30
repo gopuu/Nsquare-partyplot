@@ -2,21 +2,33 @@
 {
     public static class Utils
     {
-        public static void deleteOldFiles(string dirPath, string filePrefixWithType)
+        public static void deleteOldFiles(string dirPath, string filePattern, int olderThanMinutes=60)
         {
-            //string[] existingFiles = Directory.GetFiles(excelDir, "GetReport_CustomerBySearch_*.pdf");
-            string[] existingFiles = Directory.GetFiles(dirPath, filePrefixWithType);
-            foreach (string file in existingFiles)
+            if (!Directory.Exists(dirPath))
+                return;
+
+            var files = Directory.GetFiles(dirPath, filePattern);
+            //var cutoffTime = DateTime.Now.AddHours(-1); // 🔹 1 hour ago
+            var cutoffTime = DateTime.Now.AddMinutes(-olderThanMinutes);
+
+            foreach (string file in files)
             {
                 try
                 {
-                    System.IO.File.Delete(file);
+                    FileInfo fileInfo = new FileInfo(file);
+
+                    // Use LastWriteTime (or CreationTime if you prefer)
+                    if (fileInfo.LastWriteTime < cutoffTime)
+                    {
+                        fileInfo.Delete();
+                    }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    //Console.WriteLine("Error deleting file: " + file + " - " + ex.Message);
+                    // optional: log exception
                 }
             }
         }
+
     }
 }

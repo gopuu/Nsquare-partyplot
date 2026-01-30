@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
+using Newtonsoft.Json;
 
 namespace ERPAdmin.ApiControllers
 {
@@ -150,8 +151,267 @@ namespace ERPAdmin.ApiControllers
                 BorderWidth = 0.5f
             };
         }
+        private PdfPCell CreateInfoCell(string label, object? value, bool bold = false)
+        {
+            Font font = FontFactory.GetFont(FontFactory.HELVETICA, bold ? 10 : 9, bold ? Font.BOLD : Font.NORMAL);
+            return new PdfPCell(new Phrase($"{label} : {value}", font))
+            {
+                Border = Rectangle.NO_BORDER,
+                Padding = 4
+            };
+        }
+        private PdfPCell CreateTotalLabelCell(string text, bool isBold = false)
+        {
+            return new PdfPCell(new Phrase(
+                text,
+                FontFactory.GetFont(FontFactory.HELVETICA, 9, isBold ? Font.BOLD : Font.NORMAL)
+            ))
+            {
+                Border = Rectangle.NO_BORDER,
+                HorizontalAlignment = Element.ALIGN_LEFT,
+                Padding = 4
+            };
+        }
+        private PdfPCell CreateTotalValueCell(object value, bool isBold = false)
+        {
+            return new PdfPCell(new Phrase(
+                Convert.ToDecimal(value).ToString("N2"),
+                FontFactory.GetFont(FontFactory.HELVETICA, 9, isBold ? Font.BOLD : Font.NORMAL)
+            ))
+            {
+                Border = Rectangle.NO_BORDER,
+                HorizontalAlignment = Element.ALIGN_RIGHT,
+                Padding = 4
+            };
+        }
+
         #endregion
 
+        [HttpPost]
+        [Route("DownloadCustomerInvoiceReport")]
+        public IActionResult DownloadCustomerInvoiceReport(CustomerInvoiceReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataTable dtInvoice = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // 🔹 Company Header
+                    new SqlDataAdapter(
+                        new SqlCommand("Report_PageHeader_GetCompany", con)
+                        { CommandType = CommandType.StoredProcedure }
+                    ).Fill(dtCompany);
+
+                    // 🔹 Invoice Report
+                    using SqlCommand cmd = new SqlCommand("Report_CustomerInvoiceById", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
+
+                    new SqlDataAdapter(cmd).Fill(dtInvoice);
+                }
+
+                if (dtCompany.Rows.Count == 0 || dtInvoice.Rows.Count == 0)
+                    throw new Exception("Invoice data not found");
+
+                DataRow inv = dtInvoice.Rows[0];
+
+                string companyName = dtCompany.Rows[0]["CompanyName"].ToString() ?? "";
+                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString() ?? "";
+                string companyPhone = dtCompany.Rows[0]["CompanyMobile"].ToString() ?? "";
+                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString() ?? "";
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
+
+                // ================= HEADER =================
+                if (request.WithHeader == true)
+                {
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    Image logo = Image.GetInstance(
+                        Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
+                    );
+                    logo.ScaleToFit(70f, 70f);
+
+                    headerTable.AddCell(new PdfPCell(logo)
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10
+                    });
+
+                    PdfPCell infoCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    infoCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    infoCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    infoCell.AddElement(new Paragraph(companyPhone, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(infoCell);
+                    document.Add(headerTable);
+                }
+
+                // ================= TITLE =================
+                string title = "TAX INVOICE";
+                if (!string.IsNullOrWhiteSpace(request.ProformaInvoiceNo))
+                {
+                    title = "PROFORMA INVOICE";
+                }
+
+                document.Add(new Paragraph(title, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
+                { Alignment = Element.ALIGN_CENTER, SpacingAfter = 12f });
+
+                // ================= CUSTOMER INFO =================
+                PdfPTable infoTable = new PdfPTable(2);
+                infoTable.WidthPercentage = 100;
+                infoTable.SetWidths(new float[] { 50f, 50f });
+
+                string? invoiceNoToShow =
+                    !string.IsNullOrWhiteSpace(inv["ProformaInvoiceNo"]?.ToString())
+                        ? inv["ProformaInvoiceNo"].ToString()
+                        : inv["InvoiceNo"]?.ToString();
+
+                infoTable.AddCell(CreateInfoCell("Invoice No", invoiceNoToShow));
+                infoTable.AddCell(CreateInfoCell("Invoice Date", inv["InvoiceDate_Format"]));
+                infoTable.AddCell(CreateInfoCell("Customer Name", inv["CustomerName"]));
+                infoTable.AddCell(CreateInfoCell("GSTIN", inv["GSTIN"]));
+                infoTable.AddCell(CreateInfoCell("Email", inv["EmailId"]));
+                infoTable.AddCell(CreateInfoCell("Address", inv["Address"]));
+
+                document.Add(infoTable);
+                document.Add(new Paragraph("\n"));
+
+                // ================= ITEMS TABLE =================
+                string jsonItems = inv["JSON_Items"]?.ToString() ?? "[]";
+                var items = JsonConvert.DeserializeObject<DataTable>(jsonItems);
+
+                PdfPTable itemTable = new PdfPTable(8);
+                itemTable.WidthPercentage = 100;
+                itemTable.SetWidths(new float[] { 5, 25, 10, 10, 10, 10, 10, 10 });
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                BaseColor thColor = new BaseColor(0, 121, 182);
+
+                string[] headers = { "#", "Description", "HSN", "Rate", "Qty", "Taxable", "GST", "Total" };
+
+                foreach (var h in headers)
+                    itemTable.AddCell(CreateHeaderCell(h, thFont, thColor));
+
+                itemTable.HeaderRows = 1;
+
+                if (items == null || items.Rows.Count == 0)
+                {
+                    itemTable.AddCell(new PdfPCell(new Phrase("No Items"))
+                    {
+                        Colspan = 8,
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 10
+                    });
+                }
+                else
+                {
+                    foreach (DataRow r in items.Rows)
+                    {
+                        itemTable.AddCell(CreateBodyCell(r["SrNo"].ToString(), tdFont, Element.ALIGN_CENTER));
+                        itemTable.AddCell(CreateBodyCell(r["Description"].ToString(), tdFont));
+                        itemTable.AddCell(CreateBodyCell(r["HSN"].ToString(), tdFont, Element.ALIGN_CENTER));
+                        itemTable.AddCell(CreateBodyCell(r["Rate"].ToString(), tdFont, Element.ALIGN_RIGHT));
+                        itemTable.AddCell(CreateBodyCell(r["Qty"].ToString(), tdFont, Element.ALIGN_CENTER));
+                        itemTable.AddCell(CreateBodyCell(r["TaxableAmount"].ToString(), tdFont, Element.ALIGN_RIGHT));
+                        itemTable.AddCell(CreateBodyCell(r["GSTRate"].ToString(), tdFont, Element.ALIGN_CENTER));
+                        itemTable.AddCell(CreateBodyCell(r["Total"].ToString(), tdFont, Element.ALIGN_RIGHT));
+                    }
+                }
+
+                document.Add(itemTable);
+
+                // ================= TOTALS =================
+                document.Add(new Paragraph("\n"));
+                PdfPTable totalTable = new PdfPTable(2);
+                totalTable.WidthPercentage = 40;
+                totalTable.HorizontalAlignment = Element.ALIGN_RIGHT;
+                totalTable.SetWidths(new float[] { 60f, 40f });
+
+                totalTable.AddCell(CreateTotalLabelCell("Sub Total"));
+                totalTable.AddCell(CreateTotalValueCell(inv["SubTotal"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Booking Discount"));
+                totalTable.AddCell(CreateTotalValueCell(inv["BookingDiscount"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Total Taxable"));
+                totalTable.AddCell(CreateTotalValueCell(inv["TotalTaxableAmount"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Total GST"));
+                totalTable.AddCell(CreateTotalValueCell(inv["TotalGST"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Round Off"));
+                totalTable.AddCell(CreateTotalValueCell(inv["RoundOff"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Advance Paid"));
+                totalTable.AddCell(CreateTotalValueCell(inv["TotalAdvancePaid"]));
+
+                totalTable.AddCell(CreateTotalLabelCell("Grand Total", true));
+                totalTable.AddCell(CreateTotalValueCell(inv["GrandTotal"], true));
+
+                document.Add(totalTable);
+
+                document.Close();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"Invoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "Invoice_*.pdf", 60);
+
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                    stream.WriteTo(fs);
+
+                response.status = "Success";
+                response.message = "Invoice Report Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
 
         [HttpPost]
         [Route("DownloadBookingEventReport")]
@@ -946,7 +1206,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
 
         [HttpPost]
         [Route("Report_DailySalesDetails")]

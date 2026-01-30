@@ -21,54 +21,123 @@ $(function () {
     });
     //SUMMARY -- END
 
-    //PROFORMA INVOICE -- START
+    //CREATE PROFORMA INVOICE -- START
     $(document).on('click', '.btn-create-proforma', function () {
+        resetForm();
+
         const bookingId = $(this).data('bookingid');
-
         console.log('Create Proforma BookingId:', bookingId);
-        invoiceType = "proforma";
-        $('#invoiceId').val(0);
-        $('#invoiceItemsBody').empty();
+        $('#bookingId').val(bookingId);
 
+        invoiceType = "proforma";
         $('#invoiceModalTitle').text('Create Proforma Invoice #' + proformaInvoiceNo);
         invoiceModal.show();
 
         fetchInvoiceByBookingId(bookingId);
     });
-    //PROFORMA INVOICE -- END
+    //CREATE PROFORMA INVOICE -- END
 
-    //INVOICE -- START
+    //CREATE INVOICE -- START
     $(document).on('click', '.btn-create-invoice', function () {
+        resetForm();
+
         const bookingId = $(this).data('bookingid');
         console.log('Create Invoice BookingId:', bookingId);
+        $('#bookingId').val(bookingId);
 
         invoiceType = "invoice";
-        $('#invoiceId').val(0);
-        $('#invoiceItemsBody').empty();
-
         $('#invoiceModalTitle').text('Create Invoice #' + invoiceNo);
         invoiceModal.show();
 
         fetchInvoiceByBookingId(bookingId);
     });
-    //INVOICE -- END
+    //CREATE INVOICE -- END
 
+    //EDIT INVOICE -- START
     $(document).on('click', '.btn-edit-invoice', function () {
-        var bookingId = $(this).data('bookingid');
-        console.log('Edit Invoice BookingId:', bookingId);
-        // set hidden booking/invoice id if needed
-        $('#invoiceId').val(0);
 
-        // open modal
+        resetForm();
+
+        const bookingId = $(this).data('bookingid');
+        const invoiceNo = $(this).data('invoiceno');
+        $('#bookingId').val(bookingId);
+
+        invoiceType = "invoice";
+
         $('#invoiceModalTitle').text('Edit Invoice #' + invoiceNo);
         invoiceModal.show();
 
+        fetchInvoiceById({
+            BookingId: bookingId,
+            InvoiceNo: invoiceNo,
+            ProformaInvoiceNo: null
+        });
     });
+    //EDIT INVOICE -- END
 
+    //EDIT PROFORMA INVOICE -- START
+    $(document).on('click', '.btn-edit-proforma', function () {
+
+        resetForm();
+
+        const bookingId = $(this).data('bookingid');
+        const proformaNo = $(this).data('proformano');
+        $('#bookingId').val(bookingId);
+
+        invoiceType = "proforma";
+
+        $('#invoiceModalTitle').text('Edit Proforma #' + proformaNo);
+        invoiceModal.show();
+
+        fetchInvoiceById({
+            BookingId: bookingId,
+            InvoiceNo: null,
+            ProformaInvoiceNo: proformaNo
+        });
+    });
+    //EDIT PROFORMA INVOICE -- END
+
+    //SEND INVOICE -- START
     $(document).on('click', '.btn-send-invoice', function () {
         var bookingId = $(this).data('bookingid');
         console.log('Send Invoice BookingId:', bookingId);
     });
+    //SEND INVOICE -- END
+
+    //PDF PROFORMA INVOICE -- START
+    $(document).on('click', '.btn-pdf-proforma', function () {
+
+        const bookingId = $(this).data('bookingid');
+        const proformaNo = $(this).data('proformano');
+
+        const request = {
+            BookingId: bookingId,
+            InvoiceNo: null,
+            ProformaInvoiceNo: proformaNo,
+            WithHeader: true
+        };
+
+        generateInvoicePdf(request);
+    });
+    //PDF PROFORMA INVOICE -- END
+
+    //PDF INVOICE -- START
+    $(document).on('click', '.btn-pdf-invoice', function () {
+
+        const bookingId = $(this).data('bookingid');
+        const invoiceNo = $(this).data('invoiceno');
+
+        const request = {
+            BookingId: bookingId,
+            InvoiceNo: invoiceNo,
+            ProformaInvoiceNo: null,
+            GSTInvoiceNo: invoiceNo,   // GST invoice
+            WithHeader: true
+        };
+
+        generateInvoicePdf(request);
+    });
+    //PDF INVOICE -- END
 
     //ITEMS ROW --- START
     $('#btnAddItem').on('click', function () {
@@ -127,9 +196,10 @@ $(function () {
         const isGstIncluded = $('#isGstIncluded').is(':checked');
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
+            BookingId: parseInt($('#bookingId').val()) || 0,
             InvoiceNo: invoiceType === "invoice" ? invoiceNo : null,
             ProformaInvoiceNo: invoiceType === "proforma" ? proformaInvoiceNo : null,
-            GSTInvoiceNo: isGstIncluded ? gstInvoiceNo : null,
+            GSTInvoiceNo: (invoiceType === "invoice" && isGstIncluded) ? gstInvoiceNo : null,
 
             CustomerName: $('#customerName').val(),
             InvoiceDate: $('#invoiceDate').val(),
@@ -169,7 +239,9 @@ $(function () {
                         confirmButtonText: 'OK'
                     });
                     fetchData();
+                    getNextInvoiceNumbers();
                     //resetForm();
+                    $('#btnSaveInvoice').prop('disabled', true);
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -329,7 +401,98 @@ function recalcAll() {
     $('#balanceAmount').val((grandTotal - advance).toFixed(2));
 }
 
-//proforma/invoice -- fetch -- START
+//proforma & invoice -- fetch EDIT -- START
+function fetchInvoiceById(params) {
+
+    $.ajax({
+        url: '/api/CustomerInvoice/GetCustomerInvoiceById',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(params),
+
+        success: function (res) {
+
+            if (res.status !== 'Success' || !res.data) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invoice Not Found',
+                    text: 'Invoice data not found'
+                });
+                return;
+            }
+
+            const data = res.data;
+
+            /* ---------- MASTER ---------- */
+            $('#invoiceId').val(data.Id);
+            $('#bookingId').val(data.BookingId);
+            $('#customerName').val(data.CustomerName);
+            $('#invoiceDate').val(data.InvoiceDate);
+            $('#gstin').val(data.GSTIN);
+            $('#emailId').val(data.EmailId);
+            $('#address').val(data.Address);
+            $('#customerState').val(data.CustomerStateId);
+
+            /* ---------- TOTALS (DIRECT SET) ---------- */
+            $('#subTotal').val(data.SubTotal);
+            $('#bookingDiscount').val(data.BookingDiscount);
+            $('#totalTaxable').val(data.TotalTaxableAmount);
+            $('#totalGST').val(data.TotalGST);
+            $('#grandTotal').val(data.GrandTotal);
+            $('#roundOff').val(data.RoundOff);
+            $('#advancePaid').val(data.TotalAdvancePaid);
+            $('#balanceAmount').val(data.BalanceAmount);
+
+            /* ---------- ITEMS ---------- */
+            $('#invoiceItemsBody').empty();
+
+            if (data.Items && data.Items.length > 0) {
+
+                data.Items.forEach(item => {
+
+                    const row = `
+                        <tr>
+                            <td class="text-center col-index"></td>
+
+                            <td><input class="form-control form-control-sm desc" value="${item.Description ?? ''}"></td>
+                            <td><input class="form-control form-control-sm hsn" value="${item.HSN ?? ''}"></td>
+
+                            <td><input class="form-control form-control-sm text-end rate" value="${item.Rate}"></td>
+                            <td><input class="form-control form-control-sm text-end qty" value="${item.Qty}"></td>
+                            <td><input class="form-control form-control-sm text-end subtotal" value="${item.SubTotal}"></td>
+
+                            <td><input class="form-control form-control-sm text-end discountrate" value="${item.DiscountRate}"></td>
+                            <td><input class="form-control form-control-sm text-end discounttype" value="${item.DiscountTypeId}"></td>
+                            <td><input class="form-control form-control-sm text-end discountamount" value="${item.DiscountAmount}"></td>
+
+                            <td><input class="form-control form-control-sm text-end taxable" value="${item.TaxableAmount}"></td>
+                            <td><input class="form-control form-control-sm text-end gst" value="${item.GSTRate}"></td>
+
+                            <td><input class="form-control form-control-sm text-end cgst" value="${item.CGST}" readonly></td>
+                            <td><input class="form-control form-control-sm text-end sgst" value="${item.SGST}" readonly></td>
+                            <td><input class="form-control form-control-sm text-end fw-bold total" value="${item.Total}" readonly></td>
+
+                            <td class="text-center">
+                                <i class="fa fa-times text-danger btn-delete-row"></i>
+                            </td>
+                        </tr>
+                    `;
+
+                    $('#invoiceItemsBody').append(row);
+                });
+
+                updateRowSequence();
+            }
+        },
+
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Invoice Failed");
+        }
+    });
+}
+//proforma & invoice -- fetch EDIT -- END
+
+//proforma & invoice -- fetch -- START
 function fetchInvoiceByBookingId(bookingId) {
 
     $.ajax({
@@ -458,7 +621,7 @@ function fetchInvoiceByBookingId(bookingId) {
         }
     });
 }
-//proforma/invoice -- fetch -- END
+//proforma & invoice -- fetch -- END
 
 //FOR SUMMARY -- START
 function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, actionMode = "singleData") {
@@ -591,7 +754,7 @@ function calculateInvoiceTotals() {
 function getNextInvoiceNumbers() {
 
     $.ajax({
-        url: '/api/CustomerInvoice/GetNextInvoiceNumbers',
+        url: '/api/CustomerInvoice/GetCustomerInvoice_NextInvoiceNumbers',
         type: 'GET',
         success: function (res) {
             if (res.status === 'Success' && res.data) {
@@ -662,9 +825,27 @@ function renderTable(data) {
             { data: 'BookingId', title: '#BRN' },
 
             {
-                data: 'InvoiceNo',
+                data: null,
                 title: 'Invoice No',
-                render: d => d === '-' ? '-' : `<strong>${d}</strong>`
+                render: function (row) {
+
+                    const invoiceNo = row.InvoiceNo && row.InvoiceNo !== '-' ? row.InvoiceNo : '';
+                    const proformaNo = row.ProformaInvoiceNo && row.ProformaInvoiceNo !== '-' ? row.ProformaInvoiceNo : '';
+
+                    if (invoiceNo && proformaNo) {
+                        return `<strong>${invoiceNo} / ${proformaNo}</strong>`;
+                    }
+
+                    if (invoiceNo) {
+                        return `<strong>${invoiceNo}</strong>`;
+                    }
+
+                    if (proformaNo) {
+                        return `<strong>${proformaNo}</strong>`;
+                    }
+
+                    return '-';
+                }
             },
 
             { data: 'EventDate', title: 'Event Date' },
@@ -700,64 +881,73 @@ function renderTable(data) {
                                data-bookingid="${row.BookingId}">
                             Create Proforma
                        </button>`
-                        : `<button class="btn btn-secondary btn-action-xs2 btn-edit-proforma"
-                               data-proformainvoice="${row.ProformaInvoiceNo}">
-                            Create Proforma
+                        : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                               data-bookingid="${row.BookingId}" data-proformano="${row.ProformaInvoiceNo}">
+                            <i class="fa fa-pen me-1"></i>Edit
                        </button>`
             },
 
-            {
-                data: null,
-                title: 'Send Proforma',
-                render: row =>
-                    `<button class="btn btn-outline-secondary btn-action-xs2">Send</button>`
-            },
+            //{
+            //    data: null,
+            //    title: 'Send Proforma',
+            //    render: row =>
+            //        `<button class="btn btn-outline-secondary btn-action-xs2">Send</button>`
+            //},
 
             {
                 data: null,
                 title: 'PDF (Proforma)',
+                className: 'text-center',
                 render: row =>
                     row.ProformaInvoiceNo === '-'
                         ? '-'
-                        : `<i class="fa fa-file-pdf text-danger fs-5"></i>`
+                        : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-proforma"
+                               role="button"
+                               data-bookingid="${row.BookingId}"
+                               data-proformano="${row.ProformaInvoiceNo}">
+                           </i>`
             },
 
             {
                 data: null,
                 title: 'GST Invoice',
                 render: row =>
-                    row.GSTInvoiceNo === '-'
+                    row.InvoiceNo === '-'
                         ? `
                           <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
                                   data-bookingid="${row.BookingId}">
                               Create Invoice
                           </button>`
-                                    : `<button class="btn btn-info btn-action-xs2 btn-edit-invoice"
-                                   data-bookingid="${row.BookingId}">
-                              Edit Invoice
+                                    : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
+                                   data-bookingid="${row.BookingId}" data-invoiceno="${row.InvoiceNo}">
+                              <i class="fa fa-pen me-1"></i>Edit
                            </button>
                         `
             },
 
-            {
-                data: null,
-                title: 'Send Invoice',
-                render: row =>
-                    `<button class="btn btn-outline-secondary btn-action-xs2 btn-send-invoice"
-                         data-bookingid="${row.BookingId}">
-                    Send Invoice
-                </button>`
-            },
+            //{
+            //    data: null,
+            //    title: 'Send Invoice',
+            //    render: row =>
+            //        `<button class="btn btn-outline-secondary btn-action-xs2 btn-send-invoice"
+            //             data-bookingid="${row.BookingId}">
+            //        Send Invoice
+            //    </button>`
+            //},
 
             {
                 data: null,
                 title: 'PDF (GST)',
                 className: 'text-center',
                 render: row =>
-                    row.GSTInvoiceNo === '-'
+                    row.InvoiceNo === '-'
                         ? '-'
-                        : `<i class="fa fa-file-pdf text-danger fs-5"></i>`
-            }
+                        : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-invoice"
+                               role="button"
+                               data-bookingid="${row.BookingId}"
+                               data-invoiceno="${row.InvoiceNo}">
+                           </i>`
+            }            
         ]
     });
 }
@@ -765,6 +955,7 @@ function renderTable(data) {
 function resetForm() {
     invoiceType = null;
     $('#invoiceId').val(0);
+    $('#bookingId').val(0);
     $('#invoiceNo').val('');
     $('#invoiceDate').val('');
     $('#customerName').val('');
@@ -774,6 +965,8 @@ function resetForm() {
     $('#subTotal').val(0);
     $('#totalGST').val(0);
     $('#grandTotal').val(0);
+    $('#invoiceItemsBody').empty();
+    $('#btnSaveInvoice').prop('disabled', false);
 }
 
 function resetFilter() {
@@ -864,3 +1057,45 @@ function loadState() {
 }    
 //STATE DROPDOWN --- END ------------------------
 
+//INVOICE REPORT MODAL --- START ------------------------
+function generateInvoicePdf(request) {
+
+    $.ajax({
+        url: '/api/Report/DownloadCustomerInvoiceReport',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(request),
+        beforeSend: function () {
+            Swal.fire({
+                title: 'Generating PDF...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+        },
+        success: function (res) {
+            Swal.close();
+
+            if (res.status === 'Success' && res.data?.FileUrl) {
+                const link = document.createElement('a');
+                link.href = res.data.FileUrl;
+                link.download = '';           // 🔑 forces download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: res.message || 'Failed to generate invoice PDF'
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            Swal.close();
+            handleApiError(xhr, status, error, "Invoice PDF generation failed");
+        }
+    });
+}
+
+//INVOICE REPORT MODAL --- END ------------------------

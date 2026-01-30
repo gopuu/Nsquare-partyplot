@@ -1,5 +1,13 @@
 ﻿namespace ERPAdmin.Models
 {
+    public class CustomerInvoiceReportRequest
+    {
+        public long BookingId { get; set; }          // CustomerInvoice.Id
+        public string? InvoiceNo { get; set; }     
+        public string? ProformaInvoiceNo { get; set; }     
+        public bool? WithHeader { get; set; }
+    }
+
     //DownloadBookingEventReport
     public class DownloadBookingEventReportRequest //: BaseClass
     {

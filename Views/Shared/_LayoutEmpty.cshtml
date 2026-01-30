@@ -75,14 +75,15 @@
     }
 
     /* Loader spinner */
-    .spinner {
-        border: 8px solid #f3f3f3;
-        border-top: 8px solid #0d6efd;
+    #loaderOverlay .spinner {
+        border: 8px solid #fff3cd; /* light warning background ring (optional) */
+        border-top: 8px solid #ffc107; /* Bootstrap warning color */
         border-radius: 50%;
         width: 60px;
         height: 60px;
         animation: spin 1s linear infinite;
     }
+
 
     @@keyframes spin {
         0% {

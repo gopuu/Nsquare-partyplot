@@ -206,7 +206,9 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetCustomerInvoiceById", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar, 50).Value = request.InvoiceNo;
+                    cmd.Parameters.Add("@ProformaInvoiceNo", SqlDbType.NVarChar, 50).Value = request.ProformaInvoiceNo;
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -293,6 +295,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@Id", request.Id);
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
                     cmd.Parameters.AddWithValue("@ProformaInvoiceNo", (object)request.ProformaInvoiceNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@GSTInvoiceNo", (object)request.GSTInvoiceNo ?? DBNull.Value);
@@ -392,8 +395,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpGet]
-        [Route("GetNextInvoiceNumbers")]
-        public IActionResult GetNextInvoiceNumbers()
+        [Route("GetCustomerInvoice_NextInvoiceNumbers")]
+        public IActionResult GetCustomerInvoice_NextInvoiceNumbers()
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -412,7 +415,7 @@ namespace ERPAdmin.ApiControllers
                 NextInvoiceNumberResponse data = new NextInvoiceNumberResponse();
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("GetNextInvoiceNumbers", con))
+                using (SqlCommand cmd = new SqlCommand("GetCustomerInvoice_NextInvoiceNumbers", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
