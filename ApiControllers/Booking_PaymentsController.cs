@@ -53,7 +53,6 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = model.BookingId;
                     cmd.Parameters.Add("@ModeId", SqlDbType.BigInt).Value = model.ModeId;
-                    cmd.Parameters.Add("@AccountId", SqlDbType.BigInt).Value = model.AccountId;
                     cmd.Parameters.Add("@DateOfPayment", SqlDbType.VarChar).Value = model.DateOfPayment;
                     cmd.Parameters.Add("@PaymentTime", SqlDbType.VarChar).Value = (object)model.PaymentTime ?? DBNull.Value;
                     cmd.Parameters.Add("@TxnId", SqlDbType.VarChar).Value = (object)model.TxnId ?? DBNull.Value;

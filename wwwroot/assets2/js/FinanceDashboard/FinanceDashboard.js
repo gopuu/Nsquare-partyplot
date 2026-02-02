@@ -5,6 +5,162 @@
     loadVendorPayables("thismonth");
     loadTopRevenueEvents("thismonth");
 
+    //EXPENSE TXN --- START -------------------------
+    loadExpenseCategoryDropdown();
+    loadExpenseSubCategoryDropdown();
+    loadAccountDropdown();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('txtTransactionDate_Expense').value = today;
+
+    // Add button click
+    $("#btn-add-debit-transactions").click(function () {
+        resetFormFields_Expense();
+        $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
+        $("#txtTransactionDate_Expense").val(new Date().toISOString().split('T')[0]); // set today
+        $("#ExpenseTransactionModal").modal("show");
+    });
+
+    // Save Expense Transaction
+    $("#btnSaveExpenseTransaction").click(function (e) {
+        e.preventDefault();
+        // Basic validation
+        if ($("#ddlAccount").val() === "") {
+            Swal.fire("Validation", "Please select Account", "warning");
+            return;
+        }
+        if ($("#ddlCategory").val() === "") {
+            Swal.fire("Validation", "Please select Category", "warning");
+            return;
+        }
+        if ($("#txtAmount_Expense").val().trim() === "" || parseFloat($("#txtAmount_Expense").val()) <= 0) {
+            Swal.fire("Validation", "Amount must be greater than 0", "warning");
+            return;
+        }
+        if ($("#txtTransactionDate_Expense").val() === "") {
+            Swal.fire("Validation", "Please select Transaction Date", "warning");
+            return;
+        }
+        let payload = {
+            Id: $("#ExpenseTransactionId").val(),
+            AccountId: $("#ddlAccount").val(),
+            CategoryId: $("#ddlExpenseCategory").val(), // Corrected
+            SubCategoryId: $("#ddlSubCategory_Expense").val() || null,
+            Amount: parseFloat($("#txtAmount_Expense").val()),
+            TransactionDate: $("#txtTransactionDate_Expense").val(),
+            PaymentMode: $("#txtPaymentMode_Expense").val().trim() || null,
+            ReferenceNo: $("#txtReferenceNo_Expense").val().trim() || null,
+            Notes: $("#txtNotes_Expense").val().trim() || null,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        // console.log("SAVE PAYLOAD:", payload);
+        $.ajax({
+            url: "/api/ExpenseTransactions/SaveExpenseTransaction",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response.status === "Success") {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved!",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                    // Reset form & hide modal
+                    resetFormFields_Expense();
+                    $("#ExpenseTransactionModal").modal("hide");
+
+                    // Reload table or data
+                    //fetchExpenseTransactions();
+                } else {
+                    Swal.fire("Error", response.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save ExpenseTransaction Error")
+            }
+        });
+    });
+    //EXPENSE TXN --- END --------------------------
+
+    //INCOME TXN --- START -------------------------
+    loadIncomeCategoryDropdown();
+    loadIncomeSubCategoryDropdown();
+    document.getElementById('txtTransactionDate_Income').value = today;
+
+    // Add button click
+    $("#btn-add-credit-transactions").click(function () {
+        resetFormFields_Income();
+        $("#incomeTransactionModalTitle").text("Add Income Transactions");
+        $("#txtTransactionDate_Income").val(new Date().toISOString().split('T')[0]); // set today
+        $("#incomeTransactionModal").modal("show");
+    });
+
+    // Save Income Transaction
+    $("#btnSaveIncomeTransaction").click(function (e) {
+        e.preventDefault();
+        // Basic validation
+        if ($("#ddlAccount").val() === "") {
+            Swal.fire("Validation", "Please select Account", "warning");
+            return;
+        }
+        if ($("#ddlCategory").val() === "") {
+            Swal.fire("Validation", "Please select Category", "warning");
+            return;
+        }
+        if ($("#txtAmount_Income").val().trim() === "" || parseFloat($("#txtAmount_Income").val()) <= 0) {
+            Swal.fire("Validation", "Amount must be greater than 0", "warning");
+            return;
+        }
+        if ($("#txtTransactionDate_Income").val() === "") {
+            Swal.fire("Validation", "Please select Transaction Date", "warning");
+            return;
+        }
+        let payload = {
+            Id: $("#incomeTransactionId").val(),
+            AccountId: $("#ddlAccount").val(),
+            CategoryId: $("#ddlIncomeCategory").val(), // Corrected
+            SubCategoryId: $("#ddlSubCategory_Income").val() || null,
+            Amount: parseFloat($("#txtAmount_Income").val()),
+            TransactionDate: $("#txtTransactionDate_Income").val(),
+            PaymentMode: $("#txtPaymentMode_Income").val().trim() || null,
+            ReferenceNo: $("#txtReferenceNo_Income").val().trim() || null,
+            Notes: $("#txtNotes_Income").val().trim() || null,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+        // console.log("SAVE PAYLOAD:", payload);
+        $.ajax({
+            url: "/api/IncomeTransactions/SaveIncomeTransaction",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response.status === "Success") {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved!",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                    // Reset form & hide modal
+                    resetFormFields_Income();
+                    $("#incomeTransactionModal").modal("hide");
+
+                    // Reload table or data
+                    //fetchIncomeTransactions();
+                } else {
+                    Swal.fire("Error", response.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save IncomeTransaction Error")
+            }
+        });
+    });
+    //INCOME TXN --- END ---------------------------
+
 });
 
 function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
@@ -272,3 +428,190 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
         }
     });
 }
+
+
+//EXPENSE TRANSACTIONS ----- START --------------------
+// Optional: Reset form fields
+function resetFormFields_Expense() {
+    $("#ExpenseTransactionId").val(0);
+    $("#ddlAccount").val("");
+    $("#ddlCategory").val("");
+    $("#ddlSubCategory_Expense").val("");
+    $("#txtAmount_Expense").val("");
+    $("#txtTransactionDate_Expense").val("");
+    $("#txtPaymentMode_Expense").val("");
+    $("#txtReferenceNo_Expense").val("");
+    $("#txtNotes_Expense").val("");
+}
+
+function loadExpenseCategoryDropdown(selectedId = "") {
+    $.ajax({
+        url: "/api/ExpenseCategory/GetExpenseCategoryList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+
+            let dropdown = $("#ddlExpenseCategory");
+            dropdown.empty(); // clear previous values
+
+            dropdown.append(`<option value="">-- Select Expense Category --</option>`);
+
+            response.data.forEach(item => {
+                dropdown.append(
+                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                            ${item.CategoryName}
+                        </option>`
+                );
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
+        }
+    });
+}
+
+// Load SubCategory dropdown based on selected Expense Category
+function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
+    if (!categoryId) {
+        $("#ddlSubCategory_Expense").empty().append('<option value="">-- Select SubCategory --</option>');
+        return;
+    }
+    $.ajax({
+        url: "/api/ExpenseSubCategory/GetExpenseSubCategoryList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
+        success: function (response) {
+            let dropdown = $("#ddlSubCategory_Expense");
+            dropdown.empty();
+            dropdown.append('<option value="">-- Select SubCategory --</option>');
+
+            response.data.forEach(item => {
+                dropdown.append(
+                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                                ${item.SubCategoryName}
+                            </option>`
+                );
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
+        }
+    });
+}
+
+// Trigger SubCategory load when Expense Category changes
+$("#ddlExpenseCategory").change(function () {
+    let selectedCategoryId = $(this).val();
+    loadExpenseSubCategoryDropdown(selectedCategoryId);
+});
+
+// Load Account dropdown dynamically
+function loadAccountDropdown(selectedId = "") {
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }), // 0 = fetch all accounts
+        success: function (response) {
+            let dropdown = $(".ddlAccount");
+            dropdown.empty(); // clear previous values
+            dropdown.append('<option value="">-- Select Account --</option>');
+
+            if (response.status === "Success" && response.data.length > 0) {
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                                ${item.AccountName} (${item.AccountType})
+                            </option>`
+                    );
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
+        }
+    });
+}
+//EXPENSE TRANSACTIONS ----- END ----------------------
+
+//INCOME TRANSACTIONS ----- START --------------------
+// Optional: Reset form fields
+function resetFormFields_Income() {
+    $("#incomeTransactionId").val(0);
+    $("#ddlAccount").val("");
+    $("#ddlCategory").val("");
+    $("#ddlSubCategory_Income").val("");
+    $("#txtAmount_Income").val("");
+    $("#txtTransactionDate_Income").val("");
+    $("#txtPaymentMode_Income").val("");
+    $("#txtReferenceNo_Income").val("");
+    $("#txtNotes_Income").val("");
+}
+
+function loadIncomeCategoryDropdown(selectedId = "") {
+    $.ajax({
+        url: "/api/IncomeCategory/GetIncomeCategoryList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+
+            let dropdown = $("#ddlIncomeCategory");
+            dropdown.empty(); // clear previous values
+
+            dropdown.append(`<option value="">-- Select Income Category --</option>`);
+
+            response.data.forEach(item => {
+                dropdown.append(
+                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                            ${item.CategoryName}
+                        </option>`
+                );
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
+        }
+    });
+}
+
+// Load SubCategory dropdown based on selected Income Category
+function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
+    if (!categoryId) {
+        $("#ddlSubCategory_Income").empty().append('<option value="">-- Select SubCategory --</option>');
+        return;
+    }
+    $.ajax({
+        url: "/api/IncomeSubCategory/GetIncomeSubCategoryList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
+        success: function (response) {
+            let dropdown = $("#ddlSubCategory_Income");
+            dropdown.empty();
+            dropdown.append('<option value="">-- Select SubCategory --</option>');
+
+            response.data.forEach(item => {
+                dropdown.append(
+                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                                ${item.SubCategoryName}
+                            </option>`
+                );
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error("Failed to load dropdown data", error);
+        }
+    });
+}
+
+// Trigger SubCategory load when Income Category changes
+$("#ddlIncomeCategory").change(function () {
+    let selectedCategoryId = $(this).val();
+    loadIncomeSubCategoryDropdown(selectedCategoryId);
+});
+//INCOME TRANSACTIONS ----- END ----------------------
+
+

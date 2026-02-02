@@ -1,4 +1,5 @@
-﻿// Toggle editors visibility
+﻿
+// Toggle editors visibility
 let editorsInitialized = false;
 
 document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
@@ -238,12 +239,6 @@ function fetchHallDetails(bookingData, banquetId = 0) {
             //     title: 'Error',
             //     text: xhr.responseText || 'Failed to fetch hall details.'
             // });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -1874,10 +1869,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const addonModal = document.getElementById('addonChargeModal');
     const bookingModal = document.getElementById('bookingModal');
     const menuModal = document.getElementById('menuModal');
-    //const bookingReportModal = document.getElementById('bookingReportModal');
+    const bookingReportModal = document.getElementById('bookingReportModal');
     const paymentModal = document.getElementById('paymentModal');
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
     const foodwestageModal = document.getElementById('foodWastageModal');
+    const vendorWorkOrderModal = document.getElementById('vendorWorkOrderModal');
 
     // Create booking modal instance manually
     const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -1955,10 +1951,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     //hide/show FoodWastage MODAL ----- END --------------------------
 
-
-
     //hide/show vendorWorkOrder MODAL ----- START --------------------------
     vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
+        console.log("vendorWorkOrderModal shown");
         // Just hide visually (do not destroy modal state)
         bookingReportModal.classList.remove("show");
         bookingReportModal.style.display = "none";
@@ -2604,6 +2599,7 @@ Your feedback helps us improve our service.`;
         const bookingId = getBookingId();
         console.log("🚚 Vendor Work Orders clicked - Booking ID:", bookingId);
         console.log("bookingId:", bookingId)
+
         // Optional: store bookingId in hidden field
         $("#VendorBookingId").val(bookingId);
         $("#VendorWorkOrderId").val(0);
@@ -3324,27 +3320,42 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("input[name='menuType']").prop("checked", false);
                     $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change");
 
-                    var foodpackage = data.JSON_FoodPackage[0];
+                    const foodPackages = data.JSON_FoodPackage;
 
-                    $("#foodPackage_PackageDropdown").val(foodpackage.FoodPackageId);
-                    $("#foodPackage_RatePerPlate").val(foodpackage.PerPlate);
-                    $("#foodPackage_PackageCost").val(foodpackage.PackageCost);
-                    $("#foodPackage_Addons").val(foodpackage.Addons);
-                    $("#foodPackage_GST").val(foodpackage.GST);
-                    //AddOns btn
-                    //console.log("edit AddOnsList:", foodpackage.AddOnsList);
-                    var addOnsList = foodpackage.AddOnsList || [];
-                    $("#foodPackage_AddOnItems").data("selected-AddOnItems", addOnsList);
-                    // Update button UI
-                    if (addOnsList.length > 0) {
-                        $("#foodPackage_AddOnItems").html(`<i class="fa fa-check text-success"></i> Addons (${addOnsList.length})`);
-                    } else {
-                        $("#foodPackage_AddOnItems").html(`<i class="fa fa-check"></i> Addons`);
+                    if (!Array.isArray(foodPackages) || foodPackages.length === 0) {
+                        console.log("ℹ️ No food package found, skipping food-package binding");
+                        // just continue rest of the process
                     }
-                    $("#foodPackage_TotalValue").text(foodpackage.TotalCharges);
+                    else {
 
-                    $("#BookingType").val(data.Booking_TypeId);
-                    $("#AgentCheck").prop("checked", !!foodpackage.TotalCharges);
+                        const foodpackage = foodPackages[0];
+
+                        $("#foodPackage_PackageDropdown").val(foodpackage.FoodPackageId ?? "");
+                        $("#foodPackage_RatePerPlate").val(foodpackage.PerPlate ?? 0);
+                        $("#foodPackage_PackageCost").val(foodpackage.PackageCost ?? 0);
+                        $("#foodPackage_Addons").val(foodpackage.Addons ?? 0);
+                        $("#foodPackage_GST").val(foodpackage.GST ?? 0);
+
+                        // AddOns
+                        const addOnsList = Array.isArray(foodpackage.AddOnsList)
+                            ? foodpackage.AddOnsList
+                            : [];
+
+                        $("#foodPackage_AddOnItems").data("selected-AddOnItems", addOnsList);
+
+                        if (addOnsList.length > 0) {
+                            $("#foodPackage_AddOnItems")
+                                .html(`<i class="fa fa-check text-success"></i> Addons (${addOnsList.length})`);
+                        } else {
+                            $("#foodPackage_AddOnItems")
+                                .html(`<i class="fa fa-check"></i> Addons`);
+                        }
+
+                        $("#foodPackage_TotalValue").text(foodpackage.TotalCharges ?? 0);
+                        $("#AgentCheck").prop("checked", !!foodpackage.TotalCharges);
+                    }
+
+                    $("#BookingType").val(data.Booking_TypeId ?? "");
 
                     //othercharges
                     $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
@@ -3506,6 +3517,10 @@ function saveBooking() {
 
         //Payment
         Payment_ModeId: parseInt($("#PaymentDetails_Mode").val() || 0),
+        PaymentDetails_TransactionId: $("#PaymentDetails_TransactionId").val(),
+        PaymentDetails_ChequeBank: $("#PaymentDetails_ChequeBank").val(),
+        PaymentDetails_ChequeNo: $("#PaymentDetails_ChequeNo").val(),
+        PaymentDetails_ChequeDate: $("#PaymentDetails_ChequeDate").val(),
         Payment_Amount: parseFloat($("#PaymentDetails_Amount").val()) || 0,
         Payment_PaidTime: $("#PaymentDetails_PaidTime").val(),
         Payment_DueDate: $("#PaymentDetails_DueDate").val(),
@@ -3978,7 +3993,6 @@ $("#btnSavePayment").click(function () {
     // 🔹 Get values
     // let bookingId = Number($("#paymentBookingId").val() || 0);
     let modeId = Number($("#PaymentModal_Mode").val());
-    let accountId = Number($("#PaymentModal_Account").val());
     let paymentDate = $("#paymentDate").val();
     let paymentTime = $("#paymentTime").val();
     let txnId = $("#paymentTxn").val();
@@ -4007,7 +4021,6 @@ $("#btnSavePayment").click(function () {
     const payload = {
         BookingId: bookingId,
         ModeId: modeId,
-        AccountId: accountId,
         DateOfPayment: paymentDate,
         PaymentTime: paymentTime || null,
         TxnId: txnId || null,

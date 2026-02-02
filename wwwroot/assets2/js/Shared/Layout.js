@@ -184,6 +184,19 @@ function handleApiError(xhr, status, error, title = "Info!") {
     });
 }
 
+function printAllErrors(xhr, status, error, srcApi = "") {
+    console.log("---- API ERROR ----");
+    console.log("srcAPi:", srcApi, ", Status Code:", xhr.status);            // e.g., 404, 500
+    console.log("srcAPi:", srcApi, ", Status Text:", xhr.statusText);        // e.g., Not Found, Internal Server Error
+    console.log("srcAPi:", srcApi, ", Response Text:", xhr.responseText);    // server error message
+    console.log("srcAPi:", srcApi, ", Ready State:", xhr.readyState);
+    console.log("srcAPi:", srcApi, ", jQuery Status:", status);              // "timeout", "error", etc.
+    console.log("srcAPi:", srcApi, ", Error Thrown:", error);                // exception object/message
+    console.log("srcAPi:", srcApi, ", Full XHR Object:", xhr);               // dump everything
+    console.log("-------------------");
+}
+
+
 //get User Rights
 var userRightsData = null;
 //Fetch Data

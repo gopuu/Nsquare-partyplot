@@ -105,6 +105,11 @@
         public bool? Booking_IsAgent { get; set; }
 
         public long? Payment_ModeId { get; set; }
+        public string? PaymentDetails_TransactionId { get; set; }
+        public string? PaymentDetails_ChequeBank { get; set; }
+        public string? PaymentDetails_ChequeNo { get; set; }
+        public string? PaymentDetails_ChequeDate { get; set; }
+
         public decimal? Payment_Amount { get; set; }
         public string? Payment_PaidTime { get; set; }
         public string? Payment_DueDate { get; set; }
@@ -205,7 +210,13 @@
         public long? Booking_TypeId { get; set; }
         public string? Booking_TypeName { get; set; }
         public bool Booking_IsAgent { get; set; }
+
         public long? Payment_ModeId { get; set; }
+        public string? PaymentDetails_TransactionId { get; set; }
+        public string? PaymentDetails_ChequeBank { get; set; }
+        public string? PaymentDetails_ChequeNo { get; set; }
+        public string? PaymentDetails_ChequeDate { get; set; }
+
         public decimal Payment_Amount { get; set; }
         public string? Payment_PaidTime { get; set; }
         public string? Payment_DueDate { get; set; }

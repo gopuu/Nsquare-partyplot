@@ -1049,9 +1049,7 @@ $(document).on("click", ".year-option", function (e) {
 });
 
 
-
-
-
+//--- COMPARATIVE INSIGHTS -- START ----
 function loadPnLChart(filter) {
 
     const monthCount = filter.replace("last", "").replace("months", "");
@@ -1124,11 +1122,12 @@ function buildPnLCategoryMonthChart(apiData) {
         };
     });
 
+
+
     renderPnLCategoryChart(labels, datasets);
 }
 
-
-let pnlCategoryChart;
+let pnlCategoryChart = null;
 
 function renderPnLCategoryChart(labels, datasets) {
 
@@ -1177,6 +1176,6 @@ function renderPnLCategoryChart(labels, datasets) {
         }
     );
 }
-
+//--- COMPARATIVE INSIGHTS -- END ----
 
 

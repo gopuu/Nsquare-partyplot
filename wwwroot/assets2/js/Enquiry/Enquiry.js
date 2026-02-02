@@ -193,8 +193,8 @@ function loadTimeDropdown() {
             let hh = String(hour12).padStart(2, "0");
             let mm = String(min).padStart(2, "0");
 
-            let display = `${hh}:${mm} ${ampm} `;
-            let value = `${String(hour).padStart(2, "0")}:${mm} `; // 24-hour format
+            let display = `${hh}:${mm} ${ampm}`;
+            let value = `${String(hour).padStart(2, "0")}:${mm}`; // 24-hour format
             //console.log("time: display:", display, ", value:", value);
             ddl.append(`<option value = "${value}"> ${display}</option> `);
         }
@@ -219,7 +219,9 @@ function resetFollowUpForm() {
     // Set first time option
     //let firstTime = $("#nextFollowUpTime_modalFollowup option:first").val();
     $("#nextFollowUpTime_modalFollowup").val("");
-    updateNextFollowUpValue();
+    $("#nextFollowUpTime_modalFollowup").prop("selectedIndex", 0).trigger("change");
+
+    //updateNextFollowUpValue();
 
     $("#txtProbability").val("0");
 }
@@ -682,6 +684,12 @@ function saveFollowUpAndMoveDeal() {
                 // Close modal
                 $("#followupModal").modal("hide");
 
+                //OPEN BOOKING MODAL IF BOOKED
+                //if (pendingMoveData.ProcessId === processes.ProcessId && processes.ProcessName === "Event Booked") {
+                //    //here7
+
+                //}
+
                 // Clear pending state
                 pendingMoveData = null;
 
@@ -911,6 +919,8 @@ document.addEventListener("DOMContentLoaded", function () {
     loadFollowUpStatus();
     loadMoodList();
     loadTimeDropdown();
+
+    fetchHallDetails();
 
     $("#ddlDuration").on("change", function () {
         const duration = $(this).val();
@@ -1578,8 +1588,93 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
     //EVENT LEAD SOURCE MASTER -- END ----------------------------------------------------------------------
+
+    flatpickr("#eventDate", {
+        dateFormat: "d/m/Y",
+        disableMobile: true,
+        onChange: function () {
+            $("#eventDate").trigger("change");
+        }
+    });
+
+    $("#eventDate, #eventStart, #eventEnd, #banquetHallDropdown").on("change", function () {
+
+        let eventDate = $("#eventDate").val().trim();
+        let eventStart = $("#eventStart").val().trim(); // "02:30 PM"
+        let eventEnd = $("#eventEnd").val().trim();   // "05:00 PM"
+        let banquetId = parseInt($("#banquetHallDropdown").val(), 10) || 0;
+
+        $("#slotStatusMsg").addClass("d-none");
+
+        if (!eventDate || !eventStart || !eventEnd || banquetId <= 0) {
+            return;
+        }
+
+        var payload = {
+            EventDate: eventDate,
+            StartTime: eventStart, // ✅ 12-hr AM/PM
+            EndTime: eventEnd,   // ✅ 12-hr AM/PM
+            BanquetId: banquetId
+        };
+
+        console.log("READY TO CALL API", payload);
+
+        $.ajax({
+            url: "/api/EnquiryDeal/CheckBookingSlotAvailability",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+
+                if (res.status === "Success") {
+
+                    let isAvailable = res.data?.IsAvailable === 1;
+                    let msgBox = $("#slotStatusMsg");
+
+                    msgBox
+                        .removeClass("d-none text-danger text-success")
+                        .addClass(isAvailable ? "text-success" : "text-danger")
+                        .text(res.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                $("#slotStatusMsg")
+                    .removeClass("d-none text-success")
+                    .addClass("text-danger")
+                    .text("Unable to check slot availability");
+            }
+        });
+    });
+
 });
 
+//banquet hall details - dropdown -- START ----------------------
+function fetchHallDetails() {
+    $.ajax({
+        url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: 0 }), // Get all halls
+        success: function (response) {
+            if (response.status === "Success" && response.data) {
+
+                banquetHallsList = response.data;
+                let options = `<option value="0">-- Select Hall --</option>`; // default option
+                $.each(response.data, function (index, item) {
+                    options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
+                });
+                $("#banquetDropdown").html(options);
+            }
+            else {
+                $("#banquetDropdown").html(`<option value="0">No Hall Found</option>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to fetch hall details');
+        }
+    });
+}
+//banquet hall details - dropdown -- END ----------------------
 
 // Load event type list from API
 function loadEventTypeList() {
@@ -2091,6 +2186,7 @@ pmBtn.addEventListener('click', () => {
 function setTimeStart() {
     input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm} `;
     //picker.classList.add('d-none');
+    input.dispatchEvent(new Event("change", { bubbles: true }));
     hidePickerSlowly(picker);
 }
 setBtn.addEventListener('click', setTimeStart);
@@ -2209,6 +2305,7 @@ pmBtnEnd.addEventListener('click', () => {
 // Set time
 function setTimeEnd() {
     inputEnd.value = `${hourDisplayEnd.textContent}:${minuteDisplayEnd.textContent} ${ampmEnd} `;
+    inputEnd.dispatchEvent(new Event("change", { bubbles: true }));
     pickerEnd.classList.add('d-none');
 }
 setBtnEnd.addEventListener('click', setTimeEnd);
@@ -2223,7 +2320,6 @@ document.addEventListener('click', (e) => {
 });
 
 setModeEnd('hour');
-
 /* --------------------- 🕒 NEXT FOLLOW-UP TIME --------------------- */
 /*
 const followUpInput = document.getElementById('nextFollowUpTime_modalFollowup');

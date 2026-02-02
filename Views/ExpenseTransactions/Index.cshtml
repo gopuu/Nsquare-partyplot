@@ -5,11 +5,11 @@
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
 @section Styles {
     <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
 
 }
-
 
 <div class="content">
     <div class="pb-1">
@@ -18,7 +18,8 @@
                 <div class="mb-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="mb-0 text-warning">Expense Transactions</h4>
-                        <button class="btn btn-outline-warning" id="btn-add-transactions">
+
+                        <button class="btn btn-outline-warning d-none" id="btn-add-transactions">
                             <i class="fa fa-plus-circle"></i> Add Expense Transactions
                         </button>
                     </div>
@@ -38,7 +39,7 @@
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header bg-warning text-white">
+            <div class="modal-header bg-warning text-white py-1">
                 <h5 class="modal-title text-white" id="ExpenseTransactionModalTitle">Add Expense Transaction</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -99,8 +100,8 @@
             </div>
             <!-- FOOTER -->
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-outline-warning" id="btnSaveExpenseTransaction">Save</button>
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning btn-sm" id="btnSaveExpenseTransaction">Save</button>
             </div>
         </div>
     </div>
@@ -135,196 +136,196 @@
 
 <script>
     $(document).ready(function () {
-     //fetchData();
-    loadExpenseCategoryDropdown();
-    loadExpenseSubCategoryDropdown();
-    loadAccountDropdown();
-    loadAccountDropdown();
-    fetchExpenseTransactions();
+         //fetchData();
+        loadExpenseCategoryDropdown();
+        loadExpenseSubCategoryDropdown();
+        loadAccountDropdown();
+        loadAccountDropdown();
+        fetchExpenseTransactions();
 
-     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('txtTransactionDate').value = today;
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('txtTransactionDate').value = today;
 
-    // Add button click
-    $("#btn-add-transactions").click(function () {
-            resetFormFields();
-            $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
-            $("#txtTransactionDate").val(new Date().toISOString().split('T')[0]); // set today
-            $("#ExpenseTransactionModal").modal("show");
-        });
-
-    // Save Expense Transaction
-    $("#btnSaveExpenseTransaction").click(function (e) {
-        e.preventDefault();
-        // Basic validation
-        if ($("#ddlAccount").val() === "") {
-            Swal.fire("Validation", "Please select Account", "warning");
-            return;
-        }
-        if ($("#ddlCategory").val() === "") {
-            Swal.fire("Validation", "Please select Category", "warning");
-            return;
-        }
-        if ($("#txtAmount").val().trim() === "" || parseFloat($("#txtAmount").val()) <= 0) {
-        Swal.fire("Validation", "Amount must be greater than 0", "warning");
-        return;
-        }
-        if ($("#txtTransactionDate").val() === "") {
-        Swal.fire("Validation", "Please select Transaction Date", "warning");
-        return;
-        }
-           let payload = {
-            Id: $("#ExpenseTransactionId").val(),
-            AccountId: $("#ddlAccount").val(),
-            CategoryId: $("#ddlExpenseCategory").val(), // Corrected
-            SubCategoryId: $("#ddlSubCategory").val() || null,
-            Amount: parseFloat($("#txtAmount").val()),
-            TransactionDate: $("#txtTransactionDate").val(),
-            PaymentMode: $("#txtPaymentMode").val().trim() || null,
-            ReferenceNo: $("#txtReferenceNo").val().trim() || null,
-            Notes: $("#txtNotes").val().trim() || null,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
-        };
-           // console.log("SAVE PAYLOAD:", payload);
-        $.ajax({
-        url: "/api/ExpenseTransactions/SaveExpenseTransaction",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-            if (response.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 1000
-                });
-                // Reset form & hide modal
+        // Add button click
+        $("#btn-add-transactions").click(function () {
                 resetFormFields();
-                $("#ExpenseTransactionModal").modal("hide");
-
-                // Reload table or data
-                fetchExpenseTransactions();
-            } else {
-                Swal.fire("Error", response.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-               handleApiError(xhr, status, error, "Save ExpenseTransaction Error")
-        }
-    });
-    });
-
-    // Edit button click for Expense Transactions
-    $(document).on('click', '.btn-edit', function (event) {
-        var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
-        if (!canEdit) {
-            Swal.fire({
-                icon: "error",
-                title: "Access Denied",
-                text: "You don't have permission to Edit. Please contact admin.",
-                confirmButtonText: "OK"
+                $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
+                $("#txtTransactionDate").val(new Date().toISOString().split('T')[0]); // set today
+                $("#ExpenseTransactionModal").modal("show");
             });
-            event.preventDefault();
+
+        // Save Expense Transaction
+        $("#btnSaveExpenseTransaction").click(function (e) {
+            e.preventDefault();
+            // Basic validation
+            if ($("#ddlAccount").val() === "") {
+                Swal.fire("Validation", "Please select Account", "warning");
+                return;
+            }
+            if ($("#ddlCategory").val() === "") {
+                Swal.fire("Validation", "Please select Category", "warning");
+                return;
+            }
+            if ($("#txtAmount").val().trim() === "" || parseFloat($("#txtAmount").val()) <= 0) {
+            Swal.fire("Validation", "Amount must be greater than 0", "warning");
             return;
-        }
-
-        resetFormFields(); // Clear previous values
-
-        // Get the DataTable instance
-        var table = $('#tableMain table').DataTable();
-
-        // Get the row object for the clicked Edit button
-        var row = $(this).closest('tr');
-        var rowData = table.row(row).data(); // Get the data object for this row
-
-        // Fill modal fields with selected row data
-        $("#ExpenseTransactionId").val(rowData.Id);
-
-        // Load Account dropdown first, then select value
-        loadAccountDropdown(rowData.AccountId);
-
-        // Load Expense Category dropdown, then select value
-        loadExpenseCategoryDropdown(rowData.CategoryId);
-
-        // Load SubCategory based on selected category, then select value
-        loadExpenseSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
-
-        $("#txtAmount").val(rowData.Amount);
-
-        // Format date as yyyy-mm-dd
-        if (rowData.TransactionDate) {
-            let date = new Date(rowData.TransactionDate);
-            let yyyy = date.getFullYear();
-            let mm = ("0" + (date.getMonth() + 1)).slice(-2);
-            let dd = ("0" + date.getDate()).slice(-2);
-            $("#txtTransactionDate").val(`${yyyy}-${mm}-${dd}`);
-        } else {
-            $("#txtTransactionDate").val(new Date().toISOString().split('T')[0]);
-        }
-
-        $("#txtPaymentMode").val(rowData.PaymentMode);
-        $("#txtReferenceNo").val(rowData.ReferenceNo);
-        $("#txtNotes").val(rowData.Notes);
-
-        // Update modal title
-        $("#ExpenseTransactionModalTitle").text("Edit Expense Transaction");
-
-        // Show modal
-        $('#ExpenseTransactionModal').modal('show');
-    });
-
-    // Delete button click in table
-    $(document).on("click", ".btn-delete", function () {
-    // Get DataTable instance
-    var table = $("#tableMain table").DataTable(); // make sure this matches your table id
-    var rowData = table.row($(this).closest("tr")).data();
-
-    if (!rowData || !rowData.Id) {
-        Swal.fire("Error", "Unable to get selected row data.", "error");
-        return;
-    }
-
-    // Store Id in modal using jQuery data
-    $("#deleteRecordModal").data("id", rowData.Id).modal("show");
-    });
-
-    // Confirm delete
-    $("#delete-record").click(function () {
-    var id = $("#deleteRecordModal").data("id");
-
-    if (!id) {
-        Swal.fire("Error", "Record Id not found.", "error");
-        return;
-    }
-
-    let payload = {
-        Id: id,
-        ActionBy: sessionStorage.getItem("userId") ?? 0
-    };
-
-        $.ajax({
-            url: "/api/ExpenseTransactions/DeleteExpenseTransaction",
+            }
+            if ($("#txtTransactionDate").val() === "") {
+            Swal.fire("Validation", "Please select Transaction Date", "warning");
+            return;
+            }
+               let payload = {
+                Id: $("#ExpenseTransactionId").val(),
+                AccountId: $("#ddlAccount").val(),
+                CategoryId: $("#ddlExpenseCategory").val(), // Corrected
+                SubCategoryId: $("#ddlSubCategory").val() || null,
+                Amount: parseFloat($("#txtAmount").val()),
+                TransactionDate: $("#txtTransactionDate").val(),
+                PaymentMode: $("#txtPaymentMode").val().trim() || null,
+                ReferenceNo: $("#txtReferenceNo").val().trim() || null,
+                Notes: $("#txtNotes").val().trim() || null,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+               // console.log("SAVE PAYLOAD:", payload);
+            $.ajax({
+            url: "/api/ExpenseTransactions/SaveExpenseTransaction",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire("Deleted!", response.message, "success");
-                    $("#deleteRecordModal").modal("hide");
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved!",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                    // Reset form & hide modal
+                    resetFormFields();
+                    $("#ExpenseTransactionModal").modal("hide");
 
-                    // Reload table
+                    // Reload table or data
                     fetchExpenseTransactions();
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
             },
             error: function (xhr, status, error) {
-               handleApiError(xhr, status, error, "Something went wrong!")
+                   handleApiError(xhr, status, error, "Save ExpenseTransaction Error")
             }
         });
-    });
+        });
+
+        // Edit button click for Expense Transactions
+        $(document).on('click', '.btn-edit', function (event) {
+            var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
+            if (!canEdit) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Access Denied",
+                    text: "You don't have permission to Edit. Please contact admin.",
+                    confirmButtonText: "OK"
+                });
+                event.preventDefault();
+                return;
+            }
+
+            resetFormFields(); // Clear previous values
+
+            // Get the DataTable instance
+            var table = $('#tableMain table').DataTable();
+
+            // Get the row object for the clicked Edit button
+            var row = $(this).closest('tr');
+            var rowData = table.row(row).data(); // Get the data object for this row
+
+            // Fill modal fields with selected row data
+            $("#ExpenseTransactionId").val(rowData.Id);
+
+            // Load Account dropdown first, then select value
+            loadAccountDropdown(rowData.AccountId);
+
+            // Load Expense Category dropdown, then select value
+            loadExpenseCategoryDropdown(rowData.CategoryId);
+
+            // Load SubCategory based on selected category, then select value
+            loadExpenseSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
+
+            $("#txtAmount").val(rowData.Amount);
+
+            // Format date as yyyy-mm-dd
+            if (rowData.TransactionDate) {
+                let date = new Date(rowData.TransactionDate);
+                let yyyy = date.getFullYear();
+                let mm = ("0" + (date.getMonth() + 1)).slice(-2);
+                let dd = ("0" + date.getDate()).slice(-2);
+                $("#txtTransactionDate").val(`${yyyy}-${mm}-${dd}`);
+            } else {
+                $("#txtTransactionDate").val(new Date().toISOString().split('T')[0]);
+            }
+
+            $("#txtPaymentMode").val(rowData.PaymentMode);
+            $("#txtReferenceNo").val(rowData.ReferenceNo);
+            $("#txtNotes").val(rowData.Notes);
+
+            // Update modal title
+            $("#ExpenseTransactionModalTitle").text("Edit Expense Transaction");
+
+            // Show modal
+            $('#ExpenseTransactionModal').modal('show');
+        });
+
+        // Delete button click in table
+        $(document).on("click", ".btn-delete", function () {
+            // Get DataTable instance
+            var table = $("#tableMain table").DataTable(); // make sure this matches your table id
+            var rowData = table.row($(this).closest("tr")).data();
+
+            if (!rowData || !rowData.Id) {
+                Swal.fire("Error", "Unable to get selected row data.", "error");
+                return;
+            }
+
+            // Store Id in modal using jQuery data
+            $("#deleteRecordModal").data("id", rowData.Id).modal("show");
+        });
+
+        // Confirm delete
+        $("#delete-record").click(function () {
+            var id = $("#deleteRecordModal").data("id");
+
+            if (!id) {
+                Swal.fire("Error", "Record Id not found.", "error");
+                return;
+            }
+
+            let payload = {
+                Id: id,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            };
+
+            $.ajax({
+                url: "/api/ExpenseTransactions/DeleteExpenseTransaction",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire("Deleted!", response.message, "success");
+                        $("#deleteRecordModal").modal("hide");
+
+                        // Reload table
+                        fetchExpenseTransactions();
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr, status, error) {
+                   handleApiError(xhr, status, error, "Something went wrong!")
+                }
+            });
+        });
 
     });
 
@@ -434,71 +435,71 @@
 
     // Fetch Expense Transactions
     function fetchExpenseTransactions(accountId = 0, categoryId = 0, fromDate = "", toDate = "") {
-    $('#btn-loader').show(); // optional loader
+        $('#btn-loader').show(); // optional loader
 
-    const payload = {
-        Id: 0,               // 0 = all transactions, or pass a specific Id
-        AccountId: accountId,
-        CategoryId: categoryId,
-        FromDate: fromDate,  // format: 'yyyy-mm-dd'
-        ToDate: toDate       // format: 'yyyy-mm-dd'
-    };
+        const payload = {
+            Id: 0,               // 0 = all transactions, or pass a specific Id
+            AccountId: accountId,
+            CategoryId: categoryId,
+            FromDate: fromDate,  // format: 'yyyy-mm-dd'
+            ToDate: toDate       // format: 'yyyy-mm-dd'
+        };
 
-    $.ajax({
-            url: "/api/ExpenseTransactions/GetExpenseTransactionList",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-            //console.log("Expense Transactions:", response);
-            var data = response.data || [];
-            renderExpenseTransactionTable(data);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Something went wrong fetching Expense Transactions.");
-        },
-        complete: function() {
-            $('#btn-loader').hide();
-        }
-    });
+        $.ajax({
+                url: "/api/ExpenseTransactions/GetExpenseTransactionList",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                //console.log("Expense Transactions:", response);
+                var data = response.data || [];
+                renderExpenseTransactionTable(data);
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Something went wrong fetching Expense Transactions.");
+            },
+            complete: function() {
+                $('#btn-loader').hide();
+            }
+        });
     }
 
     // Render DataTable
     function renderExpenseTransactionTable(data) {
-        if ($.fn.dataTable.isDataTable("#tableMain  table")) {
+        if ($.fn.dataTable.isDataTable("#tableMain table")) {
             $("#tableMain  table").DataTable().destroy();
-    }
+        }
 
-    // Add Sr No
-    data.forEach((x, i) => x.srno = i + 1);
+        // Add Sr No
+        data.forEach((x, i) => x.srno = i + 1);
 
-        $("#tableMain  table").DataTable({
-        data: data,
-        columns: [
-            { data: "srno", title: "Sr. No." },
-            { data: "AccountName", title: "Account" },
-            { data: "CategoryName", title: "Category" },
-            { data: "SubCategoryName", title: "SubCategory" },
-            { data: "Amount", title: "Amount", className: "text-end" },
-            { data: "TransactionDate", title: "Transaction Date" },
-            { data: "PaymentMode", title: "Payment Mode" },
-            { data: "ReferenceNo", title: "Reference No" },
-            { data: "Notes", title: "Notes" },
-            {
-                data: null,
-                title: "Actions",
-                render: (row) => `
-                    <button class="btn btn-outline-warning  btn-action-xss btn-edit"><i class="fa fa-edit"></i></button>
-                    <button class="btn btn-outline-danger  btn-action-xss btn-delete"><i class="fa fa-trash"></i></button>
-                `
-            }
-        ],
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: false,
-        pagingType: "full_numbers"
-    });
+            $("#tableMain  table").DataTable({
+            data: data,
+            columns: [
+                { data: "srno", title: "Sr. No." },
+                { data: "AccountName", title: "Account" },
+                { data: "CategoryName", title: "Category" },
+                { data: "SubCategoryName", title: "SubCategory" },
+                { data: "Amount", title: "Amount", className: "text-end" },
+                { data: "TransactionDate", title: "Transaction Date" },
+                { data: "PaymentMode", title: "Payment Mode" },
+                { data: "ReferenceNo", title: "Reference No" },
+                { data: "Notes", title: "Notes" },
+                {
+                    data: null,
+                    title: "Actions",
+                    render: (row) => `
+                        <button class="btn btn-outline-warning  btn-action-xss btn-edit"><i class="fa fa-edit"></i></button>
+                        <button class="btn btn-outline-danger  btn-action-xss btn-delete"><i class="fa fa-trash"></i></button>
+                    `
+                }
+            ],
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: false,
+            pagingType: "full_numbers"
+        });
     }
 
 </script>

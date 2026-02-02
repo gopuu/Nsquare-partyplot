@@ -501,5 +501,61 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //VALIDATE SLOT
+        [HttpPost]
+        [Route("CheckBookingSlotAvailability")]
+        public IActionResult CheckBookingSlotAvailability([FromBody] CheckSlotAvailabilityRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                    return errorResult;
+
+                int isAvailable = 0;
+                string message = "";
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("CheckBookingSlotAvailability", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@EventDate", SqlDbType.NVarChar, 20).Value = model.EventDate ?? "";
+                    cmd.Parameters.Add("@StartTime", SqlDbType.NVarChar, 20).Value = model.StartTime ?? "";
+                    cmd.Parameters.Add("@EndTime", SqlDbType.NVarChar, 20).Value = model.EndTime ?? "";
+                    cmd.Parameters.Add("@BanquetId", SqlDbType.BigInt).Value = model.BanquetId;
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            isAvailable = Convert.ToInt32(dr["IsAvailable"]);
+                            message = dr["Message"].ToString();
+                        }
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = message;
+                apiResponse.data = new
+                {
+                    IsAvailable = isAvailable
+                };
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
     }
 }

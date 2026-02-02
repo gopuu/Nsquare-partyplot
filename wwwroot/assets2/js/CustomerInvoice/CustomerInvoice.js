@@ -887,12 +887,12 @@ function renderTable(data) {
                        </button>`
             },
 
-            //{
-            //    data: null,
-            //    title: 'Send Proforma',
-            //    render: row =>
-            //        `<button class="btn btn-outline-secondary btn-action-xs2">Send</button>`
-            //},
+            {
+                data: null,
+                title: 'Send Proforma',
+                render: row =>
+                    `<span class="text-muted fst-italic">Coming Soon</span>`
+            },
 
             {
                 data: null,
@@ -925,15 +925,12 @@ function renderTable(data) {
                         `
             },
 
-            //{
-            //    data: null,
-            //    title: 'Send Invoice',
-            //    render: row =>
-            //        `<button class="btn btn-outline-secondary btn-action-xs2 btn-send-invoice"
-            //             data-bookingid="${row.BookingId}">
-            //        Send Invoice
-            //    </button>`
-            //},
+            {
+                data: null,
+                title: 'Send Invoice',
+                render: row =>
+                    `<span class="text-muted fst-italic">Coming Soon</span>`
+            },
 
             {
                 data: null,

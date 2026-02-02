@@ -30,7 +30,6 @@
     {
         public long BookingId { get; set; }
         public long ModeId { get; set; }
-        public long AccountId { get; set; }
         public string? DateOfPayment { get; set; }
         public string? PaymentTime { get; set; }
         public string? TxnId { get; set; }

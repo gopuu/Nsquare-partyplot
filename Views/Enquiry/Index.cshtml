@@ -108,7 +108,7 @@
     <div class="modal-dialog modal-xl">
         <!-- extra wide modal -->
         <div class="modal-content">
-            <div class="modal-header bg-warning py-2">
+            <div class="modal-header bg-warning py-1">
                 <h5 class="modal-title text-white" id="dealModalLabel">Add Deal (Enquiry)</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -207,6 +207,7 @@
                         <label for="eventDate" class="form-label">Date Of Event <span class="text-danger">*</span></label>
                         <input class="form-control datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter date</div>
+                        <div id="slotStatusMsg" class="small fw-semibold mt-2 d-none"></div>
                     </div>
 
                     <!-- START TIME FIELD -->
@@ -369,7 +370,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header bg-warning py-2">
+            <div class="modal-header bg-warning py-1">
                 <h6 class="modal-title text-white">Follow-Up</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -394,25 +395,25 @@
                         <!-- Short Field -->
                         <div class="col-md-2">
                             <span class="text-secondary fw-semibold">Contact:</span>
-                            <span id="inqContact"></span>
+                            <span class="fw-bold" id="inqContact"></span>
                         </div>
 
                         <!-- Short Field -->
                         <div class="col-md-1">
                             <span class="text-secondary fw-semibold">Slot:</span>
-                            <span id="inqSlot"></span>
+                            <span class="fw-bold" id="inqSlot"></span>
                         </div>
 
                         <!-- Short Field -->
                         <div class="col-md-1">
                             <span class="text-secondary fw-semibold">Pax:</span>
-                            <span id="inqPax"></span>
+                            <span class="fw-bold" id="inqPax"></span>
                         </div>
 
                         <!-- Long Field -->
                         <div class="col-md-3">
                             <span class="text-secondary fw-semibold">Event:</span>
-                            <span id="inqEvent"></span>
+                            <span class="fw-bold" id="inqEvent"></span>
                         </div>
                     </div>
 
@@ -421,27 +422,27 @@
 
                         <div class="col-md-5">
                             <span class="text-secondary fw-semibold">Event Date:</span>
-                            <span id="inqEventDate"></span>
+                            <span class="fw-bold" id="inqEventDate"></span>
                         </div>
 
                         <div class="col-md-3">
                             <span class="text-secondary fw-semibold">Halls:</span>
-                            <span id="inqHalls"></span>
+                            <span class="fw-bold" id="inqHalls"></span>
                         </div>
 
                         <div class="col-md-4">
                             <span class="text-secondary fw-semibold">Email:</span>
-                            <span id="inqEmail"></span>
+                            <span class="fw-bold" id="inqEmail"></span>
                         </div>
 
                         <div class="col-md-5">
                             <span class="text-secondary fw-semibold">Address:</span>
-                            <span id="inqAddress"></span>
+                            <span class="fw-bold" id="inqAddress"></span>
                         </div>
 
                         <div class="col-md-6">
                             <span class="text-secondary fw-semibold">Note:</span>
-                            <span id="inqNote"></span>
+                            <span class="fw-bold" id="inqNote"></span>
                         </div>
                     </div>
 
@@ -554,7 +555,7 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header bg-warning py-2">
+            <div class="modal-header bg-warning py-1">
                 <h5 class="modal-title text-white" id="eventTypeModalLabel">Event Type Master</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -602,7 +603,7 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header bg-warning py-2">
+            <div class="modal-header bg-warning py-1">
                 <h5 class="modal-title text-white" id="eventSubTypeModalLabel">Event Sub-Type Master</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -664,7 +665,7 @@
     <div class="modal-dialog modal-lg">
         <!-- Large modal -->
         <div class="modal-content">
-            <div class="modal-header bg-warning py-2">
+            <div class="modal-header bg-warning py-1">
                 <h5 class="modal-title text-white" id="leadSourceModalLabel">Lead Source Master</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>

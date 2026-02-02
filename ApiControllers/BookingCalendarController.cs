@@ -114,6 +114,12 @@ namespace ERPAdmin.ApiControllers
                         booking.Booking_TypeName = dr["Booking_TypeName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_TypeName"]);
                         booking.Booking_IsAgent = dr["Booking_IsAgent"] != DBNull.Value && Convert.ToBoolean(dr["Booking_IsAgent"]);
                         booking.Payment_ModeId = dr["Payment_ModeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Payment_ModeId"]);
+
+                        booking.PaymentDetails_TransactionId = dr["PaymentDetails_TransactionId"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_TransactionId"]);
+                        booking.PaymentDetails_ChequeBank = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
+                        booking.PaymentDetails_ChequeNo = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
+                        booking.PaymentDetails_ChequeDate = dr["PaymentDetails_ChequeDate"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeDate"]);
+
                         booking.Payment_Amount = dr["Payment_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["Payment_Amount"]);
                         booking.Payment_PaidTime = dr["Payment_PaidTime"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_PaidTime"]);
                         booking.Payment_DueDate = dr["Payment_DueDate"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_DueDate"]);
@@ -212,6 +218,12 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Booking_IsAgent", model.Booking_IsAgent ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Payment_ModeId", model.Payment_ModeId ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@PaymentDetails_TransactionId", model.PaymentDetails_TransactionId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentDetails_ChequeBank", model.PaymentDetails_ChequeBank ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentDetails_ChequeNo", model.PaymentDetails_ChequeNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentDetails_ChequeDate", model.PaymentDetails_ChequeDate ?? (object)DBNull.Value);
+
                     cmd.Parameters.AddWithValue("@Payment_Amount", model.Payment_Amount ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Payment_PaidTime", model.Payment_PaidTime ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Payment_DueDate", model.Payment_DueDate ?? (object)DBNull.Value);

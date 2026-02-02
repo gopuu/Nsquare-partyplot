@@ -86,5 +86,13 @@
         public decimal TotalAmount { get; set; }
         public List<dynamic> EnquiryDealsJson { get; set; } = new List<dynamic>();
     }
+    //CHeck SLOT Availability
+    public class CheckSlotAvailabilityRequest
+    {
+        public string EventDate { get; set; }   // yyyy-MM-dd
+        public string StartTime { get; set; }   // HH:mm or hh:mm tt
+        public string EndTime { get; set; }     // HH:mm or hh:mm tt
+        public long BanquetId { get; set; }
+    }
 
 }

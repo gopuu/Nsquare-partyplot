@@ -75,9 +75,12 @@
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-primary">
+            <div class="modal-header bg-primary py-1">
                 <h5 class="modal-title text-white" id="title_bookingModal">Booking Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+
             </div>
 
             <div class="modal-body">
@@ -435,9 +438,29 @@
                             <div class="row g-2">
                                 <div class="col-md-3">
                                     <label>Mode</label>
-                                    <select class="form-select" id="PaymentDetails_Mode">
-                                    </select>
+                                    <select class="form-select" id="PaymentDetails_Mode"></select>
                                 </div>
+
+                                <div class="col-md-3">
+                                    <label>Transaction Id</label>
+                                    <input type="text" class="form-control" value="" id="PaymentDetails_TransactionId" maxlength="100">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label>Cheque Bank</label>
+                                    <input type="text" class="form-control" value="" id="PaymentDetails_ChequeBank" maxlength="100">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label>Cheque No.</label>
+                                    <input type="text" class="form-control" value="" id="PaymentDetails_ChequeNo" maxlength="20">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label>Cheque Date</label>
+                                    <input type="date" class="form-control" id="PaymentDetails_ChequeDate" value="">
+                                </div>
+
                                 <div class="col-md-3">
                                     <label>Amount</label>
                                     <input type="number" class="form-control" value="0" id="PaymentDetails_Amount">
@@ -448,7 +471,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label>Due Date</label>
-                                    <input type="date" class="form-control" id="PaymentDetails_DueDate" value="2025-02-24">
+                                    <input type="date" class="form-control" id="PaymentDetails_DueDate" value="">
                                 </div>
                                 <div class="col-12">
                                     <label>Payment Note</label>
@@ -472,7 +495,7 @@
 <div class="modal fade" id="addonChargeModal" tabindex="-1" aria-labelledby="addonChargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title fw-bold text-white">Select Addon Charges</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -514,7 +537,7 @@
 <div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title fw-bold text-white">Menu Items</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -538,11 +561,36 @@
         <div class="modal-content shadow-lg border-0 rounded-3">
 
             <!-- HEADER -->
-            <div class="modal-header bg-primary py-2 text-white">
-                <h5 class="modal-title text-white" id="bookingModalTitle">
-                    <i class="fa-solid fa-calendar-check me-2 text-white"></i>Booking Summary
+            <div class="modal-header bg-primary py-2 text-white d-flex align-items-center">
+
+                <!-- Left: Title -->
+                <h5 class="modal-title text-white mb-0" id="bookingModalTitle">
+                    <i class="fa-solid fa-calendar-check me-2"></i> Booking Summary
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+                <!-- Right: Action buttons + close -->
+                <div class="d-flex align-items-center gap-2 ms-auto">
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm"
+                            id="btnDownloadPDF"
+                            title="Function Report">
+                        <i class="fa-solid fa-file-pdf me-1"></i> Function Report
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm"
+                            id="btnEventForm"
+                            title="Event Report">
+                        <i class="fa-solid fa-file-lines me-1"></i> Event Report
+                    </button>
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+
+                </div>
             </div>
 
             <!-- 🔹 Hidden booking id -->
@@ -940,6 +988,12 @@
                         <i class="fa-solid fa-bullhorn me-1"></i> Request Feedback
                     </button>
 
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            id="btnFoodWestage">
+                        <i class="fa-solid fa-bowl-food me-1"></i> Food Wastage
+                    </button>
+
                     <button type="button" class="btn btn-outline-primary btn-sm" id="btnCancelBooking">
                         <i class="fa-solid fa-xmark me-1"></i> Cancel Booking
                     </button>
@@ -949,13 +1003,6 @@
                             id="btnDeleteBooking">
                         <i class="fa-solid fa-trash me-1"></i> Delete Booking
                     </button>
-
-                    <button type="button"
-                            class="btn btn-outline-danger btn-sm"
-                            id="btnFoodWestage">
-                        <i class="fa-solid fa-bowl-food me-1"></i> Food Wastage
-                    </button>
-
                 </div>
             </div>
 
@@ -969,7 +1016,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
 
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header bg-warning text-dark py-2">
                 <h5 class="modal-title text-dark">Cancel Booking</h5>
                 <button type="button" class="btn-close btn-close-dark btnCloseCancelModal" data-bs-dismiss="modal"></button>
             </div>
@@ -1004,19 +1051,13 @@
                         <input type="hidden" id="paymentBookingId">
 
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Account</label>
-                            <select class="form-select" id="PaymentModal_Account">
-                            </select>
-                        </div>
-
-                        <div class="col-md-3 mb-3">
                             <label class="form-label">Mode</label>
                             <select class="form-select" id="PaymentModal_Mode">
                             </select>
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Date Of Payment</label>
+                            <label class="form-label">Payment Date</label>
                             <input type="date" id="paymentDate" class="form-control">
                         </div>
                         <div class="col-md-2 mb-3">
@@ -1108,7 +1149,7 @@
         <div class="modal-content">
 
             <!-- Modal Header -->
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title text-white">
                     Add Vendor Work Order
                 </h5>
@@ -1414,7 +1455,7 @@
         <div class="modal-content shadow-lg border-0 rounded-3">
 
             <!-- 🔹 Header -->
-            <div class="modal-header bg-primary text-white py-3">
+            <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title fw-bold text-white">
                     <i class="fa-solid fa-calendar-day me-2"></i>Reschedule Booking
                 </h5>
@@ -1589,7 +1630,7 @@
         <div class="modal-content">
 
             <!-- Header -->
-            <div class="modal-header bg-primary">
+            <div class="modal-header bg-primary py-2">
                 <h5 class="modal-title text-white fw-bold" id="lblPrepareOrder">Create / Edit Prepare Order</h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -1668,7 +1709,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
 
-            <div class="modal-header bg-info">
+            <div class="modal-header bg-info py-2">
                 <h6 class="modal-title">
                     Add Formula – <span id="formulaFoodName"></span>
                 </h6>
@@ -1721,7 +1762,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header bg-primary">
+            <div class="modal-header bg-primary py-2">
                 <h5 class="modal-title text-white">Send Feedback Request</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -1777,9 +1818,9 @@
 <div class="modal fade" id="foodWastageModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary">
+            <div class="modal-header bg-primary py-2">
                 <h5 class="modal-title text-white">Food Wastage</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">

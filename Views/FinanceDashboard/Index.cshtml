@@ -13,8 +13,8 @@
     <div class="row g-3 mb-4 align-items-center">
         <div class="col d-flex align-items-center">
             <!-- Buttons first -->
-            <button class="btn btn-outline-success px-5 me-2">+ Credit</button>
-            <button class="btn btn-outline-danger px-5">- Debit</button>
+            <button class="btn btn-outline-success px-5 me-2" id="btn-add-credit-transactions">+ Credit</button>
+            <button class="btn btn-outline-danger px-5" id="btn-add-debit-transactions">- Debit</button>
         </div>
 
         <div class="col d-flex justify-content-end">
@@ -333,12 +333,159 @@
         </div>
 
     </div>
-
 </div>
 
+<!--Expense Transactions -- START -->
+<div class="modal fade" id="ExpenseTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-danger text-white py-1">
+                <h5 class="modal-title text-white" id="ExpenseTransactionModalTitle">Add Expense (Debit) Transaction</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- BODY -->
+            <div class="modal-body">
+                <input type="hidden" id="ExpenseTransactionId" value="0">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Account<span class="text-danger">*</span></label>
+                        <select id="ddlAccount" class="form-select ddlAccount">
+                            <option value="">-- Select Account --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Category<span class="text-danger">*</span></label>
+                        <select id="ddlExpenseCategory" class="form-select">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">SubCategory</label>
+                        <select id="ddlSubCategory_Expense" class="form-select">
+                            <option value="">-- Select SubCategory --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Amount<span class="text-danger">*</span></label>
+                        <input type="number" id="txtAmount_Expense" class="form-control" placeholder="Enter Amount">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
+                        <input type="date" id="txtTransactionDate_Expense" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Mode</label>
+                        <input type="text" id="txtPaymentMode_Expense" class="form-control" placeholder="Enter Payment Mode">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reference No</label>
+                    <input type="text" id="txtReferenceNo_Expense" class="form-control" placeholder="Enter Reference No">
+                </div>
+                <!-- Notes Full Width -->
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea id="txtNotes_Expense" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-danger btn-sm" id="btnSaveExpenseTransaction">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Expense Transactions -- END -->
+
+<!--Income Transactions -- START -->
+<div class="modal fade" id="incomeTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-success text-white py-1">
+                <h5 class="modal-title text-white" id="incomeTransactionModalTitle">Add Income Transaction</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+                <input type="hidden" id="incomeTransactionId" value="0">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Account<span class="text-danger">*</span></label>
+                        <select id="ddlAccount" class="form-select ddlAccount">
+                            <option value="">-- Select Account --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Category<span class="text-danger">*</span></label>
+                        <select id="ddlIncomeCategory" class="form-select">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">SubCategory</label>
+                        <select id="ddlSubCategory_Income" class="form-select">
+                            <option value="">-- Select SubCategory --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Amount<span class="text-danger">*</span></label>
+                        <input type="number" id="txtAmount_Income" class="form-control" placeholder="Enter Amount">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
+                        <input type="date" id="txtTransactionDate_Income" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Mode</label>
+                        <input type="text" id="txtPaymentMode_Income" class="form-control" placeholder="Enter Payment Mode">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reference No</label>
+                    <input type="text" id="txtReferenceNo_Income" class="form-control" placeholder="Enter Reference No">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea id="txtNotes_Income" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-success btn-sm" id="btnSaveIncomeTransaction">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Income Transactions -- END -->
 
 @section Scripts {
-
     <script src="~/assets2/js/financedashboard/financedashboard.js" asp-append-version="true"></script>
-
 }
