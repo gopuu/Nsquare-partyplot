@@ -1,27 +1,59 @@
 ﻿
 $(document).ready(function () {
-    loadKeyStatistics("thismonth", "", "");
-    loadCOGSCount("thismonth", "", "");
-    loadPending_Purchases_ApprovalsCount("thismonth", "", "");
+    loadKeyStatistics("thismonth");
+    loadCOGSCount("thismonth");
+    loadPending_Purchases_ApprovalsCount("thismonth");
     // initial load
     loadStockLevel();
     loadSuppliersWithItems();
 
+    //FOR KEY STATISTICS 🔹 Dropdown click event (same as event pie)
+    $(".chart-filter-Statistics .dropdown-item").on("click", function (e) {
+        e.preventDefault();
+
+        $(".chart-filter-Statistics .dropdown-item").removeClass("active");
+        $(this).addClass("active");
+
+        const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+        $("#jobChartFilter").text($(this).text());
+
+        loadKeyStatistics(filterText);
+    });
+
+    // 🔹 COGS Dropdown click event
+    $(".chart-filter-COGS .dropdown-item").on("click", function (e) {
+        e.preventDefault();
+
+        // Toggle active state
+        $(".chart-filter-COGS .dropdown-item").removeClass("active");
+        $(this).addClass("active");
+
+        // Get filter text → normalized value
+        const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+
+        // Set dropdown button text
+        $("#COGSChartFilter").text($(this).text());
+
+        // Load COGS count
+        loadCOGSCount(filterText);
+    });
+
 });
 
 function loadKeyStatistics(monthDuration = "thismonth", fromDate = null, toDate = null) {
-
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+    //console.log("key stats payload:", payload);
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardKeyStatisticsCount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
-            console.log("res key statics:",res);
+            //console.log("res key statics:",res);
             if (res.status === "Success") {
                 $("#totalSales").text(res.data.TotalSales);
                 $("#totalPurchase").text(res.data.TotalPurchase);
@@ -37,16 +69,18 @@ function loadKeyStatistics(monthDuration = "thismonth", fromDate = null, toDate 
 }
 
 function loadCOGSCount(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+    console.log("COGs payload:", payload);
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardGetCOGSCount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
             console.log("res Worth of Stock:", res);
             if (res.status === "Success") {
@@ -62,39 +96,26 @@ function loadCOGSCount(monthDuration = "thismonth", fromDate = null, toDate = nu
     });
 }
 
-
-// 🔹 Dropdown click event (same as event pie)
-$(".chart-filter-Statistics .dropdown-item").on("click", function (e) {
-    e.preventDefault();
-
-    $(".chart-filter-Statistics .dropdown-item").removeClass("active");
-    $(this).addClass("active");
-
-    const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
-    $("#jobChartFilter").text($(this).text());
-
-    loadKeyStatistics(filterText);
-
-});
-
 function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+    console.log("COGs payload:", payload);
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardGetPending_Purchases_ApprovalsCount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
             console.log("res Pending_Purchases_Approvals:", res);
             if (res.status === "Success") {
                 $("#pendingpurchases").text(res.data.PendingPurchases);
                 $("#pendingapprovals").text(res.data.PendingApprovals);
-
-            } else {
+            }
+            else {
                 $("#pendingpurchases","#pendingapprovals").text("0");
             }
         },
@@ -103,7 +124,6 @@ function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromD
         }
     });
 }
-
 
 function loadStockLevel(category = "all") {
 
@@ -178,7 +198,6 @@ function renderStockList(list) {
             container.insertAdjacentHTML("beforeend", stockItem);
         });
 }
-
 
 function loadSuppliersWithItems() {
 
