@@ -2,9 +2,9 @@
 {
     public class NextInvoiceNumberResponse
     {
-        public string NextInvoiceNo { get; set; }
-        public string NextProformaInvoiceNo { get; set; }
-        public string NextGSTInvoiceNo { get; set; }
+        public long NextInvoiceNo { get; set; }
+        public long NextProformaInvoiceNo { get; set; }
+        public long NextGSTInvoiceNo { get; set; }
     }
 
 
@@ -23,9 +23,9 @@
     public class CustomerInvoiceResponse_GRID
     {
         public long BookingId { get; set; }
-        public string InvoiceNo { get; set; }
-        public string ProformaInvoiceNo { get; set; }
-        public string GSTInvoiceNo { get; set; }
+        public long InvoiceNo { get; set; }
+        public long ProformaInvoiceNo { get; set; }
+        public long GSTInvoiceNo { get; set; }
         public string EventDate { get; set; }
         public string BookedOn { get; set; }
         public string EventName { get; set; }
@@ -40,9 +40,9 @@
         public long Id { get; set; }
         public long BookingId { get; set; }
 
-        public string? InvoiceNo { get; set; }
-        public string? ProformaInvoiceNo { get; set; }
-        public string? GSTInvoiceNo { get; set; }
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+        public long? GSTInvoiceNo { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }
@@ -157,12 +157,9 @@
     public class CustomerInvoiceRequest_Id
     {
         public long BookingId { get; set; }
-        public string? InvoiceNo { get; set; }
-        public string? ProformaInvoiceNo { get; set; }
-        //public string? GSTInvoiceNo { get; set; }
-
-        //public long Id { get; set; }
-    }
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+   }
     public class CustomerInvoiceItem_Id
     {
         public long? Id { get; set; }
@@ -188,9 +185,10 @@
     public class CustomerInvoiceResponse_Id
     {
         public long? Id { get; set; }
-        public string? InvoiceNo { get; set; }
-        public string? ProformaInvoiceNo { get; set; }
-        public string? GSTInvoiceNo { get; set; }
+
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+        public long? GSTInvoiceNo { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }

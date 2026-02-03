@@ -72,9 +72,9 @@ namespace ERPAdmin.ApiControllers
                             list.Add(new CustomerInvoiceResponse_GRID
                             {
                                 BookingId = Convert.ToInt64(dr["BookingId"]),
-                                InvoiceNo = dr["InvoiceNo"].ToString(),
-                                ProformaInvoiceNo = dr["ProformaInvoiceNo"].ToString(),
-                                GSTInvoiceNo = dr["GSTInvoiceNo"].ToString(),
+                                InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
+                                ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]),
+                                GSTInvoiceNo = Convert.ToInt64(dr["GSTInvoiceNo"]),
                                 EventDate = dr["EventDate"].ToString(),
                                 BookedOn = dr["BookedOn"].ToString(),
                                 EventName = dr["EventName"].ToString(),
@@ -207,8 +207,8 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar, 50).Value = request.InvoiceNo;
-                    cmd.Parameters.Add("@ProformaInvoiceNo", SqlDbType.NVarChar, 50).Value = request.ProformaInvoiceNo;
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo;
+                    cmd.Parameters.Add("@ProformaInvoiceNo", SqlDbType.BigInt).Value = request.ProformaInvoiceNo;
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -218,9 +218,9 @@ namespace ERPAdmin.ApiControllers
                             invoice = new CustomerInvoiceResponse_Id
                             {
                                 Id = Convert.ToInt64(dr["Id"]),
-                                InvoiceNo = dr["InvoiceNo"]?.ToString(),
-                                ProformaInvoiceNo = dr["ProformaInvoiceNo"]?.ToString(),
-                                GSTInvoiceNo = dr["GSTInvoiceNo"]?.ToString(),
+                                InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]?.ToString()),
+                                ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]?.ToString()),
+                                GSTInvoiceNo = Convert.ToInt64(dr["GSTInvoiceNo"]?.ToString()),
 
                                 CustomerName = dr["CustomerName"]?.ToString(),
                                 InvoiceDate = dr["InvoiceDate"]?.ToString(),              // yyyy-MM-dd
@@ -296,9 +296,11 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@Id", request.Id);
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
-                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", (object)request.ProformaInvoiceNo ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@GSTInvoiceNo", (object)request.GSTInvoiceNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
+                    cmd.Parameters.AddWithValue("@GSTInvoiceNo", request.GSTInvoiceNo);
+
                     cmd.Parameters.AddWithValue("@CustomerName", request.CustomerName);
                     cmd.Parameters.AddWithValue("@InvoiceDate", request.InvoiceDate);
                     cmd.Parameters.AddWithValue("@GSTIN", (object)request.GSTIN ?? DBNull.Value);
@@ -424,9 +426,18 @@ namespace ERPAdmin.ApiControllers
                     {
                         if (dr.Read())
                         {
-                            data.NextInvoiceNo = dr["NextInvoiceNo"].ToString();
-                            data.NextProformaInvoiceNo = dr["NextProformaInvoiceNo"].ToString();
-                            data.NextGSTInvoiceNo = dr["NextGSTInvoiceNo"].ToString();
+                            data.NextInvoiceNo = dr["NextInvoiceNo"] == DBNull.Value
+                                ? 0L
+                                : Convert.ToInt64(dr["NextInvoiceNo"]);
+
+                            data.NextProformaInvoiceNo = dr["NextProformaInvoiceNo"] == DBNull.Value
+                                ? 0L
+                                : Convert.ToInt64(dr["NextProformaInvoiceNo"]);
+
+                            data.NextGSTInvoiceNo = dr["NextGSTInvoiceNo"] == DBNull.Value
+                                ? 0L
+                                : Convert.ToInt64(dr["NextGSTInvoiceNo"]);
+
                         }
                     }
                 }

@@ -814,6 +814,7 @@ function renderTable(data) {
 
     data.forEach((x, i) => x.srno = i + 1);
 
+    const hasValidNo = v => v !== null && v !== undefined && Number(v) > 0;
     $('#tableMain table').DataTable({
         data: data,
         responsive: true,
@@ -829,8 +830,15 @@ function renderTable(data) {
                 title: 'Invoice No',
                 render: function (row) {
 
-                    const invoiceNo = row.InvoiceNo && row.InvoiceNo !== '-' ? row.InvoiceNo : '';
-                    const proformaNo = row.ProformaInvoiceNo && row.ProformaInvoiceNo !== '-' ? row.ProformaInvoiceNo : '';
+                    const invoiceNo =
+                        row.InvoiceNo !== null && row.InvoiceNo !== undefined && row.InvoiceNo > 0
+                            ? row.InvoiceNo
+                            : null;
+
+                    const proformaNo =
+                        row.ProformaInvoiceNo !== null && row.ProformaInvoiceNo !== undefined && row.ProformaInvoiceNo > 0
+                            ? row.ProformaInvoiceNo
+                            : null;
 
                     if (invoiceNo && proformaNo) {
                         return `<strong>${invoiceNo} / ${proformaNo}</strong>`;
@@ -876,15 +884,16 @@ function renderTable(data) {
                 data: null,
                 title: 'Proforma Invoice',
                 render: row =>
-                    row.ProformaInvoiceNo === '-'
+                    !hasValidNo(row.ProformaInvoiceNo)
                         ? `<button class="btn btn-secondary btn-action-xs2 btn-create-proforma"
-                               data-bookingid="${row.BookingId}">
-                            Create Proforma
-                       </button>`
-                        : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
-                               data-bookingid="${row.BookingId}" data-proformano="${row.ProformaInvoiceNo}">
-                            <i class="fa fa-pen me-1"></i>Edit
-                       </button>`
+                                   data-bookingid="${row.BookingId}">
+                                Create Proforma
+                           </button>`
+                                    : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                                   data-bookingid="${row.BookingId}"
+                                   data-proformano="${row.ProformaInvoiceNo}">
+                                <i class="fa fa-pen me-1"></i>Edit
+                           </button>`
             },
 
             {
@@ -899,30 +908,28 @@ function renderTable(data) {
                 title: 'PDF (Proforma)',
                 className: 'text-center',
                 render: row =>
-                    row.ProformaInvoiceNo === '-'
+                    !hasValidNo(row.ProformaInvoiceNo)
                         ? '-'
                         : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-proforma"
                                role="button"
                                data-bookingid="${row.BookingId}"
                                data-proformano="${row.ProformaInvoiceNo}">
-                           </i>`
+                           </i>`                
             },
 
             {
                 data: null,
                 title: 'GST Invoice',
                 render: row =>
-                    row.InvoiceNo === '-'
-                        ? `
-                          <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
-                                  data-bookingid="${row.BookingId}">
-                              Create Invoice
-                          </button>`
-                                    : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
-                                   data-bookingid="${row.BookingId}" data-invoiceno="${row.InvoiceNo}">
-                              <i class="fa fa-pen me-1"></i>Edit
-                           </button>
-                        `
+                    !hasValidNo(row.InvoiceNo)
+                        ? `<button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
+                                   data-bookingid="${row.BookingId}">Create Invoice
+                           </button>`
+                        : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
+                                   data-bookingid="${row.BookingId}"
+                                   data-invoiceno="${row.InvoiceNo}">
+                                <i class="fa fa-pen me-1"></i>Edit
+                           </button>`           
             },
 
             {
@@ -937,7 +944,7 @@ function renderTable(data) {
                 title: 'PDF (GST)',
                 className: 'text-center',
                 render: row =>
-                    row.InvoiceNo === '-'
+                    !hasValidNo(row.InvoiceNo)
                         ? '-'
                         : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-invoice"
                                role="button"

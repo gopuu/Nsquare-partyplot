@@ -149,6 +149,8 @@ function loadDashboardWidgets() {
                 const totalCustomers = Number(res.data.TotalCustomer) || 0;
                 const eventLostCount = Number(res.data.EventLostCount) || 0;
                 const totalEventsLost = Number(res.data.TotalEventsLost) || 0;
+                const upcomingEventsCount = Number(res.data.UpcomingEventsCount) || 0;
+                const upcomingEventsAmount = Number(res.data.UpcomingEventsAmount) || 0;
 
                 $("#totalSales").text(
                     "₹ " + totalSales.toLocaleString("en-IN", {
@@ -167,6 +169,14 @@ function loadDashboardWidgets() {
                     })
                 );
                 $("#eventLostCount").text("(" + eventLostCount + ")");
+
+                $("#upcomingEventsLost").text(
+                    "₹ " + upcomingEventsAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })
+                );
+                $("#upcomingEventsCount").text("(" + upcomingEventsCount + ")");
 
                 console.log("Dashboard Stats Fetched:", res.data);
 
@@ -1224,7 +1234,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 <li>Only valid tracked events are counted; duplicates or test events are excluded.</li>
                 <li>Data is accurate as of 11:59 PM of the selected day.</li>
             </ul>
+        `,
+        tooltipUpcomingEvents: `
+            <div class='tooltip-title'>
+                Total number of confirmed events scheduled for upcoming dates.
+            </div>
+            <ul class='tooltip-list'>
+                <li>Includes all future events with confirmed booking status.</li>
+                <li>Events that are cancelled, rejected, or completed are excluded.</li>
+                <li>Data is updated in real time based on the selected date range.</li>
+            </ul>
         `
+
     };
 
     // Loop through all tooltip elements and initialize

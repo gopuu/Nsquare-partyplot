@@ -140,9 +140,10 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        /*
         [HttpPost]
         [Route("GetDashboardWidgetCounts")]
-        public IActionResult GetDashboardWidgetCounts()
+        private IActionResult GetDashboardWidgetCounts()
         {
             apiResponse apiResponse = new apiResponse();
             DashboardWidgetCountsResponse result = new DashboardWidgetCountsResponse();
@@ -155,7 +156,7 @@ namespace ERPAdmin.ApiControllers
                 DataTable dt = new DataTable();
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("Dashboard_WidgetCounts", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_WidgetCounts_OLD", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     con.Open();
@@ -188,6 +189,7 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
+        */
 
         [HttpPost]
         [Route("GetDashboardWidgetCounts2")]
@@ -224,6 +226,8 @@ namespace ERPAdmin.ApiControllers
                     result.TotalEvents = Convert.ToInt64(row["TotalEvents"]);
                     result.EventLostCount = Convert.ToInt64(row["EventLostCount"]);
                     result.TotalEventsLost = Convert.ToDecimal(row["TotalEventsLost"]);
+                    result.UpcomingEventsCount = Convert.ToInt64(row["UpcomingEventsCount"]);
+                    result.UpcomingEventsAmount = Convert.ToDecimal(row["UpcomingEventsAmount"]);
                 }
 
                 apiResponse.status = "Success";
