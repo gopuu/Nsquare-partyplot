@@ -7,21 +7,19 @@
     public class GetEmergencyContactCategoryResponse
     {
         public long Id { get; set; }
-        public string CategoryName { get; set; }
+        public string Name { get; set; }
         public string? Description { get; set; }
     }
 
-    public class SaveEmergencyContactCategoryRequest
+    public class SaveEmergencyContactCategoryRequest : BaseClass
     {
         public long? Id { get; set; }
-        public string CategoryName { get; set; }
+        public string Name { get; set; }
         public string? Description { get; set; }
-        public long ActionBy { get; set; }
     }
-    public class DeleteEmergencyContactCategoryRequest
+    public class DeleteEmergencyContactCategoryRequest : BaseClass
     {
         public long Id { get; set; }
-        public long ActionBy { get; set; }
     }
 
 }

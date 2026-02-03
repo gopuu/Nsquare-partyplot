@@ -28,8 +28,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("GetEmergencyContactMaster")]
-        public IActionResult GetEmergencyContactMaster([FromBody] GetEmergencyContactRequest request)
+        [Route("GetEmergencyContact_Master")]
+        public IActionResult GetEmergencyContact_Master([FromBody] GetEmergencyContactRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<GetEmergencyContactResponse> list = new();
@@ -42,28 +42,36 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
 
                 using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("GetEmergencyContactMaster", con);
+                using SqlCommand cmd = new SqlCommand("GetEmergencyContact_Master", con);
 
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", request?.Id ?? 0);
-                cmd.Parameters.AddWithValue("@CategoryId", request?.CategoryId ?? 0);
-                cmd.Parameters.AddWithValue("@IsActive", request?.IsActive ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@SubCategoryId", request?.SubCategoryId ?? 0);
+                cmd.Parameters.AddWithValue("@IsActive",
+                    request?.IsActive ?? (object)DBNull.Value);
 
                 con.Open();
+
                 using SqlDataReader dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
                     list.Add(new GetEmergencyContactResponse
                     {
                         Id = Convert.ToInt64(dr["Id"]),
-                        CategoryId = Convert.ToInt64(dr["CategoryId"]),
-                        CategoryName = Convert.ToString(dr["CategoryName"]),
+                        SubCategoryId = Convert.ToInt64(dr["SubCategoryId"]),
+                        SubCategoryName = Convert.ToString(dr["SubCategoryName"]),
                         ContactType = Convert.ToString(dr["ContactType"]),
                         ContactName = Convert.ToString(dr["ContactName"]),
                         MobileNo = Convert.ToString(dr["MobileNo"]),
-                        MobileNo2 = dr["MobileNo2"] == DBNull.Value ? null : Convert.ToString(dr["MobileNo2"]),
-                        Location = dr["Location"] == DBNull.Value ? null : Convert.ToString(dr["Location"]),
-                        Remarks = dr["Remarks"] == DBNull.Value ? null : Convert.ToString(dr["Remarks"]),
+                        MobileNo2 = dr["MobileNo2"] == DBNull.Value
+                            ? null
+                            : Convert.ToString(dr["MobileNo2"]),
+                        Location = dr["Location"] == DBNull.Value
+                            ? null
+                            : Convert.ToString(dr["Location"]),
+                        Remarks = dr["Remarks"] == DBNull.Value
+                            ? null
+                            : Convert.ToString(dr["Remarks"]),
                         IsActive = Convert.ToBoolean(dr["IsActive"])
                     });
                 }
@@ -71,6 +79,7 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.status = "Success";
                 apiResponse.message = "Emergency contacts fetched successfully!";
                 apiResponse.data = list;
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -83,8 +92,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("SaveEmergencyContactMaster")]
-        public IActionResult SaveEmergencyContactMaster([FromBody] SaveEmergencyContactRequest model)
+        [Route("SaveEmergencyContact_Master")]
+        public IActionResult SaveEmergencyContact_Master([FromBody] SaveEmergencyContactRequest model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -96,23 +105,29 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
 
                 long id;
+
                 using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("SaveEmergencyContactMaster", con);
+                using SqlCommand cmd = new SqlCommand("SaveEmergencyContact_Master", con);
 
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@Id", model.Id);
-                cmd.Parameters.AddWithValue("@CategoryId", model.CategoryId);
+
+                cmd.Parameters.AddWithValue("@Id", model.Id <= 0 ? 0 : model.Id);
+                cmd.Parameters.AddWithValue("@SubCategoryId", model.SubCategoryId);
                 cmd.Parameters.AddWithValue("@ContactType", model.ContactType);
                 cmd.Parameters.AddWithValue("@ContactName", model.ContactName);
                 cmd.Parameters.AddWithValue("@MobileNo", model.MobileNo);
-                cmd.Parameters.AddWithValue("@MobileNo2", model.MobileNo2 ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Location", model.Location ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@MobileNo2",
+                    model.MobileNo2 ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@Location",
+                    model.Location ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@Remarks",
+                    model.Remarks ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
                 cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                 con.Open();
                 id = Convert.ToInt64(cmd.ExecuteScalar());
+                con.Close();
 
                 apiResponse.status = "Success";
                 apiResponse.message = model.Id > 0
@@ -132,8 +147,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DeleteEmergencyContactMaster")]
-        public IActionResult DeleteEmergencyContactMaster([FromBody] DeleteEmergencyContactRequest model)
+        [Route("DeleteEmergencyContact_Master")]
+        public IActionResult DeleteEmergencyContact_Master([FromBody] DeleteEmergencyContactRequest model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -145,7 +160,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
 
                 using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("DeleteEmergencyContactMaster", con);
+                using SqlCommand cmd = new SqlCommand("DeleteEmergencyContact_Master", con);
 
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", model.Id);
