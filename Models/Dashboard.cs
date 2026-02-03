@@ -138,6 +138,8 @@
         public long? TotalEvents { get; set; }
         public long? EventLostCount { get; set; }
         public decimal? TotalEventsLost { get; set; }
+        public long? UpcomingEventsCount { get; set; }
+        public decimal? UpcomingEventsAmount { get; set; }
     }
     #endregion
 
