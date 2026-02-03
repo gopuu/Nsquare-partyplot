@@ -1,4 +1,21 @@
-﻿
+﻿/*WIDGET AMOUNT - font size - START */
+/* default size */
+.amount-normal {
+    font-size: 1.6rem;
+}
+
+/* for very large amounts (crore+) */
+.amount-large {
+    font-size: 1.3rem;
+}
+
+/* optional: extremely large */
+.amount-xlarge {
+    font-size: 1.0rem;
+}
+/*WIDGET AMOUNT - font size - END */
+
+
 .kpi-tooltip {
   cursor: pointer;
   font-weight: 500;

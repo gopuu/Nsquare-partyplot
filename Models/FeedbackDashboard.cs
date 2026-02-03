@@ -54,11 +54,16 @@
         public int Count { get; set; }
         public string? Percentage { get; set; }
     }
+    public class Dashbaord_Inventory_SupplierItems_Request
+    {
+        public long? SupplierId { get; set; }
+    }
+
     public class DashboardFeedbackRequest
     {
-        public string? MonthDuration { get; set; }  // e.g., "ThisMonth", "LastMonth"
-        public string? FromDate { get; set; }       // optional: "2026-01-01"
-        public string? ToDate { get; set; }         // optional: "2026-01-24"
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
     }
 
     public class DashboardFeedbackCounts

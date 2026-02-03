@@ -12,10 +12,7 @@
 
     public class DashboardinventoryRequest
     {
-        public string? MonthDuration { get; set; }  
-        public string? FromDate { get; set; }     
-        public string? ToDate { get; set; }
-        public string? Category { get; set; }
+        public long? ItemCategoryId { get; set; }
     }
 
     public class InventoryDashboardKeyStatisticsCount

@@ -162,20 +162,22 @@ function loadDashboardWidgets() {
                 $("#totalEvents").text(totalEvents.toLocaleString("en-IN"));
                 $("#totalCustomers").text(totalCustomers.toLocaleString("en-IN"));
 
-                $("#totalEventsLost").text(
-                    "₹ " + totalEventsLost.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })
-                );
+                //$("#totalEventsLost").text(
+                //    "₹ " + totalEventsLost.toLocaleString("en-IN", {
+                //        minimumFractionDigits: 2,
+                //        maximumFractionDigits: 2
+                //    })
+                //);
+                setAmountWithAutoFont("#totalEventsLost", totalEventsLost);
                 $("#eventLostCount").text("(" + eventLostCount + ")");
 
-                $("#upcomingEventsLost").text(
-                    "₹ " + upcomingEventsAmount.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })
-                );
+                //$("#upcomingEventsLost").text(
+                //    "₹ " + upcomingEventsAmount.toLocaleString("en-IN", {
+                //        minimumFractionDigits: 2,
+                //        maximumFractionDigits: 2
+                //    })
+                //);
+                setAmountWithAutoFont("#upcomingEventsLost", upcomingEventsAmount);
                 $("#upcomingEventsCount").text("(" + upcomingEventsCount + ")");
 
                 console.log("Dashboard Stats Fetched:", res.data);
@@ -192,10 +194,36 @@ function loadDashboardWidgets() {
         },
         error: function (xhr, status, error) {
             console.error("AJAX Error:", status, error, xhr.responseText);
-            alert("Error loading dashboard widgets! " + error);
+            //alert("Error loading dashboard widgets! " + error);
         }
     });
 }
+
+function setAmountWithAutoFont(elSelector, amount) {
+    const el = $(elSelector);
+
+    // Format amount (Indian format)
+    const formatted = amount.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    el.text("₹ " + formatted);
+
+    // Reset font classes
+    el.removeClass("amount-normal amount-large amount-xlarge");
+
+    // Auto font sizing (Indian thresholds)
+    if (amount >= 100000000) {          // 1 Cr+
+        el.addClass("amount-xlarge");
+    } else if (amount >= 10000000) {    // 10 Lakh+
+        el.addClass("amount-large");
+    } else {
+        el.addClass("amount-normal");
+    }
+}
+
+
 function renderDashboardWidgets(stats) {
 
     const container = $("#dashboard-widgets");

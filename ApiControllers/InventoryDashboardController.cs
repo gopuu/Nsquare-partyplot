@@ -85,7 +85,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetInventoryDashboardGetCOGSCount")]
         public IActionResult GetInventoryDashboardGetCOGSCount([FromBody] DashboardFeedbackRequest request)
@@ -217,7 +216,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetInventoryDashboardStockLevel")]
         public IActionResult GetInventoryDashboardStockLevel([FromBody] DashboardinventoryRequest request)
@@ -227,9 +225,7 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";
@@ -246,10 +242,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     // 🔹 (optional future params)
-                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
-                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
-                    cmd.Parameters.AddWithValue("@Category", request.Category);
+                    cmd.Parameters.AddWithValue("@ItemCategoryId", request.ItemCategoryId);
 
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     da.Fill(dt);
@@ -285,16 +278,14 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("GetInventoryDashboardSuppliers")]
-        public IActionResult GetInventoryDashboardSuppliers([FromBody] DashboardFeedbackRequest request)
+        public IActionResult GetInventoryDashboardSuppliers([FromBody] Dashbaord_Inventory_SupplierItems_Request request)
         {
             apiResponse apiResponse = new apiResponse();
             List<InventorySupplierItem> result = new();
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";
@@ -306,13 +297,9 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand(
-                        "Dashboard_Inventory_GetSuppliersWithItems", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_Inventory_GetSuppliersWithItems", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
-                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId);
 
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     da.Fill(dt);

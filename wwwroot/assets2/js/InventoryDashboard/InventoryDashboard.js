@@ -3,8 +3,16 @@ $(document).ready(function () {
     loadKeyStatistics("thismonth");
     loadCOGSCount("thismonth");
     loadPending_Purchases_ApprovalsCount("thismonth");
+
     // initial load
+    GetCategoryMasterData();
     loadStockLevel();
+    // On category change → reload stock level
+    $("#categoryFilter").on("change", function () {
+        const categoryId = $(this).val();
+        loadStockLevel(categoryId);
+    });
+    
     loadSuppliersWithItems();
 
     //FOR KEY STATISTICS 🔹 Dropdown click event (same as event pie)
@@ -125,34 +133,49 @@ function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromD
     });
 }
 
-function loadStockLevel(category = "all") {
+//Stock Level ----------------------- START -------------------------------------
+// ITEM CATEGORY DROPDOWN
+function GetCategoryMasterData() {
+    $.ajax({
+        url: "/api/ItemCategoryMaster/GetItemCategoryList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            $("#categoryFilter").empty().append(`<option value="0">Filter By Category</option>`);
+            response.data.forEach(c => {
+                $("#categoryFilter").append(`<option value="${c.Id}">${c.CategoryName}</option>`);
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Unable to Fetch Category Data!");
+        }
+    });
+}
+
+function loadStockLevel(itemCategoryId = 0) {
+    var payload = {
+        ItemCategoryId: itemCategoryId
+    };
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardStockLevel",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: "thismonth",
-            FromDate: "",
-            ToDate: "",
-            Category: category   // 👈 pass selected category
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
             console.log("Stock level response:", res);
 
             if (res.status === "Success" && Array.isArray(res.data)) {
                 renderStockList(res.data);
-            } else {
-                $("#stockList").html(
-                    "<div class='text-muted text-center'>No stock data found</div>"
-                );
+            }
+            else {
+                $("#stockList").html("<div class='text-muted text-center'>No stock data found</div>");
             }
         },
         error: function (xhr) {
             console.error("Stock API failed", xhr);
-            $("#stockList").html(
-                "<div class='text-danger text-center'>Failed to load stock data</div>"
-            );
+            $("#stockList").html("<div class='text-danger text-center'>Failed to load stock data</div>");
         }
     });
 }
@@ -180,7 +203,7 @@ function renderStockList(list) {
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <span class="fw-semibold small">${item.ProductName}</span>
-                        <span class="small text-muted">${item.Quantity} qty</span>
+                        <span class="small text-muted">${item.Quantity} Qty</span>
                     </div>
 
                     <div class="progress" style="height: 8px; border-radius: 5px;">
@@ -198,18 +221,19 @@ function renderStockList(list) {
             container.insertAdjacentHTML("beforeend", stockItem);
         });
 }
+//Stock Level ----------------------- END ---------------------------------------
 
+//Supplier & Items ----------------------- START ---------------------------------------
 function loadSuppliersWithItems() {
+    var payload = {
+        SupplierId: 0
+    };
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardSuppliers",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: "thismonth",
-            FromDate: "",
-            ToDate: ""
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
             console.log("Suppliers response:", res);
 
@@ -263,7 +287,7 @@ function renderSuppliers(data) {
                         <span class="ms-2 fw-semibold supplier-name">${supplier}</span>
                     </div>
                     <button class="btn btn-sm btn-outline-primary raise-po-btn">
-                        Raise PO
+                        Raise PO - Coming Soon
                     </button>
                 </div>
 
@@ -283,5 +307,6 @@ $(document).on("click", ".toggle-btn", function () {
     $(target).toggle();
     $(this).text(isVisible ? "+" : "-");
 });
+//Supplier & Items ----------------------- END - ---------------------------------------
 
 
