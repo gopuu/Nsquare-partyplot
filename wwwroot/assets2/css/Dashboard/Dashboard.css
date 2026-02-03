@@ -1,4 +1,46 @@
 ﻿
+.kpi-tooltip {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.tooltip-inner {
+  max-width: 380px;
+  background-color: #2b2b2b;
+  color: #fff;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tooltip-list {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.tooltip-list li {
+  margin-bottom: 6px;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #2b2b2b;
+}
+
+.row, .col-md-3, .stat-box {
+    overflow: visible; /* tooltip cut na ho */
+    position: relative; /* Popper ke liye reference */
+}
+
+
+
+
 .stat-box {
 border-radius: 16px;
 padding: 18px;

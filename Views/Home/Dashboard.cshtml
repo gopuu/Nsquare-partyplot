@@ -81,21 +81,16 @@
                             </div>
                             <!---------- card start ---------->
                             <div class="row g-3 py-2">
+
                                 <!-- Card 1 : Total Sales -->
                                 <div class="col-md-3">
                                     <div class="stat-box bg-mint">
                                         <div class="stat-top mint"></div>
                                         <div class="stat-body">
-                                            <span class="kpi-tooltip"
-                                                  data-bs-toggle="tooltip"
-                                                  data-bs-html="true"
-                                                  data-bs-placement="bottom"
-                                                  data-tooltip-title="Total Sales"
-                                                  data-tooltip-desc="All valid orders included">
-                                                Total Sales <!-- <i class="fa-solid fa-circle-info"></i> -->
+                                            <span class="kpi-tooltip" id="tooltipTotalSales">
+                                                Total Sales
                                             </span>
-
-                                            <h3 class="value" id="totalSales"></h3>
+                                            <h3 class="value" id="totalSales">₹ 0</h3>
                                             <span class="sub">In This Month</span>
                                         </div>
                                     </div>
@@ -106,34 +101,24 @@
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
-                                            <span class="kpi-tooltip"
-                                                  data-bs-toggle="tooltip"
-                                                  data-bs-html="true"
-                                                  data-bs-placement="bottom"
-                                                  data-tooltip-title="Total Events"
-                                                  data-tooltip-desc="All valid orders included">
-                                                Total Events <!-- <i class="fa-solid fa-circle-info"></i> -->
+                                            <span class="kpi-tooltip" id="tooltipTotalOrders">
+                                                Total Orders
                                             </span>
-                                            <h3 class="value" id="totalEvents"></h3>
+                                            <h3 class="value" id="totalEvents">0</h3>
                                             <span class="sub">In This Month</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Card 3 : Customers -->
+                                <!-- Card 3 : Total Customer Visits -->
                                 <div class="col-md-3">
                                     <div class="stat-box bg-sky">
                                         <div class="stat-top sky"></div>
                                         <div class="stat-body">
-                                            <span class="kpi-tooltip"
-                                                  data-bs-toggle="tooltip"
-                                                  data-bs-html="true"
-                                                  data-bs-placement="bottom"
-                                                  data-tooltip-title="Total Customer Visits"
-                                                  data-tooltip-desc="All valid orders included">
-                                                Total Customer Visits <!-- <i class="fa-solid fa-circle-info"></i> -->
+                                            <span class="kpi-tooltip" id="tooltipTotalCustomers">
+                                                Total Customer Visits
                                             </span>
-                                            <h3 class="value" id="totalCustomers"></h3>
+                                            <h3 class="value" id="totalCustomers">0</h3>
                                             <span class="sub">In This Month</span>
                                         </div>
                                     </div>
@@ -144,47 +129,15 @@
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
-                                            <span class="kpi-tooltip text-danger"
-                                                  data-bs-toggle="tooltip"
-                                                  data-bs-html="true"
-                                                  data-bs-placement="bottom"
-                                                  data-tooltip-title="Events Lost"
-                                                  data-tooltip-desc="Includes cancelled, rejected, and unconfirmed events">
+                                            <span class="kpi-tooltip text-danger" id="tooltipEventsLost">
                                                 Events Lost <span id="eventLostCount">(0)</span>
-                                                <!-- <i class="fa-solid fa-circle-info"></i> -->
                                             </span>
                                             <h3 class="value text-danger" id="totalEventsLost">₹ 0</h3>
-
                                             <span class="sub">Cancelled / Rejected Events In This Month</span>
                                         </div>
                                     </div>
-                                    <style>
-                                        /* Light Red Background */
-                                        .bg-danger-light {
-                                            background: #fff5f5;
-                                            border: 1px solid #f5c2c7;
-                                        }
-
-                                        /* Top Accent Strip */
-                                        .stat-top.danger-light {
-                                            background: linear-gradient(90deg, #f87171, #ef4444);
-                                        }
-
-                                        /* Value Styling */
-                                        .stat-box.bg-danger-light .value {
-                                            font-weight: 700;
-                                            margin-top: 8px;
-                                        }
-
-                                        /* Hover Effect */
-                                        .stat-box.bg-danger-light:hover {
-                                            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.15);
-                                            transform: translateY(-2px);
-                                            transition: all 0.2s ease-in-out;
-                                        }
-
-                                    </style>
                                 </div>
+
                             </div>
 
                             <!---------- bar chart start ---------->
@@ -220,8 +173,8 @@
                                             </div>
 
                                             <!-- Card Body -->
-                                            <div class="card-body">                                                
-                                                <canvas id="pnlCategoryChart" height="90"></canvas>                                                
+                                            <div class="card-body">
+                                                <canvas id="pnlCategoryChart" height="90"></canvas>
 
                                             </div>
                                         </div>
@@ -231,7 +184,6 @@
                             </div>
                             <!---------- bar chart end ---------->
                             <!---------- card end ---------->
-
                             <!---------- graph start ---------->
                             <div class="row g-2 py-2 d-none">
                                 <div class="col-md-6">
@@ -283,7 +235,6 @@
                                 </div>
                             </div>
                             <!---------- graph end ---------->
-
                             <!---------- chart start ---------->
                             <div class="row g-3 py-3">
                                 <div class="col-md-4 text-center">
@@ -375,66 +326,82 @@
                             </div>
 
                             <!---------- chart end ---------->
-                            <div class="row gap-3 py-3">
-                                <div class="chart-box1 position-relative">
-                                    <!-- small dropdown -->
-                                    <div class="col-md-12">
-                                        <div class="dropdown chart-filter">
+                            <div class="row g-3">
+
+                                <!-- Bar Chart Section -->
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <!-- Card Header -->
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">Monthly Sales</h6>
+
+                                            <!-- Year Dropdown -->
                                             <div class="dropdown">
-                                                <button class="btn btn-outline-secondary dropdown-toggle"
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                                         type="button"
                                                         id="yearDropdown"
-                                                        data-bs-toggle="dropdown"
-                                                        aria-expanded="false">
+                                                        data-bs-toggle="dropdown">
                                                     Select Year
                                                 </button>
-
-                                                <ul class="dropdown-menu" id="yearDropdownMenu"
-                                                    aria-labelledby="yearDropdown">
-                                                    <!-- dynamic years -->
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="yearDropdown">
+                                                    <li><a class="dropdown-item" href="#">2026</a></li>
+                                                    <li><a class="dropdown-item" href="#">2025</a></li>
+                                                    <li><a class="dropdown-item" href="#">2024</a></li>
                                                 </ul>
                                             </div>
-
                                         </div>
-                                        <div id="bar-chart" class="mt-4"></div>
+
+                                        <!-- Card Body -->
+                                        <div class="card-body">
+                                            <div id="bar-chart" style="height:300px;">
+                                                Bar Chart Here
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="row gap-3 py-3">
-                                <div class="col-md-4 position-relative">
 
-                                    <!-- Filter -->
-                                    <div class="dropdown pie-chart-filter">
-                                        <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                                type="button"
-                                                id="filterChartFilter"
-                                                data-bs-toggle="dropdown">
-                                            This Month
-                                        </button>
+                                <!-- Pie Chart Section -->
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <!-- Card Header -->
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">Lead Source</h6>
 
-                                        <ul class="dropdown-menu" aria-labelledby="sortByDropdown">
-                                            <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
-                                            <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
-                                            <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
-                                            <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
-                                            <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
-                                            <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
-                                            <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
-                                        </ul>
+                                            <!-- Filter Dropdown -->
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button"
+                                                        id="filterChartFilter"
+                                                        data-bs-toggle="dropdown">
+                                                    This Month
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterChartFilter">
+                                                    <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                    <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                    <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                    <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                    <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Body -->
+                                        <div class="card-body">
+                                            <div class="pie-chart" style="height:300px;">
+                                                Pie Chart Here
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <!-- Chart -->
-                                    <div class="pie-chart"></div>
-
                                 </div>
 
-                                @*  <div class="col-md-4 align-content-between shadow">
-                                    <img src="~/assets2/img/banquet_img.png" class="img_review" />
 
-                                    <img src="~/assets2/img/banquet_img1.png" class="img_Integration" />
-                                </div> *@
                             </div>
+
+
+
+                           
                         </div>
                     </div>
                 </div>

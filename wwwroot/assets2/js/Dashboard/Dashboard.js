@@ -1049,7 +1049,9 @@ $(document).on("click", ".year-option", function (e) {
 });
 
 
-//--- COMPARATIVE INSIGHTS -- START ----
+
+
+
 function loadPnLChart(filter) {
 
     const monthCount = filter.replace("last", "").replace("months", "");
@@ -1122,12 +1124,11 @@ function buildPnLCategoryMonthChart(apiData) {
         };
     });
 
-
-
     renderPnLCategoryChart(labels, datasets);
 }
 
-let pnlCategoryChart = null;
+
+let pnlCategoryChart;
 
 function renderPnLCategoryChart(labels, datasets) {
 
@@ -1176,6 +1177,80 @@ function renderPnLCategoryChart(labels, datasets) {
         }
     );
 }
-//--- COMPARATIVE INSIGHTS -- END ----
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipContent = {
+        tooltipTotalSales: `
+            <div class='tooltip-title'>
+                Total value of sales generated during the selected time period.
+                (This data comes from the POS, cashier portal or any transactions you have imported)
+            </div>
+            <ul class='tooltip-list'>
+                <li>All orders – customers with valid, invalid, blocked, and no mobile number orders are all included.</li>
+                <li>Pending and voided bills are excluded.</li>
+                <li>The data is valid until 11.59 PM of the selected time.</li>
+            </ul>
+        `,
+        tooltipTotalOrders: `
+            <div class='tooltip-title'>
+                Total number of orders placed during the selected time period.
+                (This data comes from your POS or imported transactions)
+            </div>
+            <ul class='tooltip-list'>
+                <li>Includes all valid, invalid, blocked, and no mobile number orders.</li>
+                <li>Pending and voided orders are excluded.</li>
+                <li>Data is valid until 11:59 PM of the selected day.</li>
+            </ul>
+        `,
+        tooltipTotalCustomers: `
+            <div class='tooltip-title'>
+                Total number of customer visits recorded during the selected time period.
+                (This includes all visits tracked in the system)
+            </div>
+            <ul class='tooltip-list'>
+                <li>Includes first-time and repeat customer visits.</li>
+                <li>Only valid check-ins are counted; canceled or invalid visits are excluded.</li>
+                <li>Data is accurate as of 11:59 PM of the selected day.</li>
+            </ul>
+        `,
+        tooltipEventsLost: `
+            <div class='tooltip-title'>
+                Total number of events lost or not completed during the selected time period.
+            </div>
+            <ul class='tooltip-list'>
+                <li>Includes cancelled, rejected, and unconfirmed events.</li>
+                <li>Only valid tracked events are counted; duplicates or test events are excluded.</li>
+                <li>Data is accurate as of 11:59 PM of the selected day.</li>
+            </ul>
+        `
+    };
+
+    // Loop through all tooltip elements and initialize
+    Object.keys(tooltipContent).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Destroy previous tooltip if any (for re-init)
+            if (el._tooltipInstance) {
+                el._tooltipInstance.dispose();
+            }
+
+            // Create new tooltip instance
+            const tooltip = new bootstrap.Tooltip(el, {
+                title: tooltipContent[id],   // assign dynamic content
+                html: true,                  // allow HTML inside tooltip
+                placement: 'bottom',         // force bottom
+                trigger: 'hover',            // only hover
+                fallbackPlacements: []       // prevent auto flip
+            });
+
+            // Save instance for later use (optional)
+            el._tooltipInstance = tooltip;
+        }
+    });
+});
+
+
 
 
