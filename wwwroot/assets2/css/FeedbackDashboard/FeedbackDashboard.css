@@ -463,3 +463,23 @@
 
 
 
+
+.feedback-card {
+    background: #eefcf2;
+    border-radius: 12px;
+}
+
+.emoji {
+    font-size: 18px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6c757d;
+}
+

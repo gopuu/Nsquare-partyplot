@@ -421,5 +421,68 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+
+        [HttpPost]
+        [Route("GetFeedbackDashboardHots_Visitors")]
+        public IActionResult GetFeedbackDashboardHots_Visitors()
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<DashboardFeedbackCardResponse> list = new();
+
+            try
+            {
+                // 🔹 Connection + Domain
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_GetFeedbackHots_Visitors", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            list.Add(new DashboardFeedbackCardResponse
+                            {
+                                Title = dr["Title"]?.ToString(),
+                                TotalFeedbacks = dr["TotalFeedbacks"] != DBNull.Value
+                                    ? Convert.ToInt32(dr["TotalFeedbacks"])
+                                    : 0,
+                                AverageRating = dr["AverageRating"] != DBNull.Value
+                                    ? Convert.ToDecimal(dr["AverageRating"])
+                                    : 0,
+                                NegativeFeedbackPercent = dr["NegativeFeedbackPercent"] != DBNull.Value
+                                    ? Convert.ToDecimal(dr["NegativeFeedbackPercent"])
+                                    : 0,
+                                FeedbackType = dr["FeedbackType"]?.ToString()
+                            });
+                        }
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard feedback summary fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return Ok(apiResponse);
+            }
+        }
+
     }
 }

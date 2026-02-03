@@ -60,6 +60,8 @@ namespace ERPAdmin.ApiControllers
                         Id = Convert.ToInt64(dr["Id"]),
                         SubCategoryId = Convert.ToInt64(dr["SubCategoryId"]),
                         SubCategoryName = Convert.ToString(dr["SubCategoryName"]),
+                        CategoryId = Convert.ToInt64(dr["CategoryId"]),
+                        CategoryName = Convert.ToString(dr["CategoryName"]),
                         ContactType = Convert.ToString(dr["ContactType"]),
                         ContactName = Convert.ToString(dr["ContactName"]),
                         MobileNo = Convert.ToString(dr["MobileNo"]),

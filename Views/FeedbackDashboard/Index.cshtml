@@ -150,84 +150,157 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <div class="card rating-breakdown-card mt-4">
-                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">
-                                    Rating Breakdown
-                                </span>
-                                <div class="dropdown chart-filter-RatingBreakdown">
-                                    <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                            type="button"
-                                            id="ratingBreakdownFilter"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                        This Month
-                                    </button>
+                    <div class="col-md-8">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card rating-breakdown-card mt-4">
+                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">
+                                            Rating Breakdown
+                                        </span>
+                                        <div class="dropdown chart-filter-RatingBreakdown">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="ratingBreakdownFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
 
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                        <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                        <li><a class="dropdown-item " href="#">Custom Range</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="ratingBreakdownContainer"
-                                     class="rating-chart d-flex justify-content-between align-items-end">
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card rating-time-card mt-4">
-                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Ratings over time</span>
-                                <div class="dropdown chart-filter-ratingtime">
-                                    <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                            type="button"
-                                            id="ratingTimeFilter"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                        This Month
-                                    </button>
-
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                        <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                        <li><a class="dropdown-item " href="#">Custom Range</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="time-chart">
-
-                                    <!-- Emoji Scale -->
-                                    <div class="emoji-scale">
-                                        <div>😍</div>
-                                        <div>🙂</div>
-                                        <div>😐</div>
-                                        <div>😟</div>
-                                        <div>😢</div>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
-                                    <!-- Chart Area -->
-                                    <div class="spike-area" id="ratingSpikeArea"></div>
+                                    <div class="card-body">
+                                        <div id="ratingBreakdownContainer"
+                                             class="rating-chart d-flex justify-content-between align-items-end">
+                                        </div>
+                                    </div>
+
                                 </div>
-                                <!-- Dates -->
-                                <div class="date-row" id="ratingDateRow"></div>
                             </div>
+
+                            <div class="col-md-6">
+                                <div class="card rating-time-card mt-4">
+                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">Ratings over time</span>
+                                        <div class="dropdown chart-filter-ratingtime">
+                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                    type="button"
+                                                    id="ratingTimeFilter"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                This Month
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="time-chart">
+
+                                            <!-- Emoji Scale -->
+                                            <div class="emoji-scale">
+                                                <div>😍</div>
+                                                <div>🙂</div>
+                                                <div>😐</div>
+                                                <div>😟</div>
+                                                <div>😢</div>
+                                            </div>
+                                            <!-- Chart Area -->
+                                            <div class="spike-area" id="ratingSpikeArea"></div>
+                                        </div>
+                                        <!-- Dates -->
+                                        <div class="date-row" id="ratingDateRow"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3 -->
+                            <!-- Event Hosts Card -->
+                            <div class="col-md-6">
+                                <div class="card mt-4 border-0 feedback-card">
+
+                                    <div class="card-header bg-transparent border-0 pb-0">
+                                        <h5 class="fw-semibold mb-0" id="hostTitle">Feedback from Event Hosts</h5>
+                                    </div>
+
+                                    <div class="card-body pt-3">
+                                        <div class="d-flex align-items-center mb-4 d-none">
+                                            <span class="emoji">😊</span>
+                                            <span class="fw-semibold ms-2">Feedback</span>
+                                        </div>
+
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="stat-value" id="hostTotal">0</div>
+                                                <div class="stat-label">Total Feedbacks</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="stat-value" id="hostAvg">0</div>
+                                                <div class="stat-label">Average Rating</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="stat-value" id="hostNegative">0%</div>
+                                                <div class="stat-label">Negative Feedback</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Visitors Card -->
+                            <div class="col-md-6">
+                                <div class="card mt-4 border-0 feedback-card">
+
+                                    <div class="card-header bg-transparent border-0 pb-0">
+                                        <h5 class="fw-semibold mb-0" id="visitorTitle">Feedback from Visitors</h5>
+                                    </div>
+
+                                    <div class="card-body pt-3">
+                                        <div class="d-flex align-items-center mb-4 d-none">
+                                            <span class="emoji">😊</span>
+                                            <span class="fw-semibold ms-2">Feedback</span>
+                                        </div>
+
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="stat-value" id="visitorTotal">0</div>
+                                                <div class="stat-label">Total Feedbacks</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="stat-value" id="visitorAvg">0</div>
+                                                <div class="stat-label">Average Rating</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="stat-value" id="visitorNegative">0%</div>
+                                                <div class="stat-label">Negative Feedback</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Dynamic Widgets -->

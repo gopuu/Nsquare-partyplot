@@ -20,6 +20,10 @@
     color: #0d6efd; /* Bootstrap Primary Blue */
 }
 
+.master_link .emergency_masterMenu span {
+    color: #d35825; /* Bootstrap Primary red */
+}
+
 .master_link .finance_masterMenu span {
     color: #198754; /* Bootstrap Success Green */
 }

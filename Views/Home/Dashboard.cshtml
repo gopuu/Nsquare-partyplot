@@ -333,21 +333,26 @@
                                     <div class="card">
                                         <!-- Card Header -->
                                         <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h6 class="mb-0">Monthly Sales</h6>
+                                            <h5 class="mb-0">Overall Bookings Statistics </h5>
 
                                             <!-- Year Dropdown -->
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                        type="button"
-                                                        id="yearDropdown"
-                                                        data-bs-toggle="dropdown">
-                                                    Select Year
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="yearDropdown">
-                                                    <li><a class="dropdown-item" href="#">2026</a></li>
-                                                    <li><a class="dropdown-item" href="#">2025</a></li>
-                                                    <li><a class="dropdown-item" href="#">2024</a></li>
-                                                </ul>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <label class="fw-semibold mb-0">Financial Year:</label>
+
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                            type="button"
+                                                            id="yearDropdown"
+                                                            data-bs-toggle="dropdown"
+                                                            aria-expanded="false">
+                                                        Select Year
+                                                    </button>
+
+                                                    <ul class="dropdown-menu dropdown-menu-end"
+                                                        id="yearDropdownMenu"
+                                                        aria-labelledby="yearDropdown">
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -366,10 +371,10 @@
                                     <div class="card">
                                         <!-- Card Header -->
                                         <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h6 class="mb-0">Lead Source</h6>
+                                            <h5 class="mb-0">Lead Source</h5>
 
                                             <!-- Filter Dropdown -->
-                                            <div class="dropdown">
+                                            <div class="dropdown pie-chart-filter">
                                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                                         type="button"
                                                         id="filterChartFilter"
@@ -398,10 +403,7 @@
 
 
                             </div>
-
-
-
-                           
+                         
                         </div>
                     </div>
                 </div>

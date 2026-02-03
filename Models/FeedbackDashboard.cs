@@ -87,6 +87,14 @@
         public int NegativeCount { get; set; }
         public string? NegativeIcon { get; set; }
     }
+    public class DashboardFeedbackCardResponse
+    {
+        public string? Title { get; set; }
+        public int TotalFeedbacks { get; set; }
+        public decimal AverageRating { get; set; }
+        public decimal NegativeFeedbackPercent { get; set; }
+        public string FeedbackType { get; set; }
+    }
 
     public class RatingsOverTimeResponse
     {

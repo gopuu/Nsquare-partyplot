@@ -3,6 +3,7 @@
     loadCategoryWiseRatings("thismonth");
     loadRatingBreakdown("thismonth");
     loadRatingsOverTime("thismonth");
+    loadFeedbackDashboard();
 
 });
 
@@ -352,3 +353,41 @@ function formatMonth(monthKey) {
 
     return date.toLocaleDateString("en-US", { month: "short" });
 }
+
+
+function loadFeedbackDashboard() {
+    $.ajax({
+        url: '/api/FeedbackDashboard/GetFeedbackDashboardHots_Visitors',
+        type: 'POST',
+        contentType: 'application/json',
+        success: function (response) {
+            console.log(response,"Hots_Visitors");
+            if (response.status === "Success" && response.data.length > 0) {
+
+                response.data.forEach(function (item) {
+
+                    if (item.FeedbackType === "Hosts") {
+                        $("#hostTitle").text(item.Title);
+                        $("#hostTotal").text(item.TotalFeedbacks);
+                        $("#hostAvg").text(item.AverageRating);
+                        $("#hostNegative").text(item.NegativeFeedbackPercent + "%");
+                    }
+
+                    if (item.FeedbackType === "Visitors") {
+                        $("#visitorTitle").text(item.Title);
+                        $("#visitorTotal").text(item.TotalFeedbacks);
+                        $("#visitorAvg").text(item.AverageRating);
+                        $("#visitorNegative").text(item.NegativeFeedbackPercent + "%");
+                    }
+
+                });
+            }
+        },
+        error: function (err) {
+            console.error("API Error", err);
+        }
+    });
+}
+
+
+

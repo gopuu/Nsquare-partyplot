@@ -867,7 +867,7 @@ function drawLeadSourcePieChart(apiData) {
     var data = google.visualization.arrayToDataTable(chartArray);
 
     let options = {
-        title: "Lead Source",
+        //title: "Lead Source",
         chartArea: { width: "90%", height: "80%" },
         legend: { position: "bottom" },
         pieHole: 0.4

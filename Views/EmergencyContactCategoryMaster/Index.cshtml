@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Emergency Contact Category Master";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+@section Styles {
+
+    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
+}
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+
+
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-warning mb-0">Emergency Contact Category Master</h4>
+        <button class="btn btn-outline-warning" id="btn-add-category">
+            <i class="fa fa-plus-circle"></i> Add Category
+        </button>
+    </div>
+
+    <div id="tableMain">
+        <table class="table table-striped table-bordered w-100"></table>
+    </div>
+</div>
+
+<div class="modal fade" id="CategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-white" id="CategoryModalTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="CategoryId" value="0" />
+
+                <div class="mb-3">
+                    <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                    <input type="text" id="CategoryName" class="form-control"
+                           placeholder="Enter Category Name">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea id="CategoryDescription" class="form-control"
+                              placeholder="Enter Description"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-outline-warning" id="btnSaveCategory">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->
+@section Scripts {
+
+    <script src="~/assets2/js/emergencycontactcategorymaster/emergencycontactcategory.js" asp-append-version="true"></script>
+}
