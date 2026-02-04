@@ -1,16 +1,9 @@
-﻿Emergency Contact MODULE:
+﻿
+New Api:
+1.GetDashboardEventInsights
+2.GetFeedbackDashboardHots_Visitors
 
-1. Emergency Contact Category:
-api-DeleteEmergencyContact_CategoryMaster
-api-GetEmergencyContact_CategoryMaster
-api-SaveEmergencyContact_CategoryMaster
 
-2. Emergency Contact SubCategory:
-api-DeleteEmergencyContact_SubCategoryMaster
-api-GetEmergencyContact_SubCategoryMaster
-api-SaveEmergencyContact_SubCategoryMaster
 
-3. Emergency Contact Master:
-api-DeleteEmergencyContact_Master
-api-GetEmergencyContact_Master
-api-SaveEmergencyContact_Master
+
+

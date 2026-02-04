@@ -152,8 +152,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
-
         [HttpPost]
         [Route("GetFeedbackInsightSummaryCount")]
         public IActionResult GetFeedbackInsightSummaryCount()
@@ -483,6 +481,72 @@ namespace ERPAdmin.ApiControllers
                 return Ok(apiResponse);
             }
         }
+
+
+        [HttpPost]
+        [Route("GetDashboardEventInsights")]
+        public IActionResult GetDashboardEventInsights()
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardEventInsightResponse data = null;
+
+            try
+            {
+                // 🔹 Connection + Domain
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_GetEvent_Insights", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            data = new DashboardEventInsightResponse
+                            {
+                                AvgbillingText = dr["AvgbillingText"]?.ToString(),
+                                CorporateEventText = dr["CorporateEventText"]?.ToString(),
+                                FamilyeventbillingText = dr["FamilyeventbillingText"]?.ToString(),
+                                RevenueDistributionText = dr["RevenueDistributionText"]?.ToString(),
+                                AvgbillingValue = dr["AvgbillingValue"] != DBNull.Value ? Convert.ToDecimal(dr["AvgbillingValue"]) : 0,
+                                CorporateEventValue = dr["CorporateEventValue"] != DBNull.Value ? Convert.ToDecimal(dr["CorporateEventValue"]) : 0,
+                                Familyeventbillingvalue = dr["Familyeventbillingvalue"] != DBNull.Value ? Convert.ToDecimal(dr["Familyeventbillingvalue"]) : 0,
+                                RevenueDistributionValue = dr["RevenueDistributionValue"] != DBNull.Value ? Convert.ToDecimal(dr["RevenueDistributionValue"]) : 0,
+
+                            };
+                        }
+                    }
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard event insights fetched successfully.";
+                apiResponse.data = data;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return Ok(apiResponse);
+            }
+        }
+
+
+
+
+
 
     }
 }

@@ -81,6 +81,21 @@
         public string? Negative { get; set; }
     }
 
+    public class DashboardEventInsightResponse
+    {
+        public decimal? AvgbillingValue { get; set; }
+        public decimal? CorporateEventValue { get; set; }
+        public decimal? Familyeventbillingvalue { get; set; }
+        public decimal? RevenueDistributionValue { get; set; }
+
+        public string? AvgbillingText { get; set; }
+        public string? CorporateEventText { get; set; }
+        public string? FamilyeventbillingText { get; set; }
+        public string? RevenueDistributionText { get; set; }
+
+
+    }
+
     public class CategoryRating
     {
         public string? CategoryName { get; set; }
@@ -98,7 +113,7 @@
         public int TotalFeedbacks { get; set; }
         public decimal AverageRating { get; set; }
         public decimal NegativeFeedbackPercent { get; set; }
-        public string FeedbackType { get; set; }
+        public string? FeedbackType { get; set; }
     }
 
     public class RatingsOverTimeResponse

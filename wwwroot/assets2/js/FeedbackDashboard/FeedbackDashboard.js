@@ -1,9 +1,11 @@
-﻿$(document).ready(function () {
+﻿
+$(document).ready(function () {
     loadFeedbackCounts("thismonth", "", "");
     loadCategoryWiseRatings("thismonth");
     loadRatingBreakdown("thismonth");
     loadRatingsOverTime("thismonth");
     loadFeedbackDashboard();
+    loadDashboardEventInsights();
 
 });
 
@@ -251,7 +253,6 @@ $(".chart-filter-RatingBreakdown .dropdown-item").on("click", function (e) {
     loadRatingBreakdown(duration);
 });
 
-
 function loadRatingsOverTime(monthDuration = "thismonth") {
 
     $.ajax({
@@ -389,5 +390,46 @@ function loadFeedbackDashboard() {
     });
 }
 
+function loadDashboardEventInsights() {
+    $.ajax({
+        url: '/api/FeedbackDashboard/GetDashboardEventInsights',
+        type: 'POST',
+        success: function (response) {
+
+            console.log("API response:", response);
+
+            if (response.status === "Success" && response.data) {
+
+                let d = response.data;
+
+                /* ---------- Card 1 ---------- */
+                $('#insightTitle1').text(d.AvgbillingText);
+                $('#totalRevenue').text('₹' + d.AvgbillingValue);
+                $('#totalVisits').text(d.RevenueDistributionValue); // example static
+
+                /* ---------- Card 2 ---------- */
+                $('#RevenueText').text(d.RevenueDistributionText);
+                $('#customerPercentValue').text(d.RevenueDistributionValue + '%');
+                $('#revenuePercent').text(d.RevenueDistributionValue + '%');
+
+                /* ---------- Card 3 ---------- */
+                $('#avgordertext').text(d.CorporateEventText);
+                $('#avgOrderValueAmount').text(d.CorporateEventValue);
+                $('#avgItems').text('1'); // static example
+
+                /* ---------- Card 4 ---------- */
+                $('#customervisittext').text(d.FamilyeventbillingText);
+                $('#visitFrequencyValue').text(d.FamilyeventbillingValue);
+            }
+        },
+        error: function (err) {
+            console.error("Error loading dashboard insights", err);
+        }
+    });
+}
+
+
+
+   
 
 

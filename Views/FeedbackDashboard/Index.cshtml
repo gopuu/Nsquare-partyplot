@@ -149,7 +149,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-md-8">
                         <div class="row g-4">
                             <div class="col-md-6">
@@ -234,30 +233,25 @@
                             <!-- 3 -->
                             <!-- Event Hosts Card -->
                             <div class="col-md-6">
-                                <div class="card mt-4 border-0 feedback-card">
+                                <div class="card mt-4 border-0 feedback-card host-card">
 
-                                    <div class="card-header bg-transparent border-0 pb-0">
-                                        <h5 class="fw-semibold mb-0" id="hostTitle">Feedback from Event Hosts</h5>
+                                    <div class="card-header bg-transparent border-0 pb-0 d-flex align-items-center">
+                                        <h5 class="fw-semibold mb-0" id="hostTitle">Event Hosts</h5>
                                     </div>
 
                                     <div class="card-body pt-3">
-                                        <div class="d-flex align-items-center mb-4 d-none">
-                                            <span class="emoji">😊</span>
-                                            <span class="fw-semibold ms-2">Feedback</span>
-                                        </div>
-
                                         <div class="row text-center">
                                             <div class="col-4">
                                                 <div class="stat-value" id="hostTotal">0</div>
-                                                <div class="stat-label">Total Feedbacks</div>
+                                                <div class="stat-label">Total</div>
                                             </div>
                                             <div class="col-4">
                                                 <div class="stat-value" id="hostAvg">0</div>
-                                                <div class="stat-label">Average Rating</div>
+                                                <div class="stat-label">Avg Rating</div>
                                             </div>
                                             <div class="col-4">
-                                                <div class="stat-value" id="hostNegative">0%</div>
-                                                <div class="stat-label">Negative Feedback</div>
+                                                <div class="stat-value negative" id="hostNegative">0%</div>
+                                                <div class="stat-label">Negative</div>
                                             </div>
                                         </div>
                                     </div>
@@ -265,32 +259,26 @@
                                 </div>
                             </div>
 
-                            <!-- Visitors Card -->
                             <div class="col-md-6">
-                                <div class="card mt-4 border-0 feedback-card">
+                                <div class="card mt-4 border-0 feedback-card visitor-card">
 
-                                    <div class="card-header bg-transparent border-0 pb-0">
-                                        <h5 class="fw-semibold mb-0" id="visitorTitle">Feedback from Visitors</h5>
+                                    <div class="card-header bg-transparent border-0 pb-0 d-flex align-items-center">
+                                        <h5 class="fw-semibold mb-0" id="visitorTitle">Visitors</h5>
                                     </div>
 
                                     <div class="card-body pt-3">
-                                        <div class="d-flex align-items-center mb-4 d-none">
-                                            <span class="emoji">😊</span>
-                                            <span class="fw-semibold ms-2">Feedback</span>
-                                        </div>
-
                                         <div class="row text-center">
                                             <div class="col-4">
                                                 <div class="stat-value" id="visitorTotal">0</div>
-                                                <div class="stat-label">Total Feedbacks</div>
+                                                <div class="stat-label">Total</div>
                                             </div>
                                             <div class="col-4">
                                                 <div class="stat-value" id="visitorAvg">0</div>
-                                                <div class="stat-label">Average Rating</div>
+                                                <div class="stat-label">Avg Rating</div>
                                             </div>
                                             <div class="col-4">
-                                                <div class="stat-value" id="visitorNegative">0%</div>
-                                                <div class="stat-label">Negative Feedback</div>
+                                                <div class="stat-value negative" id="visitorNegative">0%</div>
+                                                <div class="stat-label">Negative</div>
                                             </div>
                                         </div>
                                     </div>
@@ -300,9 +288,128 @@
 
                         </div>
                     </div>
-
                 </div>
 
+                <div class="mb-3 py-5">
+                    <h4 class="fw-semibold mb-3"> Top insights for you</h4>
+                    <div class="row g-3">
+                        <!-- Card 1 -->
+                        <div class="col-md-3">
+                            <div class="card insight-card h-100">
+                                <!-- HEADER -->
+                                <div class="card-header bg-transparent border-0
+                                    d-flex justify-content-between align-items-center
+                                    pb-3 mb-0">
+                                    <h5 class="mb-0">
+                                        <span id="insightTitle1">Your Overall avg. billing value</span>
+                                    </h5>
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+                                <!-- BODY -->
+                                <div class="card-body pt-1">
+                                    <h4 id="totalRevenue" class="mt-0 mb-1">₹100</h4>
+                                    <p class="text-muted mb-2">
+                                        revenue and <span id="totalVisits">123</span> visits via Reelo 🚀
+                                    </p>
+                                    <img src="~/assets2/img/avgbill.png" class="img-fluid rounded img_logo">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Card 2 -->
+                        <div class="col-md-3">
+                            <div class="card insight-card h-100">
+
+                                <div class="card-header bg-transparent border-0
+                                        d-flex justify-content-between align-items-center
+                                        pb-3 mb-0">
+                                    <h5 class="mb-0">
+                                        <span id="RevenueText">Revenue Distribution</span>
+                                    </h5>
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+
+                                <div class="card-body pt-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div class="text-center">
+                                            <img src="~/assets2/img/corporate_avgbillhigh.png"
+                                                 class="img-fluid img_logo_revenue1 mb-1">
+                                            <h4 id="customerPercentValue" class="mt-0 mb-0">0%</h4>
+                                            <small class="text-muted">customers contribute</small>
+                                        </div>
+
+                                        <div class="text-center">
+                                            <img src="~/assets2/img/corporate_avgbilllow.png"
+                                                 class="img-fluid img_logo_revenue2 mb-1">
+                                            <h4 id="revenuePercent" class="mt-0 mb-0">0%</h4>
+                                            <small class="text-muted">of total revenue</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <!-- Card 3 -->
+                        <div class="col-md-3">
+                            <div class="card insight-card h-100">
+
+                                <div class="card-header bg-transparent border-0
+                                    d-flex justify-content-between align-items-center
+                                    pb-3 mb-0">
+                                    <h5 class="mb-0">
+                                        <span id="avgordertext">Avg Order Value</span>
+                                    </h5>
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+
+                                <div class="card-body pt-1">
+                                    <p class="mt-0 mb-2">
+                                        ₹<span id="avgOrderValueAmount">0</span>
+                                        with customers ordering
+                                        <strong><span id="avgItems">0</span></strong>
+                                        items per order 💰
+                                    </p>
+
+                                    <img src="~/assets2/img/fmiyavg.png"
+                                         class="img-fluid rounded img_logo_corporate">
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <!-- Card 4 -->
+                        <div class="col-md-3">
+                            <div class="card insight-card h-100">
+
+                                <div class="card-header bg-transparent border-0
+                                        d-flex justify-content-between align-items-center
+                                        pb-3 mb-0">
+                                    <h5 class="mb-0">
+                                        <span id="customervisittext">Customer Visits</span>
+                                    </h5>
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+
+                                <div class="card-body pt-1">
+                                    <p class="mt-0 mb-2">
+                                        Customers visit on average
+                                        <strong><span id="visitFrequencyValue">0</span></strong>
+                                        time(s) a year 🙂
+                                    </p>
+
+                                    <img src="~/assets2/img/customeravg.png"
+                                         class="img-fluid rounded img_logo_family">
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
                 <!-- Dynamic Widgets -->
                 <div id="dashboard-widgets" class="row g-3"></div>
             </div>
@@ -314,3 +421,7 @@
     <script src="~/assets2/js/feedbackdashboard/feedbackdashboard.js" asp-append-version="true"></script>
 
 }
+
+
+
+
