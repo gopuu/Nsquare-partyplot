@@ -116,7 +116,6 @@ $(function () {
             ProformaInvoiceNo: proformaNo,
             WithHeader: true
         };
-
         generateInvoicePdf(request);
     });
     //PDF PROFORMA INVOICE -- END
@@ -134,7 +133,6 @@ $(function () {
             GSTInvoiceNo: invoiceNo,   // GST invoice
             WithHeader: true
         };
-
         generateInvoicePdf(request);
     });
     //PDF INVOICE -- END
@@ -220,7 +218,7 @@ $(function () {
             BalanceAmount: parseFloat($('#balanceAmount').val()) || 0,
 
             JSON_Items: items,
-            ActionBy: 1 // logged-in user id
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
         console.log("save payload:", request);
 
@@ -259,61 +257,61 @@ $(function () {
 function addItemRow() {
     const row = `
         <tr>
-            <td class="text-center col-index"></td>
+            <td class="text-center col-index p-1"></td>
 
-            <td class="col-desc">
+            <td class="col-desc p-1">
                 <input type="text" class="form-control form-control-sm desc">
             </td>
 
-            <td class="col-hsn">
+            <td class="col-hsn p-1">
                 <input type="text" class="form-control form-control-sm hsn">
             </td>
 
-            <td class="col-rate">
+            <td class="col-rate p-1">
                 <input type="number" class="form-control form-control-sm text-end rate calc" value="0">
             </td>
 
-            <td class="col-qty">
+            <td class="col-qty p-1">
                 <input type="number" class="form-control form-control-sm text-end qty calc" value="1">
             </td>
 
-            <td class="col-subtotal">
+            <td class="col-subtotal p-1">
                 <input type="number" class="form-control form-control-sm text-end subtotal calc" value="0">
             </td>
 
-            <td class="col-discount-rate">
+            <td class="col-discount-rate p-1">
                 <input type="number" class="form-control form-control-sm text-end discountrate calc" value="0">
             </td>
 
-            <td class="col-discount-type">
+            <td class="col-discount-type p-1">
                 <input type="number" class="form-control form-control-sm text-end discounttype calc" value="0">
             </td>
 
-            <td class="col-discount-amount">
+            <td class="col-discount-amount p-1">
                 <input type="number" class="form-control form-control-sm text-end discountamount calc" value="0">
             </td>
 
-            <td class="col-taxable">
+            <td class="col-taxable p-1">
                 <input type="number" class="form-control form-control-sm text-end taxable calc" value="0">
             </td>
 
-            <td class="col-gst">
+            <td class="col-gst p-1">
                 <input type="number" class="form-control form-control-sm text-end gst calc" value="0">
             </td>
 
-            <td class="col-tax">
+            <td class="col-tax p-1">
                 <input type="number" class="form-control form-control-sm text-end cgst" readonly>
             </td>
 
-            <td class="col-tax">
+            <td class="col-tax p-1">
                 <input type="number" class="form-control form-control-sm text-end sgst" readonly>
             </td>
 
-            <td class="col-total">
+            <td class="col-total p-1">
                 <input type="number" class="form-control form-control-sm text-end fw-bold total" readonly>
             </td>
 
-            <td class="text-center col-action">
+            <td class="text-center col-action p-1">
                 <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
             </td>
         </tr>
@@ -533,74 +531,74 @@ function fetchInvoiceByBookingId(bookingId) {
 
                     const row = `
                         <tr>
-                            <td class="text-center col-index"></td>
+                            <td class="text-center col-index p-1"></td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="text" class="form-control form-control-sm desc"
                                        value="${item.Item_Description ?? ''}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="text" class="form-control form-control-sm hsn"
                                        value="${item.HSN ?? ''}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end rate calc"
                                        value="${item.Rate ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end qty calc"
                                        value="${item.Qty ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end subtotal"
                                        value="${item.SubTotal ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end discountrate"
                                        value="${item.DiscountRate ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end discounttype"
                                        value="${item.DiscounType ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end discountamount"
                                        value="${item.DiscountAmount ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end taxable"
                                        value="${item.Taxable ?? 0}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end gst"
                                        value="${gstPercent}">
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end cgst"
                                        value="${(item.CGST ?? 0).toFixed(2)}" readonly>
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end sgst"
                                        value="${(item.SGST ?? 0).toFixed(2)}" readonly>
                             </td>
 
-                            <td>
+                            <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end fw-bold total"
                                        value="${(item.Total ?? 0).toFixed(2)}" readonly>
                             </td>
 
-                            <td class="text-center">
+                            <td class="text-center p-1">
                                 <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
                             </td>
                         </tr>
@@ -1060,46 +1058,3 @@ function loadState() {
     });
 }    
 //STATE DROPDOWN --- END ------------------------
-
-//INVOICE REPORT MODAL --- START ------------------------
-function generateInvoicePdf(request) {
-
-    $.ajax({
-        url: '/api/Report/DownloadCustomerInvoiceReport',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(request),
-        beforeSend: function () {
-            Swal.fire({
-                title: 'Generating PDF...',
-                text: 'Please wait',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-        },
-        success: function (res) {
-            Swal.close();
-
-            if (res.status === 'Success' && res.data?.FileUrl) {
-                const link = document.createElement('a');
-                link.href = res.data.FileUrl;
-                link.download = '';           // 🔑 forces download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Failed',
-                    text: res.message || 'Failed to generate invoice PDF'
-                });
-            }
-        },
-        error: function (xhr, status, error) {
-            Swal.close();
-            handleApiError(xhr, status, error, "Invoice PDF generation failed");
-        }
-    });
-}
-
-//INVOICE REPORT MODAL --- END ------------------------

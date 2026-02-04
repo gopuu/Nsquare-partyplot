@@ -1,7 +1,9 @@
 ﻿/* Extra Extra Large Modal */
 .modal-xxl {
     max-width: 98%; /* or 1320px */
+    --bs-modal-width: 98%;
 }
+
 
 /*MASTER color - start*/
 .master_link .dropdown-link span {

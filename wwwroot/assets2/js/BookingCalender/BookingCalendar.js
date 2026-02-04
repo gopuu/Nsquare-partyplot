@@ -1,6 +1,10 @@
 ﻿
 // Toggle editors visibility
 let editorsInitialized = false;
+var invoiceNo = 0;
+var proformaInvoiceNo = 0;
+var gstInvoiceNo = 0;
+let invoiceType = null;
 
 document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
     const container = document.getElementById('OtherCharges_editorsContainer');
@@ -1718,6 +1722,28 @@ const bookingModal = new bootstrap.Modal(bookingModalEl);
 const bookingReportModalEl = document.getElementById("bookingReportModal");
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 
+function closeBookingReportModal() {
+    const bookingReportModal_local = document.getElementById('bookingReportModal');
+    bookingReportModal_local.classList.remove("show");
+    bookingReportModal_local.style.display = "none";
+    bookingReportModal_local.setAttribute("aria-hidden", "true");
+
+    // FULL cleanup
+    document.body.classList.remove("modal-open");
+    document.body.style.removeProperty("padding-right");
+
+    document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+}
+function openBookingReportModal() {
+    const bookingReportModal_local = document.getElementById('bookingReportModal');
+    bookingReportModal_local.style.display = "block";
+    bookingReportModal_local.classList.add("show");
+    bookingReportModal_local.removeAttribute("aria-hidden");
+
+    document.body.classList.add("modal-open");
+}
+
+
 document.getElementById("bookmapBtn").addEventListener("click", () => {
     location.reload();
     //console.log("add new booking");
@@ -1865,6 +1891,9 @@ document.addEventListener("DOMContentLoaded", function () {
     loadSubEventList();
     loadFoodPackageList();
 
+    getNextInvoiceNumbers();
+    loadState();
+
     // When Addon Modal is about to open
     const addonModal = document.getElementById('addonChargeModal');
     const bookingModal = document.getElementById('bookingModal');
@@ -1874,6 +1903,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
     const foodwestageModal = document.getElementById('foodWastageModal');
     const vendorWorkOrderModal = document.getElementById('vendorWorkOrderModal');
+
+    //hide booking report modal --- START ----------------
+    // ESC key handler
+    //document.addEventListener("keydown", function (e) {
+    //    if (e.key === "Escape") {
+    //        if (bookingReportModal.classList.contains("show")) {
+    //            closeBookingReportModal();
+    //        }
+    //    }
+    //});
+    //hide booking report modal --- END ----------------
 
     // Create booking modal instance manually
     const bookingModalInstance = new bootstrap.Modal(bookingModal);
@@ -1924,8 +1964,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (backdrop) backdrop.style.display = "block";
     });
     //hide/show PAYMENT MODAL ----- END --------------------------
-
-
 
     //hide/show FoodWastage MODAL ----- START --------------------------
     foodwestageModal.addEventListener('show.bs.modal', function () {
@@ -2044,6 +2082,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     //hide cancelBookingModal MODAL ----- END--------------------------
 
+    //hide invoice MODAL ----- START --------------------------
+    $("#invoiceModal").on("hidden.bs.modal", function () {
+        //console.log("openedFromReport:", openedFromReport);
+        if (openedFromReport) {
+            openedFromReport = false;
+            //$("#bookingReportModal").modal("show");
+            bookingReportModal.classList.add("show");
+            bookingReportModal.style.display = "block";
+        }
+    });
+    //hide invoice MODAL ----- END--------------------------
+
     //hide/show MENU MODAL ----- START --------------------------
     menuModal.addEventListener('show.bs.modal', function () {
         // Just hide visually (do not destroy modal state)
@@ -2065,7 +2115,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (backdrop) backdrop.style.display = "block";
     });
     //hide/show MENU MODAL ----- END --------------------------
-
 
     //Menu Item - START ----- START ---------------------------
     $('#menuModal').on('click', '.btn-success', function () {
@@ -2190,18 +2239,101 @@ document.addEventListener("DOMContentLoaded", function () {
         updateBookingDiscount();
     });
 
-
     //SAVE BOOKING ------ START ------------------------------
     $("#btnBook").on("click", function () { saveBooking(); });
     $("#btnReset").on("click", function () { resetBooking(); });
     //SAVE BOOKING ------ END --------------------------------
 
     //BOOKING REPORT MODAL ---- START ------------------------------------------------
+
+    const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    // 🧾 Invoice Generate
+    document.getElementById("btnInvoiceGenerate").addEventListener("click", function () {
+         const bookingId = getBookingId();
+         console.log("📄 Invoice Generate clicked - Booking ID:", bookingId);
+
+        const btn_invoiceNo = getInvoiceNoFromButton("btnInvoiceGenerate");
+        console.log("Invoice No:", btn_invoiceNo);
+
+        //download invoice
+        if (btn_invoiceNo > 0) {
+            const request = {
+                BookingId: bookingId,
+                InvoiceNo: btn_invoiceNo,
+                ProformaInvoiceNo: null,
+                WithHeader: true
+            };
+            generateInvoicePdf(request);
+            return;
+        }
+
+        openedFromReport = true;
+        // Just hide visually (do not destroy modal state)
+        bookingReportModal.classList.remove("show");
+        bookingReportModal.style.display = "none";
+
+        resetForm_InvoiceModal();
+        $('#bookingId_InvoiceModal').val(bookingId);
+
+        invoiceType = "invoice";
+        $('#invoiceModalTitle_InvoiceModal').text('Create Invoice #' + invoiceNo);
+        invoiceModal.show();
+
+        fetchInvoiceByBookingId(bookingId);
+    });
+
+    // 🧾 Proforma Invoice Generate
+    document.getElementById("btnProformaInvoiceGenerate").addEventListener("click", function () {
+        const bookingId = getBookingId();
+        console.log("📄 Proforma Invoice Generate clicked - Booking ID:", bookingId);
+
+        const proformaNo = getInvoiceNoFromButton("btnProformaInvoiceGenerate");
+        console.log("Proforma Invoice No:", proformaNo);
+
+        //download invoice
+        if (proformaNo > 0) {
+            const request = {
+                BookingId: bookingId,
+                InvoiceNo: null,
+                ProformaInvoiceNo: proformaNo,
+                WithHeader: true
+            };
+            generateInvoicePdf(request);
+            return;
+        }
+
+        openedFromReport = true;
+        // Just hide visually (do not destroy modal state)
+        bookingReportModal.classList.remove("show");
+        bookingReportModal.style.display = "none";
+
+        resetForm_InvoiceModal();
+        $('#bookingId_InvoiceModal').val(bookingId);
+
+        invoiceType = "proforma";
+        $('#invoiceModalTitle_InvoiceModal').text('Create Proforma Invoice #' + proformaInvoiceNo);
+        invoiceModal.show();
+
+        fetchInvoiceByBookingId(bookingId);
+    });
+
+    function getInvoiceNoFromButton(buttonId) {
+        const text = document
+            .querySelector(`#${buttonId} .btn-text`)
+            ?.textContent
+            ?.trim();
+
+        // Expected formats:
+        // "Invoice #123"
+        // "Proforma #456"
+        if (!text) return 0;
+
+        const match = text.match(/#(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+    }
+
+
     // 🧾 Download Function Prospect
-    // document.getElementById("btnDownloadPDF").addEventListener("click", function () {
-    //     const bookingId = getBookingId();
-    //     console.log("📄 Download Function Prospect clicked - Booking ID:", bookingId);
-    // });
     document.getElementById("btnDownloadPDF").addEventListener("click", function () {
         showReportOptions();
     });
@@ -2272,23 +2404,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     let wastage = parseFloat(item.WastageKg || 0);
                     total += wastage;
                     let row = `
-                    <tr>
-                        <td class="ps-2">${index + 1}</td>
-                        <td>
-                            ${item.MenuItem_Name}
-                            <input type="hidden" class="menuItemId" value="${item.MenuItem_Id}">
-                        </td>
-                        <td>
-                            <input type="number"
-                                   class="form-control text-end wastageInput"
-                                   value="${wastage}"
-                                   min="0"
-                                   step="0.01">
-                        </td>
-                    </tr>
-                `;
+                        <tr>
+                            <td class="ps-2">${index + 1}</td>
+                            <td>
+                                ${item.MenuItem_Name}
+                                <input type="hidden" class="menuItemId" value="${item.MenuItem_Id}">
+                            </td>
+                            <td>
+                                <input type="number"
+                                       class="form-control text-end wastageInput"
+                                       value="${wastage}"
+                                       min="0"
+                                       step="0.01">
+                            </td>
+                        </tr>
+                    `;
 
-                $("#tblFoodWastage tbody").append(row);
+                    $("#tblFoodWastage tbody").append(row);
                 });
                 $("#txtTotalWastage").val(total.toFixed(2));
                 $("#foodWastageModal").modal("show");
@@ -2672,6 +2804,470 @@ Your feedback helps us improve our service.`;
 
     //BOOKING REPORT MODAL ---- END  -------------------------------------------------
 });
+
+// Invoice GENEARTE -- START --------------------------------
+//ITEMS ROW --- START
+$('#btnAddItem_InvoiceModal').on('click', function () {
+    addItemRow();
+});
+
+// On input change
+$(document).on('input', '.calc_InvoiceModal', function () {
+    recalcRow($(this).closest('tr'));
+    recalcAll();
+});
+
+// On GST switch toggle
+$('#isGstIncluded_InvoiceModal').on('change', function () {
+    $('#invoiceItemsBody_InvoiceModal tr').each(function () {
+        recalcRow($(this));
+    });
+    recalcAll();
+});
+
+// On delete row
+$(document).on('click', '.btn-delete-row_InvoiceModal', function () {
+    $(this).closest('tr').remove();
+    updateRowSequence();
+    recalcAll();
+});
+//ITEMS ROW --- END
+
+function addItemRow() {
+    const row = `
+        <tr>
+            <td class="text-center col-index_InvoiceModal"></td>
+
+            <td class="col-desc_InvoiceModal">
+                <input type="text" class="form-control form-control-sm desc_InvoiceModal">
+            </td>
+
+            <td class="col-hsn_InvoiceModal">
+                <input type="text" class="form-control form-control-sm hsn_InvoiceModal">
+            </td>
+
+            <td class="col-rate_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end rate_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-qty_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end qty_InvoiceModal calc_InvoiceModal" value="1">
+            </td>
+
+            <td class="col-subtotal_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end subtotal_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-discount-rate_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end discountrate_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-discount-type_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end discounttype_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-discount-amount_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end discountamount_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-taxable_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end taxable_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-gst_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end gst_InvoiceModal calc_InvoiceModal" value="0">
+            </td>
+
+            <td class="col-tax_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end cgst_InvoiceModal" readonly>
+            </td>
+
+            <td class="col-tax_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end sgst_InvoiceModal" readonly>
+            </td>
+
+            <td class="col-total_InvoiceModal">
+                <input type="number" class="form-control form-control-sm text-end fw-bold total_InvoiceModal" readonly>
+            </td>
+
+            <td class="text-center col-action_InvoiceModal">
+                <i class="fa fa-times text-danger btn-delete-row_InvoiceModal" role="button"></i>
+            </td>
+        </tr>
+    `;
+
+    $('#invoiceItemsBody_InvoiceModal').append(row);
+    updateRowSequence();
+}
+function updateRowSequence() {
+    $('#invoiceItemsBody_InvoiceModal tr').each(function (index) {
+        $(this).find('.col-index_InvoiceModal').text(index + 1);
+    });
+}
+function recalcRow(row) {
+
+    const rate = parseFloat(row.find('.rate_InvoiceModal').val()) || 0;
+    const qty = parseFloat(row.find('.qty_InvoiceModal').val()) || 0;
+    const gstRate = parseFloat(row.find('.gst_InvoiceModal').val()) || 0;
+
+    const isGstIncluded = $('#isGstIncluded_InvoiceModal').is(':checked');
+    const gstFactor = 1 + (gstRate / 100);
+
+    let taxable = 0;
+    let gstAmount = 0;
+
+    if (isGstIncluded) {
+        // Rate already includes GST
+        const gross = rate * qty;
+        taxable = gross / gstFactor;
+        gstAmount = gross - taxable;
+    } else {
+        // GST added on top
+        taxable = rate * qty;
+        gstAmount = taxable * gstRate / 100;
+    }
+
+    const cgst = gstAmount / 2;
+    const sgst = gstAmount / 2;
+    const total = taxable + gstAmount;
+
+    row.find('.cgst_InvoiceModal').val(cgst.toFixed(2));
+    row.find('.sgst_InvoiceModal').val(sgst.toFixed(2));
+    row.find('.total_InvoiceModal').val(total.toFixed(2));
+}
+function recalcAll() {
+
+    let subTotal = 0;
+    let totalGST = 0;
+
+    const isGstIncluded = $('#isGstIncluded_InvoiceModal').is(':checked');
+
+    $('#invoiceItemsBody_InvoiceModal tr').each(function () {
+
+        const row = $(this);
+        const rate = parseFloat(row.find('.rate_InvoiceModal').val()) || 0;
+        const qty = parseFloat(row.find('.qty_InvoiceModal').val()) || 0;
+        const gstRate = parseFloat(row.find('.gst_InvoiceModal').val()) || 0;
+
+        const gstFactor = 1 + (gstRate / 100);
+        let taxable = 0;
+        let gstAmount = 0;
+
+        if (isGstIncluded) {
+            const gross = rate * qty;
+            taxable = gross / gstFactor;
+            gstAmount = gross - taxable;
+        } else {
+            taxable = rate * qty;
+            gstAmount = taxable * gstRate / 100;
+        }
+
+        subTotal += taxable;
+        totalGST += gstAmount;
+    });
+
+    const discount = parseFloat($('#bookingDiscount_InvoiceModal').val()) || 0;
+    const grandTotal = subTotal + totalGST - discount;
+
+    $('#subTotal_InvoiceModal').val(subTotal.toFixed(2));
+    $('#totalTaxable_InvoiceModal').val(subTotal.toFixed(2));
+    $('#totalGST_InvoiceModal').val(totalGST.toFixed(2));
+    $('#grandTotal_InvoiceModal').val(grandTotal.toFixed(2));
+
+    const advance = parseFloat($('#advancePaid_InvoiceModal').val()) || 0;
+    $('#balanceAmount_InvoiceModal').val((grandTotal - advance).toFixed(2));
+}
+
+//proforma & invoice -- fetch -- START
+function fetchInvoiceByBookingId(bookingId) {
+
+    $.ajax({
+        url: '/api/CustomerInvoice/GetCustomerInvoiceByBookingId', // adjust if needed
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ BookingId: bookingId }),
+        success: function (res) {
+            console.log("fetch ByBookingId res:", res);
+            if (res.status !== 'Success' || !res.data) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invoice Not Found',
+                    text: 'Invoice data not found',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            var data = res.data;
+            /* ---------- MASTER FIELDS ---------- */
+            $('#customerName_InvoiceModal').val(data.ClientName);
+            $('#invoiceDate_InvoiceModal').val(data.InvoiceDate);
+            $('#gstin_InvoiceModal').val(data.GSTIN);
+            $('#emailId_InvoiceModal').val(data.Email);
+            $('#address_InvoiceModal').val(data.Address);
+            $('#customerState_InvoiceModal').val(data.ClientStateId);
+
+            $('#isGstIncluded_InvoiceModal').prop('checked', data.IsGSTIncluded === true);
+
+            $('#invoiceItemsBody_InvoiceModal').empty();
+
+            if (data.ItemsJson && data.ItemsJson.length > 0) {
+
+                data.ItemsJson.forEach(item => {
+
+                    const taxable = parseFloat(item.Taxable) || 0;
+                    const gstPercent = taxable > 0 && item.GSTRate ? ((item.GSTRate / taxable) * 100).toFixed(2) : 0;
+
+                    const row = `
+                        <tr>
+                            <td class="text-center col-index_InvoiceModal"></td>
+
+                            <td>
+                                <input type="text" class="form-control form-control-sm desc_InvoiceModal"
+                                       value="${item.Item_Description ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="text" class="form-control form-control-sm hsn_InvoiceModal"
+                                       value="${item.HSN ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end rate_InvoiceModal calc_InvoiceModal"
+                                       value="${item.Rate ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end qty_InvoiceModal calc_InvoiceModal"
+                                       value="${item.Qty ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end subtotal_InvoiceModal"
+                                       value="${item.SubTotal ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end discountrate_InvoiceModal"
+                                       value="${item.DiscountRate ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end discounttype_InvoiceModal"
+                                       value="${item.DiscounType ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end discountamount_InvoiceModal"
+                                       value="${item.DiscountAmount ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end taxable_InvoiceModal"
+                                       value="${item.Taxable ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end gst_InvoiceModal"
+                                       value="${gstPercent}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end cgst_InvoiceModal"
+                                       value="${(item.CGST ?? 0).toFixed(2)}" readonly>
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end sgst_InvoiceModal"
+                                       value="${(item.SGST ?? 0).toFixed(2)}" readonly>
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end fw-bold total_InvoiceModal"
+                                       value="${(item.Total ?? 0).toFixed(2)}" readonly>
+                            </td>
+
+                            <td class="text-center p-1">
+                                <i class="fa fa-times text-danger btn-delete-row_InvoiceModal" role="button"></i>
+                            </td>
+                        </tr>
+                        `;
+
+                    $('#invoiceItemsBody_InvoiceModal').append(row);
+                });
+
+                updateRowSequence();
+                recalcAll();
+            } else {
+                addItemRow(); // empty invoice
+            }
+            /* ---------- ITEMS ---------- */
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Invoice by BookingId Failed");
+        }
+    });
+}
+//proforma & invoice -- fetch -- END
+function resetForm_InvoiceModal() {
+    invoiceType = null;
+    $('#invoiceId_InvoiceModal').val(0);
+    $('#bookingId_InvoiceModal').val(0);
+    $('#invoiceNo_InvoiceModal').val('');
+    $('#invoiceDate_InvoiceModal').val('');
+    $('#customerName_InvoiceModal').val('');
+    $('#gstin_InvoiceModal').val('');
+    $('#emailId_InvoiceModal').val('');
+    $('#address_InvoiceModal').val('');
+    $('#subTotal_InvoiceModal').val(0);
+    $('#totalGST_InvoiceModal').val(0);
+    $('#grandTotal_InvoiceModal').val(0);
+    $('#invoiceItemsBody_InvoiceModal').empty();
+    $('#btnSaveInvoice_InvoiceModal').prop('disabled', false);
+}
+
+//SAVE
+$('#btnSaveInvoice_InvoiceModal').on('click', function () {
+    const items = [];
+    $('#invoiceItemsBody_InvoiceModal tr').each(function (index) {
+        const row = $(this);
+
+        items.push({
+            SrNo: index + 1,
+            Description: row.find('.desc_InvoiceModal').val(),
+            HSN: row.find('.hsn_InvoiceModal').val(),
+            Rate: parseFloat(row.find('.rate_InvoiceModal').val()) || 0,
+            Qty: parseFloat(row.find('.qty_InvoiceModal').val()) || 0,
+            SubTotal: parseFloat(row.find('.subtotal_InvoiceModal').val()) || 0,
+
+            DiscountRate: parseFloat(row.find('.discountrate_InvoiceModal').val()) || 0,
+            DiscountTypeId: parseInt(row.find('.discounttype_InvoiceModal').val()) || 0,
+            DiscountAmount: parseFloat(row.find('.discountamount_InvoiceModal').val()) || 0,
+
+            TaxableAmount: parseFloat(row.find('.taxable_InvoiceModal').val()) || 0,
+            GSTRate: parseFloat(row.find('.gst_InvoiceModal').val()) || 0,
+            CGST: parseFloat(row.find('.cgst_InvoiceModal').val()) || 0,
+            SGST: parseFloat(row.find('.sgst_InvoiceModal').val()) || 0,
+
+            Total: parseFloat(row.find('.total_InvoiceModal').val()) || 0
+        });
+    });
+
+    const isGstIncluded = $('#isGstIncluded_InvoiceModal').is(':checked');
+    const request = {
+        Id: parseInt($('#invoiceId_InvoiceModal').val()) || 0,
+        BookingId: parseInt($('#bookingId_InvoiceModal').val()) || 0,
+        InvoiceNo: invoiceType === "invoice" ? invoiceNo : null,
+        ProformaInvoiceNo: invoiceType === "proforma" ? proformaInvoiceNo : null,
+        GSTInvoiceNo: (invoiceType === "invoice" && isGstIncluded) ? gstInvoiceNo : null,
+
+        CustomerName: $('#customerName_InvoiceModal').val(),
+        InvoiceDate: $('#invoiceDate_InvoiceModal').val(),
+        GSTIN: $('#gstin_InvoiceModal').val(),
+        Address: $('#address_InvoiceModal').val(),
+        EmailId: $('#emailId_InvoiceModal').val(),
+        CustomerState: parseInt($('#customerState_InvoiceModal').val()) || 0,
+
+        SubTotal: parseFloat($('#subTotal_InvoiceModal').val()) || 0,
+        BookingDiscount: parseFloat($('#bookingDiscount_InvoiceModal').val()) || 0,
+        TotalTaxableAmount: parseFloat($('#totalTaxable_InvoiceModal').val()) || 0,
+        TotalDiscountAcrossAllServices: 0,     // if not used
+        TotalGST: parseFloat($('#totalGST_InvoiceModal').val()) || 0,
+        TotalVAT: 0,
+        GrandTotal: parseFloat($('#grandTotal_InvoiceModal').val()) || 0,
+        RoundOff: parseFloat($('#roundOff_InvoiceModal').val()) || 0,
+        TotalAdvancePaid: parseFloat($('#advancePaid_InvoiceModal').val()) || 0,
+        BalanceAmount: parseFloat($('#balanceAmount_InvoiceModal').val()) || 0,
+
+        JSON_Items: items,
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
+
+    };
+    console.log("save invoice payload:", request);
+
+    $.ajax({
+        url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(request),
+        success: function (res) {
+
+            if (res.status === 'Success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved',
+                    text: 'Invoice saved successfully',
+                    confirmButtonText: 'OK'
+                });
+                getNextInvoiceNumbers();
+                //resetForm();
+                $('#btnSaveInvoice_InvoiceModal').prop('disabled', true);
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: res.message || 'Failed to save invoice'
+                });
+            }
+        },
+        error: function (xhr, statue, error) {
+            handleApiError(xhr, statue, error, "Save Invoice Failed");
+        }
+    });
+});
+
+//STATE DROPDOWN --- START ------------------------
+function loadState() {
+    $.ajax({
+        url: "/api/State/GetStateList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            console.log("response state:", response);
+            const $stateDropdowns = $("#customerState_InvoiceModal");
+            $stateDropdowns.html(`<option value="0">-- Select --</option>`);
+            response.data.forEach(s => {
+                $stateDropdowns.append(`<option value="${s.Id}">${s.Name}</option>`);
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "State Fetch Error");
+        }
+
+    });
+}
+//STATE DROPDOWN --- END ------------------------
+
+function getNextInvoiceNumbers() {
+
+    $.ajax({
+        url: '/api/CustomerInvoice/GetCustomerInvoice_NextInvoiceNumbers',
+        type: 'GET',
+        success: function (res) {
+            if (res.status === 'Success' && res.data) {
+                invoiceNo = res.data.NextInvoiceNo;
+                proformaInvoiceNo = res.data.NextProformaInvoiceNo;
+                gstInvoiceNo = res.data.NextGSTInvoiceNo;
+
+                console.log('Invoice No:', invoiceNo);
+                console.log('Proforma Invoice No:', proformaInvoiceNo);
+                console.log('GST Invoice No:', gstInvoiceNo);
+
+                // OPTIONAL: Assign to inputs
+                //$('#invoiceNo').val(invoiceNo);
+                //$('#proformaInvoiceNo').val(proformaInvoiceNo);
+                //$('#gstInvoiceNo').val(gstInvoiceNo);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Invoice Numbers Failed");
+        }
+    });
+}
+// Invoice GENERATE -- /END --------------------------------
+
+
 let openedFromPrepareOrder = false;
 function loadPrepareOrderByBooking(bookingId) {
     var payload = {
@@ -3279,8 +3875,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     // $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
                     // $("#bookingReport_Reference").text(data?.Reference || "—");
 
+                    //data.InvoiceNo, data.ProformaInvoiceNo
+                    setInvoiceButtons(data);
                     //Open REPORT MODAL
+                    console.log("bookingReportModal show");
                     bookingReportModal.show();
+
                 }
                 else if (actionMode === "editData") {
                     resetBooking();
@@ -3441,6 +4041,26 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+
+function setInvoiceButtons(data) {
+
+    // Invoice
+    if ((data.InvoiceNo ?? 0) > 0) {
+        document.querySelector("#btnInvoiceGenerate .btn-text").textContent = `Invoice #${data.InvoiceNo}`;
+    }
+    else {
+        document.querySelector("#btnInvoiceGenerate .btn-text").textContent = `Invoice`;
+    }
+
+    // Proforma Invoice
+    if ((data.ProformaInvoiceNo ?? 0) > 0) {
+        document.querySelector("#btnProformaInvoiceGenerate .btn-text").textContent = `Proforma #${data.ProformaInvoiceNo}`;
+    }
+    else {
+        document.querySelector("#btnProformaInvoiceGenerate .btn-text").textContent = `Proforma Invoice`;
+    }
+}
+
 
 function setTimeFrom24Hr(time24, hourId, minuteId, ampmId) {
     if (!time24) return;

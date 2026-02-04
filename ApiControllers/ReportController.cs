@@ -282,7 +282,7 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= TITLE =================
                 string title = "TAX INVOICE";
-                if (!string.IsNullOrWhiteSpace(request.ProformaInvoiceNo))
+                if (request.ProformaInvoiceNo > 0)
                 {
                     title = "PROFORMA INVOICE";
                 }
@@ -295,8 +295,7 @@ namespace ERPAdmin.ApiControllers
                 infoTable.WidthPercentage = 100;
                 infoTable.SetWidths(new float[] { 50f, 50f });
 
-                string? invoiceNoToShow =
-                    !string.IsNullOrWhiteSpace(inv["ProformaInvoiceNo"]?.ToString())
+                string? invoiceNoToShow = request.ProformaInvoiceNo > 0 //Convert.ToInt64(inv["ProformaInvoiceNo"]) > 0
                         ? inv["ProformaInvoiceNo"].ToString()
                         : inv["InvoiceNo"]?.ToString();
 
@@ -390,8 +389,11 @@ namespace ERPAdmin.ApiControllers
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 Directory.CreateDirectory(folder);
+                
+                string fileName = request.ProformaInvoiceNo > 0 ?
+                    $"ProformaInvoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf" :
+                    $"Invoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
-                string fileName = $"Invoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
 
                 Utils.deleteOldFiles(folder, "Invoice_*.pdf", 60);

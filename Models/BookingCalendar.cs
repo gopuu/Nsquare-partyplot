@@ -3,8 +3,8 @@
     public class CustomerInvoiceReportRequest
     {
         public long BookingId { get; set; }          // CustomerInvoice.Id
-        public string? InvoiceNo { get; set; }     
-        public string? ProformaInvoiceNo { get; set; }     
+        public long? InvoiceNo { get; set; }     
+        public long? ProformaInvoiceNo { get; set; }     
         public bool? WithHeader { get; set; }
     }
 
@@ -174,7 +174,6 @@
     public class BookingModel
     {
         public long? BookingId { get; set; }
-        public long? InvoiceNo { get; set; }
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public string? ShiftCode { get; set; }
@@ -247,6 +246,9 @@
         public string? Booked_On { get; set; }
         public List<GetFoodPackage>? JSON_FoodPackage { get; set; }
         public long? VendorWorkOrder_Count { get; set; }
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+
     }
 
     public class GetFoodPackage

@@ -77,12 +77,12 @@ namespace ERPAdmin.ApiControllers
                     {
                         BookingModel booking = new BookingModel();
                         booking.BookingId = dr["BookingId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BookingId"]);
-                        booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.EventDate = dr["EventDate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["EventDate"]).ToString("yyyy-MM-dd");
                         booking.EventDate_Format = dr["EventDate_Format"] == DBNull.Value ? "" : Convert.ToString(dr["EventDate_Format"]);
                         booking.ShiftCode = dr["ShiftCode"] == DBNull.Value ? "" : Convert.ToString(dr["ShiftCode"]);
                         booking.SlotId = dr["SlotId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["SlotId"]);
                         booking.GSTAccepted = dr["GSTAccepted"] != DBNull.Value && Convert.ToBoolean(dr["GSTAccepted"]);
+
                         booking.BanquetId = dr["BanquetId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BanquetId"]);
                         booking.BanquetName = dr["BanquetName"] == DBNull.Value ? "" : Convert.ToString(dr["BanquetName"]);
                         booking.BanquetPropertyName = dr["BanquetPropertyName"] == DBNull.Value ? "" : Convert.ToString(dr["BanquetPropertyName"]);
@@ -96,6 +96,7 @@ namespace ERPAdmin.ApiControllers
                         booking.StartTime_Full = dr["StartTime_Full"] == DBNull.Value ? "" : Convert.ToString(dr["StartTime_Full"]);
                         booking.EndTime = dr["EndTime"] == DBNull.Value ? "" : Convert.ToString(dr["EndTime"]);
                         booking.EndTime_Full = dr["EndTime_Full"] == DBNull.Value ? "" : Convert.ToString(dr["EndTime_Full"]);
+
                         booking.Client_EnquiryId = dr["Client_EnquiryId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Client_EnquiryId"]);
                         booking.Client_Name = dr["Client_Name"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Name"]);
                         booking.Client_Address = dr["Client_Address"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Address"]);
@@ -103,6 +104,7 @@ namespace ERPAdmin.ApiControllers
                         booking.Client_Contact = dr["Client_Contact"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Contact"]);
                         booking.Client_GSTIN = dr["Client_GSTIN"] == DBNull.Value ? "" : Convert.ToString(dr["Client_GSTIN"]);
                         booking.Client_StateId = dr["Client_StateId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Client_StateId"]);
+
                         booking.Booking_SubEventId = dr["Booking_SubEventId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_SubEventId"]);
                         booking.Booking_SubEventName = dr["Booking_SubEventName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_SubEventName"]);
                         booking.Booking_PAX = dr["Booking_PAX"] == DBNull.Value ? 0 : Convert.ToInt32(dr["Booking_PAX"]);
@@ -113,8 +115,8 @@ namespace ERPAdmin.ApiControllers
                         booking.Booking_TypeId = dr["Booking_TypeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_TypeId"]);
                         booking.Booking_TypeName = dr["Booking_TypeName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_TypeName"]);
                         booking.Booking_IsAgent = dr["Booking_IsAgent"] != DBNull.Value && Convert.ToBoolean(dr["Booking_IsAgent"]);
-                        booking.Payment_ModeId = dr["Payment_ModeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Payment_ModeId"]);
 
+                        booking.Payment_ModeId = dr["Payment_ModeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Payment_ModeId"]);
                         booking.PaymentDetails_TransactionId = dr["PaymentDetails_TransactionId"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_TransactionId"]);
                         booking.PaymentDetails_ChequeBank = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
                         booking.PaymentDetails_ChequeNo = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
@@ -124,6 +126,7 @@ namespace ERPAdmin.ApiControllers
                         booking.Payment_PaidTime = dr["Payment_PaidTime"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_PaidTime"]);
                         booking.Payment_DueDate = dr["Payment_DueDate"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_DueDate"]);
                         booking.Payment_Note = dr["Payment_Note"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_Note"]);
+
                         booking.OtherCharges_Decoration_Amount = dr["OtherCharges_Decoration_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_Decoration_Amount"]);
                         booking.OtherCharges_Decoration_GST = dr["OtherCharges_Decoration_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_Decoration_GST"]);
                         booking.OtherCharges_RoomCharges_Amount = dr["OtherCharges_RoomCharges_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_RoomCharges_Amount"]);
@@ -134,6 +137,7 @@ namespace ERPAdmin.ApiControllers
                         booking.OtherCharges_ProjectorScreen_GST = dr["OtherCharges_ProjectorScreen_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_ProjectorScreen_GST"]);
                         booking.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_BookingNoteForCustomer"]);
                         booking.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_InternalOfficeNote"]);
+
                         booking.PaymentSummary_TaxableAmount = dr["PaymentSummary_TaxableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_TaxableAmount"]);
                         booking.PaymentSummary_CGST = dr["PaymentSummary_CGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_CGST"]);
                         booking.PaymentSummary_SGST = dr["PaymentSummary_SGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_SGST"]);
@@ -143,11 +147,15 @@ namespace ERPAdmin.ApiControllers
                         booking.PaymentSummary_BookingDiscount_Type_Amount = dr["PaymentSummary_BookingDiscount_Type_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_BookingDiscount_Type_Amount"]);
                         booking.PaymentSummary_BookingDiscount_Total = dr["PaymentSummary_BookingDiscount_Total"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_BookingDiscount_Total"]);
                         booking.PaymentSummary_PayableAmount = dr["PaymentSummary_PayableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_PayableAmount"]);
+
                         booking.Booked_By_EmpId = dr["Booked_By_EmpId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booked_By_EmpId"]);
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
                         booking.Booked_On = dr["Booked_On"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_On"]);
                         booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
                         booking.VendorWorkOrder_Count = dr["VendorWorkOrder_Count"] == DBNull.Value ? 0 : Convert.ToInt64(dr["VendorWorkOrder_Count"]);
+
+                        booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
+                        booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);
 
                         bookings.Add(booking);
                     }

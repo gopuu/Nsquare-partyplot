@@ -9,6 +9,7 @@
 
 #tableMain table tbody td {
     font-size: 11px;
+    padding: 0;
 }
 
 /*FILTER -- START*/
@@ -57,7 +58,7 @@
 /* Inputs & selects */
 .invoice-modal-body .form-control-sm,
 .invoice-modal-body .form-select-sm {
-    font-size: 9px;
+    font-size: 11px;
     height: 30px;
     padding: 0.5px;
 }
@@ -161,6 +162,7 @@
 .col-action {
     width: 5px;
     text-align: center;
+    padding: 10px;
 }
 
 /* ================= ALIGNMENT ================= */
