@@ -13,15 +13,14 @@
         public string SubCategoryName { get; set; }
 
         public decimal Amount { get; set; }
-        public DateOnly TransactionDate { get; set; }    // or DateTime if you prefer
-        public string PaymentMode { get; set; }
-        public string ReferenceNo { get; set; }
-        public string Notes { get; set; }
-
-        public string Created_At { get; set; }
-        public long? Created_By { get; set; }
-        public string Updated_At { get; set; }
-        public long? Updated_By { get; set; }
+        public string? TransactionDate { get; set; }
+        public long? PaymentModeId { get; set; }
+        public string? PaymentModeName { get; set; }
+        public string? TransactionId { get; set; }
+        public string? Notes { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
     }
 
     public class GetIncomeTransactionRequest
@@ -40,10 +39,13 @@
         public long CategoryId { get; set; }
         public long? SubCategoryId { get; set; }
         public decimal Amount { get; set; }
-        public string TransactionDate { get; set; }
-        public string PaymentMode { get; set; }
-        public string ReferenceNo { get; set; }
-        public string Notes { get; set; }
+        public string? TransactionDate { get; set; }
+        public long? PaymentModeId { get; set; }
+        public string? TransactionId { get; set; }
+        public string? Notes { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
     }
 
     public class DeleteIncomeTransactionRequest : BaseClass

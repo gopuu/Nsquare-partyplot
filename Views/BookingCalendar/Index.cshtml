@@ -128,9 +128,9 @@
                         <div class="col-md-3">
                             <label class="form-label">Function Start Time</label>
                             <div class="d-flex gap-1">
-                                <input type="number" class="form-control" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;" disabled>
-                                <input type="number" class="form-control" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;" disabled>
-                                <select class="form-select" id="startAMPM" style="width: 100px;" disabled>
+                                <input type="number" class="form-control" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;">
+                                <input type="number" class="form-control" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;">
+                                <select class="form-select" id="startAMPM" style="width: 100px;">
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
                                 </select>
@@ -140,9 +140,9 @@
                         <div class="col-md-3">
                             <label class="form-label">Function End Time</label>
                             <div class="d-flex gap-1">
-                                <input type="number" class="form-control" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;" disabled>
-                                <input type="number" class="form-control" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;" disabled>
-                                <select class="form-select" id="endAMPM" style="width: 100px;" disabled>
+                                <input type="number" class="form-control" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;">
+                                <input type="number" class="form-control" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;">
+                                <select class="form-select" id="endAMPM" style="width: 100px;">
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
                                 </select>
@@ -188,6 +188,8 @@
                                 <option value="0">Select</option>
                             </select>
                         </div>
+
+                        <hr/>
 
                         <!-- Booking Details -->
                         <div class="col-12 mb-1">
@@ -291,59 +293,69 @@
                             <button type="button" id="addFoodBtn" class="btn btn-outline-primary btn-sm mt-2">+ Add more food package</button>
                         </div>
 
+                        <hr/>
+
                         <!-- Other Charges -->
-                        <div class="col-md-7" id="otherCharges">
+                        <div class="col-md-4" id="otherCharges">
                             <!-- Row 1 -->
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
                                 <h6 class="mb-0 text-primary">Other Charges</h6>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-info btn-sm" id="otherCharges_Reset">Reset to 0</button>
+                                    <button type="button" class="btn btn-outline-dark btn-sm" id="otherCharges_Reset">Reset to 0</button>
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="otherCharges_Restore">Restore Defaults</button>
                                 </div>
                             </div>
 
                             <!-- Row 2 -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-3">
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
                                     <label class="small">Decoraton</label>
                                     <input type="number" class="form-control" id="OtherCharges_Decoration_Amount" value="0">
                                 </div>
-                                <div class="col-3">
+                                <div class="col-6">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control" id="OtherCharges_Decoration_GST" value="0" disabled>
                                 </div>
-                                <div class="col-3">
+                            </div>
+
+                            <!-- Row 3 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
                                     <label class="small">Room Charges</label>
                                     <input type="number" class="form-control" id="OtherCharges_RoomCharges_Amount" value="0">
                                 </div>
-                                <div class="col-3">
+                                <div class="col-6">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control" id="OtherCharges_RoomCharges_GST" value="0" disabled>
                                 </div>
                             </div>
 
-                            <!-- Row 3 -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-3">
+                            <!-- Row 4 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
                                     <label class="small">Sound System</label>
                                     <input type="number" class="form-control" id="OtherCharges_SoundSystem_Amount" value="0">
                                 </div>
-                                <div class="col-3">
+                                <div class="col-6">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control" id="OtherCharges_SoundSystem_GST" value="0" disabled>
                                 </div>
-                                <div class="col-3">
+                            </div>
+
+                            <!-- Row 5 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
                                     <label class="small">Projector & Screen</label>
                                     <input type="number" class="form-control" id="OtherCharges_ProjectorScreen_Amount" value="0">
                                 </div>
-                                <div class="col-3">
+                                <div class="col-6">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
                                 </div>
                             </div>
 
                             <!-- Button to toggle editors -->
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <button type="button" id="OtherCharges_ToggleEditorsBtn" class="btn btn-outline-success btn-sm w-100">
                                     <i class="fa fa-pen"></i> Booking Note
                                 </button>
@@ -368,7 +380,7 @@
                         </div>
 
                         <!-- Payment Summary -->
-                        <div class="col-md-5 border-start ps-3">
+                        <div class="col-md-4 border-start ps-3">
                             <h6 class="text-primary">Payment Summary</h6>
                             <table class="table table-borderless mb-0">
                                 <tr class="fw-bold">
@@ -412,67 +424,55 @@
                             </table>
                         </div>
 
-                        <!-- Booking Type & Agent Checkbox-->
-                        <div class="d-flex align-items-center gap-3">
-                            <!-- Booking Type -->
-                            <div class="d-flex flex-column">
-                                <label class="form-label mb-1 ">Booking Type</label>
-                                <select class="form-select form-select-sm" id="BookingType">
-                                    <option value="1">Confirmed</option>
-                                    <option value="2">Tentative</option>
-                                </select>
-                            </div>
-
-                            <!-- Agent Checkbox -->
-                            <div class="form-check mt-4">
-                                <input class="form-check-input" type="checkbox" value="" id="AgentCheck">
-                                <label class="form-check-label" for="agentCheck">
-                                    Agent
-                                </label>
-                            </div>
-                        </div>
-
                         <!-- Payment Details -->
-                        <div class="col-md-12" id="Section_PaymentDetails">
+                        <div class="col-md-4 border-start" id="Section_PaymentDetails">
                             <h6 class="text-primary">Payment Details</h6>
                             <div class="row g-2">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label>Mode</label>
                                     <select class="form-select" id="PaymentDetails_Mode"></select>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-6">
+                                    <label>Account</label>
+                                    <select class="form-select" id="PaymentDetails_AccountId"></select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Paid Time</label>
+                                    <input type="time" class="form-control" id="PaymentDetails_PaidTime">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Amount</label>
+                                    <input type="number" class="form-control" value="0" id="PaymentDetails_Amount">
+                                </div>
+
+                                <div class="col-md-6">
                                     <label>Transaction Id</label>
                                     <input type="text" class="form-control" value="" id="PaymentDetails_TransactionId" maxlength="100">
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label>Cheque Bank</label>
                                     <input type="text" class="form-control" value="" id="PaymentDetails_ChequeBank" maxlength="100">
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label>Cheque No.</label>
                                     <input type="text" class="form-control" value="" id="PaymentDetails_ChequeNo" maxlength="20">
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label>Cheque Date</label>
                                     <input type="date" class="form-control" id="PaymentDetails_ChequeDate" value="">
                                 </div>
 
-                                <div class="col-md-3">
-                                    <label>Amount</label>
-                                    <input type="number" class="form-control" value="0" id="PaymentDetails_Amount">
-                                </div>
-                                <div class="col-md-3">
-                                    <label>Paid Time</label>
-                                    <input type="time" class="form-control" id="PaymentDetails_PaidTime">
-                                </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label>Due Date</label>
                                     <input type="date" class="form-control" id="PaymentDetails_DueDate" value="">
                                 </div>
+
                                 <div class="col-12">
                                     <label>Payment Note</label>
                                     <textarea class="form-control" id="PaymentDetails_PaymentNote"></textarea>
@@ -483,9 +483,34 @@
                 </form>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" id="btnReset">Reset</button>
-                <button type="button" class="btn btn-primary" id="btnBook">Book</button>
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+                <!-- Booking Type & Agent Checkbox-->
+                <!-- LEFT SIDE -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Booking Type -->
+                    <div class="d-flex flex-column">
+                        <label class="form-label mb-1">Booking Type</label>
+                        <select class="form-select form-select-sm" id="BookingType">
+                            <option value="1">Confirmed</option>
+                            <option value="2">Tentative</option>
+                        </select>
+                    </div>
+
+                    <!-- Agent Checkbox -->
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="AgentCheck">
+                        <label class="form-check-label" for="AgentCheck">
+                            Agent
+                        </label>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" id="btnReset">Reset</button>
+                    <button type="button" class="btn btn-primary" id="btnBook">Book</button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1249,92 +1274,106 @@
             </div>
             <div class="modal-body">
                 <form id="paymentForm">
-                    <div class="row">
+                    <div class="row g-2">
                         <input type="hidden" id="paymentBookingId">
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Mode</label>
-                            <select class="form-select" id="PaymentModal_Mode">
-                            </select>
+                            <select class="form-select" id="PaymentModal_Mode"></select>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Account</label>
+                            <select class="form-select" id="PaymentModal_AccountId"></select>
+                        </div>
+
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Payment Date</label>
                             <input type="date" id="paymentDate" class="form-control">
                         </div>
-                        <div class="col-md-2 mb-3">
+
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Payment Time</label>
                             <input type="time" id="paymentTime" class="form-control">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Transaction Id </label>
                             <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-1">
                             <label class="form-label">Cheque Bank</label>
                             <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
                         </div>
 
-                        <div class="col-md-2 mb-3">
+                        <div class="col-md-2 mb-1">
                             <label class="form-label">Cheque No</label>
                             <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Cheque Date</label>
                             <input type="date" id="paymentChequeDate" class="form-control">
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-1">
                             <label class="form-label">Amount</label>
                             <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount" min="0" step="1">
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-1">
                             <label class="form-label">Due Balance</label>
                             <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-1">
                             <label class="form-label">Next Due Date</label>
                             <input type="date" id="NextDueDate" class="form-control">
                         </div>
-                        <div class="col-md-12 mb-3">
-                            <input type="button" id="btnwritrnote" class="btn btn-outline-primary btn-sm" value="Writer Note">
-                            <div class="Payment_editorsContainer" style="display:none;">
-                                <!-- Hidden text editor -->
-                                <div class="col-md-12" id="noteEditor">
-                                    <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
-                                </div>
+                        <div class="col-md-12 mb-1 d-flex justify-content-between align-items-center">
+
+                            <!-- LEFT SIDE -->
+                            <div class="d-flex gap-2">
+                                <input type="button" id="btnwritrnote"
+                                       class="btn btn-outline-primary btn-sm"
+                                       value="Payment Notes">
+                            </div>
+
+                            <!-- RIGHT SIDE -->
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
+                                <button class="btn btn-sm btn-primary" id="btnSavePayment">Save</button>
+                            </div>
+                        </div>
+
+                        <!-- NOTE EDITOR -->
+                        <div class="col-md-12 Payment_editorsContainer mt-2" style="display:none;">
+                            <div id="noteEditor">
+                                <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
-                <button class="btn btn-sm btn-primary" id="btnSavePayment">Save</button>
-            </div>
+            <hr />
+
             <!-- Payment History Table -->
             <div class="px-3 pb-3">
-                <hr />
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold text-primary mb-0">
                         Payment History
                     </h6>
 
-                    <button class="btn btn-success btn-sm btn-download-all">
+                    <button class="btn btn-success btn-sm btn-download-all d-none">
                         <i class="fas fa-download"></i> Download All
                     </button>
                 </div>
                 <div class="table-responsive">
                     <div id="tblPaymentHistory">
                         <table class="table table-sm table-bordered align-middle mb-0 w-0">
-                            <tbody>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>

@@ -454,10 +454,7 @@
                 renderIncomeTransactionTable(data);
             },
             error: function (xhr, status, error) {
-                        handleApiError(xhr, status, error, "Something went wrong fetching Income Transactions");
-            },
-            complete: function() {
-                $('#btn-loader').hide();
+                handleApiError(xhr, status, error, "Something went wrong fetching Income Transactions");
             }
         });
     }
@@ -476,11 +473,11 @@
                 { data: "srno", title: "Sr. No." },
                 { data: "AccountName", title: "Account" },
                 { data: "CategoryName", title: "Category" },
-                { data: "SubCategoryName", title: "SubCategory" },
+                { data: "SubCategoryName", title: "Subcategory" },
                 { data: "Amount", title: "Amount", className: "text-end" },
-                { data: "TransactionDate", title: "Transaction Date" },
-                { data: "PaymentMode", title: "Payment Mode" },
-                { data: "ReferenceNo", title: "Reference No" },
+                { data: "TransactionDate", title: "Txn Date" },
+                { data: "PaymentModeName", title: "Payment Mode" },
+                { data: "TransactionId", title: "Txn Id" },
                 { data: "Notes", title: "Notes" },
                 {
                     data: null,

@@ -117,6 +117,7 @@ namespace ERPAdmin.ApiControllers
                         booking.Booking_IsAgent = dr["Booking_IsAgent"] != DBNull.Value && Convert.ToBoolean(dr["Booking_IsAgent"]);
 
                         booking.Payment_ModeId = dr["Payment_ModeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Payment_ModeId"]);
+                        booking.PaymentDetails_AccountId = dr["PaymentDetails_AccountId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["PaymentDetails_AccountId"]);
                         booking.PaymentDetails_TransactionId = dr["PaymentDetails_TransactionId"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_TransactionId"]);
                         booking.PaymentDetails_ChequeBank = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
                         booking.PaymentDetails_ChequeNo = dr["PaymentDetails_ChequeBank"] == DBNull.Value ? "" : Convert.ToString(dr["PaymentDetails_ChequeBank"]);
@@ -226,6 +227,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Booking_IsAgent", model.Booking_IsAgent ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Payment_ModeId", model.Payment_ModeId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentDetails_AccountId", model.PaymentDetails_AccountId ?? 0);
 
                     cmd.Parameters.AddWithValue("@PaymentDetails_TransactionId", model.PaymentDetails_TransactionId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@PaymentDetails_ChequeBank", model.PaymentDetails_ChequeBank ?? (object)DBNull.Value);

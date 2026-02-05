@@ -66,19 +66,18 @@ namespace ERPAdmin.ApiControllers
                         CategoryId = Convert.ToInt64(row["CategoryId"]),
                         CategoryName = Convert.ToString(row["CategoryName"]),
 
-                        SubCategoryId = row["SubCategoryId"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["SubCategoryId"]),
+                        SubCategoryId = row["SubCategoryId"] == DBNull.Value ? 0 : Convert.ToInt64(row["SubCategoryId"]),
                         SubCategoryName = Convert.ToString(row["SubCategoryName"]),
 
                         Amount = Convert.ToDecimal(row["Amount"]),
-                        TransactionDate = row["TransactionDate"] == DBNull.Value ? default : DateOnly.FromDateTime(Convert.ToDateTime(row["TransactionDate"])),
-                        PaymentMode = Convert.ToString(row["PaymentMode"]),
-                        ReferenceNo = Convert.ToString(row["ReferenceNo"]),
+                        TransactionDate = Convert.ToDateTime(row["TransactionDate"]).ToString("yyyy-MM-dd"),
+                        PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
+                        PaymentModeName = Convert.ToString(row["PaymentModeName"]),
+                        TransactionId = Convert.ToString(row["TransactionId"]),
                         Notes = Convert.ToString(row["Notes"]),
-
-                        Created_At = Convert.ToString(row["created_at"]),
-                        Created_By = row["created_by"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["created_by"]),
-                        Updated_At = Convert.ToString(row["updated_at"]),
-                        Updated_By = row["updated_by"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["updated_by"])
+                        ChequeBank = Convert.ToString(row["ChequeBank"]),
+                        ChequeNo = Convert.ToString(row["ChequeNo"]),
+                        ChequeDate = row["ChequeDate"] == DBNull.Value ? null : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
                     };
 
                     list.Add(model);
@@ -122,9 +121,13 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@SubCategoryId", (object)model.SubCategoryId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Amount", model.Amount);
                     cmd.Parameters.AddWithValue("@TransactionDate", model.TransactionDate);
-                    cmd.Parameters.AddWithValue("@PaymentMode", (object)model.PaymentMode ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ReferenceNo", (object)model.ReferenceNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", (object)model.PaymentModeId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TransactionId", (object)model.TransactionId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();

@@ -71,10 +71,14 @@ namespace ERPAdmin.ApiControllers
                         SubCategoryName = Convert.ToString(row["SubCategoryName"]),
 
                         Amount = Convert.ToDecimal(row["Amount"]),
-                        TransactionDate = DateOnly.FromDateTime(Convert.ToDateTime(row["TransactionDate"])),
-                        PaymentMode = Convert.ToString(row["PaymentMode"]),
-                        ReferenceNo = Convert.ToString(row["ReferenceNo"]),
+                        TransactionDate = Convert.ToDateTime(row["TransactionDate"]).ToString("yyyy-MM-dd"),
+                        PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
+                        PaymentModeName = Convert.ToString(row["PaymentModeName"]),
+                        TransactionId = Convert.ToString(row["TransactionId"]),
                         Notes = Convert.ToString(row["Notes"]),
+                        ChequeBank = Convert.ToString(row["ChequeBank"]),
+                        ChequeNo = Convert.ToString(row["ChequeNo"]),
+                        ChequeDate = row["ChequeDate"] == DBNull.Value ? null : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
                     });
                 }
 
@@ -116,9 +120,13 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@SubCategoryId", (object)model.SubCategoryId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Amount", model.Amount);
                     cmd.Parameters.AddWithValue("@TransactionDate", model.TransactionDate);
-                    cmd.Parameters.AddWithValue("@PaymentMode", (object)model.PaymentMode ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ReferenceNo", (object)model.ReferenceNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", (object)model.PaymentModeId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TransactionId", (object)model.TransactionId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();

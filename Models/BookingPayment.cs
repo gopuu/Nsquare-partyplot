@@ -29,6 +29,7 @@
     public class SaveBookingPaymentRequest : BaseClass
     {
         public long BookingId { get; set; }
+        public long? AccountId { get; set; }
         public long ModeId { get; set; }
         public string? DateOfPayment { get; set; }
         public string? PaymentTime { get; set; }

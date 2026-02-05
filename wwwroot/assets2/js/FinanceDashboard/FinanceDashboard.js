@@ -9,6 +9,8 @@
     loadExpenseCategoryDropdown();
     loadExpenseSubCategoryDropdown();
     loadAccountDropdown();
+    loadPaymentModeDropdown();
+
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('txtTransactionDate_Expense').value = today;
 
@@ -23,34 +25,44 @@
     // Save Expense Transaction
     $("#btnSaveExpenseTransaction").click(function (e) {
         e.preventDefault();
-        // Basic validation
-        if ($("#ddlAccount").val() === "") {
+
+        // Validation
+        if (!$("#ddlAccount_Expense").val() || $("#ddlAccount_Expense").val() <= 0) {
             Swal.fire("Validation", "Please select Account", "warning");
             return;
         }
-        if ($("#ddlCategory").val() === "") {
+        if (!$("#ddlExpenseCategory").val()) {
             Swal.fire("Validation", "Please select Category", "warning");
             return;
         }
-        if ($("#txtAmount_Expense").val().trim() === "" || parseFloat($("#txtAmount_Expense").val()) <= 0) {
+        if (!$("#txtAmount_Expense").val() || parseFloat($("#txtAmount_Expense").val()) <= 0) {
             Swal.fire("Validation", "Amount must be greater than 0", "warning");
             return;
         }
-        if ($("#txtTransactionDate_Expense").val() === "") {
+        if (!$("#txtTransactionDate_Expense").val()) {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
             return;
         }
-        let payload = {
-            Id: $("#ExpenseTransactionId").val(),
-            AccountId: $("#ddlAccount").val(),
-            CategoryId: $("#ddlExpenseCategory").val(), // Corrected
-            SubCategoryId: $("#ddlSubCategory_Expense").val() || null,
+
+        const payload = {
+            Id: Number($("#ExpenseTransactionId").val() || 0),
+            AccountId: Number($("#ddlAccount_Expense").val()),
+            CategoryId: Number($("#ddlExpenseCategory").val()),
+            SubCategoryId: $("#ddlSubCategory_Expense").val() ? Number($("#ddlSubCategory_Expense").val()) : null,
+
             Amount: parseFloat($("#txtAmount_Expense").val()),
             TransactionDate: $("#txtTransactionDate_Expense").val(),
-            PaymentMode: $("#txtPaymentMode_Expense").val().trim() || null,
-            ReferenceNo: $("#txtReferenceNo_Expense").val().trim() || null,
+
+            PaymentModeId: $("#txtPaymentMode_Expense").val() ? Number($("#txtPaymentMode_Expense").val()) : null,
+
+            TransactionId: $("#txtTransactionId_Expense").val().trim() || null,
             Notes: $("#txtNotes_Expense").val().trim() || null,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
+
+            ChequeBank: $("#paymentChequebank_Expense").val().trim() || null,
+            ChequeNo: $("#paymentChequeNo_Expense").val().trim() || null,
+            ChequeDate: $("#paymentChequeDate_Expense").val() || null,
+
+            ActionBy: Number(sessionStorage.getItem("userId") || 0)
         };
         // console.log("SAVE PAYLOAD:", payload);
         $.ajax({
@@ -100,34 +112,52 @@
     // Save Income Transaction
     $("#btnSaveIncomeTransaction").click(function (e) {
         e.preventDefault();
-        // Basic validation
-        if ($("#ddlAccount").val() === "") {
+
+        // Validation
+        if (!$("#ddlAccount_Income").val() || $("#ddlAccount_Income").val() <= 0) {
             Swal.fire("Validation", "Please select Account", "warning");
             return;
         }
-        if ($("#ddlCategory").val() === "") {
+
+        if (!$("#ddlIncomeCategory").val()) {
             Swal.fire("Validation", "Please select Category", "warning");
             return;
         }
-        if ($("#txtAmount_Income").val().trim() === "" || parseFloat($("#txtAmount_Income").val()) <= 0) {
+
+        if (!$("#txtAmount_Income").val() || parseFloat($("#txtAmount_Income").val()) <= 0) {
             Swal.fire("Validation", "Amount must be greater than 0", "warning");
             return;
         }
-        if ($("#txtTransactionDate_Income").val() === "") {
+
+        if (!$("#txtTransactionDate_Income").val()) {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
             return;
         }
-        let payload = {
-            Id: $("#incomeTransactionId").val(),
-            AccountId: $("#ddlAccount").val(),
-            CategoryId: $("#ddlIncomeCategory").val(), // Corrected
-            SubCategoryId: $("#ddlSubCategory_Income").val() || null,
+
+        const payload = {
+            Id: Number($("#incomeTransactionId").val() || 0),
+            AccountId: Number($("#ddlAccount_Income").val()),
+            CategoryId: Number($("#ddlIncomeCategory").val()),
+
+            SubCategoryId: $("#ddlSubCategory_Income").val()
+                ? Number($("#ddlSubCategory_Income").val())
+                : null,
+
             Amount: parseFloat($("#txtAmount_Income").val()),
             TransactionDate: $("#txtTransactionDate_Income").val(),
-            PaymentMode: $("#txtPaymentMode_Income").val().trim() || null,
-            ReferenceNo: $("#txtReferenceNo_Income").val().trim() || null,
+
+            PaymentModeId: $("#txtPaymentMode_Income").val()
+                ? Number($("#txtPaymentMode_Income").val())
+                : null,
+
+            TransactionId: $("#txtTransactionId_Income").val().trim() || null,
             Notes: $("#txtNotes_Income").val().trim() || null,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
+
+            ChequeBank: $("#paymentChequebank_Income").val().trim() || null,
+            ChequeNo: $("#paymentChequeNo_Income").val().trim() || null,
+            ChequeDate: $("#paymentChequeDate_Income").val() || null,
+
+            ActionBy: Number(sessionStorage.getItem("userId") || 0)
         };
         // console.log("SAVE PAYLOAD:", payload);
         $.ajax({
@@ -434,13 +464,22 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
 // Optional: Reset form fields
 function resetFormFields_Expense() {
     $("#ExpenseTransactionId").val(0);
-    $("#ddlAccount").val("");
-    $("#ddlCategory").val("");
-    $("#ddlSubCategory_Expense").val("");
+
+    $("#ddlExpenseCategory").val("0").trigger("change");
+    $("#ddlSubCategory_Expense").val("0").trigger("change");
+
+    $("#ddlAccount_Expense").val("0").trigger("change");
+
     $("#txtAmount_Expense").val("");
     $("#txtTransactionDate_Expense").val("");
-    $("#txtPaymentMode_Expense").val("");
-    $("#txtReferenceNo_Expense").val("");
+
+    $("#txtPaymentMode_Expense").val("0").trigger("change");
+    $("#txtTransactionId_Expense").val("");
+
+    $("#paymentChequebank_Expense").val("");
+    $("#paymentChequeNo_Expense").val("");
+    $("#paymentChequeDate_Expense").val("");
+
     $("#txtNotes_Expense").val("");
 }
 
@@ -455,7 +494,7 @@ function loadExpenseCategoryDropdown(selectedId = "") {
             let dropdown = $("#ddlExpenseCategory");
             dropdown.empty(); // clear previous values
 
-            dropdown.append(`<option value="">-- Select Expense Category --</option>`);
+            dropdown.append(`<option value="0">-- Select Category --</option>`);
 
             response.data.forEach(item => {
                 dropdown.append(
@@ -485,7 +524,7 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
         success: function (response) {
             let dropdown = $("#ddlSubCategory_Expense");
             dropdown.empty();
-            dropdown.append('<option value="">-- Select SubCategory --</option>');
+            dropdown.append('<option value="0">-- Select Subcategory --</option>');
 
             response.data.forEach(item => {
                 dropdown.append(
@@ -517,7 +556,7 @@ function loadAccountDropdown(selectedId = "") {
         success: function (response) {
             let dropdown = $(".ddlAccount");
             dropdown.empty(); // clear previous values
-            dropdown.append('<option value="">-- Select Account --</option>');
+            dropdown.append('<option value="0">-- Select Account --</option>');
 
             if (response.status === "Success" && response.data.length > 0) {
                 response.data.forEach(item => {
@@ -536,19 +575,61 @@ function loadAccountDropdown(selectedId = "") {
 }
 //EXPENSE TRANSACTIONS ----- END ----------------------
 
+function loadPaymentModeDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/PaymentMode/GetPaymentMode",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("payment mode res:", res);
+            const ddl = $("#txtPaymentMode_Income, #txtPaymentMode_Expense");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data
+                    .filter(x => x.IsActive)
+                    .forEach(pm => {
+                        ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
+                        `);
+                    });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Mode Dropdown Error");
+        }
+    });
+}
+
+
 //INCOME TRANSACTIONS ----- START --------------------
 // Optional: Reset form fields
 function resetFormFields_Income() {
     $("#incomeTransactionId").val(0);
-    $("#ddlAccount").val("");
-    $("#ddlCategory").val("");
-    $("#ddlSubCategory_Income").val("");
+
+    $("#ddlIncomeCategory").val("0").trigger("change");
+    $("#ddlSubCategory_Income").val("0").trigger("change");
+
+    $("#ddlAccount_Income").val("0").trigger("change");
+
     $("#txtAmount_Income").val("");
     $("#txtTransactionDate_Income").val("");
-    $("#txtPaymentMode_Income").val("");
-    $("#txtReferenceNo_Income").val("");
+
+    $("#txtPaymentMode_Income").val("0").trigger("change");
+    $("#txtTransactionId_Income").val("");
+
+    $("#paymentChequebank_Income").val("");
+    $("#paymentChequeNo_Income").val("");
+    $("#paymentChequeDate_Income").val("");
+
     $("#txtNotes_Income").val("");
 }
+
 
 function loadIncomeCategoryDropdown(selectedId = "") {
     $.ajax({
@@ -561,7 +642,7 @@ function loadIncomeCategoryDropdown(selectedId = "") {
             let dropdown = $("#ddlIncomeCategory");
             dropdown.empty(); // clear previous values
 
-            dropdown.append(`<option value="">-- Select Income Category --</option>`);
+            dropdown.append(`<option value="0">-- Select Category --</option>`);
 
             response.data.forEach(item => {
                 dropdown.append(
@@ -591,7 +672,7 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
         success: function (response) {
             let dropdown = $("#ddlSubCategory_Income");
             dropdown.empty();
-            dropdown.append('<option value="">-- Select SubCategory --</option>');
+            dropdown.append('<option value="0">-- Select Subcategory --</option>');
 
             response.data.forEach(item => {
                 dropdown.append(

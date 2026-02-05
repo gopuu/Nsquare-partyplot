@@ -105,6 +105,7 @@
         public bool? Booking_IsAgent { get; set; }
 
         public long? Payment_ModeId { get; set; }
+        public long? PaymentDetails_AccountId { get; set; }
         public string? PaymentDetails_TransactionId { get; set; }
         public string? PaymentDetails_ChequeBank { get; set; }
         public string? PaymentDetails_ChequeNo { get; set; }
@@ -211,6 +212,7 @@
         public bool Booking_IsAgent { get; set; }
 
         public long? Payment_ModeId { get; set; }
+        public long? PaymentDetails_AccountId { get; set; }
         public string? PaymentDetails_TransactionId { get; set; }
         public string? PaymentDetails_ChequeBank { get; set; }
         public string? PaymentDetails_ChequeNo { get; set; }

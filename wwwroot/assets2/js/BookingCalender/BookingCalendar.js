@@ -1678,7 +1678,6 @@ function renderListViewTable(bookingData = null) {
     });
 }
 
-
 function attachColumnHoverListeners() {
     const rows = document.querySelectorAll(".row-wrapper");
 
@@ -1723,16 +1722,7 @@ const bookingReportModalEl = document.getElementById("bookingReportModal");
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 
 function closeBookingReportModal() {
-    const bookingReportModal_local = document.getElementById('bookingReportModal');
-    bookingReportModal_local.classList.remove("show");
-    bookingReportModal_local.style.display = "none";
-    bookingReportModal_local.setAttribute("aria-hidden", "true");
-
-    // FULL cleanup
-    document.body.classList.remove("modal-open");
-    document.body.style.removeProperty("padding-right");
-
-    document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+    bookingReportModal.hide();
 }
 function openBookingReportModal() {
     const bookingReportModal_local = document.getElementById('bookingReportModal');
@@ -1787,7 +1777,7 @@ function attachShiftClickListeners() {
                     .attr("data-shiftid", shift);              // FD, MO, etc.
                 $("#banquetDropdown").val(hallid);
                 setShiftTime(shift);
-                $("#PaymentDetails_DueDate").val(dateiso);
+                $("#PaymentDetails_DueDate").val('');
 
                 $("#fromDate").val(dateiso).prop("disabled", true);
                 $("#toDate").val(dateiso);
@@ -1906,13 +1896,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide booking report modal --- START ----------------
     // ESC key handler
-    //document.addEventListener("keydown", function (e) {
-    //    if (e.key === "Escape") {
-    //        if (bookingReportModal.classList.contains("show")) {
-    //            closeBookingReportModal();
-    //        }
-    //    }
-    //});
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            if (bookingReportModal.classList.contains("show")) {
+                closeBookingReportModal();
+            }
+        }
+    });
     //hide booking report modal --- END ----------------
 
     // Create booking modal instance manually
@@ -4137,6 +4127,7 @@ function saveBooking() {
 
         //Payment
         Payment_ModeId: parseInt($("#PaymentDetails_Mode").val() || 0),
+        PaymentDetails_AccountId: parseInt($("#PaymentDetails_AccountId").val() || 0),
         PaymentDetails_TransactionId: $("#PaymentDetails_TransactionId").val(),
         PaymentDetails_ChequeBank: $("#PaymentDetails_ChequeBank").val(),
         PaymentDetails_ChequeNo: $("#PaymentDetails_ChequeNo").val(),
@@ -4612,6 +4603,7 @@ $("#btnSavePayment").click(function () {
     const bookingId = getBookingId();
     // 🔹 Get values
     // let bookingId = Number($("#paymentBookingId").val() || 0);
+    let accountId = Number($("#PaymentModal_AccountId").val());
     let modeId = Number($("#PaymentModal_Mode").val());
     let paymentDate = $("#paymentDate").val();
     let paymentTime = $("#paymentTime").val();
@@ -4640,6 +4632,7 @@ $("#btnSavePayment").click(function () {
     // 🔹 Payload (matches SaveBooking_Payments procedure)
     const payload = {
         BookingId: bookingId,
+        AccountId: accountId,
         ModeId: modeId,
         DateOfPayment: paymentDate,
         PaymentTime: paymentTime || null,
@@ -4704,12 +4697,13 @@ function loadAccountDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            const ddl = $("#PaymentModal_Account");
+            const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
-                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}</option>`);
+                    const holder = acc.AccountHolderName ? ` - ${acc.AccountHolderName}` : "";
+                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}${holder}</option>`);
                 });
             } else {
                 Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
@@ -4753,7 +4747,6 @@ function loadPaymentModeDropdown() {
     });
 }
 
-
 function loadPaymentHistory(bookingId) {
     const payload = {
         PaymentId: 0,      
@@ -4768,6 +4761,13 @@ function loadPaymentHistory(bookingId) {
         success: function (res) {
             console.log("Booking_Payments res:", res);
             if (res?.status === "Success") {
+                // HIDE download Alll btn
+                $(".btn-download-all").addClass("d-none");
+                if (res.data.length > 0) {
+                    // SHOW download Alll btn
+                    $(".btn-download-all").removeClass("d-none");
+                }
+
                 renderPaymentTable(res.data || []);
             } else {
                 Swal.fire("Error", res?.message || "Failed to fetch payments!", "error");
@@ -4793,7 +4793,7 @@ function renderPaymentTable(data) {
         data: data,
         autoWidth: false, 
         columns: [
-            { data: "srno", title: "#", width: "60px" },
+            { data: "srno", title: "#" },
             { data: "TxnId", title: "Txn Id", className: "text-end" },
             { data: "PaymentDateTimeFormat", title: "Date & Time" },
             {
