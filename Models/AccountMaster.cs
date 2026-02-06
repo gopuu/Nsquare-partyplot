@@ -21,7 +21,7 @@
         public bool IsDefaultAccount { get; set; }
     }
 
-    public class GetAccountRequest
+    public class GetAccountRequest : BaseClass
     {
         public long Id { get; set; } = 0;
     }

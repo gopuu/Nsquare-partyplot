@@ -19,20 +19,12 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class UserRightsController : MasterController
     {
-        //private readonly IConfiguration _configuration;
-        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
-        //private readonly ImageUploadService _imageUploadService;
         private readonly string domainUrl;
 
         public UserRightsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
-
         {
-            //_imageUploadService = imageUploadService;
-            //_configuration = configuration;
-            //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
-            //_connClass = new ConnClass(httpContextAccessor, masterConnString);
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }

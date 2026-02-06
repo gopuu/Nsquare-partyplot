@@ -1,0 +1,159 @@
+﻿/* MODAL SIZE */
+.modal-95 {
+    max-width: 95% !important;
+    width: 95% !important;
+}
+
+.modal-95 .modal-content {
+    height: 95vh;
+}
+
+.modal-95 .modal-body {
+    max-height: calc(95vh - 120px);
+    overflow-y: auto;
+}
+/* MODAL SIZE */
+
+.modal-top-10 {
+    margin-top: 10% !important;
+}
+
+/*ITEMS*/
+.totals-card {
+    background: #f7f7f7 !important; /* Light Gray BG */
+    border: 1px solid #e3e3e3 !important;
+    border-radius: 6px;
+}
+
+.totals-card * {
+    font-size: 12px !important;
+}
+
+.totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.totals-btn {
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+}
+
+.totals-amount {
+    font-weight: 600;
+}
+
+.icon-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    color: #6c757d;
+}
+
+.icon-btn:hover {
+    color: #000;
+}
+
+/* ===============================
+   COMPACT PURCHASE ITEMS TABLE
+================================ */
+
+.compact-table table {
+    font-size: 12px; /* overall font size */
+}
+
+/* Table header */
+.compact-table thead th {
+    padding: 6px 6px;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+/* Table body cells */
+.compact-table tbody td {
+    padding: 4px 6px;
+    vertical-align: middle;
+}
+
+/* Inputs & selects inside table */
+.compact-table .form-control,
+.compact-table .form-select {
+    height: 28px;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+/* Number inputs */
+.compact-table input[type="number"] {
+    text-align: right;
+}
+
+/* Tax inputs group spacing */
+.compact-table .d-flex.gap-1 {
+    gap: 4px !important;
+}
+
+/* Order Qty label */
+.compact-table .orderQtyLabel {
+    font-size: 12px;
+}
+
+/* Checkbox alignment */
+.compact-table input[type="checkbox"] {
+    transform: scale(0.9);
+}
+
+/* Action buttons */
+.compact-table .btn {
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+/* Delete button icon */
+.compact-table .btn i {
+    font-size: 12px;
+}
+
+/* Reduce row hover padding feel */
+.compact-table tbody tr {
+    line-height: 1.2;
+}
+
+/* Stock hint text */
+.compact-table .stockHint {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/*ITEMS*/
+
+/*<!-- Discount, Tax, Other charges-- >*/
+.detail-box {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: none; /* hide default */
+}
+
+.detail-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.detail-note {
+    background: #f0f7ff;
+    padding: 6px;
+    border-left: 3px solid #007bff;
+    border-radius: 4px;
+    font-size: 11px;
+}
+/*<!-- Discount, Tax, Other charges-- >*/
+
+

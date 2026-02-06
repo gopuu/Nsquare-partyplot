@@ -226,8 +226,8 @@ function setAmountWithAutoFont(elSelector, amount) {
 
 function renderDashboardWidgets(stats) {
 
-    const container = $("#dashboard-widgets");
-    container.empty();
+    const container2 = $("#dashboard-widgets");
+    container2.empty();
 
     // Map KPI → Icons + Colors + Labels
     const widgetConfig = {
@@ -310,7 +310,7 @@ function renderDashboardWidgets(stats) {
                     </div>
                 `;
 
-            container.append(widgetHtml);
+            container2.append(widgetHtml);
             return; // skip normal widget rendering
         }
 
@@ -336,7 +336,7 @@ function renderDashboardWidgets(stats) {
                 </div>
             `;
 
-        container.append(widgetHtml);
+        container2.append(widgetHtml);
     });
 
 }

@@ -1,0 +1,56 @@
+﻿.page-content {
+    padding-top: 90px !important;
+}
+
+#rightsTabs .nav-link {
+    font-size: 13px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+table th, table td {
+    vertical-align: middle;
+    font-size: 13px;
+    padding: 0.5rem 0.5rem;
+}
+
+table th {
+    background: #f4f4f4;
+    font-weight: 800;
+}
+
+#rightsTabs {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+#rightsTabs .nav-item {
+flex: 1;
+text-align: center;
+}
+
+#rightsTabs .nav-link {
+width: 100%;
+border: none;
+color: #0d6efd;
+padding: 2px 5px;
+border-radius: 0;
+font-weight: bold;
+}
+
+#rightsTabs .nav-link.active {
+    background: #ff8c00;
+    color: white;
+    border-bottom: 3px solid #cc6e00;
+}
+
+.tab-pane {
+    height: 350px;
+    padding-right: 6px;
+}
+/* Hover effect */
+#rightsTabs .nav-link:not(.active):hover {
+    background-color: rgba(0,0,0,0.05);
+    color: #ff8c00;
+}

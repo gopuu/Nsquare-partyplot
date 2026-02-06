@@ -34,97 +34,114 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetPurchaseList([FromBody] GetPurchaseRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-            List<GetPurchaseListModel> purchases = new List<GetPurchaseListModel>();
+            List<GetPurchaseListModel> purchases = new();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
 
-                DataTable dt = new DataTable();
+                DataTable dt = new();
+
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetPurchaseList", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
-                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId == 0 ? 0 : request.SupplierId);
+                    cmd.Parameters.AddWithValue("@Id", request.Id > 0 ? request.Id : 0);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId > 0 ? request.SupplierId : 0);
 
                     con.Open();
-                    SqlDataReader dr = cmd.ExecuteReader();
+                    using SqlDataReader dr = cmd.ExecuteReader();
                     dt.Load(dr);
                 }
 
-                if (dt.Rows.Count > 0)
+                foreach (DataRow row in dt.Rows)
                 {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        GetPurchaseListModel model = new GetPurchaseListModel();
-                        model.Id = Convert.ToInt64(row["Id"]);
-                        model.PurchaseFrom = Convert.ToInt64(row["PurchaseFrom"]);
-                        model.PurchaseFromName = Convert.ToString(row["PurchaseFromName"]);
-                        model.SupplierId = Convert.ToInt64(row["SupplierId"]);
-                        model.SupplierName = Convert.ToString(row["SupplierName"]);
-                        model.SupplierCompany = Convert.ToString(row["SupplierCompany"]);
-                        model.SupplierPhone = Convert.ToString(row["SupplierPhone"]);
+                    var model = new GetPurchaseListModel();
+                    model.Id = Convert.ToInt64(row["Id"]);
+                    model.PurchaseFrom = Convert.ToInt64(row["PurchaseFrom"]);
+                    model.PurchaseFromName = Convert.ToString(row["PurchaseFromName"]);
 
-                        model.InvoiceDate = row["InvoiceDate"] == DBNull.Value ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["InvoiceDate"]));
-                        model.InvoiceDate_Format = Convert.ToString(row["InvoiceDate_Format"]);
-                        model.InvoiceNo = Convert.ToString(row["InvoiceNo"]);
-                        model.PONo = Convert.ToString(row["PONo"]);
+                    model.SupplierId = Convert.ToInt64(row["SupplierId"]);
+                    model.SupplierName = Convert.ToString(row["SupplierName"]);
+                    model.SupplierCompany = Convert.ToString(row["SupplierCompany"]);
+                    model.SupplierPhone = Convert.ToString(row["SupplierPhone"]);
 
-                        model.DiscountType = Convert.ToInt64(row["DiscountType"]);
-                        model.TotalDiscountInInvoice = Convert.ToDecimal(row["TotalDiscountInInvoice"]);
-                        model.DiscountPercentage = Convert.ToDecimal(row["DiscountPercentage"]);
-                        model.DetermineWhenTaxApplicable = Convert.ToInt64(row["DetermineWhenTaxApplicable"]);
+                    model.InvoiceDate = row["InvoiceDate"] == DBNull.Value
+                        ? null
+                        : DateOnly.FromDateTime(Convert.ToDateTime(row["InvoiceDate"]));
 
-                        model.SubTotal_TotalDiscount_Amount = Convert.ToDecimal(row["SubTotal_TotalDiscount_Amount"]);
-                        model.SubTotal_OtherCharges_Amount = Convert.ToDecimal(row["SubTotal_OtherCharges_Amount"]);
+                    model.InvoiceDate_Format = Convert.ToString(row["InvoiceDate_Format"]);
+                    model.InvoiceNo = Convert.ToString(row["InvoiceNo"]);
+                    model.PONo = Convert.ToString(row["PONo"]);
 
-                        model.DeliveryChargeIncludedInInvoice = Convert.ToDecimal(row["DeliveryChargeIncludedInInvoice"]);
-                        model.DeliveryCharge_CGST = Convert.ToDecimal(row["DeliveryCharge_CGST"]);
-                        model.DeliveryCharge_SGST = Convert.ToDecimal(row["DeliveryCharge_SGST"]);
+                    model.DiscountType = row["DiscountType"] == DBNull.Value ? 0 : Convert.ToInt64(row["DiscountType"]);
+                    model.TotalDiscountInInvoice = Convert.ToDecimal(row["TotalDiscountInInvoice"]);
+                    model.DiscountPercentage = Convert.ToDecimal(row["DiscountPercentage"]);
+                    model.DetermineWhenTaxApplicable = row["DetermineWhenTaxApplicable"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt64(row["DetermineWhenTaxApplicable"]);
 
-                        model.SubTotal_OtherTaxes_Amount = Convert.ToDecimal(row["SubTotal_OtherTaxes_Amount"]);
-                        model.TCS_Percent = Convert.ToDecimal(row["TCS_Percent"]);
-                        model.TDS_Percent = Convert.ToDecimal(row["TDS_Percent"]);
-                        model.GrandTotal_Amount = Convert.ToDecimal(row["GrandTotal_Amount"]);
+                    model.SubTotal_TotalDiscount_Amount = Convert.ToDecimal(row["SubTotal_TotalDiscount_Amount"]);
+                    model.SubTotal_OtherCharges_Amount = Convert.ToDecimal(row["SubTotal_OtherCharges_Amount"]);
 
-                        model.PaymentType = Convert.ToInt64(row["PaymentType"]);
-                        model.PaymentDate = Convert.ToString(row["PaymentDate"]);
-                        model.PaidAmount = Convert.ToDecimal(row["PaidAmount"]);
-                        model.PaymentModeId = Convert.ToInt64(row["PaymentModeId"]);
-                        model.PaymentRefNo = Convert.ToString(row["PaymentRefNo"]);
+                    model.DeliveryChargeIncludedInInvoice = Convert.ToDecimal(row["DeliveryChargeIncludedInInvoice"]);
+                    model.DeliveryCharge_CGST = Convert.ToDecimal(row["DeliveryCharge_CGST"]);
+                    model.DeliveryCharge_SGST = Convert.ToDecimal(row["DeliveryCharge_SGST"]);
 
-                        model.IsUpdateInventoryStock = Convert.ToBoolean(row["IsUpdateInventoryStock"]);
+                    model.SubTotal_OtherTaxes_Amount = Convert.ToDecimal(row["SubTotal_OtherTaxes_Amount"]);
+                    model.TCS_Percent = Convert.ToDecimal(row["TCS_Percent"]);
+                    model.TDS_Percent = Convert.ToDecimal(row["TDS_Percent"]);
 
-                        model.UploadInvoiceFile = row["UploadInvoiceFile"] != DBNull.Value
-                                && !string.IsNullOrEmpty(row["UploadInvoiceFile"].ToString())
-                            ? domainUrl + "/uploads/org/" + domain + "/purchaseDocuments/" + row["UploadInvoiceFile"].ToString()
+                    model.GrandTotal_Amount = Convert.ToDecimal(row["GrandTotal_Amount"]);
+                    model.PaidAmount = Convert.ToDecimal(row["PaidAmount"]);
+                    model.Remaining_Amount = Convert.ToDecimal(row["Remaining_Amount"]);
+
+                    // 🔹 FIRST PAYMENT (FOR EDIT)
+                    model.PaymentType = row["PaymentType"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentType"]);
+                    model.PaymentDate = row["PaymentDate"] == DBNull.Value
+                        ? null
+                        : Convert.ToDateTime(row["PaymentDate"]).ToString("yyyy-MM-dd");
+
+                    model.PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]);
+                    model.PaymentAccountId = row["PaymentAccountId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentAccountId"]);
+                    model.PaymentRefNo = Convert.ToString(row["PaymentRefNo"]);
+                    model.PaymentRemarks = Convert.ToString(row["PaymentRemarks"]);
+
+                    model.ChequeBank = Convert.ToString(row["ChequeBank"]);
+                    model.ChequeNo = Convert.ToString(row["ChequeNo"]);
+                    model.ChequeDate = row["ChequeDate"] == DBNull.Value
+                        ? null
+                        : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd");
+
+                    model.IsUpdateInventoryStock = Convert.ToBoolean(row["IsUpdateInventoryStock"]);
+
+                    model.UploadInvoiceFile =
+                        row["UploadInvoiceFile"] != DBNull.Value &&
+                        !string.IsNullOrWhiteSpace(row["UploadInvoiceFile"].ToString())
+                            ? $"{domainUrl}/uploads/org/{domain}/purchaseDocuments/{row["UploadInvoiceFile"]}"
                             : string.Empty;
 
-                        model.IsActive = Convert.ToBoolean(row["IsActive"]);
+                    model.IsActive = Convert.ToBoolean(row["IsActive"]);
+                    model.Created_By_EmpId = Convert.ToInt64(row["Created_By_EmpId"]);
+                    model.Created_By_EmpName = Convert.ToString(row["Created_By_EmpName"]);
+                    model.Created_On = Convert.ToString(row["Created_On"]);
+                    model.Modified_On = Convert.ToString(row["Modified_On"]);
+                    model.Status = Convert.ToString(row["Status"]);
 
-                        //JSON_PurchaseItems = row["JSON_PurchaseItems"].ToString()
-                        var json = row["JSON_PurchaseItems"].ToString();
+                    // 🔹 PURCHASE ITEMS JSON
+                    var itemsJson = Convert.ToString(row["JSON_PurchaseItems"]);
+                    model.JSON_PurchaseItems = !string.IsNullOrWhiteSpace(itemsJson)
+                        ? Newtonsoft.Json.JsonConvert.DeserializeObject<List<GetPurchaseItems>>(itemsJson)
+                        : new List<GetPurchaseItems>();
 
-                        if (!string.IsNullOrWhiteSpace(json))
-                        {
-                            model.JSON_PurchaseItems =
-                                Newtonsoft.Json.JsonConvert.DeserializeObject<List<GetPurchaseItems>>(json);
-                        }
-                        else
-                        {
-                            model.JSON_PurchaseItems = new List<GetPurchaseItems>();
-                        }
-
-                        model.Created_By_EmpId = Convert.ToInt64(row["Created_By_EmpId"]);
-                        model.Created_By_EmpName = Convert.ToString(row["Created_By_EmpName"]);
-                        model.Created_On = Convert.ToString(row["Created_On"]);
-                        model.Modified_On = Convert.ToString(row["Modified_On"]);
-                        model.Status = Convert.ToString(row["Status"]);
-
-                        purchases.Add(model);
-                    }
+                    purchases.Add(model);
                 }
 
                 apiResponse.message = "Purchase data fetched successfully!";
@@ -163,7 +180,7 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@PurchaseFrom", SqlDbType.BigInt).Value = (object)model.PurchaseFrom ?? DBNull.Value;
                     cmd.Parameters.Add("@SupplierId", SqlDbType.BigInt).Value = model.SupplierId;
-                    cmd.Parameters.Add("@InvoiceDate", SqlDbType.Date).Value = model.InvoiceDate;
+                    cmd.Parameters.Add("@InvoiceDate", SqlDbType.NVarChar).Value = model.InvoiceDate;
                     cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar).Value = (object)model.InvoiceNo ?? DBNull.Value;
                     cmd.Parameters.Add("@PONo", SqlDbType.NVarChar).Value = (object)model.PONo ?? DBNull.Value;
 
@@ -187,9 +204,19 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object)model.PaymentType ?? DBNull.Value;
                     cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object)model.PaymentDate ?? DBNull.Value;
-                    cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal).Value = (object)model.PaidAmount ?? DBNull.Value;
+                    //cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal).Value = (object)model.PaidAmount ?? DBNull.Value;
+                    var pPaid = cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal);
+                    pPaid.Precision = 18;
+                    pPaid.Scale = 2;
+                    pPaid.Value = (object)model.PaidAmount ?? DBNull.Value;
+
                     cmd.Parameters.Add("@PaymentModeId", SqlDbType.BigInt).Value = (object)model.PaymentModeId ?? DBNull.Value;
                     cmd.Parameters.Add("@PaymentRefNo", SqlDbType.NVarChar).Value = (object)model.PaymentRefNo ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaymentAccountId", SqlDbType.BigInt).Value = (object)model.PaymentAccountId ?? DBNull.Value;
+                    cmd.Parameters.Add("@PaymentRemarks", SqlDbType.NVarChar).Value = (object)model.PaymentRemarks ?? DBNull.Value;
+                    cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar).Value = (object)model.ChequeBank ?? DBNull.Value;
+                    cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar).Value = (object)model.ChequeNo ?? DBNull.Value;
+                    cmd.Parameters.Add("@ChequeDate", SqlDbType.NVarChar).Value = (object)model.ChequeDate ?? DBNull.Value;
 
                     cmd.Parameters.Add("@IsUpdateInventoryStock", SqlDbType.Bit).Value = model.IsUpdateInventoryStock;
 

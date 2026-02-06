@@ -1,0 +1,147 @@
+﻿/* =========================
+   PAGE LAYOUT
+========================= */
+
+.page-content {
+    padding-top: 90px;
+}
+
+/* =========================
+   STAFF DIRECTORY
+========================= */
+
+.staff-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.staff-item {
+    user-select: none; /* prevents text highlight */
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+    .staff-item:hover {
+        background: #f5f5f5;
+    }
+
+    .staff-item img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .staff-item label {
+        margin: 0;
+        font-size: 13px;
+        cursor: pointer;
+        color: #344054;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-left: none !important;
+    }
+
+.staff-name {
+    font-size: 13px;
+    cursor: pointer;
+}
+/* Remove checkbox glow */
+.form-check-input:focus {
+    box-shadow: none !important;
+}
+
+/* =========================
+   TABLE BASE
+========================= */
+
+table th {
+    background: #f4f4f4;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+table td {
+    font-size: 13px;
+}
+
+/* =========================
+   RIGHTS TABLE DESIGN
+========================= */
+
+.rights-table-wrapper {
+    max-height: 420px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e6ef;
+}
+
+/* Table base */
+.rights-table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+    /* Header */
+    .rights-table thead th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fb;
+        z-index: 2;
+        font-weight: 700;
+        color: #344054;
+        border-bottom: 1px solid #e2e6ef;
+        padding: 10px;
+    }
+
+/* Column widths */
+.col-sr {
+    width: 50px;
+    text-align: center;
+}
+
+.col-account {
+    min-width: 200px;
+}
+
+.col-perm {
+    width: 150px;
+}
+
+/* Body rows */
+.rights-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+    .rights-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+/* Cells */
+.rights-table td {
+    padding: 10px;
+    border-bottom: 1px solid #edf0f5;
+    vertical-align: middle;
+}
+
+/* Checkbox styling */
+.rights-table .form-check-input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn {
+    padding: 6px 14px;
+    font-size: 13px;
+}

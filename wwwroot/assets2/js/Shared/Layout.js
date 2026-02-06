@@ -50,8 +50,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     var userid = Number(sessionStorage.getItem("userId", userid));
+    const staffIds = [userid];
+
     //sessionStorage.setItem("userId", userid);
     fetchUserAccessData(userid);
+    //loadStaffAccountsRights(staffIds);
 
     document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
         const subItems = dropdown.querySelectorAll('.dropdown-menu .dropdown-item');
@@ -196,7 +199,6 @@ function printAllErrors(xhr, status, error, srcApi = "") {
     console.log("-------------------");
 }
 
-
 //get User Rights
 var userRightsData = null;
 //Fetch Data
@@ -321,3 +323,5 @@ function logoutUser() {
         e.stopPropagation(); // keep open when clicking inside
     });
 })();
+
+

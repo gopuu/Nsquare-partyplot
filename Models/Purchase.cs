@@ -36,9 +36,15 @@
 
         public long PaymentType { get; set; }
         public string? PaymentDate { get; set; }
+        public decimal Remaining_Amount { get; set; }
         public decimal PaidAmount { get; set; }
         public long PaymentModeId { get; set; }
+        public long PaymentAccountId { get; set; }
         public string? PaymentRefNo { get; set; }
+        public string? PaymentRemarks { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
 
         public bool IsUpdateInventoryStock { get; set; }
         public string? UploadInvoiceFile { get; set; }
@@ -107,6 +113,11 @@
         public long? PaymentModeId { get; set; }
         public decimal? PaidAmount { get; set; }
         public string? PaymentRefNo { get; set; }
+        public long? PaymentAccountId { get; set; }
+        public string? PaymentRemarks { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
 
         public bool IsUpdateInventoryStock { get; set; }
 

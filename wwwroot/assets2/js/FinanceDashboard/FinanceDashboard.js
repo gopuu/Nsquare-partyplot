@@ -548,11 +548,13 @@ $("#ddlExpenseCategory").change(function () {
 
 // Load Account dropdown dynamically
 function loadAccountDropdown(selectedId = "") {
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
     $.ajax({
         url: "/api/AccountMaster/GetAccount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: 0 }), // 0 = fetch all accounts
+        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
         success: function (response) {
             let dropdown = $(".ddlAccount");
             dropdown.empty(); // clear previous values

@@ -46,6 +46,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy == 0 ? 0 : request.ActionBy);
 
                     con.Open();
                     SqlDataReader dr = cmd.ExecuteReader();

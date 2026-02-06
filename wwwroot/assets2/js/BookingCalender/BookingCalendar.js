@@ -4688,14 +4688,13 @@ $("#btnSavePayment").click(function () {
 // ----------------- FETCH PAYMENT DATA -----------------
 loadAccountDropdown();
 function loadAccountDropdown() {
-    const payload = {
-        Id: 0
-    };
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
     $.ajax({
         url: "/api/AccountMaster/GetAccount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify(payload),
+        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
         success: function (res) {
             const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
             ddl.empty().append('<option value="0">--Select--</option>');
