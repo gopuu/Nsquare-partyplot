@@ -75,6 +75,7 @@ namespace ERPAdmin.ApiControllers
                         PaymentModeName = Convert.ToString(row["PaymentModeName"]),
                         TransactionId = Convert.ToString(row["TransactionId"]),
                         Notes = Convert.ToString(row["Notes"]),
+                        VoucherNo = Convert.ToString(row["VoucherNo"]),
                         ChequeBank = Convert.ToString(row["ChequeBank"]),
                         ChequeNo = Convert.ToString(row["ChequeNo"]),
                         ChequeDate = row["ChequeDate"] == DBNull.Value ? null : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
@@ -125,6 +126,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@TransactionId", (object)model.TransactionId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
 
+                    cmd.Parameters.AddWithValue("@VoucherNo", (object)model.VoucherNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
@@ -184,6 +186,65 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
+
+        //NEXT VOUCHER NO
+        [HttpGet]
+        [Route("GetNextVoucherNo")]
+        public IActionResult GetNextVoucherNo()
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                NextVoucherNoResponse result = null;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetNextVoucherNo", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            result = new NextVoucherNoResponse
+                            {
+                                LastVoucherNo_Income = reader["LastVoucherNo_Income"].ToString(),
+                                LastVoucherNo_Expense = reader["LastVoucherNo_Expense"].ToString()
+                            };
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Next voucher numbers fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse); // ✅ Always 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
 
     }
 }

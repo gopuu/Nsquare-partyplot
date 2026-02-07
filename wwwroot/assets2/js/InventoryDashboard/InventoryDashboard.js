@@ -13,7 +13,9 @@ $(document).ready(function () {
         loadStockLevel(categoryId);
     });
     
-    loadSuppliersWithItems();
+    // Initial load
+    setStockOutDatesByDuration();
+    loadStockOutSummary();
 
     //FOR KEY STATISTICS 🔹 Dropdown click event (same as event pie)
     $(".chart-filter-Statistics .dropdown-item").on("click", function (e) {
@@ -223,90 +225,141 @@ function renderStockList(list) {
 }
 //Stock Level ----------------------- END ---------------------------------------
 
-//Supplier & Items ----------------------- START ---------------------------------------
-function loadSuppliersWithItems() {
-    var payload = {
-        SupplierId: 0
+//Stock-Out Summary (Raw Material Wise) ----------------------- START ---------------------------------------
+function loadStockOutSummary() {
+
+    const payload = {
+        MonthDuration: $("#stockOutDuration").val(),
+        FromDate: $("#stockOutFromDate").val(),
+        ToDate: $("#stockOutToDate").val(),
+        RawMaterialId: 0
     };
 
     $.ajax({
-        url: "/api/InventoryDashboard/GetInventoryDashboardSuppliers",
+        url: "/api/InventoryDashboard/GetInventoryDashboardStockOutSummary",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("Suppliers response:", res);
 
             if (res.status === "Success" && res.data?.length) {
-                renderSuppliers(res.data);
+                renderStockOutSummary(res.data);
             } else {
-                $("#supplierList").html(
-                    "<div class='text-muted text-center'>No data found</div>"
+                $(".stockout-list").html(
+                    "<div class='text-muted text-center'>No stock-out data found</div>"
                 );
             }
         },
         error: function () {
-            $("#supplierList").html(
-                "<div class='text-danger text-center'>Failed to load suppliers</div>"
+            $(".stockout-list").html(
+                "<div class='text-danger text-center'>Failed to load stock-out data</div>"
             );
         }
     });
 }
 
-function renderSuppliers(data) {
+function renderStockOutSummary(data) {
 
-    const container = $(".supplier-list");
+    const container = $(".stockout-list");
     container.empty();
 
-    const grouped = {};
+    // Header row
+    container.append(`
+        <div class="d-flex fw-bold text-muted border-bottom pb-2 mb-2 small">
+            <div class="flex-fill">Raw Material</div>
+            <div class="text-center d-none" style="width:120px;">Count</div>
+            <div class="text-end" style="width:150px;">Total Qty</div>
+        </div>
+    `);
 
     data.forEach(item => {
-        const supplier = item.SupplierName;
-        if (!grouped[supplier]) grouped[supplier] = [];
-        grouped[supplier].push(item);
-    });
-
-    let idx = 1;
-
-    for (const supplier in grouped) {
-
-        const id = "supplier_" + idx++;
-        let items = "";
-
-        grouped[supplier].forEach(i => {
-            items += `<p class="mb-1 small">${i.ItemName} - ${i.Quantity}</p>`;
-        });
 
         container.append(`
-            <div class="supplier mb-3">
-                <div class="d-flex justify-content-between align-items-center 
-                            border-bottom py-2 bg-light px-2 rounded">
-                    <div class="d-flex align-items-center">
-                        <button class="btn btn-sm btn-outline-secondary toggle-btn"
-                                data-target="#${id}">-</button>
-                        <span class="ms-2 fw-semibold supplier-name">${supplier}</span>
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary raise-po-btn">
-                        Raise PO - Coming Soon
-                    </button>
+            <div class="d-flex align-items-center py-2 border-bottom small">
+                <div class="flex-fill fw-semibold">
+                    ${item.RawMaterialName}
                 </div>
 
-                <div id="${id}" class="mt-2 ms-4">
-                    ${items}
+                <div class="text-center d-none" style="width:120px;">
+                    <strong class="text-danger">${item.StockOutCount}</strong>
+                </div>
+
+                <div class="text-end" style="width:150px;">
+                    <strong>${item.TotalStockOutQty}</strong>
                 </div>
             </div>
         `);
-    }
+    });
 }
 
-
-$(document).on("click", ".toggle-btn", function () {
-    const target = $(this).data("target");
-    const isVisible = $(target).is(":visible");
-
-    $(target).toggle();
-    $(this).text(isVisible ? "+" : "-");
+$("#stockOutDuration").on("change", function () {
+    setStockOutDatesByDuration();
+    loadStockOutSummary();
 });
-//Supplier & Items ----------------------- END - ---------------------------------------
+
+$("#stockOutFromDate, #stockOutToDate").on("change", function () {
+    if ($("#stockOutDuration").val() === "customrange") {
+        loadStockOutSummary();
+    }
+});
+
+function formatDate(date) {
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
+}
+function setStockOutDatesByDuration() {
+
+    const duration = $("#stockOutDuration").val();
+    const today = new Date();
+
+    let fromDate = null;
+    let toDate = formatDate(today);
+
+    switch (duration) {
+
+        case "yesterday":
+            fromDate = formatDate(new Date(today.setDate(today.getDate() - 1)));
+            toDate = fromDate;
+            break;
+
+        case "days": // Last 7 days
+            fromDate = formatDate(new Date(today.setDate(today.getDate() - 6)));
+            break;
+
+        case "lastdays": // Last 30 days
+            fromDate = formatDate(new Date(today.setDate(today.getDate() - 29)));
+            break;
+
+        case "thismonth":
+            fromDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+            toDate = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+            break;
+
+        case "lastmonth":
+            fromDate = formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1));
+            toDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 0));
+            break;
+
+        case "12months":
+            fromDate = formatDate(new Date(today.getFullYear() - 1, today.getMonth(), 1));
+            break;
+
+        case "customrange":
+            $("#stockOutFromDate, #stockOutToDate").prop("disabled", false);
+            return; // 👈 wait for manual input
+    }
+
+    // 🔒 Lock date inputs for auto ranges
+    $("#stockOutFromDate, #stockOutToDate")
+        .prop("disabled", true)
+        .val("");
+
+    $("#stockOutFromDate").val(fromDate);
+    $("#stockOutToDate").val(toDate);
+}
+
+//Stock-Out Summary (Raw Material Wise)----------------------- END - ---------------------------------------
 
 

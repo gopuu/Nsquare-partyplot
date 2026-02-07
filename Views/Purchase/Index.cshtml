@@ -20,7 +20,7 @@
         <div class="row g-2">
             <div class="col-12 col-xxl-12">
                 <div class="mb-12">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0 text-warning">Purchase Order</h5>
                         <button class="btn btn-outline-warning btn-sm" id="btn-add">
                             <i class="fa fa-plus-circle"></i> Add Purchase Order
@@ -28,10 +28,10 @@
                     </div>
 
                     <!-- 🔹 Insights Widgets -->
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-2">
 
                         <div class="col-md-4">
-                            <div class="card shadow-sm border-0">
+                            <div class="card shadow-sm border-0 bg-warning-gradient">
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="mb-1">
@@ -45,7 +45,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card shadow-sm border-0">
+                            <div class="card shadow-sm border-0 bg-warning-gradient">
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="mb-1">
@@ -59,7 +59,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card shadow-sm border-0">
+                            <div class="card shadow-sm border-0 bg-warning-gradient">
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="mb-1">
@@ -71,8 +71,9 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
+
+                    <!--tableMain-->
                     <div id="tableMain">
                         <table class="table table-striped table-bordered" style="width:100%"></table>
                     </div>
@@ -82,6 +83,7 @@
     </div>
 </div>
 
+<!-- Purchase Order MODAL-->
 <div class="modal fade" id="addEventModal" tabindex="-1">
     <div class="modal-dialog modal-95 modal-fullscreen-md-down">
         <div class="modal-content">
@@ -522,3 +524,124 @@
 </div>
 <!-- END MODAL -->
 
+<!-- Outstanding Due MODAL -- START -->
+<!-- ================= Outstanding Payment Modal ================= -->
+<div class="modal fade" id="outstandingPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-warning-gradient py-2">
+                <h6 class="modal-title fw-bold text-dark">
+                    Pay Outstanding Amount
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- Hidden -->
+                <input type="hidden" id="outPurchaseId">
+                <input type="hidden" id="outRemainingAmount">
+
+                <!-- INFO -->
+                <div class="alert alert-light border mb-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="fw-semibold text-dark">PO No</div>
+                            <div id="outPONo" class="text-muted">-</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-semibold text-dark">Outstanding Due Amount</div>
+                            <div class="fw-bold text-warning fs-5">
+                                ₹ <span id="outRemainingText">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM -->
+                <div class="row g-2">
+
+                    <!-- Payment Date -->
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                        <input type="date" id="outPaymentDate" class="form-control form-control-sm">
+                    </div>
+
+                    <!-- Paid Amount -->
+                    <div class="col-md-6">
+                        <label class="form-label">Paid Amount <span class="text-danger">*</span></label>
+                        <input type="number" id="outPaidAmount"
+                               class="form-control form-control-sm"
+                               min="0" step="0.01">
+                    </div>
+
+                    <!-- Payment Mode -->
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                        <select id="outPaymentModeId" class="form-select form-select-sm">
+                            <option value="">-- Select Mode --</option>
+                        </select>
+                    </div>
+
+                    <!-- Account -->
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Account <span class="text-danger">*</span></label>
+                        <select id="outAccountId" class="form-select form-select-sm">
+                            <option value="">-- Select Account --</option>
+                        </select>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="col-md-6">
+                        <label class="form-label">Reference No</label>
+                        <input type="text" id="outReferenceNo"
+                               class="form-control form-control-sm"
+                               placeholder="UTR / Txn ID">
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="col-md-6">
+                        <label class="form-label">Remarks</label>
+                        <input type="text" id="outRemarks"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <!-- Cheque Fields -->
+                    <div class="col-md-6 cheque-out d-none">
+                        <label class="form-label">Cheque Bank</label>
+                        <input type="text" id="outChequeBank"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-3 cheque-out d-none">
+                        <label class="form-label">Cheque No</label>
+                        <input type="text" id="outChequeNo"
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-3 cheque-out d-none">
+                        <label class="form-label">Cheque Date</label>
+                        <input type="date" id="outChequeDate"
+                               class="form-control form-control-sm">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer py-2">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-warning btn-sm" id="btnSaveOutstanding">
+                    Pay Now
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Outstanding Due MODAL -- END -->

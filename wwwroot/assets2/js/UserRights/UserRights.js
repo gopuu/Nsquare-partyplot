@@ -1,9 +1,9 @@
 ﻿$(document).ready(function () {
     loadStaffDropdown();
-    fetchUserRights();
+    //fetchUserRights();
 
     $("#rightsTabs").hide();
-    $("#rightsTabsContent").hide();
+    //$("#rightsTabsContent").hide();
     $("#ddlStaff").change(function () {
         let staffId = $(this).val();
         if (staffId) {
@@ -195,45 +195,38 @@ function renderUserRightsTabs(data) {
 
         // TAB CONTENT + SELECT ALL CHECKBOXES
         tabContent.append(`
-                <div class="tab-pane fade show ${activeClass}" id="${contentId}" role="tabpanel">
+            <div class="tab-pane fade show ${activeClass}" id="${contentId}" role="tabpanel">
 
-                    <!-- 🔵 SCROLLABLE TABLE WRAPPER -->
-                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                <div class="rights-table-wrapper">
+                    <table class="rights-table">
+                        <thead>
+                            <tr>
+                                <th class="col-sr">#</th>
+                                <th class="col-module">Module Name</th>
 
-                        <table class="table table-bordered table-striped mb-0">
-                            <thead class="bg-200 text-900">
-                                <tr>
-                                    <th style="width:60px">Sr</th>
-                                    <th>Module Name</th>
+                                <th class="col-perm">
+                                    <input type="checkbox" class="selectAllAdd" data-group="${clean}"> Add
+                                </th>
+                                <th class="col-perm">
+                                    <input type="checkbox" class="selectAllEdit" data-group="${clean}"> Edit
+                                </th>
+                                <th class="col-perm">
+                                    <input type="checkbox" class="selectAllDelete" data-group="${clean}"> Delete
+                                </th>
+                                <th class="col-perm">
+                                    <input type="checkbox" class="selectAllView" data-group="${clean}"> View
+                                </th>
+                            </tr>
+                        </thead>
 
-                                    <th class="text-center">
-                                        <input type="checkbox" class="selectAllAdd" data-group="${clean}">
-                                        Add
-                                    </th>
-                                    <th class="text-center">
-                                        <input type="checkbox" class="selectAllEdit" data-group="${clean}">
-                                        Edit
-                                    </th>
-                                    <th class="text-center">
-                                        <input type="checkbox" class="selectAllDelete" data-group="${clean}">
-                                        Delete
-                                    </th>
-                                    <th class="text-center">
-                                        <input type="checkbox" class="selectAllView" data-group="${clean}">
-                                        View
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                ${rows}
-                            </tbody>
-                        </table>
-
-                    </div>
-
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
                 </div>
-                `);
+
+            </div>
+        `);
 
 
     });

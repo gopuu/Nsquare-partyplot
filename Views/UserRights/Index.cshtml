@@ -7,24 +7,30 @@
 <div class="container-fluid page-content">
     <div class="card shadow-sm">
         <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center py-2 px-3">
-                <!-- LEFT TITLE -->
-                <h5 class="mb-0">User Rights Master</h5>
-                <!-- RIGHT SIDE DROPDOWN + BUTTON -->
-                <div class="d-flex gap-3">
-                    <select id="ddlStaff" class="form-select form-select-sm">
-                    </select>
-                    <button class="btn btn-outline-warning btn-sm" id="btnSave">Save</button>
-                </div>
-
+            <!-- LEFT TITLE -->
+            <h5 class="mb-0 text-warning">User Rights Master</h5>
+            <!-- RIGHT SIDE DROPDOWN + BUTTON -->
+            <div class="d-flex gap-3">
+                <select id="ddlStaff" class="form-select form-select-sm"></select>
+                <button class="btn btn-outline-warning btn-sm" id="btnSave">Save</button>
             </div>
+        </div>
         <div class="card-body">
             <!-- 🔵 FIXED RIGHT TABS -->
-            <ul class="nav nav-tabs mt-3" id="rightsTabs" role="tablist">
+            <ul class="nav nav-tabs mt-1" id="rightsTabs" role="tablist">
                 <!-- JS will inject tabs -->
             </ul>
             <!-- 🔵 TAB CONTENT -->
-            <div class="tab-content p-3 border border-top-0" id="rightsTabsContent">
-                <!-- JS will inject table -->
+            <div class="tab-content p-0" id="rightsTabsContent">
+
+                <!-- EMPTY STATE MESSAGE -->
+                <div id="noStaffMsg" class="text-center text-muted py-5">
+                    <h5 class="mb-2">Select Staff for access rights..</h5>
+                    <small>Please choose an employee from the dropdown above</small>
+                </div>
+
+                <!-- JS will inject tabs + tables here -->
+
             </div>
         </div>
     </div>

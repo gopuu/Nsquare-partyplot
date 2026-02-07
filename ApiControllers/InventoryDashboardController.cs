@@ -275,7 +275,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetInventoryDashboardSuppliers")]
         public IActionResult GetInventoryDashboardSuppliers([FromBody] Dashbaord_Inventory_SupplierItems_Request request)
@@ -333,6 +332,67 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetInventoryDashboardStockOutSummary")]
+        public IActionResult GetInventoryDashboardStockOutSummary([FromBody] DashboardInventoryStockOutRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<InventoryDashboardStockOutSummary> result = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid domain or connection.";
+                    apiResponse.data = null;
+                    return Ok(apiResponse); // ✅ ALWAYS 200
+                }
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("Dashboard_Inventory_GetStockOutSummary_RawMaterialWise", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@MonthDuration", (object?)request.MonthDuration ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@FromDate", (object?)request.FromDate ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ToDate", (object?)request.ToDate ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RawMaterialId", request.RawMaterialId);
+                        SqlDataAdapter da = new SqlDataAdapter(cmd);
+                        da.Fill(dt);
+                    }
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    result.Add(new InventoryDashboardStockOutSummary
+                    {
+                        RawMaterialId = Convert.ToInt64(row["RawMaterialId"]),
+                        RawMaterialName = row["RawMaterialName"].ToString(),
+                        StockOutCount = Convert.ToInt32(row["StockOutCount"]),
+                        TotalStockOutQty = Convert.ToDecimal(row["TotalStockOutQty"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Inventory dashboard stock-out summary fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse); // ✅ ALWAYS 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse); // ✅ STILL 200
+            }
+        }
 
 
     }

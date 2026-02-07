@@ -1,4 +1,8 @@
-﻿/* Extra Extra Large Modal */
+﻿.bg-warning-gradient {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe8b3 100%);
+}
+
+/* Extra Extra Large Modal */
 .modal-xxl {
     max-width: 98%; /* or 1320px */
     --bs-modal-width: 98%;

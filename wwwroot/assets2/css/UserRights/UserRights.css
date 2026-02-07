@@ -44,13 +44,107 @@ font-weight: bold;
     color: white;
     border-bottom: 3px solid #cc6e00;
 }
-
 .tab-pane {
-    height: 350px;
     padding-right: 6px;
 }
+
 /* Hover effect */
 #rightsTabs .nav-link:not(.active):hover {
     background-color: rgba(0,0,0,0.05);
     color: #ff8c00;
+}
+
+#rightsTabsContent td {
+    padding: 8px;
+}
+#rightsTabsContent {
+    overflow: hidden; /* prevents bleed outside card */
+}
+
+
+/* =========================
+   RIGHTS TABLE (SHARED)
+========================= */
+
+.rights-table-wrapper {
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e6ef;
+    background: #fff;
+}
+
+/* Table base */
+.rights-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+    /* Header */
+    .rights-table thead th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fb;
+        z-index: 2;
+        font-weight: 700;
+        color: #344054;
+        border-bottom: 1px solid #e2e6ef;
+        padding: 10px;
+    }
+
+    /* Body rows */
+    .rights-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+        .rights-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+    /* Cells */
+    .rights-table td {
+        padding: 10px;
+        border-bottom: 1px solid #edf0f5;
+        vertical-align: middle;
+    }
+
+/* Column widths */
+.col-sr {
+    width: 60px;
+    text-align: center;
+}
+
+.col-module {
+    min-width: 240px;
+}
+
+.col-perm {
+    width: 120px;
+    text-align: center;
+}
+
+/* Checkbox */
+.rights-table .form-check-input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.form-check-input:focus {
+    box-shadow: none !important;
+}
+.rights-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.rights-table-wrapper::-webkit-scrollbar-thumb {
+    background: #cfd4dc;
+    border-radius: 10px;
+}
+
+.rights-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
 }

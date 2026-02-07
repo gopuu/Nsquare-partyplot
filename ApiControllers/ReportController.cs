@@ -917,8 +917,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
 
@@ -960,7 +961,6 @@ namespace ERPAdmin.ApiControllers
                 string userName = dtCompany.Rows[0]["UserName"].ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
-
                 document.Open();
 
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -1226,8 +1226,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -1508,8 +1509,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -1787,8 +1789,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -2068,8 +2071,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -2362,8 +2366,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -2639,8 +2644,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -2943,8 +2949,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -3207,8 +3214,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
-
         [HttpPost]
         [Route("Report_ProfitLoss")]
         public IActionResult Report_ProfitLoss(ProfitLossDetailsRequest request)
@@ -3226,8 +3231,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -3502,8 +3508,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -3781,8 +3788,9 @@ namespace ERPAdmin.ApiControllers
                     return errorResult;
                 }
 
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
                 writer.PageEvent = new PdfPageEvents("Admin");
@@ -4104,6 +4112,4 @@ public class PdfPageEvents : PdfPageEventHelper
 
         cb.EndText();
     }
-
-
 }

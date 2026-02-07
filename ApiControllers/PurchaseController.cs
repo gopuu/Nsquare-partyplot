@@ -431,6 +431,154 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //All Txn
+        [HttpPost]
+        [Route("GetPurchasePaymentTransactions")]
+        public IActionResult GetPurchasePaymentTransactions([FromBody] GetPurchasePaymentTransactionsRequest request)
+        {
+            apiResponse response = new();
+            List<PurchasePaymentTransactionModel> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetPurchasePaymentTransactions", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@PurchaseId", request.PurchaseId);
+                    cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object)request.ToDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+                    cmd.Parameters.AddWithValue("@FromAmount", (object)request.FromAmount ?? 0);
+                    cmd.Parameters.AddWithValue("@ToAmount", (object)request.ToAmount ?? 0);
+
+                    con.Open();
+                    using SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        list.Add(new PurchasePaymentTransactionModel
+                        {
+                            PaymentId = Convert.ToInt64(dr["PaymentId"]),
+                            PurchaseId = Convert.ToInt64(dr["PurchaseId"]),
+
+                            InvoiceNo = Convert.ToString(dr["InvoiceNo"]),
+                            PONo = Convert.ToString(dr["PONo"]),
+                            InvoiceDate_Format = Convert.ToString(dr["InvoiceDate_Format"]),
+
+                            SupplierName = Convert.ToString(dr["SupplierName"]),
+
+                            PaymentDate_Format = Convert.ToString(dr["PaymentDate_Format"]),
+                            PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
+
+                            PaymentMode = Convert.ToString(dr["PaymentMode"]),
+                            AccountName = Convert.ToString(dr["AccountName"]),
+
+                            ReferenceNo = Convert.ToString(dr["ReferenceNo"]),
+                            Remarks = Convert.ToString(dr["Remarks"]),
+
+                            ChequeBank = Convert.ToString(dr["ChequeBank"]),
+                            ChequeNo = Convert.ToString(dr["ChequeNo"]),
+                            ChequeDate = dr["ChequeDate"] == DBNull.Value
+                                ? null
+                                : Convert.ToDateTime(dr["ChequeDate"]).ToString("dd-MMM-yyyy"),
+
+                            PaidBy = Convert.ToString(dr["PaidBy"]),
+                            PaidOn = Convert.ToDateTime(dr["PaidOn"]).ToString("dd-MMM-yyyy HH:mm")
+                        });
+                    }
+                }
+
+                response.status = "Success";
+                response.message = "Payment transactions fetched successfully";
+                response.data = list;
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                response.status = "Error";
+                response.message = ex.Message;
+                response.data = null;
+                return StatusCode(500, response);
+            }
+        }
+
+        //Save Outstanding
+        [HttpPost]
+        [Route("SavePurchaseOutstandingPayment")]
+        public IActionResult SavePurchaseOutstandingPayment([FromBody] SavePurchaseOutstandingPaymentRequest model)
+        {
+            apiResponse response = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SavePurchaseOutstandingPayment", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@PurchaseId", model.PurchaseId);
+                    cmd.Parameters.AddWithValue("@PaymentDate", model.PaymentDate);
+                    cmd.Parameters.AddWithValue("@PaidAmount", model.PaidAmount);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", model.PaymentModeId);
+                    cmd.Parameters.AddWithValue("@AccountId", model.AccountId);
+
+                    cmd.Parameters.AddWithValue("@ReferenceNo", (object)model.ReferenceNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Remarks", (object)model.Remarks ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+
+                response.status = "Success";
+                response.message = "Outstanding payment saved successfully";
+                response.data = null;
+                return Ok(response);
+            }
+            catch (SqlException ex)
+            {
+                response.status = "Error";
+                response.message = ex.Message; // shows SP RAISERROR messages
+                response.data = null;
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                response.status = "Error";
+                response.message = ex.Message;
+                response.data = null;
+                return StatusCode(500, response);
+            }
+        }
+
 
     }
 }

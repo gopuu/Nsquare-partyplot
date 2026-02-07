@@ -1,7 +1,6 @@
-﻿
-let rowIndex = 0;
-var nextPONumber = 0;
-var nextInvoiceNumber = 0;
+﻿let rowIndex = 0;
+//var nextPONumber = 0;
+//var nextInvoiceNumber = 0;
 
 $(document).ready(function () {
     loadStateDropdown();
@@ -9,8 +8,8 @@ $(document).ready(function () {
     loadRawMaterialsDropdown();
     loadUnitDropdown();
     loadPaymentModeDropdown();
+    loadAccountDropdown();
     fetchData();
-    fetchNextNumbers();
 
     // Add button click
     $(document).on('click', '#btn-add', function (event) {
@@ -303,7 +302,6 @@ $(document).ready(function () {
                             showConfirmButton: false,
                             timer: 900
                         });
-                        fetchNextNumbers();
                         resetFormFields(); // Reset form fields when modal is shown
                         fetchData();
                         //$("#addEventModal").modal("hide");
@@ -483,11 +481,114 @@ $(document).ready(function () {
         }
     });
 
+    // OUTSTANDING PAY MODAL
+
+    //btn - remaining - click
     $(document).on("click", ".btn-remaining", function () {
-        console.log("PurchaseId:", $(this).data("id"));
-        console.log("PONo:", $(this).data("pono"));
+
+        const purchaseId = $(this).data("id");
+        const poNo = $(this).data("pono");
+        const remaining = $(this).text().replace("₹", "").trim();
+
+        console.log("PurchaseId:", purchaseId);
+        console.log("PONo:", poNo);
+
+        $("#outPurchaseId").val(purchaseId);
+        $("#outRemainingAmount").val(remaining);
+        $("#outRemainingText").text(remaining);
+        $("#outPONo").text("#" + poNo);
+
+        // Default values
+        $("#outPaymentDate").val(new Date().toISOString().split("T")[0]);
+        $("#outPaidAmount").val(remaining);
+
+        $("#outPaymentModeId").prop("selectedIndex", 0);
+        $("#outAccountId").prop("selectedIndex", 0);
+        $("#outReferenceNo").val("");
+        $("#outRemarks").val("");
+        $(".cheque-out").addClass("d-none");
+
+        $("#outstandingPaymentModal").modal("show");
     });
-5
+    //outPaymentModeId - change
+    $(document).on("change", "#outPaymentModeId", function () {
+        const text = $("#outPaymentModeId option:selected").text().toLowerCase();
+        if (text.includes("cheque")) {
+            $(".cheque-out").removeClass("d-none");
+        } else {
+            $(".cheque-out").addClass("d-none");
+        }
+    });
+    //outPaidAmount - input
+    $("#outPaidAmount").on("input", function () {
+        const remaining = Number($("#outRemainingAmount").val()) || 0;
+        if (Number(this.value) > remaining) {
+            this.value = remaining;
+        }
+    });
+    //btnSaveOutstanding
+    $("#btnSaveOutstanding").click(function () {
+
+        const remaining = Number($("#outRemainingAmount").val()) || 0;
+
+        const payload = {
+            PurchaseId: Number($("#outPurchaseId").val()),
+            PaymentDate: $("#outPaymentDate").val(),
+            PaidAmount: Number($("#outPaidAmount").val()),
+            PaymentModeId: Number($("#outPaymentModeId").val()),
+            AccountId: Number($("#outAccountId").val()),
+            ReferenceNo: $("#outReferenceNo").val(),
+            Remarks: $("#outRemarks").val(),
+            ChequeBank: $("#outChequeBank").val(),
+            ChequeNo: $("#outChequeNo").val(),
+            ChequeDate: $("#outChequeDate").val(),
+            ActionBy: Number(sessionStorage.getItem("userId") || 0)
+        };
+
+        /* ================= BASIC REQUIRED CHECK ================= */
+        if (!payload.PaymentDate || !payload.PaymentModeId || !payload.AccountId) {
+            Swal.fire("Warning", "Please fill all required fields", "warning");
+            return;
+        }
+
+        /* ================= AMOUNT VALIDATION ================= */
+        if (!payload.PaidAmount || payload.PaidAmount <= 0) {
+            Swal.fire("Warning", "Paid amount must be greater than zero", "warning");
+            return;
+        }
+
+        if (payload.PaidAmount > remaining) {
+            Swal.fire(
+                "Invalid Amount",
+                `Paid amount cannot exceed remaining amount (₹ ${remaining.toLocaleString("en-IN")})`,
+                "warning"
+            );
+            return;
+        }
+
+        $.ajax({
+            url: "/api/Purchase/SavePurchaseOutstandingPayment",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === "Success") {
+                    Swal.fire("Success", res.message, "success");
+                    $("#outstandingPaymentModal").modal("hide");
+                    fetchData(); // reload grid
+                }
+                else {
+                    Swal.fire("Error", res.message, "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Failed to save payment");
+            }
+        });
+    });
+
+    // OUTSTANDING PAY MODAL
+
     // 3-dot icon click event
     $("#btnSubTotalMenu").on("click", function () {
         console.log("Subtotal Amount:", $("#txtSubTotal").text());
@@ -882,8 +983,22 @@ function renderTable(data) {
                     `
             },
             { data: "InvoiceDate_Format", title: "Invoice Date" },
-            { data: "InvoiceNo", title: "Invoice No" },
-            { data: "PONo", title: "PO/MRN No" },
+            {
+                data: "InvoiceNo",
+                title: "Invoice No",
+                render: function (d) {
+                    if (!d) return "-";
+                    return `#${d}`;
+                }
+            },
+            {
+                data: "PONo",
+                title: "PO/MRN No",
+                render: function (d) {
+                    if (!d) return "-";
+                    return `#${d}`;
+                }
+            },
 
             {
                 data: "GrandTotal_Amount",
@@ -909,7 +1024,7 @@ function renderTable(data) {
 
                     if (remain > 0) {
                         return `
-                            <button class="btn btn-sm btn-outline-warning btn-remaining"
+                            <button class="btn btn-sm btn-action-xss btn-outline-warning btn-remaining"
                                     data-id="${d.Id}"
                                     data-pono="${d.PONo ?? ''}">
                                 ₹ ${remain}
@@ -1024,8 +1139,7 @@ function resetFormFields() {
     $("#purchaseInvoiceDate").val(today);
 
     // Invoice No + PO No
-    $("#purchaseInvoiceNo").val(nextInvoiceNumber);
-    $("#purchasePONo").val(nextPONumber).prop("disabled", true);
+    fetchNextNumbers();
 
     // Reset P.O toggle button icon
     $("#togglePONo i").removeClass().addClass("fa fa-pen");
@@ -1186,8 +1300,9 @@ function fetchNextNumbers() {
         success: function (res) {
 
             if (res.status === "Success") {
-                nextPONumber = res.data.NextPONo;
+                var nextPONumber = res.data.NextPONo;
                 //console.log("Next PO Number:", nextPONumber);
+                $("#purchasePONo").val(nextPONumber).prop("disabled", true);
             }
         },
         error: function (xhr, status, error) {
@@ -1203,8 +1318,10 @@ function fetchNextNumbers() {
         success: function (res) {
 
             if (res.status === "Success") {
-                nextInvoiceNumber = res.data.NextInvoiceNo;
-                //console.log("Next Invoice Number:", nextInvoiceNumber);
+                var nextInvoiceNumber = res.data.NextInvoiceNo;
+                console.log("Next Invoice Number:", nextInvoiceNumber);
+                $("#purchaseInvoiceNo").val(nextInvoiceNumber);
+
             }
         },
         error: function (xhr, status, error) {
@@ -1301,11 +1418,22 @@ function loadPaymentModeDropdown() {
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
             //console.log("response PaymentMode:", response);                
-            $("#paymentModeId").html(`<option value="0">-- Select Payment Mode --</option>`);
+
+            if (response.status !== "Success") {
+                console.warn("PaymentMode API Error:", response.message);
+                return;
+            }
+            const $ddlPaymentMode = $("#paymentModeId, #outPaymentModeId");
+
+            if (!response.data || response.data.length === 0) {
+                $ddlPaymentMode.prop("disabled", true).html(`<option value="0">No PaymentMode Found</option>`);
+            }
+
+            $ddlPaymentMode.html(`<option value="0">-- Select Payment Mode --</option>`);
             response.data.forEach(s => {
-                $("#paymentModeId").append(`<option value="${s.Id}">${s.PaymentModeName}</option>`);
+                $ddlPaymentMode.append(`<option value="${s.Id}">${s.PaymentModeName}</option>`);
             });
-            $("#paymentModeId").val(response.data[0].Id); // first item by ID
+            $ddlPaymentMode.val(response.data[0].Id); // first item by ID
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "PaymentMode Fetch Error")
@@ -1313,6 +1441,46 @@ function loadPaymentModeDropdown() {
     });
 }
 
+//ACCOUNT DROPDOWN
+function loadAccountDropdown() {
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
+        success: function (res) {
+
+            if (res.status !== "Success") {
+                console.warn("Account API Error:", res.message);
+                return;
+            }
+
+            const $ddlAccount = $("#paymentAccountId, #outAccountId");
+
+            if (!res.data || res.data.length === 0) {
+                $ddlAccount.prop("disabled", true).html(`<option value="0">No Accounts Found</option>`);
+            }
+
+            // Clear & add default
+            $ddlAccount.html(`<option value="0">-- Select Account --</option>`);
+
+            res.data.forEach(a => {
+                $ddlAccount.append(`<option value="${a.Id}">${a.AccountName}</option>`);
+            });
+
+            // Optional: auto-select default account
+            const defaultAcc = res.data.find(x => x.IsDefaultAccount === true);
+            if (defaultAcc) {
+                $ddlAccount.val(defaultAcc.Id);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Account Fetch Error");
+        }
+    });
+}
 
 //<!--BEHAVIOUR - ADD MODAL - DISCOUNT, TAX OTHER -- START -->
 // Hide all except selected
@@ -1585,4 +1753,3 @@ $(document).on("keydown", function (e) {
 });
 
 //<!-- MANAGE - child-parent modal close -- END -->
-

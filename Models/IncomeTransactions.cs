@@ -18,6 +18,7 @@
         public string? PaymentModeName { get; set; }
         public string? TransactionId { get; set; }
         public string? Notes { get; set; }
+        public string? VoucherNo { get; set; }
         public string? ChequeBank { get; set; }
         public string? ChequeNo { get; set; }
         public string? ChequeDate { get; set; }
@@ -43,6 +44,7 @@
         public long? PaymentModeId { get; set; }
         public string? TransactionId { get; set; }
         public string? Notes { get; set; }
+        public string? VoucherNo { get; set; }
         public string? ChequeBank { get; set; }
         public string? ChequeNo { get; set; }
         public string? ChequeDate { get; set; }
@@ -51,6 +53,13 @@
     public class DeleteIncomeTransactionRequest : BaseClass
     { 
         public long Id { get; set; }
+    }
+
+    //NEXT VOUCHER NO
+    public class NextVoucherNoResponse
+    {
+        public string LastVoucherNo_Income { get; set; }
+        public string LastVoucherNo_Expense { get; set; }
     }
 
 }

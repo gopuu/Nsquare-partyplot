@@ -207,8 +207,8 @@ function fetchHallDetails(bookingData, banquetId = 0) {
         contentType: 'application/json',
         data: JSON.stringify({ Id: banquetId }), // Get all halls
         success: function (response) {
-            //console.log("Get Hall res:", response);
-            if (response.status === "Success" && response.data) {
+            console.log("Get Hall res:", response);
+            if (response.status === "Success" && response.data && response.data.length > 0) {
                 banquetHallsList = response.data;
                 let options = `<option value="0">-- Select Hall --</option>`; // default option
                 $.each(response.data, function (index, item) {
@@ -225,14 +225,14 @@ function fetchHallDetails(bookingData, banquetId = 0) {
                 }
                 //console.log("fetchHall - passing bookingData:", bookingData);
                 renderBoard(bookingData);
-            } else {
+            }
+            else {
                 $("#banquetDropdown, #reschedule_BanquetId").html(`<option value="0">No Hall Found</option>`);
-                //console.error('Failed to fetch hall details:', response.message);
-                // Swal.fire({
-                //     icon: 'error',
-                //     title: 'Error',
-                //     text: response?.message || 'Failed to fetch hall details.'
-                // });
+                $("#booking-board").html(`
+                    <div class="alert alert-danger">
+                        No Hall Found. Please add halls in Company Settings.
+                    </div>
+                `);
             }
         },
         error: function (xhr, status, error) {

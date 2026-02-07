@@ -1,4 +1,5 @@
-﻿/* MODAL SIZE */
+﻿
+/* MODAL SIZE */
 .modal-95 {
     max-width: 95% !important;
     width: 95% !important;
@@ -156,4 +157,26 @@
 }
 /*<!-- Discount, Tax, Other charges-- >*/
 
+/*OUTSTANDING DUE MODAL -- START --*/
+.bg-warning-gradient {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe0b2 100%);
+}
 
+#outstandingPaymentModal .form-label {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#outstandingPaymentModal .alert {
+    border-radius: 6px;
+}
+
+#outstandingPaymentModal .modal-body {
+    padding: 16px;
+}
+
+.cheque-out {
+    transition: all 0.2s ease;
+}
+
+/*OUTSTANDING DUE MODAL -- END --*/

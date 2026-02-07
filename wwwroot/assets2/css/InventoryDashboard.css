@@ -1,0 +1,23 @@
+﻿.date-filter {
+    width: 130px;
+    background-color: #fff;
+}
+
+.stockout-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stockout-list::-webkit-scrollbar-thumb {
+    background-color: #d0d0d0;
+    border-radius: 4px;
+}
+
+#stockList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#stockList::-webkit-scrollbar-thumb {
+    background-color: #d0d0d0;
+    border-radius: 4px;
+}
+

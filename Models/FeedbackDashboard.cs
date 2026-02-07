@@ -134,4 +134,22 @@
         public int Count { get; set; }
     }
 
+    //InventoryDashboardStockOutSummary -- START
+    public class InventoryDashboardStockOutSummary
+    {
+        public long RawMaterialId { get; set; }
+        public string? RawMaterialName { get; set; }
+        public int StockOutCount { get; set; }
+        public decimal TotalStockOutQty { get; set; }
+    }
+
+    public class DashboardInventoryStockOutRequest
+    {
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public long RawMaterialId { get; set; }
+    }
+    //InventoryDashboardStockOutSummary -- END
+
 }

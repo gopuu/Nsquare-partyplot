@@ -1,4 +1,6 @@
-﻿namespace ERPAdmin.Models
+﻿using System.Transactions;
+
+namespace ERPAdmin.Models
 {
 
     //GET
@@ -146,6 +148,7 @@
     {
         public long Id { get; set; }
     }
+
     //Widgets
     public class PurchaseWidgetDto
     {
@@ -153,5 +156,66 @@
         public string? Outstanding_Amount { get; set; }
         public string? TaxPaidToSeller { get; set; }
     }
+
+
+    //All txn - Request model – Get transactions
+    public class GetPurchasePaymentTransactionsRequest
+    {
+        public long PurchaseId { get; set; } = 0;
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public long SupplierId { get; set; } = 0;
+        public long PaymentModeId { get; set; } = 0;
+        public long AccountId { get; set; } = 0;
+        public decimal? FromAmount { get; set; }
+        public decimal? ToAmount { get; set; }
+    }
+    //All Txn - Response model – Transaction row
+    public class PurchasePaymentTransactionModel
+    {
+        public long PaymentId { get; set; }
+        public long PurchaseId { get; set; }
+
+        public string? InvoiceNo { get; set; }
+        public string? PONo { get; set; }
+        public string? InvoiceDate_Format { get; set; }
+
+        public string? SupplierName { get; set; }
+
+        public string? PaymentDate_Format { get; set; }
+        public decimal PaidAmount { get; set; }
+
+        public string? PaymentMode { get; set; }
+        public string? AccountName { get; set; }
+
+        public string? ReferenceNo { get; set; }
+        public string? Remarks { get; set; }
+
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
+
+        public string? PaidBy { get; set; }
+        public string? PaidOn { get; set; }
+    }
+
+    //Outstanding payment - Request model
+    public class SavePurchaseOutstandingPaymentRequest : BaseClass
+    {
+        public long PurchaseId { get; set; }
+        public string? PaymentDate { get; set; }
+        public decimal PaidAmount { get; set; }
+        public long PaymentModeId { get; set; }
+        public long AccountId { get; set; }
+
+        public string? ReferenceNo { get; set; }
+        public string? Remarks { get; set; }
+
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
+    }
+
 
 }

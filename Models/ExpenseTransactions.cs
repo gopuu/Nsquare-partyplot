@@ -18,6 +18,7 @@
         public string? PaymentModeName { get; set; }
         public string? TransactionId { get; set; }
         public string? Notes { get; set; }
+        public string? VoucherNo { get; set; }
         public string? ChequeBank { get; set; }
         public string? ChequeNo { get; set; }
         public string? ChequeDate { get; set; }
@@ -46,6 +47,7 @@
         public string? ChequeBank { get; set; }
         public string? ChequeNo { get; set; }
         public string? ChequeDate { get; set; }
+        public string? VoucherNo { get; set; }
 
     }
 

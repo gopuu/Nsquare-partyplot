@@ -91,6 +91,7 @@ function checkPermission(type) {
     if (!allowed) Swal.fire("Access Denied", "Permission Required", "error");
     return allowed;
 }
+
 // FETCH DATA
 function fetchData() {
     var actionBy = Number(sessionStorage.getItem("userId") ?? 0);

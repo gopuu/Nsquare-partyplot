@@ -76,6 +76,7 @@ namespace ERPAdmin.ApiControllers
                         PaymentModeName = Convert.ToString(row["PaymentModeName"]),
                         TransactionId = Convert.ToString(row["TransactionId"]),
                         Notes = Convert.ToString(row["Notes"]),
+                        VoucherNo = Convert.ToString(row["VoucherNo"]),
                         ChequeBank = Convert.ToString(row["ChequeBank"]),
                         ChequeNo = Convert.ToString(row["ChequeNo"]),
                         ChequeDate = row["ChequeDate"] == DBNull.Value ? null : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
@@ -123,6 +124,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@PaymentModeId", (object)model.PaymentModeId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@TransactionId", (object)model.TransactionId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@VoucherNo", (object)model.VoucherNo ?? DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);

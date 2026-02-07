@@ -18,7 +18,7 @@
     $("#btn-add-debit-transactions").click(function () {
         resetFormFields_Expense();
         $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
-        $("#txtTransactionDate_Expense").val(new Date().toISOString().split('T')[0]); // set today
+        $("#txtTransactionDate_Expense").val(getTodayLocalDate());
         $("#ExpenseTransactionModal").modal("show");
     });
 
@@ -57,6 +57,7 @@
 
             TransactionId: $("#txtTransactionId_Expense").val().trim() || null,
             Notes: $("#txtNotes_Expense").val().trim() || null,
+            VoucherNo: $("#paymentVoucherNo_Expense").val().trim() || null,
 
             ChequeBank: $("#paymentChequebank_Expense").val().trim() || null,
             ChequeNo: $("#paymentChequeNo_Expense").val().trim() || null,
@@ -81,7 +82,7 @@
                     });
                     // Reset form & hide modal
                     resetFormFields_Expense();
-                    $("#ExpenseTransactionModal").modal("hide");
+                    //$("#ExpenseTransactionModal").modal("hide");
 
                     // Reload table or data
                     //fetchExpenseTransactions();
@@ -105,7 +106,7 @@
     $("#btn-add-credit-transactions").click(function () {
         resetFormFields_Income();
         $("#incomeTransactionModalTitle").text("Add Income Transactions");
-        $("#txtTransactionDate_Income").val(new Date().toISOString().split('T')[0]); // set today
+        $("#txtTransactionDate_Income").val(getTodayLocalDate());
         $("#incomeTransactionModal").modal("show");
     });
 
@@ -152,6 +153,7 @@
 
             TransactionId: $("#txtTransactionId_Income").val().trim() || null,
             Notes: $("#txtNotes_Income").val().trim() || null,
+            VoucherNo: $("#paymentVoucherNo_Income").val().trim() || null,
 
             ChequeBank: $("#paymentChequebank_Income").val().trim() || null,
             ChequeNo: $("#paymentChequeNo_Income").val().trim() || null,
@@ -176,7 +178,7 @@
                     });
                     // Reset form & hide modal
                     resetFormFields_Income();
-                    $("#incomeTransactionModal").modal("hide");
+                    //$("#incomeTransactionModal").modal("hide");
 
                     // Reload table or data
                     //fetchIncomeTransactions();
@@ -192,6 +194,14 @@
     //INCOME TXN --- END ---------------------------
 
 });
+
+function getTodayLocalDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
 
@@ -481,6 +491,8 @@ function resetFormFields_Expense() {
     $("#paymentChequeDate_Expense").val("");
 
     $("#txtNotes_Expense").val("");
+    loadNextVoucherNo();
+
 }
 
 function loadExpenseCategoryDropdown(selectedId = "") {
@@ -630,6 +642,7 @@ function resetFormFields_Income() {
     $("#paymentChequeDate_Income").val("");
 
     $("#txtNotes_Income").val("");
+    loadNextVoucherNo();
 }
 
 
@@ -697,4 +710,34 @@ $("#ddlIncomeCategory").change(function () {
 });
 //INCOME TRANSACTIONS ----- END ----------------------
 
+//NEXT VOUCHER NO --- START ----------------------
+function loadNextVoucherNo() {
 
+    $.ajax({
+        url: "/api/IncomeTransactions/GetNextVoucherNo", // adjust controller route if needed
+        type: "GET",
+        success: function (res) {
+            console.log("voucher res:", res);
+            if (res.status === "Success" && res.data) {
+
+                var nextIncomeVoucherNo = res.data.LastVoucherNo_Income;
+                var nextExpenseVoucherNo = res.data.LastVoucherNo_Expense;
+
+                console.log("Next Income Voucher:", nextIncomeVoucherNo);
+                console.log("Next Expense Voucher:", nextExpenseVoucherNo);
+
+                // Example: auto-fill fields
+                $("#paymentVoucherNo_Income").val(nextIncomeVoucherNo);
+                $("#paymentVoucherNo_Expense").val(nextExpenseVoucherNo);
+            }
+            else {
+                console.warn("Voucher no not received", res);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to fetch next voucher no");
+        }
+    });
+}
+
+//NEXT VOUCHER NO --- END ----------------------
