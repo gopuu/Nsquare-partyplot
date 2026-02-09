@@ -2247,11 +2247,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         //download invoice
         if (btn_invoiceNo > 0) {
+            const userId = parseInt(sessionStorage.getItem('userId') || 0);
             const request = {
                 BookingId: bookingId,
                 InvoiceNo: btn_invoiceNo,
                 ProformaInvoiceNo: null,
-                WithHeader: true
+                WithHeader: true,
+                ActionBy: userId
             };
             generateInvoicePdf(request);
             return;
@@ -2331,6 +2333,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // 🖨️ Print Function Prospect
     document.getElementById("btnEventForm").addEventListener("click", function () {
         const bookingId = getBookingId();
+        const userId = parseInt(sessionStorage.getItem('userId') || 0);
+
         //console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
         $.ajax({
             url: '/api/Report/DownloadBookingEventReport',
@@ -2338,7 +2342,8 @@ document.addEventListener("DOMContentLoaded", function () {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             data: JSON.stringify({
-                BookingId: bookingId
+                BookingId: bookingId,
+                ActionBy: userId
             }),
             success: function (res) {
 

@@ -33,6 +33,7 @@
         public string ClientName { get; set; }
         public string ClientContactNo { get; set; }
         public decimal TotalAmount { get; set; }
+        public decimal OutstandingAmount { get; set; }
     }
     // SAVE
     public class SaveCustomerInvoiceRequest : BaseClass

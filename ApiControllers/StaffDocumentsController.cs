@@ -21,11 +21,11 @@ public class StaffDocumentsController : MasterController
         domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         _imageUploadService = imageUploadService;
     }
-
+    /*
     // ====================== GET ======================
     [HttpPost]
     [Route("GetStaffDocuments")]
-    public IActionResult GetStaffDocuments([FromBody] GetStaffDocumentsRequest request)
+    private IActionResult GetStaffDocuments([FromBody] GetStaffDocumentsRequest request)
     {
         apiResponse apiResponse = new apiResponse();
         List<StaffDocumentsModel> list = new List<StaffDocumentsModel>();
@@ -55,7 +55,6 @@ public class StaffDocumentsController : MasterController
                     Id = Convert.ToInt64(row["Id"]),
                     StaffId = Convert.ToInt64(row["StaffId"]),
                     StaffName = Convert.ToString(row["StaffName"]),
-                    DocumentType = Convert.ToString(row["DocumentType"]),
                     DocumentName = Convert.ToString(row["DocumentName"]),
                     //  FilePath = Convert.ToString(row["FilePath"]),
                     FilePath = row["FilePath"] != DBNull.Value
@@ -82,7 +81,7 @@ public class StaffDocumentsController : MasterController
     // ====================== SAVE ======================
     [HttpPost]
     [Route("SaveStaffDocuments")]
-    public IActionResult SaveStaffDocuments([FromBody] SaveStaffDocumentsRequest model)
+    private IActionResult SaveStaffDocuments([FromBody] SaveStaffDocumentsRequest model)
     {
         apiResponse apiResponse = new apiResponse();
 
@@ -100,7 +99,6 @@ public class StaffDocumentsController : MasterController
 
                 cmd.Parameters.AddWithValue("@Id", model.Id);
                 cmd.Parameters.AddWithValue("@StaffId", model.StaffId);
-                cmd.Parameters.AddWithValue("@DocumentType", (object)model.DocumentType ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@DocumentName", (object)model.DocumentName ?? DBNull.Value);
                 cmd.Parameters.Add("@FilePath", SqlDbType.NVarChar).Value = DBNull.Value;
                 cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
@@ -142,7 +140,7 @@ public class StaffDocumentsController : MasterController
             return StatusCode(500, apiResponse);
         }
     }
-
+    */
     // ====================== DELETE ======================
     [HttpPost]
     [Route("DeleteStaffDocuments")]

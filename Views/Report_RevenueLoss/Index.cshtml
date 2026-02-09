@@ -15,14 +15,17 @@
                 <div class="row align-items-center">
 
                     <!-- TITLE -->
-                    <div class="col-md-3">
+                    <div class="col-md-9">
                         <h4 class="mb-0 fw-semibold text-white">
                             Revenue Loss Report
                         </h4>
+                        <p class="mb-0 text-white-50 small">
+                            Displays lost booking opportunities by listing enquiries marked as lead lost, along with estimated revenue for the selected period.
+                        </p>
                     </div>
 
                     <!-- DOWNLOAD -->
-                    <div class="col-md-9">
+                    <div class="col-md-3">
                         <div class="row g-2 align-items-center justify-content-end flex-nowrap">
                             <!--WIth Header-->
                             <div class="col-auto d-flex align-items-center gap-2">
@@ -81,7 +84,7 @@
 
                     <!-- FILTER PANEL -->
                     <div class="filter-area">
-                        <div class="filter-panel-static">
+                        <div class="filter-panel-static d-none" id="filterPanel">
 
                             <div class="filter-header">
                                 <span class="text-warning">Filters</span>
@@ -104,17 +107,7 @@
                                 </div>
 
                                 <div class="mb-2">
-                                    <label class="form-label">From Date</label>
-                                    <input type="date" id="fromDate" class="form-control form-control-sm">
-                                </div>
-
-                                <div class="mb-2">
-                                    <label class="form-label">To Date</label>
-                                    <input type="date" id="toDate" class="form-control form-control-sm">
-                                </div>
-
-                                <div class="mb-2">
-                                    <label class="form-label">Quick Range</label>
+                                    <label class="form-label">Duration</label>
                                     <div class="dropdown w-100">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100"
                                                 id="sortByDropdown"
@@ -132,6 +125,16 @@
                                             <li><a class="dropdown-item sort-option" data-value="customrange">Custom Range</a></li>
                                         </ul>
                                     </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="from-date" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="to-date" class="form-control form-control-sm">
                                 </div>
 
                             </div>

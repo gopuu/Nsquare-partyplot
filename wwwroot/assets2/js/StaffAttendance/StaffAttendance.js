@@ -194,7 +194,6 @@
     });
 });
 
-
 // RESET FORM
 function resetAttendanceForm() {
     $('#attendanceId').val(0);
@@ -348,7 +347,12 @@ function renderAttendanceTable(data) {
                                     ${options}
                                 </select>
 
-                                <button type="button" class="btn btn-outline-danger btn-action-xss clear-time" title="Clear Check In, Check Out & Status">✕</button>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-outline-warning btn-action-xss clear-time" 
+                                    title="Clear Check In, Check Out & Status">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                               </button>
                             </div>
                         `;
                 }

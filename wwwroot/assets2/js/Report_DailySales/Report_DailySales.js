@@ -2,7 +2,10 @@
 const HEADER_KEY = "printWithHeader";
 
 $(document).ready(function () {
-    setTodayDates();
+    $("#filterPanel").removeClass("d-none");
+    
+    selectedMonthDuration = "thismonth";
+    applyQuickRange();
     ViewDailySalesReport("viewPDF");
 
     $(".sort-option").on("click", function () {
@@ -21,8 +24,14 @@ $(document).ready(function () {
     });
 
     $("#btnResetFilter").on("click", function () {
-        setTodayDates();
         selectedMonthDuration = "thismonth";
+
+        $(".sort-option").removeClass("active");
+        $(".sort-option[data-value='thismonth']").addClass("active");
+
+        $("#sortByDropdown").text("This Month");
+
+        applyQuickRange();
         ViewDailySalesReport("viewPDF");
     });
 
@@ -46,86 +55,59 @@ $(document).ready(function () {
 });
 
 function ViewDailySalesReport(actionName = "viewPDF") {
-    $('#btn-loader').show();
-
     const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
     console.log("With Header:", withHeader);
+
+    const userId = parseInt(sessionStorage.getItem('userId') || 0);
 
     const url = (actionName === "downloadExcel")
         ? "/api/Report/Report_DailySalesDetails_Excel"
         : "/api/Report/Report_DailySalesDetails";
 
-    fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            FromDate: $("#from-date").val(),
-            ToDate: $("#to-date").val(),
-            FilterDuration: selectedMonthDuration,
-            WithHeader: withHeader
+    var payload = {
+        FromDate: $("#from-date").val(),
+        ToDate: $("#to-date").val(),
+        FilterDuration: selectedMonthDuration,
+        WithHeader: withHeader,
+        ActionBy: userId
+    };
 
-        })
-    })
-    .then(r => r.json())
-    .then(result => {
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        success: function (result) {
 
-        if (result.status !== "Success" || !result.data?.FileUrl) {
-            Swal.fire("Fail", result.message || "No data", "error");
-            return;
-        }
+            if (result.status !== "Success" || !result.data?.FileUrl) {
+                Swal.fire("Fail", result.message || "No data", "error");
+                return;
+            }
 
-        if (actionName === "viewPDF") {
-            $("#pdfPreviewContainer").html(
-                `<iframe src="${result.data.FileUrl}" style="width:100%;height:100%;border:none;"></iframe>`
-            );
-        } else {
-            const link = document.createElement("a");
-            link.href = result.data.FileUrl;
-            link.download = actionName === "downloadExcel"
-                ? "DailySales_Report.xlsx"
-                : "DailySales_Report.pdf";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (actionName === "viewPDF") {
+                $("#pdfPreviewContainer").html(
+                    `<iframe src="${result.data.FileUrl}" style="width:100%;height:100%;border:none;"></iframe>`
+                );
+            }
+            else {
+                const link = document.createElement("a");
+                link.href = result.data.FileUrl;
+                link.download = actionName === "downloadExcel"
+                    ? "DailySales_Report.xlsx"
+                    : "DailySales_Report.pdf";
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "download failed");
+            console.error(error);
+            //Swal.fire("Error", "Something went wrong", "error");
         }
     });
+
 }
 
-function setTodayDates() {
-    const today = new Date().toISOString().split("T")[0];
-    $("#from-date").val(today);
-    $("#to-date").val(today);
-}
-
-function applyQuickRange() {
-    const today = new Date();
-    let from, to = today;
-
-    switch (selectedMonthDuration) {
-        case "thismonth":
-            from = new Date(today.getFullYear(), today.getMonth(), 1);
-            break;
-        case "lastmonth":
-            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            to = new Date(today.getFullYear(), today.getMonth(), 0);
-            break;
-        case "days":
-            from = new Date(today.setDate(today.getDate() - 6));
-            break;
-        case "lastdays":
-            from = new Date(today.setDate(today.getDate() - 29));
-            break;
-        case "yesterday":
-            from = to = new Date(today.setDate(today.getDate() - 1));
-            break;
-        default:
-            return;
-    }
-
-    $("#from-date").val(formatDate(from));
-    $("#to-date").val(formatDate(to));
-}
-
-function formatDate(d) {
-    return d.toISOString().split("T")[0];
-}

@@ -1,6 +1,6 @@
 ﻿namespace ERPAdmin.Models
 {
-    public class CustomerInvoiceReportRequest
+    public class CustomerInvoiceReportRequest : BaseClass
     {
         public long BookingId { get; set; }          // CustomerInvoice.Id
         public long? InvoiceNo { get; set; }     
@@ -9,7 +9,7 @@
     }
 
     //DownloadBookingEventReport
-    public class DownloadBookingEventReportRequest //: BaseClass
+    public class DownloadBookingEventReportRequest : BaseClass
     {
         public long BookingId { get; set; }
     }

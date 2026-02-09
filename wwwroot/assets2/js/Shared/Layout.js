@@ -324,4 +324,61 @@ function logoutUser() {
     });
 })();
 
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`; // local date
+}
+
+//FOR REPORTS - DURATION filter
+function applyQuickRange() {
+    const today = new Date();
+    let from = null;
+    let to = null;
+
+    switch (selectedMonthDuration) {
+
+        case "thismonth":
+            from = new Date(today.getFullYear(), today.getMonth(), 1);
+            to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            break;
+
+        case "lastmonth":
+            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            to = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+
+        case "days": // Last 7 Days
+            to = new Date();
+            from = new Date();
+            from.setDate(to.getDate() - 6);
+            break;
+
+        case "lastdays": // Last 30 Days
+            to = new Date();
+            from = new Date();
+            from.setDate(to.getDate() - 29);
+            break;
+
+        case "yesterday":
+            from = new Date();
+            from.setDate(from.getDate() - 1);
+            to = new Date(from);
+            break;
+
+        case "12months": // ✅ Last 12 Months
+            to = new Date();
+            from = new Date();
+            from.setMonth(to.getMonth() - 11);
+            from.setDate(1);
+            break;
+
+        default:
+            return;
+    }
+
+    $("#from-date").val(formatDate(from));
+    $("#to-date").val(formatDate(to));
+}
 

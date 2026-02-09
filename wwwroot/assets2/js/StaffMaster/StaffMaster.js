@@ -1,77 +1,106 @@
-﻿function loadDesignationDropdown() {
-    $.ajax({
-        url: "/api/DesignationMaster/GetDesignationMaster",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ Id: 0 }),
-        success: function (res) {
-            const dropdown = $("#ddlDesignation");
-            dropdown.empty().append('<option value="">-- Select --</option>');
-
-            if (res?.status === "Success") {
-                res.data.forEach(item => {
-                    dropdown.append(`<option value="${item.Id}">${item.DesignationName}</option>`);
-                });
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load dropdown data");
-        }
-    });
-}
+﻿let staffDocuments = [];
+let docIndex = 0;
+let isProcessingFiles = false;
 
 $(document).ready(function () {
-
-    function getBase64WithName(file, callback) {
-        let reader = new FileReader();
-        reader.onload = function (e) {
-            let base64 = e.target.result.split(',')[1];
-
-            // Combine filename + base64 value
-            let finalValue = base64;
-
-            callback(finalValue);
-        };
-        reader.readAsDataURL(file);
-    }
 
     fetchStaffData();
     loadDesignationDropdown();
 
+    // ================= ADD STAFF =================
     $(document).on("click", "#btn-add", function () {
         resetStaffForm();
-        $("#txtJoiningDate").val(new Date().toISOString().split("T")[0]);
-        $("#txtBirthDate").val(new Date().toISOString().split("T")[0]);
-        $("#txtAnniversaryDate").val(new Date().toISOString().split("T")[0]);
+        const today = new Date().toISOString().split("T")[0];
+        //$("#txtJoiningDate,#txtBirthDate,#txtAnniversaryDate").val(today);
         $("#staffModalTitle").text("Add Staff");
         $("#staffModal").modal("show");
     });
 
+    // ================= ADD DOCUMENT =================
+    $(document).on("click", "#btnAddDocument", function () {
+
+        const templateHtml = $("#docRowTemplate").html();
+
+        if (!templateHtml) {
+            console.error("❌ docRowTemplate not found in DOM");
+            return;
+        }
+
+        const template = templateHtml.replace("{{index}}", docIndex);
+
+        $("#documentsContainer").append(template);
+
+        staffDocuments.push({
+            index: docIndex,
+            Id: 0,
+            DocumentName: "",
+            FileBase64: null,
+            IsDeleted: false
+        });
+
+        docIndex++;
+    });
+
+    // ================= REMOVE DOCUMENT =================
+    $(document).on("click", ".btnRemoveDoc", function () {
+        const row = $(this).closest(".document-row");
+        const index = row.data("index");
+
+        const doc = staffDocuments.find(d => d.index === index);
+        if (doc) doc.IsDeleted = true;
+
+        row.remove();
+    });
+
+    // ================= DOCUMENT NAME =================
+    $(document).on("input", ".doc-name", function () {
+        const row = $(this).closest(".document-row");
+        const index = row.data("index");
+
+        const doc = staffDocuments.find(d => d.index === index);
+        if (doc) doc.DocumentName = $(this).val();
+    });
+
+    // ================= DOCUMENT FILE =================
+    $(document).on("change", ".doc-file", function () {
+        const row = $(this).closest(".document-row");
+        const index = row.data("index");
+        const file = this.files[0];
+        if (!file) return;
+
+        isProcessingFiles = true;
+
+        fileToBase64Document(file, function (base64) {
+            const doc = staffDocuments.find(d => d.index === index);
+            if (doc) doc.FileBase64 = base64;
+
+            row.find(".uploaded-label").removeClass("d-none");
+            isProcessingFiles = false;
+        });
+    });
+
+    // ================= SAVE STAFF =================
     $(document).on("click", "#btnSaveStaff", function () {
-        // --- Validation ---
-        const name = $("#txtName").val().trim();
-        const phone = $("#txtPhoneNo").val().trim();
-        if (!name) {
+
+        if (isProcessingFiles) {
+            Swal.fire("Please wait", "Files are still processing", "info");
+            return;
+        }
+
+        if (!$("#txtName").val().trim()) {
             Swal.fire("Validation", "Name is required", "warning");
             return;
         }
-        if (!phone) {
+
+        if (!$("#txtPhoneNo").val().trim()) {
             Swal.fire("Validation", "Phone number is required", "warning");
             return;
         }
 
-        // SELECT FILE
-        let fileInput = $("#txtPhoto").get(0);
-        let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
-        function getBase64WithoutMeta(file, callback) {
-            let reader = new FileReader();
-            reader.onload = function (e) {
-                let base64 = e.target.result.split(',')[1]; // REMOVE metadata
-                callback(base64);
-            };
-            reader.readAsDataURL(file);
-        }
-        function saveStaff(base64File) {
+        const file = $("#txtPhoto").get(0).files[0] || null;
+
+        const proceedSave = (photoBase64) => {
+
             $("#btnSaveStaff").prop("disabled", true);
 
             const payload = {
@@ -87,22 +116,33 @@ $(document).ready(function () {
                 JoiningDate: $("#txtJoiningDate").val(),
                 BirthDate: $("#txtBirthDate").val(),
                 AnniversaryDate: $("#txtAnniversaryDate").val(),
-                IsActive: $("#switchIsActive").is(":checked"),
                 Salary: Number($("#txtSalary").val() || 0),
-                Photo: base64File,
+
+                Photo: photoBase64,
+
                 User_Name: $("#txtUserName").val().trim(),
                 Password: $("#txtPassword").val().trim(),
                 IsSuperUser: $("#switchIsSuperUser").is(":checked"),
                 IsAutoLogin: $("#switchIsAutoLogin").is(":checked"),
+                IsActive: $("#switchIsActive").is(":checked"),
+
                 Bank_Name: $("#txtBankName").val().trim(),
                 Bank_BranchName: $("#txtBankBranch").val().trim(),
                 Bank_IFSC: $("#txtIFSC").val().trim(),
                 Bank_AccountNo: $("#txtAccountNo").val().trim(),
                 Bank_AccountHolderName: $("#txtBankAccountHolderName").val().trim(),
                 Bank_UPI_Id: $("#txtBankUPIId").val().trim(),
+
+                Documents: staffDocuments.map(d => ({
+                    Id: d.Id,
+                    DocumentName: d.DocumentName,
+                    FileBase64: d.FileBase64,
+                    IsDeleted: d.IsDeleted
+                })),
+
                 ActionBy: sessionStorage.getItem("userId") ?? 0
             };
-            // ---- API Call ----
+
             $.ajax({
                 url: "/api/StaffMaster/SaveStaffMaster",
                 type: "POST",
@@ -117,48 +157,42 @@ $(document).ready(function () {
                             showConfirmButton: false,
                             position: "top-end"
                         });
-
                         $("#staffModal").modal("hide");
-                        fetchStaffData(); // reload list
+                        fetchStaffData();
                     } else {
                         Swal.fire("Error", res?.message || "Save failed", "error");
                     }
                 },
-                error: function (xhr, status, error) {
-                    console.log("Error:", xhr);
-                    Swal.fire("API Error", "Something went wrong.", "error");
-                },
-                complete: function () {
-                    $("#btnSaveStaff").prop("disabled", false);
-                }
+                error: () => Swal.fire("API Error", "Something went wrong", "error"),
+                complete: () => $("#btnSaveStaff").prop("disabled", false)
             });
-        }
-        // If file exists → convert → save
+        };
+
         if (file) {
-            getBase64WithoutMeta(file, function (base64File) {
-                saveStaff(base64File);
-            });
-        }
-        else {
-            saveStaff(null);
+            fileToBase64Photo(file, proceedSave);
+        } else {
+            proceedSave(null);
         }
     });
 
+    // ================= MODAL RESET =================
+    $('#staffModal').on('hidden.bs.modal', resetStaffForm);
+
+    // ================= EDIT STAFF =================
     $(document).on("click", ".btn-edit", function () {
-        // Permission Check
+
         const canEdit = (sessionStorage.getItem("CanEdit") || localStorage.getItem("CanEdit")) === "true";
         if (!canEdit) {
             Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
             return;
         }
 
-        // Get row data
         const table = $("#tableStaff table").DataTable();
         const rowData = table.row($(this).closest("tr")).data();
-        resetStaffForm(); // Optional call if you have reset logic
-        console.log("rowData canEdit :", rowData);
+        console.log("edit rowData:", rowData);
+        resetStaffForm();
 
-        // Fill Modal Fields
+        // ===== BASIC DETAILS =====
         $("#staffId").val(rowData.Id);
         $("#txtName").val(rowData.Name);
         $("#txtEmpCode").val(rowData.Emp_Code);
@@ -166,44 +200,23 @@ $(document).ready(function () {
         $("#txtPhoneNo").val(rowData.PhoneNo);
         $("#txtEmergencyPhone").val(rowData.Emergency_PhoneNo);
         $("#txtEmail").val(rowData.Email);
-        $("#ddlDesignation").val(rowData.DesignationId).trigger('change');
+        $("#ddlDesignation").val(rowData.DesignationId).trigger("change");
         $("#txtAadhar").val(rowData.AadharCardNo);
-        // Format date for <input type="date">
-        if (rowData.JoiningDate) {
-            const date = new Date(rowData.JoiningDate);
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            $('#txtJoiningDate').val(`${yyyy}-${mm}-${dd}`);
-        }
-
-        if (rowData.BirthDate) {
-            const date = new Date(rowData.BirthDate);
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            $('#txtBirthDate').val(`${yyyy}-${mm}-${dd}`);
-        }
-        if (rowData.AnniversaryDate) {
-            const date = new Date(rowData.AnniversaryDate);
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            $('#txtAnniversaryDate').val(`${yyyy}-${mm}-${dd}`);
-        }
         $("#txtSalary").val(rowData.Salary);
 
-        // Photo not prefilled in input type="file" for security reasons
-        // SET INVOICE URL
+        $("#txtJoiningDate").val(rowData.JoiningDate);
+        $("#txtBirthDate").val(rowData.BirthDate);
+        $("#txtAnniversaryDate").val(rowData.AnniversaryDate);
+
+        // ===== PHOTO =====
         $("#invoiceFileLink").val(rowData.Photo || "");
-        // If URL present → show download button
-        if (rowData.Photo && rowData.Photo !== "") {
+        if (rowData.Photo) {
             $("#btnDownloadInvoice").removeClass("d-none");
-        }
-        else {
+        } else {
             $("#btnDownloadInvoice").addClass("d-none");
         }
 
+        // ===== LOGIN & BANK =====
         $("#txtUserName").val(rowData.User_Name);
         $("#txtPassword").val(rowData.Password);
         $("#txtBankName").val(rowData.Bank_Name);
@@ -213,98 +226,156 @@ $(document).ready(function () {
         $("#txtBankAccountHolderName").val(rowData.Bank_AccountHolderName);
         $("#txtBankUPIId").val(rowData.Bank_UPI_Id);
 
-        $("#switchIsSuperUser").prop("checked", rowData.IsSuperUser);
-        $("#switchIsAutoLogin").prop("checked", rowData.IsAutoLogin);
-        $("#switchIsActive").prop("checked", rowData.IsActive);
+        $("#switchIsSuperUser").prop("checked", rowData.IsSuperUser === true);
+        $("#switchIsAutoLogin").prop("checked", rowData.IsAutoLogin === true);
+        $("#switchIsActive").prop("checked", rowData.IsActive === true);
 
-        // Change modal title
+        // ===== DOCUMENTS (EDIT MODE) =====
+        $("#documentsContainer").empty();
+        staffDocuments = [];
+        docIndex = 0;
+
+        if (rowData.Documents && rowData.Documents.length > 0) {
+            rowData.Documents.forEach(d => {
+                const template = $("#docRowTemplate").html().replace("{{index}}", docIndex);
+                $("#documentsContainer").append(template);
+
+                const row = $(`.document-row[data-index='${docIndex}']`);
+                row.find(".doc-name").val(d.DocumentName);
+                row.find(".uploaded-label").removeClass("d-none");
+
+                staffDocuments.push({
+                    index: docIndex,
+                    Id: d.Id,
+                    DocumentName: d.DocumentName,
+                    FileBase64: null,   // unchanged unless user uploads
+                    IsDeleted: false,   // IMPORTANT
+                    ExistingPath: d.FilePath
+                });
+
+                docIndex++;
+            });
+        }
+
         $("#staffModalTitle").text("Edit Staff");
-        // $("#btnSaveStaff").text("Update");
-
-        // Show modal
         $("#staffModal").modal("show");
     });
 
-    // Delete button click
-    $(document).on('click', '.btn-delete', function () {
-        const canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
+
+    // ================= DELETE STAFF =================
+    $(document).on("click", ".btn-delete", function () {
+
+        const canDelete = (sessionStorage.getItem("CanDelete") || localStorage.getItem("CanDelete")) === "true";
         if (!canDelete) {
             Swal.fire("Access Denied", "You do not have permission to Delete.", "error");
             return;
         }
-        let table = $('#tableStaff table').DataTable();
-        let rowData = table.row($(this).closest('tr')).data();
+
+        const table = $("#tableStaff table").DataTable();
+        const rowData = table.row($(this).closest("tr")).data();
+
         $("#deleteRecordModal")
             .data("id", rowData.Id)
             .modal("show");
     });
 
-    // Confirm Delete
     $("#delete-record").click(function () {
-        let id = $("#deleteRecordModal").data("id");
-        let payload = {
-            Id: id,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
-        };
-        $('#btn-loader').show();
+
+        const id = $("#deleteRecordModal").data("id");
+
         $.ajax({
             url: "/api/StaffMaster/DeleteStaffMaster",
             type: "POST",
             contentType: "application/json",
-            data: JSON.stringify(payload),
-            success: function (response) {
-                if (typeof response === "string") {
-                    response = JSON.parse(response);
-                }
-                if (response.status === "Success") {
+            data: JSON.stringify({
+                Id: id,
+                ActionBy: sessionStorage.getItem("userId") ?? 0
+            }),
+            success: function (res) {
+                if (res?.status === "Success") {
                     Swal.fire({
-                        position: "top-end",
                         icon: "success",
                         title: "Staff Deleted!",
+                        timer: 1000,
                         showConfirmButton: false,
-                        timer: 1000
+                        position: "top-end"
                     });
-
+                    fetchStaffData();
                 } else {
-                    Swal.fire("Delete Failed", response.message, "error");
+                    Swal.fire("Delete Failed", res?.message || "Error", "error");
                 }
                 $("#deleteRecordModal").modal("hide");
-                fetchStaffData(); // reload updated list
             },
-            error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Delete Staff Error");
-            },
-            complete: function () {
-                $('#btn-loader').hide();
-            }
+            error: () => Swal.fire("Error", "Delete failed", "error")
         });
     });
 
-    $("#btnDownloadInvoice").on("click", function () {
-        let fileUrl = $("#invoiceFileLink").val();
 
-        if (!fileUrl || fileUrl.trim() === "") {
+    // ================= DOWNLOAD PHOTO =================
+    $("#btnDownloadInvoice").on("click", function () {
+
+        const fileUrl = $("#invoiceFileLink").val();
+        if (!fileUrl) {
             Swal.fire("Error", "File not found!", "error");
             return;
         }
 
         const link = document.createElement("a");
-        link.style.display = "none";
         link.href = fileUrl;
-        link.download = fileUrl.split("/").pop(); // file name
-
+        link.download = fileUrl.split("/").pop();
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
 
+
+    // ================= MODAL RESET =================
+    $('#staffModal').on('hidden.bs.modal', function () {
+        resetStaffForm();
+    });
+
 });
+
+
+// ================= HELPERS =================
 
 function resetStaffForm() {
     $("#staffId").val(0);
-    $("#staffModalTitle").text("Add Staff");
     $("#staffModal input, #staffModal textarea").val("");
-    $("#switchIsSuperUser, #switchIsAutoLogin,#switchIsActive").prop("checked", false);
+    $("#ddlDesignation").val("0");
+    $("#switchIsSuperUser,#switchIsAutoLogin,#switchIsActive").prop("checked", false);
+
+    $("#documentsContainer").empty();
+    staffDocuments = [];
+    docIndex = 0;
+}
+
+function fileToBase64Document(file, callback) {
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+        Swal.fire("Invalid File", "Only image or PDF allowed", "warning");
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        Swal.fire("File Too Large", "Max 5MB allowed", "warning");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => callback(e.target.result.split(',')[1]);
+    reader.readAsDataURL(file);
+}
+
+function fileToBase64Photo(file, callback) {
+    if (!file.type.startsWith("image/")) {
+        Swal.fire("Invalid File", "Only image allowed", "warning");
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        Swal.fire("File Too Large", "Max 2MB allowed", "warning");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => callback(e.target.result.split(',')[1]);
+    reader.readAsDataURL(file);
 }
 
 function fetchStaffData() {
@@ -313,7 +384,6 @@ function fetchStaffData() {
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }),
-
         success: function (res) {
             const data = (res && res.data) ? res.data : [];
             renderStaffTable(data);
@@ -373,30 +443,46 @@ function renderStaffTable(data) {
             {
                 data: 'Photo',
                 title: 'Photo',
+                className: 'text-center align-middle',
                 render: function (d) {
                     return d
-                        ? `<img src="${d}" class="rounded" width="40" height="40" />`
-                        : `<span class="text-muted">No Image</span>`;
+                        ? `<div class="d-flex justify-content-center align-items-center">
+                           <img src="${d}" class="rounded" width="40" height="40" />
+                       </div>`
+                                : `<div class="d-flex justify-content-center align-items-center text-muted">
+                           No Image
+                       </div>`;
                 }
             },
+
             {
                 data: 'IsSuperUser',
                 title: 'Super User',
-                render: d => d ? `<span class="badge bg-success">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+                className: 'text-center align-middle',
+                render: d =>
+                    `<span class="badge ${d ? 'bg-success' : 'bg-secondary'}">Yes</span>`
             },
+
             {
                 data: 'IsAutoLogin',
                 title: 'Auto Login',
-                render: d => d ? `<span class="badge bg-info">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+                className: 'text-center align-middle',
+                render: d =>
+                    `<span class="badge ${d ? 'bg-success' : 'bg-secondary'}">Yes</span>`
             },
+
             {
                 data: 'IsActive',
-                title: 'IsActive',
-                render: d => d ? `<span class="badge bg-info">Yes</span>` : `<span class="badge bg-secondary">No</span>`
+                title: 'Is Active',
+                className: 'text-center align-middle',
+                render: d =>
+                    `<span class="badge ${d ? 'bg-success' : 'bg-secondary'}">Yes</span>`
             },
             {
                 data: null,
                 title: 'Actions',
+                orderable: false,
+                className: 'text-center',
                 render: () => getActionsHtml()
             }
         ],
@@ -409,9 +495,49 @@ function renderStaffTable(data) {
 
 function getActionsHtml() {
     return `
-    <div class="d-flex gap-2">
-            <button class="btn btn-outline-warning btn-sm btn-action-xss  btn-edit"><i class="fa fa-edit"></i></button>
-            <button class="btn btn-outline-danger btn-sm btn-action-xss  btn-delete"><i class="fa fa-trash"></i></button>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-light dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item btn-edit" href="#">
+                    <i class="fa-solid fa-pen me-2 text-warning"></i> Edit
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item btn-delete text-danger" href="#">
+                    <i class="fa-solid fa-trash me-2"></i> Delete
+                </a>
+            </li>
+        </ul>
     </div>
     `;
 }
+
+function loadDesignationDropdown() {
+    $.ajax({
+        url: "/api/DesignationMaster/GetDesignationMaster",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            const dropdown = $("#ddlDesignation");
+            dropdown.empty().append('<option value="0">-- Select --</option>');
+
+            if (res?.status === "Success") {
+                res.data.forEach(item => {
+                    dropdown.append(`<option value="${item.Id}">${item.DesignationName}</option>`);
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
+        }
+    });
+}
+

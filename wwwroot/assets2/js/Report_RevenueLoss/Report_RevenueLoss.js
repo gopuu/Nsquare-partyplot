@@ -2,9 +2,11 @@
 const HEADER_KEY = "printWithHeader";
 
 $(document).ready(function () {
+    $("#filterPanel").removeClass("d-none");
 
     loadEventTypeDropdown();
-    setCurrentMonthDates();
+    selectedMonthDuration = "thismonth";
+    applyQuickRange();
     ViewRevenueLossReport("viewPDF");
 
     $(".sort-option").on("click", function () {
@@ -33,14 +35,21 @@ $(document).ready(function () {
     });
 
     $("#btnResetFilter").on("click", function () {
-        setCurrentMonthDates();
-        $("#ddlEventType").val("");
-        $("#ddlEventSubType").val("").prop("disabled", true);
         selectedMonthDuration = "thismonth";
+
+        $(".sort-option").removeClass("active");
+        $(".sort-option[data-value='thismonth']").addClass("active");
+
+        $("#sortByDropdown").text("This Month");
+        applyQuickRange();
+
+        $("#ddlEventType").val("0");
+        $("#ddlEventSubType").val("0").prop("disabled", true);
+
         ViewRevenueLossReport("viewPDF");
     });
 
-    $("#fromDate, #toDate").on("change", function () {
+    $("#from-date, #to-date").on("change", function () {
         selectedMonthDuration = "customrange";
         $("#sortByDropdown").text("Custom Range");
         $(".sort-option").removeClass("active");
@@ -65,7 +74,6 @@ $(document).ready(function () {
     // WITH HEADER -- END ------------
 
 });
-
 function loadEventTypeDropdown(selectedId = "") {
     $.ajax({
         url: "/api/EventType/GetEventTypeListForDropdown",
@@ -75,7 +83,7 @@ function loadEventTypeDropdown(selectedId = "") {
             let dropdown = $("#ddlEventType");
             dropdown.empty();
 
-            dropdown.append(`<option value="">-- Event Type --</option>`);
+            dropdown.append(`<option value="0">-- Event Type --</option>`);
 
             if (response.status === "Success" && response.data.length > 0) {
                 response.data.forEach(item => {
@@ -98,7 +106,7 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
 
     dropdown.prop("disabled", true);
     dropdown.empty();
-    dropdown.append(`<option value="">-- Select Event Sub Type --</option>`);
+    dropdown.append(`<option value="0">-- Select Event Sub Type --</option>`);
 
     if (!eventTypeId) return;
 
@@ -129,31 +137,33 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
         }
     });
 }
-
 function ViewRevenueLossReport(actionName = "viewPDF") {
     $('#btn-loader').show();
 
     const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
     console.log("With Header:", withHeader);
 
+    const userId = parseInt(sessionStorage.getItem('userId') || 0);
     const url = (actionName === "downloadExcel")
         ? "/api/Report/Report_RevenueLoss_Excel"
         : "/api/Report/Report_RevenueLoss";
+    var payload = {
+        FromDate: $("#from-date").val(),
+        ToDate: $("#to-date").val(),
+        FilterDuration: selectedMonthDuration,
+        WithHeader: withHeader,
+        ActionBy: userId
+    };
 
-    fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            FromDate: $("#fromDate").val(),
-            ToDate: $("#toDate").val(),
-            FilterDuration: selectedMonthDuration,
-            WithHeader: withHeader
-        })
-    })
-        .then(r => r.json())
-        .then(result => {
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        success: function (result) {
 
-            if (result.status !== "Success" || !result.data?.FileUrl) {
+            if (result.status !== "Success" || !result.data || !result.data.FileUrl) {
                 Swal.fire("Fail", result.message || "No data found", "error");
                 return;
             }
@@ -162,57 +172,24 @@ function ViewRevenueLossReport(actionName = "viewPDF") {
                 $("#pdfPreviewContainer").html(
                     `<iframe src="${result.data.FileUrl}" style="width:100%;height:100%;border:none;"></iframe>`
                 );
-            } else {
+            }
+            else {
                 const link = document.createElement("a");
                 link.href = result.data.FileUrl;
                 link.download = actionName === "downloadExcel"
                     ? "RevenueLoss_Report.xlsx"
                     : "RevenueLoss_Report.pdf";
+
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             }
-        });
-}
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to generate report");
+            console.error("AJAX Error:", status, error);
+            //Swal.fire("Error", "Something went wrong while processing the request", "error");
+        }
+    });
 
-function setCurrentMonthDates() {
-    const today = new Date();
-    const first = new Date(today.getFullYear(), today.getMonth(), 1);
-    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    $("#fromDate").val(formatDate(first));
-    $("#toDate").val(formatDate(last));
-}
-
-function applyQuickRange() {
-    const today = new Date();
-    let from, to = today;
-
-    switch (selectedMonthDuration) {
-        case "thismonth":
-            from = new Date(today.getFullYear(), today.getMonth(), 1);
-            break;
-        case "lastmonth":
-            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            to = new Date(today.getFullYear(), today.getMonth(), 0);
-            break;
-        case "days":
-            from = new Date(today.setDate(today.getDate() - 6));
-            break;
-        case "lastdays":
-            from = new Date(today.setDate(today.getDate() - 29));
-            break;
-        case "yesterday":
-            from = to = new Date(today.setDate(today.getDate() - 1));
-            break;
-        default:
-            return;
-    }
-
-    $("#fromDate").val(formatDate(from));
-    $("#toDate").val(formatDate(to));
-}
-
-function formatDate(d) {
-    return d.toISOString().split("T")[0];
 }

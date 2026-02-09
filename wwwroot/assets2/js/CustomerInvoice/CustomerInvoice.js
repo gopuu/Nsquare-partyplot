@@ -820,6 +820,11 @@ function renderTable(data) {
         searching: true,
         ordering: true,
         lengthChange: false,
+        rowCallback: function (row, data) {
+            if (Number(data.OutstandingAmount) > 0) {
+                $(row).addClass('row-outstanding');
+            }
+        },
         columns: [
             { data: 'BookingId', title: '#BRN' },
 
@@ -864,6 +869,13 @@ function renderTable(data) {
             {
                 data: 'TotalAmount',
                 title: 'Total Amt.',
+                className: 'text-end',
+                render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
+            },
+
+            {
+                data: 'OutstandingAmount',
+                title: 'Outstanding Amt.',
                 className: 'text-end',
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
             },

@@ -6,6 +6,7 @@ using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
@@ -34,10 +35,12 @@ public class StaffMasterController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+            if (!TryGetConnectionAndDomain(
+                ControllerContext, Request,
+                out string connString,
+                out string domain,
+                out IActionResult errorResult))
                 return errorResult;
-
-            DataTable dt = new DataTable();
 
             using (SqlConnection con = new SqlConnection(connString))
             using (SqlCommand cmd = new SqlCommand("GetStaffMaster", con))
@@ -46,59 +49,78 @@ public class StaffMasterController : MasterController
                 cmd.Parameters.AddWithValue("@Id", request.Id == 0 ? 0 : request.Id);
 
                 con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-                dt.Load(dr);
-            }
+                using SqlDataReader dr = cmd.ExecuteReader();
 
-            foreach (DataRow row in dt.Rows)
-            {
-                list.Add(new StaffMasterModel
+                while (dr.Read())
                 {
-                    Id = Convert.ToInt64(row["Id"]),
-                    Name = Convert.ToString(row["Name"]),
-                    Emp_Code = Convert.ToString(row["Emp_Code"]),
-                    Address = Convert.ToString(row["Address"]),
-                    PhoneNo = Convert.ToString(row["PhoneNo"]),
-                    Emergency_PhoneNo = Convert.ToString(row["Emergency_PhoneNo"]),
-                    Email = Convert.ToString(row["Email"]),
-                    DesignationId = Convert.ToInt64(row["DesignationId"]),
-                    AadharCardNo = Convert.ToString(row["AadharCardNo"]),
-                    JoiningDate = row["JoiningDate"] == DBNull.Value ? null : Convert.ToString(row["JoiningDate"]),
-                    BirthDate = row["BirthDate"] == DBNull.Value ? null : Convert.ToString(row["BirthDate"]),
-                    AnniversaryDate = row["AnniversaryDate"] == DBNull.Value ? null : Convert.ToString(row["AnniversaryDate"]),
-                    Salary = row["Salary"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Salary"]),
-                    //Photo = Convert.ToString(row["Photo"]),
-                    Photo = row["Photo"] != DBNull.Value
-                                && !string.IsNullOrEmpty(row["Photo"].ToString())
-                            ? domainUrl + "/uploads/org/" + domain + "/StaffMaster/Photo/" + row["Photo"].ToString()
+                    var staff = new StaffMasterModel
+                    {
+                        Id = Convert.ToInt64(dr["Id"]),
+                        Name = Convert.ToString(dr["Name"]),
+                        Emp_Code = Convert.ToString(dr["Emp_Code"]),
+                        Address = Convert.ToString(dr["Address"]),
+                        PhoneNo = Convert.ToString(dr["PhoneNo"]),
+                        Emergency_PhoneNo = Convert.ToString(dr["Emergency_PhoneNo"]),
+                        Email = Convert.ToString(dr["Email"]),
+                        DesignationId = Convert.ToInt64(dr["DesignationId"]),
+                        AadharCardNo = Convert.ToString(dr["AadharCardNo"]),
+                        JoiningDate = dr["JoiningDate"] == DBNull.Value ? null : dr["JoiningDate"].ToString(),
+                        BirthDate = dr["BirthDate"] == DBNull.Value ? null : dr["BirthDate"].ToString(),
+                        AnniversaryDate = dr["AnniversaryDate"] == DBNull.Value ? null : dr["AnniversaryDate"].ToString(),
+                        JoiningDate_Format = dr["JoiningDate_Format"] == DBNull.Value ? null : dr["JoiningDate_Format"].ToString(),
+                        BirthDate_Format = dr["BirthDate_Format"] == DBNull.Value ? null : dr["BirthDate_Format"].ToString(),
+                        AnniversaryDate_Format = dr["AnniversaryDate_Format"] == DBNull.Value ? null : dr["AnniversaryDate_Format"].ToString(),
+                        Salary = dr["Salary"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["Salary"]),
+
+                        Photo = dr["Photo"] != DBNull.Value && !string.IsNullOrEmpty(dr["Photo"].ToString())
+                            ? $"{domainUrl}/uploads/org/{domain}/StaffMaster/Photo/{dr["Photo"]}"
                             : string.Empty,
 
-                    User_Name = Convert.ToString(row["UserName"]),
-                    Password = Convert.ToString(row["Password"]),
-                    IsSuperUser = row["IsSuperUser"] == DBNull.Value ? null : Convert.ToBoolean(row["IsSuperUser"]),
-                    IsAutoLogin = row["IsAutoLogin"] == DBNull.Value ? null : Convert.ToBoolean(row["IsAutoLogin"]),
-                    IsActive = row["IsActive"] == DBNull.Value ? null : Convert.ToBoolean(row["IsActive"]),
-                    Bank_Name = Convert.ToString(row["Bank_Name"]),
-                    Bank_BranchName = Convert.ToString(row["Bank_BranchName"]),
-                    Bank_IFSC = Convert.ToString(row["Bank_IFSC"]),
-                    Bank_AccountNo = Convert.ToString(row["Bank_AccountNo"]),
-                    Bank_AccountHolderName = Convert.ToString(row["Bank_AccountHolderName"]),
-                    Bank_UPI_Id = Convert.ToString(row["Bank_UPI_Id"])
-                });
+                        User_Name = Convert.ToString(dr["UserName"]),
+                        Password = Convert.ToString(dr["Password"]),
+                        IsSuperUser = dr["IsSuperUser"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsSuperUser"]),
+                        IsAutoLogin = dr["IsAutoLogin"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsAutoLogin"]),
+                        IsActive = dr["IsActive"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsActive"]),
+
+                        Bank_Name = Convert.ToString(dr["Bank_Name"]),
+                        Bank_BranchName = Convert.ToString(dr["Bank_BranchName"]),
+                        Bank_IFSC = Convert.ToString(dr["Bank_IFSC"]),
+                        Bank_AccountNo = Convert.ToString(dr["Bank_AccountNo"]),
+                        Bank_AccountHolderName = Convert.ToString(dr["Bank_AccountHolderName"]),
+                        Bank_UPI_Id = Convert.ToString(dr["Bank_UPI_Id"]),
+
+                        Documents = new List<StaffDocumentsModel2>()
+                    };
+
+                    // 🔹 Deserialize documents JSON
+                    if (dr["StaffDocumentsJSON"] != DBNull.Value)
+                    {
+                        var docs = JsonConvert.DeserializeObject<List<StaffDocumentsModel2>>(dr["StaffDocumentsJSON"].ToString());
+                        foreach (var d in docs)
+                        {
+                            d.FilePath = !string.IsNullOrEmpty(d.FilePath)
+                                ? $"{domainUrl}/uploads/org/{domain}/StaffMaster/Documents/{d.FilePath}"
+                                : string.Empty;
+                        }
+                        staff.Documents = docs;
+                    }
+                    list.Add(staff);
+                }
             }
 
-            apiResponse.message = "Staff list fetched successfully!";
-            apiResponse.data = list;
             apiResponse.status = "Success";
+            apiResponse.message = "Staff data fetched successfully!";
+            apiResponse.data = list;
             return Ok(apiResponse);
         }
         catch (Exception ex)
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
-
-            apiResponse.message = "Error: " + ex.Message;
-            apiResponse.status = "Error";
-            return StatusCode(500, apiResponse);
+            return StatusCode(500, new apiResponse
+            {
+                status = "Error",
+                message = ex.Message
+            });
         }
     }
 
@@ -111,84 +133,138 @@ public class StaffMasterController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+            if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                out string connString, out string domain, out IActionResult errorResult))
                 return errorResult;
 
-            long rowId = 0;
+            long staffId;
 
             using (SqlConnection con = new SqlConnection(connString))
-            using (SqlCommand cmd = new SqlCommand("SaveStaffMaster", con))
             {
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.AddWithValue("@Id", model.Id);
-                cmd.Parameters.AddWithValue("@Name", (object)model.Name ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Emp_Code", (object)model.Emp_Code ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Address", (object)model.Address ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@PhoneNo", (object)model.PhoneNo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Emergency_PhoneNo", (object)model.Emergency_PhoneNo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Email", (object)model.Email ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@DesignationId", model.DesignationId);
-
-                cmd.Parameters.AddWithValue("@AadharCardNo", (object)model.AadharCardNo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@JoiningDate", (object)model.JoiningDate ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@BirthDate", (object)model.BirthDate ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@AnniversaryDate", (object)model.AnniversaryDate ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Salary", model.Salary);
-
-                cmd.Parameters.Add("@Photo", SqlDbType.NVarChar).Value = DBNull.Value;
-                cmd.Parameters.AddWithValue("@UserName", (object)model.User_Name ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Password", (object)model.Password ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@IsSuperUser", (object)model.IsSuperUser ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@IsAutoLogin", (object)model.IsAutoLogin ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@IsActive", (object)model.IsActive ?? DBNull.Value);
-
-                cmd.Parameters.AddWithValue("@Bank_Name", (object)model.Bank_Name ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Bank_BranchName", (object)model.Bank_BranchName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Bank_IFSC", (object)model.Bank_IFSC ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Bank_AccountNo", (object)model.Bank_AccountNo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Bank_AccountHolderName", (object)model.Bank_AccountHolderName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Bank_UPI_Id", (object)model.Bank_UPI_Id ?? DBNull.Value);
-
-                cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
-
                 con.Open();
-                rowId = Convert.ToInt64(cmd.ExecuteScalar());
-                string latestImagePath = string.Empty;
-                //photo upload
-                if (model.Photo != string.Empty && model.Photo != null)
+
+                #region SAVE STAFF MASTER
+                using (SqlCommand cmd = new SqlCommand("SaveStaffMaster", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@Id", model.Id);
+                    cmd.Parameters.AddWithValue("@Name", (object)model.Name ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Emp_Code", (object)model.Emp_Code ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Address", (object)model.Address ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PhoneNo", (object)model.PhoneNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Emergency_PhoneNo", (object)model.Emergency_PhoneNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Email", (object)model.Email ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DesignationId", model.DesignationId);
+
+                    cmd.Parameters.AddWithValue("@AadharCardNo", (object)model.AadharCardNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@JoiningDate", (object)model.JoiningDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@BirthDate", (object)model.BirthDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@AnniversaryDate", (object)model.AnniversaryDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Salary", model.Salary);
+
+                    cmd.Parameters.AddWithValue("@UserName", (object)model.User_Name ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Password", (object)model.Password ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@IsSuperUser", model.IsSuperUser);
+                    cmd.Parameters.AddWithValue("@IsAutoLogin", model.IsAutoLogin);
+                    cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
+
+                    cmd.Parameters.AddWithValue("@Bank_Name", (object)model.Bank_Name ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Bank_BranchName", (object)model.Bank_BranchName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Bank_IFSC", (object)model.Bank_IFSC ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Bank_AccountNo", (object)model.Bank_AccountNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Bank_AccountHolderName", (object)model.Bank_AccountHolderName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Bank_UPI_Id", (object)model.Bank_UPI_Id ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    staffId = Convert.ToInt64(cmd.ExecuteScalar());
+                }
+                #endregion
+
+                #region PHOTO UPLOAD
+                if (!string.IsNullOrEmpty(model.Photo))
                 {
                     string imgType = _imageUploadService.GetFileTypeFromBase64(model.Photo);
+                    string folderPath = $"org/{domain}/StaffMaster/Photo/";
 
-                     string folderPath = $"org/{domain}/StaffMaster/Photo/"; // Updated to include domain
-                    _imageUploadService.DeleteImages(folderPath, $"StaffId_{rowId.ToString()}");
-                    model.Photo = _imageUploadService.UploadImage(model.Photo, folderPath, $"StaffId_{rowId.ToString()}", imgType);
+                    _imageUploadService.DeleteImages(folderPath, $"StaffId_{staffId}");
 
-                    //update table
-                    SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
-                    cmd2.CommandType = CommandType.StoredProcedure;
-                    cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
-                    cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.Photo; // Kept max for nvarchar(max)
-                    cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "StaffMaster";
-                    cmd2.ExecuteNonQuery();
+                    string fileName = _imageUploadService.UploadImage(
+                        model.Photo,
+                        folderPath,
+                        $"StaffId_{staffId}",
+                        imgType
+                    );
 
-                    latestImagePath = $"{domainUrl}/uploads/org/{domain}/StaffMaster/Photo/{model.Photo}";
+                    using SqlCommand photoCmd = new SqlCommand("Save_DocumentFile", con);
+                    photoCmd.CommandType = CommandType.StoredProcedure;
+                    photoCmd.Parameters.AddWithValue("@Id", staffId);
+                    photoCmd.Parameters.AddWithValue("@DocumentName", fileName);
+                    photoCmd.Parameters.AddWithValue("@TableName", "StaffMaster");
+                    photoCmd.ExecuteNonQuery();
                 }
+                #endregion
 
+                #region STAFF DOCUMENTS
+                if (model.Documents != null && model.Documents.Any())
+                {
+                    foreach (var doc in model.Documents)
+                    {
+                        long docId;
+
+                        using SqlCommand docCmd = new SqlCommand("SaveStaffDocuments", con);
+                        docCmd.CommandType = CommandType.StoredProcedure;
+                        docCmd.Parameters.AddWithValue("@Id", doc.Id);
+                        docCmd.Parameters.AddWithValue("@StaffId", staffId);
+                        docCmd.Parameters.AddWithValue("@DocumentName", doc.DocumentName);
+                        docCmd.Parameters.AddWithValue("@FilePath", DBNull.Value);
+                        docCmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                        docId = Convert.ToInt64(docCmd.ExecuteScalar());
+
+                        if (!string.IsNullOrEmpty(doc.FileBase64))
+                        {
+                            string fileType = _imageUploadService.GetFileTypeFromBase64(doc.FileBase64);
+                            string folderPath = $"org/{domain}/StaffMaster/Documents/";
+
+                            _imageUploadService.DeleteImages(folderPath, $"StaffId_{staffId}_Doc_{docId}");
+
+                            string fileName = _imageUploadService.UploadImage(
+                                doc.FileBase64,
+                                folderPath,
+                                $"StaffId_{staffId}_Doc_{docId}",
+                                fileType
+                            );
+
+                            using SqlCommand docFileCmd = new SqlCommand("Save_DocumentFile", con);
+                            docFileCmd.CommandType = CommandType.StoredProcedure;
+                            docFileCmd.Parameters.AddWithValue("@Id", docId);
+                            docFileCmd.Parameters.AddWithValue("@DocumentName", fileName);
+                            docFileCmd.Parameters.AddWithValue("@TableName", "StaffDocuments");
+                            docFileCmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+                #endregion
             }
 
-            apiResponse.message = model.Id > 0 ? "Staff updated successfully!" : "Staff inserted successfully!";
-            apiResponse.data = new { StaffId = rowId };
             apiResponse.status = "Success";
+            apiResponse.message = model.Id > 0
+                ? "Staff updated successfully!"
+                : "Staff inserted successfully!";
+            apiResponse.data = new { StaffId = staffId };
+
             return Ok(apiResponse);
         }
         catch (Exception ex)
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
-
-            apiResponse.message = "Error: " + ex.Message;
-            apiResponse.status = "Error";
-            return StatusCode(500, apiResponse);
+            return StatusCode(500, new apiResponse
+            {
+                status = "Error",
+                message = ex.Message
+            });
         }
     }
 

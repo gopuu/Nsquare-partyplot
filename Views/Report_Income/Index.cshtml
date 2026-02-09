@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "Income Report";
+    Layout = "_Layout";
+}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<div class="content p-1 pt-11">
+    <div class="pb-1">
+        <div class="card shadow-sm">
+            <!-- ================= CARD HEADER ================= -->
+            <div class="card-header bg-warning p-1">
+                <div class="row align-items-center">
+                    <!-- TITLE -->
+                    <div class="col-md-9">
+                        <h4 class="mb-0 fw-semibold text-white">
+                            Income Report
+                        </h4>
+                        <p class="mb-0 text-white-50 small">
+                            Displays income received from various sources, including category, account, payment mode, and amount details for the selected period.
+                        </p>
+                    </div>
+                    <!-- DOWNLOAD -->
+                    <div class="col-md-3">
+                        <div class="row g-2 align-items-center justify-content-end flex-nowrap">
+                            <!--WIth Header-->
+                            <div class="col-auto d-flex align-items-center gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="toggleWithHeader">
+                                    <label class="form-check-label fw-semibold text-white"
+                                           for="toggleWithHeader">
+                                        With Header
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- ACTIONS -->
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-light btn-sm dropdown-toggle"
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewIncomeReport('downloadPDF')">
+                                                <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               onclick="ViewIncomeReport('downloadExcel')">
+                                                <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= CARD BODY ================= -->
+            <div class="card-body p-0">
+                <div class="report-layout">
+
+                    <!-- REPORT VIEW -->
+                    <div class="pdf-area">
+                        <div id="pdfPreviewContainer">
+                            <p class="text-center text-muted">
+                                PDF Preview will appear here...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- FILTER PANEL -->
+                    <div class="filter-area">
+                        <div class="filter-panel-static d-none" id="filterPanel">
+
+                            <div class="filter-header">
+                                <span class="text-warning">Filters</span>
+                            </div>
+
+                            <div class="filter-body">
+
+                                <div class="mb-2">
+                                    <label class="form-label">Duration</label>
+                                    <div class="dropdown w-100">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100"
+                                                id="sortByDropdown"
+                                                data-bs-toggle="dropdown">
+                                            This Month
+                                        </button>
+
+                                        <ul class="dropdown-menu w-100">
+                                            <li><a class="dropdown-item sort-option" data-value="yesterday">Yesterday</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="days">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="lastdays">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item sort-option active" data-value="thismonth">This Month</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="lastmonth">Last Month</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="12months">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item sort-option" data-value="customrange">Custom Range</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="from-date" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="to-date" class="form-control form-control-sm">
+                                </div>
+
+                            </div>
+
+                            <div class="filter-footer">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnResetFilter">Reset</button>
+                                <button class="btn btn-sm btn-warning" id="btnApplyFilter">Apply</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/assets2/js/report_Income/report_Income.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+    <link href="~/assets2/css/report_Income/report_Income.css" rel="stylesheet" asp-append-version="true" />
+}

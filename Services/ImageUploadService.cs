@@ -208,7 +208,7 @@ namespace ERPAdmin.Services
 
             if (Directory.Exists(fullPath))
             {
-                var filesToDelete = Directory.GetFiles(fullPath, $"{fileNamePrefix}.*"); // Find matching files
+                var filesToDelete = Directory.GetFiles(fullPath, $"{fileNamePrefix}*"); // Find matching files
 
                 foreach (string file in filesToDelete)
                 {

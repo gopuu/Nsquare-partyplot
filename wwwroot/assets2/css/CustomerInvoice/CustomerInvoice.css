@@ -1,4 +1,8 @@
-﻿#tableMain table {
+﻿.row-outstanding {
+    background-color: #f8d7da !important; /* light red */
+}
+
+#tableMain table {
     font-size: 12px; /* adjust as needed */
 }
 

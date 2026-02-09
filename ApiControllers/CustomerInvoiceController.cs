@@ -81,7 +81,8 @@ namespace ERPAdmin.ApiControllers
                                 HallName = dr["HallName"].ToString(),
                                 ClientName = dr["ClientName"].ToString(),
                                 ClientContactNo = dr["ClientContactNo"].ToString(),
-                                TotalAmount = Convert.ToDecimal(dr["TotalAmount"])
+                                TotalAmount = Convert.ToDecimal(dr["TotalAmount"]),
+                                OutstandingAmount = Convert.ToDecimal(dr["OutstandingAmount"])
                             });
                         }
                     }

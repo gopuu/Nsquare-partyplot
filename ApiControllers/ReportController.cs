@@ -187,6 +187,7 @@ namespace ERPAdmin.ApiControllers
 
         #endregion
 
+        #region Booking Calendar - reports
         [HttpPost]
         [Route("DownloadCustomerInvoiceReport")]
         public IActionResult DownloadCustomerInvoiceReport(CustomerInvoiceReportRequest request)
@@ -218,18 +219,17 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company Header
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Invoice Report
-                    using SqlCommand cmd = new SqlCommand("Report_CustomerInvoiceById", con);
+                    cmd = new SqlCommand("Report_CustomerInvoiceById", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
                     cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
-
                     new SqlDataAdapter(cmd).Fill(dtInvoice);
                 }
 
@@ -447,25 +447,18 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // ================= COMPANY HEADER =================
-                    using (SqlCommand cmdCompany = new SqlCommand("Report_PageHeader_GetCompany", con))
-                    {
-                        cmdCompany.CommandType = CommandType.StoredProcedure;
-
-                        SqlDataAdapter daCompany = new SqlDataAdapter(cmdCompany);
-                        daCompany.Fill(dtCompany);
-                    }
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // ================= BOOKING EVENT DETAILS =================
-                    using (SqlCommand cmdReport = new SqlCommand("Report_GetBookingEventDetails", con))
-                    {
-                        cmdReport.CommandType = CommandType.StoredProcedure;
-
-                        // 🔹 BookingId Parameter
-                        cmdReport.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-
-                        SqlDataAdapter daReport = new SqlDataAdapter(cmdReport);
-                        daReport.Fill(dsReport);
-                    }
+                    cmd = new SqlCommand("Report_GetBookingEventDetails", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    // 🔹 BookingId Parameter
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    SqlDataAdapter daReport = new SqlDataAdapter(cmd);
+                    daReport.Fill(dsReport);
                 }
 
 
@@ -903,7 +896,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 1 - Booking REPORT
         [HttpPost]
         [Route("DownloadBookingReport")]
         public IActionResult DownloadBookingReport(BookingReportRequest request)
@@ -931,12 +926,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetBookingDetails", con);
+                    cmd = new SqlCommand("Report_GetBookingDetails", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId);
                     cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId);
@@ -1150,31 +1146,23 @@ namespace ERPAdmin.ApiControllers
 
                 // === Headers ===
                 int colCount = headerTableDB.Columns.Count;
-                worksheet.Cell(1, 1).Value = "Sr. No";
-                worksheet.Cell(1, 1).Style.Font.Bold = true;
-                worksheet.Cell(1, 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
-                worksheet.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                 for (int i = 0; i < colCount; i++)
                 {
-                    worksheet.Cell(1, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    worksheet.Cell(1, i + 2).Style.Font.Bold = true;
-                    worksheet.Cell(1, i + 2).Style.Fill.BackgroundColor = XLColor.LightBlue;
-                    worksheet.Cell(1, i + 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(1, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    worksheet.Cell(1, i + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
                 // === Data Rows ===
                 int row = 2;
-                int srNo = 1;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    worksheet.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
                     {
-                        worksheet.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
                     }
-
                     row++;
                 }
 
@@ -1208,7 +1196,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 2 - Revenue REPORT - 2.1 DAILY SALES REPORT
         [HttpPost]
         [Route("Report_DailySalesDetails")]
         public IActionResult Report_DailySalesDetails(DailySalesDetailsRequest request)
@@ -1231,9 +1221,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -1243,13 +1230,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetDailySales", con);
+                    cmd = new SqlCommand("Report_GetDailySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -1267,6 +1254,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -1330,7 +1321,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -1341,18 +1332,13 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -1434,33 +1420,25 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== Report Title =====
                 ws.Cell(1, 1).Value = reportName;
-                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Range(1, 1, 1, colCount).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
                 ws.Cell(1, 1).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ===== Header =====
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
-
                 for (int i = 0; i < colCount; i++)
                 {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                    ws.Cell(3, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 1).Style.Font.Bold = true;
+                    ws.Cell(3, i + 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ===== Data =====
                 int row = 4;
-                int srNo = 1;
-
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -1491,7 +1469,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 2 - Revenue REPORT - 2.2 MONTHLY SALES REPORT
         [HttpPost]
         [Route("Report_MonthlySalesDetails")]
         public IActionResult Report_MonthlySalesDetails(MonthlySalesDetailsRequest request)
@@ -1514,9 +1494,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -1526,13 +1503,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetMonthlySales", con);
+                    cmd = new SqlCommand("Report_GetMonthlySales", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -1550,6 +1527,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -1612,7 +1593,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -1623,18 +1604,13 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -1715,33 +1691,25 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== Report Title =====
                 ws.Cell(1, 1).Value = reportName;
-                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Range(1, 1, 1, colCount).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
                 ws.Cell(1, 1).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ===== Header =====
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
-
                 for (int i = 0; i < colCount; i++)
                 {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                    ws.Cell(3, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(3, i + 1).Style.Font.Bold = true;
+                    ws.Cell(3, i + 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ===== Data =====
                 int row = 4;
-                int srNo = 1;
-
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -1770,290 +1738,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
-
-        [HttpPost]
-        [Route("Report_RevenueLoss")]
-        public IActionResult Report_RevenueLoss(RevenueLossRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext, Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult errorResult))
-                {
-                    return errorResult;
-                }
-
-                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
-                using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
-
-                DataTable dtCompany = new DataTable();
-                DataSet dsReport = new DataSet();
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    con.Open();
-
-                    // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
-
-                    // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
-
-                    new SqlDataAdapter(cmd).Fill(dsReport);
-                }
-
-                // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
-
-                // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
-                DataTable headerTableDB = dsReport.Tables[1];
-                DataTable dataTableDB = dsReport.Tables[2];
-
-                // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
-
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
-
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
-
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
-                    document.Add(headerTable);
-                }
-                // document.Add(new Paragraph("\n"));
-
-                // ================= REPORT NAME (CENTER) =================
-                Font reportTitleFont = FontFactory.GetFont(
-                    FontFactory.HELVETICA_BOLD,
-                    14,
-                    BaseColor.BLACK
-                );
-
-                Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
-                {
-                    Alignment = Element.ALIGN_CENTER,
-                    //SpacingBefore = 10f,
-                    SpacingAfter = 18f
-                };
-
-                document.Add(reportTitle);
-
-
-                // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
-                PdfPTable table = new PdfPTable(columnCount);
-                table.WidthPercentage = 100;
-
-                float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
-                table.SetWidths(widths);
-
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
-                BaseColor thColor = new BaseColor(0, 121, 182);
-
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
-                for (int i = 0; i < headerTableDB.Columns.Count; i++)
-                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
-
-                table.HeaderRows = 1;
-
-                int srNo = 1;
-                foreach (DataRow row in dataTableDB.Rows)
-                {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
-                    foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
-                }
-
-                document.Add(table);
-                document.Close();
-
-                // ================= SAVE =================
-                string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
-
-                string fileName = $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                string filePath = Path.Combine(folder, fileName);
-
-                Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.pdf");
-
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    stream.WriteTo(fileStream);
-                }
-
-                string fileUrl = $"/reports/{fileName}";
-
-                response.status = "Success";
-                response.message = "Report Generated";
-                response.data = new { FileUrl = fileUrl };
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.status = "Fail";
-                response.message = ex.Message;
-                return Ok(response);
-            }
-        }
-
-        [HttpPost]
-        [Route("Report_RevenueLoss_Excel")]
-        public IActionResult Report_RevenueLoss_Excel(RevenueLossRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext, Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
-
-                DataSet dsReport = new DataSet();
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    con.Open();
-                    using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
-
-                    new SqlDataAdapter(cmd).Fill(dsReport);
-                }
-
-                if (dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
-
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
-                DataTable headerTableDB = dsReport.Tables[1];
-                DataTable dataTableDB = dsReport.Tables[2];
-
-                using var workbook = new ClosedXML.Excel.XLWorkbook();
-                var ws = workbook.Worksheets.Add("Revenue Loss");
-
-                int colCount = headerTableDB.Columns.Count;
-
-                // ================= REPORT TITLE =================
-                ws.Cell(1, 1).Value = reportName.ToUpper();
-                ws.Range(1, 1, 1, colCount + 1).Merge();
-                ws.Cell(1, 1).Style.Font.Bold = true;
-                ws.Cell(1, 1).Style.Font.FontSize = 16;
-                ws.Cell(1, 1).Style.Alignment.Horizontal =
-                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
-
-                // ================= HEADER =================
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor =
-                    ClosedXML.Excel.XLColor.LightBlue;
-
-                for (int i = 0; i < colCount; i++)
-                {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
-                        ClosedXML.Excel.XLColor.LightBlue;
-                }
-
-                // ================= DATA =================
-                int row = 4;
-                int srNo = 1;
-
-                foreach (DataRow dr in dataTableDB.Rows)
-                {
-                    ws.Cell(row, 1).Value = srNo++;
-
-                    for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
-
-                    row++;
-                }
-
-                ws.Columns().AdjustToContents();
-
-                // ================= SAVE =================
-                string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
-
-                Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.xlsx");
-
-                string fileName =
-                    $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
-
-                workbook.SaveAs(Path.Combine(folder, fileName));
-
-                response.status = "Success";
-                response.message = "Revenue Loss Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.status = "Fail";
-                response.message = ex.Message;
-                return Ok(response);
-            }
-        }
-
-
+        #region REPORT 3 - GST REPORT
         [HttpPost]
         [Route("Report_GSTDetails")]
         public IActionResult Report_GSTDetails(GSTDetailsRequest request)
@@ -2076,9 +1763,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -2088,13 +1772,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetGSTDetail", con);
+                    cmd = new SqlCommand("Report_GetGSTDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -2112,6 +1796,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -2140,12 +1828,9 @@ namespace ERPAdmin.ApiControllers
                     HorizontalAlignment = Element.ALIGN_CENTER
                 };
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
                 headerTable.AddCell(detailCell);
                 if (request.WithHeader == true)
@@ -2153,7 +1838,7 @@ namespace ERPAdmin.ApiControllers
                     document.Add(headerTable);
                 }
                 //document.Add(headerTable);
-                // document.Add(new Paragraph("\n"));
+                //document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
                 Font reportTitleFont = FontFactory.GetFont(
@@ -2171,9 +1856,8 @@ namespace ERPAdmin.ApiControllers
 
                 document.Add(reportTitle);
 
-
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -2184,20 +1868,26 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
+                // ---- DATA ROWS ----
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                    {
+                        int alignment = Element.ALIGN_LEFT; // default
 
-                    foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                        if (i == 0 || i == 1)          // Col1 & Col2
+                            alignment = Element.ALIGN_CENTER;
+                        else if (i >= 3 && i <= 7)     // Col4 to Col8
+                            alignment = Element.ALIGN_RIGHT;
+                        // Col3 remains LEFT (default)
+
+                        table.AddCell(CreateBodyCell(row[i]?.ToString() ?? "-", tdFont, alignment));
+                    }
                 }
 
                 document.Add(table);
@@ -2282,36 +1972,25 @@ namespace ERPAdmin.ApiControllers
                 ws.Range(1, 1, 1, totalColumns).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
-                ws.Cell(1, 1).Style.Alignment.Horizontal =
-                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
-
+                ws.Cell(1, 1).Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 int headerRow = 2;
                 int colIndex = 1;
 
-                // 🔹 SR NO
-                ws.Cell(headerRow, colIndex).Value = "Sr. No";
-                ws.Cell(headerRow, colIndex).Style.Font.Bold = true;
-                colIndex++;
-
                 // 🔹 HEADERS
                 foreach (DataColumn col in headerTableDB.Columns)
                 {
-                    ws.Cell(headerRow, colIndex).Value =
-                        headerTableDB.Rows[0][col.ColumnName].ToString();
+                    ws.Cell(headerRow, colIndex).Value = headerTableDB.Rows[0][col.ColumnName].ToString();
                     ws.Cell(headerRow, colIndex).Style.Font.Bold = true;
                     colIndex++;
                 }
 
                 // 🔹 DATA
                 int rowIndex = headerRow + 1;
-                int srNo = 1;
 
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    ws.Cell(rowIndex, 1).Value = srNo++;
-
-                    colIndex = 2;
+                    colIndex = 1;
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
                         ws.Cell(rowIndex, colIndex).Value = row[col]?.ToString() ?? "-";
@@ -2348,10 +2027,12 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 4 - Revenue Loss REPORT
         [HttpPost]
-        [Route("Report_Purchase")]
-        public IActionResult Report_Purchase(PurchaseDetailsRequest request)
+        [Route("Report_RevenueLoss")]
+        public IActionResult Report_RevenueLoss(RevenueLossRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -2371,9 +2052,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -2383,13 +2061,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail", con);
+                    cmd = new SqlCommand("Report_GetRevenueLoss", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -2407,6 +2085,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -2467,7 +2149,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -2478,18 +2160,281 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
+                for (int i = 0; i < headerTableDB.Columns.Count; i++)
+                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
+
+                table.HeaderRows = 1;
+
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    foreach (DataColumn col in dataTableDB.Columns)
+                        table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                }
+
+                document.Add(table);
+                document.Close();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.pdf");
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fileStream);
+                }
+
+                string fileUrl = $"/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Report Generated";
+                response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_RevenueLoss_Excel")]
+        public IActionResult Report_RevenueLoss_Excel(RevenueLossRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Revenue Loss");
+
+                int colCount = headerTableDB.Columns.Count;
+
+                // ================= REPORT TITLE =================
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, colCount).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ================= HEADER =================
+                for (int i = 0; i < colCount; i++)
+                {
+                    ws.Cell(2, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(2, i + 1).Style.Font.Bold = true;
+                    ws.Cell(2, i + 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ================= DATA =================
+                int row = 3;
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.xlsx");
+
+                string fileName =
+                    $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Revenue Loss Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+        #endregion
+
+        #region REPORT 5 - Purchase REPORT
+        [HttpPost]
+        [Route("Report_Purchase")]
+        public IActionResult Report_Purchase(PurchaseDetailsRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // 🔹 Company
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // 🔹 Report
+                    cmd = new SqlCommand("Report_GetPurchaseDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                // ================= VALIDATION =================
+                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                // ================= EXTRACT DATA =================
+                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
+                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
+                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
+                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                // ================= HEADER =================
+                PdfPTable headerTable = new PdfPTable(2);
+                headerTable.WidthPercentage = 100;
+                headerTable.SetWidths(new float[] { 20f, 80f });
+
+                Image logo = Image.GetInstance(
+                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
+                );
+                logo.ScaleToFit(70f, 70f);
+
+                headerTable.AddCell(new PdfPCell(logo)
+                {
+                    Border = Rectangle.BOTTOM_BORDER,
+                    Padding = 10
+                });
+
+                PdfPCell detailCell = new PdfPCell
+                {
+                    Border = Rectangle.BOTTOM_BORDER,
+                    Padding = 10,
+                    HorizontalAlignment = Element.ALIGN_CENTER
+                };
+
+                detailCell.AddElement(new Paragraph(companyName,
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                detailCell.AddElement(new Paragraph(companyAddress,
+                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                detailCell.AddElement(new Paragraph(companyphoneNo,
+                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                headerTable.AddCell(detailCell);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
+                // document.Add(new Paragraph("\n"));
+
+                // ================= REPORT NAME (CENTER) =================
+                Font reportTitleFont = FontFactory.GetFont(
+                    FontFactory.HELVETICA_BOLD,
+                    14,
+                    BaseColor.BLACK
+                );
+
+                Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    //SpacingBefore = 10f,
+                    SpacingAfter = 18f
+                };
+
+                document.Add(reportTitle);
+
+
+                // ================= TABLE =================
+                int columnCount = dataTableDB.Columns.Count;
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+
+                float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
+                table.SetWidths(widths);
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                BaseColor thColor = new BaseColor(0, 121, 182);
 
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -2569,34 +2514,26 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= TITLE =================
                 ws.Cell(1, 1).Value = reportName.ToUpper();
-                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Range(1, 1, 1, colCount).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
                 ws.Cell(1, 1).Style.Alignment.Horizontal =
                     ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ================= HEADER =================
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
-
                 for (int i = 0; i < colCount; i++)
                 {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
+                    ws.Cell(2, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(2, i + 1).Style.Font.Bold = true;
+                    ws.Cell(2, i + 1).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ================= DATA =================
-                int row = 4;
-                int srNo = 1;
-
+                int row = 3;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -2625,8 +2562,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
-
+        #region REPORT 6 - Food Wastage REPORT
         [HttpPost]
         [Route("Report_FoodWastage")]
         public IActionResult Report_FoodWastage(FoodWastageDetailsRequest request)
@@ -2649,9 +2587,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -2661,13 +2596,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
+                    cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -2685,6 +2620,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -2745,7 +2684,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -2756,18 +2695,13 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -2846,11 +2780,9 @@ namespace ERPAdmin.ApiControllers
                 using var wb = new ClosedXML.Excel.XLWorkbook();
                 var ws = wb.Worksheets.Add("Food Wastage Report");
 
-                int colCount = headerTableDB.Columns.Count + 1; // + Sr No
+                int colCount = headerTableDB.Columns.Count;
                 int rowIndex = 1;
-
-                
-
+               
                 // ================= REPORT NAME =================
                 ws.Cell(rowIndex, 1).Value = reportName.ToUpper();
                 ws.Range(rowIndex, 1, rowIndex, colCount).Merge();
@@ -2858,19 +2790,10 @@ namespace ERPAdmin.ApiControllers
                 ws.Cell(rowIndex, 1).Style.Font.FontSize = 14;
                 ws.Cell(rowIndex, 1).Style.Alignment.Horizontal =
                     ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
-                rowIndex += 2;
+                rowIndex++;
 
                 // ================= TABLE HEADER =================
                 int colIndex = 1;
-
-                ws.Cell(rowIndex, colIndex).Value = "Sr. No";
-                ws.Cell(rowIndex, colIndex).Style.Font.Bold = true;
-                ws.Cell(rowIndex, colIndex).Style.Fill.BackgroundColor =
-                    ClosedXML.Excel.XLColor.FromArgb(0, 121, 182);
-                ws.Cell(rowIndex, colIndex).Style.Font.FontColor =
-                    ClosedXML.Excel.XLColor.White;
-                colIndex++;
-
                 foreach (DataColumn col in headerTableDB.Columns)
                 {
                     ws.Cell(rowIndex, colIndex).Value =
@@ -2882,22 +2805,13 @@ namespace ERPAdmin.ApiControllers
                         ClosedXML.Excel.XLColor.White;
                     colIndex++;
                 }
-
                 rowIndex++;
 
                 // ================= TABLE DATA =================
-                int srNo = 1;
-                foreach (DataRow row in dataTableDB.Rows)
+                foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(rowIndex, 1).Value = srNo++;
-                    colIndex = 2;
-
-                    foreach (DataColumn col in dataTableDB.Columns)
-                    {
-                        ws.Cell(rowIndex, colIndex).Value =
-                            row[col]?.ToString() ?? "-";
-                        colIndex++;
-                    }
+                    for (int i = 0; i < colCount; i++)
+                        ws.Cell(rowIndex, i + 1).Value = dr[i]?.ToString() ?? "-";
                     rowIndex++;
                 }
 
@@ -2931,7 +2845,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 7 - Expense REPORT
         [HttpPost]
         [Route("Report_Expense")]
         public IActionResult Report_Expense(ExpenseDetailsRequest request)
@@ -2954,9 +2870,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -2966,13 +2879,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail", con);
+                    cmd = new SqlCommand("Report_GetExpenseDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -2990,6 +2903,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -3050,7 +2967,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -3061,18 +2978,12 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
-
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -3148,7 +3059,7 @@ namespace ERPAdmin.ApiControllers
                 using var workbook = new ClosedXML.Excel.XLWorkbook();
                 var ws = workbook.Worksheets.Add("Expense Report");
 
-                int colCount = headerTableDB.Columns.Count + 1; // Sr No
+                int colCount = headerTableDB.Columns.Count; // Sr No
 
                 // ===== REPORT TITLE =====
                 ws.Cell(1, 1).Value = reportName.ToUpper();
@@ -3159,32 +3070,21 @@ namespace ERPAdmin.ApiControllers
                     ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ===== HEADER =====
-                int headerRow = 3;
-
-                ws.Cell(headerRow, 1).Value = "Sr. No";
-                ws.Cell(headerRow, 1).Style.Font.Bold = true;
-                ws.Cell(headerRow, 1).Style.Fill.BackgroundColor =
-                    ClosedXML.Excel.XLColor.LightBlue;
-
+                int headerRow = 2;
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                 {
-                    ws.Cell(headerRow, i + 2).Value =
-                        headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(headerRow, i + 2).Style.Font.Bold = true;
-                    ws.Cell(headerRow, i + 2).Style.Fill.BackgroundColor =
+                    ws.Cell(headerRow, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(headerRow, i + 1).Style.Font.Bold = true;
+                    ws.Cell(headerRow, i + 1).Style.Fill.BackgroundColor =
                         ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ===== DATA =====
                 int row = headerRow + 1;
-                int srNo = 1;
-
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -3213,10 +3113,12 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
+        #region REPORT 8 - Income REPORT
         [HttpPost]
-        [Route("Report_ProfitLoss")]
-        public IActionResult Report_ProfitLoss(ProfitLossDetailsRequest request)
+        [Route("Report_Income")]
+        public IActionResult Report_Income(ExpenseDetailsRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -3236,9 +3138,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -3248,13 +3147,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail", con);
+                    cmd = new SqlCommand("Report_GetIncomeDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -3272,6 +3171,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -3332,7 +3235,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -3343,18 +3246,281 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
+                for (int i = 0; i < headerTableDB.Columns.Count; i++)
+                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
+
+                table.HeaderRows = 1;
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    foreach (DataColumn col in dataTableDB.Columns)
+                        table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                }
+
+                document.Add(table);
+                document.Close();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"Expense_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                Utils.deleteOldFiles(folder, "Expense_Report_*.pdf");
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fileStream);
+                }
+                string fileUrl = $"/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Report Generated";
+                response.data = new { FileUrl = fileUrl };
+                return Ok(response);
+
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_Income_Excel")]
+        public IActionResult Report_Income_Excel(IncomeDetailsRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                    return errorResult;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+                    using SqlCommand cmd = new SqlCommand("Report_GetIncomeDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var ws = workbook.Worksheets.Add("Expense Report");
+
+                int colCount = headerTableDB.Columns.Count; // Sr No
+
+                // ===== REPORT TITLE =====
+                ws.Cell(1, 1).Value = reportName.ToUpper();
+                ws.Range(1, 1, 1, colCount).Merge();
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Cell(1, 1).Style.Alignment.Horizontal =
+                    ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+                // ===== HEADER =====
+                int headerRow = 2;
+                for (int i = 0; i < headerTableDB.Columns.Count; i++)
+                {
+                    ws.Cell(headerRow, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(headerRow, i + 1).Style.Font.Bold = true;
+                    ws.Cell(headerRow, i + 1).Style.Fill.BackgroundColor =
+                        ClosedXML.Excel.XLColor.LightBlue;
+                }
+
+                // ===== DATA =====
+                int row = headerRow + 1;
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                // ===== SAVE =====
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Expense_Report_*.xlsx");
+
+                string fileName = $"Expense_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                workbook.SaveAs(Path.Combine(folder, fileName));
+
+                response.status = "Success";
+                response.message = "Expense Excel Generated";
+                response.data = new { FileUrl = $"/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+        #endregion
+
+        #region REPORT 9 - Profit & Loss REPORT
+        [HttpPost]
+        [Route("Report_ProfitLoss")]
+        public IActionResult Report_ProfitLoss(ProfitLossDetailsRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext, Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // 🔹 Company
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // 🔹 Report
+                    cmd = new SqlCommand("Report_GetProfitLossDetail", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                // ================= VALIDATION =================
+                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                // ================= EXTRACT DATA =================
+                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
+                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
+                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
+                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                // ================= HEADER =================
+                PdfPTable headerTable = new PdfPTable(2);
+                headerTable.WidthPercentage = 100;
+                headerTable.SetWidths(new float[] { 20f, 80f });
+
+                Image logo = Image.GetInstance(
+                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
+                );
+                logo.ScaleToFit(70f, 70f);
+
+                headerTable.AddCell(new PdfPCell(logo)
+                {
+                    Border = Rectangle.BOTTOM_BORDER,
+                    Padding = 10
+                });
+
+                PdfPCell detailCell = new PdfPCell
+                {
+                    Border = Rectangle.BOTTOM_BORDER,
+                    Padding = 10,
+                    HorizontalAlignment = Element.ALIGN_CENTER
+                };
+
+                detailCell.AddElement(new Paragraph(companyName,
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                detailCell.AddElement(new Paragraph(companyAddress,
+                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                detailCell.AddElement(new Paragraph(companyphoneNo,
+                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                headerTable.AddCell(detailCell);
+                if (request.WithHeader == true)
+                {
+                    document.Add(headerTable);
+                }
+                // document.Add(new Paragraph("\n"));
+
+                // ================= REPORT NAME (CENTER) =================
+                Font reportTitleFont = FontFactory.GetFont(
+                    FontFactory.HELVETICA_BOLD,
+                    14,
+                    BaseColor.BLACK
+                );
+
+                Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    //SpacingBefore = 10f,
+                    SpacingAfter = 18f
+                };
+
+                document.Add(reportTitle);
+
+
+                // ================= TABLE =================
+                int columnCount = dataTableDB.Columns.Count;
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+
+                float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
+                table.SetWidths(widths);
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                BaseColor thColor = new BaseColor(0, 121, 182);
 
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -3433,7 +3599,7 @@ namespace ERPAdmin.ApiControllers
                 int row = 1;
 
                 // ================= REPORT TITLE =================
-                var titleRange = ws.Range(row, 1, row, dataTableDB.Columns.Count + 1);
+                var titleRange = ws.Range(row, 1, row, dataTableDB.Columns.Count);
                 titleRange.Merge();
                 titleRange.Value = reportName;
 
@@ -3441,28 +3607,20 @@ namespace ERPAdmin.ApiControllers
                 titleRange.Style.Font.FontSize = 14;
                 titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                row += 2;
-
+                row++;
                 // ================= HEADER =================
-                ws.Cell(row, 1).Value = "Sr No";
-                ws.Cell(row, 1).Style.Font.Bold = true;
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                 {
-                    ws.Cell(row, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(row, i + 2).Style.Font.Bold = true;
+                    ws.Cell(row, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(row, i + 1).Style.Font.Bold = true;
                 }
-
                 row++;
 
                 // ================= DATA =================
-                int srNo = 1;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -3489,8 +3647,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
-
+        #region REPORT 10 - Cashflow REPORT
         [HttpPost]
         [Route("Report_Cashflow")]
         public IActionResult Report_Cashflow([FromBody] CashflowDetailsRequest request)
@@ -3513,9 +3672,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -3525,13 +3681,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail", con);
+                    cmd = new SqlCommand("Report_GetCashflowDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -3549,6 +3705,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -3609,7 +3769,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -3620,18 +3780,13 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -3711,36 +3866,27 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= REPORT TITLE =================
                 ws.Cell(1, 1).Value = reportName;
-                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Range(1, 1, 1, colCount).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
                 ws.Cell(1, 1).Style.Alignment.Horizontal =
                     ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ================= HEADER =================
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor =
-                    ClosedXML.Excel.XLColor.LightBlue;
-
                 for (int i = 0; i < colCount; i++)
                 {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
+                    ws.Cell(2, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(2, i + 1).Style.Font.Bold = true;
+                    ws.Cell(2, i + 1).Style.Fill.BackgroundColor =
                         ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ================= DATA =================
-                int row = 4;
-                int srNo = 1;
-
+                int row = 3;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -3769,8 +3915,9 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+        #endregion
 
-
+        #region REPORT 11 - Modification REPORT
         [HttpPost]
         [Route("Report_Modification")]
         public IActionResult Report_Modification(ModificationRequest request)
@@ -3793,9 +3940,6 @@ namespace ERPAdmin.ApiControllers
                 Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
-                writer.PageEvent = new PdfPageEvents("Admin");
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
@@ -3805,13 +3949,13 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     // 🔹 Company
-                    new SqlDataAdapter(
-                        new SqlCommand("Report_PageHeader_GetCompany", con)
-                        { CommandType = CommandType.StoredProcedure }
-                    ).Fill(dtCompany);
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Report
-                    using SqlCommand cmd = new SqlCommand("Report_GetModificationDetail", con);
+                    cmd = new SqlCommand("Report_GetModificationDetail", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
@@ -3829,6 +3973,10 @@ namespace ERPAdmin.ApiControllers
                 string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
                 string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
                 string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
+                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -3889,7 +4037,7 @@ namespace ERPAdmin.ApiControllers
 
 
                 // ================= TABLE =================
-                int columnCount = dataTableDB.Columns.Count + 1;
+                int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
@@ -3900,18 +4048,12 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                table.AddCell(CreateHeaderCell("Sr. No", thFont, thColor));
-
                 for (int i = 0; i < headerTableDB.Columns.Count; i++)
                     table.AddCell(CreateHeaderCell(headerTableDB.Rows[0][i].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
-
-                int srNo = 1;
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    table.AddCell(CreateBodyCell(srNo++.ToString(), tdFont, Element.ALIGN_CENTER));
-
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
                 }
@@ -3991,36 +4133,27 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= REPORT TITLE =================
                 ws.Cell(1, 1).Value = reportName;
-                ws.Range(1, 1, 1, colCount + 1).Merge();
+                ws.Range(1, 1, 1, colCount).Merge();
                 ws.Cell(1, 1).Style.Font.Bold = true;
                 ws.Cell(1, 1).Style.Font.FontSize = 16;
                 ws.Cell(1, 1).Style.Alignment.Horizontal =
                     ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // ================= HEADER =================
-                ws.Cell(3, 1).Value = "Sr. No";
-                ws.Cell(3, 1).Style.Font.Bold = true;
-                ws.Cell(3, 1).Style.Fill.BackgroundColor =
-                    ClosedXML.Excel.XLColor.LightBlue;
-
                 for (int i = 0; i < colCount; i++)
                 {
-                    ws.Cell(3, i + 2).Value = headerTableDB.Rows[0][i].ToString();
-                    ws.Cell(3, i + 2).Style.Font.Bold = true;
-                    ws.Cell(3, i + 2).Style.Fill.BackgroundColor =
+                    ws.Cell(2, i + 1).Value = headerTableDB.Rows[0][i].ToString();
+                    ws.Cell(2, i + 1).Style.Font.Bold = true;
+                    ws.Cell(2, i + 1).Style.Fill.BackgroundColor =
                         ClosedXML.Excel.XLColor.LightBlue;
                 }
 
                 // ================= DATA =================
-                int row = 4;
-                int srNo = 1;
-
+                int row = 3;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    ws.Cell(row, 1).Value = srNo++;
-
                     for (int i = 0; i < colCount; i++)
-                        ws.Cell(row, i + 2).Value = dr[i]?.ToString() ?? "-";
+                        ws.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
 
                     row++;
                 }
@@ -4049,7 +4182,7 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
+        #endregion
     }
 }
 

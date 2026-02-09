@@ -83,26 +83,15 @@
 
                     <!-- FILTER PANEL -->
                     <div class="filter-area">
-                        <div class="filter-panel-static">
+                        <div class="filter-panel-static d-none" id="filterPanel">
 
                             <div class="filter-header">
                                 <span class="text-warning">Filters</span>
                             </div>
 
                             <div class="filter-body">
-
                                 <div class="mb-2">
-                                    <label class="form-label">From Date</label>
-                                    <input type="date" id="from-date" class="form-control form-control-sm">
-                                </div>
-
-                                <div class="mb-2">
-                                    <label class="form-label">To Date</label>
-                                    <input type="date" id="to-date" class="form-control form-control-sm">
-                                </div>
-
-                                <div class="mb-2">
-                                    <label class="form-label">Quick Range</label>
+                                    <label class="form-label">Duration</label>
                                     <div class="dropdown w-100">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100"
                                                 id="sortByDropdown"
@@ -122,6 +111,15 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="from-date" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="to-date" class="form-control form-control-sm">
+                                </div>
                             </div>
 
                             <div class="filter-footer">

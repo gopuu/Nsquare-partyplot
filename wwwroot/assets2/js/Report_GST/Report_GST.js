@@ -2,7 +2,10 @@
 const HEADER_KEY = "printWithHeader";
 
 $(document).ready(function () {
-    setCurrentMonthDates();
+    $("#filterPanel").removeClass("d-none");
+
+    selectedMonthDuration = "thismonth";
+    applyQuickRange();
     ViewGSTReport("viewPDF");
 
     $(".sort-option").on("click", function () {
@@ -22,9 +25,15 @@ $(document).ready(function () {
     });
 
     $("#btnResetFilter").on("click", function () {
-        setCurrentMonthDates();
         selectedMonthDuration = "thismonth";
-        ViewGSTReport("viewPDF");
+
+        $(".sort-option").removeClass("active");
+        $(".sort-option[data-value='thismonth']").addClass("active");
+
+        $("#sortByDropdown").text("This Month");
+
+        applyQuickRange();
+        ViewDailySalesReport("viewPDF");
     });
 
     // WITH HEADER -- START ------------
@@ -47,27 +56,29 @@ $(document).ready(function () {
 });
 
 function ViewGSTReport(actionName = "viewPDF") {
-    $('#btn-loader').show();
 
     const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
     console.log("With Header:", withHeader);
 
+    const userId = parseInt(sessionStorage.getItem('userId') || 0);
     const url = (actionName === "downloadExcel")
         ? "/api/Report/Report_GSTDetails_Excel"
         : "/api/Report/Report_GSTDetails";
+    var payload = {
+        FromDate: $("#from-date").val(),
+        ToDate: $("#to-date").val(),
+        FilterDuration: selectedMonthDuration,
+        WithHeader: withHeader,
+        ActionBy: userId
+    };
 
-    fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            FromDate: $("#from-date").val(),
-            ToDate: $("#to-date").val(),
-            FilterDuration: selectedMonthDuration,
-            WithHeader: withHeader
-        })
-    })
-        .then(r => r.json())
-        .then(result => {
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        success: function (result) {
 
             if (result.status !== "Success" || !result.data?.FileUrl) {
                 Swal.fire("Fail", result.message || "No data found", "error");
@@ -88,47 +99,13 @@ function ViewGSTReport(actionName = "viewPDF") {
                 link.click();
                 document.body.removeChild(link);
             }
-        });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "GST Report Download Failed")
+            console.error(error);
+            //Swal.fire("Error", "Something went wrong", "error");
+        }
+    });
 }
 
-function setCurrentMonthDates() {
-    const today = new Date();
-    const first = new Date(today.getFullYear(), today.getMonth(), 1);
-    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    $("#from-date").val(formatDate(first));
-    $("#to-date").val(formatDate(last));
-}
-
-function applyQuickRange() {
-    const today = new Date();
-    let from, to = today;
-
-    switch (selectedMonthDuration) {
-        case "thismonth":
-            from = new Date(today.getFullYear(), today.getMonth(), 1);
-            break;
-        case "lastmonth":
-            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            to = new Date(today.getFullYear(), today.getMonth(), 0);
-            break;
-        case "days":
-            from = new Date(today.setDate(today.getDate() - 6));
-            break;
-        case "lastdays":
-            from = new Date(today.setDate(today.getDate() - 29));
-            break;
-        case "yesterday":
-            from = to = new Date(today.setDate(today.getDate() - 1));
-            break;
-        default:
-            return;
-    }
-
-    $("#from-date").val(formatDate(from));
-    $("#to-date").val(formatDate(to));
-}
-
-function formatDate(d) {
-    return d.toISOString().split("T")[0];
-}

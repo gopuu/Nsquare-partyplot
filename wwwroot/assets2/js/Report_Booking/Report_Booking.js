@@ -2,6 +2,8 @@
 const HEADER_KEY = "printWithHeader";
 
 document.addEventListener("DOMContentLoaded", function () {
+    $("#filterPanel").removeClass("d-none");
+    
     loadEventTypeDropdown();
     loadCompanyHallDropdown();
     ViewBookingReport();
@@ -237,6 +239,7 @@ function ViewBookingReport(actionName = "viewPDF") {
 
     const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
     console.log("With Header:", withHeader);
+    const userId = parseInt(sessionStorage.getItem('userId') || 0);
 
     const inputData = {
         EventTypeId: parseInt($("#ddlEventType").val()) || 0,
@@ -245,7 +248,8 @@ function ViewBookingReport(actionName = "viewPDF") {
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration,
-        WithHeader: withHeader
+        WithHeader: withHeader,
+        ActionBy: userId
     };
 
     const url = (actionName === "downloadExcel")
@@ -306,14 +310,6 @@ function ViewBookingReport(actionName = "viewPDF") {
     });
 
 
-}
-
-// Date format yyyy-mm-dd
-function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
 }
 
 function setCurrentMonthDates() {

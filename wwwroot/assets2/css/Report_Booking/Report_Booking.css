@@ -12,7 +12,7 @@
 
 /* CARD LAYOUT */
 .card {
-    height: calc(100vh - 80px); /* adjust if layout header exists */
+    height: calc(100vh - 90px); /* adjust if layout header exists */
     display: flex;
     flex-direction: column;
     overflow: visible;

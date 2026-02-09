@@ -14,7 +14,7 @@
                 <div class="mb-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="mb-0 text-warning">Staff Master</h4>
-                        <button class="btn btn-outline-warning" id="btn-add">
+                        <button class="btn btn-outline-warning btn-sm" id="btn-add">
                             <i class="fa fa-plus-circle"></i> Add Staff
                         </button>
                     </div>
@@ -29,145 +29,268 @@
     </div>
 </div>
 
+<!--Add NEW-->
 <div class="modal fade" id="staffModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-white">
+
+            <div class="modal-header bg-warning text-white py-1">
                 <h5 class="modal-title text-white" id="staffModalTitle">Add Staff</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
                 <input type="hidden" id="staffId" value="0" />
-                <div class="row g-3">
+
+                <!-- ================= ROW 1 ================= -->
+                <div class="row g-3 mb-3">
+
+                    <!-- ===== STAFF BASIC INFO (8) ===== -->
                     <div class="col-md-8">
-                        <label class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" id="txtName" class="form-control" placeholder="Enter Name">
-                    </div>
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light fw-semibold py-1">
+                                👤 Staff Basic Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-2 py-1">
 
-                    <div class="col-md-4">
-                        <label class="form-label">Employee Code</label>
-                        <input type="text" id="txtEmpCode" class="form-control" placeholder="Enter Employee Code">
-                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Name *</label>
+                                        <input type="text" id="txtName" class="form-control">
+                                    </div>
 
-                    <div class="col-8">
-                        <label class="form-label">Address</label>
-                        <textarea id="txtAddress" class="form-control" placeholder="Enter Address"></textarea>
-                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Employee Code</label>
+                                        <input type="text" id="txtEmpCode" class="form-control">
+                                    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Phone No <span class="text-danger">*</span></label>
-                        <input type="text" id="txtPhoneNo" maxlength="10" class="form-control" placeholder="Enter Mobile No">
-                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Address</label>
+                                        <textarea id="txtAddress" class="form-control" rows="2"></textarea>
+                                    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Emergency Phone No</label>
-                        <input type="text" id="txtEmergencyPhone" maxlength="10" class="form-control" placeholder="Enter Emergency ContactNo">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="txtEmail" class="form-control" placeholder="Enter Email">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Designation</label>
-                        <select id="ddlDesignation" class="form-select"></select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Aadhar Card No</label>
-                        <input type="text" id="txtAadhar" maxlength="12" class="form-control" placeholder="Enter Aadhar Card No">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Joining Date</label>
-                        <input type="date" id="txtJoiningDate" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Birth Date</label>
-                        <input type="date" id="txtBirthDate" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Anniversary Date</label>
-                        <input type="date" id="txtAnniversaryDate" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Salary</label>
-                        <input type="number" id="txtSalary" class="form-control" placeholder="Enter Salary">
-                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Phone No *</label>
+                                        <input type="text" id="txtPhoneNo" maxlength="10" class="form-control">
+                                    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">User Name</label>
-                        <input type="text" id="txtUserName" class="form-control" placeholder="Enter Username">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="txtPassword" class="form-control" placeholder="Enter Password">
-                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Emergency Phone</label>
+                                        <input type="text" id="txtEmergencyPhone" maxlength="10" class="form-control">
+                                    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" id="txtBankName" class="form-control" placeholder="Enter Bank Name">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Bank Branch</label>
-                        <input type="text" id="txtBankBranch" class="form-control" placeholder="Enter Bank Branch">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">IFSC</label>
-                        <input type="text" id="txtIFSC" class="form-control" placeholder="Enter IFSC Code">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Account No</label>
-                        <input type="text" id="txtAccountNo" class="form-control" placeholder="Enter AccountNo">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Bank Account Holder Name</label>
-                        <input type="text" id="txtBankAccountHolderName" class="form-control" placeholder="Enter Account Holder Name">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">UPI ID</label>
-                        <input type="text" id="txtBankUPIId" class="form-control" placeholder="Enter UPI Id">
-                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" id="txtEmail" class="form-control">
+                                    </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Photo</label>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Designation</label>
+                                        <select id="ddlDesignation" class="form-select"></select>
+                                    </div>
 
-                        <div class="input-group">
-                            <input type="file" id="txtPhoto" accept="image/*" class="form-control form-control-sm">
-                            <button id="btnDownloadInvoice" class="btn btn-outline-primary btn-sm d-none" type="button">
-                                <i class="fa fa-download"></i>
-                            </button>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Aadhar No</label>
+                                        <input type="text" id="txtAadhar" maxlength="12" class="form-control">
+                                    </div>
+
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <input type="hidden" id="invoiceFileLink">
+                    <!-- ===== EMPLOYMENT DETAILS (4) ===== -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light fw-semibold py-1">
+                                🏢 Employment Details
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    <div class="col-12">
+                                        <label class="form-label">Joining Date</label>
+                                        <input type="date" id="txtJoiningDate" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Birth Date</label>
+                                        <input type="date" id="txtBirthDate" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Anniversary Date</label>
+                                        <input type="date" id="txtAnniversaryDate" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Salary</label>
+                                        <input type="number" id="txtSalary" class="form-control">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
+
+                <!-- ================= ROW 2 ================= -->
+                <div class="row g-3 mb-3">
+
+                    <!-- ===== BANK DETAILS (8) ===== -->
+                    <div class="col-md-8">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light fw-semibold py-1">
+                                🏦 Bank Details
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bank Name</label>
+                                        <input type="text" id="txtBankName" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Branch</label>
+                                        <input type="text" id="txtBankBranch" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">IFSC</label>
+                                        <input type="text" id="txtIFSC" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Account No</label>
+                                        <input type="text" id="txtAccountNo" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Account Holder</label>
+                                        <input type="text" id="txtBankAccountHolderName" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">UPI ID</label>
+                                        <input type="text" id="txtBankUPIId" class="form-control">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== LOGIN DETAILS (4) ===== -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light fw-semibold py-1">
+                                🔐 Login Details
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    <div class="col-12">
+                                        <label class="form-label">User Name</label>
+                                        <input type="text" id="txtUserName" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" id="txtPassword" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Photo</label>
+                                        <div class="input-group">
+                                            <input type="file" id="txtPhoto" class="form-control" accept="image/*">
+                                            <button id="btnDownloadInvoice"
+                                                    class="btn btn-outline-primary d-none"
+                                                    type="button">
+                                                <i class="fa fa-download"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="invoiceFileLink">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ================= ROW 3 ================= -->
+                <div class="row g-3">
+
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light fw-semibold py-1">
+                                📄 Staff Documents
+                            </div>
+                            <div class="card-body">
+
+                                <div id="documentsContainer"></div>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary mt-2"
+                                        id="btnAddDocument">
+                                    ➕ Add Document
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- DOCUMENT TEMPLATE -->
+                <script type="text/template" id="docRowTemplate">
+                    <div class="row g-2 align-items-center document-row mb-2" data-index="{{index}}">
+                        <div class="col-md-5">
+                            <input type="text" class="form-control doc-name" placeholder="Document Name">
+                        </div>
+                        <div class="col-md-5">
+                            <input type="file" class="form-control doc-file" accept="image/*,.pdf">
+                        </div>
+                        <div class="col-md-1 text-center">
+                            <span class="text-success d-none uploaded-label">✔</span>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger btnRemoveDoc">✖</button>
+                        </div>
+                    </div>
+                </script>
+
             </div>
-            <div class="modal-footer d-flex justify-content-between align-items-center">
+
+            <div class="modal-footer d-flex justify-content-between">
                 <div class="d-flex gap-4">
-                    <!-- Is Super User Switch -->
-                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="switchIsSuperUser">
-                        <label class="form-check-label" for="switchIsSuperUser">Is Super User</label>
+                        <label class="form-check-label">Is Super User</label>
                     </div>
-                    <!-- Auto Login Switch -->
-                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="switchIsAutoLogin">
-                        <label class="form-check-label" for="switchIsAutoLogin">Auto Login</label>
+                        <label class="form-check-label">Auto Login</label>
                     </div>
-
-                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="switchIsActive">
-                        <label class="form-check-label" for="switchIsActive">IsActive</label>
+                        <label class="form-check-label">Is Active</label>
                     </div>
                 </div>
+
                 <div>
-                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button class="btn btn-outline-warning" id="btnSaveStaff">Save</button>
+                    <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-outline-warning btn-sm" id="btnSaveStaff">Save</button>
                 </div>
             </div>
+
         </div>
     </div>
-</div>
 
+</div>
 
 <!-- DELETE MODAL -->
 <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
@@ -197,10 +320,8 @@
 
 @section Scripts {
     <script src="~/assets2/js/staffmaster/staffmaster.js" asp-append-version="true"></script>
-
 }
 
 @section Styles {
-    <link href="~/assets2/css/customdatatable/customdatatable.css" rel="stylesheet" />
-
+    <link href="~/assets2/css/customdatatable/customdatatable.css"  asp-append-version="true" rel="stylesheet" />
 }
