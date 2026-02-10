@@ -89,6 +89,9 @@ builder.Services.AddControllers();
 
 //builder.Services.AddScoped<IEwayBillHandler, EwayBillHandler>();
 
+//SignalR
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -98,14 +101,15 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 
-
 app.UseSwagger();
-
 // This middleware serves the Swagger documentation UI
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ERP API V1");
 });
+
+//SignalR - ✅ Map hubs AFTER Build
+app.MapHub<SettingsHub>("/settingsHub");
 
 // Read custom error settings from appsettings.json
 var config = builder.Configuration;

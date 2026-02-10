@@ -7,6 +7,10 @@ $(document).ready(function () {
     applyQuickRange();
     ViewMonthlySalesReport("viewPDF");
 
+    AppSignalR.subscribe(() => {
+        ViewMonthlySalesReport("viewPDF");
+    });
+
     $(".sort-option").on("click", function () {
 
         $(".sort-option").removeClass("active");

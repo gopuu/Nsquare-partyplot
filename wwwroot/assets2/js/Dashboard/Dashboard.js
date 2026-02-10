@@ -1,16 +1,33 @@
 ﻿
 $(document).ready(function () {
     setCurrentMonthDates();
-    loadDashboardWidgets();
-    loadJobPieChart();
-    loadEventPieChart();
-    loadSalesPieChart();
+    loadDashboardWidgetCounts();
+
+    loadBookingEventTypeCount();
+    loadBookingSubEventTypeCorporate();
+    loadBookingSubEventTypeFamilyFunction();
+
     loadYearDropdown();
-    loadPnLChart("last3months");
+    loadComparativeInsightsChart("last3months");
 
     const currentYear = new Date().getFullYear();
-    renderBarChart(currentYear);
+    loadOverallBookingsStatistics(currentYear);
     $("#yearDropdown").text(currentYear);
+
+    AppSignalR.subscribe(() => {
+        //console.log("page refresh");
+        loadDashboardWidgetCounts();
+
+        loadBookingEventTypeCount();
+        loadBookingSubEventTypeCorporate();
+        loadBookingSubEventTypeFamilyFunction();
+
+        loadComparativeInsightsChart("last3months");
+
+        loadOverallBookingsStatistics(currentYear);
+        $("#yearDropdown").text(currentYear);
+    });
+
 
 });
 function setCurrentMonthDates() {
@@ -81,7 +98,7 @@ $(".sort-option").on("click", function (e) {
     }
     else if (selectedMonthDuration === "customrange") {
         // custom range me datepicker pe user select karega
-        return loadDashboardWidgets();
+        return loadDashboardWidgetCounts();
     }
 
     // Set the datepickers
@@ -89,7 +106,7 @@ $(".sort-option").on("click", function (e) {
     $("#toDate").val(formatDate(toDate));
 
     // 🔥 Load data
-    loadDashboardWidgets();
+    loadDashboardWidgetCounts();
 });
 
 
@@ -106,7 +123,7 @@ $("#fromDate, #toDate").on("change", function () {
 
         $(".sort-option").removeClass("active");
 
-        loadDashboardWidgets(); // 🔥
+        loadDashboardWidgetCounts(); // 🔥
     }
 });
 
@@ -122,9 +139,9 @@ $("#btnReset").on("click", function () {
     $(".sort-option").removeClass("active");
     $('.sort-option[data-value="thismonth"]').addClass("active");
 
-    loadDashboardWidgets();
+    loadDashboardWidgetCounts();
 });
-function loadDashboardWidgets() {
+function loadDashboardWidgetCounts() {
     let requestObj = {
         MonthDuration: selectedMonthDuration, // eg: thismonth, lastmonth
         FromDate: $("#fromDate").val(),        // yyyy-mm-dd
@@ -355,7 +372,7 @@ tooltipTriggerList.map(function (tooltipTriggerEl) {
 
 
 let jobPieChart = null;
-function loadJobPieChart() {
+function loadBookingEventTypeCount() {
 
     let requestObj = {
         MonthDuration: selectedMonthDuration,
@@ -448,7 +465,7 @@ $(".chart-filter-pie .dropdown-item").on("click", function (e) {
 
     $("#jobChartFilter").text($(this).text());
 
-    loadJobPieChart(); // 🔥 reload chart
+    loadBookingEventTypeCount(); // 🔥 reload chart
 });
 
 
@@ -505,7 +522,7 @@ function renderEventPieChart(labels, values) {
 }
 
 // 🔹 Function to load data via AJAX
-function loadEventPieChart(monthDuration = "thismonth", fromDate = null, toDate = null) {
+function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate = null, toDate = null) {
     $.ajax({
         url: '/api/Dashboard/GetBookingSubEventTypeCorporate',
         type: 'POST',
@@ -552,7 +569,7 @@ $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
     selectedMonthDuration = selectedValue;
 
     // Call your chart update
-    loadEventPieChart(selectedValue);
+    loadBookingSubEventTypeCorporate(selectedValue);
 });
 
 
@@ -606,7 +623,7 @@ function renderSalesPieChart(labels, values) {
 }
 
 // 🔹 Function to load data via AJAX
-function loadSalesPieChart(monthDuration = "thismonth", fromDate = null, toDate = null) {
+function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", fromDate = null, toDate = null) {
     $.ajax({
         url: '/api/Dashboard/GetBookingSubEventTypeFamilyFunction', // your API route
         type: 'POST',
@@ -645,7 +662,7 @@ $(".chart-filter-salepie .dropdown-item").on("click", function (e) {
     $("#salepieChartFilter").text($(this).text());
 
     // map dropdown to MonthDuration (or custom date logic)
-    loadSalesPieChart(filterText);
+    loadBookingSubEventTypeFamilyFunction(filterText);
 });
 
 
@@ -791,13 +808,13 @@ $(".chart-filter-salepie .dropdown-item").on("click", function (e) {
 //$(document).ready(function () {
 //   // loadYearDropdown(); // populate year dropdown
 //    let selectedYear = new Date().getFullYear();
-//    renderBarChart(selectedYear);
+//    loadOverallBookingsStatistics(selectedYear);
 
 //    // Handle year selection
 //    $(document).on('click', '#yearDropdownMenu li a', function () {
 //        selectedYear = $(this).data('year');
 //        $('#yearDropdown').text(selectedYear);
-//        renderBarChart(selectedYear);
+//        loadOverallBookingsStatistics(selectedYear);
 //    });
 
 //    $(window).resize(function () {
@@ -1000,7 +1017,7 @@ function loadYearDropdown() {
 }
 
 // Render Bar Chart
-function renderBarChart(year) {
+function loadOverallBookingsStatistics(year) {
     
     $.ajax({
         url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
@@ -1031,7 +1048,6 @@ function renderBarChart(year) {
                     return { y: m, TotalAmount ,BookingQty, TotalEvents, FamilyEvents, CorporateEvents };
                 });
 
-
                 $('#bar-chart').empty();
 
                 Morris.Bar({
@@ -1060,7 +1076,6 @@ function renderBarChart(year) {
             }
         }
     });
-
 }
 
 
@@ -1083,14 +1098,10 @@ $(document).on("click", ".year-option", function (e) {
 
     console.log("Selected Year:", selectedYear);
 
-    renderBarChart(selectedYear);
+    loadOverallBookingsStatistics(selectedYear);
 });
 
-
-
-
-
-function loadPnLChart(filter) {
+function loadComparativeInsightsChart(filter) {
 
     const monthCount = filter.replace("last", "").replace("months", "");
     $("#pnlFilterBtn").text(`Last ${monthCount} Months`);

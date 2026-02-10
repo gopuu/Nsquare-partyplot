@@ -59,11 +59,20 @@
     <link href="/assets2/vendors/leaflet/leaflet.css" rel="stylesheet">
     <link href="/assets2/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
     <link href="/assets2/vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/assets2/css/Shared/Layout.css" asp-append-version="true" />
+
     <!--jquery-->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin=""></script>
     <!--sweert alert-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="~/assets2/css/Shared/Layout.css" asp-append-version="true" />
+
+    <!--singalR-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="~/assets2/js/signalr-settings.js"></script>
+    <script>
+        AppSignalR.start();
+    </script>
+
 </head>
 
 <body>

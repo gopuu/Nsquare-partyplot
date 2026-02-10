@@ -1,6 +1,18 @@
 ﻿
 $(document).ready(function () {
     loadKeyStatistics("thismonth");
+    AppSignalR.subscribe(() => {
+        //console.log("page refresh");
+        //loadKeyStatistics("thismonth");
+        const $active = $(".chart-filter-Statistics .dropdown-item.active");
+        if ($active.length) {
+            $active.trigger("click");
+        }
+        else {
+            $(".chart-filter-Statistics .dropdown-item:first").trigger("click");
+        }
+    });
+
     loadCOGSCount("thismonth");
     loadPending_Purchases_ApprovalsCount("thismonth");
 

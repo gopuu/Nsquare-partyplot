@@ -8,6 +8,10 @@ $(document).ready(function () {
     applyQuickRange();
     ViewCashflowReport("viewPDF");
 
+    AppSignalR.subscribe(() => {
+        ViewCashflowReport("viewPDF");
+    });
+
     $(".sort-option").on("click", function () {
 
         $(".sort-option").removeClass("active");

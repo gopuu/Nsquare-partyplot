@@ -176,11 +176,11 @@
                                                         </button>
 
                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last3months')">Last 3 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last4months')">Last 4 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last5months')">Last 5 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last6months')">Last 6 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadPnLChart('last12months')">Last 12 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last3months')">Last 3 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last4months')">Last 4 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last5months')">Last 5 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last6months')">Last 6 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last12months')">Last 12 Months</a></li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -189,7 +189,6 @@
                                             <!-- Card Body -->
                                             <div class="card-body">
                                                 <canvas id="pnlCategoryChart" height="90"></canvas>
-
                                             </div>
                                         </div>
                                     </div>
@@ -197,7 +196,9 @@
                                 </div>
                             </div>
                             <!---------- bar chart end ---------->
+
                             <!---------- card end ---------->
+
                             <!---------- graph start ---------->
                             <div class="row g-2 py-2 d-none">
                                 <div class="col-md-6">

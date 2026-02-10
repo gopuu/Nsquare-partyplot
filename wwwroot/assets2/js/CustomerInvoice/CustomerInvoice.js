@@ -13,6 +13,11 @@ $(function () {
     getNextInvoiceNumbers();
     loadState();
 
+    AppSignalR.subscribe(() => {
+        window.location.reload();
+        fetchData();
+    });
+
     //SUMMARY -- START 
     $(document).on('click', '.btn-summary', function () {
         var bookingId = $(this).data('bookingid');
@@ -801,7 +806,6 @@ function fetchData() {
             handleApiError(xhr, status, error, "CustomerInvoice Fetch Failed!");
         }
     });
-
 }
 
 function renderTable(data) {

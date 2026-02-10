@@ -349,7 +349,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("GetBookingEventTypeCount", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_GetBookingEventTypeCount", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
@@ -409,7 +409,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("GetBookingSubEventTypeCorporate", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_GetBookingSubEventTypeCorporate", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
@@ -471,7 +471,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("GetBookingSubEventType_FamilyFunction", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_GetBookingSubEventType_FamilyFunction", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@MonthDuration", (object)request.MonthDuration ?? DBNull.Value);
@@ -533,8 +533,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand(
-                        "Dashboard_LeadSourcecount", con);
+                    SqlCommand cmd = new SqlCommand("Dashboard_LeadSourcecount", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue(
@@ -606,7 +605,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd =
-                    new SqlCommand("Dashboard_EventSummary_YearWise", con))
+                    new SqlCommand("Dashboard_GetOverallBookingsStatistics", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
@@ -683,7 +682,7 @@ namespace ERPAdmin.ApiControllers
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd =
-                    new SqlCommand("Report_GetMonthlyPnLChart", con))
+                    new SqlCommand("Dashboard_GetComparativeInsightsChart", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 

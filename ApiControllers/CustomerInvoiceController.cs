@@ -21,7 +21,8 @@ namespace ERPAdmin.ApiControllers
     {
         private readonly string domainUrl;
         private string connString = string.Empty;
-        public CustomerInvoiceController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+
+        public CustomerInvoiceController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) 
         {
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";

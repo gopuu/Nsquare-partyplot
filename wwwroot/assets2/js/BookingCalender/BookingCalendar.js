@@ -1884,6 +1884,12 @@ document.addEventListener("DOMContentLoaded", function () {
     getNextInvoiceNumbers();
     loadState();
 
+    AppSignalR.subscribe(() => {
+        window.location.reload();
+        //console.log("page refresh");
+        loadBookingCalendar();
+    });
+
     // When Addon Modal is about to open
     const addonModal = document.getElementById('addonChargeModal');
     const bookingModal = document.getElementById('bookingModal');
