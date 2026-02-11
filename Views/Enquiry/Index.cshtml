@@ -301,22 +301,35 @@
                         </div>
                     </div>
 
-                    <!--pax-->
-                    <div class="col-md-4">
-                        <label for="pax" class="form-label">Pax <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="pax" placeholder="pax" maxlength="50">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
-                    </div>
-
                     <!-- Row 5: Follow-up Date, Estimated Amount, Lead Source -->
                     <div class="col-md-4">
                         <label for="followUpDate" class="form-label">Follow-up Date</label>
                         <input class="form-control datetimepicker flatpickr-input" id="followUpDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
                     </div>
-                    <div class="col-md-4">
+
+                    <!--pax-->
+                    <div class="col-md-2">
+                        <label for="pax" class="form-label">Pax <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="pax" placeholder="pax" min="0" step="1">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
+                    </div>
+
+                    <!-- Estimated Package Amount -->
+                    <div class="col-md-3">
+                        <label for="packageAmount" class="form-label">
+                            Estimated Package Amount <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="packageAmount" placeholder="Per Pax Amount"
+                               step="1" min="0">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Package Amount</div>
+                    </div>
+
+                    <!--Estimated Amount-->
+                    <div class="col-md-3">
                         <label for="estimatedAmount" class="form-label">Estimated Amount <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="estimatedAmount" placeholder="amount" value="0" step="0.01" min="0">
+                        <input type="number" class="form-control" id="estimatedAmount" placeholder="amount" value="0" step="1" min="0">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter valid Amount</div>
+
                         <!-- ℹ️ Info Line -->
                         <p class="text-muted small mt-1 mb-2">
                             <i class="fa fa-info-circle me-1 text-primary"></i>
@@ -325,6 +338,8 @@
                             </span>
                         </p>
                     </div>
+
+                    <!--Lead Source Dropdown-->
                     <div class="col-md-4">
                         <label for="leadSourceDropdown" class="form-label">Lead Source <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -344,13 +359,13 @@
                     </div>
 
                     <!-- Row 6: Remarks -->
-                    <div class="col-12">
+                    <div class="col-md-12">
                         <label for="remark" class="form-label">Remarks / Notes</label>
                         <textarea class="form-control" id="remark" rows="2" placeholder="Remarks"></textarea>
                     </div>
 
                     <!-- Submit -->
-                    <div class="col-12 text-end">
+                    <div class="col-md-12 text-end">
                         <button type="button" class="btn btn-action-xs btn-outline-danger d-none" id="deleteDealBtn">
                             <i class="fa fa-trash"></i> Delete
                         </button>
@@ -370,7 +385,13 @@
         <div class="modal-content">
 
             <div class="modal-header bg-warning py-1">
-                <h6 class="modal-title text-white">Follow-Up</h6>
+                <h5 class="modal-title text-white fw-semibold d-flex align-items-center gap-2">
+                    Follow-Up
+                    <span class="badge bg-light text-dark fw-normal px-2 py-1" style="font-size: 0.75rem;">
+                        (Optional) Skip If not needed
+                    </span>
+                </h5>
+
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 

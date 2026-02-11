@@ -907,6 +907,17 @@ function parseTime(timeStr) {
     return date;
 }
 
+function calculateEstimatedAmount() {
+
+    const pax = parseFloat(document.getElementById("pax").value) || 0;
+    const packageAmount = parseFloat(document.getElementById("packageAmount").value) || 0;
+
+    const total = pax * packageAmount;
+
+    document.getElementById("estimatedAmount").value =
+        total > 0 ? total.toFixed(2) : "";
+}
+
 // Initial load
 document.addEventListener("DOMContentLoaded", function () {
     loadEnquiryDeals();
@@ -921,6 +932,10 @@ document.addEventListener("DOMContentLoaded", function () {
     loadTimeDropdown();
 
     fetchHallDetails();
+
+    // Trigger on input
+    document.getElementById("pax").addEventListener("input", calculateEstimatedAmount);
+    document.getElementById("packageAmount").addEventListener("input", calculateEstimatedAmount);
 
     $("#ddlDuration").on("change", function () {
         const duration = $(this).val();

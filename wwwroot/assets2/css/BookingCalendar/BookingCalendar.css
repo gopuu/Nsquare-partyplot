@@ -1,4 +1,22 @@
-﻿/*<!--Booking View MODAL-->*/
+﻿
+.payment-summary-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.payment-summary-table td {
+vertical-align: middle;
+}
+
+.payment-summary-table td:last-child {
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/*<!--Booking View MODAL-->*/
 .card-body .d-flex:hover {
     background-color: #f8f9fa;
     transition: 0.15s ease-in-out;

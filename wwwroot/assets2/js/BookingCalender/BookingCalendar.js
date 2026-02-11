@@ -287,6 +287,7 @@ function loadEnquiryList() {
             //console.log("enquiry list response:", response);
             if (response.status === "Success") {
                 let options = `<option value="0">-- Select Client --</option>`; // default option
+                options += `<option value="0">+ Add New Client</option>`; // default option
                 $.each(response.data, function (index, item) {
                     options += `
                                <option
@@ -423,18 +424,13 @@ function loadFoodPackageList() {
                 foodPackages = response.data;
                 // populate first dropdown
                 populateFoodPackageDropdown($("#foodPackage_PackageDropdown"));
-            } else {
+            }
+            else {
                 $(".foodPackageDropdown").html(`<option value="0">No Package Found</option>`);
             }
         },
         error: function () {
             Swal.fire({ icon: "error", title: "Error", text: "Error fetching Food Packages." });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -448,18 +444,59 @@ function populateFoodPackageDropdown($dropdown) {
     $dropdown.html(options);
 }
 
-// ✅ STEP 3: Attach global delegated change event for ALL dropdowns
 $(document).on("change", ".foodPackageDropdown", function () {
-    const selectedPackageId = $(this).val();
-    if (!selectedPackageId || selectedPackageId === "0") return;
+    const $row = $(this).closest(".food-row");
 
-    const $dropdown = $(this);
-    const selectedText = $dropdown.find("option:selected").text(); // 👈 get selected text
-    const ratePerPerson = $dropdown.find("option:selected").data("rateperperson");
+    const $dropdown = $row.find(".foodPackageDropdown");
+
+    const selectedPackageId = $dropdown.val();
+
+    if (!selectedPackageId || selectedPackageId === "0") {
+        Swal.fire({
+            icon: "warning",
+            title: "Select Package",
+            text: "Please select a food package first."
+        });
+        return;
+    }
+    const selectedOption = $dropdown.find("option:selected");
+    const selectedText = selectedOption.text();
+    const ratePerPerson = selectedOption.data("rateperperson") || 0;
+
     console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
-    $("#foodPackage_RatePerPlate").val(ratePerPerson);
-    updatePackageCost();
-    //showLoader();
+
+    // Set Per Plate inside same row
+    $row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
+
+    updatePackageCost($row);  // Pass row if needed
+
+})
+
+// ✅ STEP 3: Attach global delegated change event for ALL dropdowns
+$(document).on("click", ".loadMenuBtn", function () {
+    const $row = $(this).closest(".food-row");
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedPackageId = $dropdown.val();
+
+    if (!selectedPackageId || selectedPackageId === "0") {
+        Swal.fire({
+            icon: "warning",
+            title: "Select Package",
+            text: "Please select a food package first."
+        });
+        return;
+    }
+
+    const selectedOption = $dropdown.find("option:selected");
+    const selectedText = selectedOption.text();
+    const ratePerPerson = selectedOption.data("rateperperson") || 0;
+
+    console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
+
+    // Set Per Plate inside same row
+    //$row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
+
+    //updatePackageCost($row);  // Pass row if needed
 
     $.ajax({
         url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
@@ -469,32 +506,57 @@ $(document).on("change", ".foodPackageDropdown", function () {
         success: function (response) {
             if (response.status === "Success" && response.data.length > 0) {
                 renderMenuItems(response.data);
-                // update modal title with package name
                 $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
-
                 $("#menuModal").modal("show");
-
-                // store reference to dropdown that opened modal
+                // Store dropdown reference safely
                 $("#menuModal").data("activeDropdown", $dropdown);
-            } else {
+
+                // 🔥 RESTORE SELECTION
+                const savedItems = $dropdown.data("selectedItems");
+                console.log("savedItems:", savedItems);
+                restoreSavedMenuSelection(savedItems);
+            }
+            else {
                 Swal.fire({
                     icon: "info",
                     title: "Menu Items Not Found",
                     text: "No menu items found for this package."
                 });
-                $(this).val("0");
+                $dropdown.val("0");
             }
         },
-        error: function () {
-            Swal.fire({ icon: "error", title: "Error", text: "Error fetching Package MenuItems list." });
-        },
-        complete: function () {
-            //hideLoader();
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching Package MenuItems list");
         }
     });
 });
+function restoreSavedMenuSelection(savedItems) {
+    if (!savedItems || savedItems.length === 0) return;
+    savedItems.forEach(item => {
+        $(`#menuModal 
+           .menu-section[data-menu-id='${item.FoodMenu_Id}'] 
+           .item-checkbox[value='${item.FoodItem_Id}']`)
+            .prop("checked", true);
+    });
+    updateSelectAllState();
+}
 
-function updatePackageCost() {
+function updateSelectAllState() {
+    $(".menu-section").each(function () {
+        const allItems = $(this).find(".item-checkbox");
+        const checkedItems = $(this).find(".item-checkbox:checked");
+
+        const selectAllCheckbox = $(this).find(".select-all");
+
+        if (allItems.length === checkedItems.length && allItems.length > 0) {
+            selectAllCheckbox.prop("checked", true);
+        } else {
+            selectAllCheckbox.prop("checked", false);
+        }
+    });
+}
+
+function updatePackageCost2() {
     let pax = parseFloat($("#booking_pax").val()) || 0;
     let rate = parseFloat($("#foodPackage_RatePerPlate").val()) || 0;
 
@@ -508,12 +570,40 @@ function updatePackageCost() {
     $("#foodPackage_TotalValue").text(totalCharges);
 }
 
+function updatePackageCost() {
+
+    let pax = parseFloat($("#booking_pax").val()) || 0;
+    let rate = parseFloat($("#foodPackage_RatePerPlate").val()) || 0;
+
+    let packageCost = pax * rate;
+
+    $("#foodPackage_PackageCost").val(packageCost.toFixed(2));
+
+    let gstAmount = ((packageCost * 5) / 100);
+    $("#foodPackage_GST").val(gstAmount.toFixed(2));
+
+    let totalCharges = packageCost + gstAmount;
+
+    $("#foodPackage_TotalValue").text(totalCharges.toFixed(2));
+
+    recalculatePaymentSummary();  // 🔥 IMPORTANT
+}
+
 $(document).on("input", "#foodPackage_RatePerPlate, #booking_pax", function () {
     updatePackageCost();
 });
+$(document).on("input", ".food-block .pax, .food-block .perPlate, .food-block .addonsCost", function () {
+    const row = $(this).closest(".food-block");
+    calculateFoodRowTotals(row);
+});
+$(document).on("input change","#paymentSummary_BookingAmount_Type, #paymentSummary_BookingAmount_Amount",
+    function () {
+        recalculatePaymentSummary();
+});
+
 
 //Calculate PAckage for Extra added package rows
-function calculateFoodRowTotals(rowElement) {
+function calculateFoodRowTotals2(rowElement) {
     let pax = parseFloat($(rowElement).find(".pax").val()) || 0;
     let perPlate = parseFloat($(rowElement).find(".perPlate").val()) || 0;
     let addons = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
@@ -530,6 +620,26 @@ function calculateFoodRowTotals(rowElement) {
     let total = packageCost + parseFloat(gst) + addons;
     $(rowElement).find(".foodPackage_TotalValue").text(total);
 }
+
+function calculateFoodRowTotals(rowElement) {
+
+    let pax = parseFloat($(rowElement).find(".pax").val()) || 0;
+    let perPlate = parseFloat($(rowElement).find(".perPlate").val()) || 0;
+    let addons = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
+
+    let packageCost = pax * perPlate;
+    $(rowElement).find(".packageCost").val(packageCost.toFixed(2));
+
+    let gst = (packageCost * 5) / 100;
+    $(rowElement).find(".gstCost").val(gst.toFixed(2));
+
+    let total = packageCost + gst + addons;
+
+    $(rowElement).find(".foodPackage_TotalValue").text(total.toFixed(2));
+
+    recalculatePaymentSummary(); // 🔥 IMPORTANT
+}
+
 
 // When dropdown changes → fill Per Plate and recalc
 $(document).on("change", ".foodPackageDropdown", function () {
@@ -584,12 +694,12 @@ $(document).on("change", ".select-all", function () {
 
 //StEP 6: Save MENU
 $(document).on("click", ".btn-saveMenu", function () {
-    const selectedData = [];
+    let selectedMenuData = [];
 
     $(".menu-section").each(function () {
         const menuId = $(this).data("menu-id");
         $(this).find(".item-checkbox:checked").each(function () {
-            selectedData.push({
+            selectedMenuData.push({
                 FoodMenu_Id: parseInt(menuId),
                 FoodItem_Id: parseInt($(this).val()),
                 IsChecked: $(this).is(":checked")
@@ -600,10 +710,10 @@ $(document).on("click", ".btn-saveMenu", function () {
     // attach selected items to the dropdown that opened modal
     const $activeDropdown = $("#menuModal").data("activeDropdown");
     if ($activeDropdown) {
-        $activeDropdown.data("selectedItems", selectedData);
+        $activeDropdown.data("selectedItems", selectedMenuData);
     }
 
-    console.log("Saved Menu Selection:", selectedData);
+    console.log("Saved Menu Selection:", selectedMenuData);
     $("#menuModal").modal("hide");
 });
 
@@ -623,22 +733,22 @@ addFoodBtn.addEventListener('click', () => {
             <div class="row g-2 align-items-end p-2 mb-1">
                 <div class="col-md-4">
                     <label class="form-label">Addon Food Package #${addonCounter}</label>
-                    <input type="text" class="form-control" placeholder="Addon Food Package Name">
+                    <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Pax</label>
-                    <input type="number" class="form-control pax" placeholder="Pax" value="0">
+                    <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Date</label>
-                    <input type="date" class="form-control">
+                    <input type="date" class="form-control form-control-sm">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Time</label>
                     <div class="d-flex gap-1">
-                        <input type="number" class="form-control" placeholder="HH" min="1" max="12" style="width: 70px;">
-                        <input type="number" class="form-control" placeholder="MM" min="0" max="59" style="width: 70px;">
-                        <select class="form-select" style="width: 90px;">
+                        <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" style="width: 70px;">
+                        <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" style="width: 70px;">
+                        <select class="form-select form-select-sm" style="width: 90px;">
                             <option value="AM">AM</option>
                             <option value="PM">PM</option>
                         </select>
@@ -653,24 +763,30 @@ addFoodBtn.addEventListener('click', () => {
             <div class="row g-2 food-row align-items-end mt-1">
                 <div class="col-md-3">
                     <label class="form-label">Food Package</label>
-                    <select class="form-select foodPackageDropdown"></select>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm foodPackageDropdown"></select>
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm loadMenuBtn">
+                            Menu
+                        </button>
+                    </div>
                     <input type="hidden" class="package_row_id" value="0" />
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Per Plate</label>
-                    <input type="number" class="form-control perPlate" placeholder="Per Plate" value="0">
+                    <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Package Cost</label>
-                    <input type="number" class="form-control packageCost" placeholder="Package Cost" value="0" disabled>
+                    <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Addons</label>
-                    <input type="number" class="form-control addonsCost" placeholder="Addons" value="0" disabled>
+                    <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">GST</label>
-                    <input type="number" class="form-control gstCost" placeholder="GST" value="0" disabled>
+                    <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
                 </div>
                 <div class="col-md-4 d-flex align-items-center justify-content-between">
                     <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
@@ -704,7 +820,6 @@ addFoodBtn.addEventListener('click', () => {
 //Food Addons ----- START ----------------------------------------------------------------
 let addon_Data = [];
 let headerTotals = {};
-
 function loadAddonCharges() {
     //showLoader();
     $.ajax({
@@ -719,14 +834,8 @@ function loadAddonCharges() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyFoodRateAddonCharge');
+            printAllErrors(xhr, status, error, 'Failed to load addon charges');
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load addon charges.' });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -778,28 +887,45 @@ function populateAddonModal(savedItems = []) {
             // If found, prefill values
             let isChecked = saved ? true : false;
             let rate = saved ? saved.AddOn_Rate : item.Amount;
-            let pax = saved ? saved.AddOn_Pax : 0;
+            //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
+            // WORK HERE
+            let rowPax = 0;
+            console.log("currentAddonRow:", currentAddonRow);
+            if (currentAddonRow) {
+                rowPax = parseFloat(currentAddonRow.find(".pax").val()) || ($("#booking_pax").val() || 0);
+            }
+            let pax = saved ? saved.AddOn_Pax : rowPax;
+
             let total = saved ? saved.AddOn_Total : 0;
 
             let row = $(`
                     <div class="d-flex align-items-center justify-content-between mb-2"
                          data-header="${item.HeaderName}" data-headerid="${item.HeaderId}" data-id="${item.Id}">
+
                         <div class="d-flex align-items-center flex-grow-1">
                             <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
                             <span>${item.ItemName}</span>
                         </div>
+
                         <input type="number" class="form-control form-control-sm rate-input text-center mx-1" step="1"
                                value="${rate}" min="0" style="width:70px;">
+
                         <input type="number" class="form-control form-control-sm pax-input text-center mx-1" step="1"
                                value="${pax}" min="0" style="width:70px;">
+
                         <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light"
                                value="${total.toFixed(2)}" readonly style="width:90px;">
                     </div>
                 `);
 
-            row.find(".rate-input, .pax-input, .addon-checkbox").on("input change", function () {
-                recalcRow(row);
-                recalcSummary();
+            row.find(".rate-input, .pax-input").on("input", function () {
+                console.log("here1");
+                recalcRow_AddOn(row);
+            });
+
+            row.find(".addon-checkbox").on("change", function () {
+                console.log("here2");
+                recalcRow_AddOn(row);
             });
 
             headerCard.find(`[data-header-body="${header}"]`).append(row);
@@ -823,19 +949,31 @@ function populateAddonModal(savedItems = []) {
             $(this).text(isVisible ? "+" : "−");
         });
     });
-
-    recalcSummary();
+    $("[data-header]").each(function () {
+        recalcRow_AddOn($(this));
+    });
 }
 
-function recalcRow(row) {
+function recalcRow_AddOn(row) {
+    console.log("here3");
     let checked = row.find(".addon-checkbox").is(":checked");
     let rate = parseFloat(row.find(".rate-input").val()) || 0;
     let pax = parseFloat(row.find(".pax-input").val()) || 0;
     let total = checked ? rate * pax : 0;
+
+    console.log("---- Addon Row Calculation ----");
+    console.log("Checked:", checked);
+    console.log("Rate:", rate);
+    console.log("Pax:", pax);
+    console.log("Computed Total:", total);
+    console.log("-------------------------------");
+
     row.find(".total-input").val(total.toFixed(2));
+    console.log("here4");
+    recalcSummary_AddOn();
 }
 
-function recalcSummary() {
+function recalcSummary_AddOn() {
     console.log("recalcSummary called");
     // Reset
     Object.keys(headerTotals).forEach(h => headerTotals[h] = 0);
@@ -846,21 +984,40 @@ function recalcSummary() {
         let total = parseFloat($(this).find(".total-input").val()) || 0;
         headerTotals[header] += total;
     });
-    console.log("2 headerTotals:", headerTotals);
 
     Object.keys(headerTotals).forEach(header => {
         $(`[data-header-summary="${header}"] .header-total`).text(headerTotals[header].toFixed(2));
     });
 
+    console.log("2 headerTotals:", headerTotals);
     let finalTotal = Object.values(headerTotals).reduce((a, b) => a + b, 0);
+    console.log("finalTotal:", finalTotal);
     $("#finalTotal").text(finalTotal.toFixed(2));
+
+    if (currentAddonButton) {
+        const $row = $(currentAddonButton).closest(".food-row, .food-block");
+        $row.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
+
+        // Recalculate that specific row only
+    //    if ($row.hasClass("food-block")) {
+    //        calculateFoodRowTotals($row);
+    //    }
+    //    else {
+    //        updatePackageCost();
+    //    }
+    }
+    updatePackageCost();
 }
 
 // Open modal function
 let currentAddonButton = null;
+let currentAddonRow = null;
+
 function openAddonModal(booking_foodPackageId = 0, button = null) {
     console.log("booking_foodPackageId:", booking_foodPackageId);
     currentAddonButton = button; // 🔹 store reference to clicked button
+    currentAddonRow = $(button).closest(".food-row, .food-block");
+
     let savedItems = $(button).data("selected-AddOnItems") || [];
 
     if (addon_Data.length === 0) {
@@ -1792,7 +1949,9 @@ function attachShiftClickListeners() {
                 else {
                     //Open MODAL
                     $("#title_bookingModal").text("Add Booking Details");
-                    bookingModal.show();
+                    //bookingModal.show();
+                    const bookingModal2 = new bootstrap.Modal(document.getElementById('bookingModal'));
+                    bookingModal2.show();
                 }
             }
             //For Past Days
@@ -1853,14 +2012,15 @@ function getGST(amount) {
 
 // Recalculate GST when Hall Rent changes or GST switch toggles
 function updateHallRentGST() {
-    let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
 
-    if ($("#gstSwitch").is(":checked")) {
-        let gst = getGST(hallRent);
-        $("#booking_gst").val(gst.toFixed(0));
-    } else {
-        $("#booking_gst").val(0);
-    }
+    let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+
+    let gst = isGSTEnabled ? getGST(hallRent) : 0;
+
+    $("#booking_gst").val(gst.toFixed(2));
+
+    recalculatePaymentSummary();   // 🔥 IMPORTANT
 }
 
 var vendorWorkOrder_eventDate = 0;
@@ -2155,6 +2315,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // When Save Selection button is clicked
+    /*
     $("#menuModal .btn-saveMenu").on("click", function () {
         let menuData = [];
 
@@ -2190,6 +2351,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Close modal
         $("#menuModal").modal("hide");
     });
+    */
     //Menu Item - START ----- START ---------------------------
 
     // 1️⃣ Reset to 0
@@ -2202,15 +2364,17 @@ document.addEventListener("DOMContentLoaded", function () {
     $(".btn-outline-secondary").on("click", function () {
         console.log("reset default triggered");
         // You can later add logic to restore predefined defaults if needed
-        const isChecked = $("#gstSwitch").is(":checked");
-        resetOtherCharges(isChecked);
+        //const isChecked = $("#gstSwitch").is(":checked");
+        //resetOtherCharges(isChecked);
+        recalculatePaymentSummary();
     });
 
     // Using jQuery
     $("#gstSwitch").on("change", function () {
         const isChecked = $(this).is(":checked");
         console.log(isChecked ? "GST Accepted" : "GST Not Accepted");
-        resetOtherCharges(isChecked);
+        //resetOtherCharges(isChecked);
+        recalculatePaymentSummary();
         updateHallRentGST();
 
         if (isChecked) {
@@ -4062,7 +4226,6 @@ function setInvoiceButtons(data) {
     }
 }
 
-
 function setTimeFrom24Hr(time24, hourId, minuteId, ampmId) {
     if (!time24) return;
 
@@ -4317,19 +4480,21 @@ function resetBooking() {
     $("#btnFoodLabels").data("foodpackage", "");
 
     // Reset amounts to defaults
-    resetOtherCharges(false);
+    //resetOtherCharges(false);
+    recalculatePaymentSummary();
     $("#Section_PaymentDetails").show();
+
 
     console.log("Booking form reset completed.");
 }
 
-function resetOtherCharges(isGSTEnabled) {
+function resetOtherCharges2(isGSTEnabled) {
 
     // Base amounts (unchanged)
-    decorationAmount = 3000;
+    decorationAmount = 0;
     roomchargesAmount = 0;
-    soundSystemAmount = 1500;
-    projectScreenAmount = 3500;
+    soundSystemAmount = 0;
+    projectScreenAmount = 0;
 
     // Apply GST If Enabled
     decorationGST = isGSTEnabled ? getGST(decorationAmount) : 0;
@@ -4391,7 +4556,7 @@ function resetOtherCharges(isGSTEnabled) {
     $("#paymentSummary_payableAmount").text(payableAmount);
 }
 
-function updateBookingDiscount() {
+function updateBookingDiscount2() {
     let total = parseFloat($("#paymentSummary_Total").text()) || 0;
     let type = $("#paymentSummary_BookingAmount_Type").val();   // 1 = flat, 2 = percent
     let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
@@ -4417,6 +4582,80 @@ function updateBookingDiscount() {
     let payableAmount = total - bookingDiscount;
     $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
 }
+
+
+function recalculatePaymentSummary() {
+
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gstRate = 5;
+
+    let taxableAmount = 0;
+
+    // 🔹 Hall Rent
+    let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
+    taxableAmount += hallRent;
+
+    // 🔹 Default Food
+    let defaultFoodTotal = parseFloat($("#foodPackage_TotalValue").text()) || 0;
+    taxableAmount += defaultFoodTotal;
+
+    // 🔹 Extra Food Rows
+    $(".food-block").each(function () {
+        let rowTotal = parseFloat($(this).find(".foodPackage_TotalValue").text()) || 0;
+        taxableAmount += rowTotal;
+    });
+
+    // 🔹 Other Charges
+    let decoration = parseFloat($("#OtherCharges_Decoration_Amount").val()) || 0;
+    let room = parseFloat($("#OtherCharges_RoomCharges_Amount").val()) || 0;
+    let sound = parseFloat($("#OtherCharges_SoundSystem_Amount").val()) || 0;
+    let projector = parseFloat($("#OtherCharges_ProjectorScreen_Amount").val()) || 0;
+
+    taxableAmount += decoration + room + sound + projector;
+
+    $("#paymentSummary_TaxableAmount").text(taxableAmount.toFixed(2));
+
+    // 🔹 GST
+    let totalGST = isGSTEnabled ? (taxableAmount * gstRate) / 100 : 0;
+
+    let cgst = isGSTEnabled ? totalGST / 2 : 0;
+    let sgst = isGSTEnabled ? totalGST / 2 : 0;
+    let igst = 0;
+
+    $("#paymentSummary_CGST").text(cgst.toFixed(2));
+    $("#paymentSummary_SGST").text(sgst.toFixed(2));
+    $("#paymentSummary_IGST").text(igst.toFixed(2));
+
+    let total = taxableAmount + cgst + sgst + igst;
+
+    $("#paymentSummary_Total").text(total.toFixed(2));
+
+    applyBookingDiscount(total);
+}
+
+function applyBookingDiscount(totalAmount) {
+
+    let type = $("#paymentSummary_BookingAmount_Type").val();
+    let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
+
+    let bookingDiscount = 0;
+
+    if (type == "1") {
+        bookingDiscount = enteredValue;
+    } else if (type == "2") {
+        bookingDiscount = (totalAmount * enteredValue) / 100;
+    }
+
+    if (bookingDiscount > totalAmount)
+        bookingDiscount = totalAmount;
+
+    $("#paymentSummary_BookingAmount").text(bookingDiscount.toFixed(2));
+
+    let payableAmount = totalAmount - bookingDiscount;
+
+    $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
+}
+
 
 //Vendor work order
 function saveVendorWorkOrder() {

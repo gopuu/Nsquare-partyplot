@@ -1,4 +1,15 @@
-﻿
+﻿.card {
+    position: relative;
+    z-index: 1;
+}
+
+#chartjs-tooltip {
+    position: absolute;
+    pointer-events: none;
+    z-index: 99999 !important;
+}
+
+
 /*WIDGET AMOUNT - font size - START */
 /* default size */
 .amount-normal {

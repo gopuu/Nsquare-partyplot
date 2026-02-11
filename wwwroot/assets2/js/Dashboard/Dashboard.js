@@ -38,12 +38,13 @@ function setCurrentMonthDates() {
     $("#fromDate").val(formatDate(firstDay));
     $("#toDate").val(formatDate(lastDay));
 }
-function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;   // ✅ IMPORTANT
-} 
+
+//function formatDate(date) {
+//    const y = date.getFullYear();
+//    const m = String(date.getMonth() + 1).padStart(2, '0');
+//    const d = String(date.getDate()).padStart(2, '0');
+//    return `${y}-${m}-${d}`;   // ✅ IMPORTANT
+//} 
 
 let selectedMonthDuration = "thismonth"; // ✅ default
 
@@ -240,7 +241,6 @@ function setAmountWithAutoFont(elSelector, amount) {
     }
 }
 
-
 function renderDashboardWidgets(stats) {
 
     const container2 = $("#dashboard-widgets");
@@ -366,10 +366,10 @@ function formatValue(key, value) {
 }
 
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-})
-
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    }
+)
 
 let jobPieChart = null;
 function loadBookingEventTypeCount() {
@@ -468,9 +468,34 @@ $(".chart-filter-pie .dropdown-item").on("click", function (e) {
     loadBookingEventTypeCount(); // 🔥 reload chart
 });
 
+// 🔹 Function to load data via AJAX
+function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate = null, toDate = null) {
+    $.ajax({
+        url: '/api/Dashboard/GetBookingSubEventTypeCorporate',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+                const labels = response.data.map(x => x.EventLabel);
+                const values = response.data.map(x => x.EventCount);
 
+                renderEventPieChart(labels, values);
+            } else {
+                // empty chart
+                renderEventPieChart([], []);
+            }
+        },
+        error: function (err) {
+            console.error("Error loading pie chart data:", err);
+        }
+    });
+}
 let eventPieChart; // 🔹 store chart instance globally
-
 // 🔹 Function to render chart
 function renderEventPieChart(labels, values) {
     const ctx = document.getElementById('eventPie');
@@ -521,35 +546,6 @@ function renderEventPieChart(labels, values) {
     });
 }
 
-// 🔹 Function to load data via AJAX
-function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate = null, toDate = null) {
-    $.ajax({
-        url: '/api/Dashboard/GetBookingSubEventTypeCorporate',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
-        success: function (response) {
-            if (response.status === "Success" && response.data.length > 0) {
-                const labels = response.data.map(x => x.EventLabel);
-                const values = response.data.map(x => x.EventCount);
-
-                renderEventPieChart(labels, values);
-            } else {
-                // empty chart
-                renderEventPieChart([], []);
-            }
-        },
-        error: function (err) {
-            console.error("Error loading pie chart data:", err);
-        }
-    });
-}
-
-
 // 🔹 Dropdown click event
 $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
     e.preventDefault();
@@ -567,7 +563,7 @@ $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
     // Optional: store selected value for chart
     const selectedValue = $(this).data("value"); // e.g., "yesterday", "thismonth"
     selectedMonthDuration = selectedValue;
-
+    console.log("subEvent-Corporate selectedMonthDuration:", selectedValue);
     // Call your chart update
     loadBookingSubEventTypeCorporate(selectedValue);
 });
@@ -869,8 +865,6 @@ function drawChart() {
     chart.draw(data, options);
 }
 
-//here1
-
 // init the google charts
 google.charts.load("current", { packages: ["corechart"] });
 
@@ -947,77 +941,9 @@ $(".pie-chart-filter .dropdown-item").on("click", function (e) {
     loadLeadSourcePieChart(filterText);
 });
 
-//function drawPieChart() {
-//    var data = google.visualization.arrayToDataTable([
-//        ["Type", "Count"],
-//        ["Kids", 6],
-//        ["Under Legal Age", 8],
-//        ["Over Legal Age", 20]
-//    ]);
-
-//    let options = {
-//        title: "Source of Lead",
-//        chartArea: { width: "90%", height: "80%" },
-//        legend: { position: "bottom" }
-//    };
-
-//    let chart = new google.visualization.PieChart(
-//        document.querySelector(".pie-chart")
-//    );
-
-//    chart.draw(data, options);
-//}
     
-$(document).on("click", "#btnSummary", function () {
-    console.log("Summary icon clicked ✔");
-});
-function loadYearDropdown() {
-    $.ajax({
-        url: "/api/YearMaster/GetYearList",
-        type: "GET",
-        success: function (response) {
-            if (response.status === "Success" && response.data.length > 0) {
-
-                let html = "";
-
-                // 🔹 FIRST OPTION → This Year
-                //html += `
-                //    <li>
-                //        <a class="dropdown-item year-option active"
-                //           href="#"
-                //           data-id="0"
-                //           data-year="-">
-                //           This Year
-                //        </a>
-                //    </li>`;
-
-                // 🔹 API YEARS
-                response.data.forEach(function (item) {
-                    html += `
-                        <li>
-                            <a class="dropdown-item year-option"
-                               href="#"
-                               data-id="${item.Id}"
-                               data-year="${item.YearName}">
-                               ${item.YearName}
-                            </a>
-                        </li>`;
-                });
-
-                $("#yearDropdownMenu").html(html);
-
-                // 🔹 Default button text
-               // $("#yearDropdown").text("This Year");
-            }
-        },
-        error: function (err) {
-            console.error("Error loading year list", err);
-        }
-    });
-}
-
-// Render Bar Chart
-function loadOverallBookingsStatistics(year) {
+// Overall Bookings Statistics  --- START ------------------------
+function loadOverallBookingsStatistics2(year) {
     
     $.ajax({
         url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
@@ -1078,6 +1004,238 @@ function loadOverallBookingsStatistics(year) {
     });
 }
 
+let bookingBarChart;
+function loadOverallBookingsStatistics(year) {
+
+    $.ajax({
+        url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            SelectedYear: year,
+            IsThisYear: year === new Date().getFullYear()
+        }),
+        success: function (res) {
+
+            if (res.status !== 'Success') return;
+
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            const dataMap = {};
+            res.data.forEach(d => {
+                dataMap[d.MonthNo] = d;
+            });
+
+            // Extra full data store for tooltip
+            const fullMonthData = [];
+
+            months.forEach((m, i) => {
+
+                const d = dataMap[i + 1] || {};
+
+                const row = {
+                    month: m,
+                    BookingQty: d.BookingQty || 0,
+                    TotalAmount: d.TotalAmount || 0,
+                    TotalEvents: d.TotalEvents || 0,
+                    FamilyEvents: d.TotalFamilyFunctionCount || 0,
+                    CorporateEvents: d.TotalCorporateCount || 0
+                };
+
+                fullMonthData.push(row);
+            });
+
+            if (bookingBarChart) {
+                bookingBarChart.destroy();
+            }
+
+            bookingBarChart = new Chart(
+                document.getElementById("bookingBarChart"),
+                {
+                    type: "bar",
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: "Booking Qty",
+                                data: fullMonthData.map(x => x.BookingQty),
+                                backgroundColor: "#f39c12",
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        datasets: {
+                            bar: {
+                                categoryPercentage: 0.6,
+                                barPercentage: 0.8,
+                                maxBarThickness: 40
+                            }
+                        },
+
+                        plugins: {
+                            legend: {
+                                position: "top",
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: "rectRounded"
+                                }
+                            },
+
+                            tooltip: {
+                                enabled: false,
+                                external: function (context) {
+
+                                    let tooltipEl = document.getElementById('chartjs-tooltip');
+
+                                    // Create tooltip element if not exists
+                                    if (!tooltipEl) {
+                                        tooltipEl = document.createElement('div');
+                                        tooltipEl.id = 'chartjs-tooltip';
+                                        tooltipEl.style.position = 'absolute';
+                                        tooltipEl.style.pointerEvents = 'none';
+                                        tooltipEl.style.transition = 'all .15s ease';
+                                        document.body.appendChild(tooltipEl);
+                                    }
+
+                                    const tooltip = context.tooltip;
+
+                                    if (tooltip.opacity === 0) {
+                                        tooltipEl.style.opacity = 0;
+                                        return;
+                                    }
+
+                                    const index = tooltip.dataPoints[0].dataIndex;
+                                    const row = fullMonthData[index];
+
+                                    tooltipEl.innerHTML = `
+                                        <div style="
+                                            background:#ffffff;
+                                            border:1px solid #e5e7eb;
+                                            border-radius:10px;
+                                            padding:14px 16px;
+                                            box-shadow:0 8px 20px rgba(0,0,0,0.08);
+                                            font-family:system-ui;
+                                            min-width:220px;
+                                        ">
+                                            <div style="
+                                                font-weight:600;
+                                                font-size:15px;
+                                                margin-bottom:8px;
+                                                color:#111827;
+                                            ">
+                                                ${row.month} (${year})
+                                            </div>
+
+                                            <div style="font-size:13px; color:#f39c12;">
+                                                Booking Qty:
+                                                <span style="float:right; font-weight:600;">
+                                                    ${row.BookingQty}
+                                                </span>
+                                            </div>
+
+                                            <div style="font-size:13px; color:#374151; margin-top:4px;">
+                                                Total Amount:
+                                                <span style="float:right; font-weight:600;">
+                                                    ₹${row.TotalAmount.toLocaleString()}
+                                                </span>
+                                            </div>
+
+                                            <hr style="margin:10px 0; border:none; border-top:1px solid #e5e7eb;" />
+
+                                            <div style="font-size:13px; margin-top:2px;" class="fw-bold">
+                                                Total Events:
+                                                <span style="float:right; color:#374151;">
+                                                    ${row.TotalEvents}
+                                                </span>
+                                            </div>
+
+                                            <div style="font-size:13px; margin-top:4px;">
+                                                Family Functions:
+                                                <span style="float:right; font-weight:600; color:#8e44ad;">
+                                                    ${row.FamilyEvents}
+                                                </span>
+                                            </div>
+
+                                            <div style="font-size:13px; margin-top:4px;">
+                                                Corporate Events:
+                                                <span style="float:right; font-weight:600; color:#e74c3c;">
+                                                    ${row.CorporateEvents}
+                                                </span>
+                                            </div>
+
+                                            <div style="clear:both;"></div>
+                                        </div>
+                                    `;
+
+                                    const position = context.chart.canvas.getBoundingClientRect();
+
+                                    tooltipEl.style.opacity = 1;
+                                    tooltipEl.style.left = position.left + window.pageXOffset + tooltip.caretX + 'px';
+                                    tooltipEl.style.top = position.top + window.pageYOffset + tooltip.caretY + 'px';
+                                }
+                            }
+                        },
+
+                        scales: {
+                            x: {
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    });
+}
+
+// Overall Bookings Statistics  --- END ------------------------
+
+
+//Comparative Insights Chart --- START --------------------------------
+function loadYearDropdown() {
+    $.ajax({
+        url: "/api/YearMaster/GetYearList",
+        type: "GET",
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+
+                let html = "";
+
+                // 🔹 API YEARS
+                response.data.forEach(function (item) {
+                    html += `
+                        <li>
+                            <a class="dropdown-item year-option"
+                               href="#"
+                               data-id="${item.Id}"
+                               data-year="${item.YearName}">
+                               ${item.YearName}
+                            </a>
+                        </li>`;
+                });
+
+                $("#yearDropdownMenu").html(html);
+
+                // 🔹 Default button text
+                // $("#yearDropdown").text("This Year");
+            }
+        },
+        error: function (err) {
+            console.error("Error loading year list", err);
+        }
+    });
+}
 
 $(document).on("click", ".year-option", function (e) {
     e.preventDefault();
@@ -1100,7 +1258,6 @@ $(document).on("click", ".year-option", function (e) {
 
     loadOverallBookingsStatistics(selectedYear);
 });
-
 function loadComparativeInsightsChart(filter) {
 
     const monthCount = filter.replace("last", "").replace("months", "");
@@ -1128,17 +1285,16 @@ function loadComparativeInsightsChart(filter) {
 }
 
 const PNL_CATEGORIES = [
-    { key: "Revenue", percent: null, color: "#ff9800" },
+    { key: "Revenue", percent: null, color: "#4caf50" },
     { key: "Purchase", percent: "PurchasePercent", color: "#f44336" },
     { key: "Salary", percent: "SalaryPercent", color: "#9c27b0" },
-    { key: "Rent", percent: "RentPercent", color: "#4caf50" },
+    { key: "Rent", percent: "RentPercent", color: "#000000" },
     { key: "Electricity", percent: "ElectricityPercent", color: "#03a9f4" },
     { key: "Gas", percent: "GasPercent", color: "#795548" },
     { key: "OtherExpense", percent: "OtherExpensePercent", color: "#607d8b" },
-    { key: "ProfitAndLoss", percent: "ProfitPercent", color: "#000000" }
+    { key: "ProfitAndLoss", percent: "ProfitPercent", color: "#4caf50" }
 ];
-
-function buildPnLCategoryMonthChart(apiData) {
+function buildPnLCategoryMonthChart2(apiData) {
 
     const months = apiData.map(x => x.MonthKey ? x.MonthKey.split('-')[0] : '');
 
@@ -1175,12 +1331,95 @@ function buildPnLCategoryMonthChart(apiData) {
 
     renderPnLCategoryChart(labels, datasets);
 }
+function buildPnLCategoryMonthChart(apiData) {
 
+    const months = apiData.map(x =>
+        x.MonthKey ? x.MonthKey.split('-')[0] : ''
+    );
+
+    const labels = [];
+    const categoryIndexMap = [];
+
+    // Build label structure
+    PNL_CATEGORIES.forEach(cat => {
+        months.forEach(m => {
+            labels.push(m);
+            categoryIndexMap.push(cat.key);
+        });
+    });
+
+    const datasets2 = PNL_CATEGORIES.map(cat => {
+
+        const data = [];
+        const percentData = [];
+
+        PNL_CATEGORIES.forEach(groupCat => {
+            apiData.forEach(row => {
+
+                if (groupCat.key === cat.key) {
+                    data.push(row[cat.key] ?? null);
+                    percentData.push(cat.percent ? row[cat.percent] : null);
+                } else {
+                    data.push(null);   // 🔥 IMPORTANT: use null not 0
+                    percentData.push(null);
+                }
+
+            });
+        });
+
+        return {
+            label: cat.key,
+            data,
+            backgroundColor: cat.color,
+            _percentData: percentData
+        };
+    });
+
+    const datasets = PNL_CATEGORIES.map(cat => {
+
+        const data = [];
+        const percentData = [];
+
+        PNL_CATEGORIES.forEach(groupCat => {
+            apiData.forEach(row => {
+
+                if (groupCat.key === cat.key) {
+                    const value = row[cat.key] ?? null;
+                    data.push(value);
+                    percentData.push(cat.percent ? row[cat.percent] : null);
+                } else {
+                    data.push(null);
+                    percentData.push(null);
+                }
+
+            });
+        });
+
+        return {
+            label: cat.key,
+            data,
+            _percentData: percentData,
+
+            // 🔥 Dynamic coloring only for ProfitAndLoss
+            backgroundColor: cat.key === "ProfitAndLoss"
+                ? function (ctx) {
+                    const value = ctx.raw ?? 0;
+
+                    if (value > 0) return "#4caf50";   // green
+                    if (value < 0) return "#f44336";   // red
+                    return "#9e9e9e";                  // gray
+                }
+                : cat.color
+        };
+    });
+
+
+    renderPnLCategoryChart(labels, datasets, categoryIndexMap, apiData);
+}
 
 let pnlCategoryChart;
-
-function renderPnLCategoryChart(labels, datasets) {
-
+function renderPnLCategoryChart2(labels, datasets) {
+    console.log("labels:", labels, ", datasets:", datasets);
     if (pnlCategoryChart) pnlCategoryChart.destroy();
 
     pnlCategoryChart = new Chart(
@@ -1190,6 +1429,14 @@ function renderPnLCategoryChart(labels, datasets) {
             data: { labels, datasets },
             options: {
                 responsive: true,
+                datasets: {
+                    bar: {
+                        grouped: true,
+                        categoryPercentage: 0.8,  // width of category slot (default 0.8)
+                        barPercentage: 1.9,       // width of bar inside slot (default 0.9)
+                        maxBarThickness: 40       // hard limit for thickness
+                    }
+                },
                 plugins: {
                     tooltip: {
                         callbacks: {
@@ -1208,6 +1455,8 @@ function renderPnLCategoryChart(labels, datasets) {
                 },
                 scales: {
                     x: {
+                        type: 'category',
+                        offset: true,   // 🔥 important for proper centering
                         ticks: {
                             callback: function (value, index) {
                                 const label = this.getLabelForValue(index);
@@ -1221,14 +1470,115 @@ function renderPnLCategoryChart(labels, datasets) {
                             callback: v => "₹ " + v.toLocaleString()
                         }
                     }
-                }
+                },
             }
         }
     );
 }
+function renderPnLCategoryChart(labels, datasets, categoryIndexMap, apiData) {
+
+    if (pnlCategoryChart) pnlCategoryChart.destroy();
+
+    pnlCategoryChart = new Chart(
+        document.getElementById("pnlCategoryChart"),
+        {
+            type: "bar",
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+
+                datasets: {
+                    bar: {
+                        categoryPercentage: 0.9,
+                        barPercentage: 1.0,   // never exceed 1
+                        maxBarThickness: 35
+                    }
+                },
+
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const ds = ctx.dataset;
+                                const val = ctx.raw ?? 0;
+                                const pct = ds._percentData?.[ctx.dataIndex];
+
+                                if (pct != null) {
+                                    return `${ds.label}: ₹${val.toLocaleString()} (${pct}%)`;
+                                }
+                                return `${ds.label}: ₹${val.toLocaleString()}`;
+                            }
+                        }
+                    },
+
+                    legend: {
+                        labels: {
+                            generateLabels: function (chart) {
+
+                                const defaultLabels =
+                                    Chart.defaults.plugins.legend.labels.generateLabels(chart);
+
+                                return defaultLabels.map(label => {
+
+                                    if (label.text === "ProfitAndLoss") {
+                                        return {
+                                            ...label,
+                                            fillStyle: "#9e9e9e",
+                                            text: "ProfitAndLoss (🟢/🔴)"
+                                        };
+                                    }
+
+                                    return label;
+                                });
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    x: {
+                        offset: true,
+                        ticks: {
+                            callback: function (value, index) {
+                                return labels[index];
+                            }
+                        }
+                    },
+
+                    x2: {
+                        position: 'bottom',
+                        offset: true,
+                        grid: { display: false },
+                        ticks: {
+                            callback: function (value, index) {
+
+                                const monthsPerGroup = apiData.length;
+
+                                if (index % monthsPerGroup === Math.floor(monthsPerGroup / 2)) {
+                                    return categoryIndexMap[index];
+                                }
+
+                                return "";
+                            }
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => "₹ " + v.toLocaleString()
+                        }
+                    }
+                }
+            }
+            
+        }
+    );
+}
+//Comparative Insights Chart --- END --------------------------------
 
 
-
+//COUNT WIDGETS - tooltip --- START --------------
 document.addEventListener('DOMContentLoaded', function () {
     const tooltipContent = {
         tooltipTotalSales: `
@@ -1310,7 +1660,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+//COUNT WIDGETS - tooltip --- END --------------
 
+//UnUsed ----------- START --------------------
+$(document).on("click", "#btnSummary", function () {
+    console.log("Summary icon clicked ✔");
+});
+//UnUsed ----------- END --------------------
 
 
 
