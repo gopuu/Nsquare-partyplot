@@ -85,7 +85,7 @@
 
     public class DashboardEventSummaryRequest
     {
-        public int? SelectedYear { get; set; }   // ex: 2026
+        public int? YearId { get; set; }   // ex: 2026
     }
 
 

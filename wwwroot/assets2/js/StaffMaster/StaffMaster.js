@@ -43,14 +43,74 @@ $(document).ready(function () {
 
     // ================= REMOVE DOCUMENT =================
     $(document).on("click", ".btnRemoveDoc", function () {
+
         const row = $(this).closest(".document-row");
         const index = row.data("index");
 
         const doc = staffDocuments.find(d => d.index === index);
-        if (doc) doc.IsDeleted = true;
+        if (!doc) return;
 
-        row.remove();
+        // 🔥 If document already saved in DB
+        if (doc.Id && doc.Id > 0) {
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "This document will be permanently deleted.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: "/api/StaffDocuments/DeleteStaffDocuments",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        Id: doc.Id,
+                        ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
+                    }),
+                    success: function (res) {
+                        if (res.status === "Success") {
+
+                            row.remove();
+                            staffDocuments = staffDocuments.filter(d => d.index !== index);
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Deleted!",
+                                text: res.message || "Document deleted successfully.",
+                                timer: 900,
+                                showConfirmButton: false
+                            });
+
+                        }
+                        else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: res.message || "Failed to delete document."
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        handleApiError(xhr, status, error, "Document Delete Failed");
+                    }
+                });
+
+            });
+
+        }
+        else {
+            // 🔥 New unsaved document
+            doc.IsDeleted = true;
+            row.remove();
+        }
     });
+    
 
     // ================= DOCUMENT NAME =================
     $(document).on("input", ".doc-name", function () {
@@ -335,7 +395,6 @@ $(document).ready(function () {
     });
 
 });
-
 
 // ================= HELPERS =================
 

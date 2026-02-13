@@ -1,0 +1,26 @@
+﻿#fixedSaveBar {
+    position: fixed;
+    right: 20px;
+    bottom: 14px;
+    z-index: 1100;
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+}
+
+    #fixedSaveBar .btn {
+        min-width: 120px;
+    }
+
+.unit-badge {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 6px 10px;
+    background: #f1f1f1;
+    margin-left: 6px;
+    font-size: 13px;
+}
+
+.stock-outward-qty {
+    max-width: 160px;
+}

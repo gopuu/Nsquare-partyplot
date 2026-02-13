@@ -20,6 +20,34 @@ function decodeValue(encoded) {
     return atob(encoded);
 }
 
+function updateLiveDateTime() {
+    const now = new Date();
+
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    hours = String(hours).padStart(2, '0');
+
+    const formatted = `${day}-${month}-${year}<br>${hours}:${minutes} ${ampm}`;
+
+    const el = document.getElementById("liveDateTime");
+    if (el) el.innerHTML = formatted;   // ⚠ Use innerHTML for <br>
+    $("#liveDateTime").addClass("d-none");
+}
+
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const userName = sessionStorage.getItem("userName");
     const userImage = sessionStorage.getItem("userImage") || "/assets/img/user.png";
@@ -27,6 +55,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (userName) {
         $("#lblUserName").text(userName);
     }
+
+    //LIVE DATE-TIME ------
+    // Run immediately
+    //updateLiveDateTime();
+    // Update every second
+    //setInterval(updateLiveDateTime, 60000);
+    //LIVE DATE-TIME ------
 
     // Set user image
     // if (userImage) {
@@ -147,7 +182,7 @@ let ajaxActiveCount = 0;
 
 $(document).ajaxStart(function () {
     ajaxActiveCount++;
-    console.log("ajaxActiveCount START:", ajaxActiveCount);
+    //console.log("ajaxActiveCount START:", ajaxActiveCount);
     showLoader();
 });
 
@@ -157,7 +192,7 @@ $(document).ajaxStop(function () {
         ajaxActiveCount = 0;
         hideLoader();
     }
-    console.log("ajaxActiveCount STOP:", ajaxActiveCount);
+    //console.log("ajaxActiveCount STOP:", ajaxActiveCount);
 });
 
 function handleApiError(xhr, status, error, title = "Info!") {
@@ -216,15 +251,14 @@ function fetchUserAccessData(userid) {
             xhr.setRequestHeader("accept", "application/json");
         },
         success: function (response) {
-            console.log("Full Response:", response);
+            //console.log("Full Response:", response);
             // ✅ response is already OBJECT
             let userRightsData = response.data || [];
-            console.log("userRightsData:", userRightsData);
+            //console.log("userRightsData:", userRightsData);
             validateUserAccessOfCurrentPage(userRightsData);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetching User Rights Failed");
-            $('#btn-loader').hide();
         }
     });
 }
@@ -235,7 +269,7 @@ function validateUserAccessOfCurrentPage(userRightsData) {
     const currentUrl = window.location.pathname;
     // Validate user rights using the Link property
     const module = userRightsData.find(item => item.Link === currentUrl);
-    console.log("module:", module);
+    //console.log("module:", module);
     // If module is not found or the user does not have view rights, prevent access
     if (!module || !module.CanView) {
         var isSuperUser = sessionStorage.getItem('isSuperUser');

@@ -121,30 +121,30 @@
                             Process / Stage <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
-                            <select id="dealProcess" class="form-select"></select>
+                            <select id="dealProcess" class="form-select form-select-sm"></select>
                         </div>
                         <button type="button" class="btn btn-outline-primary d-none" id="openProcessModal">+</button>
                         <div class="text-danger small mt-1 error-msg d-none">Please select process</div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="dealName" class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="dealName" placeholder="Name" maxlength="100">
+                        <input type="text" class="form-control form-control-sm" id="dealName" placeholder="Name" maxlength="100">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter name</div>
                     </div>
-                    <div class="col-md-4">
-                        <label for="dealContact" class="form-label">Contact <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="dealContact" placeholder="1234567890" maxlength="10">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter contact no.</div>
+                    <div class="col-md-2">
+                        <label for="dealContact" class="form-label">Whatsapp No. <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" id="dealContact" placeholder="1234567890" maxlength="10">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter Whatsapp no.</div>
                     </div>
 
                     <!-- Row 2: Address, Email -->
                     <div class="col-md-6">
                         <label for="dealAddress" class="form-label">Address</label>
-                        <textarea class="form-control" id="dealAddress" placeholder="address" maxlength="250"></textarea>
+                        <textarea class="form-control form-control-sm" id="dealAddress" placeholder="address" maxlength="250"></textarea>
                     </div>
                     <div class="col-md-6">
                         <label for="dealEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="dealEmail" placeholder="email id" maxlength="100">
+                        <input type="email" class="form-control form-control-sm" id="dealEmail" placeholder="email id" maxlength="100">
                     </div>
 
                     <!-- Row 3: Event Type, Event Subtype, Banquet Hall-->
@@ -155,10 +155,10 @@
                                 Event Type <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <select id="eventTypeDropdown" class="form-select">
+                                <select id="eventTypeDropdown" class="form-select form-select-sm">
                                     <option value="0">-- Select Event Type --</option>
                                 </select>
-                                <button type="button" class="btn btn-outline-primary" id="openEventTypeModal">+</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="openEventTypeModal">+</button>
                             </div>
                             <div class="text-danger small mt-1 error-msg d-none">Please select event type</div>
                         </div>
@@ -169,10 +169,10 @@
                                 Event Sub-Type <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <select id="eventSubTypeDropdown" class="form-select">
+                                <select id="eventSubTypeDropdown" class="form-select form-select-sm">
                                     <option value="0">-- Select Event Sub-Type --</option>
                                 </select>
-                                <button type="button" class="btn btn-outline-primary" id="openEventSubTypeModal">+</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="openEventSubTypeModal">+</button>
                             </div>
                             <div class="text-danger small mt-1 error-msg d-none">Please select event sub-type</div>
                         </div>
@@ -183,7 +183,7 @@
                                 Banquet Hall <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <select id="banquetHallDropdown" class="form-select">
+                                <select id="banquetHallDropdown" class="form-select form-select-sm">
                                     <option value="0">-- Select Banquet Hall --</option>
                                 </select>
                             </div>
@@ -202,9 +202,9 @@
                     </div>
 
                     <!-- Row 4: Event Date, Start Time, End Time, Pax -->
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label for="eventDate" class="form-label">Date Of Event <span class="text-danger">*</span></label>
-                        <input class="form-control datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
+                        <input class="form-control form-control-sm datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter date</div>
                         <div id="slotStatusMsg" class="small fw-semibold mt-2 d-none"></div>
                     </div>
@@ -214,7 +214,7 @@
                         <label for="eventStart" class="form-label">
                             Start Time <span class="text-danger">*</span>
                         </label>
-                        <input type="text" id="eventStart" class="form-control text-center" placeholder="Select Time" readonly>
+                        <input type="text" id="eventStart" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
                         <div class="text-danger small mt-1 error-msg d-none">Please select start time</div>
 
                         <!-- CLOCK PICKER -->
@@ -260,7 +260,7 @@
                         <label for="eventEnd" class="form-label">
                             End Time <span class="text-danger">*</span>
                         </label>
-                        <input type="text" id="eventEnd" class="form-control text-center" placeholder="Select Time" readonly>
+                        <input type="text" id="eventEnd" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
                         <div class="text-danger small mt-1 error-msg d-none">Please select end time</div>
 
                         <!-- CLOCK PICKER -->
@@ -302,51 +302,19 @@
                     </div>
 
                     <!-- Row 5: Follow-up Date, Estimated Amount, Lead Source -->
-                    <div class="col-md-4">
-                        <label for="followUpDate" class="form-label">Follow-up Date</label>
-                        <input class="form-control datetimepicker flatpickr-input" id="followUpDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
-                    </div>
-
-                    <!--pax-->
                     <div class="col-md-2">
-                        <label for="pax" class="form-label">Pax <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="pax" placeholder="pax" min="0" step="1">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
-                    </div>
-
-                    <!-- Estimated Package Amount -->
-                    <div class="col-md-3">
-                        <label for="packageAmount" class="form-label">
-                            Estimated Package Amount <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" class="form-control" id="packageAmount" placeholder="Per Pax Amount"
-                               step="1" min="0">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Package Amount</div>
-                    </div>
-
-                    <!--Estimated Amount-->
-                    <div class="col-md-3">
-                        <label for="estimatedAmount" class="form-label">Estimated Amount <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="estimatedAmount" placeholder="amount" value="0" step="1" min="0">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Amount</div>
-
-                        <!-- ℹ️ Info Line -->
-                        <p class="text-muted small mt-1 mb-2">
-                            <i class="fa fa-info-circle me-1 text-primary"></i>
-                            <span class="text-primary">
-                                For Accurate reporting, Enter the <strong>Estimated Bill Amount</strong> as per PAX & Interested Package of the Guest.
-                            </span>
-                        </p>
+                        <label for="followUpDate" class="form-label">Follow-up Date</label>
+                        <input class="form-control form-control-sm datetimepicker flatpickr-input" id="followUpDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
                     </div>
 
                     <!--Lead Source Dropdown-->
                     <div class="col-md-4">
                         <label for="leadSourceDropdown" class="form-label">Lead Source <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <select id="leadSourceDropdown" class="form-select">
+                            <select id="leadSourceDropdown" class="form-select form-select-sm">
                                 <option value="0">-- Select Lead Source --</option>
                             </select>
-                            <button type="button" class="btn btn-outline-primary" id="openLeadSourceModal">+</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="openLeadSourceModal">+</button>
                         </div>
                         <div class="text-danger small mt-1 error-msg d-none">Please select lead source</div>
                         <!-- ℹ️ Info Line -->
@@ -358,10 +326,41 @@
                         </p>
                     </div>
 
+                    <!--pax-->
+                    <div class="col-md-2">
+                        <label for="pax" class="form-label">Pax <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-sm" id="pax" placeholder="pax" min="0" step="1">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
+                    </div>
+
+                    <!-- Estimated Package Amount -->
+                    <div class="col-md-3">
+                        <label for="packageAmount" class="form-label">
+                            Estimated Package Amount <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control form-control-sm" id="packageAmount" placeholder="Per Pax Amount" step="1" min="0">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Package Amount</div>
+                    </div>
+
+                    <!--Estimated Amount-->
+                    <div class="col-md-3">
+                        <label for="estimatedAmount" class="form-label">Estimated Amount <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-sm" id="estimatedAmount" placeholder="amount" value="0" step="1" min="0">
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter valid Amount</div>
+
+                        <!-- ℹ️ Info Line -->
+                        <p class="text-muted small mt-1 mb-2">
+                            <i class="fa fa-info-circle me-1 text-primary"></i>
+                            <span class="text-primary">
+                                For Accurate reporting, Enter the <strong>Estimated Bill Amount</strong> as per PAX & Interested Package of the Guest.
+                            </span>
+                        </p>
+                    </div>
+
                     <!-- Row 6: Remarks -->
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <label for="remark" class="form-label">Remarks / Notes</label>
-                        <textarea class="form-control" id="remark" rows="2" placeholder="Remarks"></textarea>
+                        <textarea class="form-control form-control-sm" id="remark" rows="2" placeholder="Remarks"></textarea>
                     </div>
 
                     <!-- Submit -->
@@ -474,17 +473,17 @@
 
                         <div class="col-2">
                             <label class="form-label">Type</label>
-                            <select class="form-select" id="ddlFollowUpType"></select>
+                            <select class="form-select form-select-sm" id="ddlFollowUpType"></select>
                         </div>
 
                         <div class="col-2">
                             <label class="form-label">Status</label>
-                            <select class="form-select" id="ddlStatus"></select>
+                            <select class="form-select form-select-sm" id="ddlStatus"></select>
                         </div>
 
                         <div class="col-2">
                             <label class="form-label">Mood</label>
-                            <select class="form-select" id="ddlMood"></select>
+                            <select class="form-select form-select-sm" id="ddlMood"></select>
                         </div>
 
                         <div class="col-4">
@@ -492,11 +491,11 @@
 
                             <div class="row g-1">
                                 <div class="col-6">
-                                    <input type="date" class="form-control" id="nextFollowUpDate_modalFollowup">
+                                    <input type="date" class="form-control form-control-sm" id="nextFollowUpDate_modalFollowup">
                                 </div>
 
                                 <div class="col-4">
-                                    <select class="form-select" id="nextFollowUpTime_modalFollowup"></select>
+                                    <select class="form-select form-select-sm" id="nextFollowUpTime_modalFollowup"></select>
                                 </div>
                             </div>
 
@@ -506,12 +505,12 @@
 
                         <div class="col-2">
                             <label class="form-label">Probability (%)</label>
-                            <input type="number" class="form-control" id="txtProbability" min="0" max="100">
+                            <input type="number" class="form-control form-control-sm" id="txtProbability" min="0" max="100">
                         </div>
 
                         <div class="col-6">
                             <label class="form-label">Discussion Notes</label>
-                            <textarea class="form-control" id="txtDiscussionNotes" rows="7"></textarea>
+                            <textarea class="form-control form-control-sm" id="txtDiscussionNotes" rows="7"></textarea>
                         </div>
 
                         <div class="col-6">
@@ -588,13 +587,13 @@
                     <!-- Input + Error stacked vertically -->
                     <div class="flex-grow-1 d-flex flex-column">
                         <label for="eventTypeName" class="form-label">Event Type</label>
-                        <input type="text" class="form-control mt-1" id="eventTypeName">
+                        <input type="text" class="form-control form-control-sm mt-1" id="eventTypeName">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter event type</div>
                     </div>
 
                     <!-- Button aligned at bottom -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning btn-sm mt-3">Save</button>
                     </div>
                 </form>
 
@@ -639,7 +638,7 @@
                             Event Type <span class="text-danger">*</span>
                         </label>
                         <div class="input-group mt-1">
-                            <select id="eventTypeDropdown_SubTypeModal" class="form-select">
+                            <select id="eventTypeDropdown_SubTypeModal" class="form-select form-select-sm">
                                 <option value="0">-- Select Event Type --</option>
                             </select>
                             <button type="button" class="btn btn-outline-primary" id="openEventTypeModal_SubTypeModal">+</button>
@@ -650,13 +649,13 @@
                     <!-- Event Sub-Type Input -->
                     <div class="flex-grow-1 d-flex flex-column">
                         <label for="eventSubTypeName" class="form-label">Event Sub-Type <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control mt-1" id="eventSubTypeName">
+                        <input type="text" class="form-control form-control-sm mt-1" id="eventSubTypeName">
                         <span class="text-danger small mt-1 error-msg d-none">Please enter event sub-type</span>
                     </div>
 
                     <!-- Save Button aligned with inputs -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning btn-sm mt-3">Save</button>
                     </div>
                 </form>
 
@@ -698,13 +697,13 @@
                     <!-- Input + Error stacked vertically -->
                     <div class="flex-grow-1 d-flex flex-column">
                         <label for="leadSourceName" class="form-label">Lead Source</label>
-                        <input type="text" class="form-control mt-1" id="leadSourceName">
+                        <input type="text" class="form-control form-control-sm mt-1" id="leadSourceName">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter lead source</div>
                     </div>
 
                     <!-- Button aligned at bottom -->
                     <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-warning mt-3">Save</button>
+                        <button type="submit" class="btn btn-outline-warning btn-sm mt-3">Save</button>
                     </div>
                 </form>
 

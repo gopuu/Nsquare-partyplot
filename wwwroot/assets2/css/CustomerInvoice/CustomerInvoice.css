@@ -1,4 +1,8 @@
-﻿.row-outstanding {
+﻿.customerInfo input {
+    padding: 0.5rem 0.4rem;
+}
+
+.row-outstanding {
     background-color: #f8d7da !important; /* light red */
 }
 

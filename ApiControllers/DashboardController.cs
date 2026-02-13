@@ -585,8 +585,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("GetDashboardEventSummaryYearWise")]
-        public IActionResult GetDashboardEventSummaryYearWise([FromBody] DashboardEventSummaryRequest request)
+        [Route("Dashboard_GetOverallBookingsStatistics")]
+        public IActionResult Dashboard_GetOverallBookingsStatistics([FromBody] DashboardEventSummaryRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<DashboardEventSummaryResponse> result = new List<DashboardEventSummaryResponse>();
@@ -604,15 +604,10 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd =
-                    new SqlCommand("Dashboard_GetOverallBookingsStatistics", con))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_GetOverallBookingsStatistics", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue(
-                        "@SelectedYear",
-                        request.SelectedYear);
-
+                    cmd.Parameters.AddWithValue("@YearId",request.YearId);
                     con.Open();
 
                     using (SqlDataReader dr = cmd.ExecuteReader())

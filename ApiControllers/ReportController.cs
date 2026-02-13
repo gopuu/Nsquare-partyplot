@@ -904,7 +904,6 @@ namespace ERPAdmin.ApiControllers
         public IActionResult DownloadBookingReport(BookingReportRequest request)
         {
             apiResponse response = new apiResponse();
-
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
@@ -945,16 +944,41 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString() ?? string.Empty;
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString() ?? string.Empty;
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString() ?? string.Empty;
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString() ?? string.Empty;
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString() ?? string.Empty;
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? string.Empty;
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
@@ -962,39 +986,47 @@ namespace ERPAdmin.ApiControllers
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
-                // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
                 Font reportTitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK);
@@ -1246,62 +1278,89 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                //headerTable.AddCell(detailCell);
-                //document.Add(headerTable);
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
-                // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
                 Font reportTitleFont = FontFactory.GetFont(
@@ -1519,60 +1578,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
 
-                //document.Add(headerTable);
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -1788,56 +1877,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
-                //document.Add(headerTable);
+
                 //document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2077,58 +2200,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2345,56 +2500,87 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
                 // document.Add(new Paragraph("\n"));
@@ -2612,58 +2798,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -2895,58 +3113,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3163,58 +3413,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3431,58 +3713,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3697,58 +4011,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================
@@ -3965,58 +4311,90 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= VALIDATION =================
-                if (dtCompany.Rows.Count == 0 || dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
+                string companyName = string.Empty;
+                string companyAddress = string.Empty;
+                string companyphoneNo = string.Empty;
+                string logoFile = string.Empty;
+                string userName = string.Empty;
+
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    if (dtCompany.Rows.Count == 0)
+                        throw new Exception("Company details not found.");
+
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                    // Safe logo loading
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString();
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString();
-                string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"].ToString();
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString();
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? string.Empty;
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
 
+
                 // ================= HEADER =================
-                PdfPTable headerTable = new PdfPTable(2);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 20f, 80f });
-
-                Image logo = Image.GetInstance(
-                    Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                );
-                logo.ScaleToFit(70f, 70f);
-
-                headerTable.AddCell(new PdfPCell(logo)
+                if (request.WithHeader ?? false)
                 {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10
-                });
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
 
-                PdfPCell detailCell = new PdfPCell
-                {
-                    Border = Rectangle.BOTTOM_BORDER,
-                    Padding = 10,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
+                    // Logo Cell
+                    PdfPCell logoCell;
 
-                detailCell.AddElement(new Paragraph(companyName,
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                detailCell.AddElement(new Paragraph(companyAddress,
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                detailCell.AddElement(new Paragraph(companyphoneNo,
-                   FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
 
-                headerTable.AddCell(detailCell);
-                if (request.WithHeader == true)
-                {
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    // Details Cell
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
+
                 // document.Add(new Paragraph("\n"));
 
                 // ================= REPORT NAME (CENTER) =================

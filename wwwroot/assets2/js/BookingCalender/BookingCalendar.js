@@ -45,6 +45,7 @@ const SizeStyle = new Parchment.Attributor.Style('size', 'font-size', {
 });
 Quill.register(SizeStyle, true);
 
+
 // 3️⃣ Optional: Define custom line height too (if you still want)
 const LineHeightStyle = new Parchment.Attributor.Style('lineheight', 'line-height', {
     scope: Parchment.Scope.BLOCK,
@@ -148,7 +149,7 @@ $("#btnSaveReschedule").on("click", function () {
         ActionBy: Number(sessionStorage.getItem("userId")) || 0
     };
 
-    console.log("Reschedule Payload:", payload);
+    //console.log("Reschedule Payload:", payload);
 
     // 🔹 Call API
     $.ajax({
@@ -207,7 +208,7 @@ function fetchHallDetails(bookingData, banquetId = 0) {
         contentType: 'application/json',
         data: JSON.stringify({ Id: banquetId }), // Get all halls
         success: function (response) {
-            console.log("Get Hall res:", response);
+            //console.log("Get Hall res:", response);
             if (response.status === "Success" && response.data && response.data.length > 0) {
                 banquetHallsList = response.data;
                 let options = `<option value="0">-- Select Hall --</option>`; // default option
@@ -217,10 +218,7 @@ function fetchHallDetails(bookingData, banquetId = 0) {
                 $("#banquetDropdown, #reschedule_BanquetId").html(options);
                 // ✅ If banquetId is passed → select & STOP
                 if (banquetId > 0) {
-                    $("#banquetDropdown, #reschedule_BanquetId")
-                        .val(String(banquetId))
-                        .trigger("change");
-
+                    $("#banquetDropdown, #reschedule_BanquetId").val(String(banquetId)).trigger("change");
                     return; // ❌ do not render board
                 }
                 //console.log("fetchHall - passing bookingData:", bookingData);
@@ -228,21 +226,11 @@ function fetchHallDetails(bookingData, banquetId = 0) {
             }
             else {
                 $("#banquetDropdown, #reschedule_BanquetId").html(`<option value="0">No Hall Found</option>`);
-                $("#booking-board").html(`
-                    <div class="alert alert-danger">
-                        No Hall Found. Please add halls in Company Settings.
-                    </div>
-                `);
+                $("#booking-board").html(`<div class="alert alert-danger">No Hall Found. Please add halls in Company Settings.</div>`);
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'Failed to fetch hall details');
-            //console.error('Error fetching hall details:', xhr.responseText);
-            // Swal.fire({
-            //     icon: 'error',
-            //     title: 'Error',
-            //     text: xhr.responseText || 'Failed to fetch hall details.'
-            // });
+            handleApiError(xhr, status, error, 'Failed to fetch hall details');
         }
     });
 }
@@ -319,12 +307,6 @@ function loadEnquiryList() {
                 text: "Error fetching Enquiry list.",
                 confirmButtonText: "OK",
             });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -359,12 +341,6 @@ function loadStateList() {
                 text: "Error fetching State list.",
                 confirmButtonText: "OK",
             });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -397,12 +373,6 @@ function loadSubEventList() {
                 text: "Error fetching Event list.",
                 confirmButtonText: "OK",
             });
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -463,7 +433,7 @@ $(document).on("change", ".foodPackageDropdown", function () {
     const selectedText = selectedOption.text();
     const ratePerPerson = selectedOption.data("rateperperson") || 0;
 
-    console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
+    //console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
 
     // Set Per Plate inside same row
     $row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
@@ -491,7 +461,7 @@ $(document).on("click", ".loadMenuBtn", function () {
     const selectedText = selectedOption.text();
     const ratePerPerson = selectedOption.data("rateperperson") || 0;
 
-    console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
+    //console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
 
     // Set Per Plate inside same row
     //$row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
@@ -513,7 +483,7 @@ $(document).on("click", ".loadMenuBtn", function () {
 
                 // 🔥 RESTORE SELECTION
                 const savedItems = $dropdown.data("selectedItems");
-                console.log("savedItems:", savedItems);
+                //console.log("savedItems:", savedItems);
                 restoreSavedMenuSelection(savedItems);
             }
             else {
@@ -530,13 +500,43 @@ $(document).on("click", ".loadMenuBtn", function () {
         }
     });
 });
-function restoreSavedMenuSelection(savedItems) {
+function restoreSavedMenuSelection2(savedItems) {
     if (!savedItems || savedItems.length === 0) return;
     savedItems.forEach(item => {
         $(`#menuModal 
            .menu-section[data-menu-id='${item.FoodMenu_Id}'] 
            .item-checkbox[value='${item.FoodItem_Id}']`)
             .prop("checked", true);
+    });
+    updateSelectAllState();
+}
+
+function restoreSavedMenuSelection(savedItems) {
+    if (!savedItems || savedItems.length === 0) return;
+    savedItems.forEach(item => {
+        const section = $(`#menuModal .menu-section[data-menu-id='${item.FoodMenu_Id}']`);
+        if (!section.length) return;
+
+        // 🔹 EXISTING ITEM
+        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
+            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`).prop("checked", true);
+        }
+
+        // 🔹 NEW CUSTOM ITEM (ID = 0)
+        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
+            const newItemHtml = `
+                <div class="form-check me-3 mb-2">
+                    <input class="form-check-input item-checkbox new-item"
+                           type="checkbox"
+                           value="0"
+                           data-menu-id="${item.FoodMenu_Id}"
+                           data-item-name="${item.FoodItem_Name_NewAdded}"
+                           checked>
+                    <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
+                </div>
+            `;
+            section.find(".item-container").append(newItemHtml);
+        }
     });
     updateSelectAllState();
 }
@@ -556,30 +556,23 @@ function updateSelectAllState() {
     });
 }
 
-function updatePackageCost2() {
-    let pax = parseFloat($("#booking_pax").val()) || 0;
-    let rate = parseFloat($("#foodPackage_RatePerPlate").val()) || 0;
-
-    let packageCost = pax * rate;
-    $("#foodPackage_PackageCost").val(packageCost);
-
-    let gstAmount = ((packageCost * 5) / 100).toFixed(0);
-    $("#foodPackage_GST").val(gstAmount);
-
-    let totalCharges = parseFloat(packageCost) + parseFloat(gstAmount);
-    $("#foodPackage_TotalValue").text(totalCharges);
-}
 
 function updatePackageCost() {
 
     let pax = parseFloat($("#booking_pax").val()) || 0;
     let rate = parseFloat($("#foodPackage_RatePerPlate").val()) || 0;
 
+    let addOnsCost = parseFloat($("#foodPackage_Addons").val()) || 0;
+
     let packageCost = pax * rate;
 
     $("#foodPackage_PackageCost").val(packageCost.toFixed(2));
+    packageCost = packageCost + addOnsCost;
 
-    let gstAmount = ((packageCost * 5) / 100);
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    //let gst = isGSTEnabled ? getGST(hallRent) : 0;
+
+    let gstAmount = isGSTEnabled ? ((packageCost * 5) / 100) : 0;
     $("#foodPackage_GST").val(gstAmount.toFixed(2));
 
     let totalCharges = packageCost + gstAmount;
@@ -601,40 +594,54 @@ $(document).on("input change","#paymentSummary_BookingAmount_Type, #paymentSumma
         recalculatePaymentSummary();
 });
 
+$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount",
+    function () {
+        recalculateAllOtherCharges();
+        recalculatePaymentSummary();
+    });
 
-//Calculate PAckage for Extra added package rows
-function calculateFoodRowTotals2(rowElement) {
-    let pax = parseFloat($(rowElement).find(".pax").val()) || 0;
-    let perPlate = parseFloat($(rowElement).find(".perPlate").val()) || 0;
-    let addons = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
 
-    console.log("pax:", pax, ", perPlate:", perPlate, ", addons:", addons);
-
-    let packageCost = pax * perPlate;
-    $(rowElement).find(".packageCost").val(packageCost);
-    console.log("packageCost:", packageCost);
-
-    let gst = ((packageCost * 5) / 100).toFixed(0);
-    $(rowElement).find(".gstCost").val(gst);
-
-    let total = packageCost + parseFloat(gst) + addons;
-    $(rowElement).find(".foodPackage_TotalValue").text(total);
+function recalculateAllOtherCharges() {
+    calculateOtherCharge("#OtherCharges_Decoration_Amount", "#OtherCharges_Decoration_GST");
+    calculateOtherCharge("#OtherCharges_RoomCharges_Amount", "#OtherCharges_RoomCharges_GST");
+    calculateOtherCharge("#OtherCharges_SoundSystem_Amount", "#OtherCharges_SoundSystem_GST");
+    calculateOtherCharge("#OtherCharges_ProjectorScreen_Amount", "#OtherCharges_ProjectorScreen_GST");
 }
 
+function calculateOtherCharge(amountSelector, gstSelector) {
+
+    let amount = parseFloat($(amountSelector).val()) || 0;
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gstRate = 5;
+
+    let gstAmount = 0;
+
+    if (isGSTEnabled) {
+        gstAmount = (amount * gstRate) / 100;
+    }
+
+    $(gstSelector).val(gstAmount.toFixed(2));
+}
+
+//Calculate PAckage for Extra added package rows
 function calculateFoodRowTotals(rowElement) {
 
     let pax = parseFloat($(rowElement).find(".pax").val()) || 0;
     let perPlate = parseFloat($(rowElement).find(".perPlate").val()) || 0;
-    let addons = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
+    let addOnsCost = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
 
     let packageCost = pax * perPlate;
     $(rowElement).find(".packageCost").val(packageCost.toFixed(2));
 
-    let gst = (packageCost * 5) / 100;
+    packageCost = packageCost + addOnsCost;
+
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gst = isGSTEnabled ? ((packageCost * 5) / 100) : 0;
+
     $(rowElement).find(".gstCost").val(gst.toFixed(2));
 
-    let total = packageCost + gst + addons;
-
+    let total = packageCost + gst;
+    //console.log("total:", total, ", packageCost:", packageCost, ", gst:", gst);
     $(rowElement).find(".foodPackage_TotalValue").text(total.toFixed(2));
 
     recalculatePaymentSummary(); // 🔥 IMPORTANT
@@ -662,28 +669,63 @@ function renderMenuItems(menuData) {
     menuData.forEach(menu => {
         const foodItems = menu.FoodItemsList?.length
             ? menu.FoodItemsList.map(item => `
-                    <div class="form-check me-3 mb-2">
-                        <input class="form-check-input item-checkbox" type="checkbox"
-                            value="${item.Item_Id}" data-menu-id="${menu.FoodMenu_Id}">
-                        <label class="form-check-label">${item.Item_Name}</label>
-                    </div>`).join("")
+                <div class="form-check me-3 mb-2">
+                    <input class="form-check-input item-checkbox" type="checkbox"
+                        value="${item.Item_Id}" data-menu-id="${menu.FoodMenu_Id}">
+                    <label class="form-check-label">${item.Item_Name}</label>
+                </div>`).join("")
             : `<p class="text-muted">No items found.</p>`;
 
         html += `
-                <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name}</h6>
-                        <div>
-                            <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
-                            <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
-                        </div>
+            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name}</h6>
+                    <div>
+                        <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
+                        <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
                     </div>
-                    <div class="d-flex flex-wrap">${foodItems}</div>
-                </div>`;
+                </div>
+                <div class="d-flex flex-wrap item-container">${foodItems}</div>
+                <div class="d-flex mt-2">
+                    <input type="text" class="form-control form-control-sm me-2 new-item-input" placeholder="Add New Item">
+                    <button type="button" class="btn btn-sm btn-primary btn-addNewItem">Add</button>
+                </div>
+            </div>`;
     });
 
     $("#menuModalBody").html(html);
 }
+
+//ADD NEW ITEM
+$(document).on("click", ".btn-addNewItem", function () {
+
+    let section = $(this).closest(".menu-section");
+    let menuId = section.data("menu-id");
+
+    let input = section.find(".new-item-input");
+    let itemName = input.val().trim();
+
+    if (!itemName) {
+        alert("Please enter item name");
+        return;
+    }
+
+    let newItemHtml = `
+        <div class="form-check me-3 mb-2">
+            <input class="form-check-input item-checkbox new-item"
+                   type="checkbox"
+                   value="0"
+                   data-menu-id="${menuId}"
+                   data-item-name="${itemName}"
+                   checked>
+            <label class="form-check-label">${itemName}</label>
+        </div>
+    `;
+
+    section.find(".item-container").append(newItemHtml);
+
+    input.val("");
+});
 
 // ✅ STEP 5: Modal “Select All” and “Save” buttons
 $(document).on("change", ".select-all", function () {
@@ -699,9 +741,11 @@ $(document).on("click", ".btn-saveMenu", function () {
     $(".menu-section").each(function () {
         const menuId = $(this).data("menu-id");
         $(this).find(".item-checkbox:checked").each(function () {
+            let isNew = $(this).hasClass("new-item");
             selectedMenuData.push({
                 FoodMenu_Id: parseInt(menuId),
                 FoodItem_Id: parseInt($(this).val()),
+                FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
                 IsChecked: $(this).is(":checked")
             });
         });
@@ -711,9 +755,10 @@ $(document).on("click", ".btn-saveMenu", function () {
     const $activeDropdown = $("#menuModal").data("activeDropdown");
     if ($activeDropdown) {
         $activeDropdown.data("selectedItems", selectedMenuData);
+        $activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
     }
 
-    console.log("Saved Menu Selection:", selectedMenuData);
+    //console.log("Saved Menu Selection:", selectedMenuData);
     $("#menuModal").modal("hide");
 });
 
@@ -841,7 +886,7 @@ function loadAddonCharges() {
 }
 
 function populateAddonModal(savedItems = []) {
-    console.log("savedItems AddOns:", savedItems);
+    //console.log("savedItems AddOns:", savedItems);
     let container = $("#addonItemsContainer");
     let summaryContainer = $("#headerSummaryContainer");
     container.empty();
@@ -883,16 +928,23 @@ function populateAddonModal(savedItems = []) {
         grouped[header].forEach(item => {
             // Find if this item was saved previously
             let saved = savedItems.find(s => s.AddOn_Item_Id === item.Id && s.AddOn_Header_Id === item.HeaderId);
-            console.log("saved AddOns:", saved);
+            //console.log("saved AddOns:", saved);
             // If found, prefill values
             let isChecked = saved ? true : false;
             let rate = saved ? saved.AddOn_Rate : item.Amount;
             //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
-            // WORK HERE
+
             let rowPax = 0;
-            console.log("currentAddonRow:", currentAddonRow);
-            if (currentAddonRow) {
-                rowPax = parseFloat(currentAddonRow.find(".pax").val()) || ($("#booking_pax").val() || 0);
+            if (currentAddonRow && currentAddonRow.length > 0) {
+                let paxInput = currentAddonRow.find(".pax");
+
+                if (paxInput.length > 0) {
+                    rowPax = parseFloat(paxInput.val()) || 0;
+                }
+                else {
+                    // fallback for first default row (which doesn't have .pax)
+                    rowPax = parseFloat($("#booking_pax").val()) || 0;
+                }
             }
             let pax = saved ? saved.AddOn_Pax : rowPax;
 
@@ -919,12 +971,11 @@ function populateAddonModal(savedItems = []) {
                 `);
 
             row.find(".rate-input, .pax-input").on("input", function () {
-                console.log("here1");
+                //console.log("here1");
                 recalcRow_AddOn(row);
             });
 
             row.find(".addon-checkbox").on("change", function () {
-                console.log("here2");
                 recalcRow_AddOn(row);
             });
 
@@ -949,36 +1000,37 @@ function populateAddonModal(savedItems = []) {
             $(this).text(isVisible ? "+" : "−");
         });
     });
+
     $("[data-header]").each(function () {
         recalcRow_AddOn($(this));
     });
 }
 
 function recalcRow_AddOn(row) {
-    console.log("here3");
+    //console.log("here3");
     let checked = row.find(".addon-checkbox").is(":checked");
     let rate = parseFloat(row.find(".rate-input").val()) || 0;
     let pax = parseFloat(row.find(".pax-input").val()) || 0;
     let total = checked ? rate * pax : 0;
 
-    console.log("---- Addon Row Calculation ----");
-    console.log("Checked:", checked);
-    console.log("Rate:", rate);
-    console.log("Pax:", pax);
-    console.log("Computed Total:", total);
-    console.log("-------------------------------");
+    //console.log("---- Addon Row Calculation ----");
+    //console.log("Checked:", checked);
+    //console.log("Rate:", rate);
+    //console.log("Pax:", pax);
+    //console.log("Computed Total:", total);
+    //console.log("-------------------------------");
 
     row.find(".total-input").val(total.toFixed(2));
-    console.log("here4");
+    //console.log("here4");
     recalcSummary_AddOn();
 }
 
 function recalcSummary_AddOn() {
-    console.log("recalcSummary called");
+    //console.log("recalcSummary called");
     // Reset
     Object.keys(headerTotals).forEach(h => headerTotals[h] = 0);
 
-    console.log("1 headerTotals:", headerTotals);
+    //console.log("1 headerTotals:", headerTotals);
     $("[data-header]").each(function () {
         let header = $(this).data("header");
         let total = parseFloat($(this).find(".total-input").val()) || 0;
@@ -989,16 +1041,16 @@ function recalcSummary_AddOn() {
         $(`[data-header-summary="${header}"] .header-total`).text(headerTotals[header].toFixed(2));
     });
 
-    console.log("2 headerTotals:", headerTotals);
+    //console.log("2 headerTotals:", headerTotals);
     let finalTotal = Object.values(headerTotals).reduce((a, b) => a + b, 0);
-    console.log("finalTotal:", finalTotal);
+    //console.log("finalTotal:", finalTotal);
     $("#finalTotal").text(finalTotal.toFixed(2));
 
     if (currentAddonButton) {
         const $row = $(currentAddonButton).closest(".food-row, .food-block");
         $row.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
 
-        // Recalculate that specific row only
+    // Recalculate that specific row only
     //    if ($row.hasClass("food-block")) {
     //        calculateFoodRowTotals($row);
     //    }
@@ -1014,9 +1066,15 @@ let currentAddonButton = null;
 let currentAddonRow = null;
 
 function openAddonModal(booking_foodPackageId = 0, button = null) {
-    console.log("booking_foodPackageId:", booking_foodPackageId);
+    //console.log("booking_foodPackageId:", booking_foodPackageId);
     currentAddonButton = button; // 🔹 store reference to clicked button
-    currentAddonRow = $(button).closest(".food-row, .food-block");
+    //currentAddonRow = $(button).closest(".food-row, .food-block");
+
+    currentAddonRow = $(button).closest(".food-block");   // for dynamic rows
+    if (currentAddonRow.length === 0) {
+        // default first row (no .food-block wrapper)
+        currentAddonRow = $(button).closest(".food-row");
+    }
 
     let savedItems = $(button).data("selected-AddOnItems") || [];
 
@@ -1069,11 +1127,12 @@ $(document).on("click", ".btn-saveAddOn", function () {
         return;
     }
 
-    console.log("✅ Selected Addon Items:", selectedItems);
-    console.log("💰 Grand Total:", grandTotal.toFixed(2));
+    //console.log("✅ Selected Addon Items:", selectedItems);
+    //console.log("💰 Grand Total:", grandTotal.toFixed(2));
 
     // 🔹 Update the clicked AddOn button’s total span
     if (currentAddonButton) {
+        //console.log("here addon btn 1");
         let $btn = $(currentAddonButton);
         let $totalSpan = $btn.closest(".d-flex").find(".foodPackage_TotalValue");
 
@@ -1087,8 +1146,21 @@ $(document).on("click", ".btn-saveAddOn", function () {
         // 🔹 Update button label with count
         let itemCount = selectedItems.length;
         $btn.html(`<i class="fa fa-check"></i> Addons (${itemCount})`);
-    }
 
+        //Update Amount
+        let row = $(currentAddonButton).closest(".food-block");
+        // fallback for default row (no .food-block wrapper)
+        if (row.length === 0) {
+            row = $(currentAddonButton).closest(".food-row");
+        }
+        //console.log("grandTotal 2:", grandTotal);
+
+        updatePackageCost(); //WORK HERE
+        //calculateFoodRowTotals(row);
+        //recalculatePaymentSummary();
+
+        //console.log("grandTotal 3:", grandTotal);
+    }
     // Close the modal
     $("#addonChargeModal").modal("hide");
 });
@@ -1121,6 +1193,8 @@ const toggleViewBtn = document.getElementById("toggleViewBtn");
 
 let selectedYear = new Date().getFullYear();
 let selectedMonth = new Date().getMonth();
+let selectedYearId = 0;
+let selectedMonthId = 0;
 let cachedDays = [];
 let cachedShiftData = {};
 
@@ -1134,10 +1208,13 @@ function populateYearDropdown() {
             if (res.status === "Success") {
                 yearSelect.innerHTML = "";
                 const years = res.data;
+                //console.log("years list:", years);
 
                 // Find current year object
                 let currentYearObj = years.find(y => y.YearName == new Date().getFullYear());
                 selectedYear = currentYearObj ? parseInt(currentYearObj.YearName) : new Date().getFullYear();
+                selectedYearId = currentYearObj ? parseInt(currentYearObj.Id) : 0;
+                //console.log("selectedYear:", selectedYear, ", selectedYearId:", selectedYearId);
 
                 years.forEach(y => {
                     const option = document.createElement("option");
@@ -1153,12 +1230,6 @@ function populateYearDropdown() {
         },
         error: function (err) {
             console.error("Error fetching years:", err);
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -1166,11 +1237,15 @@ function populateYearDropdown() {
 //Year - change event
 yearSelect.addEventListener("change", function () {
     selectedYear = yearSelect.options[yearSelect.selectedIndex].text; // display year
+    selectedYearId = yearSelect.options[yearSelect.selectedIndex].value;
+    //console.log("yearChange - selectedYear:", selectedYear, ", selectedYearId:", selectedYearId);
+
     fetchMonthData(yearSelect.value); // fetch months for selected year
 });
 
 //Fetch Month by Year
 function fetchMonthData(yearId) {
+    //console.log("yearId in MonthData:", yearId);
     $.ajax({
         url: '/api/MonthMaster/GetMonthList', // replace with actual controller route
         type: 'POST',
@@ -1182,21 +1257,17 @@ function fetchMonthData(yearId) {
                 //console.log("getMonths:", res.data);
             }
         },
-        error: function (err) {
-            console.error("Error fetching months:", err);
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching months");
         }
     });
 }
 
 //DISPLAY Months
 function populateMonthButtons(months) {
-    //console.log("fetched months:", months);
+    selectedMonthId = months[selectedMonth].MonthId;
+    //console.log("fetched months:", months, ", selectedMonth:", selectedMonth, ", selectedMonthId:", selectedMonthId);
+
     monthButtons.innerHTML = "";
     months.forEach((m, idx) => {
         const btn = document.createElement("button");
@@ -1205,18 +1276,21 @@ function populateMonthButtons(months) {
         btn.dataset.monthId = m.MonthId;
         btn.dataset.yearId = m.YearId;
 
+        //console.log("DEFAULT YearId:", m.YearId, "MonthId:", m.MonthId);
         btn.addEventListener("click", () => {
             selectedMonth = idx;
             // Highlight selected month
             populateMonthButtons(months);
 
-            console.log("Selected YearId:", m.YearId, "MonthId:", m.MonthId);
+            //console.log("Selected YearId:", selectedYearId, "MonthId:", selectedMonthId);
             // Call renderBoard() or other logic if needed
             //renderBoard();
-            loadBookingCalendar();
+            //loadBookingCalendar();
         });
         monthButtons.appendChild(btn);
     });
+    //console.log("DEFAULT selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
+    loadBookingCalendar();
 }
 
 //Generate Days for Selected Month
@@ -1263,7 +1337,7 @@ function generateDays(year, month) {
             contentType: "application/json",
             data: JSON.stringify(req),
             success: function (res) {
-                console.log("GetEnquiryCalendarMock res:", res);
+                //console.log("GetEnquiryCalendarMock res:", res);
                 try {
                     if (res && res.status === "Success" && Array.isArray(res.data)) {
                         const days = res.data.map(item => {
@@ -1326,15 +1400,15 @@ function generateShiftDataPerDay(dateObj) {
     });
 }
 
-//main booking board
+//main booking board //here2
 async function renderBoard(bookingData = null) {
-    console.log("renderBoard bookingData:", bookingData);
+    //console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
     cachedDays = await generateDays(selectedYear, selectedMonth);
-    console.log("renderBoard cachedDays:", cachedDays);
+    //console.log("renderBoard cachedDays:", cachedDays);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -1475,21 +1549,21 @@ async function renderBoard(bookingData = null) {
                 }
 
                 return `<div
-                                class="badge bg-${finalColor} d-block mb-1 ${textColor}"
-                                data-bookingid="${bookingId}"
-                                data-eventname="${eventName}"
-                                data-clientname="${clientName}"
-                                data-clientcontact="${clientContact}"
-                                data-eventdaterange="${eventDateRange}"
-                                data-shift="${shiftCode}"
-                                data-shiftname="${shiftFull}"
-                                data-date="${dateStr}"
-                                data-date_format="${dateStr_Format}"
-                                data-date_iso="${dateStr_ISO}"
-                                data-hallname="${hall.HallName}"
-                                data-hallid="${hall.Id}">
-                                ${shiftCode}
-                            </div>`;
+                            class="badge bg-${finalColor} d-block mb-1 ${textColor}"
+                            data-bookingid="${bookingId}"
+                            data-eventname="${eventName}"
+                            data-clientname="${clientName}"
+                            data-clientcontact="${clientContact}"
+                            data-eventdaterange="${eventDateRange}"
+                            data-shift="${shiftCode}"
+                            data-shiftname="${shiftFull}"
+                            data-date="${dateStr}"
+                            data-date_format="${dateStr_Format}"
+                            data-date_iso="${dateStr_ISO}"
+                            data-hallname="${hall.HallName}"
+                            data-hallid="${hall.Id}">
+                            ${shiftCode}
+                        </div>`;
 
             }).join("");
 
@@ -1497,13 +1571,13 @@ async function renderBoard(bookingData = null) {
             cell.querySelectorAll(".badge").forEach(badge => {
                 badge.addEventListener("click", (e) => {
                     e.stopPropagation(); // prevent triggering cell click
-                    // console.log("Banquet ID:", hall.Id);
-                    // console.log("Banquet Name:", hall.HallName);
-                    // console.log("shift short:", badge.dataset.shift); // ✅ only that one badge
-                    // console.log("shift full:", badge.dataset.shiftname); // ✅ only that one badge
-                    // console.log("Date:", badge.dataset.date);
-                    // console.log("Date_Format:", badge.dataset.date_format);
-                    // console.log("Date_ISO:", badge.dataset.date_iso);
+                    // //console.log("Banquet ID:", hall.Id);
+                    // //console.log("Banquet Name:", hall.HallName);
+                    // //console.log("shift short:", badge.dataset.shift); // ✅ only that one badge
+                    // //console.log("shift full:", badge.dataset.shiftname); // ✅ only that one badge
+                    // //console.log("Date:", badge.dataset.date);
+                    // //console.log("Date_Format:", badge.dataset.date_format);
+                    // //console.log("Date_ISO:", badge.dataset.date_iso);
                     //console.log("Date:", `${cachedDays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`);
                 });
             });
@@ -1616,7 +1690,6 @@ async function renderBoard(bookingData = null) {
     attachColumnHoverListeners();
     enableEnquiryTooltips();
     attachShiftClickListeners();
-    //hideLoader();
 }
 
 //enquiry count - tooltip
@@ -1924,8 +1997,8 @@ function attachShiftClickListeners() {
             //Present Day & Future Days
             if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
                 resetBooking();
-                console.log(`Edit Booking → Shift: ${shift} (${shiftname}) | Date: ${date} (format: ${dateformat}, iso: ${dateiso}) | Hall: ${hallname} (${hallid}) | BookingId: ${bookingid}`);
-                //Work Here..
+                //console.log(`Edit Booking → Shift: ${shift} (${shiftname}) | Date: ${date} (format: ${dateformat}, iso: ${dateiso}) | Hall: ${hallname} (${hallid}) | BookingId: ${bookingid}`);
+
                 $("#BookingId").val(bookingid);
                 // 🟢 Update label content & attributes - using jQuery
                 $("#label_date_shift")
@@ -2033,7 +2106,7 @@ document.addEventListener("DOMContentLoaded", function () {
     populateYearDropdown();
     //populateMonthButtons();
     //fetchHallDetails();
-    loadBookingCalendar();
+    //loadBookingCalendar();
     //loadPaymentHistory(bookingId);
     loadLeadSourceList();
     loadEnquiryList();
@@ -2099,7 +2172,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide/show PAYMENT MODAL ----- START --------------------------
     paymentModal.addEventListener('show.bs.modal', function () {
-        console.log("paymentModal SHOW");
+        //console.log("paymentModal SHOW");
         // Just hide visually (do not destroy modal state)
         bookingReportModal.classList.remove("show");
         bookingReportModal.style.display = "none";
@@ -2110,7 +2183,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     paymentModal.addEventListener('hidden.bs.modal', function () {
-        console.log("paymentModal HIDE");
+        //console.log("paymentModal HIDE");
         // Show booking modal visually again (no reset, same position)
         bookingReportModal.classList.add("show");
         bookingReportModal.style.display = "block";
@@ -2123,7 +2196,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide/show FoodWastage MODAL ----- START --------------------------
     foodwestageModal.addEventListener('show.bs.modal', function () {
-        console.log("foodWastageModal SHOW");
+        //console.log("foodWastageModal SHOW");
         // Just hide visually (do not destroy modal state)
         bookingReportModal.classList.remove("show");
         bookingReportModal.style.display = "none";
@@ -2134,7 +2207,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     foodwestageModal.addEventListener('hidden.bs.modal', function () {
-        console.log("foodWastageModal HIDE");
+        //console.log("foodWastageModal HIDE");
         // Show booking modal visually again (no reset, same position)
         bookingReportModal.classList.add("show");
         bookingReportModal.style.display = "block";
@@ -2147,7 +2220,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide/show vendorWorkOrder MODAL ----- START --------------------------
     vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
-        console.log("vendorWorkOrderModal shown");
+        //console.log("vendorWorkOrderModal shown");
         // Just hide visually (do not destroy modal state)
         bookingReportModal.classList.remove("show");
         bookingReportModal.style.display = "none";
@@ -2216,7 +2289,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide feedback MODAL ----- START --------------------------
     $("#feedbackModal").on("hidden.bs.modal", function () {
-        console.log("openedFromPrepareOrder feedback:", openedFromReport);
+        //console.log("openedFromPrepareOrder feedback:", openedFromReport);
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
@@ -2346,7 +2419,7 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#foodPackage_PackageDropdown").data("menuitems", jsonString);
 
         // Optionally show summary text in dropdown (or console)
-        console.log("Saved Menu JSON:", jsonString);
+        //console.log("Saved Menu JSON:", jsonString);
 
         // Close modal
         $("#menuModal").modal("hide");
@@ -2362,7 +2435,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 2️⃣ Restore Defaults
     $(".btn-outline-secondary").on("click", function () {
-        console.log("reset default triggered");
+        //console.log("reset default triggered");
         // You can later add logic to restore predefined defaults if needed
         //const isChecked = $("#gstSwitch").is(":checked");
         //resetOtherCharges(isChecked);
@@ -2372,10 +2445,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Using jQuery
     $("#gstSwitch").on("change", function () {
         const isChecked = $(this).is(":checked");
-        console.log(isChecked ? "GST Accepted" : "GST Not Accepted");
+        //console.log(isChecked ? "GST Accepted" : "GST Not Accepted");
+        updatePackageCost();
+        // Recalculate dynamic rows
+        $(".food-block").each(function () {
+            calculateFoodRowTotals($(this));
+        });
         //resetOtherCharges(isChecked);
-        recalculatePaymentSummary();
+
         updateHallRentGST();
+
+        // Recalculate all Other Charges GST
+        recalculateAllOtherCharges();
+
+        recalculatePaymentSummary();
 
         if (isChecked) {
             $("#gstSwitchText").text("On").removeClass("text-danger").addClass("text-success");  // Green for ON
@@ -2410,10 +2493,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // 🧾 Invoice Generate
     document.getElementById("btnInvoiceGenerate").addEventListener("click", function () {
          const bookingId = getBookingId();
-         console.log("📄 Invoice Generate clicked - Booking ID:", bookingId);
+         //console.log("📄 Invoice Generate clicked - Booking ID:", bookingId);
 
         const btn_invoiceNo = getInvoiceNoFromButton("btnInvoiceGenerate");
-        console.log("Invoice No:", btn_invoiceNo);
+        //console.log("Invoice No:", btn_invoiceNo);
 
         //download invoice
         if (btn_invoiceNo > 0) {
@@ -2447,10 +2530,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // 🧾 Proforma Invoice Generate
     document.getElementById("btnProformaInvoiceGenerate").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("📄 Proforma Invoice Generate clicked - Booking ID:", bookingId);
+        //console.log("📄 Proforma Invoice Generate clicked - Booking ID:", bookingId);
 
         const proformaNo = getInvoiceNoFromButton("btnProformaInvoiceGenerate");
-        console.log("Proforma Invoice No:", proformaNo);
+        //console.log("Proforma Invoice No:", proformaNo);
 
         //download invoice
         if (proformaNo > 0) {
@@ -2545,7 +2628,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Open foodwestage modal safely
     document.getElementById('btnFoodWestage').addEventListener('click', function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
-        console.log("💳 Enter Food Westage clicked - Booking ID:", bookingId);
+        //console.log("💳 Enter Food Westage clicked - Booking ID:", bookingId);
         $("#tblFoodWastage tbody").empty();
         $("#txtTotalWastage").val("0.00");
 
@@ -2597,7 +2680,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Open payment modal safely
     document.getElementById('btnEnterPayment').addEventListener('click', function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
-        console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
+        //console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
         $("#paymentModal").modal("show");
         loadPaymentHistory(bookingId);
         //paymentModalInstance.show();
@@ -2606,7 +2689,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 📢 Request Feedback
     document.getElementById("btnRequestFeedback").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
+        //console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
@@ -2707,7 +2790,7 @@ Your feedback helps us improve our service.`;
         const bookingId = getBookingId();
         //let userId = parseInt( sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0 );
 
-        console.log("❌ Cancel Booking clicked - Booking ID:", bookingId);
+        //console.log("❌ Cancel Booking clicked - Booking ID:", bookingId);
         if (!bookingId || bookingId == 0) {
             Swal.fire({
                 icon: "warning",
@@ -2750,7 +2833,7 @@ Your feedback helps us improve our service.`;
             ActionBy: userId
         };
 
-        console.log("📤 Sending Cancel Request:", reqModel);
+        //console.log("📤 Sending Cancel Request:", reqModel);
 
         // 🔥 API Call
         $.ajax({
@@ -2759,7 +2842,7 @@ Your feedback helps us improve our service.`;
             contentType: "application/json",
             data: JSON.stringify(reqModel),
             success: function (response) {
-                console.log("✔ API Success:", response);
+                //console.log("✔ API Success:", response);
 
                 if (response.status === "Success") {
                     Swal.fire({
@@ -2805,7 +2888,7 @@ Your feedback helps us improve our service.`;
     // 🗑️ Delete Booking
     document.getElementById("btnDeleteBooking").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("🗑️ Delete Booking clicked - Booking ID:", bookingId);
+        //console.log("🗑️ Delete Booking clicked - Booking ID:", bookingId);
         let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
 
         if (!bookingId || bookingId == 0) {
@@ -2839,7 +2922,7 @@ Your feedback helps us improve our service.`;
                     ActionBy: userId
                 }),
                 success: function (res) {
-                    console.log("✔ Delete API Success:", res);
+                    //console.log("✔ Delete API Success:", res);
 
                     if (res.status === "Success") {
                         Swal.fire({
@@ -2894,8 +2977,8 @@ Your feedback helps us improve our service.`;
     // 🚚 Vendor Work Orders button click
     document.getElementById("btnVendorWorkOrders").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("🚚 Vendor Work Orders clicked - Booking ID:", bookingId);
-        console.log("bookingId:", bookingId)
+        //console.log("🚚 Vendor Work Orders clicked - Booking ID:", bookingId);
+        //console.log("bookingId:", bookingId)
 
         // Optional: store bookingId in hidden field
         $("#VendorBookingId").val(bookingId);
@@ -2915,7 +2998,7 @@ Your feedback helps us improve our service.`;
     // ✏️ Edit
     document.getElementById("btnEdit").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("✏️ Edit clicked - Booking ID:", bookingId);
+        //console.log("✏️ Edit clicked - Booking ID:", bookingId);
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
@@ -2930,7 +3013,7 @@ Your feedback helps us improve our service.`;
     // 📅 Reschedule
     document.getElementById("btnReschedule").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("📅 Reschedule clicked - Booking ID:", bookingId);
+        //console.log("📅 Reschedule clicked - Booking ID:", bookingId);
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
@@ -2945,13 +3028,13 @@ Your feedback helps us improve our service.`;
     // 🔔 Post Booking Followups
     // document.getElementById("btnPostBookingFollowups").addEventListener("click", function () {
     //     const bookingId = getBookingId();
-    //     console.log("🔔 Post Booking Followups clicked - Booking ID:", bookingId);
+    //     //console.log("🔔 Post Booking Followups clicked - Booking ID:", bookingId);
     // });
 
     // 📋 Prepare Order (PO)
     document.getElementById("btnPrepareOrder").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("📋 Prepare Order (PO) clicked - Booking ID:", bookingId);
+        //console.log("📋 Prepare Order (PO) clicked - Booking ID:", bookingId);
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
         bookingReportModal.classList.remove("show");
@@ -2964,7 +3047,7 @@ Your feedback helps us improve our service.`;
     // 📤 Export Booking
     document.getElementById("btnExportBooking").addEventListener("click", function () {
         const bookingId = getBookingId();
-        console.log("📤 Export Booking clicked - Booking ID:", bookingId);
+        //console.log("📤 Export Booking clicked - Booking ID:", bookingId);
     });
 
     //BOOKING REPORT MODAL ---- END  -------------------------------------------------
@@ -3152,7 +3235,7 @@ function fetchInvoiceByBookingId(bookingId) {
         contentType: 'application/json',
         data: JSON.stringify({ BookingId: bookingId }),
         success: function (res) {
-            console.log("fetch ByBookingId res:", res);
+            //console.log("fetch ByBookingId res:", res);
             if (res.status !== 'Success' || !res.data) {
                 Swal.fire({
                     icon: 'warning',
@@ -3347,7 +3430,7 @@ $('#btnSaveInvoice_InvoiceModal').on('click', function () {
         ActionBy: Number(sessionStorage.getItem('userId') || 0)
 
     };
-    console.log("save invoice payload:", request);
+    //console.log("save invoice payload:", request);
 
     $.ajax({
         url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -3389,7 +3472,7 @@ function loadState() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
-            console.log("response state:", response);
+            //console.log("response state:", response);
             const $stateDropdowns = $("#customerState_InvoiceModal");
             $stateDropdowns.html(`<option value="0">-- Select --</option>`);
             response.data.forEach(s => {
@@ -3415,9 +3498,9 @@ function getNextInvoiceNumbers() {
                 proformaInvoiceNo = res.data.NextProformaInvoiceNo;
                 gstInvoiceNo = res.data.NextGSTInvoiceNo;
 
-                console.log('Invoice No:', invoiceNo);
-                console.log('Proforma Invoice No:', proformaInvoiceNo);
-                console.log('GST Invoice No:', gstInvoiceNo);
+                //console.log('Invoice No:', invoiceNo);
+                //console.log('Proforma Invoice No:', proformaInvoiceNo);
+                //console.log('GST Invoice No:', gstInvoiceNo);
 
                 // OPTIONAL: Assign to inputs
                 //$('#invoiceNo').val(invoiceNo);
@@ -3445,7 +3528,7 @@ function loadPrepareOrderByBooking(bookingId) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("prepareOrder - Booking API Response:", res);
+            //console.log("prepareOrder - Booking API Response:", res);
             if (!res || res.status !== "Success" || !res.data) {
                 console.warn("No prepare order data found");
                 return;
@@ -3662,13 +3745,13 @@ function saveFormula() {
         });
     }
 
-    console.log("before foodItemState:", foodItemState);
+    //console.log("before foodItemState:", foodItemState);
     foodItemState[foodItemId].FoodFormula = {
         PeopleCount: parseInt($("#txtFormulaPeople").val()) || 1,
         IsFormulaRequired: !$("#chkFormulaNotRequired").is(":checked"),
         Ingredients: ingredients
     };
-    console.log("after foodItemState:", foodItemState);
+    //console.log("after foodItemState:", foodItemState);
     $("#formulaModal").modal("hide");
 }
 function escapeHtml(text) {
@@ -3725,7 +3808,7 @@ function savePrepareOrder() {
         FoodItems: foodItemsPayload
     };
 
-    console.log("Save Prepare Order Payload:", payload);
+    //console.log("Save Prepare Order Payload:", payload);
 
     $.ajax({
         url: "/api/BookingCalendar_PrepareOrder/SaveBookingCalendar_PrepareOrder",
@@ -3780,7 +3863,7 @@ function fetchUnitMaster() {
         data: JSON.stringify({ Id: 0 })
     }).then(function (response) {
 
-        console.log("UnitMaster Response:", response);
+        //console.log("UnitMaster Response:", response);
 
         if (response.status === "Success") {
             unitMasterList = response.data || [];
@@ -3948,26 +4031,28 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
     var requestData = {
         BookingId: bookingId,
         BanquetId: banquetId,
-        EventDate: eventDate
+        EventDate: eventDate,
+        YearId: selectedYearId ?? 0,
+        MonthId: selectedMonthId ?? 0
     };
-
+    //console.log("GetBookingCalendar requestData:", requestData);
     $.ajax({
-        url: '/api/BookingCalendar/GetBookingCalendar',
-        type: 'POST',
-        contentType: 'application/json',
+        url: "/api/BookingCalendar/GetBookingCalendar",
+        type: "POST",
+        contentType: "application/json",
         data: JSON.stringify(requestData),
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
                 //console.log("Booking List:",data);
                 if (actionMode === "fullData") {
-                    console.log("fullData - Booking API Response:", data);
+                    //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);
                 }
                 else if (actionMode === "singleData") {
                     resetBooking();
                     data = data[0];
-                    console.log("singleData - Booking API Response:", data);
+                    //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
                     $("#bookingReport_clientName").text(data.Client_Name || "—");
@@ -4043,14 +4128,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //data.InvoiceNo, data.ProformaInvoiceNo
                     setInvoiceButtons(data);
                     //Open REPORT MODAL
-                    console.log("bookingReportModal show");
+                    //console.log("bookingReportModal show");
                     bookingReportModal.show();
 
                 }
                 else if (actionMode === "editData") {
                     resetBooking();
                     data = data[0];
-                    console.log("editData - Booking API Response:", data);
+                    //console.log("editData - Booking API Response:", data);
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
@@ -4088,7 +4173,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     const foodPackages = data.JSON_FoodPackage;
 
                     if (!Array.isArray(foodPackages) || foodPackages.length === 0) {
-                        console.log("ℹ️ No food package found, skipping food-package binding");
+                        //console.log("ℹ️ No food package found, skipping food-package binding");
                         // just continue rest of the process
                     }
                     else {
@@ -4161,7 +4246,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "rescheduleData") {
                     //resetBooking();
                     data = data[0];
-                    console.log("rescheduleData - Booking API Response:", data);
+                    //console.log("rescheduleData - Booking API Response:", data);
 
                     /* ------------------------------------Hidden Booking Id--------------------------------- */
                     $("#reschedule_BookingId").val(bookingId);
@@ -4197,12 +4282,6 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "getBooking fetch fail")
 
-        },
-        complete: function () {
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -4368,7 +4447,7 @@ function saveBooking() {
 
         // Add additional fields for dynamic blocks
         if (isDynamicBlock) {
-            console.log("new row added");
+            //console.log("new row added");
             const $packageNameInput = $row.find('input[placeholder="Addon Food Package Name"]');
             const $paxInput = $row.find('input[placeholder="Pax"]');
             const $dateInput = $row.find('input[type="date"]');
@@ -4388,7 +4467,7 @@ function saveBooking() {
             foodPackage.FoodPackageDateTime = $dateInput.val() ? `${$dateInput.val()} ${timeString}` : '';
         }
         else {
-            console.log("static row only");
+            //console.log("static row only");
             // For first row, set default values for optional fields
             foodPackage.FoodPackageTitleName = '';
             foodPackage.Pax = 0;
@@ -4401,7 +4480,7 @@ function saveBooking() {
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
 
-    console.log("Final Booking JSON:", bookingData);
+    //console.log("Final Booking JSON:", bookingData);
 
     // 🔹 4. AJAX POST
     $.ajax({
@@ -4413,7 +4492,7 @@ function saveBooking() {
             $("#btnSaveBooking").prop("disabled", true).text("Saving...");
         },
         success: function (response) {
-            console.log("save response:", response);
+            //console.log("save response:", response);
             if (response.status === "Success") {
                 Swal.fire({
                     position: "top-end",
@@ -4448,20 +4527,11 @@ function saveBooking() {
                 });
             }
         },
-        error: function (xhr) {
-            console.error("Error saving booking:", xhr.responseText);
-            Swal.fire({
-                title: "Booking Save Error",
-                text: xhr.responseText,
-                icon: "error"
-            });
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Booking Save Error");
         },
         complete: function () {
             $("#btnSaveBooking").prop("disabled", false).text("Save Booking");
-            //hideLoader();
-        },
-        beforeSend: function () {
-            //showLoader(); // Optionally, you can use beforeSend here as well
         }
     });
 }
@@ -4485,104 +4555,8 @@ function resetBooking() {
     $("#Section_PaymentDetails").show();
 
 
-    console.log("Booking form reset completed.");
+    //console.log("Booking form reset completed.");
 }
-
-function resetOtherCharges2(isGSTEnabled) {
-
-    // Base amounts (unchanged)
-    decorationAmount = 0;
-    roomchargesAmount = 0;
-    soundSystemAmount = 0;
-    projectScreenAmount = 0;
-
-    // Apply GST If Enabled
-    decorationGST = isGSTEnabled ? getGST(decorationAmount) : 0;
-    roomchargesGST = isGSTEnabled ? getGST(roomchargesAmount) : 0;
-    soundSystemGST = isGSTEnabled ? getGST(soundSystemAmount) : 0;
-    projectScreenGST = isGSTEnabled ? getGST(projectScreenAmount) : 0;
-
-    // Update textboxes
-    $("#OtherCharges_Decoration_Amount").val(decorationAmount);
-    $("#OtherCharges_Decoration_GST").val(decorationGST);
-
-    $("#OtherCharges_RoomCharges_Amount").val(roomchargesAmount);
-    $("#OtherCharges_RoomCharges_GST").val(roomchargesGST);
-
-    $("#OtherCharges_SoundSystem_Amount").val(soundSystemAmount);
-    $("#OtherCharges_SoundSystem_GST").val(soundSystemGST);
-
-    $("#OtherCharges_ProjectorScreen_Amount").val(projectScreenAmount);
-    $("#OtherCharges_ProjectorScreen_GST").val(projectScreenGST);
-
-    // Taxable Amount
-    var taxableAmount = decorationAmount + roomchargesAmount + soundSystemAmount + projectScreenAmount;
-    $("#paymentSummary_TaxableAmount").text(taxableAmount);
-
-    // GST Calculation
-    totalGST = decorationGST + roomchargesGST + soundSystemGST + projectScreenGST;
-
-    cgst = isGSTEnabled ? (totalGST / 2).toFixed(2) : 0;
-    sgst = isGSTEnabled ? (totalGST / 2).toFixed(2) : 0;
-    igst = 0;
-
-    $("#paymentSummary_CGST").text(cgst);
-    $("#paymentSummary_SGST").text(sgst);
-    $("#paymentSummary_IGST").text(igst);
-
-    // Total
-    total = parseFloat(taxableAmount) + parseFloat(cgst) + parseFloat(sgst) + parseFloat(igst);
-    $("#paymentSummary_Total").text(total);
-
-    // Reset Booking Amount (Discount Input)
-    $("#paymentSummary_BookingAmount_Type").val("1"); // default flat
-    $("#paymentSummary_BookingAmount_Amount").val(0);
-    // Reset Display
-    $("#paymentSummary_BookingAmount").text("0.00");
-
-    // Booking Discount
-    bookingDiscount = 0;
-    // $("#paymentSummary_BookingAmount").text(bookingDiscount);
-
-    // Show / Hide booking amount row
-    if (isGSTEnabled) {
-        $("#paymentSummary_BookingAmount_Row").hide();
-    } else {
-        $("#paymentSummary_BookingAmount_Row").show();
-    }
-
-    // Final payable amount
-    payableAmount = total; + bookingDiscount;
-    $("#paymentSummary_payableAmount").text(payableAmount);
-}
-
-function updateBookingDiscount2() {
-    let total = parseFloat($("#paymentSummary_Total").text()) || 0;
-    let type = $("#paymentSummary_BookingAmount_Type").val();   // 1 = flat, 2 = percent
-    let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
-
-    let bookingDiscount = 0;
-
-    if (type == "1") {
-        // Flat Discount
-        bookingDiscount = enteredValue;
-    }
-    else if (type == "2") {
-        // Percentage Discount
-        bookingDiscount = (total * enteredValue) / 100;
-    }
-
-    // Prevent discount > total
-    if (bookingDiscount > total) bookingDiscount = total;
-
-    // Update discount field
-    $("#paymentSummary_BookingAmount").text(bookingDiscount.toFixed(2));
-
-    // Update payable amount
-    let payableAmount = total - bookingDiscount;
-    $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
-}
-
 
 function recalculatePaymentSummary() {
 
@@ -4594,15 +4568,18 @@ function recalculatePaymentSummary() {
     // 🔹 Hall Rent
     let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
     taxableAmount += hallRent;
+    //console.log("hallRent:", hallRent);
 
     // 🔹 Default Food
-    let defaultFoodTotal = parseFloat($("#foodPackage_TotalValue").text()) || 0;
-    taxableAmount += defaultFoodTotal;
+    //let defaultFoodTotal = parseFloat($("#foodPackage_TotalValue").text()) || 0;
+    //taxableAmount += defaultFoodTotal;
+    //console.log("defaultFoodTotal:", defaultFoodTotal);
 
     // 🔹 Extra Food Rows
-    $(".food-block").each(function () {
-        let rowTotal = parseFloat($(this).find(".foodPackage_TotalValue").text()) || 0;
-        taxableAmount += rowTotal;
+    $(".foodPackage_TotalValue").each(function () {
+        let value = parseFloat($(this).text()) || 0;
+        taxableAmount += value;
+        //console.log("defaultFoodTotal rows:", value);
     });
 
     // 🔹 Other Charges
@@ -4612,8 +4589,13 @@ function recalculatePaymentSummary() {
     let projector = parseFloat($("#OtherCharges_ProjectorScreen_Amount").val()) || 0;
 
     taxableAmount += decoration + room + sound + projector;
+    //console.log("decoration:", decoration);
+    //console.log("room:", room);
+    //console.log("sound:", sound);
+    //console.log("projector:", projector);
 
     $("#paymentSummary_TaxableAmount").text(taxableAmount.toFixed(2));
+    //console.log("taxableAmount:", taxableAmount);
 
     // 🔹 GST
     let totalGST = isGSTEnabled ? (taxableAmount * gstRate) / 100 : 0;
@@ -4629,6 +4611,7 @@ function recalculatePaymentSummary() {
     let total = taxableAmount + cgst + sgst + igst;
 
     $("#paymentSummary_Total").text(total.toFixed(2));
+    //console.log("total:", total);
 
     applyBookingDiscount(total);
 }
@@ -4715,7 +4698,7 @@ function saveVendorWorkOrder() {
     // 🔹 3. Attach Particulars
     workOrderData.Particulars = particulars;
 
-    console.log("🚚 Vendor Work Order JSON:", workOrderData);
+    //console.log("🚚 Vendor Work Order JSON:", workOrderData);
 
     // 🔹 4. AJAX SAVE
     $.ajax({
@@ -4729,7 +4712,7 @@ function saveVendorWorkOrder() {
                 .text("Saving...");
         },
         success: function (response) {
-            console.log("Vendor Work Order Save Response:", response);
+            //console.log("Vendor Work Order Save Response:", response);
             if (response.status === "Success") {
                 Swal.fire({
                     position: "top-end",
@@ -4808,7 +4791,7 @@ $("#btnSaveFoodWastage").on("click", function () {
         FoodJson: JSON.stringify(foodList)
     };
 
-    console.log("📦 Save Food Wastage Payload:", payload);
+    //console.log("📦 Save Food Wastage Payload:", payload);
 
     $.ajax({
         url: "/api/FoodWastage/SaveFoodWastage",
@@ -4896,7 +4879,7 @@ $("#btnSavePayment").click(function () {
         ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
     };
 
-    console.log("Save Payment Payload :", payload);
+    //console.log("Save Payment Payload :", payload);
 
     $("#btnSavePayment").prop("disabled", true);
 
@@ -4975,7 +4958,7 @@ function loadPaymentModeDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("payment mode res:", res);
+            //console.log("payment mode res:", res);
             const ddl = $("#PaymentModal_Mode, #PaymentDetails_Mode");
             ddl.empty().append('<option value="0">--Select--</option>');
 
@@ -5001,14 +4984,14 @@ function loadPaymentHistory(bookingId) {
         PaymentId: 0,      
         BookingId: bookingId        
     };
-    console.log("loadPaymentHistory payload:", payload);
+    //console.log("loadPaymentHistory payload:", payload);
     $.ajax({
         url: "/api/Booking_Payments/GetBookingPayments",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("Booking_Payments res:", res);
+            //console.log("Booking_Payments res:", res);
             if (res?.status === "Success") {
                 // HIDE download Alll btn
                 $(".btn-download-all").addClass("d-none");

@@ -53,6 +53,11 @@
     gap: 8px;
     white-space: nowrap;
 }
+    .master_link .dropdown-link svg {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+    }
 .master_link .menu-text {
     display: inline-block;
     width: 180px; /* 🔧 fixed label width */
@@ -271,8 +276,8 @@
 }
 
 .avatar img, .avatar .avatar-name {
-    height: 70%;
-    width: 70%;
+    height: 90%;
+    width: 90%;
 }
 
 /* Loader overlay */

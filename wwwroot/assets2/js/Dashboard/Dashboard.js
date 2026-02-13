@@ -7,12 +7,9 @@ $(document).ready(function () {
     loadBookingSubEventTypeCorporate();
     loadBookingSubEventTypeFamilyFunction();
 
-    loadYearDropdown();
     loadComparativeInsightsChart("last3months");
 
-    const currentYear = new Date().getFullYear();
-    loadOverallBookingsStatistics(currentYear);
-    $("#yearDropdown").text(currentYear);
+    loadYearDropdown(); //loadOverallBookingsStatistics
 
     AppSignalR.subscribe(() => {
         //console.log("page refresh");
@@ -23,8 +20,8 @@ $(document).ready(function () {
         loadBookingSubEventTypeFamilyFunction();
 
         loadComparativeInsightsChart("last3months");
-
-        loadOverallBookingsStatistics(currentYear);
+        loadYearDropdown();
+        //loadOverallBookingsStatistics(currentYear);
         $("#yearDropdown").text(currentYear);
     });
 
@@ -941,86 +938,86 @@ $(".pie-chart-filter .dropdown-item").on("click", function (e) {
     loadLeadSourcePieChart(filterText);
 });
 
-    
+
 // Overall Bookings Statistics  --- START ------------------------
-function loadOverallBookingsStatistics2(year) {
-    
+function loadYearDropdown() {
     $.ajax({
-        url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            SelectedYear: year,
-            IsThisYear: year === new Date().getFullYear()
-        }),
-        success: function (res) {
-            if (res.status === 'Success') {
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const currentMonth = new Date().getMonth(); // 0–11
+        url: "/api/YearMaster/GetYearList",
+        type: "GET",
+        success: function (response) {
 
-                const dataMap = {};
-                res.data.forEach(d => {
-                    dataMap[d.MonthNo] = d;
-                });
+            if (response.status === "Success" && response.data.length > 0) {
 
-                const chartData = months.map((m, i) => {
-                    const d = dataMap[i + 1];
-                    const TotalAmount = d && d.TotalAmount ? d.TotalAmount : 0; // instead of 0
-                    const BookingQty = d && d.BookingQty ? d.BookingQty : 0; // instead of 0
-                    const TotalEvents = d && d.TotalEvents ? d.TotalEvents : 0; // instead of 0
-                    const FamilyEvents = d && d.TotalFamilyFunctionCount ? d.TotalFamilyFunctionCount : 0;
-                    const CorporateEvents = d && d.TotalCorporateCount ? d.TotalCorporateCount : 0;
+                let html = "";
+                let currentYear = new Date().getFullYear();
+                let selectedYearId = null;
+                let selectedYearName = null;
 
-                    return { y: m, TotalAmount ,BookingQty, TotalEvents, FamilyEvents, CorporateEvents };
-                });
+                response.data.forEach(function (item) {
 
-                $('#bar-chart').empty();
+                    const isCurrentYear = parseInt(item.YearName) === currentYear;
 
-                Morris.Bar({
-                    element: 'bar-chart',
-                    data: chartData,
-                    xkey: 'y',
-                    ykeys: ['TotalEvents', 'FamilyEvents', 'CorporateEvents'], // all 3 bars
-                    labels: ['Total Events', 'Family Functions', 'Corporate Events'],
-                    barColors: ['#f39c12', '#8e44ad', '#e74c3c'],
-                    hideHover: 'auto',
-                    resize: true,
-                    xLabelAngle: 45,
-                    barGap: 4,
-                    barSizeRatio: 0.55,
-                    hoverCallback: function (index, options, content, row) {
-                        return `
-                            <strong>${row.y} (${year})</strong><br/>
-                            Booking Qty: ${row.BookingQty}<br/>
-                            Total Amount: ${row.TotalAmount}<br/>
-                            <span style="color:#f39c12;">Total Events: ${row.TotalEvents}</span><br/>
-                            <span style="color:#8e44ad;">Family Functions: ${row.FamilyEvents}</span><br/>
-                            <span style="color:#e74c3c;">Corporate Events: ${row.CorporateEvents}</span>
-                        `;
+                    if (isCurrentYear) {
+                        selectedYearId = item.Id;
+                        selectedYearName = item.YearName;
                     }
+
+                    html += `
+                        <li>
+                            <a class="dropdown-item year-option ${isCurrentYear ? 'active' : ''}"
+                               href="#"
+                               data-id="${item.Id}"
+                               data-year="${item.YearName}">
+                               ${item.YearName}
+                            </a>
+                        </li>`;
                 });
+
+                $("#yearDropdownMenu").html(html);
+
+                // 🔥 Set default dropdown text
+                if (selectedYearId) {
+                    $("#yearDropdown").text(currentYear);
+                    loadOverallBookingsStatistics(selectedYearId, selectedYearName);
+                }
             }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading year list");
         }
     });
 }
 
-let bookingBarChart;
-function loadOverallBookingsStatistics(year) {
+$(document).on("click", ".year-option", function (e) {
+    e.preventDefault();
 
+    $(".year-option").removeClass("active");
+    $(this).addClass("active");
+
+    const selectedYearId = $(this).data("id");
+    const yearText = $(this).data("year");
+
+    $("#yearDropdown").text(yearText);
+
+    console.log("Selected YearId:", selectedYearId);
+
+    loadOverallBookingsStatistics(selectedYearId, yearText);
+});
+
+let bookingBarChart;
+function loadOverallBookingsStatistics(yearId, yearName) {
     $.ajax({
-        url: '/api/Dashboard/GetDashboardEventSummaryYearWise',
+        url: '/api/Dashboard/Dashboard_GetOverallBookingsStatistics',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({
-            SelectedYear: year,
-            IsThisYear: year === new Date().getFullYear()
+            YearId: yearId
         }),
         success: function (res) {
 
             if (res.status !== 'Success') return;
 
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             const dataMap = {};
             res.data.forEach(d => {
@@ -1050,8 +1047,7 @@ function loadOverallBookingsStatistics(year) {
                 bookingBarChart.destroy();
             }
 
-            bookingBarChart = new Chart(
-                document.getElementById("bookingBarChart"),
+            bookingBarChart = new Chart(document.getElementById("bookingBarChart"),
                 {
                     type: "bar",
                     data: {
@@ -1128,7 +1124,7 @@ function loadOverallBookingsStatistics(year) {
                                                 margin-bottom:8px;
                                                 color:#111827;
                                             ">
-                                                ${row.month} (${year})
+                                                ${row.month} (${yearName})
                                             </div>
 
                                             <div style="font-size:13px; color:#f39c12;">
@@ -1195,6 +1191,9 @@ function loadOverallBookingsStatistics(year) {
                     }
                 }
             );
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading Overall-Bookings-Statistics");
         }
     });
 }
@@ -1203,61 +1202,6 @@ function loadOverallBookingsStatistics(year) {
 
 
 //Comparative Insights Chart --- START --------------------------------
-function loadYearDropdown() {
-    $.ajax({
-        url: "/api/YearMaster/GetYearList",
-        type: "GET",
-        success: function (response) {
-            if (response.status === "Success" && response.data.length > 0) {
-
-                let html = "";
-
-                // 🔹 API YEARS
-                response.data.forEach(function (item) {
-                    html += `
-                        <li>
-                            <a class="dropdown-item year-option"
-                               href="#"
-                               data-id="${item.Id}"
-                               data-year="${item.YearName}">
-                               ${item.YearName}
-                            </a>
-                        </li>`;
-                });
-
-                $("#yearDropdownMenu").html(html);
-
-                // 🔹 Default button text
-                // $("#yearDropdown").text("This Year");
-            }
-        },
-        error: function (err) {
-            console.error("Error loading year list", err);
-        }
-    });
-}
-
-$(document).on("click", ".year-option", function (e) {
-    e.preventDefault();
-
-    $(".year-option").removeClass("active");
-    $(this).addClass("active");
-
-    let yearText = $(this).data("year");
-    let selectedYear;
-
-    if (yearText === "thisyear") {
-        selectedYear = new Date().getFullYear();
-        $("#yearDropdown").text("This Year");
-    } else {
-        selectedYear = parseInt(yearText);
-        $("#yearDropdown").text(yearText);
-    }
-
-    console.log("Selected Year:", selectedYear);
-
-    loadOverallBookingsStatistics(selectedYear);
-});
 function loadComparativeInsightsChart(filter) {
 
     const monthCount = filter.replace("last", "").replace("months", "");
@@ -1292,7 +1236,7 @@ const PNL_CATEGORIES = [
     { key: "Electricity", percent: "ElectricityPercent", color: "#03a9f4" },
     { key: "Gas", percent: "GasPercent", color: "#795548" },
     { key: "OtherExpense", percent: "OtherExpensePercent", color: "#607d8b" },
-    { key: "ProfitAndLoss", percent: "ProfitPercent", color: "#4caf50" }
+    { key: "P&L", percent: "ProfitPercent", color: "#4caf50" }
 ];
 function buildPnLCategoryMonthChart2(apiData) {
 

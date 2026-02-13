@@ -58,6 +58,8 @@
         public long? BookingId { get; set; } = 0;
         public long? BanquetId { get; set; } = 0;
         public string? EventDate { get; set; } = null;
+        public long? YearId { get; set; } = 0;
+        public long? MonthId { get; set; } = 0;
     }
 
     public class DeleteBookingCalendarRequest : BaseClass

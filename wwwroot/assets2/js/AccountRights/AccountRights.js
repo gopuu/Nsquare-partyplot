@@ -151,7 +151,6 @@ function loadStaffList() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-
             let html = "";
             res.data.forEach(s => {
                 html += `
@@ -164,6 +163,9 @@ function loadStaffList() {
             });
 
             $("#staffList").html(html);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading StaffMaster");
         }
     });
 }
@@ -179,33 +181,46 @@ function loadAccounts(staffIds = []) {
             console.log("AccountRights res:", res);
 
             let rows = "";
-            let i = 0;
 
-            res.data.forEach(a => {
-                rows += `
-                <tr data-accountid="${a.AccountId}">
-                    <td class="text-muted text-center">${++i}</td>
-                    <td class="fw-medium">${a.AccountName}</td>
+            if (!res || !Array.isArray(res.data) || res.data.length === 0) {
+                rows = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">
+                            No Accounts Found
+                        </td>
+                    </tr>`;
+            }
+            else {
+                let i = 0;
+                res.data.forEach(a => {
+                    rows += `
+                        <tr data-accountid="${a.AccountId}">
+                            <td class="text-muted text-center">${++i}</td>
+                            <td class="fw-medium">${a.AccountName}</td>
 
-                    <td class="text-center">
-                        <input type="checkbox" class="form-check-input chkEdit"
-                               ${a.CanEdit ? "checked" : ""}>
-                    </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input chkEdit"
+                                       ${a.CanEdit ? "checked" : ""}>
+                            </td>
 
-                    <td class="text-center">
-                        <input type="checkbox" class="form-check-input chkView"
-                               ${a.CanView ? "checked" : ""}>
-                    </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input chkView"
+                                       ${a.CanView ? "checked" : ""}>
+                            </td>
 
-                    <td class="text-center">
-                        <input type="checkbox" class="form-check-input chkTransfer"
-                               ${a.CanTransfer ? "checked" : ""}>
-                    </td>
-                </tr>`;
-            });
-
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input chkTransfer"
+                                       ${a.CanTransfer ? "checked" : ""}>
+                            </td>
+                        </tr>`;
+                });
+            }
             $("#rightsTableBody").html(rows);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading AccountRights");
         }
+
     });
 }
 

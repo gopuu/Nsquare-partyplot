@@ -68,7 +68,7 @@
 
     <!--singalR-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script src="~/assets2/js/signalr-settings.js"></script>
+    <script src="~/assets2/js/signalr-settings.js" asp-append-version="true"></script>
     <script>
         AppSignalR.start();
     </script>
@@ -1025,8 +1025,9 @@
                             <img class="rounded-circle imgUserProfile" alt="" />
                         </div> *@
                         <div class="avatar avatar-xl">
-                            <img class="rounded-circle userAvatar" id="imgUserProfile1" src="/assets/img/team/avatar.png" alt="User" />
+                            <img class="rounded-circle userAvatar" id="imgUserProfile1" src="~/assets/img/user.png" alt="User" />
                         </div>
+                        <div class="small mt-1 text-white" id="liveDateTime"></div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border profile-dropdown">
                         <div class="card position-relative border-0">
@@ -1040,7 +1041,6 @@
                                              height="80" />
                                     </div>
                                     <h6 class="mt-2 text-body-emphasis" id="lblUserName"></h6>
-
                                 </div>
                                 <div class="mb-3 mx-3 d-none"><input class="form-control form-control-sm" id="statusUpdateInput" type="text" placeholder="Update your status" /></div>
                             </div>

@@ -66,6 +66,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId == 0 ? 0 : request.BookingId);
                     cmd.Parameters.AddWithValue("@BanquetId", request.BanquetId == 0 ? 0 : request.BanquetId);
                     cmd.Parameters.AddWithValue("@EventDate", request.EventDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@YearId", request.YearId == 0 ? 0 : request.YearId);
+                    cmd.Parameters.AddWithValue("@MonthId", request.MonthId == 0 ? 0 : request.MonthId);
 
                     con.Open();
                     DataTable dataTable = new DataTable();

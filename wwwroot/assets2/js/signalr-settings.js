@@ -16,9 +16,15 @@
             });
         });
 
+        //connection.start()
+        //    .then(() => console.log("✅ SignalR connected"))
+        //    .catch(err => console.error("❌ SignalR error:", err));
+
         connection.start()
-            .then(() => console.log("✅ SignalR connected"))
-            .catch(err => console.error("❌ SignalR error:", err));
+            .catch(err => {
+                handleApiError(null, "SignalRError", err, "SignalR connection failed");
+            });
+
     }
 
     function subscribe(fn) {
