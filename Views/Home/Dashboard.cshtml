@@ -80,7 +80,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <!---------- card start ---------->
+
+                            <!---------- Widgets - start ---------->
                             <div class="row g-3 py-2">
 
                                 <!-- Card 1 : Total Sales -->
@@ -126,7 +127,7 @@
                                 </div>
 
                                 <!-- Card 4 : Events Lost -->
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
@@ -140,20 +141,50 @@
                                 </div>
 
                                 <!-- Card 5 : Upcoming Events -->
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <div class="stat-box bg-mint">
                                         <div class="stat-top mint"></div>
+
                                         <div class="stat-body">
-                                            <span class="kpi-tooltip text-success" id="tooltipUpcomingEvents">
-                                                Upcoming Events <span id="upcomingEventsCount">(0)</span>
-                                            </span>
-                                            <h3 class="value text-success" id="upcomingEventsLost">₹ 0</h3>
+
+                                            <!-- Header with Filter -->
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+
+                                                <span class="kpi-tooltip text-success">
+                                                    Upcoming Events
+                                                    <span id="upcomingEventsCount">(0)</span>
+                                                </span>
+
+                                                <!-- Small Dropdown Filter -->
+                                                <div class="dropdown upcoming-filter">
+                                                    <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                                            type="button"
+                                                            id="upcomingFilterBtn"
+                                                            data-bs-toggle="dropdown">
+                                                        This Month
+                                                    </button>
+
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item active" data-value="thismonth" href="#">This Month</a></li>
+                                                        <li><a class="dropdown-item" data-value="next3month" href="#">Next 3 Months</a></li>
+                                                        <li><a class="dropdown-item" data-value="next6month" href="#">Next 6 Months</a></li>
+                                                        <li><a class="dropdown-item" data-value="next12month" href="#">Next 12 Months</a></li>
+                                                        <li><a class="dropdown-item" data-value="overall" href="#">Overall</a></li>
+                                                        <li><a class="dropdown-item" data-value="customrange" href="#">Custom Range</a></li>
+                                                    </ul>
+                                                </div>
+
+                                            </div>
+
+                                            <h3 class="value text-success" id="upcomingEventsAmount">₹ 0</h3>
                                             <span class="sub">Confirmed future bookings</span>
+
                                         </div>
                                     </div>
                                 </div>
 
                             </div>
+                            <!---------- Widgets - end---------->
 
                             <!---------- Comparative Insights - START ---------->
                             <div class="row g-2 py-2">
@@ -385,34 +416,31 @@
 
                                 <!-- Lead Source -- START -->
                                 <div class="col-md-4">
-                                    <div class="card">
-                                        <!-- Card Header -->
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="mb-0">Lead Source</h5>
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 fw-semibold">Lead Source</h6>
 
-                                            <!-- Filter Dropdown -->
                                             <div class="dropdown pie-chart-filter">
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                <button class="btn btn-sm btn-light border dropdown-toggle"
                                                         type="button"
-                                                        id="filterChartFilter"
+                                                        id="leadSourceFilterBtn"
                                                         data-bs-toggle="dropdown">
                                                     This Month
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterChartFilter">
-                                                    <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                                    <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                                    <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                                    <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                                    <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="#" data-value="yesterday">Yesterday</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-value="last7days">Last 7 Days</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-value="last30days">Last 30 Days</a></li>
+                                                    <li><a class="dropdown-item active" href="#" data-value="thismonth">This Month</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-value="lastmonth">Last Month</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-value="last12months">Last 12 Months</a></li>
                                                 </ul>
                                             </div>
                                         </div>
 
-                                        <!-- Card Body -->
                                         <div class="card-body">
-                                            <div class="pie-chart" style="height:300px;">
-                                                Pie Chart Here
+                                            <div class="position-relative" style="height:300px;">
+                                                <canvas id="leadSourceChart"></canvas>
                                             </div>
                                         </div>
                                     </div>

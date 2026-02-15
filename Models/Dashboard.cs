@@ -56,6 +56,19 @@
         public string? ToDate { get; set; }
 
     }
+    #region Upcoming events count and amount
+    public class DashboardUpcomingEventsRequest
+    {
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+    }
+    public class DashboardUpcomingEventsResponse
+    {
+        public long UpcomingEventsCount { get; set; }
+        public decimal UpcomingEventsAmount { get; set; }
+    }
+    #endregion
 
     public class EventTypePieChart
     {
@@ -138,8 +151,6 @@
         public long? TotalEvents { get; set; }
         public long? EventLostCount { get; set; }
         public decimal? TotalEventsLost { get; set; }
-        public long? UpcomingEventsCount { get; set; }
-        public decimal? UpcomingEventsAmount { get; set; }
     }
     #endregion
 
