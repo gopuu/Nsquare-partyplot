@@ -78,6 +78,7 @@ namespace ERPAdmin.ApiControllers
                     foreach (DataRow dr in dataTable.Rows)
                     {
                         BookingModel booking = new BookingModel();
+                        booking.BookingCalendar_IsBlocked = dr["BookingCalendar_IsBlocked"] == DBNull.Value ? false : Convert.ToBoolean(dr["BookingCalendar_IsBlocked"]);
                         booking.BookingId = dr["BookingId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BookingId"]);
                         booking.EventDate = dr["EventDate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["EventDate"]).ToString("yyyy-MM-dd");
                         booking.EventDate_Format = dr["EventDate_Format"] == DBNull.Value ? "" : Convert.ToString(dr["EventDate_Format"]);

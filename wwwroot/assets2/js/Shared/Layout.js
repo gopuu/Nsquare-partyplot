@@ -358,12 +358,33 @@ function logoutUser() {
     });
 })();
 
-function formatDate(date) {
+function formatDate2(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`; // local date
 }
+function formatDate(date) {
+
+    if (!date) return "";
+
+    // If string → convert to Date
+    if (typeof date === "string") {
+        date = new Date(date);
+    }
+
+    // If still invalid date
+    if (!(date instanceof Date) || isNaN(date)) {
+        return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${day}/${month}/${year}`;
+}
+
 
 //FOR REPORTS - DURATION filter
 function applyQuickRange() {

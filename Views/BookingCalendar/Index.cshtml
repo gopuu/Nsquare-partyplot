@@ -18,6 +18,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0">Booking Calendar</h4>
                         <div class="d-flex gap-2">
+                            <button class="btn btn-outline-dark btn-sm" id="btnBlockHall">Block</button>
                             <button class="btn btn-outline-primary btn-sm d-none" id="bookmapBtn">Bookmap</button>
                             <button class="btn btn-outline-secondary btn-sm d-none" id="toggleViewBtn">List View</button>
                             <button class="btn btn-dark btn-sm d-none">Block</button>
@@ -29,7 +30,14 @@
                     <!-- Calendar View -->
                     <div class="container-fluid py-3" id="calendarView">
                         <div class="scroll-wrapper">
-                            <div class="d-flex flex-column" id="booking-board"></div>
+                            <div class="d-flex flex-column" id="booking-board">
+                                <!-- Loading State -->
+                                <div id="calendarLoader" class="text-center py-5">
+                                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                                    <div class="fw-semibold">Fetching booking data...</div>
+                                    <div class="text-muted small">Please wait while we prepare your calendar.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -2101,6 +2109,76 @@
     </div>
 </div>
 <!-- food Wastage Modal -- formula -- END -->
+
+<!-- hallBlockModal -- START -->
+<div class="modal fade" id="hallBlockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary py-1">
+                <h5 class="modal-title text-white">Block Dates - Maintenance / No Operations</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- FORM -->
+                <input type="hidden" id="blockId_hallBlock" value="0" />
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label>From Date</label>
+                        <input type="date" class="form-control" id="fromDate_hallBlock">
+                    </div>
+                    <div class="col-md-3">
+                        <label>To Date</label>
+                        <input type="date" class="form-control" id="toDate_hallBlock">
+                    </div>
+                    <div class="col-md-6">
+                        <label>Reason</label>
+                        <input type="text" class="form-control" id="reason_hallBlock">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Remarks</label>
+                    <textarea class="form-control" id="remarks_hallBlock"></textarea>
+                </div>
+
+                <!-- Hall List -->
+                <div class="mb-3">
+                    <label>Select Halls</label>
+                    <div id="hallCheckboxContainer" class="d-flex gap-4 flex-wrap">
+                        <!-- Dynamically loaded -->
+                    </div>
+                </div>
+
+                <div class="text-end mb-4">
+                    <button class="btn btn-success btn-sm" id="btnSaveHallBlock">Save</button>
+                </div>
+
+                <hr />
+
+                <!-- GRID -->
+                <h6>Blocked Entries</h6>
+                <table class="table table-bordered table-sm" id="hallBlockTable">
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Reason</th>
+                            <th>Halls</th>
+                            <th width="120">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- hallBlockModal -- END-->
 
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">

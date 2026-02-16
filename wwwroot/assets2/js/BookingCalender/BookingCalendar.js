@@ -1155,7 +1155,7 @@ $(document).on("click", ".btn-saveAddOn", function () {
         }
         //console.log("grandTotal 2:", grandTotal);
 
-        updatePackageCost(); //WORK HERE
+        updatePackageCost();
         //calculateFoodRowTotals(row);
         //recalculatePaymentSummary();
 
@@ -1503,7 +1503,7 @@ async function renderBoard(bookingData = null) {
                 // return `<div class="badge bg-${finalColor} d-block mb-1 ${textColor}">
                 //             ${shiftNames[i]}
                 //         </div>`;
-                const textColor = finalColor === "light" ? "text-black" : "text-white";
+                var textColor = finalColor === "light" ? "text-black" : "text-white";
                 // const dateStr = `${cachedDays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`;
                 // const dateStr_Format = `${cachedDays[dayIndex].date}-${selectedMonth+1}-${selectedYear}`;
                 const yyyy = selectedYear;
@@ -1515,6 +1515,7 @@ async function renderBoard(bookingData = null) {
                 const dateStr_ISO = `${yyyy}-${mm}-${dd}`;                          // ✅ proper yyyy-mm-dd
 
                 const shiftCode = shiftNames[i];
+                console.log("i:", i, ", shiftNames:", shiftNames, ", shiftCode:", shiftCode);
                 const shiftFull = fullShiftName(shiftCode); // fallback if not found
                 var bookingId = 0;
                 var eventName = null;
@@ -1523,7 +1524,11 @@ async function renderBoard(bookingData = null) {
                 var eventDateRange = null;
 
                 // 🔍 Check if this cell is booked in bookingData
-                let isBooked = false;
+                let isBookingConfirmed = false;
+                let isBookingTentative = false;
+                let isBlocked = false;
+                //work HERE
+                console.log("bookingData:", bookingData);
                 if (Array.isArray(bookingData)) {
                     for (const booking of bookingData) {
                         if (booking.BanquetId === hall.Id && booking.ShiftCode === shiftCode) {
@@ -1538,14 +1543,40 @@ async function renderBoard(bookingData = null) {
                                 clientContact = booking.Client_Contact;
                                 eventDateRange = booking.FromDate_Short + ' ' + booking.StartTime_Full + ' - ' + booking.TillDate_Short + ' ' + booking.EndTime_Full;
 
-                                isBooked = true;
+                                if (booking.Booking_TypeId == 2) {
+                                    isBookingTentative = true;
+                                    isBookingConfirmed = false;
+                                    isBlocked = false;
+                                }
+                                else {
+                                    isBookingTentative = false;
+                                    isBookingConfirmed = true;
+                                    isBlocked = false;
+                                }
+
+                                //Block Booking
+                                if (booking.BookingCalendar_IsBlocked) {
+                                    isBookingTentative = false;
+                                    isBookingConfirmed = false;
+                                    isBlocked = true;
+                                }
+
                                 break;
                             }
                         }
                     }
                 }
-                if (isBooked) {
+                if (isBookingConfirmed) {
                     finalColor = "danger"; // 🔴 Mark Confirmed Booked
+                    textColor = "text-white";
+                }
+                else if (isBookingTentative) {
+                    finalColor = "white"; // 🔴 Mark Tentative Booked
+                    textColor = "text-dark";
+                }
+                else if (isBlocked) {
+                    finalColor = "dark"; // 🔴 Mark Tentative Booked
+                    textColor = "text-white";
                 }
 
                 return `<div
@@ -3051,6 +3082,285 @@ Your feedback helps us improve our service.`;
     });
 
     //BOOKING REPORT MODAL ---- END  -------------------------------------------------
+
+    //Hall Block --- START ----------------------------
+    $("#btnBlockHall").click(function () {
+        $("#hallBlockModal").modal("show");
+        resetForm_HallBlock();
+        loadHallBlocks();
+        loadHallList_BlockHall();
+    });
+    function loadHallList_BlockHall() {
+        let container = $("#hallCheckboxContainer");
+        container.empty();
+
+        banquetHallsList.forEach(hall => {
+            container.append(`
+                <div class="form-check">
+                    <input class="form-check-input hall-checkbox" 
+                           type="checkbox" value="${hall.Id}">
+                    <label class="form-check-label">${hall.HallName}</label>
+                </div>
+            `);
+        });
+    }
+
+    $("#btnSaveHallBlock").click(function () {
+
+        let selectedHalls = [];
+        $(".hall-checkbox:checked").each(function () {
+            selectedHalls.push({ HallId: parseInt($(this).val()) });
+        });
+
+        if (selectedHalls.length === 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Hall Required",
+                text: "Please select at least one hall.",
+                confirmButtonColor: "#3085d6"
+            });
+            return;
+        }
+            
+        let payload = {
+            Id: parseInt($("#blockId_hallBlock").val()),
+            FromDate: $("#fromDate_hallBlock").val(),
+            ToDate: $("#toDate_hallBlock").val(),
+            Reason: $("#reason_hallBlock").val(),
+            Remarks: $("#remarks_hallBlock").val(),
+            HallBlockDetailsJson: JSON.stringify(selectedHalls),
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
+        };
+
+        $.ajax({
+            url: "/api/HallBlock/SaveHallBlock",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === "Success") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: res.message,
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+                    resetForm_HallBlock();
+                    loadHallBlocks();
+                }
+                else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: res.message
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save Hall Block Failed");
+            }
+        });
+    });
+    function loadHallBlocks() {
+
+        let tbody = $("#hallBlockTable tbody");
+        tbody.html(`
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    <span class="spinner-border spinner-border-sm"></span>
+                    Loading hall blocks...
+                </td>
+            </tr>
+        `);
+
+        $.ajax({
+            url: "/api/HallBlock/GetHallBlock",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: 0 }),
+            success: function (res) {
+                tbody.empty();
+                if (res.status !== "Success") {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: res.message || "Failed to fetch hall blocks."
+                    });
+                    return;
+                }
+                if (!res.data || res.data.length === 0) {
+                    tbody.html(`
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No hall blocks found.
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                console.log("hallBlock data:", res.data);
+                res.data.forEach(item => {
+
+                    let hallList = item.HallListJson || [];
+
+                    let hallNames = hallList
+                        .map(x => x.HallName)
+                        .filter(name => name) // remove null/undefined
+                        .join(", ");
+
+                    tbody.append(`
+                    <tr>
+                        <td>${item.FromDate2}</td>
+                        <td>${item.ToDate2}</td>
+                        <td>${item.Reason || ""}</td>
+                        <td>${hallNames}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning edit-block" data-id="${item.Id}" title="Edit">
+                                <i class="fa fa-pen-to-square"></i>
+                            </button>
+
+                            <button class="btn btn-sm btn-outline-danger delete-block" data-id="${item.Id}" title="Delete">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+                });
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Load Hall Blocks Failed");
+
+                tbody.html(`
+                <tr>
+                    <td colspan="5" class="text-center text-danger">
+                        Failed to load data.
+                    </td>
+                </tr>
+            `);
+            }
+        });
+    }
+
+    $(document).on("click", ".edit-block", function () {
+
+        let id = $(this).data("id");
+
+        $.ajax({
+            url: "/api/HallBlock/GetHallBlock",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ Id: id }),
+
+            success: function (res) {
+
+                if (res.status !== "Success" || !res.data || res.data.length === 0) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: res.message || "Unable to fetch hall block data."
+                    });
+                    return;
+                }
+
+                let data = res.data[0];
+
+                // ✅ Use correct case
+                $("#blockId_hallBlock").val(data.Id || 0);
+                $("#fromDate_hallBlock").val(data.FromDate ? data.FromDate.split("T")[0] : "");
+                $("#toDate_hallBlock").val(data.ToDate ? data.ToDate.split("T")[0] : "");
+                $("#reason_hallBlock").val(data.Reason || "");
+                $("#remarks_hallBlock").val(data.Remarks || "");
+
+                $(".hall-checkbox").prop("checked", false);
+
+                let hallList = data.HallListJson || [];
+
+                hallList.forEach(h => {
+                    $(`.hall-checkbox[value='${h.HallId}']`).prop("checked", true);
+                });
+
+                $("#btnSaveHallBlock").text("Update");
+
+                $(".modal-body").animate({ scrollTop: 0 }, 300);
+            },
+
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Load Hall Block For Edit Failed");
+            }
+        });
+    });
+
+    $(document).on("click", ".delete-block", function () {
+        let id = $(this).data("id");
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This will delete the hall block.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: "/api/HallBlock/DeleteHallBlock",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    Id: id,
+                    ActionBy: 1
+                }),
+
+                success: function (res) {
+
+                    if (res.status === "Success") {
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Deleted",
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        loadHallBlocks();
+                    }
+                    else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: res.message || "Unable to delete."
+                        });
+                    }
+                },
+
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Hall Block Failed");
+                }
+            });
+
+        });
+    });
+
+    function resetForm_HallBlock() {
+        $("#blockId_hallBlock").val(0);
+        let today = new Date();
+        // Format to yyyy-MM-dd (required for input[type="date"])
+        let formatDateInput = (date) => {
+            return date.toISOString().split("T")[0];
+        };
+        $("#fromDate_hallBlock").val(formatDateInput(today));
+        $("#toDate_hallBlock").val(formatDateInput(today));
+        $("#reason_hallBlock").val("");
+        $("#remarks_hallBlock").val("");
+        $(".hall-checkbox").prop("checked", false);
+        $("#btnSaveHallBlock").text("Save");
+    }
+    //Hall Block --- END ------------------------------
 });
 
 // Invoice GENEARTE -- START --------------------------------

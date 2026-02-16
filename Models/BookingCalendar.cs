@@ -176,6 +176,7 @@
     //GET ALL
     public class BookingModel
     {
+        public bool? BookingCalendar_IsBlocked { get; set; }
         public long? BookingId { get; set; }
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
