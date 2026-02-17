@@ -7,6 +7,12 @@ $(document).ready(function () {
     loadFeedbackDashboard();
     loadDashboardEventInsights();
 
+
+    //Widget count hover
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipTriggerList.forEach(el => {
+        new bootstrap.Tooltip(el);
+    });
 });
 
 
@@ -120,30 +126,30 @@ function renderCategoryRatings(list) {
 
             <!-- Center : Avg Rating -->
             <div class="avg-rating-box">
-                <div class="avg-text">Avg Rating</div>
-                <div class="avg-value">${formatPercent(item.AvgRating)}</div>
-                <div class="avg-sub">Out of 5</div>
+                <div class="avg-text">Avg Rate</div>
+                <div class="avg-value">${item.AvgRating} / 5</div>
+                <div class="avg-sub d-none">Out of 5</div>
             </div>
 
             <!-- Right : Feedback counts -->
             <div class="feedback-box">
                 
                 <div class="feedback-item positive">
-                    <img src="assets2/img/Smiling_Emoji.png">
-                    <div class="count">${item.PositiveCount}</div>
-                    <div class="label">Positive</div>
+                    😊
+                    <div class="count text-success">${item.PositiveCount}</div>
+                    <div class="label text-success">Positive</div>
                 </div>
 
                 <div class="feedback-item neutral">
-                    <img src="assets2/img/Neutral_Face.png">
-                    <div class="count">${item.NeutralCount}</div>
-                    <div class="label">Neutral</div>
+                    😐
+                    <div class="count text-secondary">${item.NeutralCount}</div>
+                    <div class="label text-secondary">Neutral</div>
                 </div>
 
                 <div class="feedback-item negative">
-                    <img src="assets2/img/Very_Sad.png">
-                    <div class="count">${item.NegativeCount}</div>
-                    <div class="label">Negative</div>
+                    🙁
+                    <div class="count text-danger">${item.NegativeCount}</div>
+                    <div class="label text-danger">Negative</div>
                 </div>
 
             </div>
@@ -228,9 +234,7 @@ function renderRatingBreakdown(list) {
                  style="height:${percentValue.toFixed(2)}%">
             </div>
 
-            <div class="emoji">
-                <img src="${item.IconUrl}" width="28">
-            </div>
+            <div class="emoji">${item.IconUrl}</div>
 
             <div class="percent">${formatPercent(item.Percentage)}</div>
             <div class="count">${item.Count} Ratings</div>
@@ -370,14 +374,14 @@ function loadFeedbackDashboard() {
                     if (item.FeedbackType === "Hosts") {
                         $("#hostTitle").text(item.Title);
                         $("#hostTotal").text(item.TotalFeedbacks);
-                        $("#hostAvg").text(item.AverageRating);
+                        $("#hostAvg").text(item.AverageRating + ' / 5');
                         $("#hostNegative").text(item.NegativeFeedbackPercent + "%");
                     }
 
                     if (item.FeedbackType === "Visitors") {
                         $("#visitorTitle").text(item.Title);
                         $("#visitorTotal").text(item.TotalFeedbacks);
-                        $("#visitorAvg").text(item.AverageRating);
+                        $("#visitorAvg").text(item.AverageRating + ' / 5');
                         $("#visitorNegative").text(item.NegativeFeedbackPercent + "%");
                     }
 

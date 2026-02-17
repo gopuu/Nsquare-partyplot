@@ -13,7 +13,7 @@
     <div class="pb-5">
         <div class="row g-4">
             <div class="col-12 col-xxl-12">
-                <div class="row align-items-center justify-content-between mb-4">
+                <div class="row align-items-center justify-content-between mb-2">
                     <div class="col-12">
                         <div class="mb-0">
                             <div class="header-flex">
@@ -39,8 +39,8 @@
                                 </div>
                             </div>
                             <div class="row g-4 align-items-stretch">
-                                <!-- Total Feedback -->
-                                <div class="col-lg-3 col-md-4">
+                                <!--1 Total Feedback -->
+                                <div class="col-lg-2 col-md-4">
                                     <div class="card metric-card">
                                         <div class="metric-top bg-feedback"></div>
                                         <div class="card-body d-flex justify-content-between align-items-center">
@@ -48,15 +48,12 @@
                                                 <div class="metric-title" id="lblTotalFeedback">Total Feedback</div>
                                                 <div class="metric-value" id="valTotalFeedback">0</div>
                                             </div>
-                                            <div class="metric-icon bg-feedback">
-                                                <i class="bi bi-chat-dots"></i>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Avg Rating -->
-                                <div class="col-lg-3 col-md-4">
+                                <!--2 Avg Rating -->
+                                <div class="col-lg-2 col-md-4">
                                     <div class="card metric-card">
                                         <div class="metric-top bg-rating"></div>
                                         <div class="card-body d-flex justify-content-between align-items-center">
@@ -64,51 +61,95 @@
                                                 <div class="metric-title" id="lblAvgRating">Avg Rating</div>
                                                 <div class="metric-value" id="valAvgRating">0</div>
                                             </div>
-                                            <div class="metric-icon bg-rating">
-                                                <i class="bi bi-star-fill"></i>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- AI Assisted -->
-                                <div class="col-lg-3 col-md-4">
+                                <!--3 AI Assisted -->
+                                <div class="col-lg-2 col-md-4">
                                     <div class="card metric-card">
                                         <div class="metric-top bg-ai"></div>
                                         <div class="card-body d-flex justify-content-between align-items-center">
                                             <div>
-                                                <div class="metric-title" id="lblAI">Assisted Reviews & Ratings</div>
+                                                <div class="metric-title" id="lblAI">Assisted Reviews</div>
                                                 <div class="metric-value" id="valAI">0</div>
-                                            </div>
-                                            <div class="metric-icon bg-ai">
-                                                <i class="bi bi-emoji-smile"></i>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Sentiment -->
-                                <div class="col-lg-3 col-md-4">
-                                    <div class="card metric-card metric-width">
-                                        <div class="metric-top bg-feedback"></div>
-                                        <div class="card-body d-flex align-items-center">
+                                <!--4 Sentiment -->
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="card metric-card">
+                                        <div class="metric-top bg-rating"></div>
+                                        <div class="card-body d-flex align-items-center py-3">
                                             <div class="row text-center w-100">
                                                 <div class="col-4 border-end">
-                                                    <img src="~/assets2/img/smiling_emoji.png" class="emoji_icon mb-1" />
-                                                    <div class="metric-title">Positive</div>
+                                                    😊
+                                                    <div class="metric-title text-success">Positive</div>
                                                     <div class="metric-value text-success" id="valPositive">0%</div>
                                                 </div>
                                                 <div class="col-4 border-end">
-                                                    <img src="~/assets2/img/very_sad.png" class="emoji_icon mb-1" />
-                                                    <div class="metric-title">Negative</div>
+                                                    🙁
+                                                    <div class="metric-title text-danger">Negative</div>
                                                     <div class="metric-value text-danger" id="valNegative">0%</div>
                                                 </div>
                                                 <div class="col-4">
-                                                    <img src="~/assets2/img/neutral_face.png" class="emoji_icon mb-1" />
-                                                    <div class="metric-title">Neutral</div>
+                                                    😐
+                                                    <div class="metric-title text-secondary">Neutral</div>
                                                     <div class="metric-value text-secondary" id="valNeutral">0%</div>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--5 Host vs Visitor -->
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="card metric-card">
+                                        <div class="metric-top bg-feedback"></div>
+                                        <div class="card-body py-3">
+
+                                            <div class="row text-center small-metric-row">
+
+                                                <!-- Hosts -->
+                                                <div class="col-6 border-end">
+                                                    <div class="mini-title text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Feedback from Hosts">
+                                                        Hosts Feedback
+                                                    </div>
+                                                    <div class="mini-stat" id="hostTotal" data-bs-toggle="tooltip" data-bs-placement="top" title="Total">0</div>
+                                                    <div class="mini-sub">
+                                                        <span data-bs-toggle="tooltip" data-bs-placement="top" title="Avg Rating">
+                                                            ⭐ <span id="hostAvg">0</span>
+                                                        </span>
+                                                        <span class="text-danger ms-1" id="hostNegative" data-bs-toggle="tooltip" data-bs-placement="top" title="Negative">
+                                                            0%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Visitors -->
+                                                <div class="col-6">
+                                                    <div class="mini-title text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Feedback from Visitors">
+                                                        Visitors Feedback
+                                                    </div>
+                                                    <!-- Total -->
+                                                    <div class="mini-stat" id="visitorTotal" data-bs-toggle="tooltip" data-bs-placement="top" title="Total">0</div>
+                                                    <div class="mini-sub">
+                                                        <!-- Avg Rating -->
+                                                        <span data-bs-toggle="tooltip" data-bs-placement="top" title="Avg Rating">
+                                                            ⭐ <span id="visitorAvg">0</span>
+                                                        </span>
+
+                                                        <!-- Negative -->
+                                                        <span class="text-danger ms-1" id="visitorNegative" data-bs-toggle="tooltip" data-bs-placement="top" title="Negative">
+                                                            0%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -118,14 +159,15 @@
                     </div>
                 </div>
                 <div class="row g-4">
+                    <!--Category wise rating-->
                     <div class="col-md-4">
-                        <div class="card category-card mt-4">
-                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">
+                        <div class="card category-card mt-2">
+                            <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold text-dark">
                                     Category wise rating
                                 </span>
                                 <div class="dropdown chart-filter-rating">
-                                    <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                    <button class="btn btn-outline-light btn-xs dropdown-toggle"
                                             type="button"
                                             id="jobChartFilter"
                                             data-bs-toggle="dropdown"
@@ -149,16 +191,19 @@
                             </div>
                         </div>
                     </div>
+                    <!--Rating Breakdown & Ratings over time-->
                     <div class="col-md-8">
                         <div class="row g-4">
+
+                            <!--Rating Breakdown-->
                             <div class="col-md-6">
-                                <div class="card rating-breakdown-card mt-4">
-                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">
+                                <div class="card rating-breakdown-card mt-2">
+                                    <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
+                                        <span class="fw-bold text-dark">
                                             Rating Breakdown
                                         </span>
                                         <div class="dropdown chart-filter-RatingBreakdown">
-                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                            <button class="btn btn-outline-light btn-xs dropdown-toggle"
                                                     type="button"
                                                     id="ratingBreakdownFilter"
                                                     data-bs-toggle="dropdown"
@@ -178,20 +223,19 @@
                                         </div>
                                     </div>
                                     <div class="card-body">
-                                        <div id="ratingBreakdownContainer"
-                                             class="rating-chart d-flex justify-content-between align-items-end">
-                                        </div>
+                                        <div id="ratingBreakdownContainer" class="rating-chart d-flex justify-content-between align-items-end"></div>
                                     </div>
 
                                 </div>
                             </div>
 
+                            <!--Ratings over time-->
                             <div class="col-md-6">
-                                <div class="card rating-time-card mt-4">
-                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">Ratings over time</span>
+                                <div class="card rating-time-card mt-2">
+                                    <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
+                                        <span class="fw-bold text-dark">Ratings over time</span>
                                         <div class="dropdown chart-filter-ratingtime">
-                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
+                                            <button class="btn btn-outline-light btn-xs dropdown-toggle"
                                                     type="button"
                                                     id="ratingTimeFilter"
                                                     data-bs-toggle="dropdown"
@@ -219,7 +263,7 @@
                                                 <div>🙂</div>
                                                 <div>😐</div>
                                                 <div>😟</div>
-                                                <div>😢</div>
+                                                <div>😡</div>
                                             </div>
                                             <!-- Chart Area -->
                                             <div class="spike-area" id="ratingSpikeArea"></div>
@@ -230,8 +274,7 @@
                                 </div>
                             </div>
 
-                            <!-- 3 -->
-                            <!-- Event Hosts Card -->
+@*                             <!-- Feedback from Event Hosts -->
                             <div class="col-md-6">
                                 <div class="card mt-4 border-0 feedback-card host-card">
 
@@ -251,7 +294,7 @@
                                             </div>
                                             <div class="col-4">
                                                 <div class="stat-value negative" id="hostNegative">0%</div>
-                                                <div class="stat-label">Negative</div>
+                                                <div class="stat-label negative">Negative</div>
                                             </div>
                                         </div>
                                     </div>
@@ -259,6 +302,7 @@
                                 </div>
                             </div>
 
+                            <!-- Feedback from Visitors -->
                             <div class="col-md-6">
                                 <div class="card mt-4 border-0 feedback-card visitor-card">
 
@@ -278,14 +322,14 @@
                                             </div>
                                             <div class="col-4">
                                                 <div class="stat-value negative" id="visitorNegative">0%</div>
-                                                <div class="stat-label">Negative</div>
+                                                <div class="stat-label negative">Negative</div>
                                             </div>
                                         </div>
                                     </div>
 
                                 </div>
                             </div>
-
+ *@
                         </div>
                     </div>
                 </div>
@@ -419,7 +463,6 @@
 
 @section Scripts {
     <script src="~/assets2/js/feedbackdashboard/feedbackdashboard.js" asp-append-version="true"></script>
-
 }
 
 

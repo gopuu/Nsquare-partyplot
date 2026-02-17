@@ -1,6 +1,7 @@
 ﻿const bookingReportModalEl = document.getElementById("bookingReportModal");
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+const sendInvoiceModal = new bootstrap.Modal(document.getElementById('sendInvoiceModal'));
 var invoiceNo = 0;
 var proformaInvoiceNo = 0;
 var gstInvoiceNo = 0;
@@ -104,10 +105,96 @@ $(function () {
 
     //SEND INVOICE -- START
     $(document).on('click', '.btn-send-invoice', function () {
-        var bookingId = $(this).data('bookingid');
-        console.log('Send Invoice BookingId:', bookingId);
+
+        const bookingId = $(this).data('bookingid');
+        const invoiceNo = $(this).data('invoiceno') || 0;
+        const proformaNo = $(this).data('proformano') || 0;
+
+        $("#sendBookingId").val(bookingId);
+        $("#sendInvoiceNo").val(invoiceNo);
+        $("#sendProformaNo").val(proformaNo);
+
+        // 🔹 Change modal title dynamically
+        if (proformaNo) {
+            $("#sendInvoiceModal .modal-title").text("Send Proforma Invoice");
+        } else {
+            $("#sendInvoiceModal .modal-title").text("Send Invoice");
+        }
+
+        $("#sendEmail").val("");
+        $("#sendContact").val("");
+        $("#sendWhatsapp").val("");
+
+        $("#chkEmail, #chkSMS, #chkWhatsapp").prop("checked", false);
+        sendInvoiceModal.show();
     });
-    //SEND INVOICE -- END
+
+    $("#sendEmail").on("input", function () {
+        $("#chkEmail").prop("checked", $(this).val().trim() !== "");
+    });
+
+    $("#sendContact").on("input", function () {
+        $("#chkSMS").prop("checked", $(this).val().trim() !== "");
+    });
+
+    $("#sendWhatsapp").on("input", function () {
+        $("#chkWhatsapp").prop("checked", $(this).val().trim() !== "");
+    });
+
+    $("#btnSendInvoice").click(function () {
+        const email = $("#chkEmail").is(":checked") ? $("#sendEmail").val().trim() : "";
+        const contact = $("#chkSMS").is(":checked") ? $("#sendContact").val().trim() : "";
+        const whatsapp = $("#chkWhatsapp").is(":checked") ? $("#sendWhatsapp").val().trim() : "";
+
+        if (!email && !contact && !whatsapp) {
+            Swal.fire({
+                icon: "warning",
+                title: "Required",
+                text: "Please provide at least one delivery mode."
+            });
+            return;
+        }
+
+        const payload = {
+            BookingId: parseInt($("#sendBookingId").val()),
+            InvoiceNo: $("#sendInvoiceNo").val() || "",
+            ProformaInvoiceNo: $("#sendProformaNo").val() || "",
+            EmailId: email,
+            ContactNo: contact,
+            WhatsappNo: whatsapp,
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
+        };
+
+        const btn = $(this);
+        btn.prop("disabled", true).html(`<span class="spinner-border spinner-border-sm"></span> Sending...`);
+
+        $.ajax({
+            url: "/api/CustomerInvoice/SendCustomerInvoice",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === "Success") {
+                    handleApiSuccess("Invoice Sent");
+                    $("#sendInvoiceModal").modal("hide");
+                }
+                else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: res.message || "Unable to send invoice."
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Send Invoice Failed");
+            },
+            complete: function () {
+                btn.prop("disabled", false).html(`<i class="fa fa-paper-plane me-1"></i>Send`);
+            }
+        });
+    });
+    //SEND INVOICE -- END 
 
     //PDF PROFORMA INVOICE -- START
     $(document).on('click', '.btn-pdf-proforma', function () {
@@ -150,6 +237,11 @@ $(function () {
     // On input change
     $(document).on('input', '.calc', function () {
         recalcRow($(this).closest('tr'));
+        recalcAll();
+    });
+
+    // On Advance input change
+    $(document).on('input', '#advancePaid', function () {
         recalcAll();
     });
 
@@ -258,6 +350,46 @@ $(function () {
             }
         });
     });
+
+    //FILTER - PAYMENT ---- START ---------------------------
+    let selectedPaymentDuration = "thismonth";
+    loadPaymentCollection(selectedPaymentDuration);
+    loadUpcomingPayments(selectedPaymentDuration);
+
+    $(".chart-filter-Payment .payment-option").on("click", function (e) {
+        e.preventDefault();
+
+        const newFilter = $(this).data("value");
+        if (selectedPaymentDuration === newFilter) return;
+
+        selectedPaymentDuration = newFilter;
+
+        $(".payment-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#PaymentChartFilter").text($(this).text());
+
+        loadPaymentCollection(selectedPaymentDuration);
+    });
+    let selectedUpcomingDuration = "thismonth";
+
+    $(".chart-filter-finance .upcoming-option").on("click", function (e) {
+        e.preventDefault();
+
+        const newFilter = $(this).data("value");
+        if (selectedUpcomingDuration === newFilter) return;
+
+        selectedUpcomingDuration = newFilter;
+
+        $(".upcoming-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#UpcomingChartFilter").text($(this).text());
+
+        loadUpcomingPayments(selectedUpcomingDuration);
+    });
+
+    //FILTER - PAYMENT ---- END -----------------------------
 });
 function addItemRow() {
     const row = `
@@ -398,10 +530,19 @@ function recalcAll() {
     $('#subTotal').val(subTotal.toFixed(2));
     $('#totalTaxable').val(subTotal.toFixed(2));
     $('#totalGST').val(totalGST.toFixed(2));
-    $('#grandTotal').val(grandTotal.toFixed(2));
+
+    let actualTotal = parseFloat(grandTotal);
+    // Round to nearest integer
+    let roundedTotal = Math.round(actualTotal);
+    // Calculate roundoff difference
+    let roundOff = roundedTotal - actualTotal;
+
+    // Set values
+    $('#grandTotal').val(roundedTotal.toFixed(2));
+    $('#roundOff').prop('disabled', true).val(roundOff.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount').val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount').prop('disabled', true).val((grandTotal - advance).toFixed(2));
 }
 
 //proforma & invoice -- fetch EDIT -- START
@@ -831,7 +972,7 @@ function renderTable(data) {
         },
         columns: [
             { data: 'BookingId', title: '#BRN' },
-
+            //InvoiceNo / ProformaInvoiceNo
             {
                 data: null,
                 title: 'Invoice No',
@@ -869,21 +1010,21 @@ function renderTable(data) {
             { data: 'HallName', title: 'Banquet' },
             { data: 'ClientName', title: 'Client' },
             { data: 'ClientContactNo', title: 'Contact' },
-
+            //TotalAmount
             {
                 data: 'TotalAmount',
                 title: 'Total Amt.',
                 className: 'text-end',
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
             },
-
+            //OutstandingAmount
             {
                 data: 'OutstandingAmount',
                 title: 'Outstanding Amt.',
                 className: 'text-end',
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
             },
-
+            //Summary
             {
                 data: null,
                 title: 'Summary',
@@ -893,7 +1034,7 @@ function renderTable(data) {
                     Summary
                 </button>`
             },
-
+            //Proforma Invoice - created/edit
             {
                 data: null,
                 title: 'Proforma Invoice',
@@ -909,14 +1050,21 @@ function renderTable(data) {
                                 <i class="fa fa-pen me-1"></i>Edit
                            </button>`
             },
-
+            //Send Proforma
             {
                 data: null,
                 title: 'Send Proforma',
                 render: row =>
-                    `<span class="text-muted fst-italic">Coming Soon</span>`
+                    hasValidNo(row.ProformaInvoiceNo)
+                        ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
+                       data-bookingid="${row.BookingId}"
+                       data-invoiceno=""
+                       data-proformano="${row.ProformaInvoiceNo}">
+                    <i class="fa fa-paper-plane me-1"></i>Send
+                </button>`
+                        : '-'
             },
-
+            //PDF (Proforma)
             {
                 data: null,
                 title: 'PDF (Proforma)',
@@ -930,7 +1078,7 @@ function renderTable(data) {
                                data-proformano="${row.ProformaInvoiceNo}">
                            </i>`                
             },
-
+            //GST Invoice - created/edit    
             {
                 data: null,
                 title: 'GST Invoice',
@@ -945,14 +1093,21 @@ function renderTable(data) {
                                 <i class="fa fa-pen me-1"></i>Edit
                            </button>`           
             },
-
+            //Send GST Invoice
             {
                 data: null,
                 title: 'Send Invoice',
                 render: row =>
-                    `<span class="text-muted fst-italic">Coming Soon</span>`
+                    hasValidNo(row.InvoiceNo)
+                        ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
+                       data-bookingid="${row.BookingId}"
+                       data-invoiceno="${row.InvoiceNo}"
+                       data-proformano="">
+                    <i class="fa fa-paper-plane me-1"></i>Send
+                </button>`
+                        : '-'
             },
-
+            //PDF (GST Invoice)
             {
                 data: null,
                 title: 'PDF (GST)',
@@ -1051,7 +1206,6 @@ function loadSlotDropdown() {
 }
 //SLOT DROPDOWN -- END ------------------------
 
-
 //STATE DROPDOWN --- START ------------------------
 function loadState() {
     $.ajax({
@@ -1074,3 +1228,87 @@ function loadState() {
     });
 }    
 //STATE DROPDOWN --- END ------------------------
+
+
+function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
+
+    $.ajax({
+        url: "/api/FinanceDashboard/GetDashboardPaymentCollectionStatus",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (res) {
+            console.log("res count PaymentCollection finance:", res);
+
+            if (res.status === "Success" && res.data) {
+
+                const paid = res.data.PaidAmount;
+                // const partial = res.data.PartialAmount;
+                const pending = res.data.PendingAmount;
+                const total = res.data.TotalAmount || 1; // avoid divide by zero
+
+                $("#txtPaidAmount").text(formatINR(paid));
+                // $("#txtPartialAmount").text(formatINR(partial));
+                $("#txtPendingAmount").text(formatINR(pending));
+
+                $("#barPaid").css("width", calcPercent(paid, total) + "%");
+                //$("#barPartial").css("width", calcPercent(partial, total) + "%");
+                $("#barPending").css("width", calcPercent(pending, total) + "%");
+            }
+        }
+    });
+}
+
+function loadUpcomingPayments(monthDuration = "thismonth", fromDate = null, toDate = null) {
+
+    $.ajax({
+        url: "/api/FinanceDashboard/GetDashboardUpcomingPayments",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            MonthDuration: monthDuration,
+            FromDate: fromDate,
+            ToDate: toDate
+        }),
+        success: function (res) {
+
+            console.log("UpcomingPayments API:", res);
+
+            let html = "";
+
+            if (res.status === "Success" && Array.isArray(res.data) && res.data.length > 0) {
+
+                res.data.forEach(item => {
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>${item.EventName}</span>
+                            <span class="text-danger">
+                                ₹ ${formatINR(item.Amount)}
+                            </span>
+                        </li>`;
+                });
+
+            } else {
+                html = `
+                    <li class="list-group-item text-muted text-center">
+                        No upcoming payments
+                    </li>`;
+            }
+
+            $("#upcomingPaymentsList").html(html);
+        },
+        error: function () {
+            $("#upcomingPaymentsList").html(`
+                <li class="list-group-item text-danger text-center">
+                    Error loading data
+                </li>
+            `);
+        }
+    });
+}
+
+

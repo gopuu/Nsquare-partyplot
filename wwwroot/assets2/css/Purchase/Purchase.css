@@ -1,4 +1,38 @@
-﻿
+﻿.finance-metric-card {
+    border-radius: 12px;
+    border: 1px solid #f1f1f1;
+}
+
+.metric-label {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.metric-amount {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.vendor-table-wrapper {
+    max-height: 230px; /* ~5 rows */
+    overflow-y: auto;
+}
+
+.vendor-card {
+    border-radius: 12px;
+}
+
+.vendor-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.vendor-table-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d1d1;
+    border-radius: 4px;
+}
+
+
+
 /* MODAL SIZE */
 .modal-95 {
     max-width: 95% !important;

@@ -1,5 +1,16 @@
 ﻿namespace ERPAdmin.Models
 {
+    //send invoice
+    public class SendInvoiceRequest : BaseClass
+    {
+        public long BookingId { get; set; }
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+        public string? EmailId { get; set; }
+        public string? ContactNo { get; set; }
+        public string? WhatsappNo { get; set; }
+    }
+
     public class NextInvoiceNumberResponse
     {
         public long NextInvoiceNo { get; set; }

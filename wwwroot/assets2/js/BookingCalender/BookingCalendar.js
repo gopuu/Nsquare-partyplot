@@ -157,7 +157,6 @@ $("#btnSaveReschedule").on("click", function () {
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-
         success: function (res) {
             if (res.status === "Success") {
                 Swal.fire({
@@ -1531,41 +1530,60 @@ async function renderBoard(bookingData = null) {
                 console.log("bookingData:", bookingData);
                 if (Array.isArray(bookingData)) {
                     for (const booking of bookingData) {
-                        if (booking.BanquetId === hall.Id && booking.ShiftCode === shiftCode) {
-                            const fromDate = new Date(booking.FromDate);
-                            const tillDate = new Date(booking.TillDate);
-                            const currentDate = new Date(dateStr_ISO);
-                            // inclusive range
-                            if (currentDate >= fromDate && currentDate <= tillDate) {
-                                bookingId = booking.BookingId;
-                                eventName = booking.Booking_TypeName;
-                                clientName = booking.Client_Name;
-                                clientContact = booking.Client_Contact;
-                                eventDateRange = booking.FromDate_Short + ' ' + booking.StartTime_Full + ' - ' + booking.TillDate_Short + ' ' + booking.EndTime_Full;
+                        if (booking.BanquetId !== hall.Id)
+                            continue;
 
-                                if (booking.Booking_TypeId == 2) {
-                                    isBookingTentative = true;
-                                    isBookingConfirmed = false;
-                                    isBlocked = false;
-                                }
-                                else {
-                                    isBookingTentative = false;
-                                    isBookingConfirmed = true;
-                                    isBlocked = false;
-                                }
+                        const fromDate = new Date(booking.FromDate);
+                        const tillDate = new Date(booking.TillDate);
+                        const currentDate = new Date(dateStr_ISO);
 
-                                //Block Booking
-                                if (booking.BookingCalendar_IsBlocked) {
-                                    isBookingTentative = false;
-                                    isBookingConfirmed = false;
-                                    isBlocked = true;
-                                }
+                        if (!(currentDate >= fromDate && currentDate <= tillDate))
+                            continue;
 
+                        // 🔴 FULL DAY BLOCK → Block all shifts
+                        if (booking.BookingCalendar_IsBlocked && booking.ShiftCode === "FD") {
+                            isBookingTentative = false;
+                            isBookingConfirmed = false;
+                            isBlocked = true;
+                            break;
+                        }
+
+                        // 🟢 Normal shift-based booking
+                        if (booking.ShiftCode === shiftCode) {
+
+                            // If this shift itself is blocked
+                            if (booking.BookingCalendar_IsBlocked) {
+                                isBookingTentative = false;
+                                isBookingConfirmed = false;
+                                isBlocked = true;
                                 break;
                             }
+
+                            bookingId = booking.BookingId;
+                            eventName = booking.Booking_TypeName;
+                            clientName = booking.Client_Name;
+                            clientContact = booking.Client_Contact;
+                            eventDateRange =
+                                booking.FromDate_Short + ' ' +
+                                booking.StartTime_Full + ' - ' +
+                                booking.TillDate_Short + ' ' +
+                                booking.EndTime_Full;
+
+                            if (booking.Booking_TypeId == 2) {
+                                isBookingTentative = true;
+                                isBookingConfirmed = false;
+                            } else {
+                                isBookingTentative = false;
+                                isBookingConfirmed = true;
+                            }
+
+                            isBlocked = false;
+                            break;
                         }
                     }
                 }
+
+
                 if (isBookingConfirmed) {
                     finalColor = "danger"; // 🔴 Mark Confirmed Booked
                     textColor = "text-white";
@@ -3139,13 +3157,7 @@ Your feedback helps us improve our service.`;
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success",
-                        text: res.message,
-                        timer: 1800,
-                        showConfirmButton: false
-                    });
+                    handleApiSuccess();
                     resetForm_HallBlock();
                     loadHallBlocks();
                 }
@@ -3748,14 +3760,10 @@ $('#btnSaveInvoice_InvoiceModal').on('click', function () {
         contentType: 'application/json',
         data: JSON.stringify(request),
         success: function (res) {
+            handleApiSuccess();
 
             if (res.status === 'Success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Saved',
-                    text: 'Invoice saved successfully',
-                    confirmButtonText: 'OK'
-                });
+                handleApiSuccess();
                 getNextInvoiceNumbers();
                 //resetForm();
                 $('#btnSaveInvoice_InvoiceModal').prop('disabled', true);
@@ -4132,12 +4140,7 @@ function savePrepareOrder() {
         },
         success: function (response) {
             if (response.status === "Success") {
-                Swal.fire({
-                    icon: "success",
-                    title: "Prepare Order Saved",
-                    timer: 1200,
-                    showConfirmButton: false
-                });
+                handleApiSuccess();
                 // Close modal safely
                 $("#prepareOrderModal").modal("hide");
             }
@@ -4804,13 +4807,7 @@ function saveBooking() {
         success: function (response) {
             //console.log("save response:", response);
             if (response.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess();
                 resetBooking();
                 loadBookingCalendar();
                 //CLOSE MODAL
@@ -5024,13 +5021,7 @@ function saveVendorWorkOrder() {
         success: function (response) {
             //console.log("Vendor Work Order Save Response:", response);
             if (response.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Vendor Work Order Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess();
 
                 // 🔹 Close modal
                 const modalEl = document.getElementById("vendorWorkOrderModal");
@@ -5110,13 +5101,7 @@ $("#btnSaveFoodWastage").on("click", function () {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res?.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved",
-                    showConfirmButton: false,
-                    timer: 1000
-                });
+                handleApiSuccess();
                 $('#foodWastageModal').modal('hide');
                  loadBookingCalendar();
             } else {
@@ -5200,14 +5185,7 @@ $("#btnSavePayment").click(function () {
         data: JSON.stringify(payload),
         success: function (response) {
             if (response?.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Payment saved successfully!",
-                    showConfirmButton: false,
-                    timer: 1200
-                });
-
+                handleApiSuccess();
                 $("#paymentForm")[0].reset();
                 $("#PaymentModal").modal("hide");
 

@@ -14,6 +14,26 @@ $(document).ready(function () {
 
     loadYearDropdown(); //loadOverallBookingsStatistics();
 
+    //8 Top Revenue Events -------------- START ------------------------
+    let selectedRevenueDuration = "thismonth";
+    loadTopRevenueEvents(selectedRevenueDuration);
+
+    $(".chart-filter-Revenue .revenuchart-option").on("click", function (e) {
+        e.preventDefault();
+
+        const newFilter = $(this).data("value");
+        if (selectedRevenueDuration === newFilter) return;
+
+        selectedRevenueDuration = newFilter;
+
+        $(".payment-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#RevenueChartFilter").text($(this).text());
+        loadTopRevenueEvents(selectedRevenueDuration);
+    });
+    //8 Top Revenue Events -------------- END ------------------------
+
     AppSignalR.subscribe(() => {
         //console.log("page refresh");
         loadDashboardWidgetCounts();
@@ -27,6 +47,7 @@ $(document).ready(function () {
         $("#yearDropdown").text(currentYear);
     });
 });
+
 //1. Dashboard Widget Counts --- START ------------------------
 function setCurrentMonthDates() {
     const today = new Date();
@@ -1265,6 +1286,53 @@ function generateGradientColors(ctx, chartArea, count) {
 }
 
 //7. Lead Source -END-------------------------------------------
+
+//8 Revenue Chart - START -------------------------------------------
+function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+
+    $.ajax({
+        url: "/api/FinanceDashboard/GetDashboardTopRevenueEvents",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("Top Revenue Events:", res);
+
+            let html = "";
+
+            if (res.status === "Success" && res.data && res.data.length > 0) {
+                res.data.forEach(item => {
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>${item.EventName}</span>
+                            <strong>₹ ${formatINR(item.Amount)}</strong>
+                        </li>`;
+                });
+            } else {
+                html = `
+                    <li class="list-group-item text-muted text-center">
+                        No revenue events found
+                    </li>`;
+            }
+
+            $("#topRevenueEventsList").html(html);
+        },
+        error: function () {
+            $("#topRevenueEventsList").html(`
+                <li class="list-group-item text-danger text-center">
+                    Error loading data
+                </li>
+            `);
+        }
+    });
+}
+
+//8 Revenue Chart - END -------------------------------------------
 
 
 //COUNT WIDGETS - tooltip --- START --------------

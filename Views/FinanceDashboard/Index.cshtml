@@ -3,10 +3,8 @@
     Layout = "_Layout";
 }
 
-
 @section Styles {
     <link href="~/assets2/css/financedashboard/financedashboard.css" rel="stylesheet" asp-append-version="true" />
-
 }
 
 <div class="content">
@@ -18,29 +16,51 @@
         </div>
 
         <div class="col d-flex justify-content-end">
-            <!-- Dropdown last -->
-            <div class="dropdown chart-filter-finance">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                        type="button"
-                        id="jobChartFilter"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                    This Month
+            <div class="d-flex align-items-center gap-2 flex-wrap chart-filter-finance">
+
+                <!-- Filter Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm fw-semibold dropdown-toggle"
+                            type="button"
+                            id="jobChartFilter"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        Filter : This Month
+                    </button>
+
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="jobChartFilter">
+                        <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
+                        <li><a class="dropdown-item sort-option" data-value="days" href="#">Last 7 Days</a></li>
+                        <li><a class="dropdown-item sort-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                        <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
+                        <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                        <li><a class="dropdown-item sort-option" data-value="12months" href="#">Last 12 Months</a></li>
+                        <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+                    </ul>
+                </div>
+
+                <!-- From Date -->
+                <input type="date"
+                       class="form-control form-control-sm"
+                       id="fromDate"
+                       style="width: 140px;">
+
+                <!-- To Date -->
+                <input type="date"
+                       class="form-control form-control-sm"
+                       id="toDate"
+                       style="width: 140px;">
+
+                <!-- Reset Button -->
+                <button class="btn btn-sm btn-outline-danger"
+                        id="btnReset">
+                    Reset
                 </button>
 
-                <ul class="dropdown-menu shadow-sm" aria-labelledby="jobChartFilter">
-                    <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                    <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                    <li><a class="dropdown-item active" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">Last Month</a></li>
-                    <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                    <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                </ul>
             </div>
+
         </div>
     </div>
-
 
     <!-- ================= TOP FINANCEw KPIs ================= -->
     <div class="row g-3 mb-4">
@@ -49,12 +69,17 @@
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold">Total Revenue</h6>
+                    <h6 class="fw-semibold text-success"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Sum of GST Invoices (Grand Total) + Income Transactions within selected date range.">
+                        Total Revenue
+                    </h6>
                     <h3 class="text-success mt-2">
                         <i class="fa fa-inr me-1"></i>
                         <span id="txtTotalRevenue">0</span>
                     </h3>
-                    <small class="text-muted" id="lblRevenueDuration">Current Month</small>
+                    <small class="text-muted d-none" id="lblRevenueDuration">Current Month</small>
                 </div>
             </div>
         </div>
@@ -63,12 +88,17 @@
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold">Outstanding Receivables</h6>
+                    <h6 class="fw-semibold text-warning"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Total Payable Amount from bookings minus total payments received from clients.">
+                        Outstanding Receivables
+                    </h6>
                     <h3 class="text-warning mt-2">
                         <i class="fa fa-inr me-1"></i>
                         <span id="txtOutstanding">0</span>
                     </h3>
-                    <small class="text-muted">Pending from clients</small>
+                    <small class="text-muted d-none">Pending from clients</small>
                 </div>
             </div>
         </div>
@@ -77,257 +107,36 @@
         <div class="col-md-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold">Total Expenses</h6>
+                    <h6 class="fw-semibold text-danger"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Purchase payments + Direct expense transactions recorded in selected period.">
+                        Total Expenses
+                    </h6>
                     <h3 class="text-danger mt-2">
                         <i class="fa fa-inr me-1"></i>
                         <span id="txtExpenses">0</span>
                     </h3>
-                    <small class="text-muted">Purchases + Vendors</small>
+                    <small class="text-muted d-none">Purchases + Vendors</small>
                 </div>
             </div>
         </div>
 
         <!-- Net Profit -->
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 bg-light">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold">Net Profit</h6>
-                    <h3 class="text-primary mt-2">
+                    <h6 class="fw-semibold"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Total Revenue minus Total Expenses for the selected period.">
+                        Net Profit
+                    </h6>
+                    <h3 class="mt-2" id="netProfitWrapper">
                         <i class="fa fa-inr me-1"></i>
                         <span id="txtNetProfit">0</span>
                     </h3>
-                    <small class="text-muted">After all expenses</small>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-
-    <!-- ================= PAYMENT STATUS ================= -->
-    <div class="row g-3 mb-4">
-
-        <!-- Payment Collection -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="col d-flex justify-content-between">
-                        <h6 class="fw-semibold mb-3">Payment Collection Status</h6>
-                        <div class="dropdown chart-filter-Payment">
-                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                    type="button"
-                                    id="PaymentChartFilter"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                This Month
-                            </button>
-
-                            <ul class="dropdown-menu shadow-sm" aria-labelledby="PaymentChartFilter">
-                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Paid</span>
-                        <span class="text-success">₹ <span id="txtPaidAmount">0</span></span>
-                    </div>
-                    <div class="progress mb-3">
-                        <div id="barPaid" class="progress-bar bg-success"></div>
-                    </div>
-
-                    @* <div class="d-flex justify-content-between mb-2">
-                        <span>Partial</span>
-                        <span class="text-warning">₹ <span id="txtPartialAmount">0</span></span>
-                    </div> *@
-                    @* <div class="progress mb-3">
-                        <div id="barPartial" class="progress-bar bg-warning"></div>
-                    </div> *@
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Pending</span>
-                        <span class="text-danger">₹ <span id="txtPendingAmount">0</span></span>
-                    </div>
-                    <div class="progress">
-                        <div id="barPending" class="progress-bar bg-danger"></div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Upcoming Payments -->
-        @*  <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="fw-semibold mb-3">Upcoming Payments (Next 7 Days)</h6>
-
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Wedding – Patel Family</span>
-                            <span class="text-danger">₹ 75,000</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Corporate Event – ABC Ltd</span>
-                            <span class="text-danger">₹ 1,20,000</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Birthday Party – Shah</span>
-                            <span class="text-danger">₹ 45,000</span>
-                        </li>
-                    </ul>
-
-                </div>
-            </div>
-        </div> *@
-
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="col d-flex justify-content-between">
-                        <h6 class="fw-semibold mb-3">Upcoming Payments (Next 7 Days)</h6>
-                        <div class="dropdown chart-filter-finance">
-                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                    type="button"
-                                    id="UpcomingChartFilter"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                This Month
-                            </button>
-
-                            <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
-                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <ul class="list-group list-group-flush" id="upcomingPaymentsList">
-                        <li class="list-group-item text-muted text-center">
-                            Loading...
-                        </li>
-                    </ul>
-
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ================= VENDOR & EVENT FINANCE ================= -->
-    <div class="row g-3">
-
-        <!-- Vendor Payables -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="col d-flex justify-content-between">
-                        <h6 class="fw-semibold mb-3">Vendor Payables</h6>
-                        <div class="dropdown chart-filter-Vendor">
-                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                    type="button"
-                                    id="VendorChartFilter"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                This Month
-                            </button>
-
-                            <ul class="dropdown-menu shadow-sm" aria-labelledby="VendorChartFilter">
-                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Vendor</th>
-                                <th>Pending</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vendorPayablesBody">
-                            <tr>
-                                <td colspan="3" class="text-muted text-center">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Top Revenue Events -->
-        @*  <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="fw-semibold mb-3">Top Revenue Events</h6>
-
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Wedding – Patel Family</span>
-                            <strong>₹ 4,50,000</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Corporate Gala – ABC Ltd</span>
-                            <strong>₹ 3,20,000</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Reception – Mehta</span>
-                            <strong>₹ 2,75,000</strong>
-                        </li>
-                    </ul>
-
-                </div>
-            </div>
-        </div> *@
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="col d-flex justify-content-between">
-                        <h6 class="fw-semibold mb-3">Top Revenue Events</h6>
-                        <div class="dropdown chart-filter-Revenue">
-                            <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                    type="button"
-                                    id="RevenueChartFilter"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                This Month
-                            </button>
-
-                            <ul class="dropdown-menu shadow-sm" aria-labelledby="RevenueChartFilter">
-                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <ul class="list-group list-group-flush" id="topRevenueEventsList">
-                        <li class="list-group-item text-muted text-center">
-                            Loading...
-                        </li>
-                    </ul>
-
+                    <small class="text-muted d-none">After all expenses</small>
                 </div>
             </div>
         </div>

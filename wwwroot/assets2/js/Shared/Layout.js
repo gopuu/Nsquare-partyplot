@@ -1,4 +1,28 @@
-﻿
+﻿function handleApiSuccess(msg = "Saved successfully!") {
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: msg,
+        showConfirmButton: false,
+        timer: 1200,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+}
+function formatINR(amount) {
+    if (!amount) return "0";
+    return amount.toLocaleString("en-IN");
+}
+function calcPercent(value, total) {
+    return Math.round((value / total) * 100);
+}
+
+
 function showLoader() {
     document.getElementById("loaderOverlay").style.display = "flex";
 }

@@ -621,6 +621,26 @@ $(document).ready(function () {
         document.body.removeChild(tempLink);
     });
 
+    //Vendor Widget -------------- START ------------------------    
+    let selectedVendorDuration = "thismonth";
+    loadVendorPayables(selectedVendorDuration);
+
+    $(".chart-filter-Vendor .payment-option").on("click", function (e) {
+        e.preventDefault();
+
+        const newFilter = $(this).data("value");
+        if (selectedVendorDuration === newFilter) return;
+
+        selectedVendorDuration = newFilter;
+
+        $(".payment-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#VendorChartFilter").text($(this).text());
+        loadVendorPayables(selectedVendorDuration);
+    });
+    //Vendor Widget -------------- END ------------------------    
+
 });
 
 //Widgets  -- START ------------------------------------------------------------
@@ -644,6 +664,69 @@ function loadWidgetsData() {
         }
     });
 }
+
+function loadVendorPayables(monthDuration, fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+    $.ajax({
+        url: "/api/FinanceDashboard/GetDashboardVendorPayables",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            console.log("Vendor Payables API:", res);
+
+            let html = "";
+
+            if (res.status === "Success" && Array.isArray(res.data) && res.data.length > 0) {
+                res.data.slice(0, 100).forEach(item => {
+
+                    let badgeClass =
+                        item.Status === "Overdue" ? "bg-danger" :
+                            item.Status === "Pending" ? "bg-warning text-white" :
+                                "bg-secondary";
+
+                    html += `
+                        <tr>
+                            <td>${item.VendorName}</td>
+                            <td class="text-end fw-semibold">
+                                ₹ ${formatINR(item.PendingAmount)}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge ${badgeClass}">
+                                    ${item.Status}
+                                </span>
+                            </td>
+                        </tr>`;
+                });               
+            }
+            else {
+                html = `
+                    <tr>
+                        <td colspan="3" class="text-muted text-center">
+                            No vendor payables
+                        </td>
+                    </tr>`;
+            }
+
+            $("#vendorPayablesBody").html(html);
+        },
+        error: function () {
+            $("#vendorPayablesBody").html(`
+                <tr>
+                    <td colspan="3" class="text-danger text-center">
+                        Error loading data
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
 
 //Widgets  -- END --------------------------------------------------------------
 

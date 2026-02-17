@@ -13,7 +13,6 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class FinanceDashboardController : MasterController
     {
-
         private string connString = string.Empty;
         private readonly string domainUrl;
 

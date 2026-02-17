@@ -1,4 +1,4 @@
-﻿.customerInfo input {
+﻿.customerInfo input:not(#isGstIncluded) {
     padding: 0.5rem 0.4rem;
 }
 

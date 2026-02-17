@@ -11,7 +11,7 @@
 @section Styles {
     <link href="~/assets2/css/customerinvoice/customerinvoice.css" asp-append-version="true" rel="stylesheet" />
 }
-
+<!--MAIN-->
 <div class="content">
     <div class="pb-1">
         <div class="row">
@@ -23,6 +23,94 @@
                         Customer Invoices
                     </h4>
                 </div>
+
+                <!-- ================= PAYMENT WIDGET ================= -->
+                <div class="row g-3 mb-4">
+
+                    <!-- Payment Collection -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="col d-flex justify-content-between">
+                                    <h6 class="fw-semibold mb-3">Payment Collection Status</h6>
+                                    <div class="dropdown chart-filter-Payment">
+                                        <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                                type="button"
+                                                id="PaymentChartFilter"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            This Month
+                                        </button>
+
+                                        <ul class="dropdown-menu shadow-sm" aria-labelledby="PaymentChartFilter">
+                                            <li><a class="dropdown-item payment-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                            <li><a class="dropdown-item payment-option" data-value="days" href="#">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item payment-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item payment-option active" data-value="thismonth" href="#">This Month</a></li>
+                                            <li><a class="dropdown-item payment-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                            <li><a class="dropdown-item payment-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item payment-option" data-value="customrange" href="#">Custom Range</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Paid</span>
+                                    <span class="text-success">₹ <span id="txtPaidAmount">0</span></span>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div id="barPaid" class="progress-bar bg-success"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Pending</span>
+                                    <span class="text-danger">₹ <span id="txtPendingAmount">0</span></span>
+                                </div>
+                                <div class="progress">
+                                    <div id="barPending" class="progress-bar bg-danger"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!--Upcoming Payment-->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="col d-flex justify-content-between">
+                                    <h6 class="fw-semibold mb-3">Upcoming Payment</h6>
+                                    <div class="dropdown chart-filter-finance">
+                                        <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
+                                                type="button"
+                                                id="UpcomingChartFilter"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            This Month
+                                        </button>
+
+                                        <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
+                                            <li><a class="dropdown-item upcoming-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                            <li><a class="dropdown-item upcoming-option" data-value="days" href="#">Last 7 Days</a></li>
+                                            <li><a class="dropdown-item upcoming-option active" data-value="thismonth" href="#">This Month</a></li>
+                                            <li><a class="dropdown-item upcoming-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                            <li><a class="dropdown-item upcoming-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                            <li><a class="dropdown-item upcoming-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                            <li><a class="dropdown-item upcoming-option" data-value="customrange" href="#">Custom Range</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <ul class="list-group list-group-flush" id="upcomingPaymentsList">
+                                    <li class="list-group-item text-muted text-center">
+                                        Loading...
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
 
                 <!-- FILTER CARD -->
                 <div class="card invoice-filter-card shadow-sm mb-3">
@@ -682,9 +770,65 @@
     </div>
 </div>
 
+<!-- Send Invoice Modal --- START --->
+<div class="modal fade" id="sendInvoiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary py-2">
+                <h5 class="modal-title text-white">Send Invoice</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="sendBookingId">
+                <input type="hidden" id="sendInvoiceNo">
+                <input type="hidden" id="sendProformaNo">
+
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" id="sendEmail" class="form-control">
+                    <div class="form-check mt-1">
+                        <input type="checkbox" id="chkEmail" class="form-check-input">
+                        <label class="form-check-label">Send via Email</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Contact No (SMS)</label>
+                    <input type="text" id="sendContact" class="form-control">
+                    <div class="form-check mt-1">
+                        <input type="checkbox" id="chkSMS" class="form-check-input">
+                        <label class="form-check-label">Send via SMS</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>WhatsApp No</label>
+                    <input type="text" id="sendWhatsapp" class="form-control">
+                    <div class="form-check mt-1">
+                        <input type="checkbox" id="chkWhatsapp" class="form-check-input">
+                        <label class="form-check-label">Send via WhatsApp</label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer py-2">
+                <button class="btn btn-primary btn-sm" id="btnSendInvoice">
+                    <i class="fa fa-paper-plane me-1"></i>Send
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 <!-- Booking Info Modal -- END -->
 @section Scripts {
     <script src="~/assets2/js/customerinvoice/CustomerInvoice.js" asp-append-version="true"></script>
-    <script src="~/assets2/js/customerinvoice/Utility.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/Shared/Utility.js" asp-append-version="true"></script>
 }
 

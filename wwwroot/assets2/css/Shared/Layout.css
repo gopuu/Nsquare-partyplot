@@ -1,4 +1,15 @@
-﻿.bg-warning-gradient {
+﻿.bg-rating {
+    background: linear-gradient(90deg,#fbbf24,#f97316);
+}
+
+.btn-xs {
+    padding: 0.15rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    border-radius: 0.2rem;
+}
+
+.bg-warning-gradient {
     background: linear-gradient(135deg, #fff7e6 0%, #ffe8b3 100%);
 }
 

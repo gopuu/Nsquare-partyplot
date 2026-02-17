@@ -462,5 +462,62 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //Send Invoice
+        [HttpPost]
+        [Route("SendCustomerInvoice")]
+        public IActionResult SendCustomerInvoice([FromBody] SendInvoiceRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult errorResult))
+                {
+                    return errorResult;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SendCustomerInvoice", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@BookingId", model.BookingId);
+                    cmd.Parameters.AddWithValue("@InvoiceNo", model.InvoiceNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", model.ProformaInvoiceNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EmailId", model.EmailId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ContactNo", model.ContactNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@WhatsappNo", model.WhatsappNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            apiResponse.status =
+                                Convert.ToInt32(reader["Status"]) == 1 ? "Success" : "Error";
+
+                            apiResponse.message =
+                                reader["Message"]?.ToString() ?? "Unknown response";
+                        }
+                    }
+
+                    con.Close();
+                }
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
     }
 }
