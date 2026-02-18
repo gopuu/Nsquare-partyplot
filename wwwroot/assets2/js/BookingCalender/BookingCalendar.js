@@ -2731,10 +2731,58 @@ document.addEventListener("DOMContentLoaded", function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
         //console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
         $("#paymentModal").modal("show");
+
+        const dueText = $("#bookingReport_OutstandingAmount").text();
+        // Remove ₹ and commas
+        let cleaned = dueText.replace(/[₹,\s]/g, '');
+        let dueAmount = Number(cleaned) || 0;
+        if (dueAmount === 0) {
+            $("#dueMessage").removeClass("d-none");
+            $("#paymentAmount").prop("disabled", true);
+        }
+        else {
+            $("#dueMessage").addClass("d-none");
+            $("#paymentAmount").prop("disabled", false);
+        }
+        $("#paymentDueBalance, #originalDueAmount").val(dueAmount);
+
+        setCurrentPaymentDateTime();
         loadPaymentHistory(bookingId);
         //paymentModalInstance.show();
     });
+    $("#paymentAmount").on("input", function () {
+        const originalDue = Number($("#originalDueAmount").val()) || 0;
+        let payAmount = Number($(this).val()) || 0;
 
+        //if (payAmount > originalDue) {
+        //    payAmount = originalDue;
+        //    $(this).val(originalDue);
+        //}
+
+        const remaining = originalDue - payAmount;
+        $("#paymentDueBalance").val(remaining);
+    });
+
+    function setCurrentPaymentDateTime() {
+
+        const now = new Date();
+
+        // Format date → yyyy-mm-dd (required for input[type=date])
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+
+        const formattedDate = `${year}-${month}-${day}`;
+
+        // Format time → HH:mm (required for input[type=time])
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+
+        const formattedTime = `${hours}:${minutes}`;
+
+        $("#paymentDate").val(formattedDate);
+        $("#paymentTime").val(formattedTime);
+    }
     // 📢 Request Feedback
     document.getElementById("btnRequestFeedback").addEventListener("click", function () {
         const bookingId = getBookingId();
@@ -5115,6 +5163,7 @@ $("#btnSaveFoodWastage").on("click", function () {
         }
     });
 });
+
 
 $(document).on("input", ".wastageInput", function () {
     let total = 0;

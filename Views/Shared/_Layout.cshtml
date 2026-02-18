@@ -80,13 +80,13 @@
     <!--    Main Content-->
     <!-- ===============================================-->
     <main class="main" id="top">
-        <nav class="navbar navbar-top fixed-top navbar-expand-lg" id="navbarTop" style="display:none;" data-navbar-appearance="darker">
+        <nav class="navbar navbar-top fixed-top navbar-expand-lg" id="navbarTop" style="display:none;" data-navbar-appearance="default">
             <div class="navbar-logo">
                 <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTopCollapse" aria-controls="navbarTopCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
                 <a class="navbar-brand me-1 me-sm-3" href="/Home/Dashboard">
                     <div class="d-flex align-items-center">
                         <div class="d-flex align-items-center">
-                            <img src="/assets2/img/icons/infinity_logo1.png" alt="infinity" class="infinitylogo_img" />
+                            <img src="/assets2/img/logos/logo-png.png" alt="infinity" class="infinitylogo_img" />
                             @*<h5 class="logo-text ms-2 d-none d-sm-block" id="companyName" style="color:#003399">Infinity</h5>*@                        
                         </div>
                     </div>
@@ -97,7 +97,7 @@
 
                     <!-- Home -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="uil fs-8 me-2 uil-chart-pie"></span>Home</a>
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="uil fs-8 me-2 uil-chart-pie"></span>Home</a>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item @(currentController == "Home" ? "active" : "")" href="/Home/Dashboard">
@@ -111,7 +111,7 @@
 
                     <!-- Lead Management -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-users-alt"></span>Lead
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -127,7 +127,7 @@
 
                     <!-- Booking Calendar -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-calendar-alt"></span>Booking
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -144,7 +144,7 @@
 
                     <!-- Feedback & CRM -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-star"></span>CRM
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -167,7 +167,7 @@
 
                     <!-- Customer Invoice -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-file-alt"></span>Invoice
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -183,7 +183,7 @@
 
                     <!-- Inventory Management -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-box"></span>Inventory
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -223,7 +223,7 @@
 
                     <!-- Accounting & Finance -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-rupee-sign"></span>Finance
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -231,20 +231,6 @@
                                 <a class="dropdown-item @(currentController == "FinanceDashboard" ? "active" : "")" href="/FinanceDashboard">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="bar-chart-2"></span>Finance Dashboard
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "IncomeTransactions" ? "active" : "")" href="/IncomeTransactions">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="download"></span>Credit (Income) Transactions
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(currentController == "ExpenseTransactions" ? "active" : "")" href="/ExpenseTransactions">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="upload"></span>Debit (Expense) Transactions
                                     </div>
                                 </a>
                             </li>
@@ -260,7 +246,7 @@
 
                     <!-- Reports -->
                     <li class="nav-item dropdown" id="report_NavBar">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-invoice"></span>Reports
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -395,7 +381,7 @@
 
                     <!-- Staff -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-user-circle"></span>Staff
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
@@ -506,7 +492,7 @@
 
                     <!-- Settings / Configuration -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle lh-1 text-white" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                             <span class="uil fs-8 me-2 uil-setting"></span>Settings
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">

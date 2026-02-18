@@ -19,7 +19,7 @@
 
                 <!-- HEADER -->
                 <div class="mb-3">
-                    <h4 class="mb-0 fw-semibold text-warning">
+                    <h4 class="mb-0 fw-bold text-warning">
                         Customer Invoices
                     </h4>
                 </div>
@@ -786,7 +786,7 @@
                 <input type="hidden" id="sendInvoiceNo">
                 <input type="hidden" id="sendProformaNo">
 
-                <div class="mb-3">
+                <div class="mb-3 d-none">
                     <label>Email</label>
                     <input type="email" id="sendEmail" class="form-control">
                     <div class="form-check mt-1">
@@ -795,7 +795,7 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3 d-none">
                     <label>Contact No (SMS)</label>
                     <input type="text" id="sendContact" class="form-control">
                     <div class="form-check mt-1">
@@ -825,6 +825,130 @@
     </div>
 </div>
 
+<!-- paymentModal -- START -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-1">
+                <h5 class="modal-title text-white">Booking Payments</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="row g-2">
+                        <input type="hidden" id="paymentBookingId">
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Mode</label>
+                            <select class="form-select" id="PaymentModal_Mode"></select>
+                        </div>
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Account</label>
+                            <select class="form-select" id="PaymentModal_AccountId"></select>
+                        </div>
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Payment Date</label>
+                            <input type="date" id="paymentDate" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Payment Time</label>
+                            <input type="time" id="paymentTime" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Transaction Id </label>
+                            <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
+                        </div>
+
+                        <div class="col-md-4 mb-1">
+                            <label class="form-label">Cheque Bank</label>
+                            <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
+                        </div>
+
+                        <div class="col-md-2 mb-1">
+                            <label class="form-label">Cheque No</label>
+                            <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
+                        </div>
+
+                        <div class="col-md-3 mb-1">
+                            <label class="form-label">Cheque Date</label>
+                            <input type="date" id="paymentChequeDate" class="form-control">
+                        </div>
+
+                        <div class="col-md-4 mb-1">
+                            <label class="form-label">Amount</label>
+                            <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount" min="0" step="1">
+                        </div>
+
+                        <div class="col-md-4 mb-1">
+                            <label class="form-label">Due Balance</label>
+                            <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
+                            <input type="hidden" id="originalDueAmount">
+                            <small id="dueMessage" class="text-danger d-none">No Due</small>
+                        </div>
+
+                        <div class="col-md-4 mb-1">
+                            <label class="form-label">Next Due Date</label>
+                            <input type="date" id="NextDueDate" class="form-control">
+                        </div>
+                        <div class="col-md-12 mb-1 d-flex justify-content-between align-items-center">
+
+                            <!-- LEFT SIDE -->
+                            <div class="d-flex gap-2">
+                                <input type="button" id="btnwritrnote"
+                                       class="btn btn-outline-primary btn-sm"
+                                       value="Payment Notes">
+                            </div>
+
+                            <!-- RIGHT SIDE -->
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
+                                <button type="button" class="btn btn-sm btn-primary" id="btnSavePayment">
+                                    Save
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- NOTE EDITOR -->
+                        <div class="col-md-12 Payment_editorsContainer mt-2" style="display:none;">
+                            <div id="noteEditor">
+                                <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <hr />
+
+            <!-- Payment History Table -->
+            <div class="px-3 pb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-primary mb-0">
+                        Payment History
+                    </h6>
+
+                    <button class="btn btn-outline-success btn-sm btn-download-all d-none">
+                        <i class="fas fa-download"></i> All Receipts
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <div id="tblPaymentHistory">
+                        <table class="table table-sm table-bordered align-middle mb-0 w-0">
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- paymentModal -- END -->
 
 <!-- Booking Info Modal -- END -->
 @section Scripts {

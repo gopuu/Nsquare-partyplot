@@ -1,4 +1,8 @@
-﻿.page-content {
+﻿#btnSave {
+    height: calc(1.8125rem + 2px); /* matches form-select-sm */
+}
+
+.page-content {
     padding-top: 90px !important;
 }
 

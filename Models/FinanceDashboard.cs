@@ -15,7 +15,6 @@
     public class DashboardPaymentCollectionStatus
     {
         public decimal PaidAmount { get; set; }
-        public decimal PartialAmount { get; set; }
         public decimal PendingAmount { get; set; }
         public decimal TotalAmount { get; set; }
     }

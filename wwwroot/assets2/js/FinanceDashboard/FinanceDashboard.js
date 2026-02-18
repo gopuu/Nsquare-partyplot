@@ -99,6 +99,55 @@
 
         loadFinanceSummary(selectedFinanceDuration);
     });
+
+    //INCOME TABLE - FILTER -- START -------------------------
+    $("#filter_income_apply").on("click", function () {
+        var categoryId = Number($("#filter_income_category").val() || 0);
+        var subCategoryId = Number($("#filter_income_subcategory").val() || 0);
+        var accountId = Number($("#filter_income_account").val() || 0);
+        var paymentModeId = Number($("#filter_income_paymentmode").val() || 0);
+        var fromDate = $("#filter_income_fromdate").val();
+        var toDate = $("#filter_income_todate").val();
+
+        fetchIncomeTransactions(accountId, paymentModeId, categoryId, subCategoryId, fromDate, toDate);
+    });
+    $("#filter_income_reset").on("click", function () {
+
+        $("#filter_income_category").val("0");
+        $("#filter_income_subcategory").val("0");
+        $("#filter_income_fromdate").val("");
+        $("#filter_income_todate").val("");
+
+        console.log("Income filters reset");
+        fetchIncomeTransactions();
+    });
+    //INCOME TABLE - FILTER -- END -------------------------
+
+    //EXPENSE TABLE - FILTER -- START -------------------------
+    $("#filter_expense_apply").on("click", function () {
+        var categoryId = Number($("#filter_expense_category").val() || 0);
+        var subCategoryId = Number($("#filter_expense_subcategory").val() || 0);
+        var accountId = Number($("#filter_expense_account").val() || 0);
+        var paymentModeId = Number($("#filter_expense_paymentmode").val() || 0);
+        var fromDate = $("#filter_expense_fromdate").val();
+        var toDate = $("#filter_expense_todate").val();
+
+        fetchExpenseTransactions(accountId, paymentModeId, categoryId, subCategoryId, fromDate, toDate);
+    });
+    $("#filter_expense_reset").on("click", function () {
+
+        $("#filter_expense_category").val("0");
+        $("#filter_expense_subcategory").val("0");
+        $("#filter_expense_fromdate").val("");
+        $("#filter_expense_todate").val("");
+
+        console.log("Expense filters reset");
+        fetchExpenseTransactions();
+    });
+
+    //EXPENSE TABLE - FILTER -- END -------------------------
+
+
     //FILTER --- END---------------------------------------
 
     //Tooltip - on-hover widget ---START ------
@@ -116,10 +165,10 @@
     loadExpenseSubCategoryDropdown();
     loadAccountDropdown();
     loadPaymentModeDropdown();
+    fetchExpenseTransactions();
 
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('txtTransactionDate_Expense').value = today;
-
     // Add button click
     $("#btn-add-debit-transactions").click(function () {
         resetFormFields_Expense();
@@ -127,7 +176,6 @@
         $("#txtTransactionDate_Expense").val(getTodayLocalDate());
         $("#ExpenseTransactionModal").modal("show");
     });
-
     // Save Expense Transaction
     $("#btnSaveExpenseTransaction").click(function (e) {
         e.preventDefault();
@@ -191,7 +239,7 @@
                     //$("#ExpenseTransactionModal").modal("hide");
 
                     // Reload table or data
-                    //fetchExpenseTransactions();
+                    fetchExpenseTransactions();
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
@@ -201,11 +249,89 @@
             }
         });
     });
+
+    // Edit button click for Expense Transactions
+    $(document).on('click', '.btn-edit-expense', function (event) {
+        var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
+        if (!canEdit) {
+            Swal.fire({
+                icon: "error",
+                title: "Access Denied",
+                text: "You don't have permission to Edit. Please contact admin.",
+                confirmButtonText: "OK"
+            });
+            event.preventDefault();
+            return;
+        }
+
+        resetFormFields_Expense(); // Clear previous values
+
+        // Get the DataTable instance
+        var table = $('#tableMain_Expense table').DataTable();
+
+        // Get the row object for the clicked Edit button
+        var row = $(this).closest('tr');
+        var rowData = table.row(row).data(); // Get the data object for this row
+
+        // Fill modal fields with selected row data
+        $("#ExpenseTransactionId").val(rowData.Id);
+
+        // Load Account dropdown first, then select value
+        loadAccountDropdown(rowData.AccountId);
+
+        // Load Expense Category dropdown, then select value
+        loadExpenseCategoryDropdown(rowData.CategoryId);
+
+        // Load SubCategory based on selected category, then select value
+        loadExpenseSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
+
+        $("#txtAmount_Expense").val(rowData.Amount);
+
+        // Format date as yyyy-mm-dd
+        if (rowData.TransactionDate) {
+            let date = new Date(rowData.TransactionDate);
+            let yyyy = date.getFullYear();
+            let mm = ("0" + (date.getMonth() + 1)).slice(-2);
+            let dd = ("0" + date.getDate()).slice(-2);
+            $("#txtTransactionDate_Expense").val(`${yyyy}-${mm}-${dd}`);
+        }
+        else {
+            $("#txtTransactionDate_Expense").val(new Date().toISOString().split('T')[0]);
+        }
+
+        $("#txtPaymentMode_Expense").val(rowData.PaymentMode);
+        $("#txtReferenceNo_Expense").val(rowData.ReferenceNo);
+        $("#txtNotes_Expense").val(rowData.Notes);
+
+        // Update modal title
+        $("#ExpenseTransactionModalTitle").text("Edit Expense Transaction");
+
+        // Show modal
+        $('#ExpenseTransactionModal').modal('show');
+    });
+
+    // Delete button click in table
+    $(document).on("click", ".btn-delete-expense", function () {
+        // Get DataTable instance
+        var table = $("#tableMain_Expense table").DataTable(); // make sure this matches your table id
+        var rowData = table.row($(this).closest("tr")).data();
+
+        if (!rowData || !rowData.Id) {
+            Swal.fire("Error", "Unable to get selected row data.", "error");
+            return;
+        }
+
+        // Store Id in modal using jQuery data
+        $("#deleteRecordModal").data("id", rowData.Id).data("src", "expense").modal("show");
+    });
+
     //EXPENSE TXN --- END --------------------------
 
     //INCOME TXN --- START -------------------------
     loadIncomeCategoryDropdown();
     loadIncomeSubCategoryDropdown();
+    fetchIncomeTransactions();
+
     document.getElementById('txtTransactionDate_Income').value = today;
 
     // Add button click
@@ -297,8 +423,146 @@
             }
         });
     });
-    //INCOME TXN --- END ---------------------------
 
+    // Edit button click for Income Transactions
+    $(document).on('click', '.btn-edit-income', function (event) {
+        var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
+        if (!canEdit) {
+            Swal.fire({
+                icon: "error",
+                title: "Access Denied",
+                text: "You don't have permission to Edit. Please contact admin.",
+                confirmButtonText: "OK"
+            });
+            event.preventDefault();
+            return;
+        }
+
+        resetFormFields_Income(); // Clear previous values
+
+        // Get the DataTable instance
+        var table = $('#tableMain_Income table').DataTable();
+
+        // Get the row object for the clicked Edit button
+        var row = $(this).closest('tr');
+        var rowData = table.row(row).data(); // Get the data object for this row
+
+        // Fill modal fields with selected row data
+        $("#incomeTransactionId").val(rowData.Id);
+
+        // Load Account dropdown first, then select value
+        loadAccountDropdown(rowData.AccountId);
+
+        // Load Income Category dropdown, then select value
+        loadIncomeCategoryDropdown(rowData.CategoryId);
+
+        // Load SubCategory based on selected category, then select value
+        loadIncomeSubCategoryDropdown(rowData.CategoryId, rowData.SubCategoryId);
+
+        $("#txtAmount_Income").val(rowData.Amount);
+
+        // Format date as yyyy-mm-dd
+        if (rowData.TransactionDate) {
+            let date = new Date(rowData.TransactionDate);
+            let yyyy = date.getFullYear();
+            let mm = ("0" + (date.getMonth() + 1)).slice(-2);
+            let dd = ("0" + date.getDate()).slice(-2);
+            $("#txtTransactionDate_Income").val(`${yyyy}-${mm}-${dd}`);
+        }
+        else {
+            $("#txtTransactionDate_Income").val(new Date().toISOString().split('T')[0]);
+        }
+
+        $("#txtPaymentMode_Income").val(rowData.PaymentMode);
+        $("#txtReferenceNo_Income").val(rowData.ReferenceNo);
+        $("#txtNotes_Income").val(rowData.Notes);
+
+        // Update modal title
+        $("#incomeTransactionModalTitle").text("Edit Income Transactions");
+
+        // Show modal
+        $('#incomeTransactionModal').modal('show');
+    });
+
+    // Delete button click in table
+    $(document).on("click", ".btn-delete-income", function () {
+        // Get DataTable instance
+        var table = $("#tableMain_Income table").DataTable(); // make sure this matches your table id
+        var rowData = table.row($(this).closest("tr")).data();
+
+        if (!rowData || !rowData.Id) {
+            Swal.fire("Error", "Unable to get selected row data.", "error");
+            return;
+        }
+        // Store Id in modal using jQuery data
+        $("#deleteRecordModal").data("id", rowData.Id).data("src", "income").modal("show");
+    });
+
+    // Confirm delete
+    $("#delete-record").click(function () {
+        var id = $("#deleteRecordModal").data("id");
+        var src = $("#deleteRecordModal").data("src");
+
+        if (!id) {
+            Swal.fire("Error", "Record Id not found.", "error");
+            return;
+        }
+
+        let payload = {
+            Id: id,
+            ActionBy: sessionStorage.getItem("userId") ?? 0
+        };
+
+        if (src === "income") {
+            $.ajax({
+                url: "/api/IncomeTransactions/DeleteIncomeTransaction",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire("Deleted!", response.message, "success");
+                        $("#deleteRecordModal").modal("hide");
+
+                        // Reload table
+                        fetchIncomeTransactions();
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Income Transaction Failed!");
+                }
+            });
+        }
+
+        if (src === "expense") {
+            $.ajax({
+                url: "/api/ExpenseTransactions/DeleteExpenseTransaction",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (response.status === "Success") {
+                        Swal.fire("Deleted!", response.message, "success");
+                        $("#deleteRecordModal").modal("hide");
+
+                        // Reload table
+                        fetchExpenseTransactions();
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Expense Transaction FAILED!")
+                }
+            });
+
+        }
+    });
+
+
+    //INCOME TXN --- END ---------------------------
 });
 
 function getTodayLocalDate() {
@@ -351,7 +615,8 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
                 resetFinanceCards();
             }
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fail to load FinanceSummary data")
             resetFinanceCards();
         }
     });
@@ -366,6 +631,95 @@ function resetFinanceCards() {
 
 
 //EXPENSE TRANSACTIONS ----- START --------------------
+// Fetch Expense Transactions
+function fetchExpenseTransactions(accountId = 0, paymentModeId = 0, categoryId = 0, subCategoryId = 0, fromDate = "", toDate = "") {
+    const payload = {
+        Id: 0,               // 0 = all transactions, or pass a specific Id
+        AccountId: accountId,
+        PaymentModeId: paymentModeId,
+        CategoryId: categoryId,
+        SubCategoryId: subCategoryId,
+        FromDate: fromDate,  // format: 'yyyy-mm-dd'
+        ToDate: toDate       // format: 'yyyy-mm-dd'
+    };
+
+    $.ajax({
+        url: "/api/ExpenseTransactions/GetExpenseTransactionList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //console.log("Expense Transactions:", response);
+            var data = response.data || [];
+            renderExpenseTransactionTable(data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fail fetching Expense Transactions.");
+        }
+    });
+}
+
+// Render DataTable
+function renderExpenseTransactionTable(data) {
+    if ($.fn.dataTable.isDataTable("#tableMain_Expense table")) {
+        $("#tableMain_Expense table").DataTable().destroy();
+    }
+
+    // Add Sr No
+    data.forEach((x, i) => x.srno = i + 1);
+
+    $("#tableMain_Expense table").DataTable({
+        data: data,
+        columns: [
+            { data: "srno", title: "Sr. No." },
+            { data: "AccountName", title: "Account" },
+            //{ data: "CategoryName", title: "Category" },
+            { data: "SubCategoryName", title: "Subcategory" },
+            { data: "TransactionDate2", title: "Txn Date" },
+            { data: "PaymentModeName", title: "Payment Mode" },
+            //{ data: "TransactionId", title: "Txn Id" },
+            //{ data: "Notes", title: "Notes" },
+            { data: "Amount", title: "Amount", className: "text-end" },
+            {
+                data: null,
+                title: "Actions",
+                orderable: false,
+                searchable: false,
+                className: "text-center",
+                render: function (data, type, row) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border-0"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item btn-edit-expense" href="#">
+                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item btn-delete-expense" href="#">
+                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+        ],
+        pageLength: 10,
+        ordering: true,
+        searching: true,
+        lengthChange: false,
+        pagingType: "full_numbers"
+    });
+}
+
 // Optional: Reset form fields
 function resetFormFields_Expense() {
     $("#ExpenseTransactionId").val(0);
@@ -398,7 +752,7 @@ function loadExpenseCategoryDropdown(selectedId = "") {
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
 
-            let dropdown = $("#ddlExpenseCategory");
+            let dropdown = $("#ddlExpenseCategory, #filter_expense_category");
             dropdown.empty(); // clear previous values
 
             dropdown.append(`<option value="0">-- Select Category --</option>`);
@@ -412,7 +766,7 @@ function loadExpenseCategoryDropdown(selectedId = "") {
             });
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load dropdown data");
+            handleApiError(xhr, status, error, "Failed to load expense category data");
         }
     });
 }
@@ -429,7 +783,7 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
         success: function (response) {
-            let dropdown = $("#ddlSubCategory_Expense");
+            let dropdown = $("#ddlSubCategory_Expense, #filter_expense_subcategory");
             dropdown.empty();
             dropdown.append('<option value="0">-- Select Subcategory --</option>');
 
@@ -442,13 +796,13 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
             });
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load dropdown data");
+            handleApiError(xhr, status, error, "Failed to load subcategory dropdown data");
         }
     });
 }
 
 // Trigger SubCategory load when Expense Category changes
-$("#ddlExpenseCategory").change(function () {
+$("#ddlExpenseCategory, #filter_expense_category").change(function () {
     let selectedCategoryId = $(this).val();
     loadExpenseSubCategoryDropdown(selectedCategoryId);
 });
@@ -478,7 +832,7 @@ function loadAccountDropdown(selectedId = "") {
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load dropdown data");
+            handleApiError(xhr, status, error, "Failed to load account dropdown data");
         }
     });
 }
@@ -495,7 +849,7 @@ function loadPaymentModeDropdown() {
         data: JSON.stringify(payload),
         success: function (res) {
             console.log("payment mode res:", res);
-            const ddl = $("#txtPaymentMode_Income, #txtPaymentMode_Expense");
+            const ddl = $(".ddlPaymentMode");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
@@ -515,8 +869,94 @@ function loadPaymentModeDropdown() {
     });
 }
 
-
 //INCOME TRANSACTIONS ----- START --------------------
+// Fetch Income Transactions
+function fetchIncomeTransactions(accountId = 0, paymentModeId = 0, categoryId = 0, subCategoryId = 0, fromDate = "", toDate = "") {
+    const payload = {
+        Id: 0,               // 0 = all transactions, or pass a specific Id
+        AccountId: accountId,
+        PaymentModeId: paymentModeId,
+        CategoryId: categoryId,
+        SubCategoryId: subCategoryId,
+        FromDate: fromDate,  // format: 'yyyy-mm-dd'
+        ToDate: toDate       // format: 'yyyy-mm-dd'
+    };
+    console.log("payload:", payload);
+    $.ajax({
+        url: "/api/IncomeTransactions/GetIncomeTransactionList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //  console.log("Income Transactions:", response);
+            var data = response.data || [];
+            renderIncomeTransactionTable(data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "fail fetching Income Transactions");
+        }
+    });
+}
+
+// Render DataTable
+function renderIncomeTransactionTable(data) {
+    if ($.fn.dataTable.isDataTable("#tableMain_Income table")) {
+        $("#tableMain_Income table").DataTable().destroy();
+    }
+
+    // Add Sr No
+    data.forEach((x, i) => x.srno = i + 1);
+    $("#tableMain_Income  table").DataTable({
+        data: data,
+        columns: [
+            { data: "srno", title: "Sr. No." },
+            { data: "AccountName", title: "Account" },
+            //{ data: "CategoryName", title: "Category" },
+            { data: "SubCategoryName", title: "Subcategory" },
+            { data: "TransactionDate2", title: "Txn Date" },
+            { data: "PaymentModeName", title: "Payment Mode" },
+            { data: "Amount", title: "Amount", className: "text-end" },
+            //{ data: "TransactionId", title: "Txn Id" },
+            {
+                data: null,
+                title: "Actions",
+                orderable: false,
+                searchable: false,
+                className: "text-center",
+                render: function (data, type, row) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item btn-edit-income" href="#">
+                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item btn-delete-income" href="#">
+                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+        ],
+        pageLength: 10,
+        ordering: true,
+        searching: true,
+        lengthChange: false,
+        pagingType: "full_numbers"
+    });
+}
+
 // Optional: Reset form fields
 function resetFormFields_Income() {
     $("#incomeTransactionId").val(0);
@@ -539,8 +979,6 @@ function resetFormFields_Income() {
     $("#txtNotes_Income").val("");
     loadNextVoucherNo();
 }
-
-
 function loadIncomeCategoryDropdown(selectedId = "") {
     $.ajax({
         url: "/api/IncomeCategory/GetIncomeCategoryList",
@@ -549,7 +987,7 @@ function loadIncomeCategoryDropdown(selectedId = "") {
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
 
-            let dropdown = $("#ddlIncomeCategory");
+            let dropdown = $("#ddlIncomeCategory, #filter_income_category");
             dropdown.empty(); // clear previous values
 
             dropdown.append(`<option value="0">-- Select Category --</option>`);
@@ -563,12 +1001,10 @@ function loadIncomeCategoryDropdown(selectedId = "") {
             });
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load dropdown data");
+            handleApiError(xhr, status, error, "Failed to load income category dropdown data");
         }
     });
 }
-
-// Load SubCategory dropdown based on selected Income Category
 function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
     if (!categoryId) {
         $("#ddlSubCategory_Income").empty().append('<option value="">-- Select SubCategory --</option>');
@@ -580,7 +1016,9 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
         success: function (response) {
-            let dropdown = $("#ddlSubCategory_Income");
+
+            console.log("GetIncomeSubCategoryList response:", response);
+            let dropdown = $("#ddlSubCategory_Income, #filter_income_subcategory");
             dropdown.empty();
             dropdown.append('<option value="0">-- Select Subcategory --</option>');
 
@@ -593,13 +1031,13 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
             });
         },
         error: function (xhr, status, error) {
-            console.error("Failed to load dropdown data", error);
+            handleApiError(xhr, status, error, "Fail to load Income SubCategory")
         }
     });
 }
 
 // Trigger SubCategory load when Income Category changes
-$("#ddlIncomeCategory").change(function () {
+$("#ddlIncomeCategory, #filter_income_category").change(function () {
     let selectedCategoryId = $(this).val();
     loadIncomeSubCategoryDropdown(selectedCategoryId);
 });

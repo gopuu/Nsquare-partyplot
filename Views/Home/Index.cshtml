@@ -3,6 +3,13 @@
     Layout = "_LayoutEmpty";
 }
 
+@section Styles {
+    <link href="~/assets2/css/Login/Login.css" asp-append-version="true" rel="stylesheet" />
+}
+@section Scripts {
+    <script src="~/assets2/js/Login/Login.js" asp-append-version="true"></script>
+}
+
 <div class="container-fluid bg-body-tertiary dark__bg-gray-1200 min-vh-100 d-flex flex-center">
     <div class="col-lg-9 col-xxl-7 py-3 position-relative">
         <!-- Background shapes -->
@@ -25,7 +32,7 @@
                                 <a class="link-light mb-4 fs-4 fw-bolder d-inline-block" href="/">
                                     <img class="img-fluid me-2"
                                          src="~/assets2/img/TenXSoftware.png"
-                                         alt="Logo" />
+                                         alt="Logo" width="70%" />
                                 </a>
 
                                 <p class="opacity-75 text-white">
@@ -72,22 +79,24 @@
                             </p>
                         </div>
                     </div>
+
                     <!-- ================= RIGHT SIDE ================= -->
                     <div class="col-md-7 d-flex flex-center">
                         <div class="p-4 p-md-5 flex-grow-1">
                             <h3 class="text-center mb-4">Sign In</h3>
+
                             <!-- LOGIN FORM (unchanged logic) -->
                             <form id="loginForm">
                                 <div class="mb-3">
                                     <label class="form-label" for="UserName">Username or Email</label>
-                                    <input class="form-control" type="text" id="UserName" name="UserName" placeholder="UserName" autofocus />
+                                    <input class="form-control" type="text" id="UserName" name="UserName" placeholder="Username or Email" autofocus />
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" for="password">Password</label>
                                     <div class="form-icon-container" data-password="data-password">
                                         <input class="form-control" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" />
-@*                                         <span class="fas fa-key text-body fs-9 form-icon"></span>
- *@                                        <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
+                                            @*<span class="fas fa-key text-body fs-9 form-icon"></span>*@                                        
+                                            <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
                                             <span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span>
                                         </button>
                                     </div>
@@ -100,6 +109,15 @@
                                 </div>
                                 <hr />
                             </form>
+
+                            <!-- Greeting / Quote -->
+                            <div class="text-center mb-4">
+                                <span class="fw-semibold text-dark" id="dailyGreeting"></span>
+                            </div>
+
+                            <!-- Date -->
+                            <div class="text-center text-muted small mb-1" id="currentDate"></div>
+
                         </div>
                     </div>
                 </div>
@@ -107,62 +125,3 @@
         </div>
     </div>
 </div>
-<script>
-
-    $(document).ready(function () {
-        $('#Password').on('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                $('#loginForm').submit();
-            }
-        });
-
-        // Handle form submission
-        $('#loginForm').on('submit', function (e) {
-            e.preventDefault(); // Prevent the form from submitting normally
-            var userName = $('#UserName').val();
-            var password = $('#Password').val();
-            // Prepare the data for the API request
-            var data = {
-                username: userName,
-                password: password,
-                fcm: ''
-            };
-            // Make AJAX request to login API
-            $.ajax({
-                url: '/api/User/Login',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (response) {
-                    console.log("response login:", response);
-                    if (response.status === 'Success' && response.data !== null) {
-                        sessionStorage.setItem('isSuperUser', response.data.issuperuser);
-                        sessionStorage.setItem('userId', response.data.userid);
-                        sessionStorage.setItem('userName', response.data.username);
-                        sessionStorage.setItem('userImage', response.data.userimage);
-                        sessionStorage.setItem('token', response.data.token);
-                        sessionStorage.setItem('companyid', response.data.companyid);
-                        sessionStorage.setItem('companyname', response.data.companyname);
-                        sessionStorage.setItem('companylogo', response.data.companylogo);
-
-                        window.location.href = '/Home/Dashboard';
-                    }
-                    else {
-                        $('#errorMessage').text(response.message);
-                        ajaxActiveCount--;
-                    }
-                },
-                error: function (xhr, status, error) {
-                    ajaxActiveCount--;
-                    handleApiError(xhr, status, error, 'Login failed');
-                    // Handle any errors
-                    $('#errorMessage').text('Login failed. Please try again.');
-                },
-                complete: function () {
-                    ajaxActiveCount++;
-                }
-            });
-        });
-    });
-</script>

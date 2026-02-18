@@ -46,7 +46,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Id", request.Id);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
+                    cmd.Parameters.AddWithValue("@SubCategoryId", request.SubCategoryId);
                     cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ToDate", (object)request.ToDate ?? DBNull.Value);
 
@@ -70,7 +72,8 @@ namespace ERPAdmin.ApiControllers
                         SubCategoryName = Convert.ToString(row["SubCategoryName"]),
 
                         Amount = Convert.ToDecimal(row["Amount"]),
-                        TransactionDate = Convert.ToDateTime(row["TransactionDate"]).ToString("yyyy-MM-dd"),
+                        TransactionDate = Convert.ToString(row["TransactionDate"]),
+                        TransactionDate2 = Convert.ToString(row["TransactionDate2"]),
                         PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
                         PaymentModeName = Convert.ToString(row["PaymentModeName"]),
                         TransactionId = Convert.ToString(row["TransactionId"]),

@@ -14,6 +14,7 @@
 
         public decimal Amount { get; set; }
         public string? TransactionDate { get; set; }
+        public string? TransactionDate2 { get; set; }
         public long? PaymentModeId { get; set; }
         public string? PaymentModeName { get; set; }
         public string? TransactionId { get; set; }
@@ -27,7 +28,9 @@
     {
         public long Id { get; set; } = 0;
         public long AccountId { get; set; } = 0;
+        public long PaymentModeId { get; set; } = 0;
         public long CategoryId { get; set; } = 0;
+        public long SubCategoryId { get; set; } = 0;
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
     }

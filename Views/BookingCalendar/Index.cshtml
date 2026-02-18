@@ -16,7 +16,7 @@
                 <div class="mb-12">
                     <!-- Title + Controls -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Booking Calendar</h4>
+                        <h4 class="mb-0 fw-bold text-warning">Booking Calendar</h4>
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-dark btn-sm" id="btnBlockHall">Block</button>
                             <button class="btn btn-outline-primary btn-sm d-none" id="bookmapBtn">Bookmap</button>
@@ -1281,7 +1281,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-1">
-                <h5 class="modal-title text-white">Add Payment Details</h5>
+                <h5 class="modal-title text-white">Booking Payments</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -1337,6 +1337,8 @@
                         <div class="col-md-4 mb-1">
                             <label class="form-label">Due Balance</label>
                             <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
+                            <input type="hidden" id="originalDueAmount">
+                            <small id="dueMessage" class="text-danger d-none">No Due</small>
                         </div>
 
                         <div class="col-md-4 mb-1">
@@ -1355,7 +1357,7 @@
                             <!-- RIGHT SIDE -->
                             <div>
                                 <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnSavePayment">Save</button>
+                                <button type="button" class="btn btn-sm btn-primary" id="btnSavePayment">Save</button>
                             </div>
                         </div>
 

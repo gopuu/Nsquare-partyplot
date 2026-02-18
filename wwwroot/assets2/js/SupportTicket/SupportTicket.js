@@ -1,6 +1,5 @@
-﻿$(document).ready(function () {
-   
-    loadSupportTicketData();
+﻿$(document).ready(function () {   
+    fetchData();
     loadTicketTypeDropdown();
     loadPriorityDropdown();
     loadStatusDropdown();
@@ -14,15 +13,12 @@ $("#btn-add").click(function () {
     $("#SupportTicketModal").modal("show");
 });
 
-
-
 // 🔹 Reset Sr No
 function resetSrNo() {
     $("#tblDocuments tbody tr").each(function (index) {
         $(this).find(".srno").text(index + 1);
     });
 }
-
 
 $("#btnSave").click(async function () {
 
@@ -85,7 +81,7 @@ $("#btnSave").click(async function () {
                     timer: 1000
                 });
                 $("#SupportTicketModal").modal("hide");
-                loadSupportTicketData();
+                fetchData();
             } else {
                 Swal.fire("Info", res.message, "info");
             }
@@ -130,7 +126,7 @@ $("#delete-record").click(function () {
                 });
             }
             $("#deleteRecordModal").modal("hide");
-            loadSupportTicketData();
+            fetchData();
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Delete SupportTicket Type Error");
@@ -152,7 +148,7 @@ function resetSupportTicketForm() {
     addDocumentRow();
 }
 
-function loadSupportTicketData() {
+function fetchData() {
     $.ajax({
         url: "/api/SupportTicket/GetSupportTicketList",
         type: "POST",
@@ -193,19 +189,19 @@ function renderSupportTicketTable(data) {
                         : "<span class='badge bg-danger'>No</span>";
                 }
             },
-            {
-                data: null,
-                title: "Action",
-                render: function () {
-                    return `
+            //{
+            //    data: null,
+            //    title: "Action",
+            //    render: function () {
+            //        return `
 
 
-                        <button class="btn btn-outline-danger btn-sm btn-delete">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    `;
-                }
-            }
+            //            <button class="btn btn-outline-danger btn-sm btn-delete">
+            //                <i class="fa fa-trash"></i>
+            //            </button>
+            //        `;
+            //    }
+            //}
         ]
     });
 }

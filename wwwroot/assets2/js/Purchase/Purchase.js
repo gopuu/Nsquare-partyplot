@@ -1107,7 +1107,7 @@ function renderTable(data) {
 
                     if (remain > 0) {
                         return `
-                            <button class="btn btn-sm btn-action-xss btn-outline-warning btn-remaining"
+                            <button class="btn btn-sm btn-action-xss btn-outline-danger btn-remaining"
                                     data-id="${d.Id}"
                                     data-pono="${d.PONo ?? ''}">
                                 ₹ ${remain}

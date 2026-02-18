@@ -1,18 +1,24 @@
 ﻿@{
-    ViewData["Title"] = "UserRights";
+    ViewData["Title"] = "User Rights";
     Layout = "_Layout";
 }
 
 @*UserRights*@
 <div class="container-fluid page-content">
     <div class="card shadow-sm">
-        <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center py-2 px-3">
+        <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2 px-3">
             <!-- LEFT TITLE -->
-            <h5 class="mb-0 text-warning">User Rights Master</h5>
+            <h5 class="mb-0 text-white">User Rights</h5>
             <!-- RIGHT SIDE DROPDOWN + BUTTON -->
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-3 align-items-stretch">
+
                 <select id="ddlStaff" class="form-select form-select-sm"></select>
-                <button class="btn btn-outline-warning btn-sm" id="btnSave">Save</button>
+
+                <button class="btn btn-outline-light btn-sm d-flex align-items-center px-4"
+                        id="btnSave">
+                    <i class="fa fa-save me-2"></i>
+                    Save
+                </button>
             </div>
         </div>
         <div class="card-body">

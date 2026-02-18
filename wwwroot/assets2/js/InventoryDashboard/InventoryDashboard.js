@@ -156,9 +156,19 @@ function GetCategoryMasterData() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
-            $("#categoryFilter").empty().append(`<option value="0">Filter By Category</option>`);
+            const dropdown = $("#categoryFilter");
+
+            dropdown.empty().append(`<option value="0">Filter By Category</option>`);
+
             response.data.forEach(c => {
-                $("#categoryFilter").append(`<option value="${c.Id}">${c.CategoryName}</option>`);
+                dropdown.append(`<option value="${c.Id}">${c.CategoryName}</option>`);
+            });
+
+            dropdown.select2({
+                placeholder: "Filter By Category",
+                allowClear: true,
+                width: '50%',   // 🔥 increase by 30%
+                //width: 'resolve'
             });
         },
         error: function (xhr, status, error) {
@@ -277,7 +287,7 @@ function renderStockOutSummary(data) {
 
     // Header row
     container.append(`
-        <div class="d-flex fw-bold text-muted border-bottom pb-2 mb-2 small">
+        <div class="d-flex fw-bold text-muted border-bottom pb-2 mb-2 small stockout-header">
             <div class="flex-fill">Raw Material</div>
             <div class="text-center d-none" style="width:120px;">Count</div>
             <div class="text-end" style="width:150px;">Total Qty</div>
@@ -285,9 +295,8 @@ function renderStockOutSummary(data) {
     `);
 
     data.forEach(item => {
-
         container.append(`
-            <div class="d-flex align-items-center py-2 border-bottom small">
+            <div class="d-flex align-items-center py-2 border-bottom small stockout-row">
                 <div class="flex-fill fw-semibold">
                     ${item.RawMaterialName}
                 </div>

@@ -1,0 +1,42 @@
+﻿.date-filter {
+    width: 130px;
+    background-color: #fff;
+}
+
+.stockout-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stockout-list::-webkit-scrollbar-thumb {
+    background-color: #d0d0d0;
+    border-radius: 4px;
+}
+
+#stockList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#stockList::-webkit-scrollbar-thumb {
+    background-color: #d0d0d0;
+    border-radius: 4px;
+}
+
+.stockout-row {
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    cursor: pointer;
+}
+
+    .stockout-row:hover {
+        background-color: #f8f9fa; /* light gray */
+    }
+.stockout-header {
+    background-color: #f1f3f5; /* soft gray */
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 32px;
+    padding: 2px 6px;
+}
+

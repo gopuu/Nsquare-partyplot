@@ -2,6 +2,8 @@
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 const sendInvoiceModal = new bootstrap.Modal(document.getElementById('sendInvoiceModal'));
+const paymentModal = document.getElementById('paymentModal');
+
 var invoiceNo = 0;
 var proformaInvoiceNo = 0;
 var gstInvoiceNo = 0;
@@ -125,7 +127,8 @@ $(function () {
         $("#sendContact").val("");
         $("#sendWhatsapp").val("");
 
-        $("#chkEmail, #chkSMS, #chkWhatsapp").prop("checked", false);
+        $("#chkEmail, #chkSMS").prop("checked", false);
+        $("#chkWhatsapp").prop("checked", true);
         sendInvoiceModal.show();
     });
 
@@ -146,12 +149,21 @@ $(function () {
         const contact = $("#chkSMS").is(":checked") ? $("#sendContact").val().trim() : "";
         const whatsapp = $("#chkWhatsapp").is(":checked") ? $("#sendWhatsapp").val().trim() : "";
 
-        if (!email && !contact && !whatsapp) {
+        //if (!email && !contact && !whatsapp) {
+        if (!whatsapp) {
             Swal.fire({
                 icon: "warning",
                 title: "Required",
-                text: "Please provide at least one delivery mode."
+                //text: "Please provide at least one delivery mode."
+                text: "WhatsApp number is required!"
             });
+            return;
+        }
+
+        // Remove spaces & non-numeric characters
+        const cleanedNumber = whatsapp.replace(/\D/g, '');
+        if (cleanedNumber.length !== 10) {
+            Swal.fire("Validation", "Enter valid 10-digit WhatsApp number!", "warning");
             return;
         }
 
@@ -390,7 +402,155 @@ $(function () {
     });
 
     //FILTER - PAYMENT ---- END -----------------------------
+
+    //OUTSTANDING PAYMENT
+    $("#btnSavePayment").click(function () {
+        // 🔹 Get values
+        let bookingId = Number($("#paymentBookingId").val() || 0);
+        let accountId = Number($("#PaymentModal_AccountId").val());
+        let modeId = Number($("#PaymentModal_Mode").val());
+        let paymentDate = $("#paymentDate").val();
+        let paymentTime = $("#paymentTime").val();
+        let txnId = $("#paymentTxn").val();
+        let chequeBank = $("#paymentChequebank").val();
+        let chequeNo = $("#paymentChequeNo").val();
+        let chequeDate = $("#paymentChequeDate").val();
+        let amount = Number($("#paymentAmount").val() || 0);
+        let dueBalance = Number($("#paymentDueBalance").val() || 0);
+        let nextDueDate = $("#NextDueDate").val();
+
+        // 🔹 Basic Validation
+        if (!bookingId) {
+            Swal.fire("Validation", "Booking Id missing!", "warning");
+            return;
+        }
+        if (!paymentDate) {
+            Swal.fire("Validation", "Payment date is required!", "warning");
+            return;
+        }
+        if (!amount || amount <= 0) {
+            Swal.fire("Validation", "Valid amount is required!", "warning");
+            return;
+        }
+
+        // 🔹 Payload (matches SaveBooking_Payments procedure)
+        const payload = {
+            BookingId: bookingId,
+            AccountId: accountId,
+            ModeId: modeId,
+            DateOfPayment: paymentDate,
+            PaymentTime: paymentTime || null,
+            TxnId: txnId || null,
+            ChequeBank: chequeBank || null,
+            ChequeNo: chequeNo || null,
+            ChequeDate: chequeDate || null,
+            Amount: amount,
+            DueBalance: dueBalance || 0,
+            NextDueDate: nextDueDate || null,
+            ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
+        };
+
+        //console.log("Save Payment Payload :", payload);
+
+        $("#btnSavePayment").prop("disabled", true);
+
+        $.ajax({
+            url: "/api/Booking_Payments/SaveBookingPayment", // 🔁 API URL
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response?.status === "Success") {
+                    handleApiSuccess();
+                    $("#paymentForm")[0].reset();
+                    //$("#PaymentModal").modal("hide");
+
+                    // 🔁 Reload payment list if needed
+                    //loadBookingCalendar();
+                    fetchData();
+                    loadPaymentHistory(bookingId);
+                } else {
+                    Swal.fire("Error", response?.message || "Save failed!", "error");
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save Payment Error");
+            },
+            complete: function () {
+                $("#btnSavePayment").prop("disabled", false);
+            }
+        });
+    });
+    $('#tableMain').on('click', '.btn-outstanding', function () {
+        $("#paymentForm")[0].reset();
+
+        const bookingId = $(this).data('bookingid');
+        const dueAmount = $(this).data('outstandingamount');
+        // Remove ₹ and commas
+        if (dueAmount === 0) {
+            $("#dueMessage").removeClass("d-none");
+            $("#paymentAmount").prop("disabled", true);;
+        }
+        else {
+            $("#dueMessage").addClass("d-none");
+            $("#paymentAmount").prop("disabled", false);
+        }
+
+        console.log("Outstanding clicked for BookingId:", bookingId);
+
+        $("#paymentDueBalance, #originalDueAmount").val(dueAmount);
+        $("#paymentBookingId").val(bookingId);
+        setCurrentPaymentDateTime();
+
+        // Call your method
+        loadPaymentHistory(bookingId);
+    });
+    $("#paymentAmount").on("input", function () {
+
+        const originalDue = Number($("#originalDueAmount").val()) || 0;
+        let payAmount = Number($(this).val()) || 0;
+
+        if (payAmount > originalDue) {
+            payAmount = originalDue;
+            $(this).val(originalDue);
+        }
+
+        const remaining = originalDue - payAmount;
+        $("#paymentDueBalance").val(remaining);
+    });
+
+    $("#btnwritrnote").click(function () {
+        let editor = $(".Payment_editorsContainer");
+        if (editor.is(":visible")) {
+            editor.hide();
+            $(this).val("Write Note");
+        } else {
+            editor.show();
+            $(this).val("Write Note");
+        }
+    });
 });
+function setCurrentPaymentDateTime() {
+
+    const now = new Date();
+
+    // Format date → yyyy-mm-dd (required for input[type=date])
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Format time → HH:mm (required for input[type=time])
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const formattedTime = `${hours}:${minutes}`;
+
+    $("#paymentDate").val(formattedDate);
+    $("#paymentTime").val(formattedTime);
+}
+
 function addItemRow() {
     const row = `
         <tr>
@@ -1019,10 +1179,26 @@ function renderTable(data) {
             },
             //OutstandingAmount
             {
-                data: 'OutstandingAmount',
+                data: null,
                 title: 'Outstanding Amt.',
                 className: 'text-end',
-                render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
+                render: function (d) {
+
+                    let outstanding = d.OutstandingAmount ?? 0;
+                    let formatted = Number(outstanding).toLocaleString('en-IN');
+
+                    if (outstanding > 0) {
+                        return `
+                            <button class="btn btn-sm btn-action-xss btn-outline-danger btn-outstanding"
+                                    data-bookingid="${d.BookingId}"
+                                    data-outstandingamount="${outstanding}">
+                                ₹ ${formatted}
+                            </button>
+                        `;
+                    }
+
+                    return `<span class="text-muted">₹ ${formatted}</span>`;
+                }
             },
             //Summary
             {
@@ -1275,13 +1451,9 @@ function loadUpcomingPayments(monthDuration = "thismonth", fromDate = null, toDa
             ToDate: toDate
         }),
         success: function (res) {
-
             console.log("UpcomingPayments API:", res);
-
             let html = "";
-
             if (res.status === "Success" && Array.isArray(res.data) && res.data.length > 0) {
-
                 res.data.forEach(item => {
                     html += `
                         <li class="list-group-item d-flex justify-content-between">
@@ -1291,17 +1463,14 @@ function loadUpcomingPayments(monthDuration = "thismonth", fromDate = null, toDa
                             </span>
                         </li>`;
                 });
-
-            } else {
-                html = `
-                    <li class="list-group-item text-muted text-center">
-                        No upcoming payments
-                    </li>`;
             }
-
+            else {
+                html = `<li class="list-group-item text-muted text-center">No upcoming payments</li>`;
+            }
             $("#upcomingPaymentsList").html(html);
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Upcoming Payments Fetch Error");
             $("#upcomingPaymentsList").html(`
                 <li class="list-group-item text-danger text-center">
                     Error loading data
@@ -1311,4 +1480,210 @@ function loadUpcomingPayments(monthDuration = "thismonth", fromDate = null, toDa
     });
 }
 
+//DUE PAYMENT -- START -----------------------
+loadAccountDropdown();
+function loadAccountDropdown() {
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
+        success: function (res) {
+            const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data.forEach(acc => {
+                    const holder = acc.AccountHolderName ? ` - ${acc.AccountHolderName}` : "";
+                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}${holder}</option>`);
+                });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Account Dropdown Error");
+        }
+    });
+}
+
+loadPaymentModeDropdown();
+function loadPaymentModeDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/PaymentMode/GetPaymentMode",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("payment mode res:", res);
+            const ddl = $("#PaymentModal_Mode");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data
+                    .filter(x => x.IsActive)
+                    .forEach(pm => {
+                        ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
+                        `);
+                    });
+            }
+            else {
+                Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Mode Dropdown Error");
+        }
+    });
+}
+
+function loadPaymentHistory(bookingId) {
+    const payload = {
+        PaymentId: 0,
+        BookingId: bookingId
+    };
+    //console.log("loadPaymentHistory payload:", payload);
+    $.ajax({
+        url: "/api/Booking_Payments/GetBookingPayments",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("Booking_Payments res:", res);
+            if (res?.status === "Success") {
+                // HIDE download Alll btn
+                $(".btn-download-all").addClass("d-none");
+                if (res.data.length > 0) {
+                    // SHOW download Alll btn
+                    $(".btn-download-all").removeClass("d-none");
+                }
+                $("#paymentModal").modal("show");
+                renderPaymentTable(res.data || []);
+            } else {
+                Swal.fire("Error", res?.message || "Failed to fetch payments!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Payments Error");
+        }
+    });
+}
+
+// -- RENDER TABLE ---
+function renderPaymentTable(data) {
+
+    // Destroy existing DataTable if exists
+    if ($.fn.dataTable && $.fn.dataTable.isDataTable("#tblPaymentHistory table")) {
+        $("#tblPaymentHistory table").DataTable().destroy();
+    }
+
+    // Add serial numbers
+    data.forEach((item, i) => item.srno = i + 1);
+    $("#tblPaymentHistory table").DataTable({
+        data: data,
+        autoWidth: false,
+        columns: [
+            { data: "srno", title: "#" },
+            { data: "TxnId", title: "Txn Id", className: "text-end" },
+            { data: "PaymentDateTimeFormat", title: "Date & Time" },
+            {
+                data: "Amount",
+                title: "Amount (₹)",
+                className: "text-end",
+                render: $.fn.dataTable.render.number(',', '.', 2, '₹ ')
+            },
+            {
+                data: null,
+                title: "Receipt",
+                className: "text-center",
+                render: function (row) {
+                    return `<button class="btn btn-sm btn-outline-primary btn-download" data-id="${row.PaymentId}">
+                                <i class="fas fa-download"></i>
+                            </button>`;
+                }
+            }
+        ],
+        pageLength: 5,
+        ordering: true,
+        searching: false
+    });
+}
+
+// -- Download receipt - button click --
+$(document).on("click", ".btn-download", function () {
+    let paymentId = $(this).data("id");
+    let bookingId = 0; // getBookingId();
+    let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
+
+    var payload = {
+        PaymentId: paymentId,
+        BookingId: bookingId,
+        ActionBy: actionBy
+    };
+    $.ajax({
+        url: "/api/Booking_Payments/DownloadPaymentReceipt",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status === "Success") {
+
+                let link = document.createElement("a");
+                link.href = res.data.FileUrl;
+                link.download = "";   // 👈 force download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Download Receipt Failed")
+        }
+    });
+});
+
+$(document).on("click", ".btn-download-all", function () {
+    let paymentId = 0;
+    let bookingId = Number($("#paymentBookingId").val() || 0);
+    let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
+
+    var payload = {
+        PaymentId: paymentId,
+        BookingId: bookingId,
+        ActionBy: actionBy
+    };
+    $.ajax({
+        url: "/api/Booking_Payments/DownloadPaymentReceipt",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status === "Success") {
+
+                let link = document.createElement("a");
+                link.href = res.data.FileUrl;
+                link.download = "";   // 👈 force download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Download All-Receipt Failed")
+        }
+    });
+});
+
+//DUE PAYMENT -- END -----------------------
 

@@ -23,7 +23,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-
         [HttpPost]
         [Route("GetDashboardFinanceSummary")]
         public IActionResult GetDashboardFinanceSummary([FromBody] DashboardFeedbackRequest request)
@@ -91,7 +90,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetDashboardPaymentCollectionStatus")]
         public IActionResult GetDashboardPaymentCollectionStatus([FromBody] DashboardFeedbackRequest request)
@@ -133,7 +131,6 @@ namespace ERPAdmin.ApiControllers
                     result = new DashboardPaymentCollectionStatus
                     {
                         PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
-                        PartialAmount = Convert.ToDecimal(row["PartialAmount"]),
                         PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
                         TotalAmount = Convert.ToDecimal(row["TotalAmount"])
                     };
@@ -156,7 +153,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(apiResponse); // ✅ STILL 200
             }
         }
-
 
         [HttpPost]
         [Route("GetDashboardUpcomingPayments")]
@@ -193,7 +189,7 @@ namespace ERPAdmin.ApiControllers
                             result.Add(new UpcomingPaymentItem
                             {
                                 EventName = dr["EventName"].ToString(),
-                                Amount = Convert.ToDecimal(dr["Amount"])
+                                Amount = Convert.ToDecimal(dr["DueAmount"])
                             });
                         }
                     }
@@ -216,8 +212,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(apiResponse); // ✅ STILL 200
             }
         }
-
-
 
         [HttpPost]
         [Route("GetDashboardVendorPayables")]

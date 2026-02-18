@@ -34,67 +34,8 @@
     <link href="~/assets2/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
     <link href="~/assets2/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin=""></script>
+    <link href="~/assets2/css/shared/layoutempty.css" asp-append-version="true" rel="stylesheet" />
 
-    <style>
-    .bg-card-gradient {
-       background: linear-gradient(180deg, #e5780b, #e5780b);
-    }
-
-    .tag-slide {
-        position: absolute;
-        white-space: nowrap;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 1.5s ease;
-        font-size: 0.95rem;
-        color: #6c757d;
-    }
-
-    .tag-slide.active {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    .tag-slide.exit-left {
-        opacity: 0;
-        transform: translateX(-100%);
-    }
-
-    /* Loader overlay */
-    #loaderOverlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(200, 200, 200, 0.7); /* light transparent gray */
-        display: none; /* flex; */ /* show by default */
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
-
-    /* Loader spinner */
-    #loaderOverlay .spinner {
-        border: 8px solid #fff3cd; /* light warning background ring (optional) */
-        border-top: 8px solid #ffc107; /* Bootstrap warning color */
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-    }
-
-
-    @@keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-    </style>
     <script>
         var phoenixIsRTL = window.config.config.phoenixIsRTL;
         if (phoenixIsRTL) {
@@ -116,64 +57,10 @@
     <div id="loaderOverlay">
         <div class="spinner"></div>
     </div>
-    <main class="main" id="top">
-       
+    <main class="main" id="top">       
        @RenderBody()
     </main>
-    
-    <script>
-        function showLoader() {
-          document.getElementById("loaderOverlay").style.display = "flex";
-        }
 
-        function hideLoader() {
-          document.getElementById("loaderOverlay").style.display = "none";
-        }
-
-        let ajaxActiveCount = 0;
-
-        $(document).ajaxStart(function () {
-            ajaxActiveCount++;
-            console.log("ajaxActiveCount START:", ajaxActiveCount);
-            showLoader();
-        });
-
-        $(document).ajaxStop(function () {
-            ajaxActiveCount--;
-            if (ajaxActiveCount <= 0) {
-                ajaxActiveCount = 0;
-                hideLoader();
-            }
-            console.log("ajaxActiveCount STOP:", ajaxActiveCount);
-        });
-
-        function handleApiError(xhr, status, error, title="Info!") {
-
-            console.log("API Error:", xhr.responseText);
-
-            let msg = "Something went wrong!";
-
-            try {
-                // Parse JSON response safely
-                let resp = JSON.parse(xhr.responseText);
-
-                // If message exists, show that only
-                if (resp && resp.message) {
-                    msg = resp.message;
-                }
-            } catch (e) {
-                // If JSON parse fails, fallback to raw text
-                msg = xhr.responseText;
-            }
-
-            // Show SweetAlert Error
-            Swal.fire({
-                icon: "info",
-                title: title,
-                text: msg
-            });
-        }
-    </script>
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
@@ -187,5 +74,10 @@
     <script src="~/assets2/vendors/feather-icons/feather.min.js"></script>
     <script src="~/assets2/vendors/dayjs/dayjs.min.js"></script>
     <script src="~/assets2/js/phoenix.js"></script>
+    @RenderSection("Scripts", required: false)
+    @RenderSection("Styles", required: false)
+
+    <script src="~/assets2/js/shared/layoutempty.js" asp-append-version="true"></script>
+
 </body>
 </html>

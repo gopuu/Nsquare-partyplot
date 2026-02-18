@@ -1,0 +1,16 @@
+﻿.file-input {
+    position: relative;
+    overflow: hidden;
+}
+
+    .file-input input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+.action-btns button {
+    margin-right: 4px;
+}
