@@ -13,18 +13,18 @@
         var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
 
         $.ajax({
-            url: "/api/AccountMaster/GetAccount",
+            url: "/api/AccountTypeMaster/GetAccountTypeList",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
             success: function (response) {
-
+                console.log("response:", response);
                 if (response.status === "Success" && response.data.length > 0) {
 
                     let dropdown = $("#accountType");
                     dropdown.empty(); // clear dropdown
 
-                    dropdown.append(`<option value="0">Select</option>`);
+                    dropdown.append(`<option value="0">-- Select --</option>`);
 
                     response.data.forEach(item => {
                         dropdown.append(`<option value="${item.Id}">${item.TypeName}</option>`);
@@ -209,7 +209,7 @@ function saveAccount() {
         data: JSON.stringify(payload),
         contentType: "application/json",
         success: function (res) {
-            Swal.fire("Saved!", "", "success");
+            handleApiSuccess();
             $("#accountModal").modal("hide");
             fetchData();
         },

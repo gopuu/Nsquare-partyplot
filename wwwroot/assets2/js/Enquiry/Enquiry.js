@@ -395,6 +395,13 @@ function renderBoard() {
                                     <span class="text-muted">${deal.EnquiryDealName}</span>
                                     <span class="text-muted">${deal.EventDate_Format1}</span>
                                 </div>
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span class="text-muted d-none">${deal.EventTypeName}</span>
+                                    <span class="text-muted">${deal.EventSubTypeName}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span class="text-muted">${deal.EventStartTime} - ${deal.EventEndTime}</span>
+                                </div>
                                 <p class="mb-1 fw-bold">₹${deal.Amount.toLocaleString()}</p>
                             </div>
 
@@ -412,7 +419,8 @@ function renderBoard() {
                         </div>
                     `;
             });
-        } else {
+        }
+        else {
             dealsHtml = `<p class="text-muted fst-italic"> This stage is empty</p> `;
         }
 
@@ -472,12 +480,12 @@ function renderBoard() {
                     }, 300); // small delay to ensure subtypes are loaded
 
                     $("#banquetHallDropdown").val(data.BanquetHallId);
-                    $("#eventDate").val(data.EventDate);
+                    $("#eventDate").val(data.EventDate_Format2);
 
                     $("#eventStart").val(data.EventStartTime);
                     $("#eventEnd").val(data.EventEndTime);
                     $("#pax").val(data.Pax);
-                    $("#followUpDate").val(data.FollowUpDate);
+                    $("#followUpDate").val(data.FollowUpDate_Format2);
 
                     $("#estimatedAmount").val(data.EstimatedAmount);
                     $("#leadSourceDropdown").val(data.LeadSourceId);
@@ -1633,26 +1641,27 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         console.log("READY TO CALL API", payload);
-
+        showTempLoader('Checking Availability');
         $.ajax({
             url: "/api/EnquiryDeal/CheckBookingSlotAvailability",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-
+                Swal.close(); // Close loader
                 if (res.status === "Success") {
-
                     let isAvailable = res.data?.IsAvailable === 1;
                     let msgBox = $("#slotStatusMsg");
-
                     msgBox
-                        .removeClass("d-none text-danger text-success")
-                        .addClass(isAvailable ? "text-success" : "text-danger")
+                        .removeClass("d-none text-danger text-success bg-success-subtle bg-danger-subtle")
+                        .addClass(isAvailable
+                            ? "text-success bg-success-subtle"
+                            : "text-danger bg-danger-subtle")
                         .text(res.message);
                 }
             },
             error: function (xhr, status, error) {
+                Swal.close(); // Close loader
                 $("#slotStatusMsg")
                     .removeClass("d-none text-success")
                     .addClass("text-danger")

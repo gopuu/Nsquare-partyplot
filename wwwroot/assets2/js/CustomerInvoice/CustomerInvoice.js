@@ -253,7 +253,7 @@ $(function () {
     });
 
     // On Advance input change
-    $(document).on('input', '#advancePaid', function () {
+    $(document).on('input', '#advancePaid, #bookingDiscount', function () {
         recalcAll();
     });
 

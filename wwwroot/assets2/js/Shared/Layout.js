@@ -1,4 +1,16 @@
-﻿function handleApiSuccess(msg = "Saved successfully!") {
+﻿function showTempLoader(title = "Checking Availability"){
+    // Show loader before AJAX
+    Swal.fire({
+        title: title,
+        text: "Please wait...",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+function handleApiSuccess(msg = "Saved successfully!") {
     Swal.fire({
         toast: true,
         position: "top-end",
@@ -21,7 +33,6 @@ function formatINR(amount) {
 function calcPercent(value, total) {
     return Math.round((value / total) * 100);
 }
-
 
 function showLoader() {
     document.getElementById("loaderOverlay").style.display = "flex";

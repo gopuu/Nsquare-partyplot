@@ -257,9 +257,13 @@ namespace ERPAdmin.ApiControllers
                             //                ? reader.GetString(reader.GetOrdinal("FollowUpDate_Format"))
                             //                : null;
                             enquiryDeal.EventDate = reader["EventDate"] != DBNull.Value ? ((DateTime)reader["EventDate"]).ToString("yyyy-MM-dd") : null;
+                            enquiryDeal.EventDate_Format2 = reader["EventDate"] != DBNull.Value ? ((DateTime)reader["EventDate"]).ToString("dd-MM-yyyy") : null;
                             enquiryDeal.EventDate_Format = reader["EventDate_Format"] != DBNull.Value ? reader["EventDate_Format"].ToString() : null;
+
                             enquiryDeal.FollowUpDate = reader["FollowUpDate"] != DBNull.Value ? ((DateTime)reader["FollowUpDate"]).ToString("yyyy-MM-dd") : null;
+                            enquiryDeal.FollowUpDate_Format2 = reader["FollowUpDate"] != DBNull.Value ? ((DateTime)reader["FollowUpDate"]).ToString("dd-MM-yyyy") : null;
                             enquiryDeal.FollowUpDate_Format = reader["FollowUpDate_Format"] != DBNull.Value ? reader["FollowUpDate_Format"].ToString() : null;
+
                             enquiryDeal.EventStartTime = reader["EventStartTime"] != DBNull.Value ? reader["EventStartTime"].ToString() : null;
                             enquiryDeal.EventEndTime = reader["EventEndTime"] != DBNull.Value ? reader["EventEndTime"].ToString() : null;
 

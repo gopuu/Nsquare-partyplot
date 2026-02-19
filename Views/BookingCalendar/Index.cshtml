@@ -70,7 +70,7 @@
 
                     <!-- Shift Abbreviations -->
                     <div class="alert alert-secondary p-2 m-2 ml-5">
-                        <b>Shift Abbreviations:</b> FD-Full Day, MO-Morning, AF-Afternoon, EV-Evening, ON-Overnight, BF-Breakfast, LN-Lunch, HT-High Tea, DN-Dinner
+                        <b>Shift Abbreviations:</b> FD-Full Day, MO-Morning, AF-Afternoon, EV-Evening, ON-Overnight @* , BF-Breakfast, LN-Lunch, HT-High Tea, DN-Dinner *@
                     </div>
 
                 </div>
@@ -460,22 +460,22 @@
                                     <input type="number" class="form-control form-control-sm" value="0" id="PaymentDetails_Amount">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <label>Transaction Id</label>
                                     <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_TransactionId" maxlength="100">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <label>Cheque Bank</label>
                                     <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_ChequeBank" maxlength="100">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <label>Cheque No.</label>
                                     <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_ChequeNo" maxlength="20">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <label>Cheque Date</label>
                                     <input type="date" class="form-control form-control-sm" id="PaymentDetails_ChequeDate" value="">
                                 </div>
@@ -1034,7 +1034,7 @@
             <div class="modal-footer bg-light border-top-0 justify-content-between flex-wrap">
                 <div>
                     <button type="button" class="btn btn-outline-primary btn-sm" id="btnEnterPayment">
-                        <i class="fa-solid fa-credit-card me-1"></i> Enter Payment Details
+                        <i class="fa-solid fa-credit-card me-1"></i> Payment
                     </button>
 
                     <button type="button" class="btn btn-outline-success btn-sm" id="btnRequestFeedback">
@@ -1309,22 +1309,22 @@
                             <input type="time" id="paymentTime" class="form-control">
                         </div>
 
-                        <div class="col-md-3 mb-1">
+                        <div class="col-md-3 mb-1 d-none">
                             <label class="form-label">Transaction Id </label>
                             <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-4 mb-1 d-none">
                             <label class="form-label">Cheque Bank</label>
                             <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
                         </div>
 
-                        <div class="col-md-2 mb-1">
+                        <div class="col-md-2 mb-1 d-none">
                             <label class="form-label">Cheque No</label>
                             <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
                         </div>
 
-                        <div class="col-md-3 mb-1">
+                        <div class="col-md-3 mb-1 d-none">
                             <label class="form-label">Cheque Date</label>
                             <input type="date" id="paymentChequeDate" class="form-control">
                         </div>
@@ -1759,12 +1759,12 @@
                 <!-- ===================== -->
                 <!-- Select New Date & Time -->
                 <!-- ===================== -->
-                <section class="border rounded p-3">
-                    <h6 class="fw-bold text-danger mb-3">
-                        Select New Date & Time
+                <section class="border rounded p-0">
+                    <h6 class="fw-bold border-bottom px-3 py-1 text-danger bg-light rounded-top mb-0">
+                        Modify Date & Time
                     </h6>
 
-                    <div class="row g-3">
+                    <div class="row g-3 px-3 py-2">
 
                         <!-- Banquet -->
                         <div class="col-md-6">
@@ -1775,7 +1775,7 @@
                         </div>
 
                         <!-- Slot -->
-                        <div class="col-md-6">
+                        <div class="col-md-6 d-none">
                             <label class="form-label">Slot</label>
                             <select class="form-select" id="reschedule_SlotId">
                                 <option value="">Select Slot</option>
@@ -1783,20 +1783,15 @@
                         </div>
 
                         <!-- From Date -->
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">From Date</label>
-                            <input type="date"
-                                   class="form-control bg-light"
-                                   id="reschedule_FromDate"
-                                   readonly>
+                            <input type="date" class="form-control" id="reschedule_FromDate">
                         </div>
 
                         <!-- Till Date -->
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Till Date</label>
-                            <input type="date"
-                                   class="form-control"
-                                   id="reschedule_TillDate">
+                            <input type="date" class="form-control" id="reschedule_TillDate">
                         </div>
 
                         <!-- Function Start Time -->

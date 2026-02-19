@@ -26,12 +26,14 @@
         public long BanquetHallId { get; set; }
         public string? BanquetHallName { get; set; }
         public string? EventDate { get; set; }
+        public string? EventDate_Format2 { get; set; }
         public string? EventDate_Format { get; set; }
         public string? EventStartTime { get; set; }
         public string? EventEndTime { get; set; }
         public long Pax { get; set; }
         public string? FollowUpDate { get; set; }
         public string? FollowUpDate_Format { get; set; }
+        public string? FollowUpDate_Format2 { get; set; }
         public decimal EstimatedAmount { get; set; }
         public long LeadSourceId { get; set; }
         public string? LeadSourceName { get; set; }

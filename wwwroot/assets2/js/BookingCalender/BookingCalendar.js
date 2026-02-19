@@ -139,17 +139,17 @@ $("#btnSaveReschedule").on("click", function () {
     // 🔹 Build payload (match API model)
     const payload = {
         BookingId: bookingId,
-        BanquetId: Number($("#reschedule_BanquetId").val()) || null,
-        SlotId: Number($("#reschedule_SlotId").val()) || null,
+        BanquetId: Number($("#reschedule_BanquetId").val()) || 0,
+        SlotId: 0,                                                      //Number($("#reschedule_SlotId").val()) || null,
         FromDate: $("#reschedule_FromDate").val() || null,
         TillDate: $("#reschedule_TillDate").val() || null,
         StartTime: startTime || null,
         EndTime: endTime || null,
-        ShiftCode: null, // optional (can be derived from slot if needed)
+        ShiftCode: null,                                                // optional (can be derived from slot if needed)
         ActionBy: Number(sessionStorage.getItem("userId")) || 0
     };
 
-    //console.log("Reschedule Payload:", payload);
+    console.log("Reschedule Payload:", payload);
 
     // 🔹 Call API
     $.ajax({
@@ -159,15 +159,9 @@ $("#btnSaveReschedule").on("click", function () {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    icon: "success",
-                    title: "Rescheduled",
-                    text: res.message
-                }).then(() => {
-                    $("#bookingRescheduleModal").modal("hide");
-                    // refresh calendar / board here if needed
-                    loadBookingCalendar();
-                });
+                handleApiSuccess("Booking Rescheduled");
+                $("#bookingRescheduleModal").modal("hide");
+                loadBookingCalendar();
             } else {
                 Swal.fire("Error", res.message || "Failed to reschedule booking.", "error");
             }
@@ -1514,7 +1508,7 @@ async function renderBoard(bookingData = null) {
                 const dateStr_ISO = `${yyyy}-${mm}-${dd}`;                          // ✅ proper yyyy-mm-dd
 
                 const shiftCode = shiftNames[i];
-                console.log("i:", i, ", shiftNames:", shiftNames, ", shiftCode:", shiftCode);
+                //console.log("i:", i, ", shiftNames:", shiftNames, ", shiftCode:", shiftCode);
                 const shiftFull = fullShiftName(shiftCode); // fallback if not found
                 var bookingId = 0;
                 var eventName = null;
@@ -1527,7 +1521,7 @@ async function renderBoard(bookingData = null) {
                 let isBookingTentative = false;
                 let isBlocked = false;
                 //work HERE
-                console.log("bookingData:", bookingData);
+                //console.log("bookingData:", bookingData);
                 if (Array.isArray(bookingData)) {
                     for (const booking of bookingData) {
                         if (booking.BanquetId !== hall.Id)
@@ -1681,7 +1675,7 @@ async function renderBoard(bookingData = null) {
                 tooltip.style.display = "block";
             }
             else {
-                if (badge.classList.contains("bg-secondary")) {
+                if (badge.classList.contains("bg-secondary") || badge.classList.contains("bg-dark")) {
                     tooltip.style.display = "none";
                     return; // stop tooltip processing
                 }
@@ -2043,8 +2037,19 @@ function attachShiftClickListeners() {
             const hallname = badge.dataset.hallname;
             const hallid = badge.dataset.hallid;
 
+            console.log("color cell:", color);
             //Present Day & Future Days
-            if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
+            //if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
+            if (color !== legendColors.blocked &&
+                (
+                    color !== legendColors.past ||
+                    //color === legendColors.present ||
+                    //color === legendColors.future ||
+                    (color === legendColors.past && bookingid > 0)
+                )
+            )
+            { 
+
                 resetBooking();
                 //console.log(`Edit Booking → Shift: ${shift} (${shiftname}) | Date: ${date} (format: ${dateformat}, iso: ${dateiso}) | Hall: ${hallname} (${hallid}) | BookingId: ${bookingid}`);
 
@@ -2531,6 +2536,71 @@ document.addEventListener("DOMContentLoaded", function () {
         updateBookingDiscount();
     });
 
+    $(document).on("change", "#PaymentDetails_Mode", function () {
+        let selectedText = $("#PaymentDetails_Mode option:selected").text().toLowerCase();
+
+        // Hide everything first
+        $("#PaymentDetails_TransactionId").closest(".col-md-6").addClass("d-none");
+        $("#PaymentDetails_ChequeBank").closest(".col-md-6").addClass("d-none");
+        $("#PaymentDetails_ChequeNo").closest(".col-md-6").addClass("d-none");
+        $("#PaymentDetails_ChequeDate").closest(".col-md-6").addClass("d-none");
+
+        // CASH
+        if (selectedText.includes("cash")) {
+            // Nothing to show
+        }
+
+        // BANK TRANSFER
+        else if (selectedText.includes("bank transfer")) {
+            // Nothing to show
+        }
+
+        // CHEQUE
+        else if (selectedText.includes("cheque")) {
+            $("#PaymentDetails_ChequeBank").closest(".col-md-6").removeClass("d-none");
+            $("#PaymentDetails_ChequeNo").closest(".col-md-6").removeClass("d-none");
+            $("#PaymentDetails_ChequeDate").closest(".col-md-6").removeClass("d-none");
+        }
+
+        // UPI OR CREDIT
+        else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+            $("#PaymentDetails_TransactionId").closest(".col-md-6").removeClass("d-none");
+        }
+    });
+
+    $(document).on("change", "#PaymentModal_Mode", function () {
+        let selectedText = $("#PaymentModal_Mode option:selected").text().toLowerCase();
+
+        // Hide everything first
+        $("#paymentTxn").closest(".col-md-6").addClass("d-none");
+        $("#paymentChequebank").closest(".col-md-6").addClass("d-none");
+        $("#paymentChequeNo").closest(".col-md-6").addClass("d-none");
+        $("#paymentChequeDate").closest(".col-md-6").addClass("d-none");
+
+        // CASH
+        if (selectedText.includes("cash")) {
+            // Nothing to show
+        }
+
+        // BANK TRANSFER
+        else if (selectedText.includes("bank transfer")) {
+            // Nothing to show
+        }
+
+        // CHEQUE
+        else if (selectedText.includes("cheque")) {
+            $("#paymentChequebank").closest(".col-md-6").removeClass("d-none");
+            $("#paymentChequeNo").closest(".col-md-6").removeClass("d-none");
+            $("#paymentChequeDate").closest(".col-md-6").removeClass("d-none");
+        }
+
+        // UPI OR CREDIT
+        else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+            $("#paymentTxn").closest(".col-md-6").removeClass("d-none");
+        }
+    });
+
+
     //SAVE BOOKING ------ START ------------------------------
     $("#btnBook").on("click", function () { saveBooking(); });
     $("#btnReset").on("click", function () { resetBooking(); });
@@ -2730,6 +2800,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('btnEnterPayment').addEventListener('click', function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
         //console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
+        resetPaymentModal();
+
         $("#paymentModal").modal("show");
 
         const dueText = $("#bookingReport_OutstandingAmount").text();
@@ -2986,7 +3058,7 @@ Your feedback helps us improve our service.`;
     document.getElementById("btnDeleteBooking").addEventListener("click", function () {
         const bookingId = getBookingId();
         //console.log("🗑️ Delete Booking clicked - Booking ID:", bookingId);
-        let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
+        let userId = parseInt(sessionStorage.getItem('userId') || 0);
 
         if (!bookingId || bookingId == 0) {
             Swal.fire({
@@ -3020,18 +3092,13 @@ Your feedback helps us improve our service.`;
                 }),
                 success: function (res) {
                     //console.log("✔ Delete API Success:", res);
-
                     if (res.status === "Success") {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Booking Deleted",
-                            text: res.message,
-                            //timer: 900
-                        });
+                        handleApiSuccess("Booking Deleted");
                         // 🔄 Refresh calendar or UI
                         loadBookingCalendar();
                         //CLOSE MODAL
-                        bookingReportModal.hide();
+                        //bookingReportModal.hide();
+                        closeBookingReportModal();
                     }
                     else {
                         Swal.fire({
@@ -3041,14 +3108,8 @@ Your feedback helps us improve our service.`;
                         });
                     }
                 },
-                error: function (xhr) {
-                    console.error("❌ Delete API Error:", xhr);
-
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error!",
-                        text: xhr.responseJSON?.message || "Something went wrong."
-                    });
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Booking Delete Failed")
                 }
             });
         });
@@ -4437,7 +4498,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_Invoice").text("#" + data.InvoiceNo);
                     $("#bookingReport_EventDate").text(data.FromDate_Full || "—");
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
-                    $("#bookingReport_Slot").text(data.ShiftCode || "—");
+                    $("#bookingReport_Slot").text(`${data.ShiftCode} (${fullShiftName(data.ShiftCode)})` || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
                     $("#bookingReport_EventName").text(data.Booking_TypeName + "(" + data.Booking_SubEventName + ")" || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
@@ -4908,9 +4969,24 @@ function resetBooking() {
     //resetOtherCharges(false);
     recalculatePaymentSummary();
     $("#Section_PaymentDetails").show();
-
-
     //console.log("Booking form reset completed.");
+
+    // Hide dynamic sections manually
+    $("#PaymentDetails_TransactionId").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeBank").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeNo").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeDate").closest(".col-md-6").addClass("d-none");
+    // Optionally reset dropdown to default
+    $("#PaymentDetails_Mode").val("0").trigger("change");
+
+    // Re-select default account manually
+    const defaultOption = $("#PaymentDetails_AccountId option").filter(function () {
+        return $(this).data("isdefault") === true;
+    });
+    if (defaultOption.length) {
+        $("#PaymentDetails_AccountId").val(defaultOption.val());
+    }
+
 }
 
 function recalculatePaymentSummary() {
@@ -5176,6 +5252,28 @@ $(document).on("input", ".wastageInput", function () {
     $("#txtTotalWastage").val(total.toFixed(2));
 });
 
+function resetPaymentModal() {
+    $("#paymentForm")[0].reset();
+    $("#PaymentModal").modal("hide");
+
+    // Hide dynamic sections manually
+    $("#paymentTxn").closest(".col-md-6").addClass("d-none");
+    $("#paymentChequebank").closest(".col-md-6").addClass("d-none");
+    $("#paymentChequeNo").closest(".col-md-6").addClass("d-none");
+    $("#paymentChequeDate").closest(".col-md-6").addClass("d-none");
+    // Optionally reset dropdown to default
+    $("#PaymentModal_Mode").val("0").trigger("change");
+
+    // Re-select default account manually
+    const defaultOption = $("#PaymentModal_AccountId option").filter(function () {
+        return $(this).data("isdefault") === true;
+    });
+    if (defaultOption.length) {
+        $("#PaymentModal_AccountId").val(defaultOption.val());
+    }
+}
+
+
 $("#btnSavePayment").click(function () {
     const bookingId = getBookingId();
     // 🔹 Get values
@@ -5235,8 +5333,7 @@ $("#btnSavePayment").click(function () {
         success: function (response) {
             if (response?.status === "Success") {
                 handleApiSuccess();
-                $("#paymentForm")[0].reset();
-                $("#PaymentModal").modal("hide");
+                resetPaymentModal();
 
                 // 🔁 Reload payment list if needed
                 //loadBookingCalendar();
@@ -5259,22 +5356,38 @@ $("#btnSavePayment").click(function () {
 loadAccountDropdown();
 function loadAccountDropdown() {
     var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
-
+    var payload = { Id: 0, ActionBy: actionBy };
     $.ajax({
         url: "/api/AccountMaster/GetAccount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
+        data: JSON.stringify(payload),
         success: function (res) {
+            //console.log("GetAccount res:", res);
+
             const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
-                    const holder = acc.AccountHolderName ? ` - ${acc.AccountHolderName}` : "";
-                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}${holder}</option>`);
+
+                    const accountName = (acc.AccountName || "").trim();
+                    const holderName = (acc.AccountHolderName || "").trim();
+
+                    let holderDisplay = "";
+
+                    if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
+                        holderDisplay = ` (${holderName})`;
+                    }
+
+                    ddl.append(`
+                        <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
+                            ${accountName}${holderDisplay}
+                        </option>
+                    `);
                 });
-            } else {
+            }
+            else {
                 Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
             }
         },
