@@ -42,9 +42,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -121,9 +121,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -199,9 +199,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -284,9 +284,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 long invoiceId;
@@ -364,9 +364,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -411,9 +411,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 NextInvoiceNumberResponse data = new NextInvoiceNumberResponse();
@@ -475,9 +475,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))

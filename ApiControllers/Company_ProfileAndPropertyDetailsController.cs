@@ -20,7 +20,7 @@ namespace ERPAdmin.ApiControllers
         private readonly ImageUploadService _imageUploadService;
         //private readonly string domainUrl = "http://tenxsoftwarek-001-site1.qtempurl.com/";
         private readonly string domainUrl;
-        private readonly ConnClass _connClass;
+        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
 
         public Company_ProfileAndPropertyDetailsController(IConfiguration configuration, ImageUploadService imageUploadService, IHttpContextAccessor httpContextAccessor)
@@ -43,8 +43,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -85,8 +85,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 var list = new List<dynamic>();
 
@@ -162,7 +162,7 @@ namespace ERPAdmin.ApiControllers
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                ErrorLogger.LogException(ex, ControllerContext, Request, null ?? "");
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;
@@ -210,9 +210,9 @@ namespace ERPAdmin.ApiControllers
             public bool AfternoonSlot { get; set; }
             public bool EveningSlot { get; set; }
             public bool OvernightSlot { get; set; }
-            public List<string> Facilities { get; set; }
-            public List<string> Rules { get; set; }
-            public List<string> BookingSteps { get; set; }
+            public List<string>? Facilities { get; set; }
+            public List<string>? Rules { get; set; }
+            public List<string>? BookingSteps { get; set; }
             public string SearchLocation { get; set; } = string.Empty;
             public string AboutUsAndTnC { get; set; } = string.Empty;
         }
@@ -224,8 +224,8 @@ namespace ERPAdmin.ApiControllers
             var apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -298,8 +298,8 @@ namespace ERPAdmin.ApiControllers
             var apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {

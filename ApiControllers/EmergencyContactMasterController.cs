@@ -38,8 +38,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using SqlConnection con = new SqlConnection(connString);
                 using SqlCommand cmd = new SqlCommand("GetEmergencyContact_Master", con);
@@ -103,8 +103,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 long id;
 
@@ -158,8 +158,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using SqlConnection con = new SqlConnection(connString);
                 using SqlCommand cmd = new SqlCommand("DeleteEmergencyContact_Master", con);

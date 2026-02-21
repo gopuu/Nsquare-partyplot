@@ -60,7 +60,7 @@ namespace ERPAdmin.Services
         {
             // Check if inputs are valid
             if (string.IsNullOrEmpty(foldername) || string.IsNullOrEmpty(filename))
-                return null; // Return null if inputs are invalid
+                return null ?? ""; // Return null if inputs are invalid
 
             try
             {
@@ -83,7 +83,7 @@ namespace ERPAdmin.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error converting image to Base64: {ex.Message}");
-                return null; // Return null in case of an error
+                return null ?? ""; // Return null in case of an error
             }
         }
 
@@ -112,7 +112,7 @@ namespace ERPAdmin.Services
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine($"Error converting image to base64: {ex.Message}");
+                    Console.WriteLine($"Error converting image to base64: {ex.Message}");
                 }
             }
             return base64Image;

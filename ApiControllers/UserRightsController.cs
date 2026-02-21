@@ -42,8 +42,8 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 List<UserRightsGroupModel> result = new List<UserRightsGroupModel>();
 
@@ -100,8 +100,8 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 // Convert model list to JSON string
                 string jsonData = JsonConvert.SerializeObject(request.UserRights);
@@ -145,8 +145,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
 
                 DataSet ds = new DataSet();

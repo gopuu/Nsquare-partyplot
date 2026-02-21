@@ -32,8 +32,8 @@ public class StaffDocumentsController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             DataTable dt = new DataTable();
 
@@ -87,8 +87,8 @@ public class StaffDocumentsController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             long rowId = 0;
 
@@ -150,8 +150,8 @@ public class StaffDocumentsController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             using (SqlConnection con = new SqlConnection(connString))
             using (SqlCommand cmd = new SqlCommand("DeleteStaffDocuments", con))

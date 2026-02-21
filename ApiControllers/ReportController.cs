@@ -201,9 +201,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using var stream = new MemoryStream();
@@ -233,17 +233,35 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtInvoice);
                 }
 
-                if (dtCompany.Rows.Count == 0 || dtInvoice.Rows.Count == 0)
+                if (dtInvoice.Rows.Count == 0)
                     throw new Exception("Invoice data not found");
 
-                DataRow inv = dtInvoice.Rows[0];
+                // Safe Invoice Row
+                DataRow inv = null;
+                if (dtInvoice != null && dtInvoice.Rows.Count > 0)
+                {
+                    inv = dtInvoice.Rows[0];
+                }
 
-                string companyName = dtCompany.Rows[0]["CompanyName"].ToString() ?? "";
-                string companyAddress = dtCompany.Rows[0]["CompanyAddress"].ToString() ?? "";
-                string companyPhone = dtCompany.Rows[0]["CompanyMobile"].ToString() ?? "";
-                string logoFile = dtCompany.Rows[0]["CompanyLogo"].ToString() ?? "";
-                string userName = dtCompany.Rows[0]["UserName"].ToString() ?? "";
+                // Safe Company Data
+                string companyName = "";
+                string companyAddress = "";
+                string companyPhone = "";
+                string logoFile = "";
+                string userName = "";
 
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+
+                if (isCompanyAvailable)
+                {
+                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                    companyPhone = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                }
+
+                // Page Event (safe even if userName empty)
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
@@ -254,32 +272,66 @@ namespace ERPAdmin.ApiControllers
                     headerTable.WidthPercentage = 100;
                     headerTable.SetWidths(new float[] { 20f, 80f });
 
-                    Image logo = Image.GetInstance(
-                        Path.Combine(_env.WebRootPath, "assets2", "img", logoFile)
-                    );
-                    logo.ScaleToFit(70f, 70f);
-
-                    headerTable.AddCell(new PdfPCell(logo)
+                    if (isCompanyAvailable)
                     {
-                        Border = Rectangle.BOTTOM_BORDER,
-                        Padding = 10
-                    });
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
 
-                    PdfPCell infoCell = new PdfPCell
+                        if (System.IO.File.Exists(logoPath))
+                        {
+                            Image logo = Image.GetInstance(logoPath);
+                            logo.ScaleToFit(70f, 70f);
+
+                            headerTable.AddCell(new PdfPCell(logo)
+                            {
+                                Border = Rectangle.BOTTOM_BORDER,
+                                Padding = 10
+                            });
+                        }
+                        else
+                        {
+                            headerTable.AddCell(new PdfPCell(new Phrase(""))
+                            {
+                                Border = Rectangle.BOTTOM_BORDER,
+                                Padding = 10
+                            });
+                        }
+
+                        PdfPCell infoCell = new PdfPCell
+                        {
+                            Border = Rectangle.BOTTOM_BORDER,
+                            Padding = 10,
+                            HorizontalAlignment = Element.ALIGN_CENTER
+                        };
+
+                        infoCell.AddElement(new Paragraph(companyName,
+                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+
+                        infoCell.AddElement(new Paragraph(companyAddress,
+                            FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+
+                        infoCell.AddElement(new Paragraph(companyPhone,
+                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                        headerTable.AddCell(infoCell);
+                    }
+                    else
                     {
-                        Border = Rectangle.BOTTOM_BORDER,
-                        Padding = 10,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
+                        // Same behavior as previous solution
+                        PdfPCell messageCell = new PdfPCell(
+                            new Phrase("[PAGE HEADER] Company Data Not Found",
+                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.RED)))
+                        {
+                            Border = Rectangle.BOTTOM_BORDER,
+                            Colspan = 2,
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 15
+                        };
 
-                    infoCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                    infoCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                    infoCell.AddElement(new Paragraph(companyPhone, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                        headerTable.AddCell(messageCell);
+                    }
 
-                    headerTable.AddCell(infoCell);
                     document.Add(headerTable);
                 }
-
                 // ================= TITLE =================
                 string title = "TAX INVOICE";
                 if (request.ProformaInvoiceNo > 0)
@@ -427,9 +479,9 @@ namespace ERPAdmin.ApiControllers
                     ControllerContext, Request,
                     out string connString,
                     out string domain,
-                    out IActionResult errorResult))
+                    out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using MemoryStream stream = new MemoryStream();
@@ -485,31 +537,63 @@ namespace ERPAdmin.ApiControllers
 
 
                 /* ================= HEADER ================= */
+                /* ================= HEADER ================= */
                 PdfPTable header = new PdfPTable(2);
                 header.WidthPercentage = 100;
                 header.SetWidths(new float[] { 20, 80 });
 
-                string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img",
-                    dtCompany.Rows[0]["CompanyLogo"].ToString());
-
-                Image logo = Image.GetInstance(logoPath);
-                logo.ScaleToFit(60, 60);
-
-                header.AddCell(new PdfPCell(logo) { Border = Rectangle.NO_BORDER });
-
-                PdfPCell compCell = new PdfPCell
+                if (dtCompany != null && dtCompany.Rows.Count > 0)
                 {
-                    Border = Rectangle.NO_BORDER,
-                    HorizontalAlignment = Element.ALIGN_CENTER
-                };
-                compCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyName"].ToString(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14)));
-                compCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyAddress"].ToString(),
-                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    string logoPath = Path.Combine(
+                        _env.WebRootPath,
+                        "assets2",
+                        "img",
+                        dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? ""
+                    );
 
-                header.AddCell(compCell);
+                    if (System.IO.File.Exists(logoPath))
+                    {
+                        Image logo = Image.GetInstance(logoPath);
+                        logo.ScaleToFit(60, 60);
+                        header.AddCell(new PdfPCell(logo) { Border = Rectangle.NO_BORDER });
+                    }
+                    else
+                    {
+                        header.AddCell(new PdfPCell(new Phrase("")) { Border = Rectangle.NO_BORDER });
+                    }
+
+                    PdfPCell compCell = new PdfPCell
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    compCell.AddElement(new Paragraph(
+                        dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "",
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14)));
+
+                    compCell.AddElement(new Paragraph(
+                        dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "",
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+
+                    header.AddCell(compCell);
+                }
+                else
+                {
+                    // No company data found
+                    PdfPCell messageCell = new PdfPCell(
+                        new Phrase("[PAGE HEADER] Company Data Not Found",
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.RED)))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        Colspan = 2,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    header.AddCell(messageCell);
+                }
+
                 document.Add(header);
-
                 document.Add(new Paragraph("\n"));
 
                 /* ================= EVENT FORM TITLE ================= */
@@ -906,9 +990,9 @@ namespace ERPAdmin.ApiControllers
             apiResponse response = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -954,23 +1038,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -1144,8 +1242,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 // === Fetch Data from DB ===
                 DataSet dsReport = new DataSet();
@@ -1243,9 +1341,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -1288,23 +1386,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -1447,8 +1559,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -1543,9 +1655,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -1588,23 +1700,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -1749,8 +1875,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -1842,9 +1968,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -1887,23 +2013,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -2057,9 +2197,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataSet dsReport = new DataSet();
@@ -2165,9 +2305,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -2210,23 +2350,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -2370,8 +2524,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -2465,9 +2619,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -2510,23 +2664,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -2669,8 +2837,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -2763,9 +2931,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -2808,23 +2976,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -2968,9 +3150,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataSet dsReport = new DataSet();
@@ -3078,9 +3260,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -3123,23 +3305,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -3282,8 +3478,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -3378,9 +3574,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -3423,23 +3619,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -3582,8 +3792,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -3678,9 +3888,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -3723,23 +3933,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -3883,8 +4107,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -3976,9 +4200,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -4021,23 +4245,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -4181,8 +4419,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 
@@ -4276,9 +4514,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -4321,23 +4559,37 @@ namespace ERPAdmin.ApiControllers
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany.Rows.Count == 0)
-                        throw new Exception("Company details not found.");
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
 
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
-
-                    // Safe logo loading
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                        if (System.IO.File.Exists(logoPath))
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? string.Empty;
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? string.Empty;
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? string.Empty;
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? string.Empty;
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? string.Empty;
+
+                        // Safe logo loading
+                        if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            logo = Image.GetInstance(logoPath);
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                            if (System.IO.File.Exists(logoPath))
+                            {
+                                logo = Image.GetInstance(logoPath);
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Fallback values
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                        companyAddress = string.Empty;
+                        companyphoneNo = string.Empty;
+                        userName = string.Empty;
+
+                        // Optional: Log warning
+                        //_logger.LogWarning("Company details not found while generating PDF.");
                     }
                 }
 
@@ -4480,8 +4732,8 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataSet dsReport = new DataSet();
 

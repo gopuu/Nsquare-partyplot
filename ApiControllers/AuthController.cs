@@ -99,8 +99,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 DataSet ds = new DataSet();
                 SqlDataAdapter adapter;
@@ -211,8 +211,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();            
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
                 SqlConnection conn = new SqlConnection(connString);
                 DataSet ds = new DataSet();
                 SqlDataAdapter adapter;

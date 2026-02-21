@@ -39,9 +39,9 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using SqlConnection con = new SqlConnection(connString);
@@ -100,9 +100,9 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 long subCategoryId;
@@ -148,9 +148,9 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using SqlConnection con = new SqlConnection(connString);

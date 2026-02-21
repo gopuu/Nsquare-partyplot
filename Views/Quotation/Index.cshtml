@@ -1,0 +1,256 @@
+﻿@{
+    ViewData["Title"] = "Quotation Master";
+    Layout = "_Layout";
+}
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+@section Styles {
+    <link href="~/assets2/css/customdatatable/customdatatable.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/assets2/css/Quotation/Quotation.css" asp-append-version="true" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/assets2/js/Quotation/Quotation.js" asp-append-version="true"></script>
+}
+
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0 text-warning">Quotation Master</h4>
+        <button class="btn btn-outline-warning btn-sm" id="btn-add">
+            <i class="fa fa-plus-circle"></i> Add Quotation
+        </button>
+    </div>
+
+    <div id="tableMain">
+        <table class="table table-striped table-bordered w-100"></table>
+    </div>
+</div>
+
+<div class="modal fade" id="quotationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-warning text-white py-1">
+                <h5 class="modal-title text-white">Add Quotation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+                <input type="hidden" id="quotationId" value="0" />
+                <input type="hidden" id="bookingId" value="0" />
+
+                <div class="row">
+                    <!-- LEFT SIDE -->
+                    <div class="col-md-8">
+
+                        <div class="row g-2 mb-1">
+
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">Banquet</label>
+                                <select id="banquetId" class="form-select form-select-sm p-1"></select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Slot</label>
+                                <select id="slotId" class="form-select form-select-sm p-1"></select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">From Date</label>
+                                <input type="date" id="fromDate" class="form-control form-control-sm p-1" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Till Date</label>
+                                <input type="date" id="tillDate" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <!-- Time Section -->
+                        <div class="row mb-1">
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Start Time</label>
+                                <input type="time" id="startTime" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">End Time</label>
+                                <input type="time" id="endTime" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <!-- Client Section -->
+                        <div class="row mb-1">
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">Select Client</label>
+                                <select id="clientId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label compact-label">Client Name</label>
+                                <input type="text" id="clientName" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-1">
+                            <div class="col-md-6">
+                                <label class="form-label compact-label">Address</label>
+                                <input type="text" id="clientAddress" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label compact-label">Email</label>
+                                <input type="text" id="clientEmail" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-1">
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">Contact</label>
+                                <input type="text" id="clientContact" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">GSTIN</label>
+                                <input type="text" id="clientGstIn" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">State</label>
+                                <select id="clientStateId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                        </div>
+
+                        <!-- Booking Details -->
+                        <h6 class="text-danger mt-3">Booking Details</h6>
+                        <div class="row mb-1">
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Event</label>
+                                <select id="eventSubTypeId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Banquet Rent</label>
+                                <input type="number" id="banquetRent" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Pax</label>
+                                <input type="number" id="pax" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Reference</label>
+                                <select id="referenceTypeId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                        </div>
+
+                        <!-- Other Services -->
+                        <h6 class="text-danger mt-2">Other Services</h6>
+                        <div id="otherServicesContainer"></div>
+
+                        <button type="button" class="btn btn-xs btn-primary mt-1" id="btnAddService">
+                            + Add More
+                        </button>
+
+                    </div>
+
+                    <!-- RIGHT SIDE -->
+                    <div class="col-md-4 border-start">
+                        <h6 class="text-danger">Other Charges</h6>
+
+                        <div class="row g-1 mb-2">
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Decoration</small>
+                                <input type="number" id="decorationAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Sound System</small>
+                                <input type="number" id="soundAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Projector & Screen</small>
+                                <input type="number" id="projectorAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <h6 class="d-none">Select Food Package</h6>
+
+                        <div id="packageContainer">
+                            <!-- Dynamically load packages -->
+                        </div>
+
+                        <div class="form-check mt-3">
+                            <input type="checkbox" id="isPrintExclusive" class="form-check-input" />
+                            <label class="form-check-label">
+                                Print: All prices are exclusive of taxes
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" id="isPrintFoodItems" class="form-check-input" />
+                            <label class="form-check-label">
+                                Print: Print food items
+                            </label>
+                        </div>
+
+                        <hr />
+
+                        <div class="mt-3">
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>Sub Total</strong>
+                                <input type="number" id="subTotal" class="form-control form-control-sm p-1 w-50 text-end" value="0" readonly />
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2 d-none">
+                                <strong>Tax (18%)</strong>
+                                <input type="number" id="taxAmount" class="form-control form-control-sm p-1 w-50 text-end" value="0" readonly />
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <strong>Net Total</strong>
+                                <input type="number" id="grandTotal" class="form-control form-control-sm p-1 w-50 text-end fw-bold" value="0" readonly />
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer py-2">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-warning btn-sm" id="btnSaveQuotation">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning py-1">
+                <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="/assets/js/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you Sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Delete this record?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-outline-danger" id="delete-record">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END MODAL -->

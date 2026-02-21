@@ -34,8 +34,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // Get connection string and domain
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -102,8 +102,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Get connection & domain
-                if (!TryGetConnectionAndDomain(ControllerContext,Request,out string connString,out string domain,out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext,Request,out string connString,out string domain,out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_RatingBreakdown", con))
@@ -163,7 +163,7 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";
@@ -245,7 +245,7 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";
@@ -305,7 +305,7 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";
@@ -369,8 +369,8 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_RatingsOverTime", con))
@@ -432,9 +432,9 @@ namespace ERPAdmin.ApiControllers
                 // 🔹 Connection + Domain
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -495,9 +495,9 @@ namespace ERPAdmin.ApiControllers
                 // 🔹 Connection + Domain
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))

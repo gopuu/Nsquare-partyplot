@@ -37,9 +37,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataSet ds = new DataSet();

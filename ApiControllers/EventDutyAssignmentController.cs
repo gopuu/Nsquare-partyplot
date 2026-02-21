@@ -30,8 +30,8 @@ public class EventDutyAssignmentController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             DataTable dt = new DataTable();
 
@@ -96,8 +96,8 @@ public class EventDutyAssignmentController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             long rowId = 0;
 
@@ -153,8 +153,8 @@ public class EventDutyAssignmentController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connStr, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             using (SqlConnection con = new SqlConnection(connStr))
             using (SqlCommand cmd = new SqlCommand("DeleteEventDutyAssignment", con))

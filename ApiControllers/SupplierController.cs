@@ -39,8 +39,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetSupplierList", con))
@@ -111,8 +111,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 using (SqlConnection conn = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveSupplier", conn))
@@ -200,8 +200,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("DeleteSupplier", con))

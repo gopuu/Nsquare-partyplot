@@ -39,8 +39,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 DataTable dt = new DataTable();
                 using (SqlConnection con = new SqlConnection(connString))
@@ -96,9 +96,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataTable dt = new DataTable();
@@ -168,9 +168,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -247,9 +247,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -308,9 +308,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -370,9 +370,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -427,8 +427,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 DataTable dt = new DataTable();
                 using (SqlConnection con = new SqlConnection(connString))
@@ -484,8 +484,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                { return errorResult; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 DataTable dt = new DataTable();
                 using (SqlConnection con = new SqlConnection(connString))
@@ -545,9 +545,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -618,9 +618,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -691,9 +691,9 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 GetDailyReportSummaryResponse summary = null;

@@ -29,7 +29,7 @@ namespace ERPAdmin.ApiControllers
     HttpRequest request,
     out string connString,
     out string domain,
-    out IActionResult errorResult)
+    out IActionResult? errorResult)
         {
             connString = _connClass.GetChildConnectionString();
             domain = _connClass.GetDomainName();

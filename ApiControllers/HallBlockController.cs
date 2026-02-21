@@ -37,9 +37,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataTable dt = new DataTable();
@@ -99,9 +99,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 long hallBlockId = 0;
@@ -153,9 +153,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
+                    out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))

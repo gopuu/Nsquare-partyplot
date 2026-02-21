@@ -33,8 +33,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataTable dt = new DataTable();
 
@@ -93,8 +93,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 long updatedId = 0;
                 string dbStatus = "Success";
@@ -156,8 +156,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("DeleteSupportTicket", con))

@@ -21,7 +21,7 @@ namespace ERPAdmin.ApiControllers
         private readonly ImageUploadService _imageUploadService;
         //private readonly string domainUrl = "http://tenxsoftwarek-001-site1.qtempurl.com/";
         private readonly string domainUrl;
-        private readonly ConnClass _connClass;
+        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
 
         public Company_FoodItem_PackageController(IConfiguration configuration, ImageUploadService imageUploadService, IHttpContextAccessor httpContextAccessor)
@@ -44,9 +44,9 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -85,9 +85,9 @@ namespace ERPAdmin.ApiControllers
             List<FoodPackageModel> packages = new List<FoodPackageModel>();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -157,9 +157,9 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -245,9 +245,9 @@ namespace ERPAdmin.ApiControllers
             List<FoodPackageModel_Dropdown> packages = new List<FoodPackageModel_Dropdown>();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))

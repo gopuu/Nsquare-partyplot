@@ -39,9 +39,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 long paymentId = 0;
@@ -103,9 +103,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 DataTable dt = new DataTable();
@@ -180,9 +180,9 @@ namespace ERPAdmin.ApiControllers
                         ControllerContext, Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
+                        out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using var stream = new MemoryStream();
@@ -353,9 +353,9 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using var stream = new MemoryStream();

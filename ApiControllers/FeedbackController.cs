@@ -39,8 +39,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 List<FeedbackStepModel> steps = new List<FeedbackStepModel>();
 
@@ -107,8 +107,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse response = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 // Convert to JSON for SP
                 string jsonData = JsonConvert.SerializeObject(request.Responses);
@@ -160,8 +160,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 List<FeedbackData> feedbackList = new List<FeedbackData>();
 
@@ -224,8 +224,8 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(
                     ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 FeedbackDashboardResponse dashboard = new FeedbackDashboardResponse();
 
@@ -281,8 +281,8 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 DashboardRatingBreakdownResponse dashboardData = new DashboardRatingBreakdownResponse();
                 dashboardData.RatingBreakdown = new List<RatingBreakdownModel>();
@@ -333,8 +333,8 @@ namespace ERPAdmin.ApiControllers
                     Request,
                     out string connString,
                     out string domain,
-                    out IActionResult errorResult))
-                    return errorResult;
+                    out IActionResult? errorResult))
+                    return errorResult!;
 
                 DashboardFeedbackRatingOverTimeResponse result = new DashboardFeedbackRatingOverTimeResponse();
                 result.RatingsOverTime = new List<RatingOverTimeModel>();

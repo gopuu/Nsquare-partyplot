@@ -28,14 +28,11 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveFoodWastage([FromBody] SaveFoodWastageRequest model)
         {
             apiResponse apiResponse = new apiResponse();
-            string connString = "";
-
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult; // already 200 based on your pattern
+                    return errorResult!; // already 200 based on your pattern
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -89,13 +86,12 @@ namespace ERPAdmin.ApiControllers
         {
             apiResponse apiResponse = new apiResponse();
             List<FoodWastage> list = new();
-            string connString = "";
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request,out connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult; // already handled
+                    return errorResult!; // already handled
                 }
 
                 DataTable dt = new DataTable();

@@ -34,8 +34,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 SqlConnection con = new SqlConnection(connString);
                 SqlCommand cmd = new SqlCommand("GetRawMaterialsList", con);
@@ -141,12 +141,11 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveRawMaterial([FromBody] SaveRawMaterials model)
         {
             apiResponse apiResponse = new apiResponse();
-            string connString = "";
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveRawMaterials", con))
@@ -289,8 +288,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 SqlConnection conn = new SqlConnection(connString);
                 SqlCommand cmd = new SqlCommand("DeleteRawMaterials", conn);
@@ -328,8 +327,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveRawMaterials_IsFavourite", con))
@@ -365,8 +364,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveRawMaterials_IsActive", con))
@@ -399,12 +398,11 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetRawMaterial_CategorySummary([FromBody] GetCategorySummaryRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-            string connString = "";
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 List<RawMaterialCategorySummary> list = new List<RawMaterialCategorySummary>();
 

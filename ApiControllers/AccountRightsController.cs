@@ -36,8 +36,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 // Convert StaffIds to JSON
                 string staffJson = request?.StaffIds != null && request.StaffIds.Any()
@@ -98,8 +98,8 @@ namespace ERPAdmin.ApiControllers
                         Request,
                         out string connString,
                         out string domain,
-                        out IActionResult errorResult))
-                    return errorResult;
+                        out IActionResult? errorResult))
+                    return errorResult!;
 
                 if (request == null ||
                     request.StaffIds == null || !request.StaffIds.Any() ||

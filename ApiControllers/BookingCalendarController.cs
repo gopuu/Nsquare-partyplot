@@ -53,9 +53,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate and get connection string
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 // 🔹 Database setup
@@ -191,8 +191,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate connection setup
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 long bookingId = 0;
                 using (SqlConnection con = new SqlConnection(connString))
@@ -301,9 +301,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate and get connection string
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -343,9 +343,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate connection and domain
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -391,9 +391,9 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate and get connection string
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -1276,7 +1276,7 @@ namespace ERPAdmin.ApiControllers
             //doc.Add(mukhwasTable);
             // ===== MUKHWAS =====
             Phrase mukhwasPhrase = new Phrase();
-            mukhwasPhrase.Add(new Chunk("Mukhwas  \n", boldFont));
+            //mukhwasPhrase.Add(new Chunk("Mukhwas  \n", boldFont));
             mukhwasPhrase.Add(new Chunk(report.Mukhwas, normalFont));
 
             PdfPCell mukhwasCell = new PdfPCell(mukhwasPhrase);
@@ -1572,8 +1572,8 @@ namespace ERPAdmin.ApiControllers
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 string baseDir = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "PackageReports"); //here
                 if (!Directory.Exists(baseDir)) Directory.CreateDirectory(baseDir);
@@ -1609,8 +1609,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataTable dt = new DataTable();
 
@@ -1680,8 +1680,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 // 🔹 Validate connection setup
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult)){
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult)){
+                    return errorResult!;
                 }
 
                 long bookingId = 0;

@@ -36,8 +36,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 DataTable dt = new DataTable();
 
@@ -82,7 +82,7 @@ namespace ERPAdmin.ApiControllers
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                ErrorLogger.LogException(ex, ControllerContext, Request, null ?? "");
 
                 apiResponse.message = "Error: " + ex.Message;
                 apiResponse.status = "Error";
@@ -98,8 +98,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 long rowId = 0;
 
@@ -153,8 +153,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("DeleteAccountMaster", con))

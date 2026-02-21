@@ -252,6 +252,9 @@ function loadLeadSourceList(selectedId = null) {
             if (selectedId && selectedId != 0) {
                 ddl.val(String(selectedId));
             }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load lead sources');  
         }
     });
 }
@@ -293,13 +296,8 @@ function loadEnquiryList() {
                 $("#clientEnquiryDropdown").html(`<option value="0">No Enquiry Client Found</option>`);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching Enquiry list.",
-                confirmButtonText: "OK",
-            });
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load enquiry list');  
         }
     });
 }
@@ -319,21 +317,24 @@ function loadStateList() {
             //console.log("state list response:", response);
             if (response.status === "Success") {
                 let options = `<option value="0">-- Select State --</option>`; // default option
+                let gujaratId = 0;
                 $.each(response.data, function (index, item) {
                     options += `<option value="${item.Id}">${item.Name}</option>`;
+                    if (item.Name.toLowerCase() === "gujarat") {
+                        gujaratId = item.Id;
+                    }
                 });
                 $("#clientStateDropdown").html(options);
+                // Set default selection if found
+                if (gujaratId > 0) {
+                    $("#clientStateDropdown").val(gujaratId);
+                }
             } else {
                 $("#clientStateDropdown").html(`<option value="0">No State Found</option>`);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching State list.",
-                confirmButtonText: "OK",
-            });
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load state list');
         }
     });
 }
@@ -359,13 +360,8 @@ function loadSubEventList() {
                 $("#booking_subEventDropdown").html(`<option value="0">No Event Found</option>`);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching Event list.",
-                confirmButtonText: "OK",
-            });
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load event list');
         }
     });
 }
@@ -392,8 +388,8 @@ function loadFoodPackageList() {
                 $(".foodPackageDropdown").html(`<option value="0">No Package Found</option>`);
             }
         },
-        error: function () {
-            Swal.fire({ icon: "error", title: "Error", text: "Error fetching Food Packages." });
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load food packages'); 
         }
     });
 }
@@ -2529,11 +2525,14 @@ document.addEventListener("DOMContentLoaded", function () {
     //discount change
     $("#paymentSummary_BookingAmount_Type").on("change", function () {
         $("#paymentSummary_BookingAmount_Amount").val(0);
-        updateBookingDiscount();
+        //updateBookingDiscount();
+        recalculatePaymentSummary();
     });
 
     $("#paymentSummary_BookingAmount_Amount").on("input", function () {
-        updateBookingDiscount();
+        //updateBookingDiscount();
+        recalculatePaymentSummary();
+
     });
 
     $(document).on("change", "#PaymentDetails_Mode", function () {
@@ -2706,17 +2705,17 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("btnEventForm").addEventListener("click", function () {
         const bookingId = getBookingId();
         const userId = parseInt(sessionStorage.getItem('userId') || 0);
-
-        //console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
+        var payload = {
+            BookingId: bookingId,
+            ActionBy: userId
+        };
+        console.log("payload EventForm:", payload);
         $.ajax({
             url: '/api/Report/DownloadBookingEventReport',
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
-            data: JSON.stringify({
-                BookingId: bookingId,
-                ActionBy: userId
-            }),
+            data: JSON.stringify(payload),
             success: function (res) {
 
                 if (res.status === "Success" && res.data && res.data.FileUrl) {

@@ -20,7 +20,7 @@ namespace ERPAdmin.ApiControllers
         private readonly ImageUploadService _imageUploadService;
         //private readonly string domainUrl = "http://tenxsoftwarek-001-site1.qtempurl.com/";
         private readonly string domainUrl;
-        private readonly ConnClass _connClass;
+        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
 
         public Company_FoodRate_OtherChargeController(IConfiguration configuration, ImageUploadService imageUploadService, IHttpContextAccessor httpContextAccessor)
@@ -44,9 +44,9 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
-                    return errorResult;
+                    return errorResult!;
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
@@ -87,8 +87,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -145,8 +145,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -208,11 +208,11 @@ public class CompanyFoodRateOtherCharge
 {
     public long Id { get; set; }
     public string ServiceName { get; set; }
-    public string ChargeType { get; set; }
+    public string? ChargeType { get; set; }
     public decimal Amount { get; set; }
     public string TaxType { get; set; }
     public decimal? GSTRate { get; set; }
-    public string HSNSAC { get; set; }
+    public string? HSNSAC { get; set; }
     public bool? IsFixedService { get; set; }
     public string TallyLedgerName { get; set; }
 }

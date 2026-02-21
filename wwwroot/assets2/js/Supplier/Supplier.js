@@ -121,7 +121,7 @@
 
             SupplierType: $("input[name='supType']:checked").val(),
 
-            Documents: fileBase64.FileBase64 || null,    // <-- base64 file or null
+            Documents: fileBase64?.FileBase64 || null,    // <-- base64 file or null
 
             IsActive: $("#supIsActive").is(":checked"),
             ActionBy: parseInt(sessionStorage.getItem("userId") ?? 0)

@@ -39,8 +39,8 @@ public class StaffMasterController : MasterController
                 ControllerContext, Request,
                 out string connString,
                 out string domain,
-                out IActionResult errorResult))
-                return errorResult;
+                out IActionResult? errorResult))
+                return errorResult!;
 
             using (SqlConnection con = new SqlConnection(connString))
             using (SqlCommand cmd = new SqlCommand("GetStaffMaster", con))
@@ -134,8 +134,8 @@ public class StaffMasterController : MasterController
         try
         {
             if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                out string connString, out string domain, out IActionResult errorResult))
-                return errorResult;
+                out string connString, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             long staffId;
 
@@ -277,8 +277,8 @@ public class StaffMasterController : MasterController
 
         try
         {
-            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                return errorResult;
+            if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                return errorResult!;
 
             using (SqlConnection con = new SqlConnection(connString))
             using (SqlCommand cmd = new SqlCommand("DeleteStaffMaster", con))

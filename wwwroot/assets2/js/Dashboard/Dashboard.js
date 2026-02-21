@@ -46,6 +46,12 @@ $(document).ready(function () {
         loadYearDropdown(); //loadOverallBookingsStatistics(currentYear);
         $("#yearDropdown").text(currentYear);
     });
+
+    //Lead SOurce
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });
 
 //1. Dashboard Widget Counts --- START ------------------------

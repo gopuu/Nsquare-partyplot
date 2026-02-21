@@ -20,7 +20,7 @@ namespace ERPAdmin.ApiControllers
         private readonly ImageUploadService _imageUploadService;
         //private readonly string domainUrl = "http://tenxsoftwarek-001-site1.qtempurl.com/";
         private readonly string domainUrl;
-        private readonly ConnClass _connClass;
+        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
 
         public Company_InvoiceSetupController(IConfiguration configuration, ImageUploadService imageUploadService, IHttpContextAccessor httpContextAccessor)
@@ -43,8 +43,8 @@ namespace ERPAdmin.ApiControllers
             var apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 List<dynamic> invoiceSetupList = new();
 
@@ -108,7 +108,7 @@ namespace ERPAdmin.ApiControllers
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                ErrorLogger.LogException(ex, ControllerContext, Request, null ?? "");
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 return StatusCode(500, apiResponse);
@@ -122,8 +122,8 @@ namespace ERPAdmin.ApiControllers
             var apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -204,8 +204,8 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                        out string connString, out string domain, out IActionResult errorResult))
-                    return errorResult;
+                        out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetCompanyInvoiceNumbers", con))
