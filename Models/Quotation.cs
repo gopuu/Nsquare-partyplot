@@ -9,7 +9,7 @@
     public class GetQuotationResponse
     {
         public long Id { get; set; }
-        public long? BookingId { get; set; }
+        public long? EnquiryDealId { get; set; }
         public long BanquetId { get; set; }
         public string? BanquetName { get; set; }
         public long SlotId { get; set; }
@@ -17,9 +17,12 @@
 
         public string? FromDate { get; set; }
         public string? TillDate { get; set; }
+        public string? FromDate2 { get; set; }
+        public string? TillDate2 { get; set; }
         public string? StartTime { get; set; }
         public string? EndTime { get; set; }
-
+        public string? QuotationDate { get; set; }
+        public string? QuotationDate2 { get; set; }
         public long? ClientId { get; set; }
         public string ClientName { get; set; } = string.Empty;
         public string? Address { get; set; }
@@ -50,8 +53,8 @@
 
         public string? Notes { get; set; }
 
-        public List<QuotationPackageModel>? Packages { get; set; } = new();
-        public List<QuotationOtherServiceModel>? OtherServices { get; set; } = new();
+        public List<QuotationPackageModel>? Packages_JSON { get; set; } = new();
+        public List<QuotationOtherServiceModel>? OtherServices_JSON { get; set; } = new();
     }
     public class QuotationPackageModel
     {
@@ -74,13 +77,13 @@
     {
         public long Id { get; set; }
 
-        public long? BookingId { get; set; }
+        public long? EnquiryDealId { get; set; }
         public long BanquetId { get; set; }
         public long SlotId { get; set; }
-        public string FromDate { get; set; }
-        public string TillDate { get; set; }
-        public string StartTime { get; set; }
-        public string EndTime { get; set; }
+        public string? FromDate { get; set; }
+        public string? TillDate { get; set; }
+        public string? StartTime { get; set; }
+        public string? EndTime { get; set; }
 
         public long? ClientId { get; set; }
         public string ClientName { get; set; } = string.Empty;

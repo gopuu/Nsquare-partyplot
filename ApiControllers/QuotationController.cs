@@ -57,16 +57,21 @@ namespace ERPAdmin.ApiControllers
                             var item = new GetQuotationResponse
                             {
                                 Id = Convert.ToInt64(reader["Id"]),
-                                BookingId = reader["BookingId"] == DBNull.Value ? null : Convert.ToInt64(reader["BookingId"]),
+                                EnquiryDealId = reader["EnquiryDealId"] == DBNull.Value ? 0 : Convert.ToInt64(reader["EnquiryDealId"]),
                                 BanquetId = Convert.ToInt64(reader["BanquetId"]),
                                 BanquetName = reader["BanquetName"]?.ToString(),
                                 SlotId = Convert.ToInt64(reader["SlotId"]),
                                 SlotName = reader["SlotName"]?.ToString(),
 
-                                FromDate = reader["SlotName"]?.ToString(),
+                                FromDate = reader["FromDate"]?.ToString(),
                                 TillDate = reader["TillDate"]?.ToString(),
+                                FromDate2 = reader["FromDate2"]?.ToString(),
+                                TillDate2 = reader["TillDate2"]?.ToString(),
                                 StartTime = reader["StartTime"]?.ToString(),
                                 EndTime = reader["EndTime"]?.ToString(),
+
+                                QuotationDate = reader["QuotationDate"]?.ToString(),
+                                QuotationDate2 = reader["QuotationDate2"]?.ToString(),
 
                                 ClientId = reader["ClientId"] == DBNull.Value ? null : Convert.ToInt64(reader["ClientId"]),
                                 ClientName = Convert.ToString(reader["ClientName"]) ?? "",
@@ -102,14 +107,14 @@ namespace ERPAdmin.ApiControllers
                             var packagesJson = reader["Packages_JSON"]?.ToString();
                             if (!string.IsNullOrEmpty(packagesJson))
                             {
-                                item.Packages = System.Text.Json.JsonSerializer
+                                item.Packages_JSON = System.Text.Json.JsonSerializer
                                     .Deserialize<List<QuotationPackageModel>>(packagesJson) ?? new();
                             }
 
                             var servicesJson = reader["OtherServices_JSON"]?.ToString();
                             if (!string.IsNullOrEmpty(servicesJson))
                             {
-                                item.OtherServices = System.Text.Json.JsonSerializer
+                                item.OtherServices_JSON = System.Text.Json.JsonSerializer
                                     .Deserialize<List<QuotationOtherServiceModel>>(servicesJson) ?? new();
                             }
 
@@ -156,7 +161,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@Id", model.Id);
-                    cmd.Parameters.AddWithValue("@BookingId", model.BookingId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EnquiryDealId", model.EnquiryDealId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@BanquetId", model.BanquetId);
                     cmd.Parameters.AddWithValue("@SlotId", model.SlotId);
                     cmd.Parameters.AddWithValue("@FromDate", model.FromDate);

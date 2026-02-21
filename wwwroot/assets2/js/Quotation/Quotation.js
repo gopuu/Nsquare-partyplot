@@ -27,7 +27,7 @@
             // ===== Basic =====
             Id: parseInt($("#quotationId").val()) || 0,
             // ===== Booking Info =====
-            BookingId: parseInt($("#bookingId").val()) || 0,
+            EnquiryDealId: parseInt($("#enquiryDealId").val()) || 0,
 
             BanquetId: parseInt($("#banquetId").val()) || 0,
             SlotId: parseInt($("#slotId").val()) || 0,
@@ -78,6 +78,7 @@
             ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
         };
         $("#btnSave").prop("disabled", true);
+        console.log("data save:", payload);
 
         $.ajax({
             url: "/api/Quotation/SaveQuotation",
@@ -158,6 +159,25 @@
                 handleApiError(xhr, status, error, "Delete Failed");
             },
         });
+    });
+
+
+    //SEND
+    $(document).on("click", ".btn-send", function () {
+        let row = $("#tableMain table").DataTable().row($(this).closest("tr")).data();
+        console.log("Send quotation:", row.Id);
+    });
+
+    //DOWNLOAD PDF
+    $(document).on("click", ".btn-download", function () {
+        let row = $("#tableMain table").DataTable().row($(this).closest("tr")).data();
+        console.log("Download PDF:", row.Id);
+    });
+
+    //BOOK
+    $(document).on("click", ".btn-book", function () {
+        let row = $("#tableMain table").DataTable().row($(this).closest("tr")).data();
+        console.log("Book quotation:", row.Id);
     });
 
     //Add Service Row
@@ -263,6 +283,7 @@ function fetchData(id=0, mode="add") {
 
                 // ===== Basic =====
                 $("#quotationId").val(q.Id);
+                $("#enquiryDealId").val(q.EnquiryDealId);
 
                 // ===== Booking Section =====
                 $("#banquetId").val(q.BanquetId);
@@ -275,7 +296,7 @@ function fetchData(id=0, mode="add") {
                 $("#endTime").val(q.EndTime || "");
 
                 // ===== Client Section =====
-                $("#clientId").val(q.ClientId || "0");
+                $("#clientId").val(row.ClientId).trigger("change");
                 $("#clientName").val(q.ClientName || "");
                 $("#clientAddress").val(q.Address || "");
                 $("#clientEmail").val(q.Email || "");
@@ -305,18 +326,17 @@ function fetchData(id=0, mode="add") {
 
                 // ===== Load Packages =====
                 if (q.Packages_JSON) {
-                    let packages = JSON.parse(q.Packages_JSON);
+                    let packages = q.Packages_JSON;
                     $(".package-checkbox").prop("checked", false);
 
                     packages.forEach(p => {
-                        $(".package-checkbox[value='" + p.PackageId + "']")
-                            .prop("checked", true);
+                        $(".package-checkbox[value='" + p.PackageId + "']").prop("checked", true);
                     });
                 }
 
                 // ===== Load Other Services =====
                 if (q.OtherServices_JSON) {
-                    let services = JSON.parse(q.OtherServices_JSON);
+                    let services = q.OtherServices_JSON;
 
                     $("#otherServicesContainer").html("");
 
@@ -382,21 +402,40 @@ function renderTable(data) {
         columns: [
             { data: 'srno', title: '#' },
             { data: 'ClientName', title: 'Client' },
-            { data: 'BanquetName', title: 'Banquet' },
+            { data: 'Email', title: 'Email' },
+            { data: 'ContactNo', title: 'Contact' },
+            { data: 'EventSubTypeName', title: 'Event' },
             {
-                data: 'FromDate',
-                title: 'From Date',
-                render: data => data ? data.split('T')[0] : ''
+                data: 'FromDate2',
+                title: 'Event Date'
             },
             {
-                data: 'TillDate',
-                title: 'Till Date',
-                render: data => data ? data.split('T')[0] : ''
+                data: 'QuotationDate2',
+                title: 'Quotation Date'
             },
-            { data: 'GrandTotal', title: 'Total', className: "text-end" },
+            { data: 'BanquetName', title: 'Hall' },
+            { data: 'SlotName', title: 'Slot' },
+            { data: 'BanquetRent', title: 'Rent' },
+            { data: 'Pax', title: 'PAX' },
+            { data: 'ReferenceTypeName', title: 'Medium' },
+            //{
+            //    data: 'GrandTotal',
+            //    title: 'Total',
+            //    className: "text-end",
+            //    render: function (data, type, row) {
+            //        if (!data) return "₹ 0.00";
+
+            //        let amount = parseFloat(data).toLocaleString('en-IN', {
+            //            minimumFractionDigits: 2,
+            //            maximumFractionDigits: 2
+            //        });
+            //        return "₹ " + amount;
+            //    }
+            //},
             {
                 data: null,
                 title: 'Action',
+                className: "text-center",
                 orderable: false,
                 render: function () {
                     return `
@@ -405,16 +444,39 @@ function renderTable(data) {
                                 <i class="fa fa-ellipsis-v"></i>
                             </button>
                             <ul class="dropdown-menu">
+
                                 <li>
                                     <a class="dropdown-item btn-edit" href="javascript:void(0)">
                                         <i class="fa fa-edit me-2 text-warning"></i> Edit
                                     </a>
                                 </li>
+
                                 <li>
                                     <a class="dropdown-item btn-delete" href="javascript:void(0)">
                                         <i class="fa fa-trash me-2 text-danger"></i> Delete
                                     </a>
                                 </li>
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <li>
+                                    <a class="dropdown-item btn-send" href="javascript:void(0)">
+                                        <i class="fa fa-paper-plane me-2 text-primary"></i> Send (Coming Soon)
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-download" href="javascript:void(0)">
+                                        <i class="fa fa-file-pdf me-2 text-danger"></i> Download (Coming Soon)
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-book" href="javascript:void(0)">
+                                        <i class="fa fa-check-circle me-2 text-success"></i> Book (Coming Soon)
+                                    </a>
+                                </li>
+
                             </ul>
                         </div>`;
                 }
@@ -430,6 +492,7 @@ function resetForm() {
 
     // ===== Basic =====
     $("#quotationId").val(0);
+    $("#enquiryDealId").val(0);
 
     // ===== Banquet / Slot / Date =====
     $("#banquetId").val("0");
@@ -441,7 +504,7 @@ function resetForm() {
     $("#endTime").val("");
 
     // ===== Client Section =====
-    $("#clientId").val("0");
+    $("#clientId").val(null).trigger("change");
     $("#clientName").val("");
     $("#clientAddress").val("");
     $("#clientEmail").val("");
@@ -597,32 +660,69 @@ function loadEnquiryList() {
         url: "/api/EnquiryDeal/GetEnquiryDealList",
         type: "GET",
         success: function (response) {
-            //console.log("enquiry list response:", response);
+
             if (response.status === "Success") {
-                let options = `<option value="0">-- Select Client --</option>`; // default option
-                options += `<option value="0">+ Add New Client</option>`; // default option
+
+                // 🔹 Store currently selected value (if any)
+                let selectedClientId = $("#clientId").val();
+
+                let options = `<option value="">-- Select Client --</option>`;
+                options += `<option value="add_new">+ Add New Client</option>`;
+
                 $.each(response.data, function (index, item) {
                     options += `
-                               <option
-                                   value="${item.Id}"
-                                   data-name="${item.Name || ''}"
-                                   data-email="${item.Email || ''}"
-                                   data-address="${item.Address || ''}"
-                                   data-contact="${item.Contact || ''}"
-                               >${item.Name} (${item.Contact})</option>`;
+                        <option 
+                            value="${item.Id}"
+                            data-name="${item.Name || ''}"
+                            data-email="${item.Email || ''}"
+                            data-address="${item.Address || ''}"
+                            data-contact="${item.Contact || ''}">
+                            ${item.Name} (${item.Contact || ''})
+                        </option>`;
                 });
+
                 $("#clientId").html(options);
 
-                $("#clientId").on("change", function () {
+                // Destroy Select2 if already initialized
+                if ($.fn.select2 && $("#clientId").hasClass("select2-hidden-accessible")) {
+                    $("#clientId").select2("destroy");
+                }
+
+                // Initialize Select2
+                $("#clientId").select2({
+                    dropdownParent: $("#quotationModal"),
+                    placeholder: "Select Client",
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                // 🔹 Restore selection if exists
+                if (selectedClientId && selectedClientId !== "") {
+                    if ($("#clientId option[value='" + selectedClientId + "']").length) {
+                        $("#clientId").val(selectedClientId).trigger("change");
+                    }
+                }
+
+                // Change Event
+                $("#clientId").off("change").on("change", function () {
+
                     const selected = $(this).find(":selected");
+                    const value = $(this).val();
+
+                    if (value === "add_new") {
+                        resetClientFields();
+                        return;
+                    }
 
                     $("#clientName").val(selected.data("name") || "");
                     $("#clientEmail").val(selected.data("email") || "");
                     $("#clientAddress").val(selected.data("address") || "");
                     $("#clientContact").val(selected.data("contact") || "");
                 });
-            } else {
-                $("#clientId").html(`<option value="0">No Enquiry Client Found</option>`);
+
+            }
+            else {
+                $("#clientId").html(`<option value="">No Client Found</option>`);
             }
         },
         error: function (xhr, status, error) {
