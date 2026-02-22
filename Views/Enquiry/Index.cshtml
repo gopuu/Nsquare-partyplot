@@ -333,8 +333,19 @@
                         <div class="text-danger small mt-1 error-msg d-none">Please enter Pax</div>
                     </div>
 
+                    <!--Package Dropdown-->
+                    <div class="col-md-2">
+                        <label for="packageDropdown" class="form-label">Package</label>
+                        <div class="input-group">
+                            <select id="packageDropdown" class="form-select form-select-sm">
+                                <option value="0">-- Select Package --</option>
+                            </select>
+                        </div>
+                        <div class="text-danger small mt-1 error-msg d-none">Please select package</div>
+                    </div>
+
                     <!-- Estimated Package Amount -->
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="packageAmount" class="form-label">
                             Estimated Package Amount <span class="text-danger">*</span>
                         </label>
@@ -343,7 +354,7 @@
                     </div>
 
                     <!--Estimated Amount-->
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="estimatedAmount" class="form-label">Estimated Amount <span class="text-danger">*</span></label>
                         <input type="number" class="form-control form-control-sm" id="estimatedAmount" placeholder="amount" value="0" step="1" min="0">
                         <div class="text-danger small mt-1 error-msg d-none">Please enter valid Amount</div>
@@ -726,6 +737,9 @@
         </div>
     </div>
 </div>
+
+<!-- Custom Tooltip-->
+<div id="dealTooltip" class="deal-tooltip bg-ai"></div>
 
 @section Scripts {
     <script src="~/assets2/js/Enquiry/Enquiry.js" asp-append-version="true"></script>

@@ -1,6 +1,13 @@
 ﻿.bg-rating {
     background: linear-gradient(90deg,#fbbf24,#f97316);
 }
+.bg-feedback {
+    background: linear-gradient(90deg,#6366f1,#8b5cf6);
+}
+.bg-ai {
+    background: linear-gradient(90deg,#2dd4bf,#06b6d4);
+}
+
 
 .btn-xs {
     padding: 0.15rem 0.35rem;

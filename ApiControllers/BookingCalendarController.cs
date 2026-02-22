@@ -161,6 +161,10 @@ namespace ERPAdmin.ApiControllers
                         booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);
 
+                        var paymentJson = dr["PaymentTrailList"] == DBNull.Value ? null : dr["PaymentTrailList"].ToString();
+                        booking.PaymentTrailList = !string.IsNullOrWhiteSpace(paymentJson)
+                            ? JsonConvert.DeserializeObject<List<PaymentTrailModel>>(paymentJson)
+                            : new List<PaymentTrailModel>();
                         bookings.Add(booking);
                     }
                 }

@@ -1319,7 +1319,7 @@ function generateDays(year, month) {
             Year: year,
             Month: month + 1 // JS month 0-based -> API month 1-based
         };
-
+        console.log("GetEnquiryCalendarMock payload:", req);
         $.ajax({
             url: "/api/BookingCalendar/GetEnquiryCalendarMock",
             type: "POST",
@@ -1397,7 +1397,7 @@ async function renderBoard(bookingData = null) {
     board.innerHTML = "";
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
     cachedDays = await generateDays(selectedYear, selectedMonth);
-    //console.log("renderBoard cachedDays:", cachedDays);
+    console.log("renderBoard cachedDays:", cachedDays);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -1732,7 +1732,7 @@ async function renderBoard(bookingData = null) {
 }
 
 //enquiry count - tooltip
-function enableEnquiryTooltips() {
+function enableEnquiryTooltips2() {
     const tooltip = document.getElementById("enquiryTooltip");
 
     // Show tooltip on hover
@@ -1787,6 +1787,77 @@ function enableEnquiryTooltips() {
         }
     });
 }
+function enableEnquiryTooltips() {
+
+    const tooltip = document.getElementById("enquiryTooltip");
+
+    document.addEventListener("mouseover", function (e) {
+
+        const badge = e.target.closest(".badge-enquiries");
+        if (!badge) return;
+
+        const list = badge.dataset.enquiryList
+            ? JSON.parse(badge.dataset.enquiryList)
+            : [];
+
+        const count = parseInt(badge.innerText);
+
+        if (count === 0 || list.length === 0) {
+            tooltip.style.display = "none";
+            return;
+        }
+
+        let totalAmount = 0;
+
+        let html = `
+            <table class="table table-sm table-bordered m-0">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        list.forEach(x => {
+
+            const amount = parseFloat(x.Amount) || 0;
+            totalAmount += amount;
+
+            html += `
+                <tr>
+                    <td>${x.Name}</td>
+                    <td class="text-end">₹${amount.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        // ✅ TOTAL ROW (Bold)
+        html += `
+            <tr class="fw-bold">
+                <td>Total</td>
+                <td class="text-end">₹${totalAmount.toLocaleString()}</td>
+            </tr>
+        `;
+
+        html += `</tbody></table>`;
+
+        tooltip.innerHTML = html;
+        tooltip.style.display = "block";
+
+        const rect = badge.getBoundingClientRect();
+        tooltip.style.left = (rect.right + 10 + window.scrollX) + "px";
+        tooltip.style.top = (rect.top + window.scrollY) + "px";
+    });
+
+    document.addEventListener("mouseout", function (e) {
+        if (e.target.closest(".badge-enquiries")) {
+            tooltip.style.display = "none";
+        }
+    });
+}
+//enquiry count - tooltip
 
 function adjustFontSizeForDays(daysCount) {
     const scale = daysCount > 30 ? 0.65 : daysCount > 29 ? 0.7 : 0.75;
@@ -4396,34 +4467,40 @@ function fillPaymentTrailTable(paymentList = []) {
         return;
     }
 
+    console.log("paymentList:", paymentList);
+
     paymentList.forEach((item, index) => {
         tbody.append(`
                 <tr>
                     <td>${index + 1}</td>
-                    <td><span class="fw-semibold text-dark">${item.Receipt_No || "—"}</span></td>
-                    <td><span class="badge bg-success-subtle text-success border">${item.Mode || "—"}</span></td>
-                    <td>${item.Payment_Date || "—"}</td>
-                    <td>${item.Txn_Id || "—"}</td>
-                    <td>${item.Cheque_Bank || "—"}</td>
-                    <td>${item.Cheque_No || "—"}</td>
-                    <td>${item.Cheque_Date || "—"}</td>
+                    <td><span class="fw-semibold text-dark">#${item.PaymentId || "—"}</span></td>
+                    <td><span class="badge bg-success-subtle text-success border">${item.ModeName || "—"}</span></td>
+                    <td>${item.DateOfPayment2 || "—"}</td>
+                    <td>${item.TxnId || "—"}</td>
+                    <td>${item.ChequeBank || "—"}</td>
+                    <td>${item.ChequeNo || "—"}</td>
+                    <td>${item.ChequeDate2 || "—"}</td>
                     <td class="text-success fw-semibold">₹${formatNumber(item.Amount) || "0"}</td>
-                    <td class="text-danger fw-semibold">₹${formatNumber(item.Due_Balance) || "0"}</td>
-                    <td class="text-muted small fst-italic">${item.Note || "—"}</td>
-                    <td>
-                        <button class="btn btn-light btn-sm border" title="View Receipt">
-                            <i class="fa-solid fa-file-invoice text-primary"></i>
-                        </button>
+                    <td class="text-danger fw-semibold">₹${formatNumber(item.DueBalance) || "0"}</td>
+                    <td class="text-muted small">
+                        ${
+                            item.PaymentNotes
+                                ? `<span class="text-primary cursor-pointer" title="${item.PaymentNotes}">
+                                    View Notes
+                                </span>`
+                                : "—"
+                        }
                     </td>
                     <td>
-                        <button class="btn btn-light btn-sm border" title="Delete Record">
-                            <i class="fa-solid fa-trash text-danger"></i>
+                        <button class="btn btn-light btn-sm border btn-download" title="View Receipt" data-id="${item.PaymentId}">
+                            <i class="fa-solid fa-file-invoice text-primary"></i>
                         </button>
                     </td>
                 </tr>
             `);
     });
 }
+
 
 // Helper: Format ₹ numbers with commas
 function formatNumber(num) {
@@ -4535,7 +4612,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table
-                    // fillPaymentTrailTable(data.PaymentTrailList);
+                    fillPaymentTrailTable(data.PaymentTrailList);
 
                     // Food Package and Selected Menu
                     $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
@@ -4543,8 +4620,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
 
-                    // $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
-                    // $("#bookingReport_Reference").text(data?.Reference || "—");
+                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
+                     $("#bookingReport_Reference").text(data?.Reference || "—");
 
                     //data.InvoiceNo, data.ProformaInvoiceNo
                     setInvoiceButtons(data);
@@ -5288,6 +5365,7 @@ $("#btnSavePayment").click(function () {
     let amount = Number($("#paymentAmount").val() || 0);
     let dueBalance = Number($("#paymentDueBalance").val() || 0);
     let nextDueDate = $("#NextDueDate").val();
+    let paymentNotes = $("#btnwritrnote").val();
 
     // 🔹 Basic Validation
     if (!bookingId) {
@@ -5317,6 +5395,7 @@ $("#btnSavePayment").click(function () {
         Amount: amount,
         DueBalance: dueBalance || 0,
         NextDueDate: nextDueDate || null,
+        PaymentNotes: paymentNotes || null,
         ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
     };
 
@@ -5448,7 +5527,6 @@ function loadPaymentHistory(bookingId) {
                     // SHOW download Alll btn
                     $(".btn-download-all").removeClass("d-none");
                 }
-
                 renderPaymentTable(res.data || []);
             } else {
                 Swal.fire("Error", res?.message || "Failed to fetch payments!", "error");

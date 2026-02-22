@@ -64,6 +64,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@DueBalance", SqlDbType.Decimal).Value = model.DueBalance;
                     cmd.Parameters.Add("@NextDueDate", SqlDbType.VarChar).Value = (object)model.NextDueDate ?? DBNull.Value;
                     cmd.Parameters.Add("@ActionBy", SqlDbType.VarChar).Value = model.ActionBy;
+                    cmd.Parameters.Add("@PaymentNotes", SqlDbType.NVarChar).Value = model.PaymentNotes;
 
                     conn.Open();
                     object result = cmd.ExecuteScalar(); // 🔥 PaymentId return
@@ -145,7 +146,8 @@ namespace ERPAdmin.ApiControllers
                             ChequeDate = row["ChequeDate"].ToString(),
                             Amount = Convert.ToDecimal(row["Amount"]),
                             DueBalance = Convert.ToDecimal(row["DueBalance"]),
-                            NextDueDate = row["NextDueDate"].ToString()
+                            NextDueDate = row["NextDueDate"].ToString(),
+                            PaymentNotes = row["PaymentNotes"].ToString()
                         };
                         list.Add(model);
                     }

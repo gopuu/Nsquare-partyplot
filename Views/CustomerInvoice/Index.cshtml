@@ -16,43 +16,57 @@
     <div class="pb-1">
         <div class="row">
             <div class="col-12">
-
                 <!-- HEADER -->
-                <div class="mb-3">
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+
                     <h4 class="mb-0 fw-bold text-warning">
                         Customer Invoices
                     </h4>
+
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="toggleWidgets">
+                        <label class="form-check-label ms-2" id="widgetLabel" for="toggleWidgets">
+                            Hide Widgets
+                        </label>
+                    </div>
+
                 </div>
 
                 <!-- ================= PAYMENT WIDGET ================= -->
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-4" id="invoiceWidgets">
 
                     <!-- Payment Collection -->
                     <div class="col-md-6">
                         <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body">
-                                <div class="col d-flex justify-content-between">
-                                    <h6 class="fw-semibold mb-3">Payment Collection Status</h6>
-                                    <div class="dropdown chart-filter-Payment">
-                                        <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="PaymentChartFilter"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false">
-                                            This Month
-                                        </button>
+                            <!-- CARD HEADER -->
+                            <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2">
+                                <h6 class="fw-bold mb-0 text-white">
+                                    Payment Collection Status
+                                </h6>
 
-                                        <ul class="dropdown-menu shadow-sm" aria-labelledby="PaymentChartFilter">
-                                            <li><a class="dropdown-item payment-option" data-value="yesterday" href="#">Yesterday</a></li>
-                                            <li><a class="dropdown-item payment-option" data-value="days" href="#">Last 7 Days</a></li>
-                                            <li><a class="dropdown-item payment-option" data-value="lastdays" href="#">Last 30 Days</a></li>
-                                            <li><a class="dropdown-item payment-option active" data-value="thismonth" href="#">This Month</a></li>
-                                            <li><a class="dropdown-item payment-option" data-value="lastmonth" href="#">Last Month</a></li>
-                                            <li><a class="dropdown-item payment-option" data-value="12months" href="#">Last 12 Months</a></li>
-                                            <li><a class="dropdown-item payment-option" data-value="customrange" href="#">Custom Range</a></li>
-                                        </ul>
-                                    </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-xs btn-light dropdown-toggle"
+                                            type="button"
+                                            id="PaymentChartFilter"
+                                            data-bs-toggle="dropdown">
+                                        This Month
+                                    </button>
+
+                                    <ul class="dropdown-menu shadow-sm" aria-labelledby="PaymentChartFilter">
+                                        <li><a class="dropdown-item payment-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                        <li><a class="dropdown-item payment-option" data-value="days" href="#">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item payment-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                        <li><a class="dropdown-item payment-option active" data-value="thismonth" href="#">This Month</a></li>
+                                        <li><a class="dropdown-item payment-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                        <li><a class="dropdown-item payment-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item payment-option" data-value="customrange" href="#">Custom Range</a></li>
+                                    </ul>
                                 </div>
+                            </div>
+
+                            <!-- CARD BODY -->
+                            <div class="card-body">
+
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Paid</span>
                                     <span class="text-success">₹ <span id="txtPaidAmount">0</span></span>
@@ -72,34 +86,40 @@
                             </div>
                         </div>
                     </div>
+
                     <!--Upcoming Payment-->
                     <div class="col-md-6">
                         <div class="card shadow-sm border-0 h-100">
-                            <div class="card-body">
-                                <div class="col d-flex justify-content-between">
-                                    <h6 class="fw-semibold mb-3">Upcoming Payment</h6>
-                                    <div class="dropdown chart-filter-finance">
-                                        <button class="btn btn-outline-secondary btn-xs btn-sm dropdown-toggle"
-                                                type="button"
-                                                id="UpcomingChartFilter"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false">
-                                            This Month
-                                        </button>
+                            <!-- CARD HEADER -->
+                            <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2">
+                                <h6 class="fw-bold mb-0 text-white">
+                                    Upcoming Payment
+                                </h6>
 
-                                        <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
-                                            <li><a class="dropdown-item upcoming-option" data-value="yesterday" href="#">Yesterday</a></li>
-                                            <li><a class="dropdown-item upcoming-option" data-value="days" href="#">Last 7 Days</a></li>
-                                            <li><a class="dropdown-item upcoming-option active" data-value="thismonth" href="#">This Month</a></li>
-                                            <li><a class="dropdown-item upcoming-option" data-value="lastdays" href="#">Last 30 Days</a></li>
-                                            <li><a class="dropdown-item upcoming-option" data-value="lastmonth" href="#">Last Month</a></li>
-                                            <li><a class="dropdown-item upcoming-option" data-value="12months" href="#">Last 12 Months</a></li>
-                                            <li><a class="dropdown-item upcoming-option" data-value="customrange" href="#">Custom Range</a></li>
-                                        </ul>
-                                    </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-xs btn-light dropdown-toggle"
+                                            type="button"
+                                            id="UpcomingChartFilter"
+                                            data-bs-toggle="dropdown">
+                                        This Month
+                                    </button>
+
+                                    <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
+                                        <li><a class="dropdown-item upcoming-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                        <li><a class="dropdown-item upcoming-option" data-value="days" href="#">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item upcoming-option active" data-value="thismonth" href="#">This Month</a></li>
+                                        <li><a class="dropdown-item upcoming-option" data-value="lastdays" href="#">Last 30 Days</a></li>
+                                        <li><a class="dropdown-item upcoming-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                        <li><a class="dropdown-item upcoming-option" data-value="12months" href="#">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item upcoming-option" data-value="customrange" href="#">Custom Range</a></li>
+                                    </ul>
                                 </div>
+                            </div>
 
-                                <ul class="list-group list-group-flush" id="upcomingPaymentsList">
+                            <!-- CARD BODY -->
+                            <div class="card-body p-0">
+
+                                <ul class="list-group list-group-flush upcoming-scroll" id="upcomingPaymentsList">
                                     <li class="list-group-item text-muted text-center">
                                         Loading...
                                     </li>
@@ -108,19 +128,17 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
-
                 <!-- FILTER CARD -->
-                <div class="card invoice-filter-card shadow-sm mb-3">
+                <div class="card invoice-filter-card shadow-sm mb-3 bg-warning">
                     <div class="card-body py-2">
 
                         <div class="row gx-2 align-items-end flex-nowrap">
 
                             <!-- Search -->
                             <div class="col-auto flex-grow-1" style="min-width:180px">
-                                <label class="filter-label">Name / Email / Contact</label>
+                                <label class="filter-label text-white">Name / Email / Contact</label>
                                 <input type="text" id="fltSearch"
                                        class="form-control form-control-sm"
                                        placeholder="Search">
@@ -128,42 +146,42 @@
 
                             <!-- Slot -->
                             <div class="col-auto" style="width:130px">
-                                <label class="filter-label">Slot</label>
+                                <label class="filter-label text-white">Slot</label>
                                 <select id="fltSlot" class="form-select form-select-sm">
                                 </select>
                             </div>
 
                             <!-- Event From -->
                             <div class="col-auto" style="width:135px">
-                                <label class="filter-label">Event From</label>
+                                <label class="filter-label text-white">Event From</label>
                                 <input type="date" id="fltEventFrom"
                                        class="form-control form-control-sm">
                             </div>
 
                             <!-- Event To -->
                             <div class="col-auto" style="width:135px">
-                                <label class="filter-label">Event To</label>
+                                <label class="filter-label text-white">Event To</label>
                                 <input type="date" id="fltEventTo"
                                        class="form-control form-control-sm">
                             </div>
 
                             <!-- Booked From -->
                             <div class="col-auto" style="width:135px">
-                                <label class="filter-label">Booked From</label>
+                                <label class="filter-label text-white">Booked From</label>
                                 <input type="date" id="fltBookedFrom"
                                        class="form-control form-control-sm">
                             </div>
 
                             <!-- Booked Till -->
                             <div class="col-auto" style="width:135px">
-                                <label class="filter-label">Booked Till</label>
+                                <label class="filter-label text-white">Booked Till</label>
                                 <input type="date" id="fltBookedTill"
                                        class="form-control form-control-sm">
                             </div>
 
                             <!-- Event -->
                             <div class="col-auto" style="width:140px">
-                                <label class="filter-label">Event</label>
+                                <label class="filter-label text-white">Event</label>
                                 <select id="fltEvent" class="form-select form-select-sm">
                                 </select>
                             </div>
@@ -173,7 +191,7 @@
                                 <button class="btn btn-primary btn-sm px-3" onclick="fetchData()">
                                     Apply
                                 </button>
-                                <button class="btn btn-outline-danger btn-sm px-3" onclick="resetFilter()">
+                                <button class="btn btn-danger btn-sm px-3 text-white" onclick="resetFilter()">
                                     Reset
                                 </button>
                             </div>
@@ -181,7 +199,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <!-- TABLE -->
                 <div id="tableMain">

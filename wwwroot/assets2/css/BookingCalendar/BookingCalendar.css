@@ -1,4 +1,7 @@
-﻿
+﻿.cursor-pointer {
+    cursor: pointer;
+}
+
 .payment-summary-table {
     table-layout: fixed;
     width: 100%;

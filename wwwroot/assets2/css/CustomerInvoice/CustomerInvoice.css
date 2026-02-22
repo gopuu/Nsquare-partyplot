@@ -1,4 +1,10 @@
-﻿.customerInfo input:not(#isGstIncluded) {
+﻿.upcoming-scroll {
+    max-height: 150px;
+    overflow-y: auto;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+.customerInfo input:not(#isGstIncluded) {
     padding: 0.5rem 0.4rem;
 }
 

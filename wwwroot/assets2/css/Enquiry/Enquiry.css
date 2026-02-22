@@ -1,4 +1,31 @@
-﻿
+﻿/*Custom Tooltip -- START */
+.deal-tooltip {
+    position: absolute;
+    z-index: 9999;
+    display: none;
+    color: #000;
+    padding: 12px 14px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    min-width: 260px;
+    max-width: 320px;
+    font-size: 14px;
+}
+
+#processBoard .deal-tooltip .title {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+#processBoard .deal-tooltip .row-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+        font-size: 13px;
+    }
+/*Custom Tooltip --- END */
+
 .picker-transition {
     transition: opacity 0.3s ease, transform 0.3s ease;
     opacity: 1;

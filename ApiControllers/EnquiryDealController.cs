@@ -94,6 +94,7 @@ namespace ERPAdmin.ApiControllers
                                 LeadSourceId = reader.GetInt64(reader.GetOrdinal("LeadSourceId")),
                                 LeadSourceName = reader.GetString(reader.GetOrdinal("LeadSourceName")),
                                 Remarks = reader["Remarks"] != DBNull.Value ? reader.GetString(reader.GetOrdinal("Remarks")) : null,
+                                PackageId = reader.GetInt64(reader.GetOrdinal("PackageId")),
                                 FollowUpCount = reader.GetInt64(reader.GetOrdinal("FollowUpCount")),
                             };
                             enquiryDeals.Add(deal);
@@ -149,6 +150,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@EstimatedAmount", SqlDbType.Decimal).Value = model.EstimatedAmount;
                     cmd.Parameters.Add("@LeadSourceId", SqlDbType.BigInt).Value = model.LeadSourceId;
                     cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar, -1).Value = model.Remarks ?? string.Empty;
+                    cmd.Parameters.Add("@PackageId", SqlDbType.BigInt).Value = model.PackageId;
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();
@@ -272,6 +274,7 @@ namespace ERPAdmin.ApiControllers
                             enquiryDeal.LeadSourceName = reader.GetString(reader.GetOrdinal("LeadSourceName"));
                             enquiryDeal.Remarks = reader["Remarks"] != DBNull.Value ? reader.GetString(reader.GetOrdinal("Remarks")) : null; 
                             enquiryDeal.FollowUpCount = reader.GetInt64(reader.GetOrdinal("FollowUpCount"));
+                            enquiryDeal.PackageId = reader.GetInt64(reader.GetOrdinal("PackageId"));
 
                         }
                     }

@@ -38,7 +38,8 @@
         public long LeadSourceId { get; set; }
         public string? LeadSourceName { get; set; }
         public string? Remarks { get; set; }
-        public long FollowUpCount { get; set; }
+        public long? FollowUpCount { get; set; }
+        public long? PackageId { get; set; }
     }
     public class SaveEnquiryDeal : BaseClass
     {
@@ -48,16 +49,17 @@
         public string? Contact { get; set; }
         public string? Address { get; set; }
         public string? Email { get; set; }
-        public long EventTypeId { get; set; }
-        public long EventSubTypeId { get; set; }
-        public long BanquetHallId { get; set; }
+        public long? EventTypeId { get; set; }
+        public long? EventSubTypeId { get; set; }
+        public long? BanquetHallId { get; set; }
         public string? EventDate { get; set; }
         public string? EventStartTime { get; set; }
         public string? EventEndTime { get; set; }
-        public long Pax { get; set; }
+        public long? Pax { get; set; }
         public string? FollowUpDate { get; set; }
-        public decimal EstimatedAmount { get; set; }
-        public long LeadSourceId { get; set; }
+        public decimal? EstimatedAmount { get; set; }
+        public long? LeadSourceId { get; set; }
+        public long? PackageId { get; set; }
         public string? Remarks { get; set; }
     }
 

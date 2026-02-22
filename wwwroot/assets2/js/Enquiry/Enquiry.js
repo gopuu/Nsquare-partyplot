@@ -388,21 +388,47 @@ function renderBoard() {
                     <div class="card shadow-sm mb-2 deal-card cursor-pointer"
                         draggable = "true"
                         data-dealid="${deal.EnquiryDealId}"
+                        data-bookingid="${deal.BookingId || 0}"
+                        data-deal='${JSON.stringify(deal)}'
                         data-processid="${process.ProcessId}">
-                            <div class="card-body p-2 deal-open">
-                                <h6 class="mb-1">${deal.EnquiryDealTitle}</h6>
-                                <div class="d-flex justify-content-between mb-1 small">
-                                    <span class="text-muted">${deal.EnquiryDealName}</span>
-                                    <span class="text-muted">${deal.EventDate_Format1}</span>
+                            <div class="card shadow-sm border-0 deal-open">
+
+                                <!-- CARD HEADER -->
+                                <div class="card-header bg-rating d-flex align-items-center justify-content-between p-1 py-2">
+                                    <h6 class="mb-0 text-dark text-truncate flex-grow-1 me-0">
+                                        ${deal.EnquiryDealTitle}
+                                    </h6>
+
+                                    <span class="fw-bold text-white small flex-shrink-0"
+                                          title="Enquiry Date">
+                                        ${deal.EnquiryDate_Format1}
+                                    </span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-1 small">
-                                    <span class="text-muted d-none">${deal.EventTypeName}</span>
-                                    <span class="text-muted">${deal.EventSubTypeName}</span>
+
+                                <!-- CARD BODY -->
+                                <div class="card-body p-2">
+                                    <!-- Row 1 : Deal Name + Event Date -->
+                                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                        <span class="fw-bold text-muted text-truncate me-2">
+                                            ${deal.EnquiryDealName}
+                                        </span>
+
+                                        <span class="text-muted flex-shrink-0" title="Event Date">
+                                            ${deal.EventDate_Format1}
+                                        </span>
+                                    </div>
+
+                                    <!-- Row 2 : Time + Amount -->
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span class="fw-bold text-dark flex-shrink-0 fs-9">
+                                            ₹${deal.Amount.toLocaleString()}
+                                        </span>
+
+                                        <span class="text-muted">
+                                            ${deal.EventStartTime} - ${deal.EventEndTime}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-between mb-1 small">
-                                    <span class="text-muted">${deal.EventStartTime} - ${deal.EventEndTime}</span>
-                                </div>
-                                <p class="mb-1 fw-bold">₹${deal.Amount.toLocaleString()}</p>
                             </div>
 
                             <!--Follow-up Row-->
@@ -427,11 +453,11 @@ function renderBoard() {
         board.innerHTML += `
                 <div class="card process-column"
                     data-processid="${process.ProcessId}">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">${process.ProcessName}</h6>
-                        <small class="text-muted">₹${process.TotalAmount.toLocaleString()} • ${process.TotalEnquiryDeals} Deal(s)</small>
+                    <div class="card-header bg-warning p-3">
+                        <h6 class="mb-0 text-white">${process.ProcessName}</h6>
+                        <small class="text-white">₹${process.TotalAmount.toLocaleString()} • ${process.TotalEnquiryDeals} Deal(s)</small>
                     </div>
-                    <div class="card-body deal-dropzone" style="min-height: 500px;">
+                    <div class="card-body deal-dropzone p-2" style="min-height: 500px;">
                         ${dealsHtml}
                     </div>
                 </div>
@@ -445,11 +471,22 @@ function renderBoard() {
     // 🔥 Add click event listener for all deal cards
     $(document).off("click", ".deal-open").on("click", ".deal-open", function () {
         const dealId = $(this).closest(".deal-card").data("dealid");
+        const bookingId = $(this).closest(".deal-card").data("bookingid");
         console.log("Clicked dealId:", dealId);
+
+        // 🔒 Validation: Prevent edit if already booked
+        if (bookingId > 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Edit Not Allowed",
+                text: "This enquiry has already been booked and cannot be edited."
+            });
+            return; // stop execution
+        }
+
         // later you can call your API here
         // 🔥 Reset before fetching data
         resetDealForm();
-        ////showLoader()(); // optional - show loader while fetching
 
         $.ajax({
             url: `/api/EnquiryDeal/GetEnquiryDealById/${dealId} `,
@@ -465,7 +502,7 @@ function renderBoard() {
 
                     // Populate form fields
                     $("#dealId").val(data.Id);
-                    $("#dealProcess").val(data.ProcessId);
+                    $("#dealProcess").val(data.ProcessId).prop("disabled", true);;
                     $("#dealName").val(data.Name);
                     $("#dealContact").val(data.Contact);
                     $("#dealAddress").val(data.Address || "");
@@ -485,6 +522,7 @@ function renderBoard() {
                     $("#eventStart").val(data.EventStartTime);
                     $("#eventEnd").val(data.EventEndTime);
                     $("#pax").val(data.Pax);
+                    $("#packageDropdown").val(data.PackageId).trigger("change");
                     $("#followUpDate").val(data.FollowUpDate_Format2);
 
                     $("#estimatedAmount").val(data.EstimatedAmount);
@@ -505,9 +543,6 @@ function renderBoard() {
             },
             error: function (xhr, error, status) {
                 handleApiError(xhr, error, status, "EnquiryId Fetch Fail");
-            },
-            complete: function () {
-                //hideLoader();
             }
         });
 
@@ -623,6 +658,103 @@ function renderBoard() {
     });
 }
 
+//custom tooltip - on-hover -- START --------------------
+const tooltip = document.getElementById("dealTooltip");
+const board = document.getElementById("processBoard");
+
+board.addEventListener("mouseover", function (e) {
+    const card = e.target.closest(".deal-card");
+    if (!card) return;
+
+    // Prevent re-trigger when moving inside same card
+    if (card.contains(e.relatedTarget)) return;
+
+    const deal = JSON.parse(card.dataset.deal);
+
+    tooltip.innerHTML = `
+        <div class="title">📌 ${deal.EnquiryDealTitle}</div>
+
+        <div class="row-item"><strong>Name:</strong> ${deal.EnquiryDealName || "-"}</div>
+        <div class="row-item"><strong>Contact:</strong> ${deal.EnquiryDealContact || "-"}</div>
+        <div class="row-item"><strong>Email:</strong> ${deal.EnquiryDealEmail || "-"}</div>
+        <div class="row-item"><strong>Address:</strong> ${deal.EnquiryDealAddress || "-"}</div>
+
+        <hr style="margin:6px 0; opacity:0.3;">
+
+        <div class="row-item"><strong>Event Type:</strong> ${deal.EventTypeName || "-"}</div>
+        <div class="row-item"><strong>Event SubType:</strong> ${deal.EventSubTypeName || "-"}</div>
+        <div class="row-item"><strong>Hall:</strong> ${deal.HallName || "-"}</div>
+        <div class="row-item"><strong>Lead Source:</strong> ${deal.LeadSourceName || "-"}</div>
+
+        <hr style="margin:6px 0; opacity:0.3;">
+
+        <div class="row-item"><strong>Event Date:</strong> ${deal.EventDate_Format1 || "-"}</div>
+        <div class="row-item"><strong>Event Time:</strong> 
+            ${deal.EventStartTime || "-"} - ${deal.EventEndTime || "-"}
+        </div>
+
+        <div class="row-item"><strong>PAX:</strong> ${deal.Pax || 0}</div>
+        <div class="row-item"><strong>Package:</strong> ${deal.PackageName || 0}</div>
+        <div class="row-item"><strong>Pakage Amount:</strong> ${deal.EstimatedPackageAmount || 0}</div>
+        <div class="row-item"><strong>Estimated Amount:</strong> 
+            ₹${deal.Amount ? deal.Amount.toLocaleString() : "0"}
+        </div>
+
+        <hr style="margin:6px 0; opacity:0.3;">
+
+        <div class="row-item"><strong>Enquiry Date:</strong> ${deal.EnquiryDate_Format1 || "-"}</div>
+        <div class="row-item d-none"><strong>FollowUps:</strong> ${deal.FollowUpCount || 0}</div>
+
+        <div class="row-item">
+            <strong>Status:</strong>
+            ${
+                deal.Is_LeadBooked
+                    ? `<span class="badge bg-success">Booked</span>`
+                    : deal.Is_LeadLost
+                        ? `<span class="badge bg-danger">Lost</span>`
+                        : `<span class="badge bg-warning">Open</span>`
+            }
+        </div>
+
+        ${deal.Remarks ? `
+            <hr style="margin:6px 0; opacity:0.3;">
+            <div class="row-item"><strong>Remarks:</strong></div>
+            <div style="font-size:12px; opacity:0.9;">
+                ${deal.Remarks}
+            </div>
+        ` : ""}
+    `;
+
+    tooltip.style.display = "block";
+    const rect = card.getBoundingClientRect();
+    const screenWidth = window.innerWidth;
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const gap = 12;
+
+    let leftPosition;
+
+    if (rect.left < screenWidth / 2) {
+        leftPosition = rect.right + gap + window.scrollX;
+    } else {
+        leftPosition = rect.left - tooltipRect.width - gap + window.scrollX;
+    }
+
+    tooltip.style.left = leftPosition + "px";
+    tooltip.style.top = rect.top + window.scrollY + "px";
+});
+
+board.addEventListener("mouseout", function (e) {
+    const card = e.target.closest(".deal-card");
+    if (!card) return;
+
+    // Prevent hide when moving inside same card
+    if (card.contains(e.relatedTarget)) return;
+
+    tooltip.style.display = "none";
+});
+//custom tooltip - on-hover -- END --------------------
+
+
 // Drag & Drop setup
 let pendingMoveData = null;
 function enableDragDrop() {
@@ -630,11 +762,34 @@ function enableDragDrop() {
     const dropzones = document.querySelectorAll(".deal-dropzone");
 
     cards.forEach(card => {
+
         card.addEventListener("dragstart", e => {
+
+            const bookingId = parseInt(card.dataset.bookingid) || 0;
+
+            // 🔒 Block drag if already booked
+            if (bookingId > 0) {
+                e.preventDefault(); // stop drag
+                Swal.fire({
+                    icon: "warning",
+                    title: "Action Not Allowed",
+                    text: "This enquiry has already been booked and cannot be moved."
+                });
+                return;
+            }
+
+            // ✅ Normal drag
             e.dataTransfer.setData("dealId", card.dataset.dealid);
             e.dataTransfer.setData("fromProcessId", card.dataset.processid);
         });
     });
+
+    //cards.forEach(card => {
+    //    card.addEventListener("dragstart", e => {
+    //        e.dataTransfer.setData("dealId", card.dataset.dealid);
+    //        e.dataTransfer.setData("fromProcessId", card.dataset.processid);
+    //    });
+    //});
 
     dropzones.forEach(zone => {
         zone.addEventListener("dragover", e => e.preventDefault());
@@ -736,7 +891,8 @@ function resetDealForm() {
 
     // Reset all fields
     $("#dealId").val(0);
-    $("#dealProcess").val(1);
+    $("#dealProcess").val(1).prop("disabled", false);;
+
     $("#dealName").val("");
     $("#dealContact").val("");
     $("#dealAddress").val("");
@@ -747,7 +903,7 @@ function resetDealForm() {
     $("#eventDate").val("");
     $("#eventStart").val("");
     $("#eventEnd").val("");
-    $("#pax").val("");
+    $("#pax").val("0");
     $("#leadSourceDropdown").val("0");
     $("#followUpDate").val("");
     $("#estimatedAmount").val("0");
@@ -940,10 +1096,22 @@ document.addEventListener("DOMContentLoaded", function () {
     loadTimeDropdown();
 
     fetchHallDetails();
+    loadFoodPackageList();
 
     // Trigger on input
     document.getElementById("pax").addEventListener("input", calculateEstimatedAmount);
     document.getElementById("packageAmount").addEventListener("input", calculateEstimatedAmount);
+    document.getElementById("packageDropdown").addEventListener("change", function () {
+        const selectedOption = this.options[this.selectedIndex];
+        // Get rate per person from data attribute
+        const ratePerPerson = parseFloat(selectedOption.getAttribute("data-rateperperson")) || 0;
+
+        // Set estimated package amount field
+        document.getElementById("packageAmount").value = ratePerPerson > 0 ? ratePerPerson : "";
+
+        // Recalculate total
+        calculateEstimatedAmount();
+    });
 
     $("#ddlDuration").on("change", function () {
         const duration = $(this).val();
@@ -1094,6 +1262,7 @@ document.addEventListener("DOMContentLoaded", function () {
             EstimatedAmount: parseFloat($("#estimatedAmount").val()) || 0,
             LeadSourceId: parseInt($("#leadSourceDropdown").val()) || 0,
             Remarks: $("#remark").val().trim(),
+            PackageId: parseInt($("#packageDropdown").val()) || 0,
             ActionBy: userId // must be >0
         };
         console.log("Posting EnquiryDeal:", enquiryData);
@@ -1672,6 +1841,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+//package dropdown -- START --------------------
+function loadFoodPackageList() {
+    //showLoader();
+    $.ajax({
+        url: "/api/Company_FoodItem_Package/GetCompanyFoodPackage_Dropdown",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            if (response.status === "Success") {
+                foodPackages = response.data;
+                // populate first dropdown
+                populateFoodPackageDropdown($("#packageDropdown"), foodPackages);
+            }
+            else {
+                $("#packageDropdown").html(`<option value="0">No Package Found</option>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load food packages');
+        }
+    });
+}
+
+// ✅ STEP 2: Reusable dropdown populate
+function populateFoodPackageDropdown($dropdown, foodPackages) {
+    let options = `<option value="0">-- Select Package --</option>`;
+    $.each(foodPackages, (i, pkg) => {
+        options += `<option value="${pkg.Id}" data-rateperperson="${pkg.RatePerPerson}">${pkg.PackageName}</option>`;
+    });
+    $dropdown.html(options);
+}
+//package dropdown -- END --------------------
+
 //banquet hall details - dropdown -- START ----------------------
 function fetchHallDetails() {
     $.ajax({
@@ -1806,7 +2009,7 @@ function loadEventSubTypeList(eventTypeId = 0) {
 
                 $.each(response.data, function (index, item) {
                     rows += `
-    <tr data-id="${item.Id}" data-eventtypeid="${item.EventTypeId}">
+                            <tr data-id="${item.Id}" data-eventtypeid="${item.EventTypeId}">
                                 <td class="text-center">${srNo++}</td>
                                 <td>${item.Name}</td>
                                 <td class="text-center">

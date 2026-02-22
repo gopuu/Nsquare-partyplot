@@ -17,6 +17,7 @@
         public decimal Amount { get; set; }
         public decimal DueBalance { get; set; }
         public string? NextDueDate { get; set; }
+        public string? PaymentNotes { get; set; }
 
     }
     public class GetBookingPayments_Request
@@ -40,6 +41,7 @@
         public decimal Amount { get; set; }
         public decimal DueBalance { get; set; }
         public string? NextDueDate { get; set; }
+        public string? PaymentNotes { get; set; }
 
     }
 

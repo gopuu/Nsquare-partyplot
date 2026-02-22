@@ -86,13 +86,6 @@
 }
 
 /* Gradients */
-.bg-feedback {
-    background: linear-gradient(90deg,#6366f1,#8b5cf6);
-}
-
-.bg-ai {
-    background: linear-gradient(90deg,#2dd4bf,#06b6d4);
-}
 
 .bg-positive {
     background: linear-gradient(90deg,#34d399,#16a34a);

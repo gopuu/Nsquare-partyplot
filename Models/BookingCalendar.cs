@@ -253,9 +253,30 @@
         public long? VendorWorkOrder_Count { get; set; }
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
+        public string? ReachedUs { get; set; }
+        public string? Reference { get; set; }
+        public List<PaymentTrailModel>? PaymentTrailList { get; set; }
 
     }
-
+    public class PaymentTrailModel
+    {
+        public long? PaymentId { get; set; }
+        public int? ModeId { get; set; }
+        public string? ModeName { get; set; }
+        public string? DateOfPayment { get; set; }
+        public string? DateOfPayment2 { get; set; }
+        public string? PaymentTime { get; set; }
+        public string? TxnId { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
+        public string? ChequeDate2 { get; set; }
+        public decimal? Amount { get; set; }
+        public decimal? DueBalance { get; set; }
+        public string? NextDueDate { get; set; }
+        public string? NextDueDate2 { get; set; }
+        public string? PaymentNotes { get; set; }
+    }
     public class GetFoodPackage
     {
         public long? Id { get; set; }
