@@ -750,7 +750,7 @@ function addNewRow() {
 
     //RAW MATERIALS DROPDOWN
     let rawMaterial_Html_dropdown = `<select class="form-select form-select-sm rawMaterialSelect">`;
-    rawMaterial_Html_dropdown += `<option value="0" data-currentqty="0">--Select Raw Materail--</option>`;
+    rawMaterial_Html_dropdown += `<option value="0" data-currentqty="0">--Select Raw Material--</option>`;
     rawMaterials.forEach(x => {
         rawMaterial_Html_dropdown += `
                 <option value="${x.Id}" data-currentqty="${x.CurrentQty ?? 0}" 

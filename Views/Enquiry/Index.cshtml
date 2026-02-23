@@ -6,6 +6,11 @@
 <link href="/assets2/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
 <script src="/assets2/vendors/flatpickr/flatpickr.min.js"></script>
 
+<!--Booking Note - text Editor --- START ---->
+<link href="/assets2/css/quill.snow.css" rel="stylesheet">
+<script src="/assets2/js/quill.js"></script>
+
+
 <!-- MAIN -->
 <div class="content">
     <div class="pb-5">
@@ -64,17 +69,17 @@
                                         <!-- Custom Date Range (Hidden by default) -->
                                         <div id="customDateRange" class="d-none">
                                             <label class="form-label mb-1">From Date</label>
-                                            <input type="date" class="form-control form-control-sm mb-2" id="fromDate">
+                                            <input type="date" class="form-control form-control-sm mb-2" id="fromDate_filter">
 
                                             <label class="form-label mb-1">To Date</label>
-                                            <input type="date" class="form-control form-control-sm mb-2" id="toDate">
+                                            <input type="date" class="form-control form-control-sm mb-2" id="toDate_filter">
                                         </div>
 
                                         <!-- Amount Range -->
                                         <label class="form-label fw-semibold mb-1">Amount Range</label>
                                         <div class="d-flex gap-2 mb-2">
-                                            <input type="number" class="form-control form-control-sm" id="fromAmount" placeholder="Min">
-                                            <input type="number" class="form-control form-control-sm" id="toAmount" placeholder="Max">
+                                            <input type="number" class="form-control form-control-sm" id="fromAmount_filter" placeholder="Min">
+                                            <input type="number" class="form-control form-control-sm" id="toAmount_filter" placeholder="Max">
                                         </div>
 
                                         <!-- Actions -->
@@ -741,6 +746,518 @@
 <!-- Custom Tooltip-->
 <div id="dealTooltip" class="deal-tooltip bg-ai"></div>
 
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary py-1">
+                <h5 class="modal-title text-white" id="title_bookingModal">Booking Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="bookingForm">
+                    <div class="row g-3 align-items-center mb-1">
+                        <input type="hidden" id="BookingId" value="0">
+                        <!-- Event Date (Left) -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-8 text-primary"> Event Date:</label>
+                            <span class="text-danger fw-bold" id="label_date_shift" data-eventdate="" data-shiftid="0"></span>
+                        </div>
+
+                        <!-- GST Toggle (Right) -->
+                        <div class="col-md-6 d-flex justify-content-end align-items-center">
+                            <label class="form-label me-2 mb-0 fs-8 text-primary">Accept GST:</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="gstSwitch">
+                                <label class="form-check-label" for="gstSwitch">
+                                    <span id="gstSwitchText" class="text-danger fw-bold">Off</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Event & Banquet Info -->
+                        <!--banquetDropdown-->
+                        <div class="col-md-2">
+                            <label class="form-label">Banquets</label>
+                            <select class="form-select form-select-sm" id="banquetDropdown">
+                            </select>
+                        </div>
+                        <!--fromDate-->
+                        <div class="col-md-2">
+                            <label class="form-label">From Date</label>
+                            <input type="date" class="form-control form-control-sm" id="fromDate">
+                        </div>
+                        <!--toDate-->
+                        <div class="col-md-2">
+                            <label class="form-label">Till Date</label>
+                            <input type="date" class="form-control form-control-sm" id="toDate">
+                        </div>
+                        <!-- Function Start Time -->
+                        <div class="col-md-3">
+                            <label class="form-label">Function Start Time</label>
+                            <div class="d-flex gap-1">
+                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;">
+                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;">
+                                <select class="form-select form-select-sm" id="startAMPM" style="width: 100px;">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Function End Time -->
+                        <div class="col-md-3">
+                            <label class="form-label">Function End Time</label>
+                            <div class="d-flex gap-1">
+                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;">
+                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;">
+                                <select class="form-select form-select-sm" id="endAMPM" style="width: 100px;">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Client Info -->
+                        <div class="col-md-3">
+                            <label class="form-label">Select Client</label>
+                            <select class="form-select form-select-sm" id="clientEnquiryDropdown">
+                                <option>-- Select --</option>
+                            </select>
+                        </div>
+                        <!-- Client Name-->
+                        <div class="col-md-5">
+                            <label class="form-label">Client Name</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Enter Client Name" id="clientName">
+                        </div>
+                        <!-- Client Email-->
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control form-control-sm" placeholder="Enter Client Email" id="clientEmail">
+                        </div>
+                        <!-- Client Address-->
+                        <div class="col-md-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control form-control-sm" rows="1" placeholder="Enter Client Address" id="clientAddress"></textarea>
+                        </div>
+                        <!-- Client Contact-->
+                        <div class="col-md-3">
+                            <label class="form-label">Contact</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Enter Client Contact" id="clientContact" maxlength="10">
+                        </div>
+                        <!-- Client GSTIN-->
+                        <div class="col-md-3">
+                            <label class="form-label">Client's GSTIN</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Enter Client GSTIN" id="clientGSTIN">
+                        </div>
+                        <!-- State Dropdown-->
+                        <div class="col-md-3">
+                            <label class="form-label">Client's State</label>
+                            <select class="form-select form-select-sm" id="clientStateDropdown">
+                                <option value="0">Select</option>
+                            </select>
+                        </div>
+
+                        <hr class="m-1" />
+
+                        <!-- Booking Details -->
+                        <div class="col-12 mb-1">
+                            <h6 class="text-primary">Booking Details</h6>
+                            <div class="row g-2 align-items-end">
+                                <!-- Event (Dropdown, width 3) -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Event</label>
+                                    <select class="form-select form-select-sm" id="booking_subEventDropdown"></select>
+                                </div>
+
+                                <!-- Pax (Input, width 2) -->
+                                <div class="col-md-2">
+                                    <label class="form-label">Pax</label>
+                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_pax">
+                                </div>
+
+                                <!-- Hall Rent (Input, width 2) -->
+                                <div class="col-md-2">
+                                    <label class="form-label">Hall Rent</label>
+                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_hallRent">
+                                </div>
+
+                                <!-- GST (Input, width 2) -->
+                                <div class="col-md-2">
+                                    <label class="form-label">GST</label>
+                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_gst">
+                                </div>
+
+                                <!-- Reference (Dropdown, width 3) -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Reference</label>
+                                    <select class="form-select form-select-sm" id="booking_leadReferenceDropdown"></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Food Package -->
+                        <div class="col-12">
+                            <label class="form-label">Select Menu Type</label>
+                            <!-- Menu Type - Chef/Choice-->
+                            <div class="d-flex gap-4 mt-1">
+                                <!-- Choice Menu -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="menuType" id="foodPackage_choiceMenu" value="1" checked>
+                                    <label class="form-check-label" for="foodPackage_choiceMenu">
+                                        Choice Menu
+                                        <span class="small text-muted mt-2">(You select items)</span>
+                                    </label>
+
+                                </div>
+
+                                <!-- Chef Menu -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="menuType" id="foodPackage_chefMenu" value="2">
+                                    <label class="form-check-label" for="foodPackage_chefMenu">
+                                        Chef Menu
+                                        <span class="small text-muted mt-2">(Chef decides menu)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="foodPackageContainer">
+                                <!-- Default first row -->
+                                <div class="row g-2 food-row align-items-end">
+                                    <!-- Food Package Dropdown -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">Food Package</label>
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select form-select-sm foodPackageDropdown" id="foodPackage_PackageDropdown"></select>
+                                            <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">Menu</button>
+                                        </div>
+                                        <input type="hidden" class="package_row_id" value="0" />
+                                    </div>
+
+                                    <!-- Per Plate -->
+                                    <div class="col-md-1">
+                                        <label class="form-label">Per Plate</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Per Plate" value="0" id="foodPackage_RatePerPlate">
+                                    </div>
+
+                                    <!-- Package Cost -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Package Cost</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Package Cost" value="0" id="foodPackage_PackageCost" readonly>
+                                    </div>
+
+                                    <!-- Addons -->
+                                    <div class="col-md-1">
+                                        <label class="form-label">Addons</label>
+                                        <input type="number" class="form-control form-control-sm foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
+                                    </div>
+
+                                    <!-- GST -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">GST (5%)</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="GST" value="0" id="foodPackage_GST" readonly>
+                                    </div>
+
+                                    <!-- Addons Button + Total -->
+                                    <div class="col-md-3 d-flex align-items-center justify-content-between">
+                                        <button type="button" class="btn btn-outline-success btn-sm  foodPackage_AddOnItems" id="foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
+                                            <i class="fa fa-check"></i> Addons
+                                        </button>
+                                        <span class="fw-semibold small text-nowrap">Total: <span class="foodPackage_TotalValue" id="foodPackage_TotalValue">0</span></span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <button type="button" id="addFoodBtn" class="btn btn-outline-primary btn-sm mt-2">+ Add more food package</button>
+                        </div>
+
+                        <hr class="my-1" />
+
+                        <!-- Other Charges -->
+                        <div class="col-md-4" id="otherCharges">
+                            <!-- Row 1 -->
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 text-primary">Other Charges</h6>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-dark btn-xs" id="otherCharges_Reset">Reset to 0</button>
+                                </div>
+                            </div>
+
+                            <!-- Row 2 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
+                                    <label class="small">Decoraton</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_Amount" value="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small">GST</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_GST" value="0" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Row 3 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
+                                    <label class="small">Room Charges</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_Amount" value="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small">GST</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_GST" value="0" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Row 4 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
+                                    <label class="small">Sound System</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_Amount" value="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small">GST</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_GST" value="0" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Row 5 -->
+                            <div class="row g-2 mb-1">
+                                <div class="col-6">
+                                    <label class="small">Projector & Screen</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_Amount" value="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small">GST</label>
+                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Button to toggle editors -->
+                            <div class="mb-1">
+                                <button type="button" id="OtherCharges_ToggleEditorsBtn" class="btn btn-outline-success btn-sm w-100">
+                                    <i class="fa fa-pen"></i> Booking Note
+                                </button>
+                            </div>
+
+                            <!-- Container for text editors (hidden by default) -->
+                            <div id="OtherCharges_editorsContainer" style="display:none;">
+
+                                <!-- Booking Note - Customer -->
+                                <div class="mb-3">
+                                    <label class="form-label small">Booking Note - Customer <span class="small">(Printed on FP)</span></label>
+                                    <div id="OtherCharges_customerEditor" style="height: 120px;"></div>
+                                </div>
+
+                                <!-- Internal Office Note -->
+                                <div class="mb-3">
+                                    <label class="form-label small">Internal Office Note <span class="small">(Not shared with customer)</span></label>
+                                    <div id="OtherCharges_internalEditor" style="height: 120px;"></div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Payment Summary -->
+                        <div class="col-md-4 border-start ps-3">
+                            <h6 class="text-primary mb-2 small fw-bold">Payment Summary</h6>
+                            <table class="table table-borderless mb-0 payment-summary-table">
+                                <tr class="fw-bold">
+                                    <td>Taxable Amount</td>
+                                    <td class="text-end" id="paymentSummary_TaxableAmount">0</td>
+                                </tr>
+                                <tr>
+                                    <td>CGST</td>
+                                    <td class="text-end" id="paymentSummary_CGST">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>SGST</td>
+                                    <td class="text-end" id="paymentSummary_SGST">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>IGST</td>
+                                    <td class="text-end" id="paymentSummary_IGST">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="text-end" id="paymentSummary_Total">0.00</td>
+                                </tr>
+                                <tr id="paymentSummary_BookingAmount_Row">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            Booking Amount
+                                            <select class="form-select form-select-sm" id="paymentSummary_BookingAmount_Type" style="width:500px;">
+                                                <option value="1">Flat</option>
+                                                <option value="2">Percent (%)</option>
+                                            </select>
+
+                                            <input type="number" class="form-control form-control-sm" value="0" id="paymentSummary_BookingAmount_Amount" style="width:80px;">
+                                        </div>
+                                    </td>
+                                    <td class="text-end" id="paymentSummary_BookingAmount">0</td>
+                                </tr>
+                                <tr class="table-warning fw-bold">
+                                    <td>Payable Amount</td>
+                                    <td class="text-end" id="paymentSummary_payableAmount">0</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Payment Details -->
+                        <div class="col-md-4 border-start" id="Section_PaymentDetails">
+                            <h6 class="text-primary">Payment Details</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label>Mode</label>
+                                    <select class="form-select form-select-sm" id="PaymentDetails_Mode"></select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Account</label>
+                                    <select class="form-select form-select-sm" id="PaymentDetails_AccountId"></select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Paid Time</label>
+                                    <input type="time" class="form-control form-control-sm" id="PaymentDetails_PaidTime">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Amount</label>
+                                    <input type="number" class="form-control form-control-sm" value="0" id="PaymentDetails_Amount">
+                                </div>
+
+                                <div class="col-md-6 d-none">
+                                    <label>Transaction Id</label>
+                                    <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_TransactionId" maxlength="100">
+                                </div>
+
+                                <div class="col-md-6 d-none">
+                                    <label>Cheque Bank</label>
+                                    <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_ChequeBank" maxlength="100">
+                                </div>
+
+                                <div class="col-md-6 d-none">
+                                    <label>Cheque No.</label>
+                                    <input type="text" class="form-control form-control-sm" value="" id="PaymentDetails_ChequeNo" maxlength="20">
+                                </div>
+
+                                <div class="col-md-6 d-none">
+                                    <label>Cheque Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_ChequeDate" value="">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>Due Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_DueDate" value="">
+                                </div>
+
+                                <div class="col-12">
+                                    <label>Payment Note</label>
+                                    <textarea class="form-control form-control-sm" id="PaymentDetails_PaymentNote"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+                <!-- Booking Type & Agent Checkbox-->
+                <!-- LEFT SIDE -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Booking Type -->
+                    <div class="d-flex flex-column">
+                        <label class="form-label mb-1">Booking Type</label>
+                        <select class="form-select form-select-sm" id="BookingType">
+                            <option value="1">Confirmed</option>
+                            <option value="2">Tentative</option>
+                        </select>
+                    </div>
+
+                    <!-- Agent Checkbox -->
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="AgentCheck">
+                        <label class="form-check-label" for="AgentCheck">
+                            Agent
+                        </label>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" id="btnReset">Reset</button>
+                    <button type="button" class="btn btn-primary" id="btnBook">Book</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--AddOns -- MODAL -- START -->
+<div class="modal fade" id="addonChargeModal" tabindex="-1" aria-labelledby="addonChargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white py-1">
+                <h5 class="modal-title fw-bold text-white">Select Addon Charges</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <!-- LEFT SIDE (ITEMS) -->
+                    <div class="col-md-8 border-end pe-3" style="max-height:70vh; overflow-y:auto;">
+                        <div id="addonItemsContainer" class="space-y-3">
+                            <!-- Groups & Items will be injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE (SUMMARY) -->
+                    <div class="col-md-4 ps-4">
+                        <h6 class="fw-bold mb-3">Summary</h6>
+                        <div id="headerSummaryContainer" class="mb-3">
+                            <!-- HeaderName -> Total will be appended here -->
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-8">
+                            <span>Total</span>
+                            <span id="finalTotal">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary btn-saveAddOn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--AddOns -- MODAL -- END -->
+
+<!--Menu Item-- MODAL -- START -->
+<div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white py-1">
+                <h5 class="modal-title fw-bold text-white">Menu Items</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" id="menuModalBody">
+                <!-- Dynamic menus & items will load here -->
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary btn-saveMenu">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Menu Item-- MODAL -- END -->
 @section Scripts {
     <script src="~/assets2/js/Enquiry/Enquiry.js" asp-append-version="true"></script>
 }

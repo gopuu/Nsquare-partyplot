@@ -5,12 +5,21 @@
 .payment-summary-table {
     table-layout: fixed;
     width: 100%;
+    font-size: 13px;
 }
-
 .payment-summary-table td {
-vertical-align: middle;
+    padding: 4px 6px !important; /* reduce row height */
+    vertical-align: middle;
 }
-
+.payment-summary-table select,
+.payment-summary-table input {
+    height: 26px;
+    padding: 2px 6px !important;
+    font-size: 12px;
+}
+.payment-summary-table .table-warning td {
+    padding: 6px 6px !important;
+}
 .payment-summary-table td:last-child {
     text-align: right;
     overflow: hidden;

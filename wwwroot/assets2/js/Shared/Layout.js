@@ -1,4 +1,32 @@
-﻿function showTempLoader(title = "Checking Availability"){
+﻿// Helper: Convert abbreviation to full name
+function fullShiftName(abbr) {
+    const map = {
+        FD: "Full Day",
+        MO: "Morning",
+        AF: "Afternoon",
+        EV: "Evening",
+        ON: "Overnight",
+        BF: "Breakfast",
+        LN: "Lunch",
+        HT: "High Tea",
+        DN: "Dinner"
+    };
+    return map[abbr] || abbr;
+}
+
+const shiftTimes = {
+    FD: { start: "07:00 AM", end: "11:00 PM" },
+    MO: { start: "09:00 AM", end: "12:00 PM" },
+    AF: { start: "01:00 PM", end: "05:00 PM" },
+    EV: { start: "06:00 PM", end: "10:00 PM" },
+    ON: { start: "10:00 PM", end: "06:00 AM" },
+    //BF: { start: "07:00 AM", end: "10:00 AM" },
+    //LN: { start: "12:00 PM", end: "03:00 PM" },
+    //HT: { start: "04:00 PM", end: "06:00 PM" },
+    //DN: { start: "07:00 PM", end: "11:00 PM" }
+};
+
+function showTempLoader(title = "Checking Availability") {
     // Show loader before AJAX
     Swal.fire({
         title: title,

@@ -86,6 +86,8 @@
     {
         public long ProcessId { get; set; }
         public string? ProcessName { get; set; }
+        public bool? IsConfirmed { get; set; }
+        public bool? IsLost { get; set; }
         public int TotalEnquiryDeals { get; set; }
         public decimal TotalAmount { get; set; }
         public List<dynamic> EnquiryDealsJson { get; set; } = new List<dynamic>();

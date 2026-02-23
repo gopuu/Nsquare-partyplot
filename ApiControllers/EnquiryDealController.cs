@@ -416,6 +416,8 @@ namespace ERPAdmin.ApiControllers
                             {
                                 ProcessId = reader.GetInt64(reader.GetOrdinal("ProcessId")),
                                 ProcessName = reader.GetString(reader.GetOrdinal("ProcessName")),
+                                IsConfirmed = reader.GetBoolean(reader.GetOrdinal("IsConfirmed")),
+                                IsLost = reader.GetBoolean(reader.GetOrdinal("IsLost")),
                                 TotalEnquiryDeals = reader.GetInt32(reader.GetOrdinal("TotalEnquiryDeals")),
                                 TotalAmount = reader["TotalAmount"] != DBNull.Value
                                     ? reader.GetDecimal(reader.GetOrdinal("TotalAmount"))
@@ -467,8 +469,25 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();
-                    var result = cmd.ExecuteScalar();
-                    long rowid = result != null ? Convert.ToInt64(result) : 0;
+
+                    long enquiryDealProcessingId = 0;
+                    long bookingId = 0;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            enquiryDealProcessingId =
+                                reader["EnquiryDealProcessing_Id"] != DBNull.Value
+                                ? Convert.ToInt64(reader["EnquiryDealProcessing_Id"])
+                                : 0;
+
+                            bookingId =
+                                reader["BookingId"] != DBNull.Value
+                                ? Convert.ToInt64(reader["BookingId"])
+                                : 0;
+                        }
+                    }
 
                     string latestImagePath = string.Empty;
                     //photo upload
@@ -477,14 +496,14 @@ namespace ERPAdmin.ApiControllers
                         string imgType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
 
                         string folderPath = $"/org/{domain}/Booking_Processing/EnquiryDealId_{model.EnquiryDealId}"; // Updated to include domain
-                        string fileName = $"EnquiryDealsProcessingId_{rowid}";
+                        string fileName = $"EnquiryDealsProcessingId_{enquiryDealProcessingId}";
                         _imageUploadService.DeleteImages(folderPath, fileName);
                         model.FileUpload = _imageUploadService.UploadImage(model.FileUpload, folderPath, fileName, imgType);
 
                         //update table
                         SqlCommand cmd2 = new SqlCommand("SaveEnquiryDeal_forDragNDrop_FileUpload", con);
                         cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = rowid;
+                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = enquiryDealProcessingId;
                         cmd2.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = model.FileUpload; // Kept max for nvarchar(max)
                         cmd2.ExecuteNonQuery();
 
@@ -493,6 +512,11 @@ namespace ERPAdmin.ApiControllers
 
                     con.Close();
 
+                    apiResponse.data = new
+                    {
+                        EnquiryDealProcessingId = enquiryDealProcessingId,
+                        BookingId = bookingId
+                    };
                     apiResponse.message = "EnquiryDeal Moved Successfully!";
                     apiResponse.status = "Success";
                     return Ok(apiResponse);

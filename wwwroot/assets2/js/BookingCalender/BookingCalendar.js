@@ -1,11 +1,12 @@
 ﻿
 // Toggle editors visibility
-let editorsInitialized = false;
 var invoiceNo = 0;
 var proformaInvoiceNo = 0;
 var gstInvoiceNo = 0;
 let invoiceType = null;
 
+//< !--Booking Note - text Editor-- - START---->
+let editorsInitialized = false;
 document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
     const container = document.getElementById('OtherCharges_editorsContainer');
 
@@ -45,7 +46,6 @@ const SizeStyle = new Parchment.Attributor.Style('size', 'font-size', {
 });
 Quill.register(SizeStyle, true);
 
-
 // 3️⃣ Optional: Define custom line height too (if you still want)
 const LineHeightStyle = new Parchment.Attributor.Style('lineheight', 'line-height', {
     scope: Parchment.Scope.BLOCK,
@@ -71,7 +71,6 @@ var noteEditor = new Quill('#noteEditor', {
     theme: 'snow',
     modules: { toolbar: toolbarOptions }
 });
-
 
 var otherCharges_internalEditor = new Quill('#OtherCharges_internalEditor', {
     theme: 'snow',
@@ -183,6 +182,11 @@ $(document).ready(function () {
             editor.show();
             $(this).val("Write Note");
         }
+    });
+
+    $("#otherCharges_Reset").on("click", function () {
+        // Reset all number inputs inside Other Charges section
+        $("#otherCharges").find("input[type='number']").val(0);
     });
 });
 
@@ -489,17 +493,6 @@ $(document).on("click", ".loadMenuBtn", function () {
         }
     });
 });
-function restoreSavedMenuSelection2(savedItems) {
-    if (!savedItems || savedItems.length === 0) return;
-    savedItems.forEach(item => {
-        $(`#menuModal 
-           .menu-section[data-menu-id='${item.FoodMenu_Id}'] 
-           .item-checkbox[value='${item.FoodItem_Id}']`)
-            .prop("checked", true);
-    });
-    updateSelectAllState();
-}
-
 function restoreSavedMenuSelection(savedItems) {
     if (!savedItems || savedItems.length === 0) return;
     savedItems.forEach(item => {
@@ -545,7 +538,6 @@ function updateSelectAllState() {
     });
 }
 
-
 function updatePackageCost() {
 
     let pax = parseFloat($("#booking_pax").val()) || 0;
@@ -588,7 +580,6 @@ $(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomChar
         recalculateAllOtherCharges();
         recalculatePaymentSummary();
     });
-
 
 function recalculateAllOtherCharges() {
     calculateOtherCharge("#OtherCharges_Decoration_Amount", "#OtherCharges_Decoration_GST");
@@ -1866,34 +1857,6 @@ function adjustFontSizeForDays(daysCount) {
     });
 }
 
-// Helper: Convert abbreviation to full name
-function fullShiftName(abbr) {
-    const map = {
-        FD: "Full Day",
-        MO: "Morning",
-        AF: "Afternoon",
-        EV: "Evening",
-        ON: "Overnight",
-        BF: "Breakfast",
-        LN: "Lunch",
-        HT: "High Tea",
-        DN: "Dinner"
-    };
-    return map[abbr] || abbr;
-}
-
-const shiftTimes = {
-    FD: { start: "07:00 AM", end: "11:00 PM" },
-    MO: { start: "09:00 AM", end: "12:00 PM" },
-    AF: { start: "01:00 PM", end: "05:00 PM" },
-    EV: { start: "06:00 PM", end: "10:00 PM" },
-    ON: { start: "10:00 PM", end: "06:00 AM" },
-    BF: { start: "07:00 AM", end: "10:00 AM" },
-    LN: { start: "12:00 PM", end: "03:00 PM" },
-    HT: { start: "04:00 PM", end: "06:00 PM" },
-    DN: { start: "07:00 PM", end: "11:00 PM" }
-};
-
 function renderListViewTable2() {
     listTableBody.innerHTML = "";
     cachedDays.forEach((d, index) => {
@@ -2546,22 +2509,22 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#menuModal").modal("hide");
     });
     */
-    //Menu Item - START ----- START ---------------------------
+    //Menu Item - START ----- END ---------------------------
 
     // 1️⃣ Reset to 0
-    $(".btn-outline-info").on("click", function () {
+    //$(".btn-outline-info").on("click", function () {
         // Find all number inputs in the parent container (Other Charges) and set value to 0
-        $(this).closest(".col-md-7").find("input[type='number']").val(0);
-    });
+        //$(this).closest(".col-md-7").find("input[type='number']").val(0);
+    //});
 
     // 2️⃣ Restore Defaults
-    $(".btn-outline-secondary").on("click", function () {
+    //$(".btn-outline-secondary").on("click", function () {
         //console.log("reset default triggered");
         // You can later add logic to restore predefined defaults if needed
         //const isChecked = $("#gstSwitch").is(":checked");
         //resetOtherCharges(isChecked);
-        recalculatePaymentSummary();
-    });
+        //recalculatePaymentSummary();
+    //});
 
     // Using jQuery
     $("#gstSwitch").on("change", function () {
@@ -5064,7 +5027,6 @@ function resetBooking() {
     }
 
 }
-
 function recalculatePaymentSummary() {
 
     let isGSTEnabled = $("#gstSwitch").is(":checked");
@@ -5122,7 +5084,6 @@ function recalculatePaymentSummary() {
 
     applyBookingDiscount(total);
 }
-
 function applyBookingDiscount(totalAmount) {
 
     let type = $("#paymentSummary_BookingAmount_Type").val();

@@ -337,16 +337,16 @@ $(document).on("click", ".delete-followup", function () {
 // Load Enquiry Deals (Drag & Drop view)
 function loadEnquiryDeals(processId = 0) {
     const duration = $("#ddlDuration").val();
-    const fromAmt = $("#fromAmount").val();
-    const toAmt = $("#toAmount").val();
+    const fromAmt = $("#fromAmount_filter").val();
+    const toAmt = $("#toAmount_filter").val();
 
     const inputData = {
         ProcessId: Number(processId),
         Duration: duration,
         FromAmount: fromAmt ? Number(fromAmt) : 0,
         ToAmount: toAmt ? Number(toAmt) : 0,
-        FromDate: duration === "customrange" ? $("#fromDate").val() : null,
-        ToDate: duration === "customrange" ? $("#toDate").val() : null
+        FromDate: duration === "customrange" ? $("#fromDate_filter").val() : null,
+        ToDate: duration === "customrange" ? $("#toDate_filter").val() : null
     };
     console.log("EnquiryDeal inpuData:", inputData);
 
@@ -382,7 +382,7 @@ function renderBoard() {
 
         if (process.EnquiryDealsJson.length > 0) {
             process.EnquiryDealsJson.forEach(deal => {
-                console.log("deal:", deal);
+                //console.log("deal render:", deal);
                 const hideFollowUp = (deal.Is_LeadBooked || deal.Is_LeadLost);
                 dealsHtml += `
                     <div class="card shadow-sm mb-2 deal-card cursor-pointer"
@@ -452,7 +452,9 @@ function renderBoard() {
 
         board.innerHTML += `
                 <div class="card process-column"
-                    data-processid="${process.ProcessId}">
+                    data-processid="${process.ProcessId}"
+                    data-isconfirmed="${process.IsConfirmed}"
+                    data-islost="${process.IsLost}">
                     <div class="card-header bg-warning p-3">
                         <h6 class="mb-0 text-white">${process.ProcessName}</h6>
                         <small class="text-white">₹${process.TotalAmount.toLocaleString()} • ${process.TotalEnquiryDeals} Deal(s)</small>
@@ -666,13 +668,20 @@ board.addEventListener("mouseover", function (e) {
     const card = e.target.closest(".deal-card");
     if (!card) return;
 
+    // 🚫 Do not show tooltip while dragging
+    if (card.classList.contains("dragging")) return;
+
     // Prevent re-trigger when moving inside same card
     if (card.contains(e.relatedTarget)) return;
 
     const deal = JSON.parse(card.dataset.deal);
+    //console.log("deal:", deal);
 
     tooltip.innerHTML = `
-        <div class="title">📌 ${deal.EnquiryDealTitle}</div>
+        <div class="title">
+            📌 ${deal.EnquiryDealTitle}
+            ${deal.BookingId > 0 ? ` - BK#${deal.BookingId}` : ""}
+        </div>
 
         <div class="row-item"><strong>Name:</strong> ${deal.EnquiryDealName || "-"}</div>
         <div class="row-item"><strong>Contact:</strong> ${deal.EnquiryDealContact || "-"}</div>
@@ -735,7 +744,8 @@ board.addEventListener("mouseover", function (e) {
 
     if (rect.left < screenWidth / 2) {
         leftPosition = rect.right + gap + window.scrollX;
-    } else {
+    }    
+    else {
         leftPosition = rect.left - tooltipRect.width - gap + window.scrollX;
     }
 
@@ -754,21 +764,26 @@ board.addEventListener("mouseout", function (e) {
 });
 //custom tooltip - on-hover -- END --------------------
 
-
 // Drag & Drop setup
 let pendingMoveData = null;
+//const bookingModal = new bootstrap.Modal(document.getElementById("bookingModal"));
+//bookingModal.show();
+//bookingModal.hide();
+
 function enableDragDrop() {
     const cards = document.querySelectorAll(".deal-card");
     const dropzones = document.querySelectorAll(".deal-dropzone");
 
     cards.forEach(card => {
-
         card.addEventListener("dragstart", e => {
-
             const bookingId = parseInt(card.dataset.bookingid) || 0;
 
+            const column = card.closest(".process-column");
+            const isConfirmed = column.dataset.isconfirmed === "true";
+            //const isLost = column.dataset.islost === "true";
+
             // 🔒 Block drag if already booked
-            if (bookingId > 0) {
+            if (bookingId > 0 && isConfirmed) {
                 e.preventDefault(); // stop drag
                 Swal.fire({
                     icon: "warning",
@@ -778,18 +793,17 @@ function enableDragDrop() {
                 return;
             }
 
+            // 🛑 Hide tooltip while dragging
+            const tooltip = document.getElementById("dealTooltip");
+            tooltip.style.display = "none";
+            // Optional: disable tooltip temporarily
+            card.classList.add("dragging");
+
             // ✅ Normal drag
             e.dataTransfer.setData("dealId", card.dataset.dealid);
             e.dataTransfer.setData("fromProcessId", card.dataset.processid);
         });
     });
-
-    //cards.forEach(card => {
-    //    card.addEventListener("dragstart", e => {
-    //        e.dataTransfer.setData("dealId", card.dataset.dealid);
-    //        e.dataTransfer.setData("fromProcessId", card.dataset.processid);
-    //    });
-    //});
 
     dropzones.forEach(zone => {
         zone.addEventListener("dragover", e => e.preventDefault());
@@ -797,11 +811,23 @@ function enableDragDrop() {
         zone.addEventListener("drop", e => {
             e.preventDefault();
 
+            //Re-enable Tooltip After Drop
+            const tooltip = document.getElementById("dealTooltip");
+            tooltip.style.display = "none";
+            document.querySelectorAll(".deal-card.dragging").forEach(c => c.classList.remove("dragging"));
+
             const dealId = parseInt(e.dataTransfer.getData("dealId"));
             const fromProcessId = parseInt(e.dataTransfer.getData("fromProcessId"));
-            const toProcessId = parseInt(
-                zone.closest(".process-column").dataset.processid
-            );
+
+            const column = zone.closest(".process-column");
+
+            const toProcessId = parseInt(column.dataset.processid);
+            const isConfirmed = column.dataset.isconfirmed === "true";
+            const isLost = column.dataset.islost === "true";
+
+            //const toProcessId = parseInt(
+            //    zone.closest(".process-column").dataset.processid
+            //);
 
             if (fromProcessId !== toProcessId) {
 
@@ -811,6 +837,65 @@ function enableDragDrop() {
                     ProcessId: toProcessId
                 };
 
+                // 🎯 If dropped in Confirmed column
+                if (isConfirmed) {
+                    moveOn();
+                    console.log("Booked");
+                    resetBooking();
+                    //Fetch Lead-Deal Data
+                    const draggedCard = document.querySelector(`.deal-card[data-dealid="${dealId}"]`);
+                    if (!draggedCard) return;
+                    var dealData = null;
+                    try {
+                        dealData = JSON.parse(draggedCard.dataset.deal);
+                        console.log("=== CONFIRMED DEAL DATA ===");
+                        // Optional: pretty print
+                        console.table(dealData);
+                    }
+                    catch (err) {
+                        console.error("Error parsing deal data:", err);
+                        return;
+                    }
+                    
+                    //OPEN BOOKING MODAL
+                    const dateStr = dealData.EventDate;       // for display
+                    const dateStr_Format = dealData.EventDate_Format1;
+                    const dateStr_ISO = dealData.EventDate;
+                    const shift = dealData.ShiftCode;
+                    const shiftname = dealData.ShiftFullName; // fallback if not found
+                    const date = dateStr;
+                    const dateiso = dateStr_ISO;
+                    const hallid = dealData.HallId;
+
+                    $("#BookingId").val(bookingId);
+                    // 🟢 Update label content & attributes - using jQuery
+                    $("#label_date_shift")
+                        .text(`${date}, ${shiftname} Slot`)        // visible text
+                        .attr("data-eventdate", dateiso)           // yyyy-mm-dd
+                        .attr("data-shiftid", shift);              // FD, MO, etc.
+                    $("#banquetDropdown").val(hallid);
+                    $("#clientEnquiryDropdown").val(dealData.EnquiryDealId).trigger("change");
+
+                    $("#booking_pax").val(dealData.Pax);
+
+                    setShiftTime(shift);
+                    $("#PaymentDetails_DueDate").val('');
+
+                    $("#fromDate").val(dateiso); //.prop("disabled", true);
+                    $("#toDate").val(dateiso);
+
+                    $("#title_bookingModal").text("Add Booking Details");
+                    $("#bookingModal").modal("show");
+
+                    return;
+                }
+
+                // 🎯 If dropped in Lost column (optional handling)
+                if (isLost) {
+                    console.log("Lost");
+                    return;
+                }
+
                 // Open follow-up modal
                 openFollowUp(dealId);
             }
@@ -819,11 +904,16 @@ function enableDragDrop() {
 
 }
 
-$("#followupModal").on("hidden.bs.modal", function () {
+function moveOn(){
     saveFollowUpAndMoveDeal();
+    bookingId = 0;
     pendingMoveData = null;
-});
+}
 
+$("#followupModal").on("hidden.bs.modal", function () {
+    moveOn();
+});
+var bookingId = 0;
 function saveFollowUpAndMoveDeal() {
     console.log("pendingMoveData:", pendingMoveData);
     if (!pendingMoveData) return;
@@ -852,7 +942,8 @@ function saveFollowUpAndMoveDeal() {
                 //    //here7
 
                 //}
-
+                console.log("res data:", res.data);
+                bookingId = res.data.BookingId;
                 // Clear pending state
                 pendingMoveData = null;
 
@@ -1085,8 +1176,11 @@ function calculateEstimatedAmount() {
 // Initial load
 document.addEventListener("DOMContentLoaded", function () {
     loadEnquiryDeals();
+    loadEnquiryList();
+    loadStateList();
 
     loadEventTypeList();
+    loadEventSubTypeList();
     loadBanquetHallList();
     loadLeadSourceList();
 
@@ -1120,8 +1214,8 @@ document.addEventListener("DOMContentLoaded", function () {
             $("#customDateRange").removeClass("d-none");
         } else {
             $("#customDateRange").addClass("d-none");
-            $("#fromDate").val("");
-            $("#toDate").val("");
+            $("#fromDate_filter").val("");
+            $("#toDate_filter").val("");
         }
     });
 
@@ -1132,10 +1226,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $("#btnResetFilters").on("click", function () {
         $("#ddlDuration").val("thismonth");
-        $("#fromAmount").val("");
-        $("#toAmount").val("");
-        $("#fromDate").val("");
-        $("#toDate").val("");
+        $("#fromAmount_filter").val("");
+        $("#toAmount_filter").val("");
+        $("#fromDate_filter").val("");
+        $("#toDate_filter").val("");
         $("#customDateRange").addClass("d-none");
 
         loadEnquiryDeals();
@@ -1229,7 +1323,100 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     //Modal Behaviour -- START ---------------------------------------------------
-    
+
+    const addonModal = document.getElementById('addonChargeModal');
+    const bookingModal = document.getElementById('bookingModal');
+    const menuModal = document.getElementById('menuModal');
+
+    //hide/show Add-On MODAL ----- START --------------------------
+    addonModal.addEventListener('show.bs.modal', function () {
+        // Just hide visually (do not destroy modal state)
+        bookingModal.classList.remove("show");
+        bookingModal.style.display = "none";
+
+        // Also hide backdrop manually
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "none";
+    });
+
+    addonModal.addEventListener('hidden.bs.modal', function () {
+        // Show booking modal visually again (no reset, same position)
+        bookingModal.classList.add("show");
+        bookingModal.style.display = "block";
+
+        // Show backdrop again
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "block";
+    });
+
+    //hide/show Add-On MODAL ----- END --------------------------
+
+    //hide/show MENU MODAL ----- START --------------------------
+    menuModal.addEventListener('show.bs.modal', function () {
+        // Just hide visually (do not destroy modal state)
+        bookingModal.classList.remove("show");
+        bookingModal.style.display = "none";
+
+        // Also hide backdrop manually
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "none";
+    });
+
+    menuModal.addEventListener('hidden.bs.modal', function () {
+        // Show booking modal visually again (no reset, same position)
+        bookingModal.classList.add("show");
+        bookingModal.style.display = "block";
+
+        // Show backdrop again
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "block";
+    });
+    //hide/show MENU MODAL ----- END --------------------------
+
+    //Menu Item - START ----- START ---------------------------
+    $('#menuModal').on('click', '.btn-success', function () {
+        const container = $(this).closest('.border');
+        const input = $(this).siblings('input[type="text"]');
+        const newItemName = input.val().trim();
+        if (newItemName === '') return;
+
+        const itemsContainer = container.find('.items-container');
+        const newId = newItemName.replace(/\s+/g, '_') + '_' + Date.now();
+
+        const newItemHtml = `
+                <div class="new-item">
+                    <input class="form-check-input me-1" type="checkbox" value="${newItemName}" id="${newId}">
+                    <label class="form-check-label" for="${newId}">${newItemName}</label>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-item">✖</button>
+                </div>
+            `;
+
+        itemsContainer.append(newItemHtml);
+        input.val(''); // clear input
+    });
+
+    // Delete new item
+    $('#menuModal').on('click', '.delete-item', function () {
+        $(this).closest('.new-item').remove();
+    });
+
+    // Select All toggle
+    $('#menuModal').on('change', 'input[id^="selectAll"]', function () {
+        const isChecked = $(this).is(':checked');
+        const container = $(this).closest('.border');
+        container.find('.items-container input.form-check-input').prop('checked', isChecked);
+    });
+
+    // Update Select All if manual changes
+    $('#menuModal').on('change', '.items-container input.form-check-input', function () {
+        const container = $(this).closest('.border');
+        const all = container.find('.items-container input.form-check-input');
+        const selectAllBox = container.find('input[id^="selectAll"]');
+        selectAllBox.prop('checked', all.length === all.filter(':checked').length);
+    });
+    //Menu Item - START ----- END ---------------------------
+
+
     // Enquiry/Deal -- START --------------------------------------------------------------------
     // Save Deal Form
     document.getElementById("saveDealBtn").addEventListener("click", function (e) {
@@ -1546,13 +1733,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(inputData),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Saved!");
                     resetEventSubTypeForm();
                     loadEventSubTypeList(eventTypeId);
                 } else {
@@ -1563,15 +1744,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 }
             },
-            error: function () {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Error saving event sub-type."
-                });
-            },
-            complete: function () {
-                //hideLoader();
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Error saving event sub-type");
             }
         });
     });
@@ -1842,6 +2016,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 //package dropdown -- START --------------------
+let foodPackages = [];
 function loadFoodPackageList() {
     //showLoader();
     $.ajax({
@@ -1853,10 +2028,10 @@ function loadFoodPackageList() {
             if (response.status === "Success") {
                 foodPackages = response.data;
                 // populate first dropdown
-                populateFoodPackageDropdown($("#packageDropdown"), foodPackages);
+                populateFoodPackageDropdown($("#packageDropdown, #foodPackage_PackageDropdown"));
             }
             else {
-                $("#packageDropdown").html(`<option value="0">No Package Found</option>`);
+                $("#packageDropdown, #foodPackage_PackageDropdown").html(`<option value="0">No Package Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -1866,7 +2041,7 @@ function loadFoodPackageList() {
 }
 
 // ✅ STEP 2: Reusable dropdown populate
-function populateFoodPackageDropdown($dropdown, foodPackages) {
+function populateFoodPackageDropdown($dropdown) {
     let options = `<option value="0">-- Select Package --</option>`;
     $.each(foodPackages, (i, pkg) => {
         options += `<option value="${pkg.Id}" data-rateperperson="${pkg.RatePerPerson}">${pkg.PackageName}</option>`;
@@ -1905,7 +2080,6 @@ function fetchHallDetails() {
 
 // Load event type list from API
 function loadEventTypeList() {
-    ////showLoader()();
     $.ajax({
         url: "/api/EventType/GetEventTypeList",
         type: "GET",
@@ -1944,16 +2118,8 @@ function loadEventTypeList() {
                 $("#eventTypeDropdown").html(`<option value = "0"> No Event Type Found</option> `);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching event type list.",
-                confirmButtonText: "OK",
-            });
-        },
-        complete: function () {
-            //hideLoader();
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load EventType List");
         }
     });
 }
@@ -1987,10 +2153,6 @@ function validateEventTypeForm() {
 
 // Load event sub-type list from API
 function loadEventSubTypeList(eventTypeId = 0) {
-    ////showLoader()();
-
-    //let eventTypeId = $("#eventTypeDropdown").val(); // capture selected event type
-
     var inputData = {
         EventTypeId: eventTypeId // match your C# EventSubType_Request model
     };
@@ -2006,6 +2168,7 @@ function loadEventSubTypeList(eventTypeId = 0) {
                 let rows = "";
                 let srNo = 1;
                 let options = `<option value = "0"> --Select Event Sub-Type--</option> `;
+                let options1 = `<option value = "0"> --Select Event--</option> `;
 
                 $.each(response.data, function (index, item) {
                     rows += `
@@ -2023,26 +2186,22 @@ function loadEventSubTypeList(eventTypeId = 0) {
                             </tr>
     `;
                     options += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                    options1 += `<option value = "${item.Id}"> ${item.Name}</option> `;
                 });
 
                 $("#eventSubTypeTable tbody").html(rows);
                 $("#eventSubTypeDropdown").html(options);
+                $("#booking_subEventDropdown").html(options1);
             } else {
                 $("#eventSubTypeTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
                 $("#eventSubTypeDropdown").html(`<option value = "0"> No Event Sub-Type Found</option> `);
+                $("#booking_subEventDropdown").html(`<option value = "0"> No Event Found</option> `);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching event sub-type list."
-            });
-        },
-        complete: function () {
-            //hideLoader();
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching event sub-type list.");
         }
     });
 }
@@ -2091,7 +2250,6 @@ function validateEventSubTypeForm() {
 
 // Load banquet hall list from API
 function loadBanquetHallList() {
-    ////showLoader()();
     $.ajax({
         url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
         type: 'POST',
@@ -2102,23 +2260,16 @@ function loadBanquetHallList() {
             if (response.status === "Success") {
                 let options = `<option value = "0"> --Select Banquet Hall--</option> `; // default option
                 $.each(response.data, function (index, item) {
-                    options += `<option value = "${item.Id}"> ${item.HallName}</option> `;
+                    options += `<option value = "${item.Id}"> ${item.HallName} (${item.CapacityRangeText})</option> `;
                 });
-                $("#banquetHallDropdown").html(options);
-            } else {
-                $("#banquetHallDropdown").html(`<option value = "0"> No Banquet Hall Found</option> `);
+                $("#banquetHallDropdown, #banquetDropdown").html(options);
+            }
+            else {
+                $("#banquetHallDropdown, #banquetDropdown").html(`<option value = "0">No Banquet Hall Found</option> `);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching banquet hall list.",
-                confirmButtonText: "OK",
-            });
-        },
-        complete: function () {
-            //hideLoader();
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Error fetching banquet hall list')
         }
     });
 }
@@ -2155,13 +2306,13 @@ function loadLeadSourceList() {
                 });
 
                 $("#leadSourceTable tbody").html(rows);
-                $("#leadSourceDropdown").html(options);
+                $("#leadSourceDropdown, #booking_leadReferenceDropdown").html(options);
             }
             else {
                 $("#leadSourceTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#leadSourceDropdown").html(`<option value = "0"> No Lead Source Found</option> `);
+                $("#leadSourceDropdown, #booking_leadReferenceDropdown").html(`<option value = "0">No Lead Source Found</option> `);
             }
         },
         error: function () {
@@ -2547,131 +2698,1445 @@ document.addEventListener('click', (e) => {
 });
 
 setModeEnd('hour');
-/* --------------------- 🕒 NEXT FOLLOW-UP TIME --------------------- */
-/*
-const followUpInput = document.getElementById('nextFollowUpTime_modalFollowup');
-const followUpPicker = document.getElementById('clockPickerFollowUp');
-const hourDisplayFollowUp = document.getElementById('hourDisplayFollowUp');
-const minuteDisplayFollowUp = document.getElementById('minuteDisplayFollowUp');
-const hourHandFollowUp = document.getElementById('hourHandFollowUp');
-const minuteHandFollowUp = document.getElementById('minuteHandFollowUp');
-const amBtnFollowUp = document.getElementById('amBtnFollowUp');
-const pmBtnFollowUp = document.getElementById('pmBtnFollowUp');
-const setBtnFollowUp = document.getElementById('setTimeBtnFollowUp');
+//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->
 
-let hourFollowUp = 12;
-let minuteFollowUp = 0;
-let ampmFollowUp = 'AM';
-let modeFollowUp = 'hour';
+//BOOKING CALENDAR DESIGN - START ----------------------------------------------------------------------
+function resetBooking() {
+    // Reset all form fields
+    $("#bookingForm").trigger("reset");
+    // Reset any special fields
+    $("#gstSwitch").prop("checked", false);
+    $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
+    $("#foodPackageContainer .foodPackage_TotalValue").text("0");
+    $("#addonItemsContainer").empty();
+    $("#headerSummaryContainer").empty();
 
-// Toggle picker visibility
-followUpInput.addEventListener('click', (e) => {
-    e.stopPropagation();
-    initializeFollowUpPicker(followUpInput.value);
-    followUpPicker.classList.toggle('d-none');
-});
-
-// Initialize picker when opening
-function initializeFollowUpPicker(value) {
-    let time = value.trim();
-    if (!time) time = "12:00 AM"; // Default if empty
-
-    const [timePart, modifier] = time.split(" ");
-    let [h, m] = timePart.split(":").map(Number);
-
-    ampmFollowUp = modifier || 'AM';
-    hourFollowUp = h;
-    minuteFollowUp = m;
-
-    hourDisplayFollowUp.textContent = hourFollowUp.toString().padStart(2, '0');
-    minuteDisplayFollowUp.textContent = minuteFollowUp.toString().padStart(2, '0');
-    hourHandFollowUp.style.transform = `rotate(${hourFollowUp * 30}deg)`;
-    minuteHandFollowUp.style.transform = `rotate(${minuteFollowUp * 6}deg)`;
-
-    if (ampmFollowUp === 'AM') {
-        amBtnFollowUp.classList.add('active');
-        pmBtnFollowUp.classList.remove('active');
-    } else {
-        pmBtnFollowUp.classList.add('active');
-        amBtnFollowUp.classList.remove('active');
+    //SET STATE 
+    const $stateDropdown = $("#clientStateDropdown");
+    // Find option with text "Gujarat"
+    const gujaratOption = $stateDropdown.find("option").filter(function () {
+        return $(this).text().trim().toLowerCase() === "gujarat";
+    });
+    if (gujaratOption.length > 0) {
+        $stateDropdown.val(gujaratOption.val()).trigger("change");
+    }
+    else {
+        $stateDropdown.val("0").trigger("change");
     }
 
-    setFollowUpMode('hour');
+    // ✅ Store FULL package array in button as JSON
+    $("#btnFoodLabels").data("foodpackage", "");
+
+    // Reset amounts to defaults
+    //resetOtherCharges(false);
+    recalculatePaymentSummary();
+    $("#Section_PaymentDetails").show();
+    //console.log("Booking form reset completed.");
+
+    // Hide dynamic sections manually
+    $("#PaymentDetails_TransactionId").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeBank").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeNo").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeDate").closest(".col-md-6").addClass("d-none");
+    // Optionally reset dropdown to default
+    $("#PaymentDetails_Mode").val("0").trigger("change");
+
+    // Re-select default account manually
+    const defaultOption = $("#PaymentDetails_AccountId option").filter(function () {
+        return $(this).data("isdefault") === true;
+    });
+    if (defaultOption.length) {
+        $("#PaymentDetails_AccountId").val(defaultOption.val());
+    }
+
+}
+function recalculatePaymentSummary() {
+
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gstRate = 5;
+
+    let taxableAmount = 0;
+
+    // 🔹 Hall Rent
+    let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
+    taxableAmount += hallRent;
+    //console.log("hallRent:", hallRent);
+
+    // 🔹 Default Food
+    //let defaultFoodTotal = parseFloat($("#foodPackage_TotalValue").text()) || 0;
+    //taxableAmount += defaultFoodTotal;
+    //console.log("defaultFoodTotal:", defaultFoodTotal);
+
+    // 🔹 Extra Food Rows
+    $(".foodPackage_TotalValue").each(function () {
+        let value = parseFloat($(this).text()) || 0;
+        taxableAmount += value;
+        //console.log("defaultFoodTotal rows:", value);
+    });
+
+    // 🔹 Other Charges
+    let decoration = parseFloat($("#OtherCharges_Decoration_Amount").val()) || 0;
+    let room = parseFloat($("#OtherCharges_RoomCharges_Amount").val()) || 0;
+    let sound = parseFloat($("#OtherCharges_SoundSystem_Amount").val()) || 0;
+    let projector = parseFloat($("#OtherCharges_ProjectorScreen_Amount").val()) || 0;
+
+    taxableAmount += decoration + room + sound + projector;
+    //console.log("decoration:", decoration);
+    //console.log("room:", room);
+    //console.log("sound:", sound);
+    //console.log("projector:", projector);
+
+    $("#paymentSummary_TaxableAmount").text(taxableAmount.toFixed(2));
+    //console.log("taxableAmount:", taxableAmount);
+
+    // 🔹 GST
+    let totalGST = isGSTEnabled ? (taxableAmount * gstRate) / 100 : 0;
+
+    let cgst = isGSTEnabled ? totalGST / 2 : 0;
+    let sgst = isGSTEnabled ? totalGST / 2 : 0;
+    let igst = 0;
+
+    $("#paymentSummary_CGST").text(cgst.toFixed(2));
+    $("#paymentSummary_SGST").text(sgst.toFixed(2));
+    $("#paymentSummary_IGST").text(igst.toFixed(2));
+
+    let total = taxableAmount + cgst + sgst + igst;
+
+    $("#paymentSummary_Total").text(total.toFixed(2));
+    //console.log("total:", total);
+
+    applyBookingDiscount(total);
+}
+function applyBookingDiscount(totalAmount) {
+
+    let type = $("#paymentSummary_BookingAmount_Type").val();
+    let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
+
+    let bookingDiscount = 0;
+
+    if (type == "1") {
+        bookingDiscount = enteredValue;
+    }
+    else if (type == "2") {
+        bookingDiscount = (totalAmount * enteredValue) / 100;
+    }
+
+    if (bookingDiscount > totalAmount)
+        bookingDiscount = totalAmount;
+
+    $("#paymentSummary_BookingAmount").text(bookingDiscount.toFixed(2));
+
+    let payableAmount = totalAmount - bookingDiscount;
+
+    $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
 }
 
-// Switch between hour/minute mode
-//hourDisplayFollowUp.addEventListener('click', () => setFollowUpMode('hour'));
-//minuteDisplayFollowUp.addEventListener('click', () => setFollowUpMode('minute'));
+//SAVE BOOKING ------ START ------------------------------
+$("#btnBook").on("click", function () { saveBooking(); });
+$("#btnReset").on("click", function () { resetBooking(); });
+//SAVE BOOKING ------ END --------------------------------
 
-function setFollowUpMode(m) {
-    modeFollowUp = m;
+function saveBooking() {
+    //const form = $("#bookingForm");
+    const $label = $("#label_date_shift");
 
-    if (modeFollowUp === 'hour') {
-        hourDisplayFollowUp.classList.add('active-text');
-        minuteDisplayFollowUp.classList.remove('active-text');
-        minuteDisplayFollowUp.classList.add('inactive-text');
-        hourDisplayFollowUp.classList.remove('inactive-text');
-        hourHandFollowUp.classList.add('active-hand');
-        minuteHandFollowUp.classList.remove('active-hand');
-    } else {
-        minuteDisplayFollowUp.classList.add('active-text');
-        hourDisplayFollowUp.classList.remove('active-text');
-        hourDisplayFollowUp.classList.add('inactive-text');
-        minuteDisplayFollowUp.classList.remove('inactive-text');
-        minuteHandFollowUp.classList.add('active-hand');
-        hourHandFollowUp.classList.remove('active-hand');
+    let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
+
+    var quillCustomer = new Quill('#OtherCharges_customerEditor', {
+        theme: 'snow'
+    });
+
+    var quillInternal = new Quill('#OtherCharges_internalEditor', {
+        theme: 'snow'
+    });
+
+    var customerNote = quillCustomer.root.innerHTML;
+    var internalNote = quillInternal.root.innerHTML;
+
+    // 🔹 1. Collect Booking Data
+    const bookingData = {
+        BookingId: parseInt($("#BookingId").val() || 0),
+        EventDate: $label.data("eventdate"),
+        ShiftCode: $label.data("shiftid"),
+        GSTAccepted: $("#gstSwitch").is(":checked"),
+
+        //Dates
+        BanquetId: parseInt($("#banquetDropdown").val() || 0),
+        FromDate: $("#fromDate").val(),
+        TillDate: $("#toDate").val(),
+
+        //Time
+        StartTime: `${$("#startHour").val()}:${$("#startMinute").val()} ${$("#startAMPM").val()}`,
+        EndTime: `${$("#endHour").val()}:${$("#endMinute").val()} ${$("#endAMPM").val()}`,
+
+        // Client Info
+        Client_EnquiryId: parseInt($("#clientEnquiryDropdown").val() || 0),
+        Client_Name: $("#clientName").val(),
+        Client_Email: $("#clientEmail").val(),
+        Client_Address: $("#clientAddress").val(),
+        Client_Contact: $("#clientContact").val(),
+        Client_GSTIN: $("#clientGSTIN").val(),
+        Client_StateId: parseInt($("#clientStateDropdown").val() || 0),
+
+        // Booking Details
+        Booking_SubEventId: parseInt($("#booking_subEventDropdown").val() || 0),
+        Booking_PAX: parseInt($("#booking_pax").val() || 0),
+        Booking_HallRent: parseInt($("#booking_hallRent").val() || 0),
+        Booking_GST: parseFloat($("#booking_gst").val() || 0),
+        Booking_LeadReferenceId: parseInt($("#booking_leadReferenceDropdown").val() || 0),
+        Booking_MenuType_Id: parseInt($("input[name='menuType']:checked").val() || 0),
+        Booking_TypeId: parseInt($("#BookingType").val() || 0),
+        Booking_IsAgent: $("#AgentCheck").is(":checked"),
+
+        //Payment
+        Payment_ModeId: parseInt($("#PaymentDetails_Mode").val() || 0),
+        PaymentDetails_AccountId: parseInt($("#PaymentDetails_AccountId").val() || 0),
+        PaymentDetails_TransactionId: $("#PaymentDetails_TransactionId").val(),
+        PaymentDetails_ChequeBank: $("#PaymentDetails_ChequeBank").val(),
+        PaymentDetails_ChequeNo: $("#PaymentDetails_ChequeNo").val(),
+        PaymentDetails_ChequeDate: $("#PaymentDetails_ChequeDate").val(),
+        Payment_Amount: parseFloat($("#PaymentDetails_Amount").val()) || 0,
+        Payment_PaidTime: $("#PaymentDetails_PaidTime").val(),
+        Payment_DueDate: $("#PaymentDetails_DueDate").val(),
+        Payment_Note: $("#PaymentDetails_PaymentNote").val(),
+
+        // ✅ Other Charges
+        OtherCharges_Decoration_Amount: parseFloat($("#OtherCharges_Decoration_Amount").val() || 0),
+        OtherCharges_Decoration_GST: parseFloat($("#OtherCharges_Decoration_GST").val() || 0),
+        OtherCharges_RoomCharges_Amount: parseFloat($("#OtherCharges_RoomCharges_Amount").val() || 0),
+        OtherCharges_RoomCharges_GST: parseFloat($("#OtherCharges_RoomCharges_GST").val() || 0),
+        OtherCharges_SoundSystem_Amount: parseFloat($("#OtherCharges_SoundSystem_Amount").val() || 0),
+        OtherCharges_SoundSystem_GST: parseFloat($("#OtherCharges_SoundSystem_GST").val() || 0),
+        OtherCharges_ProjectorScreen_Amount: parseFloat($("#OtherCharges_ProjectorScreen_Amount").val() || 0),
+        OtherCharges_ProjectorScreen_GST: parseFloat($("#OtherCharges_ProjectorScreen_GST").val() || 0),
+        OtherCharges_BookingNoteForCustomer: customerNote,
+        OtherCharges_InternalOfficeNote: internalNote,
+
+        // ✅ Payment Summary
+        PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text() || 0),
+        PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text() || 0),
+        PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text() || 0),
+        PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text() || 0),
+        PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text() || 0),
+        PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingAmount_Type").val() || 0),
+        PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingAmount_Amount").val() || 0),
+        PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text() || 0),
+        PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text() || 0),
+
+        ActionBy: userId
+    };
+
+    // 🔹 2. Build Food Packages JSON --here
+    const foodPackages = [];
+
+    $(".foodPackageContainer > .food-block, #foodPackageContainer > .food-row").each(function () {
+        const $row = $(this);
+
+        // Check if it's a dynamic block (has food-block class) or first row
+        const isDynamicBlock = $row.hasClass('food-block');
+
+        // Get common elements
+        const $dropdown = $row.find(".foodPackageDropdown, #foodPackage_PackageDropdown");
+        const selectedMenuItems = $dropdown.data("selectedItems") || [];
+
+        const $dropdown_AddOns = $row.find(".foodPackage_AddOnItems");
+        const selectedAddOnCharges = $dropdown_AddOns.data("selected-AddOnItems") || [];
+
+        // Create base package object
+        const foodPackage = {
+            Id: parseInt($row.find("package_row_id").val() || 0),
+            PackageId: parseInt($dropdown.val()),
+            PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
+            PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
+            AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
+            GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
+            TotalCharges: parseFloat($row.find(".foodPackage_TotalValue, #foodPackage_TotalValue").text() || 0),
+            MenuItems: selectedMenuItems,
+            AddOns: selectedAddOnCharges
+        };
+
+        // Add additional fields for dynamic blocks
+        if (isDynamicBlock) {
+            //console.log("new row added");
+            const $packageNameInput = $row.find('input[placeholder="Addon Food Package Name"]');
+            const $paxInput = $row.find('input[placeholder="Pax"]');
+            const $dateInput = $row.find('input[type="date"]');
+            const $hourInput = $row.find('input[placeholder="HH"]');
+            const $minuteInput = $row.find('input[placeholder="MM"]');
+            const $ampmSelect = $row.find('select');
+
+            // Construct time string (HH:MM AM/PM)
+            const hour = $hourInput.val() || '12';
+            const minute = $minuteInput.val() || '00';
+            const ampm = $ampmSelect.val() || 'AM';
+            const timeString = `${hour}:${minute} ${ampm}`;
+
+            // Add additional fields
+            foodPackage.FoodPackageTitleName = $packageNameInput.val() || '';
+            foodPackage.Pax = $paxInput.val() || 0;
+            foodPackage.FoodPackageDateTime = $dateInput.val() ? `${$dateInput.val()} ${timeString}` : '';
+        }
+        else {
+            //console.log("static row only");
+            // For first row, set default values for optional fields
+            foodPackage.FoodPackageTitleName = '';
+            foodPackage.Pax = 0;
+            foodPackage.FoodPackageDateTime = '';
+        }
+
+        foodPackages.push(foodPackage);
+    });
+
+    // 🔹 3. Attach as JSON string
+    bookingData.JSON_FoodPackage = foodPackages;
+
+    //console.log("Final Booking JSON:", bookingData);
+
+    // 🔹 4. AJAX POST
+    $.ajax({
+        url: "/api/BookingCalendar/SaveBookingCalendar",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(bookingData),
+        beforeSend: function () {
+            $("#btnSaveBooking").prop("disabled", true).text("Saving...");
+        },
+        success: function (response) {
+            //console.log("save response:", response);
+            if (response.status === "Success") {
+                handleApiSuccess();
+                resetBooking();
+                $("#bookingModal").modal("hide");
+            }
+            else {
+                Swal.fire({
+                    title: "Booking Save Failed",
+                    text: response.message,
+                    icon: "error"
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Booking Save Error");
+        },
+        complete: function () {
+            $("#btnSaveBooking").prop("disabled", false).text("Save Booking");
+        }
+    });
+}
+function setGSTSwitch(isGSTAccepted) {
+    const gstSwitch = document.getElementById("gstSwitch");
+    const gstText = document.getElementById("gstSwitchText");
+
+    gstSwitch.checked = !!isGSTAccepted;
+
+    if (gstSwitch.checked) {
+        gstText.textContent = "On";
+        gstText.classList.remove("text-danger");
+        gstText.classList.add("text-success");
+    }
+    else {
+        gstText.textContent = "Off";
+        gstText.classList.remove("text-success");
+        gstText.classList.add("text-danger");
     }
 }
-/*
-// Handle number click
-followUpPicker.querySelectorAll('.clock-number').forEach(num => {
-    num.addEventListener('click', () => {
-        const value = parseInt(num.textContent);
-        if (modeFollowUp === 'hour') {
-            hourFollowUp = value;
-            hourDisplayFollowUp.textContent = value.toString().padStart(2, '0');
-            hourHandFollowUp.style.transform = `rotate(${value * 30}deg)`;
-        } else {
-            minuteFollowUp = (value % 12) * 5;
-            minuteDisplayFollowUp.textContent = minuteFollowUp.toString().padStart(2, '0');
-            minuteHandFollowUp.style.transform = `rotate(${minuteFollowUp * 6}deg)`;
+function setShiftTime(shiftAbbr) {
+    const times = shiftTimes[shiftAbbr];
+    if (!times) return; // invalid shift — do nothing
+
+    // Parse start time
+    const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+    $("#startHour").val(startH);
+    $("#startMinute").val(startM);
+    $("#startAMPM").val(startAMPM);
+
+    // Parse end time
+    const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+    $("#endHour").val(endH);
+    $("#endMinute").val(endM);
+    $("#endAMPM").val(endAMPM);
+}
+
+//Enquiry Client - dropdown -- START ----------------------
+function loadEnquiryList() {
+    //showLoader();
+    $.ajax({
+        url: "/api/EnquiryDeal/GetEnquiryDealList",
+        type: "GET",
+        success: function (response) {
+            //console.log("enquiry list response:", response);
+            if (response.status === "Success") {
+                let options = `<option value="0">-- Select Client --</option>`; // default option
+                //options += `<option value="0">+ Add New Client</option>`; // default option
+                $.each(response.data, function (index, item) {
+                    options += `
+                               <option
+                                   value="${item.Id}"
+                                   data-name="${item.Name || ''}"
+                                   data-email="${item.Email || ''}"
+                                   data-address="${item.Address || ''}"
+                                   data-contact="${item.Contact || ''}"
+                               >${item.Name} (${item.Contact})</option>`;
+                });
+                $("#clientEnquiryDropdown").html(options);
+
+                 $("#clientEnquiryDropdown").on("change", function () {
+                    const selected = $(this).find(":selected");
+
+                    $("#clientName").val(selected.data("name") || "");
+                    $("#clientEmail").val(selected.data("email") || "");
+                    $("#clientAddress").val(selected.data("address") || "");
+                    $("#clientContact").val(selected.data("contact") || "");
+                }); 
+            } else {
+                $("#clientEnquiryDropdown").html(`<option value="0">No Enquiry Client Found</option>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load enquiry list');
+        }
+    });
+}
+//Enquiry Client - dropdown -- END ------------------------
+
+//State - dropdown -- START ----------------------
+function loadStateList() {
+    //showLoader();
+    $.ajax({
+        url: "/api/State/GetStateList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            Id: 0     // or specific Id if needed
+        }),
+        success: function (response) {
+            //console.log("state list response:", response);
+            if (response.status === "Success") {
+                let options = `<option value="0">-- Select State --</option>`; // default option
+                let gujaratId = 0;
+                $.each(response.data, function (index, item) {
+                    options += `<option value="${item.Id}">${item.Name}</option>`;
+                    if (item.Name.toLowerCase() === "gujarat") {
+                        gujaratId = item.Id;
+                    }
+                });
+                $("#clientStateDropdown").html(options);
+                // Set default selection if found
+                if (gujaratId > 0) {
+                    $("#clientStateDropdown").val(gujaratId);
+                }
+            } else {
+                $("#clientStateDropdown").html(`<option value="0">No State Found</option>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load state list');
+        }
+    });
+}
+//State - dropdown -- END ------------------------
+
+// food Package Dropdown -------------------------------------------
+$(document).on("change", ".foodPackageDropdown", function () {
+    const $row = $(this).closest(".food-row");
+
+    const $dropdown = $row.find(".foodPackageDropdown");
+
+    const selectedPackageId = $dropdown.val();
+
+    if (!selectedPackageId || selectedPackageId === "0") {
+        Swal.fire({
+            icon: "warning",
+            title: "Select Package",
+            text: "Please select a food package first."
+        });
+        return;
+    }
+    const selectedOption = $dropdown.find("option:selected");
+    const selectedText = selectedOption.text();
+    const ratePerPerson = selectedOption.data("rateperperson") || 0;
+
+    //console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
+
+    // Set Per Plate inside same row
+    $row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
+
+    updatePackageCost($row);  // Pass row if needed
+
+})
+
+// ✅ STEP 3: Attach global delegated change event for ALL dropdowns
+$(document).on("click", ".loadMenuBtn", function () {
+    const $row = $(this).closest(".food-row");
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedPackageId = $dropdown.val();
+
+    if (!selectedPackageId || selectedPackageId === "0") {
+        Swal.fire({
+            icon: "warning",
+            title: "Select Package",
+            text: "Please select a food package first."
+        });
+        return;
+    }
+
+    const selectedOption = $dropdown.find("option:selected");
+    const selectedText = selectedOption.text();
+    const ratePerPerson = selectedOption.data("rateperperson") || 0;
+
+    //console.log("selectedPackageId:", selectedPackageId, "selectedText:", selectedText);
+
+    // Set Per Plate inside same row
+    //$row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
+
+    //updatePackageCost($row);  // Pass row if needed
+
+    $.ajax({
+        url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Package_Id: selectedPackageId }),
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+                renderMenuItems(response.data);
+                $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
+                //$("#bookingModal").modal("hide");
+                $("#menuModal").modal("show");
+                // Store dropdown reference safely
+                $("#menuModal").data("activeDropdown", $dropdown);
+
+                // 🔥 RESTORE SELECTION
+                const savedItems = $dropdown.data("selectedItems");
+                //console.log("savedItems:", savedItems);
+                restoreSavedMenuSelection(savedItems);
+            }
+            else {
+                Swal.fire({
+                    icon: "info",
+                    title: "Menu Items Not Found",
+                    text: "No menu items found for this package."
+                });
+                $dropdown.val("0");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching Package MenuItems list");
         }
     });
 });
-// AM/PM toggle
-amBtnFollowUp.addEventListener('click', () => {
-    ampmFollowUp = 'AM';
-    amBtnFollowUp.classList.add('active');
-    pmBtnFollowUp.classList.remove('active');
-});
+function restoreSavedMenuSelection(savedItems) {
+    if (!savedItems || savedItems.length === 0) return;
+    savedItems.forEach(item => {
+        const section = $(`#menuModal .menu-section[data-menu-id='${item.FoodMenu_Id}']`);
+        if (!section.length) return;
 
-pmBtnFollowUp.addEventListener('click', () => {
-    ampmFollowUp = 'PM';
-    pmBtnFollowUp.classList.add('active');
-    amBtnFollowUp.classList.remove('active');
-});
+        // 🔹 EXISTING ITEM
+        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
+            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`).prop("checked", true);
+        }
 
-// Set time function
-function setTimeFollowUp() {
-    followUpInput.value = `${hourDisplayFollowUp.textContent}:${minuteDisplayFollowUp.textContent} ${ampmFollowUp} `;
-    followUpPicker.classList.add('d-none');
+        // 🔹 NEW CUSTOM ITEM (ID = 0)
+        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
+            const newItemHtml = `
+                <div class="form-check me-3 mb-2">
+                    <input class="form-check-input item-checkbox new-item"
+                           type="checkbox"
+                           value="0"
+                           data-menu-id="${item.FoodMenu_Id}"
+                           data-item-name="${item.FoodItem_Name_NewAdded}"
+                           checked>
+                    <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
+                </div>
+            `;
+            section.find(".item-container").append(newItemHtml);
+        }
+    });
+    updateSelectAllState();
 }
 
-// Confirm button click
-setBtnFollowUp.addEventListener('click', setTimeFollowUp);
+function updateSelectAllState() {
+    $(".menu-section").each(function () {
+        const allItems = $(this).find(".item-checkbox");
+        const checkedItems = $(this).find(".item-checkbox:checked");
 
-// 🔹 Auto-save on outside click
-document.addEventListener('click', (e) => {
-    if (!followUpPicker.contains(e.target) && e.target !== followUpInput) {
-        if (!followUpPicker.classList.contains('d-none')) {
-            setTimeFollowUp();
+        const selectAllCheckbox = $(this).find(".select-all");
+
+        if (allItems.length === checkedItems.length && allItems.length > 0) {
+            selectAllCheckbox.prop("checked", true);
+        } else {
+            selectAllCheckbox.prop("checked", false);
         }
+    });
+}
+
+function updatePackageCost() {
+
+    let pax = parseFloat($("#booking_pax").val()) || 0;
+    let rate = parseFloat($("#foodPackage_RatePerPlate").val()) || 0;
+
+    let addOnsCost = parseFloat($("#foodPackage_Addons").val()) || 0;
+
+    let packageCost = pax * rate;
+
+    $("#foodPackage_PackageCost").val(packageCost.toFixed(2));
+    packageCost = packageCost + addOnsCost;
+
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    //let gst = isGSTEnabled ? getGST(hallRent) : 0;
+
+    let gstAmount = isGSTEnabled ? ((packageCost * 5) / 100) : 0;
+    $("#foodPackage_GST").val(gstAmount.toFixed(2));
+
+    let totalCharges = packageCost + gstAmount;
+
+    $("#foodPackage_TotalValue").text(totalCharges.toFixed(2));
+
+    recalculatePaymentSummary();  // 🔥 IMPORTANT
+}
+
+$(document).on("input", "#foodPackage_RatePerPlate, #booking_pax", function () {
+    updatePackageCost();
+});
+
+$(document).on("input", ".food-block .pax, .food-block .perPlate, .food-block .addonsCost", function () {
+    const row = $(this).closest(".food-block");
+    calculateFoodRowTotals(row);
+});
+
+$(document).on("input change", "#paymentSummary_BookingAmount_Type, #paymentSummary_BookingAmount_Amount",
+    function () {
+        recalculatePaymentSummary();
+    });
+
+$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount",
+    function () {
+        recalculateAllOtherCharges();
+        recalculatePaymentSummary();
+    });
+
+function recalculateAllOtherCharges() {
+    calculateOtherCharge("#OtherCharges_Decoration_Amount", "#OtherCharges_Decoration_GST");
+    calculateOtherCharge("#OtherCharges_RoomCharges_Amount", "#OtherCharges_RoomCharges_GST");
+    calculateOtherCharge("#OtherCharges_SoundSystem_Amount", "#OtherCharges_SoundSystem_GST");
+    calculateOtherCharge("#OtherCharges_ProjectorScreen_Amount", "#OtherCharges_ProjectorScreen_GST");
+}
+
+function calculateOtherCharge(amountSelector, gstSelector) {
+
+    let amount = parseFloat($(amountSelector).val()) || 0;
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gstRate = 5;
+
+    let gstAmount = 0;
+
+    if (isGSTEnabled) {
+        gstAmount = (amount * gstRate) / 100;
+    }
+
+    $(gstSelector).val(gstAmount.toFixed(2));
+}
+
+//Calculate PAckage for Extra added package rows
+function calculateFoodRowTotals(rowElement) {
+
+    let pax = parseFloat($(rowElement).find(".pax").val()) || 0;
+    let perPlate = parseFloat($(rowElement).find(".perPlate").val()) || 0;
+    let addOnsCost = parseFloat($(rowElement).find(".addonsCost").val()) || 0;
+
+    let packageCost = pax * perPlate;
+    $(rowElement).find(".packageCost").val(packageCost.toFixed(2));
+
+    packageCost = packageCost + addOnsCost;
+
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+    let gst = isGSTEnabled ? ((packageCost * 5) / 100) : 0;
+
+    $(rowElement).find(".gstCost").val(gst.toFixed(2));
+
+    let total = packageCost + gst;
+    //console.log("total:", total, ", packageCost:", packageCost, ", gst:", gst);
+    $(rowElement).find(".foodPackage_TotalValue").text(total.toFixed(2));
+
+    recalculatePaymentSummary(); // 🔥 IMPORTANT
+}
+
+// When dropdown changes → fill Per Plate and recalc
+$(document).on("change", ".foodPackageDropdown", function () {
+    const row = $(this).closest(".food-block");
+    const rate = $(this).find("option:selected").data("rateperperson") || 0;
+
+    row.find(".perPlate").val(rate);
+    calculateFoodRowTotals(row);
+});
+
+// When Pax OR Per Plate OR Addons change → recalc
+$(document).on("input", ".pax, .perPlate, .addonsCost", function () {
+    const row = $(this).closest(".food-block");
+    calculateFoodRowTotals(row);
+});
+
+// ✅ STEP 4: Build modal dynamically
+function renderMenuItems(menuData) {
+    let html = "";
+    menuData.forEach(menu => {
+        const foodItems = menu.FoodItemsList?.length
+            ? menu.FoodItemsList.map(item => `
+                <div class="form-check me-3 mb-2">
+                    <input class="form-check-input item-checkbox" type="checkbox"
+                        value="${item.Item_Id}" data-menu-id="${menu.FoodMenu_Id}">
+                    <label class="form-check-label">${item.Item_Name}</label>
+                </div>`).join("")
+            : `<p class="text-muted">No items found.</p>`;
+
+        html += `
+            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name}</h6>
+                    <div>
+                        <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
+                        <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap item-container">${foodItems}</div>
+                <div class="d-flex mt-2">
+                    <input type="text" class="form-control form-control-sm me-2 new-item-input" placeholder="Add New Item">
+                    <button type="button" class="btn btn-sm btn-primary btn-addNewItem">Add</button>
+                </div>
+            </div>`;
+    });
+
+    $("#menuModalBody").html(html);
+}
+
+//ADD NEW ITEM
+$(document).on("click", ".btn-addNewItem", function () {
+
+    let section = $(this).closest(".menu-section");
+    let menuId = section.data("menu-id");
+
+    let input = section.find(".new-item-input");
+    let itemName = input.val().trim();
+
+    if (!itemName) {
+        alert("Please enter item name");
+        return;
+    }
+
+    let newItemHtml = `
+        <div class="form-check me-3 mb-2">
+            <input class="form-check-input item-checkbox new-item"
+                   type="checkbox"
+                   value="0"
+                   data-menu-id="${menuId}"
+                   data-item-name="${itemName}"
+                   checked>
+            <label class="form-check-label">${itemName}</label>
+        </div>
+    `;
+
+    section.find(".item-container").append(newItemHtml);
+
+    input.val("");
+});
+
+// ✅ STEP 5: Modal “Select All” and “Save” buttons
+$(document).on("change", ".select-all", function () {
+    const menuId = $(this).attr("id").split("_")[1];
+    const checked = $(this).is(":checked");
+    $(`.item-checkbox[data-menu-id='${menuId}']`).prop("checked", checked);
+});
+
+//StEP 6: Save MENU
+$(document).on("click", ".btn-saveMenu", function () {
+    let selectedMenuData = [];
+
+    $(".menu-section").each(function () {
+        const menuId = $(this).data("menu-id");
+        $(this).find(".item-checkbox:checked").each(function () {
+            let isNew = $(this).hasClass("new-item");
+            selectedMenuData.push({
+                FoodMenu_Id: parseInt(menuId),
+                FoodItem_Id: parseInt($(this).val()),
+                FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
+                IsChecked: $(this).is(":checked")
+            });
+        });
+    });
+
+    // attach selected items to the dropdown that opened modal
+    const $activeDropdown = $("#menuModal").data("activeDropdown");
+    if ($activeDropdown) {
+        $activeDropdown.data("selectedItems", selectedMenuData);
+        $activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
+    }
+
+    //console.log("Saved Menu Selection:", selectedMenuData);
+    $("#menuModal").modal("hide");
+    //$("#bookingModal").modal("show");
+});
+
+//Food Package - dropdown -- END----------------------
+
+//Booking - Food Package --- START --------------------------------------------------
+const addFoodBtn = document.getElementById('addFoodBtn');
+const foodContainer = document.getElementById('foodPackageContainer');
+let addonCounter = 1;
+
+addFoodBtn.addEventListener('click', () => {
+    const newRow = document.createElement('div');
+    newRow.className = 'food-block border rounded p-3 mt-3';
+
+    newRow.innerHTML = `
+            <!-- Row 1 -->
+            <div class="row g-2 align-items-end p-2 mb-1">
+                <div class="col-md-4">
+                    <label class="form-label">Addon Food Package #${addonCounter}</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Pax</label>
+                    <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Time</label>
+                    <div class="d-flex gap-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" style="width: 70px;">
+                        <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" style="width: 70px;">
+                        <select class="form-select form-select-sm" style="width: 90px;">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end justify-content-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-btn">&times;</button>
+                </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="row g-2 food-row align-items-end mt-1">
+                <div class="col-md-3">
+                    <label class="form-label">Food Package</label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm foodPackageDropdown"></select>
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm loadMenuBtn">
+                            Menu
+                        </button>
+                    </div>
+                    <input type="hidden" class="package_row_id" value="0" />
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Per Plate</label>
+                    <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Package Cost</label>
+                    <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Addons</label>
+                    <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">GST</label>
+                    <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-between">
+                    <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
+                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">0</span></span>
+                </div>
+            </div>
+        `;
+
+    foodContainer.appendChild(newRow);
+
+    // Populate dropdown in new row
+    const dropdown = newRow.querySelector(".foodPackageDropdown");
+    populateFoodPackageDropdown($(dropdown));
+
+    // On change of dropdown, set Per Plate rate
+    // dropdown.addEventListener('change', function () {
+    //     const selected = this.options[this.selectedIndex];
+    //     const rate = selected.dataset.rateperperson || 0;
+    //     newRow.querySelector(".perPlate").value = rate;
+    // });
+
+    // Remove functionality
+    newRow.querySelector('.remove-btn').addEventListener('click', () => {
+        foodContainer.removeChild(newRow);
+    });
+
+    addonCounter++;
+});
+//Booking - Food Package --- /END --------------------------------------------------
+
+//Food Addons ----- START ----------------------------------------------------------------
+let addon_Data = [];
+let headerTotals = {};
+function loadAddonCharges() {
+    //showLoader();
+    $.ajax({
+        url: "/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            if (res.status === "Success" && res.data && res.data.length > 0) {
+                addon_Data = res.data;
+                populateAddonModal();
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load addon charges');
+        }
+    });
+}
+
+function populateAddonModal(savedItems = []) {
+    //console.log("savedItems AddOns:", savedItems);
+    let container = $("#addonItemsContainer");
+    let summaryContainer = $("#headerSummaryContainer");
+    container.empty();
+    summaryContainer.empty();
+    headerTotals = {};
+
+    // Group data by header
+    let grouped = {};
+    addon_Data.forEach(item => {
+        if (!grouped[item.HeaderName]) grouped[item.HeaderName] = [];
+        grouped[item.HeaderName].push(item);
+    });
+
+    Object.keys(grouped).forEach(header => {
+        headerTotals[header] = 0;
+
+        let headerCard = $(`
+                <div class="card shadow-sm border-0">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light py-2">
+                        <span class="fw-bold">${header}</span>
+                        <button class="btn btn-xs btn-outline-secondary toggle-btn">−</button>
+                    </div>
+                    <div class="card-body p-2" data-header-body="${header}"></div>
+                </div>
+            `);
+
+        // Column headers
+        let columnHeader = $(`
+                <div class="d-flex fw-bold text-secondary border-bottom pb-1 mb-2">
+                    <div class="flex-grow-1">Food Item</div>
+                    <div style="width:90px;" class="text-center">Rate</div>
+                    <div style="width:90px;" class="text-center">Pax</div>
+                    <div style="width:90px;" class="text-center">Total</div>
+                </div>
+            `);
+        headerCard.find(`[data-header-body="${header}"]`).append(columnHeader);
+
+        // Populate items
+        grouped[header].forEach(item => {
+            // Find if this item was saved previously
+            let saved = savedItems.find(s => s.AddOn_Item_Id === item.Id && s.AddOn_Header_Id === item.HeaderId);
+            //console.log("saved AddOns:", saved);
+            // If found, prefill values
+            let isChecked = saved ? true : false;
+            let rate = saved ? saved.AddOn_Rate : item.Amount;
+            //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
+
+            let rowPax = 0;
+            if (currentAddonRow && currentAddonRow.length > 0) {
+                let paxInput = currentAddonRow.find(".pax");
+
+                if (paxInput.length > 0) {
+                    rowPax = parseFloat(paxInput.val()) || 0;
+                }
+                else {
+                    // fallback for first default row (which doesn't have .pax)
+                    rowPax = parseFloat($("#booking_pax").val()) || 0;
+                }
+            }
+            let pax = saved ? saved.AddOn_Pax : rowPax;
+
+            let total = saved ? saved.AddOn_Total : 0;
+
+            let row = $(`
+                    <div class="d-flex align-items-center justify-content-between mb-2"
+                         data-header="${item.HeaderName}" data-headerid="${item.HeaderId}" data-id="${item.Id}">
+
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
+                            <span>${item.ItemName}</span>
+                        </div>
+
+                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1" step="1"
+                               value="${rate}" min="0" style="width:90px;">
+
+                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1" step="1"
+                               value="${pax}" min="0" style="width:90px;">
+
+                        <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light"
+                               value="${total.toFixed(2)}" readonly style="width:90px;">
+                    </div>
+                `);
+
+            row.find(".rate-input, .pax-input").on("input", function () {
+                //console.log("here1");
+                recalcRow_AddOn(row);
+            });
+
+            row.find(".addon-checkbox").on("change", function () {
+                recalcRow_AddOn(row);
+            });
+
+            headerCard.find(`[data-header-body="${header}"]`).append(row);
+        });
+
+        container.append(headerCard);
+
+        // Summary row
+        summaryContainer.append(`
+                <div class="d-flex justify-content-between mb-1 fs-9" data-header-summary="${header}">
+                    <span>${header}</span>
+                    <span class="header-total">0</span>
+                </div>
+            `);
+
+        // Toggle button
+        headerCard.find(".toggle-btn").on("click", function () {
+            let body = headerCard.find(`[data-header-body="${header}"]`);
+            let isVisible = body.is(":visible");
+            body.toggle();
+            $(this).text(isVisible ? "+" : "−");
+        });
+    });
+
+    $("[data-header]").each(function () {
+        recalcRow_AddOn($(this));
+    });
+}
+
+function recalcRow_AddOn(row) {
+    //console.log("here3");
+    let checked = row.find(".addon-checkbox").is(":checked");
+    let rate = parseFloat(row.find(".rate-input").val()) || 0;
+    let pax = parseFloat(row.find(".pax-input").val()) || 0;
+    let total = checked ? rate * pax : 0;
+
+    //console.log("---- Addon Row Calculation ----");
+    //console.log("Checked:", checked);
+    //console.log("Rate:", rate);
+    //console.log("Pax:", pax);
+    //console.log("Computed Total:", total);
+    //console.log("-------------------------------");
+
+    row.find(".total-input").val(total.toFixed(2));
+    //console.log("here4");
+    recalcSummary_AddOn();
+}
+
+function recalcSummary_AddOn() {
+    //console.log("recalcSummary called");
+    // Reset
+    Object.keys(headerTotals).forEach(h => headerTotals[h] = 0);
+
+    //console.log("1 headerTotals:", headerTotals);
+    $("[data-header]").each(function () {
+        let header = $(this).data("header");
+        let total = parseFloat($(this).find(".total-input").val()) || 0;
+        headerTotals[header] += total;
+    });
+
+    Object.keys(headerTotals).forEach(header => {
+        $(`[data-header-summary="${header}"] .header-total`).text(headerTotals[header].toFixed(2));
+    });
+
+    //console.log("2 headerTotals:", headerTotals);
+    let finalTotal = Object.values(headerTotals).reduce((a, b) => a + b, 0);
+    //console.log("finalTotal:", finalTotal);
+    $("#finalTotal").text(finalTotal.toFixed(2));
+
+    if (currentAddonButton) {
+        const $row = $(currentAddonButton).closest(".food-row, .food-block");
+        $row.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
+
+        // Recalculate that specific row only
+        //    if ($row.hasClass("food-block")) {
+        //        calculateFoodRowTotals($row);
+        //    }
+        //    else {
+        //        updatePackageCost();
+        //    }
+    }
+    updatePackageCost();
+}
+
+// Open modal function
+let currentAddonButton = null;
+let currentAddonRow = null;
+
+function openAddonModal(booking_foodPackageId = 0, button = null) {
+    //console.log("booking_foodPackageId:", booking_foodPackageId);
+    currentAddonButton = button; // 🔹 store reference to clicked button
+    //currentAddonRow = $(button).closest(".food-row, .food-block");
+
+    currentAddonRow = $(button).closest(".food-block");   // for dynamic rows
+    if (currentAddonRow.length === 0) {
+        // default first row (no .food-block wrapper)
+        currentAddonRow = $(button).closest(".food-row");
+    }
+
+    let savedItems = $(button).data("selected-AddOnItems") || [];
+
+    if (addon_Data.length === 0) {
+        loadAddonCharges();
+    } else {
+        populateAddonModal(savedItems);
+
+        // Reset button text if no items saved
+        if (savedItems.length === 0) {
+            $(button).html('<i class="fa fa-check"></i> Addons');
+        }
+    }
+
+    $("#addonChargeModal").modal("show");
+    //$("#bookingModal").modal("hide");
+}
+
+//SAVE AddOns Modal
+$(document).on("click", ".btn-saveAddOn", function () {
+    let selectedItems = [];
+    let grandTotal = 0;
+
+    // Loop through all checked rows
+    $("#addonItemsContainer .addon-checkbox:checked").each(function () {
+        let row = $(this).closest("[data-header]");
+        let header = parseInt(row.data("headerid"));
+        let itemId = parseInt(row.data("id"));
+        let rate = parseFloat(row.find(".rate-input").val() || 0);
+        let pax = parseFloat(row.find(".pax-input").val() || 0);
+        let total = parseFloat(row.find(".total-input").val() || 0);
+
+        grandTotal += total;
+
+        selectedItems.push({
+            AddOn_Header_Id: header,
+            AddOn_Item_Id: itemId,
+            AddOn_Rate: rate,
+            AddOn_Pax: pax,
+            AddOn_Total: total
+        });
+    });
+
+    // No selection warning
+    if (selectedItems.length === 0) {
+        Swal.fire({
+            icon: "warning",
+            title: "No Addons Selected",
+            text: "Please select at least one addon item."
+        });
+        return;
+    }
+
+    //console.log("✅ Selected Addon Items:", selectedItems);
+    //console.log("💰 Grand Total:", grandTotal.toFixed(2));
+
+    // 🔹 Update the clicked AddOn button’s total span
+    if (currentAddonButton) {
+        //console.log("here addon btn 1");
+        let $btn = $(currentAddonButton);
+        let $totalSpan = $btn.closest(".d-flex").find(".foodPackage_TotalValue");
+
+        // Update total text
+        $totalSpan.text(grandTotal.toFixed(2));
+
+        // Store selected items for later retrieval
+        $btn.data("selected-AddOnItems", selectedItems);
+        $btn.data("total", grandTotal);
+
+        // 🔹 Update button label with count
+        let itemCount = selectedItems.length;
+        $btn.html(`<i class="fa fa-check"></i> Addons (${itemCount})`);
+
+        //Update Amount
+        let row = $(currentAddonButton).closest(".food-block");
+        // fallback for default row (no .food-block wrapper)
+        if (row.length === 0) {
+            row = $(currentAddonButton).closest(".food-row");
+        }
+        //console.log("grandTotal 2:", grandTotal);
+
+        updatePackageCost();
+        //calculateFoodRowTotals(row);
+        //recalculatePaymentSummary();
+
+        //console.log("grandTotal 3:", grandTotal);
+    }
+    // Close the modal
+    $("#addonChargeModal").modal("hide");
+    //$("#bookingModal").modal("show");
+
+});
+
+// Function to update the Addon button with the selected items and total
+function updateAddonButton(selectedItems) {
+    // Find the button that was clicked (assuming we pass it as a context)
+    let addonButton = $(".btn-outline-success").last();  // Adjust as needed to target the correct button
+    let total = selectedItems.reduce((sum, item) => sum + item.total, 0);
+
+    // Update the button's total value
+    addonButton.next().find(".foodPackage_TotalValue").text(total.toFixed(2));
+
+    // Store the selected items for later use
+    addonButton.data("selected-AddOnItems", selectedItems);
+}
+//Food Addons ----- /END ------------------------------------------------------------------
+
+//< !--Booking Note - text Editor-- - START---->
+let editorsInitialized = false;
+document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
+    const container = document.getElementById('OtherCharges_editorsContainer');
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+
+        // Initialize editors only once after showing
+        if (!editorsInitialized) {
+            // Customer editor
+            // window.otherCharges_customerEditor = new Quill('#otherCharges_customerEditor', {
+            //     theme: 'snow',
+            //     modules: { toolbar: toolbarOptions }
+            // });
+
+            // // Internal editor
+            // window.otherCharges_internalEditor = new Quill('#otherCharges_internalEditor', {
+            //     theme: 'snow',
+            //     modules: { toolbar: toolbarOptions }
+            // });
+
+            editorsInitialized = true;
+        }
+
+    }
+    else {
+        container.style.display = 'none';
     }
 });
 
-// Default mode
-setFollowUpMode('hour');
-*/
+// 1️⃣ Import parchment
+const Parchment = Quill.import('parchment');
+
+// 2️⃣ Define a custom style attributor for font size (instead of class-based)
+const SizeStyle = new Parchment.Attributor.Style('size', 'font-size', {
+    scope: Parchment.Scope.INLINE,
+    whitelist: ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px']
+});
+Quill.register(SizeStyle, true);
+
+// 3️⃣ Optional: Define custom line height too (if you still want)
+const LineHeightStyle = new Parchment.Attributor.Style('lineheight', 'line-height', {
+    scope: Parchment.Scope.BLOCK,
+    whitelist: ['1.0', '1.2', '1.4', '1.5', '1.6', '2.0', '3.0']
+});
+Quill.register(LineHeightStyle, true);
+
+// 4️⃣ Toolbar options
+var toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'size': ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px'] }],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'lineheight': ['1.0', '1.2', '1.4', '1.5', '1.6', '2.0', '3.0'] }]
+];
+
+// 5️⃣ Initialize editors
+var otherCharges_customerEditor = new Quill('#OtherCharges_customerEditor', {
+    theme: 'snow',
+    modules: { toolbar: toolbarOptions }
+});
+
+var otherCharges_internalEditor = new Quill('#OtherCharges_internalEditor', {
+    theme: 'snow',
+    modules: { toolbar: toolbarOptions }
+});
+//< !--Booking Note - text Editor-- - END---->
+
+$("#otherCharges_Reset").on("click", function () {
+    // Reset all number inputs inside Other Charges section
+    $("#otherCharges").find("input[type='number']").val(0);
+    recalculatePaymentSummary();
+});
 
 
-//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->
+// Using jQuery
+$("#gstSwitch").on("change", function () {
+    const isChecked = $(this).is(":checked");
+    //console.log(isChecked ? "GST Accepted" : "GST Not Accepted");
+    updatePackageCost();
+    // Recalculate dynamic rows
+    $(".food-block").each(function () {
+        calculateFoodRowTotals($(this));
+    });
+    //resetOtherCharges(isChecked);
+
+    updateHallRentGST();
+
+    // Recalculate all Other Charges GST
+    recalculateAllOtherCharges();
+
+    recalculatePaymentSummary();
+
+    if (isChecked) {
+        $("#gstSwitchText").text("On").removeClass("text-danger").addClass("text-success");  // Green for ON
+    } else {
+        $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
+    }
+});
+
+// When Hall Rent value is typed or changed
+$("#booking_hallRent").on("input", function () {
+    updateHallRentGST();
+});
+
+//discount change
+$("#paymentSummary_BookingAmount_Type").on("change", function () {
+    $("#paymentSummary_BookingAmount_Amount").val(0);
+    //updateBookingDiscount();
+    recalculatePaymentSummary();
+});
+
+$("#paymentSummary_BookingAmount_Amount").on("input", function () {
+    //updateBookingDiscount();
+    recalculatePaymentSummary();
+
+});
+
+$(document).on("change", "#PaymentDetails_Mode", function () {
+    let selectedText = $("#PaymentDetails_Mode option:selected").text().toLowerCase();
+
+    // Hide everything first
+    $("#PaymentDetails_TransactionId").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeBank").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeNo").closest(".col-md-6").addClass("d-none");
+    $("#PaymentDetails_ChequeDate").closest(".col-md-6").addClass("d-none");
+
+    // CASH
+    if (selectedText.includes("cash")) {
+        // Nothing to show
+    }
+
+    // BANK TRANSFER
+    else if (selectedText.includes("bank transfer")) {
+        // Nothing to show
+    }
+
+    // CHEQUE
+    else if (selectedText.includes("cheque")) {
+        $("#PaymentDetails_ChequeBank").closest(".col-md-6").removeClass("d-none");
+        $("#PaymentDetails_ChequeNo").closest(".col-md-6").removeClass("d-none");
+        $("#PaymentDetails_ChequeDate").closest(".col-md-6").removeClass("d-none");
+    }
+
+    // UPI OR CREDIT
+    else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+        $("#PaymentDetails_TransactionId").closest(".col-md-6").removeClass("d-none");
+    }
+});
+
+loadPaymentModeDropdown();
+function loadPaymentModeDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/PaymentMode/GetPaymentMode",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("payment mode res:", res);
+            const ddl = $("#PaymentDetails_Mode");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data
+                    .filter(x => x.IsActive)
+                    .forEach(pm => {
+                        ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
+                        `);
+                    });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Mode Dropdown Error");
+        }
+    });
+}
+
+loadAccountDropdown();
+function loadAccountDropdown() {
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+    var payload = { Id: 0, ActionBy: actionBy };
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("GetAccount res:", res);
+
+            const ddl = $("#PaymentDetails_AccountId");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data.forEach(acc => {
+
+                    const accountName = (acc.AccountName || "").trim();
+                    const holderName = (acc.AccountHolderName || "").trim();
+
+                    let holderDisplay = "";
+
+                    if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
+                        holderDisplay = ` (${holderName})`;
+                    }
+
+                    ddl.append(`
+                        <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
+                            ${accountName}${holderDisplay}
+                        </option>
+                    `);
+                });
+            }
+            else {
+                Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Account Dropdown Error");
+        }
+    });
+}
+// GST Formula (18%)
+function getGST(amount) {
+    return amount * 0.18;
+}
+
+// Recalculate GST when Hall Rent changes or GST switch toggles
+function updateHallRentGST() {
+
+    let hallRent = parseFloat($("#booking_hallRent").val()) || 0;
+    let isGSTEnabled = $("#gstSwitch").is(":checked");
+
+    let gst = isGSTEnabled ? getGST(hallRent) : 0;
+
+    $("#booking_gst").val(gst.toFixed(2));
+
+    recalculatePaymentSummary();   // 🔥 IMPORTANT
+}
+
+
+//BOOKING CALENDAR DESIGN - END ----------------------------------------------------------------------
