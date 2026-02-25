@@ -29,6 +29,8 @@
         public string? BookedFrom { get; set; }
         public string? BookedTill { get; set; }
         public long SubEventId { get; set; } = 0;
+        public bool? IsOnlyInvoice { get; set; } = false;
+        public long? PaymentStatusId { get; set; } = 0;
     }
 
     public class CustomerInvoiceResponse_GRID
@@ -37,8 +39,10 @@
         public long InvoiceNo { get; set; }
         public long ProformaInvoiceNo { get; set; }
         public long GSTInvoiceNo { get; set; }
-        public string EventDate { get; set; }
-        public string BookedOn { get; set; }
+        public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
+        public bool? IsInvoiceBlocked { get; set; }
+        public string? BookedOn { get; set; }
         public string EventName { get; set; }
         public string HallName { get; set; }
         public string ClientName { get; set; }
@@ -63,6 +67,18 @@
         public string? Address { get; set; }
         public string? EmailId { get; set; }
         public long? CustomerState { get; set; }
+
+        public long? Payment_ModeId { get; set; }
+        public long? Payment_AccountId { get; set; }
+        public string? Payment_TransactionId { get; set; }
+        public string? Payment_ChequeBank { get; set; }
+        public string? Payment_ChequeNo { get; set; }
+        public string? Payment_ChequeDate { get; set; }  // Keep string if passing raw date
+        public decimal? Payment_Amount { get; set; }
+        public string? Payment_PaidDate { get; set; }   // NVARCHAR(20)
+        public string? Payment_PaidTime { get; set; }
+        public string? Payment_DueDate { get; set; }
+        public string? Payment_Note { get; set; }
 
         public decimal? SubTotal { get; set; }
         public decimal? BookingDiscount { get; set; }
@@ -139,6 +155,7 @@
         public long? ClientStateId { get; set; }
         public string? Address { get; set; }
         public bool? IsGSTIncluded { get; set; }
+        public decimal? PaidAmount { get; set; }
         public List<CustomerInvoiceItem_BookingId>? ItemsJson { get; set; }   // JSON string from SQL
     }
     public class CustomerInvoiceItem_BookingId

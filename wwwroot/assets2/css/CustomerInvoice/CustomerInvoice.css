@@ -1,4 +1,16 @@
-﻿.upcoming-scroll {
+﻿/*WIdgets tooltip*/
+.kpi-wide-tooltip .tooltip-inner {
+    max-width: 350px; /* increase width */
+    width: 350px; /* fixed width */
+    text-align: left; /* better readability */
+}
+
+.kpi-wide-tooltip .tooltip-inner ul {
+    padding-left: 1rem;
+    margin-bottom: 0;
+}
+/*WIdgets tooltip*/
+.upcoming-scroll {
     max-height: 150px;
     overflow-y: auto;
     border-bottom-left-radius: 0.5rem;

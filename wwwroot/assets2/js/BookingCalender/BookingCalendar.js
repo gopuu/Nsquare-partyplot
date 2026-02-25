@@ -1388,7 +1388,8 @@ async function renderBoard(bookingData = null) {
     board.innerHTML = "";
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
     cachedDays = await generateDays(selectedYear, selectedMonth);
-    console.log("renderBoard cachedDays:", cachedDays);
+    //console.log("renderBoard cachedDays:", cachedDays);
+    //console.log("renderBoard bookingData:", bookingData);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -1428,6 +1429,8 @@ async function renderBoard(bookingData = null) {
     });
     board.appendChild(dateRow);
 
+    //var bookingCount = 0;
+    //var bookingCountTemp = 0;
     // Resource Rows
     banquetHallsList.forEach(hall => {
         const row = document.createElement("div");
@@ -1479,13 +1482,7 @@ async function renderBoard(bookingData = null) {
                     finalColor = "success"; // ✅ Force all shifts green for today
                 }
 
-                // const textColor = finalColor === "light" ? "text-black" : "text-white";
-                // return `<div class="badge bg-${finalColor} d-block mb-1 ${textColor}">
-                //             ${shiftNames[i]}
-                //         </div>`;
                 var textColor = finalColor === "light" ? "text-black" : "text-white";
-                // const dateStr = `${cachedDays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`;
-                // const dateStr_Format = `${cachedDays[dayIndex].date}-${selectedMonth+1}-${selectedYear}`;
                 const yyyy = selectedYear;
                 const mm = String(selectedMonth + 1).padStart(2, "0"); // ensure 2 digits
                 const dd = String(cachedDays[dayIndex].date).padStart(2, "0");
@@ -1508,6 +1505,7 @@ async function renderBoard(bookingData = null) {
                 let isBookingTentative = false;
                 let isBlocked = false;
                 //work HERE
+
                 //console.log("bookingData:", bookingData);
                 if (Array.isArray(bookingData)) {
                     for (const booking of bookingData) {
@@ -1531,6 +1529,9 @@ async function renderBoard(bookingData = null) {
 
                         // 🟢 Normal shift-based booking
                         if (booking.ShiftCode === shiftCode) {
+                            console.log("bookingId:", booking.BookingId, ", booking.ShiftCode:", booking.ShiftCode, ", shiftCode:", shiftCode);
+
+                            //bookingCountTemp++;
 
                             // If this shift itself is blocked
                             if (booking.BookingCalendar_IsBlocked) {
@@ -1539,6 +1540,8 @@ async function renderBoard(bookingData = null) {
                                 isBlocked = true;
                                 break;
                             }
+
+                            //bookingCount++;
 
                             bookingId = booking.BookingId;
                             eventName = booking.Booking_TypeName;
@@ -1563,7 +1566,6 @@ async function renderBoard(bookingData = null) {
                         }
                     }
                 }
-
 
                 if (isBookingConfirmed) {
                     finalColor = "danger"; // 🔴 Mark Confirmed Booked
@@ -1616,6 +1618,7 @@ async function renderBoard(bookingData = null) {
         });
         board.appendChild(row);
     });
+    //console.log("bookingCount:", bookingCount, ", bookingCountTemp:", bookingCountTemp);
 
     //on cell hover - tooltip ---- START --------------------
     // 🧠 Create a custom tooltip element (only once)
@@ -2602,13 +2605,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $(document).on("change", "#PaymentModal_Mode", function () {
+        console.log("PaymentModal_Mode called");
         let selectedText = $("#PaymentModal_Mode option:selected").text().toLowerCase();
+        console.log("selectedText:", selectedText);
 
-        // Hide everything first
-        $("#paymentTxn").closest(".col-md-6").addClass("d-none");
-        $("#paymentChequebank").closest(".col-md-6").addClass("d-none");
-        $("#paymentChequeNo").closest(".col-md-6").addClass("d-none");
-        $("#paymentChequeDate").closest(".col-md-6").addClass("d-none");
+        // Hide all first
+        $(".paymentModal_Fields").addClass("d-none");
 
         // CASH
         if (selectedText.includes("cash")) {
@@ -2622,14 +2624,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // CHEQUE
         else if (selectedText.includes("cheque")) {
-            $("#paymentChequebank").closest(".col-md-6").removeClass("d-none");
-            $("#paymentChequeNo").closest(".col-md-6").removeClass("d-none");
-            $("#paymentChequeDate").closest(".col-md-6").removeClass("d-none");
+            $("#paymentChequebank").closest(".paymentModal_Fields").removeClass("d-none");
+            $("#paymentChequeNo").closest(".paymentModal_Fields").removeClass("d-none");
+            $("#paymentChequeDate").closest(".paymentModal_Fields").removeClass("d-none");
         }
 
         // UPI OR CREDIT
         else if (selectedText.includes("upi") || selectedText.includes("credit")) {
-            $("#paymentTxn").closest(".col-md-6").removeClass("d-none");
+            $("#paymentTxn").closest(".paymentModal_Fields").removeClass("d-none");
         }
     });
 
@@ -3088,6 +3090,11 @@ Your feedback helps us improve our service.`;
     });
 
     // 🗑️ Delete Booking
+    var isSuperUser = sessionStorage.getItem("isSuperUser") === "true";
+    if (isSuperUser) {
+        document.getElementById("btnDeleteBooking").classList.remove("d-none");
+    }
+
     document.getElementById("btnDeleteBooking").addEventListener("click", function () {
         const bookingId = getBookingId();
         //console.log("🗑️ Delete Booking clicked - Booking ID:", bookingId);
@@ -4443,8 +4450,8 @@ function fillPaymentTrailTable(paymentList = []) {
                     <td>${item.ChequeBank || "—"}</td>
                     <td>${item.ChequeNo || "—"}</td>
                     <td>${item.ChequeDate2 || "—"}</td>
-                    <td class="text-success fw-semibold">₹${formatNumber(item.Amount) || "0"}</td>
-                    <td class="text-danger fw-semibold">₹${formatNumber(item.DueBalance) || "0"}</td>
+                    <td class="text-success fw-semibold">₹${formatINR(item.Amount) || "0"}</td>
+                    <td class="text-danger fw-semibold">₹${formatINR(item.DueBalance) || "0"}</td>
                     <td class="text-muted small">
                         ${
                             item.PaymentNotes
@@ -4462,13 +4469,6 @@ function fillPaymentTrailTable(paymentList = []) {
                 </tr>
             `);
     });
-}
-
-
-// Helper: Format ₹ numbers with commas
-function formatNumber(num) {
-    if (!num || isNaN(num)) return "0";
-    return Number(num).toLocaleString("en-IN");
 }
 
 function setGSTSwitch(isGSTAccepted) {
@@ -4505,7 +4505,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                //console.log("Booking List:",data);
+                console.log("Booking List:",data);
                 if (actionMode === "fullData") {
                     //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);

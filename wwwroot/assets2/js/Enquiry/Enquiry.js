@@ -10,7 +10,7 @@ function loadFollowUpTypes() {
         url: "/api/EnquiryFollowup/GetEnquiryFollowUp_Types",
         type: "GET",
         success: function (res) {
-            console.log("res type:", res);
+            //console.log("res type:", res);
             if (res.status === "Success") {
                 let ddl = $("#ddlFollowUpType");
                 ddl.empty();
@@ -34,7 +34,7 @@ function loadFollowUpStatus() {
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0, StatusType: "Followup" }),
         success: function (res) {
-            console.log("res status:", res);
+            //console.log("res status:", res);
             if (res.status === "Success") {
                 let ddl = $("#ddlStatus");
                 ddl.empty();
@@ -56,7 +56,7 @@ function loadMoodList() {
         url: "/api/EnquiryFollowup/GetEnquiryFollowUp_MoodList",
         type: "GET",
         success: function (res) {
-            console.log("res mood:", res);
+            //console.log("res mood:", res);
             if (res.status === "Success") {
                 let ddl = $("#ddlMood");
                 ddl.empty();
@@ -343,8 +343,8 @@ function loadEnquiryDeals(processId = 0) {
     const inputData = {
         ProcessId: Number(processId),
         Duration: duration,
-        FromAmount: fromAmt ? Number(fromAmt) : 0,
-        ToAmount: toAmt ? Number(toAmt) : 0,
+        FromAmount: fromAmt ? Number(fromAmt) : null,
+        ToAmount: toAmt ? Number(toAmt) : null,
         FromDate: duration === "customrange" ? $("#fromDate_filter").val() : null,
         ToDate: duration === "customrange" ? $("#toDate_filter").val() : null
     };
@@ -421,7 +421,7 @@ function renderBoard() {
                                     <!-- Row 2 : Time + Amount -->
                                     <div class="d-flex justify-content-between align-items-center small">
                                         <span class="fw-bold text-dark flex-shrink-0 fs-9">
-                                            ₹${deal.Amount.toLocaleString()}
+                                            ₹${formatINR(deal.Amount)}
                                         </span>
 
                                         <span class="text-muted">
@@ -457,7 +457,7 @@ function renderBoard() {
                     data-islost="${process.IsLost}">
                     <div class="card-header bg-warning p-3">
                         <h6 class="mb-0 text-white">${process.ProcessName}</h6>
-                        <small class="text-white">₹${process.TotalAmount.toLocaleString()} • ${process.TotalEnquiryDeals} Deal(s)</small>
+                        <small class="text-white">₹${formatINR(process.TotalAmount)} • ${process.TotalEnquiryDeals} Deal(s)</small>
                     </div>
                     <div class="card-body deal-dropzone p-2" style="min-height: 500px;">
                         ${dealsHtml}
@@ -1175,6 +1175,18 @@ function calculateEstimatedAmount() {
 
 // Initial load
 document.addEventListener("DOMContentLoaded", function () {
+
+    // Step 1: Get session value from Page 1
+    const selectedDuration = sessionStorage.getItem("SelectedFilter_DashboardWidget");
+    console.log("selectedDuration:", selectedDuration);
+    if (selectedDuration) {
+        // Step 2: Set dropdown value
+        $("#ddlDuration").val(selectedDuration);
+        // Trigger change event to handle custom range visibility
+        $("#ddlDuration").trigger("change");
+        // Step 3: Remove session (one-time use)
+        sessionStorage.removeItem("SelectedFilter_DashboardWidget");
+    }
     loadEnquiryDeals();
     loadEnquiryList();
     loadStateList();
@@ -2084,7 +2096,7 @@ function loadEventTypeList() {
         url: "/api/EventType/GetEventTypeList",
         type: "GET",
         success: function (response) {
-            console.log("eventType response:", response);
+            //console.log("eventType response:", response);
             if (response.status === "Success") {
                 let rows = "";
                 let srNo = 1;
@@ -2163,7 +2175,7 @@ function loadEventSubTypeList(eventTypeId = 0) {
         contentType: "application/json",
         data: JSON.stringify(inputData),
         success: function (response) {
-            console.log("eventSubType response:", response);
+            //console.log("eventSubType response:", response);
             if (response.status === "Success") {
                 let rows = "";
                 let srNo = 1;
@@ -2256,7 +2268,7 @@ function loadBanquetHallList() {
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }), // Get all halls
         success: function (response) {
-            console.log("banquetHall response:", response);
+            //console.log("banquetHall response:", response);
             if (response.status === "Success") {
                 let options = `<option value = "0"> --Select Banquet Hall--</option> `; // default option
                 $.each(response.data, function (index, item) {
@@ -2281,7 +2293,7 @@ function loadLeadSourceList() {
         url: "/api/LeadSource/GetLeadSourceList",
         type: "GET",
         success: function (response) {
-            console.log("leadSource response:", response);
+            //console.log("leadSource response:", response);
             if (response.status && response.status.toLowerCase() === "success") {
                 let rows = "";
                 let srNo = 1;

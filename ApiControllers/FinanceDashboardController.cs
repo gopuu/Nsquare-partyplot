@@ -32,9 +32,7 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
                     apiResponse.status = "Error";
                     apiResponse.message = "Invalid domain or connection.";

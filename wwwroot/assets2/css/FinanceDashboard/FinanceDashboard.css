@@ -1,4 +1,8 @@
-﻿
+﻿/* Increase tooltip width */
+.tooltip-inner {
+    max-width: 100%; /* Increase as needed */
+    white-space: normal; /* Allow wrapping */
+}
 
 .btn-xs {
     padding: 2px 8px;

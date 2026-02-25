@@ -24,13 +24,13 @@
                 <div class="row g-0 h-100">
                     <!-- ================= LEFT SIDE ================= -->
                     <div class="col-md-5 text-center bg-card-gradient">
-                        <div class="position-relative p-4 pt-md-5 pb-md-7" data-bs-theme="light">
+                        <div class="position-relative p-3 pt-md-5 pb-md-7" data-bs-theme="light">
                             <div class="bg-holder bg-auth-card-shape"
                                  style="background-image:url('~/assets2/img/icons/illustrations/half-circle.png');">
                             </div>
                             <div class="z-1 position-relative">
-                                <a class="link-light mb-4 fs-4 fw-bolder d-inline-block" href="/">
-                                    <img class="img-fluid me-2"
+                                <a class="link-light mb-4 fs-4 fw-bolder d-inline-block mb-2" href="/">
+                                    <img class="img-fluid me-1"
                                          src="~/assets2/img/TenXSoftware.png"
                                          alt="Logo" width="70%" />
                                 </a>
@@ -39,7 +39,7 @@
                                     Driven By Purpose, Powered By Code
                                 </p>
 
-                                <p class="text-white fw-semi-bold mb-0">
+                                <p class="text-white fw-semi-bold mb-0 d-none d-md-block">
                                     <a class="text-white" href="https://www.nsquaresoftware.com" target="_blank">
                                         <i class="fas fa-globe me-2"></i>www.nsquaresoftware.com
                                     </a>
@@ -47,7 +47,7 @@
                             </div>
                         </div>
                         <!-- Contact Info -->
-                        <div class="mt-3 mb-4 mt-md-4 mb-md-5" data-bs-theme="light">
+                        <div class="mt-3 mb-4 mt-md-4 mb-md-5 d-none d-md-block" data-bs-theme="light">
                             <p class="text-white">
                                 Need support?<br>
                                 <span class="opacity-75">Expert assistance is one call away.</span>
@@ -71,7 +71,7 @@
                                 </a>
                             </p>
 
-                            <p class="text-white fw-semi-bold mb-0">
+                            <p class="text-white fw-semi-bold mb-0 d-none d-md-block">
                                 <a class="text-white" href="mailto:nsquaresoftwarsolution@gmail.com">
                                     <i class="fas fa-envelope me-2"></i>
                                     nsquaresoftwarsolution@gmail.com
@@ -89,19 +89,19 @@
                             <form id="loginForm">
                                 <div class="mb-3">
                                     <label class="form-label" for="UserName">Username or Email</label>
-                                    <input class="form-control" type="text" id="UserName" name="UserName" placeholder="Username or Email" autofocus />
+                                    <input class="form-control" type="text" id="UserName" name="UserName" placeholder="Username or Email" autofocus autocomplete="off" />
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" for="password">Password</label>
                                     <div class="form-icon-container" data-password="data-password">
-                                        <input class="form-control" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" />
+                                        <input class="form-control" id="Password" type="password" placeholder="Password" data-password-input="data-password-input" autocomplete="off" />
                                             @*<span class="fas fa-key text-body fs-9 form-icon"></span>*@                                        
                                             <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle">
                                             <span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-1">
                                     <button class="btn btn-warning w-100 mb-3" type="submit">Sign In</button>
                                 </div>
                                 <div class="row mb-3">
@@ -111,7 +111,7 @@
                             </form>
 
                             <!-- Greeting / Quote -->
-                            <div class="text-center mb-4">
+                            <div class="text-center mb-2">
                                 <span class="fw-semibold text-dark" id="dailyGreeting"></span>
                             </div>
 

@@ -440,12 +440,19 @@
                             <h6 class="text-primary">Payment Details</h6>
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label>Mode</label>
+                                    <label>Payment Mode</label>
                                     <select class="form-select form-select-sm" id="PaymentDetails_Mode"></select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Account</label>
+                                    <label class="d-flex align-items-center gap-2">
+                                        Account
+                                        <i class="fa fa-info-circle text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                        </i>
+                                    </label>
                                     <select class="form-select form-select-sm" id="PaymentDetails_AccountId"></select>
                                 </div>
 
@@ -1050,7 +1057,7 @@
                     </button>
 
                     <button type="button"
-                            class="btn btn-outline-danger btn-sm"
+                            class="btn btn-outline-danger btn-sm d-none"
                             id="btnDeleteBooking">
                         <i class="fa-solid fa-trash me-1"></i> Delete Booking
                     </button>
@@ -1288,12 +1295,19 @@
                         <input type="hidden" id="paymentBookingId">
 
                         <div class="col-md-3 mb-1">
-                            <label class="form-label">Mode</label>
+                            <label class="form-label">Payment Mode</label>
                             <select class="form-select" id="PaymentModal_Mode"></select>
                         </div>
 
                         <div class="col-md-3 mb-1">
-                            <label class="form-label">Account</label>
+                            <label class="d-flex align-items-center gap-2">
+                                Account
+                                <i class="fa fa-info-circle text-primary"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                </i>
+                            </label>
                             <select class="form-select" id="PaymentModal_AccountId"></select>
                         </div>
 
@@ -1307,39 +1321,39 @@
                             <input type="time" id="paymentTime" class="form-control">
                         </div>
 
-                        <div class="col-md-3 mb-1 d-none">
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
                             <label class="form-label">Transaction Id </label>
                             <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
                         </div>
 
-                        <div class="col-md-4 mb-1 d-none">
+                        <div class="col-md-6 mb-1 paymentModal_Fields">
                             <label class="form-label">Cheque Bank</label>
                             <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
                         </div>
 
-                        <div class="col-md-2 mb-1 d-none">
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
                             <label class="form-label">Cheque No</label>
                             <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
                         </div>
 
-                        <div class="col-md-3 mb-1 d-none">
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
                             <label class="form-label">Cheque Date</label>
                             <input type="date" id="paymentChequeDate" class="form-control">
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Amount</label>
                             <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount" min="0" step="1">
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Due Balance</label>
                             <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
                             <input type="hidden" id="originalDueAmount">
                             <small id="dueMessage" class="text-danger d-none">No Due</small>
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Next Due Date</label>
                             <input type="date" id="NextDueDate" class="form-control">
                         </div>

@@ -154,7 +154,7 @@ namespace ERPAdmin.ApiControllers
                         userDetail.companyname = dr["Company_Name"] != DBNull.Value && !string.IsNullOrEmpty(dr["Company_Name"].ToString())
                             ? dr["Company_Name"].ToString()
                             : "NSquare";
-                        //userDetail.companylogo = Convert.ToString(dr["Company_Logo"]) ?? "/assets/img/icons/spot-illustrations/falcon.png";
+                        //userDetail.companylogo = Convert.ToString(dr["Company_Logo"]) ?? "/assets2/img/icons/spot-illustrations/falcon.png";
                         //userDetail.companylogo = dr["Company_Logo"] != DBNull.Value && !string.IsNullOrEmpty(dr["Company_Logo"].ToString())
                         //    ? domainUrl + "uploads/companyPic/" + dr["Company_Logo"].ToString()
                         //    : domainUrl + "uploads/companyPic/nsquare.png";
@@ -243,7 +243,7 @@ namespace ERPAdmin.ApiControllers
                         userDetail.companyname = dr["Company_Name"] != DBNull.Value && !string.IsNullOrEmpty(dr["Company_Name"].ToString())
                             ? dr["Company_Name"].ToString()
                             : "NSquare";
-                        //userDetail.companylogo = Convert.ToString(dr["Company_Logo"]) ?? "/assets/img/icons/spot-illustrations/falcon.png";
+                        //userDetail.companylogo = Convert.ToString(dr["Company_Logo"]) ?? "/assets2/img/icons/spot-illustrations/falcon.png";
                         //userDetail.companylogo = dr["Company_Logo"] != DBNull.Value && !string.IsNullOrEmpty(dr["Company_Logo"].ToString())
                         //    ? domainUrl + "uploads/companyPic/" + dr["Company_Logo"].ToString()
                         //    : domainUrl + "uploads/companyPic/nsquare.png";

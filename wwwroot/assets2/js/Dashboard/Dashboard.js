@@ -78,7 +78,7 @@ $(".sort-option").on("click", function (e) {
     $(this).addClass("active");
 
     $("#sortByDropdown").text("Filter : " + $(this).text());
-    $(".sub").text("In " + $(this).text());
+    $(".sub_count").text("In " + $(this).text());
 
     // --------------------------
     // MonthDuration ke hisab se From/To date set karna
@@ -119,7 +119,9 @@ $(".sort-option").on("click", function (e) {
         return loadDashboardWidgetCounts();
     }
 
-    // Set the datepickers
+    // Store selected filter in session
+    sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
+
     $("#fromDate").val(formatDate(fromDate));
     $("#toDate").val(formatDate(toDate));
 
@@ -253,7 +255,7 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 //1. Dashboard Widget Counts --- END --------------------------
 
 //1.4 Dashboard Upcoming Event & Amount--- START --------------------------
-let selectedUpcomingDuration = "thismonth";
+let selectedUpcomingDuration = "thismonth_upcoming";
 $(".upcoming-filter .dropdown-item").on("click", function (e) {
     e.preventDefault();
 
@@ -261,7 +263,9 @@ $(".upcoming-filter .dropdown-item").on("click", function (e) {
     $(this).addClass("active");
 
     selectedUpcomingDuration = $(this).data("value");
-    $("#upcomingFilterBtn").text($(this).text());
+    var txt = $(this).text();
+    $("#upcomingFilterBtn").text(txt);
+    $(".sub_upcoming").text("In " + txt);
 
     loadUpcomingEventsWidget();
 });
@@ -1344,60 +1348,11 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
 //COUNT WIDGETS - tooltip --- START --------------
 document.addEventListener('DOMContentLoaded', function () {
     const tooltipContent = {
-        tooltipTotalSales: `
-            <div class='tooltip-title'>
-                Total value of sales generated during the selected time period.
-                (This data comes from the POS, cashier portal or any transactions you have imported)
-            </div>
-            <ul class='tooltip-list'>
-                <li>All orders – customers with valid, invalid, blocked, and no mobile number orders are all included.</li>
-                <li>Pending and voided bills are excluded.</li>
-                <li>The data is valid until 11.59 PM of the selected time.</li>
-            </ul>
-        `,
-        tooltipTotalOrders: `
-            <div class='tooltip-title'>
-                Total number of orders placed during the selected time period.
-                (This data comes from your POS or imported transactions)
-            </div>
-            <ul class='tooltip-list'>
-                <li>Includes all valid, invalid, blocked, and no mobile number orders.</li>
-                <li>Pending and voided orders are excluded.</li>
-                <li>Data is valid until 11:59 PM of the selected day.</li>
-            </ul>
-        `,
-        tooltipTotalCustomers: `
-            <div class='tooltip-title'>
-                Total number of customer visits recorded during the selected time period.
-                (This includes all visits tracked in the system)
-            </div>
-            <ul class='tooltip-list'>
-                <li>Includes first-time and repeat customer visits.</li>
-                <li>Only valid check-ins are counted; canceled or invalid visits are excluded.</li>
-                <li>Data is accurate as of 11:59 PM of the selected day.</li>
-            </ul>
-        `,
-        tooltipEventsLost: `
-            <div class='tooltip-title'>
-                Total number of events lost or not completed during the selected time period.
-            </div>
-            <ul class='tooltip-list'>
-                <li>Includes cancelled, rejected, and unconfirmed events.</li>
-                <li>Only valid tracked events are counted; duplicates or test events are excluded.</li>
-                <li>Data is accurate as of 11:59 PM of the selected day.</li>
-            </ul>
-        `,
-        tooltipUpcomingEvents: `
-            <div class='tooltip-title'>
-                Total number of confirmed events scheduled for upcoming dates.
-            </div>
-            <ul class='tooltip-list'>
-                <li>Includes all future events with confirmed booking status.</li>
-                <li>Events that are cancelled, rejected, or completed are excluded.</li>
-                <li>Data is updated in real time based on the selected date range.</li>
-            </ul>
-        `
-
+        tooltipTotalSales: `Sum of total invoice amounts generated during the selected period.`,
+        tooltipTotalOrders: `Sum of total invoices generated during the selected period.`,
+        tooltipTotalCustomers: `Sum of total Booking PAX of total invoice generated during the selected period.`,
+        tooltipEventsLost: `Sum of total lead (enquiries) lost during the selected period.`,
+        tooltipUpcomingEvents: `Total number of confirmed events scheduled for upcoming dates.`
     };
 
     // Loop through all tooltip elements and initialize
@@ -1421,6 +1376,17 @@ document.addEventListener('DOMContentLoaded', function () {
             // Save instance for later use (optional)
             el._tooltipInstance = tooltip;
         }
+    });
+
+    //Amount Click & Redirect page
+    $('#totalSales, #totalEvents, #totalCustomers').on('click', function () {
+        sessionStorage.setItem("IsShowTotalSalesList", "true");
+        window.location.href = '/CustomerInvoice';
+    });
+
+    //Eent Lost Click & Redirect page
+    $('#totalEventsLost, #tooltipEventsLost').on('click', function () {
+        window.location.href = '/Enquiry';
     });
 });
 //COUNT WIDGETS - tooltip --- END --------------

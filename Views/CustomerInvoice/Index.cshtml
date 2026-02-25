@@ -11,6 +11,7 @@
 @section Styles {
     <link href="~/assets2/css/customerinvoice/customerinvoice.css" asp-append-version="true" rel="stylesheet" />
 }
+
 <!--MAIN-->
 <div class="content">
     <div class="pb-1">
@@ -36,11 +37,11 @@
                 <div class="row g-3 mb-4" id="invoiceWidgets">
 
                     <!-- Payment Collection -->
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <div class="card shadow-sm border-0 h-100">
                             <!-- CARD HEADER -->
                             <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2">
-                                <h6 class="fw-bold mb-0 text-white">
+                                <h6 class="fw-bold mb-0 text-white kpi-tooltip" id="paymentCollectionTitle">
                                     Payment Collection Status
                                 </h6>
 
@@ -68,16 +69,16 @@
                             <div class="card-body">
 
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>Paid</span>
-                                    <span class="text-success">₹ <span id="txtPaidAmount">0</span></span>
+                                    <span>Payment Received</span>
+                                    <span class="text-success fw-bold">₹ <span id="txtPaidAmount">0</span></span>
                                 </div>
                                 <div class="progress mb-3">
                                     <div id="barPaid" class="progress-bar bg-success"></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>Pending</span>
-                                    <span class="text-danger">₹ <span id="txtPendingAmount">0</span></span>
+                                    <span>Payment Pending</span>
+                                    <span class="text-danger fw-bold">₹ <span id="txtPendingAmount">0</span></span>
                                 </div>
                                 <div class="progress">
                                     <div id="barPending" class="progress-bar bg-danger"></div>
@@ -87,115 +88,93 @@
                         </div>
                     </div>
 
-                    <!--Upcoming Payment-->
-                    <div class="col-md-6">
+                    <!-- RIGHT SIDE : FILTER -->
+                    <div class="col-md-9">
                         <div class="card shadow-sm border-0 h-100">
-                            <!-- CARD HEADER -->
+
                             <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2">
                                 <h6 class="fw-bold mb-0 text-white">
-                                    Upcoming Payment
+                                    Filters
                                 </h6>
+                            </div>
 
-                                <div class="dropdown">
-                                    <button class="btn btn-xs btn-light dropdown-toggle"
-                                            type="button"
-                                            id="UpcomingChartFilter"
-                                            data-bs-toggle="dropdown">
-                                        This Month
-                                    </button>
+                            <div class="card-body">
 
-                                    <ul class="dropdown-menu shadow-sm" aria-labelledby="UpcomingChartFilter">
-                                        <li><a class="dropdown-item upcoming-option" data-value="yesterday" href="#">Yesterday</a></li>
-                                        <li><a class="dropdown-item upcoming-option" data-value="days" href="#">Last 7 Days</a></li>
-                                        <li><a class="dropdown-item upcoming-option active" data-value="thismonth" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item upcoming-option" data-value="lastdays" href="#">Last 30 Days</a></li>
-                                        <li><a class="dropdown-item upcoming-option" data-value="lastmonth" href="#">Last Month</a></li>
-                                        <li><a class="dropdown-item upcoming-option" data-value="12months" href="#">Last 12 Months</a></li>
-                                        <li><a class="dropdown-item upcoming-option" data-value="customrange" href="#">Custom Range</a></li>
-                                    </ul>
+                                <div class="row g-2">
+
+                                    <!-- Search -->
+                                    <div class="col-4">
+                                        <label class="form-label">Name / Email / Contact</label>
+                                        <input type="text" id="fltSearch"
+                                               class="form-control form-control-sm"
+                                               placeholder="Search">
+                                    </div>
+
+                                    <!-- Event -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Event</label>
+                                        <select id="fltEvent" class="form-select form-select-sm"></select>
+                                    </div>
+
+                                    <!-- Slot -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Slot</label>
+                                        <select id="fltSlot" class="form-select form-select-sm"></select>
+                                    </div>
+
+                                    <!-- Event From -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Event From</label>
+                                        <input type="date" id="fltEventFrom"
+                                               class="form-control form-control-sm">
+                                    </div>
+
+                                    <!-- Event To -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Event To</label>
+                                        <input type="date" id="fltEventTo"
+                                               class="form-control form-control-sm">
+                                    </div>
+
+                                    <!-- Booked From -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Booked From</label>
+                                        <input type="date" id="fltBookedFrom"
+                                               class="form-control form-control-sm">
+                                    </div>
+
+                                    <!-- Booked Till -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Booked Till</label>
+                                        <input type="date" id="fltBookedTill"
+                                               class="form-control form-control-sm">
+                                    </div>
+
+                                    <!-- Payment Status -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Payment Status</label>
+                                        <select id="fltPaymentStatus" class="form-select form-select-sm">
+                                            <option value="0">All</option>
+                                            <option value="1">Payment Pending</option>
+                                            <option value="2">Payment Received</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Buttons -->
+                                    <div class="col-md-4 d-flex gap-2 mt-5">
+                                        <button class="btn btn-outline-primary btn-sm w-100"
+                                                onclick="fetchData()">
+                                            Apply
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm w-100"
+                                                onclick="resetFilter()">
+                                            Reset
+                                        </button>
+                                    </div>
+
                                 </div>
-                            </div>
-
-                            <!-- CARD BODY -->
-                            <div class="card-body p-0">
-
-                                <ul class="list-group list-group-flush upcoming-scroll" id="upcomingPaymentsList">
-                                    <li class="list-group-item text-muted text-center">
-                                        Loading...
-                                    </li>
-                                </ul>
 
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- FILTER CARD -->
-                <div class="card invoice-filter-card shadow-sm mb-3 bg-warning">
-                    <div class="card-body py-2">
-
-                        <div class="row gx-2 align-items-end flex-nowrap">
-
-                            <!-- Search -->
-                            <div class="col-auto flex-grow-1" style="min-width:180px">
-                                <label class="filter-label text-white">Name / Email / Contact</label>
-                                <input type="text" id="fltSearch"
-                                       class="form-control form-control-sm"
-                                       placeholder="Search">
-                            </div>
-
-                            <!-- Slot -->
-                            <div class="col-auto" style="width:130px">
-                                <label class="filter-label text-white">Slot</label>
-                                <select id="fltSlot" class="form-select form-select-sm">
-                                </select>
-                            </div>
-
-                            <!-- Event From -->
-                            <div class="col-auto" style="width:135px">
-                                <label class="filter-label text-white">Event From</label>
-                                <input type="date" id="fltEventFrom"
-                                       class="form-control form-control-sm">
-                            </div>
-
-                            <!-- Event To -->
-                            <div class="col-auto" style="width:135px">
-                                <label class="filter-label text-white">Event To</label>
-                                <input type="date" id="fltEventTo"
-                                       class="form-control form-control-sm">
-                            </div>
-
-                            <!-- Booked From -->
-                            <div class="col-auto" style="width:135px">
-                                <label class="filter-label text-white">Booked From</label>
-                                <input type="date" id="fltBookedFrom"
-                                       class="form-control form-control-sm">
-                            </div>
-
-                            <!-- Booked Till -->
-                            <div class="col-auto" style="width:135px">
-                                <label class="filter-label text-white">Booked Till</label>
-                                <input type="date" id="fltBookedTill"
-                                       class="form-control form-control-sm">
-                            </div>
-
-                            <!-- Event -->
-                            <div class="col-auto" style="width:140px">
-                                <label class="filter-label text-white">Event</label>
-                                <select id="fltEvent" class="form-select form-select-sm">
-                                </select>
-                            </div>
-
-                            <!-- Buttons -->
-                            <div class="col-auto d-flex gap-2">
-                                <button class="btn btn-primary btn-sm px-3" onclick="fetchData()">
-                                    Apply
-                                </button>
-                                <button class="btn btn-danger btn-sm px-3 text-white" onclick="resetFilter()">
-                                    Reset
-                                </button>
-                            </div>
-
                         </div>
                     </div>
                 </div>
@@ -214,15 +193,33 @@
 <div class="modal fade" id="invoiceModal" tabindex="-1">
     <div class="modal-dialog modal-xxl">
         <div class="modal-content">
-            <!--Header-->
             <div class="modal-header bg-warning py-1 text-white">
-                <h6 class="modal-title text-white" id="invoiceModalTitle">Add Invoice</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+                <h6 class="modal-title text-white mb-0" id="invoiceModalTitle">
+                    Add Invoice
+                </h6>
+
+                <!-- Push buttons to extreme right -->
+                <div class="ms-auto d-flex align-items-center gap-2">
+
+                    <!-- Delete Button -->
+                    <button type="button"
+                            class="btn btn-sm btn-danger d-none"
+                            id="btnDeleteInvoice">
+                        <i class="fa fa-trash me-1"></i> Delete
+                    </button>
+
+                    <!-- Close Button -->
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
             </div>
 
             <div class="modal-body invoice-modal-body">
                 <input type="hidden" id="invoiceId" value="0" />
-                <input type="hidden" id="bookingId" value="0" />
+                <input type="hidden" id="paymentBookingId" value="0" />
 
                 <!-- CUSTOMER / INVOICE INFO -->
                 <div class="row g-2 customerInfo">
@@ -282,9 +279,9 @@
                                     <th class="col-rate">Rate</th>
                                     <th class="col-qty">Qty</th>
                                     <th class="col-subtotal">SubTotal</th>
-                                    <th class="col-discount-rate">Discount</th>
+                                    <th class="col-discount-rate">Discount Rate</th>
                                     <th class="col-discount-type">Type</th>
-                                    <th class="col-discount-amount">Discount</th>
+                                    <th class="col-discount-amount">Discount Amt.</th>
                                     <th class="col-taxable">Taxable</th>
                                     <th class="col-gst">GST%</th>
                                     <th class="col-cgst">CGST</th>
@@ -321,8 +318,117 @@
 
                 <!-- TOTALS -->
                 <div class="row mt-4">
-                    <!-- EMPTY SPACE (LEFT) -->
-                    <div class="col-md-7"></div>
+
+                    <!-- LEFT SIDE : PAYMENT DETAILS -->
+                    <div class="col-md-7">
+                        <div class="border rounded p-3 bg-white" id="paymentSection">
+                            <!-- 🔹 Payment Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-primary mb-0">
+                                    Payment Details
+                                </h6>
+                                <span class="badge bg-light text-dark border">
+                                    Invoice Payment
+                                </span>
+                            </div>
+
+                            <div class="row g-2">
+
+                                <!-- Mode -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Mode</label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Mode"></select>
+                                </div>
+
+                                <!-- Account -->
+                                <div class="col-md-3">
+                                    <label class="form-label d-flex gap-2">
+                                        Account
+                                        <i class="fa fa-info-circle text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                        </i>
+                                    </label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Account"></select>
+                                </div>
+
+                                <!-- Payment Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Date</label>
+                                    <input type="date" id="invoicePayment_Date" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Payment Time -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Time</label>
+                                    <input type="time" id="invoicePayment_Time" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Transaction Id -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Transaction Id</label>
+                                    <input type="text" id="invoicePayment_Txn" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Bank -->
+                                <div class="col-md-4 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Bank</label>
+                                    <input type="text" id="invoicePayment_ChequeBank" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque No -->
+                                <div class="col-md-2 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque No</label>
+                                    <input type="text" id="invoicePayment_ChequeNo" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Date -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Date</label>
+                                    <input type="date" id="invoicePayment_ChequeDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Amount -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="number" id="invoicePayment_Amount" class="form-control form-control-sm" min="0" step="1">
+                                </div>
+
+                                <!-- Due Balance -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Due Balance</label>
+                                    <input type="number" id="invoicePayment_DueBalance" class="form-control form-control-sm" min="0" step="1">
+                                    <input type="hidden" id="invoicePayment_originalDueAmount">
+                                    <small id="invoicePayment_dueMessage" class="text-danger d-none">No Due</small>
+                                </div>
+
+                                <!-- Next Due Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Next Due Date</label>
+                                    <input type="date" id="invoicePayment_NextDueDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Buttons Row -->
+                                <div class="col-md-12 d-flex justify-content-between align-items-center mt-2">
+                                    <!-- Left -->
+                                    <div>
+                                        <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
+                                    </div>
+                                </div>
+
+                                <!-- Note Editor -->
+                                <div class="col-md-12 invoicePayment_EditorContainer mt-2 d-none">
+                                    <div id="invoicePayment_noteEditor">
+                                        <textarea class="form-control"
+                                                  rows="4"
+                                                  placeholder="Write your note here..."></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- TOTALS PANEL (RIGHT) -->
                     <div class="col-md-5">
@@ -399,8 +505,8 @@
 <div class="modal fade" id="deleteRecordModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-white py-1">
-                <h5 class="modal-title">Delete Invoice</h5>
+            <div class="modal-header bg-danger text-white py-1">
+                <h5 class="modal-title text-white">Delete Invoice</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
@@ -679,7 +785,6 @@
                                             <th>Due Balance</th>
                                             <th>Note</th>
                                             <th>Receipt</th>
-                                            <th>Delete</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bookingReport_PaymentTrailBody">
@@ -786,6 +891,7 @@
         </div>
     </div>
 </div>
+<!-- Booking Info Modal -- END -->
 
 <!-- Send Invoice Modal --- START --->
 <div class="modal fade" id="sendInvoiceModal" tabindex="-1">
@@ -842,80 +948,87 @@
     </div>
 </div>
 
-<!-- paymentModal -- START -->
+<!-- outstanding paymentModal -- START -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-1">
-                <h5 class="modal-title text-white">Booking Payments</h5>
+                <h5 class="modal-title text-white">Oustanding - Invoice Payments</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="paymentForm">
+                <form id="outstanding_paymentForm">
                     <div class="row g-2">
-                        <input type="hidden" id="paymentBookingId">
+                        <input type="hidden" id="outstanding_paymentBookingId">
 
                         <div class="col-md-3 mb-1">
-                            <label class="form-label">Mode</label>
-                            <select class="form-select" id="PaymentModal_Mode"></select>
+                            <label class="form-label">Payment Mode</label>
+                            <select class="form-select" id="outstandingPayment_Mode"></select>
                         </div>
 
                         <div class="col-md-3 mb-1">
-                            <label class="form-label">Account</label>
-                            <select class="form-select" id="PaymentModal_AccountId"></select>
+                            <label class="form-label">
+                                Account
+                                <i class="fa fa-info-circle text-primary"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                </i>
+                            </label>
+                            <select class="form-select" id="outstandingPayment_Account"></select>
                         </div>
 
                         <div class="col-md-3 mb-1">
                             <label class="form-label">Payment Date</label>
-                            <input type="date" id="paymentDate" class="form-control">
+                            <input type="date" id="outstandingPayment_Date" class="form-control">
                         </div>
 
                         <div class="col-md-3 mb-1">
                             <label class="form-label">Payment Time</label>
-                            <input type="time" id="paymentTime" class="form-control">
+                            <input type="time" id="outstandingPayment_Time" class="form-control">
                         </div>
 
-                        <div class="col-md-3 mb-1">
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
                             <label class="form-label">Transaction Id </label>
-                            <input type="text" id="paymentTxn" class="form-control" placeholder="Enter Txn Id">
+                            <input type="text" id="outstandingPayment_Txn" class="form-control" placeholder="Enter Txn Id">
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-6 mb-1 paymentModal_Fields">
                             <label class="form-label">Cheque Bank</label>
-                            <input type="text" id="paymentChequebank" class="form-control" placeholder="Enter Cheque Bank">
+                            <input type="text" id="outstandingPayment_Chequebank" class="form-control" placeholder="Enter Cheque Bank">
                         </div>
 
-                        <div class="col-md-2 mb-1">
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
                             <label class="form-label">Cheque No</label>
-                            <input type="text" id="paymentChequeNo" class="form-control" placeholder="Cheque No">
+                            <input type="text" id="outstandingPayment_ChequeNo" class="form-control" placeholder="Cheque No">
+                        </div>
+
+                        <div class="col-md-3 mb-1 paymentModal_Fields">
+                            <label class="form-label">Cheque Date</label>
+                            <input type="date" id="outstandingPayment_ChequeDate" class="form-control">
                         </div>
 
                         <div class="col-md-3 mb-1">
-                            <label class="form-label">Cheque Date</label>
-                            <input type="date" id="paymentChequeDate" class="form-control">
-                        </div>
-
-                        <div class="col-md-4 mb-1">
                             <label class="form-label">Amount</label>
-                            <input type="number" id="paymentAmount" class="form-control" placeholder="Enter Amount" min="0" step="1">
+                            <input type="number" id="outstandingPayment_Amount" class="form-control" placeholder="Enter Amount" min="0" step="1">
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Due Balance</label>
-                            <input type="number" id="paymentDueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
-                            <input type="hidden" id="originalDueAmount">
+                            <input type="number" id="outstandingPayment_DueBalance" class="form-control" placeholder="Enter Due Balance" min="0" step="1">
+                            <input type="hidden" id="outstandingPayment_originalDueAmount">
                             <small id="dueMessage" class="text-danger d-none">No Due</small>
                         </div>
 
-                        <div class="col-md-4 mb-1">
+                        <div class="col-md-3 mb-1">
                             <label class="form-label">Next Due Date</label>
-                            <input type="date" id="NextDueDate" class="form-control">
+                            <input type="date" id="outstandingPayment_NextDueDate" class="form-control">
                         </div>
                         <div class="col-md-12 mb-1 d-flex justify-content-between align-items-center">
 
                             <!-- LEFT SIDE -->
                             <div class="d-flex gap-2">
-                                <input type="button" id="btnwritrnote"
+                                <input type="button" id="outstandingPayment_btnwritrnote"
                                        class="btn btn-outline-primary btn-sm"
                                        value="Payment Notes">
                             </div>
@@ -931,8 +1044,8 @@
                         </div>
 
                         <!-- NOTE EDITOR -->
-                        <div class="col-md-12 Payment_editorsContainer mt-2" style="display:none;">
-                            <div id="noteEditor">
+                        <div class="col-md-12 outstandingPayment_editorsContainer mt-2 d-none">
+                            <div id="outstandingPayment_noteEditor">
                                 <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
                             </div>
                         </div>
@@ -965,9 +1078,8 @@
         </div>
     </div>
 </div>
-<!-- paymentModal -- END -->
+<!-- outstanding paymentModal -- END -->
 
-<!-- Booking Info Modal -- END -->
 @section Scripts {
     <script src="~/assets2/js/customerinvoice/CustomerInvoice.js" asp-append-version="true"></script>
     <script src="~/assets2/js/Shared/Utility.js" asp-append-version="true"></script>

@@ -1159,7 +1159,6 @@ namespace ERPAdmin.ApiControllers
 
                 table.HeaderRows = 1;
 
-
                 // ---- NO DATA FOUND CONDITION ----
                 if (dataTableDB.Rows.Count == 0)
                 {

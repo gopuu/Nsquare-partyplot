@@ -52,18 +52,15 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-                    cmd.Parameters.Add("@NameEmailContact", SqlDbType.NVarChar, 100)
-                                  .Value = (object?)request.NameEmailContact ?? DBNull.Value;
+                    cmd.Parameters.Add("@NameEmailContact", SqlDbType.NVarChar, 100).Value = (object?)request.NameEmailContact ?? DBNull.Value;
                     cmd.Parameters.Add("@SlotId", SqlDbType.BigInt).Value = request.SlotId;
-                    cmd.Parameters.Add("@EventFrom", SqlDbType.NVarChar, 20)
-                                  .Value = (object?)request.EventFrom ?? DBNull.Value;
-                    cmd.Parameters.Add("@EventTo", SqlDbType.NVarChar, 20)
-                                  .Value = (object?)request.EventTo ?? DBNull.Value;
-                    cmd.Parameters.Add("@BookedFrom", SqlDbType.NVarChar, 20)
-                                  .Value = (object?)request.BookedFrom ?? DBNull.Value;
-                    cmd.Parameters.Add("@BookedTill", SqlDbType.NVarChar, 20)
-                                  .Value = (object?)request.BookedTill ?? DBNull.Value;
+                    cmd.Parameters.Add("@EventFrom", SqlDbType.NVarChar, 20).Value = (object?)request.EventFrom ?? DBNull.Value;
+                    cmd.Parameters.Add("@EventTo", SqlDbType.NVarChar, 20).Value = (object?)request.EventTo ?? DBNull.Value;
+                    cmd.Parameters.Add("@BookedFrom", SqlDbType.NVarChar, 20).Value = (object?)request.BookedFrom ?? DBNull.Value;
+                    cmd.Parameters.Add("@BookedTill", SqlDbType.NVarChar, 20).Value = (object?)request.BookedTill ?? DBNull.Value;
                     cmd.Parameters.Add("@SubEventId", SqlDbType.BigInt).Value = request.SubEventId;
+                    cmd.Parameters.Add("@PaymentStatusId", SqlDbType.BigInt).Value = request.PaymentStatusId;
+                    cmd.Parameters.Add("@IsOnlyInvoice", SqlDbType.Bit).Value = request.IsOnlyInvoice;
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -77,6 +74,8 @@ namespace ERPAdmin.ApiControllers
                                 ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]),
                                 GSTInvoiceNo = Convert.ToInt64(dr["GSTInvoiceNo"]),
                                 EventDate = dr["EventDate"].ToString(),
+                                EventDate_Format = dr["EventDate_Format"].ToString(),
+                                IsInvoiceBlocked = Convert.ToBoolean(dr["IsInvoiceBlocked"]),
                                 BookedOn = dr["BookedOn"].ToString(),
                                 EventName = dr["EventName"].ToString(),
                                 HallName = dr["HallName"].ToString(),
@@ -149,7 +148,8 @@ namespace ERPAdmin.ApiControllers
                                 Address = dr["Client_Address"]?.ToString(),
                                 IsGSTIncluded = dr["IsGSTIncluded"] == DBNull.Value
                                                 ? null
-                                                : Convert.ToBoolean(dr["IsGSTIncluded"])
+                                                : Convert.ToBoolean(dr["IsGSTIncluded"]),
+                                PaidAmount = Convert.ToDecimal(dr["PaidAmount"]?.ToString())
                             };
 
                             string itemsJson = dr["Items"]?.ToString();
@@ -279,12 +279,7 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext,
-                        Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
                     return errorResult!;
                 }
@@ -309,6 +304,25 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Address", (object)request.Address ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmailId", (object)request.EmailId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@CustomerStateId", (object)request.CustomerState ?? DBNull.Value);
+
+                    // ================= PAYMENT PARAMETERS =================
+                    cmd.Parameters.AddWithValue("@Payment_ModeId", (object?)request.Payment_ModeId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_AccountId", (object?)request.Payment_AccountId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_TransactionId", (object?)request.Payment_TransactionId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_ChequeBank", (object?)request.Payment_ChequeBank ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_ChequeNo", (object?)request.Payment_ChequeNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_ChequeDate", (object?)request.Payment_ChequeDate ?? DBNull.Value);
+
+                    // 🔹 Numeric (Better to define SqlDbType)
+                    var amountParam = cmd.Parameters.Add("@Payment_Amount", SqlDbType.Decimal);
+                    amountParam.Precision = 18;
+                    amountParam.Scale = 2;
+                    amountParam.Value = (object?)request.Payment_Amount ?? DBNull.Value;
+
+                    cmd.Parameters.AddWithValue("@Payment_PaidDate", (object?)request.Payment_PaidDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_PaidTime", (object?)request.Payment_PaidTime ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_DueDate", (object?)request.Payment_DueDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Payment_Note", (object?)request.Payment_Note ?? DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@SubTotal", request.SubTotal);
                     cmd.Parameters.AddWithValue("@BookingDiscount", request.BookingDiscount);

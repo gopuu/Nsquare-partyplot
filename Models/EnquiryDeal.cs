@@ -67,8 +67,8 @@
     {
         public long ProcessId { get; set; }
         public string? Duration { get; set; }
-        public decimal FromAmount { get; set; }
-        public decimal ToAmount { get; set; }
+        public decimal? FromAmount { get; set; }
+        public decimal? ToAmount { get; set; }
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
     }

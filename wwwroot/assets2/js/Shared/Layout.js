@@ -109,11 +109,9 @@ function updateLiveDateTime() {
     $("#liveDateTime").addClass("d-none");
 }
 
-
-
 document.addEventListener("DOMContentLoaded", function () {
     const userName = sessionStorage.getItem("userName");
-    const userImage = sessionStorage.getItem("userImage") || "/assets/img/user.png";
+    const userImage = sessionStorage.getItem("userImage") || "/assets2/img/user.png";
     // Set user name
     if (userName) {
         $("#lblUserName").text(userName);
@@ -421,7 +419,7 @@ function logoutUser() {
     });
 })();
 
-function formatDate2(date) {
+function formatDate2(date = new Date()) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");

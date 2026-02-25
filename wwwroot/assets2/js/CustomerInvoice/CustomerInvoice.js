@@ -9,12 +9,26 @@ var proformaInvoiceNo = 0;
 var gstInvoiceNo = 0;
 var invoiceType = null;
 
+let selectedPaymentDuration = "thismonth";
+
 $(function () {
-    fetchData();
+    const flag_ShowOnlyInvoice = sessionStorage.getItem("IsShowTotalSalesList") === "true";
+    if (flag_ShowOnlyInvoice) {
+        console.log("Show Total Sales List is enabled");
+        // clear after use
+        sessionStorage.removeItem("IsShowTotalSalesList");
+    }
+
+    fetchData(flag_ShowOnlyInvoice);
     loadSubEventList();
     loadSlotDropdown();
     getNextInvoiceNumbers();
     loadState();
+
+    loadPaymentCollection(selectedPaymentDuration);
+
+    loadAccountDropdown();
+    loadPaymentModeDropdown();
 
     AppSignalR.subscribe(() => {
         window.location.reload();
@@ -63,7 +77,7 @@ $(function () {
 
     //EDIT INVOICE -- START
     $(document).on('click', '.btn-edit-invoice', function () {
-
+        ShowHide_DeleteButton();
         resetForm();
 
         const bookingId = $(this).data('bookingid');
@@ -85,6 +99,7 @@ $(function () {
 
     //EDIT PROFORMA INVOICE -- START
     $(document).on('click', '.btn-edit-proforma', function () {
+        ShowHide_DeleteButton();
 
         resetForm();
 
@@ -131,6 +146,8 @@ $(function () {
         $("#chkWhatsapp").prop("checked", true);
         sendInvoiceModal.show();
     });
+
+
 
     $("#sendEmail").on("input", function () {
         $("#chkEmail").prop("checked", $(this).val().trim() !== "");
@@ -315,6 +332,18 @@ $(function () {
             EmailId: $('#emailId').val(),
             CustomerState: parseInt($('#customerState').val()) || null,
 
+            Payment_ModeId: parseInt($('#invoicePayment_Mode').val()) || 0,
+            Payment_AccountId: parseInt($('#invoicePayment_Account').val()) || 0,
+            Payment_TransactionId: $('#invoicePayment_Txn').val()?.trim() || null,
+            Payment_ChequeBank: $('#invoicePayment_ChequeBank').val()?.trim() || null,
+            Payment_ChequeNo: $('#invoicePayment_ChequeNo').val()?.trim() || null,
+            Payment_ChequeDate: $('#invoicePayment_ChequeDate').val() || null,
+            Payment_Amount: parseFloat($('#invoicePayment_Amount').val()) || 0,
+            Payment_PaidDate: $('#invoicePayment_Date').val() || null,
+            Payment_PaidTime: $('#invoicePayment_Time').val() || null,
+            Payment_DueDate: $('#invoicePayment_NextDueDate').val() || null,
+            Payment_Note: $('#invoicePayment_noteEditor textarea').val()?.trim() || null,
+
             SubTotal: parseFloat($('#subTotal').val()) || 0,
             BookingDiscount: parseFloat($('#bookingDiscount').val()) || 0,
             TotalTaxableAmount: parseFloat($('#totalTaxable').val()) || 0,
@@ -364,14 +393,12 @@ $(function () {
     });
 
     //FILTER - PAYMENT ---- START ---------------------------
-    let selectedPaymentDuration = "thismonth";
-    loadPaymentCollection(selectedPaymentDuration);
-    loadUpcomingPayments(selectedPaymentDuration);
-
-    $(".chart-filter-Payment .payment-option").on("click", function (e) {
+    //collections
+    $(document).on("click", ".payment-option", function (e) {
         e.preventDefault();
 
         const newFilter = $(this).data("value");
+
         if (selectedPaymentDuration === newFilter) return;
 
         selectedPaymentDuration = newFilter;
@@ -383,47 +410,41 @@ $(function () {
 
         loadPaymentCollection(selectedPaymentDuration);
     });
-    let selectedUpcomingDuration = "thismonth";
-
-    $(".chart-filter-finance .upcoming-option").on("click", function (e) {
-        e.preventDefault();
-
-        const newFilter = $(this).data("value");
-        if (selectedUpcomingDuration === newFilter) return;
-
-        selectedUpcomingDuration = newFilter;
-
-        $(".upcoming-option").removeClass("active");
-        $(this).addClass("active");
-
-        $("#UpcomingChartFilter").text($(this).text());
-
-        loadUpcomingPayments(selectedUpcomingDuration);
-    });
 
     //FILTER - PAYMENT ---- END -----------------------------
 
-    //OUTSTANDING PAYMENT
+    //OUTSTANDING PAYMENT -------------------- START ------------------------
     $("#btnSavePayment").click(function () {
         // 🔹 Get values
-        let bookingId = Number($("#paymentBookingId").val() || 0);
-        let accountId = Number($("#PaymentModal_AccountId").val());
-        let modeId = Number($("#PaymentModal_Mode").val());
-        let paymentDate = $("#paymentDate").val();
-        let paymentTime = $("#paymentTime").val();
-        let txnId = $("#paymentTxn").val();
-        let chequeBank = $("#paymentChequebank").val();
-        let chequeNo = $("#paymentChequeNo").val();
-        let chequeDate = $("#paymentChequeDate").val();
-        let amount = Number($("#paymentAmount").val() || 0);
-        let dueBalance = Number($("#paymentDueBalance").val() || 0);
-        let nextDueDate = $("#NextDueDate").val();
+        let bookingId = Number($("#outstanding_paymentBookingId").val() || 0);
+        let accountId = Number($("#outstandingPayment_Account").val());
+        let modeId = Number($("#outstandingPayment_Mode").val());
+        let paymentDate = $("#outstandingPayment_Date").val();
+        let paymentTime = $("#outstandingPayment_Time").val();
+        let txnId = $("#outstandingPayment_Txn").val();
+        let chequeBank = $("#outstandingPayment_Chequebank").val();
+        let chequeNo = $("#outstandingPayment_ChequeNo").val();
+        let chequeDate = $("#outstandingPayment_ChequeDate").val();
+        let amount = Number($("#outstandingPayment_Amount").val() || 0);
+        let dueBalance = Number($("#outstandingPayment_DueBalance").val() || 0);
+        let nextDueDate = $("#outstandingPayment_NextDueDate").val();
 
         // 🔹 Basic Validation
         if (!bookingId) {
             Swal.fire("Validation", "Booking Id missing!", "warning");
             return;
         }
+
+        if (!modeId) {
+            Swal.fire("Validation", "Select payment mode!", "warning");
+            return;
+        }
+
+        if (!accountId) {
+            Swal.fire("Validation", "Select account!", "warning");
+            return;
+        }
+
         if (!paymentDate) {
             Swal.fire("Validation", "Payment date is required!", "warning");
             return;
@@ -462,7 +483,7 @@ $(function () {
             success: function (response) {
                 if (response?.status === "Success") {
                     handleApiSuccess();
-                    $("#paymentForm")[0].reset();
+                    $("#outstanding_paymentForm")[0].reset();
                     //$("#PaymentModal").modal("hide");
 
                     // 🔁 Reload payment list if needed
@@ -482,32 +503,33 @@ $(function () {
         });
     });
     $('#tableMain').on('click', '.btn-outstanding', function () {
-        $("#paymentForm")[0].reset();
+        $("#outstanding_paymentForm")[0].reset();
 
         const bookingId = $(this).data('bookingid');
-        const dueAmount = $(this).data('outstandingamount');
-        // Remove ₹ and commas
-        if (dueAmount === 0) {
+        const dueAmount = Number($(this).data('outstandingamount')) || 0;
+        if (dueAmount <= 0) {
             $("#dueMessage").removeClass("d-none");
-            $("#paymentAmount").prop("disabled", true);;
+            $("#outstandingPayment_Amount").prop("disabled", true);;
         }
         else {
             $("#dueMessage").addClass("d-none");
-            $("#paymentAmount").prop("disabled", false);
+            $("#outstandingPayment_Amount").prop("disabled", false);
         }
 
         console.log("Outstanding clicked for BookingId:", bookingId);
 
-        $("#paymentDueBalance, #originalDueAmount").val(dueAmount);
-        $("#paymentBookingId").val(bookingId);
+        $("#outstandingPayment_DueBalance, #outstandingPayment_originalDueAmount").val(dueAmount);
+        $("#outstanding_paymentBookingId").val(bookingId);
         setCurrentPaymentDateTime();
 
         // Call your method
         loadPaymentHistory(bookingId);
+        $("#outstandingPayment_Mode").trigger("change");
     });
-    $("#paymentAmount").on("input", function () {
 
-        const originalDue = Number($("#originalDueAmount").val()) || 0;
+    //outstandingPayment_Amount - Input
+    $(document).on("input", "#outstandingPayment_Amount", function () {
+        const originalDue = Number($("#outstandingPayment_originalDueAmount").val()) || 0;
         let payAmount = Number($(this).val()) || 0;
 
         if (payAmount > originalDue) {
@@ -516,19 +538,129 @@ $(function () {
         }
 
         const remaining = originalDue - payAmount;
-        $("#paymentDueBalance").val(remaining);
+        $("#outstandingPayment_DueBalance").val(remaining);
+    });
+    //invoicePayment_Amount - Input
+    $(document).on("input", "#invoicePayment_Amount", function () {
+        const originalDue = Number($("#invoicePayment_originalDueAmount").val()) || 0;
+        let payAmount = Number($(this).val()) || 0;
+
+        // 🔒 Prevent overpayment
+        if (payAmount > originalDue) {
+            payAmount = originalDue;
+            $(this).val(originalDue);
+        }
+        const remaining = originalDue - payAmount;
+        $("#invoicePayment_DueBalance").val(remaining);
     });
 
-    $("#btnwritrnote").click(function () {
-        let editor = $(".Payment_editorsContainer");
-        if (editor.is(":visible")) {
-            editor.hide();
-            $(this).val("Write Note");
-        } else {
-            editor.show();
-            $(this).val("Write Note");
+    //outstandingPayment_btnwritrnote - click
+    $(document).on("click", "#outstandingPayment_btnwritrnote", function () {
+        const editor = $(".outstandingPayment_editorsContainer");
+        editor.toggleClass("d-none");
+        if (editor.hasClass("d-none")) {
+            $(this).val("Payment Notes");
+        }
+        else {
+            $(this).val("Hide Notes");
+        }
+
+    });
+    //invoicePayment_btnWriteNote - click
+    $(document).on("click", "#invoicePayment_btnWriteNote", function () {
+        const editor = $(".invoicePayment_EditorContainer");
+        editor.toggleClass("d-none");
+        if (editor.hasClass("d-none")) {
+            $(this).val("Payment Notes");
+        }
+        else {
+            $(this).val("Hide Notes");
+        }
+
+    });
+
+    //outstandingPayment_Mode - change
+    $(document).on("change", "#outstandingPayment_Mode", function () {
+        console.log("outstandingPayment_Mode called");
+        let selectedText = $("#outstandingPayment_Mode option:selected").text().toLowerCase();
+        console.log("selectedText:", selectedText);
+
+        // Hide all first
+        $(".paymentModal_Fields").addClass("d-none");
+        $(".paymentModal_Fields input").val("");
+        // CASH
+        if (selectedText.includes("cash")) {
+            // Nothing to show
+        }
+
+        // BANK TRANSFER
+        else if (selectedText.includes("bank transfer")) {
+            // Nothing to show
+        }
+
+        // CHEQUE
+        else if (selectedText.includes("cheque")) {
+            $("#outstandingPayment_Chequebank").closest(".paymentModal_Fields").removeClass("d-none");
+            $("#outstandingPayment_ChequeNo").closest(".paymentModal_Fields").removeClass("d-none");
+            $("#outstandingPayment_ChequeDate").closest(".paymentModal_Fields").removeClass("d-none");
+        }
+
+        // UPI OR CREDIT
+        else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+            $("#outstandingPayment_Txn").closest(".paymentModal_Fields").removeClass("d-none");
         }
     });
+    //invoicePayment_Mode - change
+    $(document).on("change", "#invoicePayment_Mode", function () {
+
+        console.log("invoicePayment_Mode called");
+
+        let selectedText = $("#invoicePayment_Mode option:selected")
+            .text()
+            .toLowerCase();
+
+        console.log("selectedText:", selectedText);
+
+        // 🔹 Hide all invoice dynamic fields first
+        $(".invoicePayment_Fields").addClass("d-none");
+        $(".invoicePayment_Fields input").val("");
+        // CASH
+        if (selectedText.includes("cash")) {
+            // Nothing to show
+        }
+
+        // BANK TRANSFER
+        else if (selectedText.includes("bank transfer")) {
+            // Nothing to show
+        }
+
+        // CHEQUE
+        else if (selectedText.includes("cheque")) {
+
+            $("#invoicePayment_ChequeBank")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+
+            $("#invoicePayment_ChequeNo")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+
+            $("#invoicePayment_ChequeDate")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+        }
+
+        // UPI OR CREDIT
+        else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+
+            $("#invoicePayment_Txn")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+        }
+
+    });
+
+    //OUTSTANDING PAYMENT -------------------- END  --------------------------
 
     //Widgets hide/show -- START --------------
     const widgetContainer = $("#invoiceWidgets");
@@ -569,7 +701,93 @@ $(function () {
         updateLabel(isVisible);
     });
     //Widgets hide/show -- END --------------
+
+    //tooltip -widget---------- START -----------------------
+    const tooltipContent = {
+
+        // ================= PAYMENT COLLECTION =================
+        paymentCollectionTitle: `Total of collected Booking Amounts & Invoice Amounts, within the selected period`,
+
+        // ================= UPCOMING PAYMENT =================
+        upcomingPaymentTitle: `Total of pending Booking & Invoice payments due within the selected period.`
+
+    };
+    Object.keys(tooltipContent).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+
+            if (el._tooltipInstance) {
+                el._tooltipInstance.dispose();
+            }
+
+            const tooltip = new bootstrap.Tooltip(el, {
+                title: tooltipContent[id],
+                html: true,
+                placement: 'bottom',
+                trigger: 'hover',
+                fallbackPlacements: [],
+                customClass: 'kpi-wide-tooltip'   // 👈 add this
+            });
+
+            el._tooltipInstance = tooltip;
+        }
+    });
+    //tooltip -widget---------- END -----------------------
+
+    //Delete Invoice ---------- START --------------
+    $(document).on("click", "#btnDeleteInvoice", function () {
+        const invoiceId = $("#invoiceId").val();
+        if (!invoiceId || invoiceId == 0) return;
+        // Store ID temporarily in delete button
+        $("#delete-record").data("id", invoiceId);
+        $("#deleteRecordModal").modal("show");
+    });
+
+    $(document).on("click", "#delete-record", function () {
+        const invoiceId = $(this).data("id");
+        if (!invoiceId) return;
+
+        var payload = {
+            Id: invoiceId,
+            ActionBy: sessionStorage.getItem("userId") // or logged user id
+        };
+
+        $.ajax({
+            url: "/api/CustomerInvoice/DeleteCustomerInvoice",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response.status === "Success") {
+                    $("#deleteRecordModal").modal("hide");
+                    $("#invoiceModal").modal("hide");
+                    handleApiSuccess("Invoice Deleted");
+                    fetchData();
+                }
+                else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Delete Failed',
+                        text: response.message
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Invoice Delete Fail");
+            }
+        });
+    });
+    //Delete Invoice ---------- END --------------
+
 });
+
+function ShowHide_DeleteButton() {
+    //Delete button HIDE/SHOW
+    const isSuperUser = sessionStorage.getItem("isSuperUser") === "true";
+    if (isSuperUser) {
+        document.getElementById("btnDeleteInvoice").classList.remove("d-none");
+    }
+}
 
 function setCurrentPaymentDateTime() {
 
@@ -588,10 +806,9 @@ function setCurrentPaymentDateTime() {
 
     const formattedTime = `${hours}:${minutes}`;
 
-    $("#paymentDate").val(formattedDate);
-    $("#paymentTime").val(formattedTime);
+    $("#outstandingPayment_Date").val(formattedDate);
+    $("#outstandingPayment_Time").val(formattedTime);
 }
-
 function addItemRow() {
     const row = `
         <tr>
@@ -661,7 +878,6 @@ function addItemRow() {
     $('#invoiceItemsBody').append(row);
     updateRowSequence();
 }
-
 function updateRowSequence() {
     $('#invoiceItemsBody tr').each(function (index) {
         $(this).find('.col-index').text(index + 1);
@@ -781,18 +997,16 @@ function recalcAll() {
     $('#roundOff').prop('disabled', true).val(roundOff.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount').prop('disabled', true).val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount, #invoicePayment_DueBalance').prop('disabled', true).val((grandTotal - advance).toFixed(2));
 }
 
 //proforma & invoice -- fetch EDIT -- START
 function fetchInvoiceById(params) {
-
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoiceById',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(params),
-
         success: function (res) {
 
             if (res.status !== 'Success' || !res.data) {
@@ -803,7 +1017,6 @@ function fetchInvoiceById(params) {
                 });
                 return;
             }
-
             const data = res.data;
 
             /* ---------- MASTER ---------- */
@@ -823,9 +1036,8 @@ function fetchInvoiceById(params) {
             $('#totalGST').val(data.TotalGST);
             $('#grandTotal').val(data.GrandTotal);
             $('#roundOff').val(data.RoundOff);
-            $('#advancePaid').val(data.TotalAdvancePaid);
+            $('#advancePaid').val(data.TotalAdvancePaid).attr('disabled', true);
             $('#balanceAmount').val(data.BalanceAmount);
-
             /* ---------- ITEMS ---------- */
             $('#invoiceItemsBody').empty();
 
@@ -871,8 +1083,8 @@ function fetchInvoiceById(params) {
 
                 updateRowSequence();
             }
+            $("#paymentSection").addClass("d-none");
         },
-
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetch Invoice Failed");
         }
@@ -882,7 +1094,7 @@ function fetchInvoiceById(params) {
 
 //proforma & invoice -- fetch -- START
 function fetchInvoiceByBookingId(bookingId) {
-
+    $("#paymentSection").removeClass("d-none");
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoiceByBookingId', // adjust if needed
         type: 'POST',
@@ -1001,6 +1213,7 @@ function fetchInvoiceByBookingId(bookingId) {
 
                 updateRowSequence();
                 recalcAll();
+                $('#advancePaid').val(data.PaidAmount).attr('disabled', true);
             } else {
                 addItemRow(); // empty invoice
             }
@@ -1095,7 +1308,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table
-                    // fillPaymentTrailTable(data.PaymentTrailList);
+                    fillPaymentTrailTable(data.PaymentTrailList);
 
                     // Food Package and Selected Menu
                     $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
@@ -1125,6 +1338,55 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+// Fill Payment Trail dynamically
+function fillPaymentTrailTable(paymentList = []) {
+    const tbody = $("#bookingReport_PaymentTrailBody");
+    tbody.empty(); // Clear old data
+
+    if (!paymentList || paymentList.length === 0) {
+        tbody.append(`
+                <tr>
+                    <td colspan="13" class="text-muted small fst-italic text-center">
+                        No payment records found
+                    </td>
+                </tr>
+            `);
+        return;
+    }
+
+    console.log("paymentList:", paymentList);
+
+    paymentList.forEach((item, index) => {
+        tbody.append(`
+                <tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td class="text-center"><span class="fw-semibold text-dark">#${item.PaymentId || "—"}</span></td>
+                    <td class="text-center"><span class="badge bg-success-subtle text-success border">${item.ModeName || "—"}</span></td>
+                    <td class="text-center">${item.DateOfPayment2 || "—"}</td>
+                    <td class="text-center">${item.TxnId || "—"}</td>
+                    <td class="text-center">${item.ChequeBank || "—"}</td>
+                    <td class="text-center">${item.ChequeNo || "—"}</td>
+                    <td class="text-center">${item.ChequeDate2 || "—"}</td>
+                    <td class="text-success fw-semibold text-center">₹${formatINR(item.Amount) || "0"}</td>
+                    <td class="text-danger fw-semibold text-center">₹${formatINR(item.DueBalance) || "0"}</td>
+                    <td class="text-muted small text-center">
+                        ${item.PaymentNotes
+                        ? `<span class="text-primary cursor-pointer" title="${item.PaymentNotes}">
+                                            View Notes
+                                        </span>`
+                        : "—"
+                    }
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-light btn-xs border btn-download" title="View Receipt" data-id="${item.PaymentId}">
+                            <i class="fa-solid fa-file-invoice text-primary"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+    });
+}
+
 //FOR SUMMARY -- END
 
 function calculateInvoiceTotals() {
@@ -1168,7 +1430,7 @@ function getNextInvoiceNumbers() {
     });
 }
 
-function fetchData() {
+function fetchData(isOnlyInvoice=false) {
     const payload = {
         BookingId: 0,
         NameEmailContact: $('#fltSearch').val() || null,
@@ -1177,7 +1439,9 @@ function fetchData() {
         EventTo: $('#fltEventTo').val() || null,
         BookedFrom: $('#fltBookedFrom').val() || null,
         BookedTill: $('#fltBookedTill').val() || null,
-        SubEventId: $('#fltEvent').val() || 0
+        SubEventId: $('#fltEvent').val() || 0,
+        PaymentStatusId: $('#fltPaymentStatus').val() || 0,
+        IsOnlyInvoice: isOnlyInvoice
     };
     console.log("payload:", payload);
     $.ajax({
@@ -1202,6 +1466,7 @@ function renderTable(data) {
     }
 
     data.forEach((x, i) => x.srno = i + 1);
+    //const isSuperUser = sessionStorage.getItem("isSuperUser") === "true";
 
     const hasValidNo = v => v !== null && v !== undefined && Number(v) > 0;
     $('#tableMain table').DataTable({
@@ -1250,9 +1515,9 @@ function renderTable(data) {
                 }
             },
 
-            { data: 'EventDate', title: 'Event Date' },
+            { data: 'EventDate_Format', title: 'Event Date' },
             { data: 'BookedOn', title: 'Booked On' },
-            { data: 'EventName', title: 'Event' },
+            { data: 'EventName', title: 'Event (PAX)' },
             { data: 'HallName', title: 'Banquet' },
             { data: 'ClientName', title: 'Client' },
             { data: 'ClientContactNo', title: 'Contact' },
@@ -1300,17 +1565,38 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'Proforma Invoice',
-                render: row =>
-                    !hasValidNo(row.ProformaInvoiceNo)
-                        ? `<button class="btn btn-secondary btn-action-xs2 btn-create-proforma"
-                                   data-bookingid="${row.BookingId}">
+                render: function (row) {
+
+                    if (!hasValidNo(row.ProformaInvoiceNo)) {
+
+                        if (row.IsInvoiceBlocked) {
+                            return `
+                                <span title="You can create Proforma only on or after the event date.">
+                                    <button class="btn btn-secondary btn-action-xs2"
+                                            data-bookingid="${row.BookingId}"
+                                            disabled>
+                                        Create Proforma
+                                    </button>
+                                </span>
+                            `;
+                        }
+
+                        return `
+                            <button class="btn btn-secondary btn-action-xs2 btn-create-proforma"
+                                    data-bookingid="${row.BookingId}">
                                 Create Proforma
-                           </button>`
-                                    : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
-                                   data-bookingid="${row.BookingId}"
-                                   data-proformano="${row.ProformaInvoiceNo}">
-                                <i class="fa fa-pen me-1"></i>Edit
-                           </button>`
+                            </button>
+                        `;
+                    }
+
+                    return `
+                        <button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                                data-bookingid="${row.BookingId}"
+                                data-proformano="${row.ProformaInvoiceNo}">
+                            <i class="fa fa-pen me-1"></i>Edit
+                        </button>
+                    `;
+                }
             },
             //Send Proforma
             {
@@ -1344,16 +1630,38 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'GST Invoice',
-                render: row =>
-                    !hasValidNo(row.InvoiceNo)
-                        ? `<button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
-                                   data-bookingid="${row.BookingId}">Create Invoice
-                           </button>`
-                        : `<button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
-                                   data-bookingid="${row.BookingId}"
-                                   data-invoiceno="${row.InvoiceNo}">
-                                <i class="fa fa-pen me-1"></i>Edit
-                           </button>`           
+                render: function (row) {
+
+                    if (!hasValidNo(row.InvoiceNo)) {
+
+                        if (row.IsInvoiceBlocked) {
+                            return `
+                                <span title="You can create Invoice only on or after the event date.">
+                                    <button class="btn btn-success btn-action-xs2 mb-1"
+                                            data-bookingid="${row.BookingId}"
+                                            disabled>
+                                        Create Invoice
+                                    </button>
+                                </span>
+                            `;
+                        }
+
+                        return `
+                            <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
+                                    data-bookingid="${row.BookingId}">
+                                Create Invoice
+                            </button>
+                        `;
+                    }
+
+                    return `
+                        <button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
+                                data-bookingid="${row.BookingId}"
+                                data-invoiceno="${row.InvoiceNo}">
+                            <i class="fa fa-pen me-1"></i>Edit
+                        </button>
+                    `;
+                }
             },
             //Send GST Invoice
             {
@@ -1382,9 +1690,22 @@ function renderTable(data) {
                                data-bookingid="${row.BookingId}"
                                data-invoiceno="${row.InvoiceNo}">
                            </i>`
-            }            
+            },
         ]
-    });
+    }); 
+}
+
+function isPastDate(dateString) {
+    if (!dateString) return false;
+
+    const eventDate = new Date(dateString);
+    const today = new Date();
+
+    // Remove time portion
+    today.setHours(0, 0, 0, 0);
+    eventDate.setHours(0, 0, 0, 0);
+
+    return eventDate < today;
 }
 
 function resetForm() {
@@ -1392,16 +1713,33 @@ function resetForm() {
     $('#invoiceId').val(0);
     $('#bookingId').val(0);
     $('#invoiceNo').val('');
-    $('#invoiceDate').val('');
+
     $('#customerName').val('');
     $('#gstin').val('');
     $('#emailId').val('');
     $('#address').val('');
+
+    $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
+    $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
+    $('#invoicePayment_Amount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val(0);
+
     $('#subTotal').val(0);
     $('#totalGST').val(0);
     $('#grandTotal').val(0);
     $('#invoiceItemsBody').empty();
     $('#btnSaveInvoice').prop('disabled', false);
+
+    const now = new Date();
+    // Format Date → YYYY-MM-DD
+    const date = now.toISOString().split("T")[0];
+    // Format Time → HH:MM (24hr)
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const time = `${hours}:${minutes}`;
+    // Set values
+    $('#invoiceDate').val(date);
+    $('#invoicePayment_Date').val(date);
+    $('#invoicePayment_Time').val(time);
 }
 
 function resetFilter() {
@@ -1491,7 +1829,6 @@ function loadState() {
 }    
 //STATE DROPDOWN --- END ------------------------
 
-
 function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
 
     $.ajax({
@@ -1525,49 +1862,8 @@ function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
     });
 }
 
-function loadUpcomingPayments(monthDuration = "thismonth", fromDate = null, toDate = null) {
-
-    $.ajax({
-        url: "/api/FinanceDashboard/GetDashboardUpcomingPayments",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
-        success: function (res) {
-            console.log("UpcomingPayments API:", res);
-            let html = "";
-            if (res.status === "Success" && Array.isArray(res.data) && res.data.length > 0) {
-                res.data.forEach(item => {
-                    html += `
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>${item.EventName}</span>
-                            <span class="text-danger">
-                                ₹ ${formatINR(item.Amount)}
-                            </span>
-                        </li>`;
-                });
-            }
-            else {
-                html = `<li class="list-group-item text-muted text-center">No upcoming payments</li>`;
-            }
-            $("#upcomingPaymentsList").html(html);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Upcoming Payments Fetch Error");
-            $("#upcomingPaymentsList").html(`
-                <li class="list-group-item text-danger text-center">
-                    Error loading data
-                </li>
-            `);
-        }
-    });
-}
-
 //DUE PAYMENT -- START -----------------------
-loadAccountDropdown();
+
 function loadAccountDropdown() {
     var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
 
@@ -1577,7 +1873,7 @@ function loadAccountDropdown() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
         success: function (res) {
-            const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
+            const ddl = $("#outstandingPayment_Account, #invoicePayment_Account");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
@@ -1594,8 +1890,6 @@ function loadAccountDropdown() {
         }
     });
 }
-
-loadPaymentModeDropdown();
 function loadPaymentModeDropdown() {
     const payload = {
         Id: 0
@@ -1607,7 +1901,7 @@ function loadPaymentModeDropdown() {
         data: JSON.stringify(payload),
         success: function (res) {
             //console.log("payment mode res:", res);
-            const ddl = $("#PaymentModal_Mode");
+            const ddl = $("#outstandingPayment_Mode, #invoicePayment_Mode");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
@@ -1738,7 +2032,7 @@ $(document).on("click", ".btn-download", function () {
 
 $(document).on("click", ".btn-download-all", function () {
     let paymentId = 0;
-    let bookingId = Number($("#paymentBookingId").val() || 0);
+    let bookingId = Number($("#outstanding_paymentBookingId").val() || 0);
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
 
     var payload = {
