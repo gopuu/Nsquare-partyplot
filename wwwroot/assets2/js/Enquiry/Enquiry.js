@@ -476,16 +476,6 @@ function renderBoard() {
         const bookingId = $(this).closest(".deal-card").data("bookingid");
         console.log("Clicked dealId:", dealId);
 
-        // 🔒 Validation: Prevent edit if already booked
-        if (bookingId > 0) {
-            Swal.fire({
-                icon: "warning",
-                title: "Edit Not Allowed",
-                text: "This enquiry has already been booked and cannot be edited."
-            });
-            return; // stop execution
-        }
-
         // later you can call your API here
         // 🔥 Reset before fetching data
         resetDealForm();
@@ -497,10 +487,19 @@ function renderBoard() {
                 if (response.status === "Success" && response.data) {
                     const data = response.data;
 
-                    // 🔥 Change modal title for edit mode
-                    $("#dealModalLabel").text("Edit Deal (Enquiry)");
-                    // Show delete button
-                    $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
+                    // 🔒 Validation: Prevent edit if already booked
+                    if (bookingId > 0) {
+                        // 🔥 Change modal title for edit mode
+                        $("#dealModalLabel").text("Deal Details (Enquiry)");
+                        $("#deleteDealBtn").addClass("d-none").data("deal-id", "0"); // hide delete btn
+                        $("#saveDealBtn").addClass("d-none"); // hide delete btn
+                    }
+                    else {
+                        // 🔥 Change modal title for edit mode
+                        $("#dealModalLabel").text("Edit Deal (Enquiry)");
+                        // Show delete button
+                        $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
+                    }
 
                     // Populate form fields
                     $("#dealId").val(data.Id);
@@ -979,6 +978,7 @@ function openFollowUp(enquiryDealId, moveContext = null) {
 function resetDealForm() {
     $("#dealModalLabel").text("Add Deal (Enquiry)");
     $("#deleteDealBtn").addClass("d-none").data("deal-id", "0"); // hide delete btn
+    $("#saveDealBtn").removeClass("d-none"); // show save btn
 
     // Reset all fields
     $("#dealId").val(0);

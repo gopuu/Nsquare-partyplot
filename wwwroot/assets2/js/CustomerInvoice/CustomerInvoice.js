@@ -264,7 +264,7 @@ $(function () {
     });
 
     // On input change
-    $(document).on('input', '.calc', function () {
+    $(document).on('input change', '.calc', function () {
         recalcRow($(this).closest('tr'));
         recalcAll();
     });
@@ -533,7 +533,7 @@ $(function () {
         let payAmount = Number($(this).val()) || 0;
 
         if (payAmount > originalDue) {
-            payAmount = originalDue;
+            //payAmount = originalDue;
             $(this).val(originalDue);
         }
 
@@ -547,11 +547,11 @@ $(function () {
 
         // 🔒 Prevent overpayment
         if (payAmount > originalDue) {
-            payAmount = originalDue;
+            //payAmount = originalDue;
             $(this).val(originalDue);
         }
         const remaining = originalDue - payAmount;
-        $("#invoicePayment_DueBalance").val(remaining);
+        $("#invoicePayment_DueBalance, #balanceAmount").val(remaining);
     });
 
     //outstandingPayment_btnwritrnote - click
@@ -883,6 +883,7 @@ function updateRowSequence() {
         $(this).find('.col-index').text(index + 1);
     });
 }
+
 function recalcRow(row) {
 
     const rate = parseFloat(row.find('.rate').val()) || 0;
@@ -921,7 +922,8 @@ function recalcRow(row) {
         const gross = taxable;
         taxable = gross / gstFactor;
         gstAmount = gross - taxable;
-    } else {
+    }
+    else {
         gstAmount = taxable * gstRate / 100;
     }
 
@@ -997,7 +999,7 @@ function recalcAll() {
     $('#roundOff').prop('disabled', true).val(roundOff.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount, #invoicePayment_DueBalance').prop('disabled', true).val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').prop('disabled', true).val((grandTotal - advance).toFixed(2));
 }
 
 //proforma & invoice -- fetch EDIT -- START
@@ -1052,21 +1054,21 @@ function fetchInvoiceById(params) {
                             <td><input class="form-control form-control-sm desc p-1" value="${item.Description ?? ''}"></td>
                             <td><input class="form-control form-control-sm hsn p-1" value="${item.HSN ?? ''}"></td>
 
-                            <td><input class="form-control form-control-sm text-end rate p-1" value="${item.Rate}"></td>
-                            <td><input class="form-control form-control-sm text-end qty p-1" value="${item.Qty}"></td>
-                            <td><input class="form-control form-control-sm text-end subtotal p-1" value="${item.SubTotal}"></td>
+                            <td><input class="form-control form-control-sm text-end rate calc p-1" value="${item.Rate}"></td>
+                            <td><input class="form-control form-control-sm text-end qty calc p-1" value="${item.Qty}"></td>
+                            <td><input class="form-control form-control-sm text-end subtotal calc p-1" value="${item.SubTotal}"></td>
 
-                            <td><input class="form-control form-control-sm text-end discountrate p-1" value="${item.DiscountRate}"></td>
+                            <td><input class="form-control form-control-sm text-end discountrate calc p-1" value="${item.DiscountRate}"></td>
                             <td>
-                                <select class="form-select form-select-sm discounttype p-1">
+                                <select class="form-select form-select-sm discounttype p-1 calc">
                                     <option value="1" ${item.DiscountTypeId == 1 ? "selected" : ""}>%</option>
                                     <option value="2" ${item.DiscountTypeId == 2 ? "selected" : ""}>Flat</option>
                                 </select>
                             </td>
-                            <td><input class="form-control form-control-sm text-end discountamount p-1" value="${item.DiscountAmount}"></td>
+                            <td><input class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount}"></td>
 
-                            <td><input class="form-control form-control-sm text-end taxable p-1" value="${item.TaxableAmount}"></td>
-                            <td><input class="form-control form-control-sm text-end gst p-1" value="${item.GSTRate}"></td>
+                            <td><input class="form-control form-control-sm text-end taxable p-1 calc" value="${item.TaxableAmount}"></td>
+                            <td><input class="form-control form-control-sm text-end gst p-1 calc" value="${item.GSTRate}"></td>
 
                             <td><input class="form-control form-control-sm text-end cgst p-1" value="${item.CGST}" readonly></td>
                             <td><input class="form-control form-control-sm text-end sgst p-1" value="${item.SGST}" readonly></td>
@@ -1156,34 +1158,34 @@ function fetchInvoiceByBookingId(bookingId) {
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end subtotal p-1"
+                                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1"
                                        value="${item.SubTotal ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountrate p-1"
+                                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1"
                                        value="${item.DiscountRate ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <select class="form-select form-select-sm discounttype p-1">
+                                <select class="form-select form-select-sm discounttype calc p-1">
                                     <option value="1" ${(item.DiscountType ?? 1) == 1 ? "selected" : ""}>%</option>
                                     <option value="2" ${(item.DiscountType ?? 1) == 2 ? "selected" : ""}>Flat</option>
                                 </select>
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountamount p-1"
+                                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc"
                                        value="${item.DiscountAmount ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end taxable p-1"
+                                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc"
                                        value="${item.Taxable ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end gst p-1"
+                                <input type="number" class="form-control form-control-sm text-end gst p-1 calc"
                                        value="${gstPercent}">
                             </td>
 
@@ -1721,7 +1723,8 @@ function resetForm() {
 
     $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
     $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
-    $('#invoicePayment_Amount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val(0);
+    $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
+    $('#invoicePayment_DueBalance').val(0).prop('disabled', false);
 
     $('#subTotal').val(0);
     $('#totalGST').val(0);

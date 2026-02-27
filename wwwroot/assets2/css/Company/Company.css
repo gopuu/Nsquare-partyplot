@@ -1,0 +1,353 @@
+﻿/*<!--Food Rates & Services Tab -- START -->*/
+#subtab-add-edit-items .mt-2,
+#subtab-addon-charges .mt-2 {
+    overflow: hidden;
+    max-height: none; /* fallback */
+    transition: max-height 0.3s ease;
+}
+
+/* Active tab: custom background */
+#foodSubTabs .nav-link.active {
+    background-color: #1976d2; /* Dark blue */
+    color: #fff !important;
+    border-radius: 4px;
+}
+
+/* Apply hover only on non-active tabs */
+#foodSubTabs .nav-link:not(.active):hover {
+    background-color: #bbdefb;
+    color: #000;
+}
+
+/* Add padding to all sub-tab links */
+#foodSubTabs .nav-link {
+    padding: 8px 16px;
+    margin-right: 8px; /* Optional: spacing between tabs */
+}
+/*<!--Food Rates & Services Tab -- END -->*/
+
+/*<!-- Company - Navbar Tabs -- START -->*/
+/* Highlight all tabs */
+#companyTabs .nav-link {
+    border: 1px solid #dee2e6; /* Light border for all tabs */
+    border-bottom: none; /* So active tab connects visually to content */
+    background-color: #f8f9fa; /* Light grey background */
+    margin-right: 4px; /* Space between tabs */
+    padding: 8px 15px;
+    color: #495057; /* Bootstrap default text color */
+    border-radius: 0.375rem 0.375rem 0 0; /* Rounded top corners */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Hover effect for inactive tabs */
+#companyTabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #000;
+}
+
+/* Active tab styling */
+#companyTabs .nav-link.active {
+    background-color: #6c757d; /* Bootstrap gray */
+    border-color: #6c757d #6c757d #6c757d;
+    color: #fff;
+    font-weight: 600;
+}
+
+.time-slot {
+border-bottom: 1px solid #dee2e6;
+padding-bottom: 8px;
+margin-bottom: 8px;
+}
+
+.time-slot p {
+    margin: 0 0 0 38px; /* align text with label after switch */
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/*<!-- Company - Navbar Tabs -- END -->*/
+
+/*<!-- Facility icons -- START -->*/
+.facility-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.facility-cell {
+    position: relative;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    vertical-align: top;
+}
+
+.facility-cell:hover {
+    background-color: #f8f9fa;
+}
+
+.facility-checkbox {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.facility-icon {
+    font-size: 40px; /* Increases icon size */
+    display: block; /* Keeps icon on its own line */
+    color: gray; /* Default color */
+    transition: color 0.3s ease;
+}
+
+.facility-label {
+    font-size: 0.85rem;
+}
+
+.facility-cell.checked {
+    background-color: #e9ecef; /* Light gray background when checked */
+}
+
+.facility-cell.checked .facility-icon {
+    color: red; /* Color when selected */
+}
+/*<!-- Facility icons -- END -->*/
+
+/*<!-- Rules & Regulations -- START -->*/
+.rules-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 15px; /* space between columns */
+}
+
+.rule-cell {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.rule-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.rule-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    padding: 5px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.rule-option i {
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.rule-option.selected {
+    background-color: #e9ecef;
+}
+
+.rule-option.selected i {
+    color: red;
+}
+
+.rule-option:not(.selected) i {
+    color: gray;
+}
+
+/* Checkbox styling */
+.rule-checkbox {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/*<!-- Rules & Regulations -- END -->*/
+
+/*<!-- Hall Rent-- START -->*/
+.form-section {
+    margin-bottom: 1.5rem;
+}
+
+.toggle-switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    display: none;
+}
+
+.toggle-slider {
+    width: 50px;
+    height: 26px;
+    background: #ccc;
+    border-radius: 15px;
+    position: relative;
+    transition: background-color 0.3s;
+    margin-left: 10px;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 2px;
+    top: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+input:checked + .toggle-slider {
+    background: #ff0055;
+}
+
+    input:checked + .toggle-slider::before {
+        transform: translateX(24px);
+    }
+
+.toggle-label {
+    font-weight: 600;
+    color: #ff0055;
+    margin-left: 10px;
+}
+
+.toggle-label.off {
+    color: #999;
+}
+
+/* Grid layout for the big form */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+/* Good for, Amenities icons styles */
+.option-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.8rem;
+}
+
+.option-item {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.option-item.disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.option-item svg {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 4px;
+    fill: #777;
+}
+
+.option-item.active {
+    border-color: #ff0055;
+    background: #ffe6f0;
+}
+
+/* Upload inputs vertical */
+.upload-group input[type="file"] {
+    margin-bottom: 0.6rem;
+}
+/*<!-- Hall Rent-- END -->*/
+
+/*<!-- SECTION - START -->*/
+.option-item {
+    position: relative;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+    .option-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.option-checkbox {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.option-item.active {
+    border-color: #ff0055;
+    background-color: #ffe6f0;
+}
+
+    .option-item.active .facility-icon {
+        color: #ff0055;
+    }
+
+.facility-icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 5px;
+    color: gray;
+    transition: color 0.3s ease;
+}
+/*<!-- SECTION - END -->*/
+
+/*<!-- Food rates & services > Setup/Update Food Package --START-->*/
+#subtab-addon-charges .table th, #subtab-addon-charges .table td {
+    vertical-align: middle;
+}
+
+#subtab-addon-charges .form-check-inline {
+    margin-right: 10px;
+}
+
+#subtab-addon-charges .btn-sm {
+    font-size: 0.8rem;
+}
+
+#subtab-addon-charges.badge {
+    font-size: 0.75rem;
+}
+
+/*<!-- Food rates & services > Setup/Update Food Package --END -->*/
+
+/*<!-- Inclusion modal --START-->*/
+#inclusionModal .form-check-label {
+    font-size: 0.85rem; /* Adjust as needed */
+}
+
+.inclusion-item {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .inclusion-item:hover {
+        background-color: #f8f9fa; /* light gray */
+        box-shadow: 0 0 6px rgba(0,0,0,0.15);
+        cursor: pointer;
+    }
+
+/*<!-- Inclusion modal --END-->*/
+
+

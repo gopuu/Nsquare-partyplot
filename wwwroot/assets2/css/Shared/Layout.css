@@ -8,6 +8,9 @@
     background: linear-gradient(90deg,#2dd4bf,#06b6d4);
 }
 
+.navbar .dropdown-menu {
+    z-index: 2055 !important;
+}
 
 .btn-xs {
     padding: 0.15rem 0.35rem;

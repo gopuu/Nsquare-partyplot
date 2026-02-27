@@ -747,6 +747,8 @@ function resetFormFields_Expense() {
     $("#paymentChequeDate_Expense").val("");
 
     $("#txtNotes_Expense").val("");
+
+    $("#paymentVoucherNo_Expense").val(nextExpenseVoucherNo);
     //loadNextVoucherNo();
 }
 
@@ -983,6 +985,10 @@ function resetFormFields_Income() {
     $("#paymentChequeDate_Income").val("");
 
     $("#txtNotes_Income").val("");
+
+    // Example: auto-fill fields
+    $("#paymentVoucherNo_Income").val(nextIncomeVoucherNo);
+
     //loadNextVoucherNo();
 }
 function loadIncomeCategoryDropdown(selectedId = "") {
@@ -1066,10 +1072,6 @@ function loadNextVoucherNo() {
 
                 console.log("Next Income Voucher:", nextIncomeVoucherNo);
                 console.log("Next Expense Voucher:", nextExpenseVoucherNo);
-
-                // Example: auto-fill fields
-                $("#paymentVoucherNo_Income").val(nextIncomeVoucherNo);
-                $("#paymentVoucherNo_Expense").val(nextExpenseVoucherNo);
             }
             else {
                 console.warn("Voucher no not received", res);

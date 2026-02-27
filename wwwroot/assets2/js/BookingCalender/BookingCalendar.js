@@ -188,6 +188,7 @@ $(document).ready(function () {
         // Reset all number inputs inside Other Charges section
         $("#otherCharges").find("input[type='number']").val(0);
     });
+
 });
 
 // NEW
@@ -647,6 +648,7 @@ $(document).on("input", ".pax, .perPlate, .addonsCost", function () {
 function renderMenuItems(menuData) {
     let html = "";
     menuData.forEach(menu => {
+        const totalCount = menu.FoodItemsList?.length || 0;
         const foodItems = menu.FoodItemsList?.length
             ? menu.FoodItemsList.map(item => `
                 <div class="form-check me-3 mb-2">
@@ -659,7 +661,7 @@ function renderMenuItems(menuData) {
         html += `
             <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name}</h6>
+                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name} (${totalCount})</h6>
                     <div>
                         <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
                         <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
@@ -2635,6 +2637,83 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    //invoicePayment_Mode - change
+    $(document).on("change", "#invoicePayment_Mode", function () {
+
+        console.log("invoicePayment_Mode called");
+
+        let selectedText = $("#invoicePayment_Mode option:selected")
+            .text()
+            .toLowerCase();
+
+        console.log("selectedText:", selectedText);
+
+        // 🔹 Hide all invoice dynamic fields first
+        $(".invoicePayment_Fields").addClass("d-none");
+        $(".invoicePayment_Fields input").val("");
+        // CASH
+        if (selectedText.includes("cash")) {
+            // Nothing to show
+        }
+
+        // BANK TRANSFER
+        else if (selectedText.includes("bank transfer")) {
+            // Nothing to show
+        }
+
+        // CHEQUE
+        else if (selectedText.includes("cheque")) {
+
+            $("#invoicePayment_ChequeBank")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+
+            $("#invoicePayment_ChequeNo")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+
+            $("#invoicePayment_ChequeDate")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+        }
+
+        // UPI OR CREDIT
+        else if (selectedText.includes("upi") || selectedText.includes("credit")) {
+
+            $("#invoicePayment_Txn")
+                .closest(".invoicePayment_Fields")
+                .removeClass("d-none");
+        }
+
+    });
+
+    //invoicePayment_Amount - Input
+    $(document).on("input", "#invoicePayment_Amount", function () {
+        const originalDue = Number($("#invoicePayment_originalDueAmount").val()) || 0;
+        let payAmount = Number($(this).val()) || 0;
+
+        // 🔒 Prevent overpayment
+        if (payAmount > originalDue) {
+            //payAmount = originalDue;
+            $(this).val(originalDue);
+        }
+        const remaining = originalDue - payAmount;
+        $("#invoicePayment_DueBalance, #balanceAmount_InvoiceModal").val(remaining);
+    });
+
+    //invoicePayment_btnWriteNote - click
+    $(document).on("click", "#invoicePayment_btnWriteNote", function () {
+        const editor = $(".invoicePayment_EditorContainer");
+        editor.toggleClass("d-none");
+        if (editor.hasClass("d-none")) {
+            $(this).val("Payment Notes");
+        }
+        else {
+            $(this).val("Hide Notes");
+        }
+
+    });
+
 
     //SAVE BOOKING ------ START ------------------------------
     $("#btnBook").on("click", function () { saveBooking(); });
@@ -3531,8 +3610,13 @@ $('#btnAddItem_InvoiceModal').on('click', function () {
 });
 
 // On input change
-$(document).on('input', '.calc_InvoiceModal', function () {
+$(document).on('input change', '.calc_InvoiceModal, #bookingDiscount_InvoiceModal', function () {
     recalcRow($(this).closest('tr'));
+    recalcAll();
+});
+
+// On input change
+$(document).on('input change', '#bookingDiscount_InvoiceModal', function () {
     recalcAll();
 });
 
@@ -3582,7 +3666,10 @@ function addItemRow() {
             </td>
 
             <td class="col-discount-type_InvoiceModal">
-                <input type="number" class="form-control form-control-sm text-end discounttype_InvoiceModal calc_InvoiceModal" value="0">
+                <select class="form-select form-select-sm discounttype calc p-1 discounttype_InvoiceModal calc_InvoiceModal">
+                    <option value="1">%</option>
+                    <option value="2">Flat</option>
+                </select>
             </td>
 
             <td class="col-discount-amount_InvoiceModal">
@@ -3629,20 +3716,34 @@ function recalcRow(row) {
     const qty = parseFloat(row.find('.qty_InvoiceModal').val()) || 0;
     const gstRate = parseFloat(row.find('.gst_InvoiceModal').val()) || 0;
 
-    const isGstIncluded = $('#isGstIncluded_InvoiceModal').is(':checked');
-    const gstFactor = 1 + (gstRate / 100);
+    const discountValue = parseFloat(row.find('.discountrate_InvoiceModal').val()) || 0;
+    const discountType = parseInt(row.find('.discounttype_InvoiceModal').val()) || 1; // 1 = %, 2 = Flat
 
-    let taxable = 0;
+    const isGstIncluded = $('#isGstIncluded_InvoiceModal').is(':checked');
+
+    let gross = rate * qty;
+
+    // 🔹 Apply Discount
+    let discountAmount = 0;
+
+    if (discountType === 1) { // %
+        discountAmount = gross * discountValue / 100;
+    } else { // Flat
+        discountAmount = discountValue;
+    }
+
+    if (discountAmount > gross) discountAmount = gross;
+
+    let taxable = gross - discountAmount;
+
     let gstAmount = 0;
 
     if (isGstIncluded) {
-        // Rate already includes GST
-        const gross = rate * qty;
-        taxable = gross / gstFactor;
-        gstAmount = gross - taxable;
+        const gstFactor = 1 + (gstRate / 100);
+        const actualTaxable = taxable / gstFactor;
+        gstAmount = taxable - actualTaxable;
+        taxable = actualTaxable;
     } else {
-        // GST added on top
-        taxable = rate * qty;
         gstAmount = taxable * gstRate / 100;
     }
 
@@ -3664,20 +3765,35 @@ function recalcAll() {
     $('#invoiceItemsBody_InvoiceModal tr').each(function () {
 
         const row = $(this);
+
         const rate = parseFloat(row.find('.rate_InvoiceModal').val()) || 0;
         const qty = parseFloat(row.find('.qty_InvoiceModal').val()) || 0;
         const gstRate = parseFloat(row.find('.gst_InvoiceModal').val()) || 0;
 
-        const gstFactor = 1 + (gstRate / 100);
-        let taxable = 0;
+        const discountValue = parseFloat(row.find('.discountrate_InvoiceModal').val()) || 0;
+        const discountType = parseInt(row.find('.discounttype_InvoiceModal').val()) || 1;
+
+        let gross = rate * qty;
+
+        let discountAmount = 0;
+        if (discountType === 1) {
+            discountAmount = gross * discountValue / 100;
+        } else {
+            discountAmount = discountValue;
+        }
+
+        if (discountAmount > gross) discountAmount = gross;
+
+        let taxable = gross - discountAmount;
+
         let gstAmount = 0;
 
         if (isGstIncluded) {
-            const gross = rate * qty;
-            taxable = gross / gstFactor;
-            gstAmount = gross - taxable;
+            const gstFactor = 1 + (gstRate / 100);
+            const actualTaxable = taxable / gstFactor;
+            gstAmount = taxable - actualTaxable;
+            taxable = actualTaxable;
         } else {
-            taxable = rate * qty;
             gstAmount = taxable * gstRate / 100;
         }
 
@@ -3685,8 +3801,9 @@ function recalcAll() {
         totalGST += gstAmount;
     });
 
-    const discount = parseFloat($('#bookingDiscount_InvoiceModal').val()) || 0;
-    const grandTotal = subTotal + totalGST - discount;
+    const bookingDiscount = parseFloat($('#bookingDiscount_InvoiceModal').val()) || 0;
+
+    const grandTotal = subTotal + totalGST - bookingDiscount;
 
     $('#subTotal_InvoiceModal').val(subTotal.toFixed(2));
     $('#totalTaxable_InvoiceModal').val(subTotal.toFixed(2));
@@ -3694,7 +3811,7 @@ function recalcAll() {
     $('#grandTotal_InvoiceModal').val(grandTotal.toFixed(2));
 
     const advance = parseFloat($('#advancePaid_InvoiceModal').val()) || 0;
-    $('#balanceAmount_InvoiceModal').val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount_InvoiceModal, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val((grandTotal - advance).toFixed(2));
 }
 
 //proforma & invoice -- fetch -- START
@@ -3761,32 +3878,34 @@ function fetchInvoiceByBookingId(bookingId) {
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end subtotal_InvoiceModal"
+                                <input type="number" class="form-control form-control-sm text-end subtotal_InvoiceModal calc_InvoiceModal"
                                        value="${item.SubTotal ?? 0}">
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end discountrate_InvoiceModal"
+                                <input type="number" class="form-control form-control-sm text-end discountrate_InvoiceModal calc_InvoiceModal"
                                        value="${item.DiscountRate ?? 0}">
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end discounttype_InvoiceModal"
-                                       value="${item.DiscounType ?? 0}">
+                                <select class="form-select form-select-sm discounttype_InvoiceModal calc_InvoiceModal p-1">
+                                    <option value="1" ${(item.DiscountType ?? 1) == 1 ? "selected" : ""}>%</option>
+                                    <option value="2" ${(item.DiscountType ?? 1) == 2 ? "selected" : ""}>Flat</option>
+                                </select>
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end discountamount_InvoiceModal"
+                                <input type="number" class="form-control form-control-sm text-end discountamount_InvoiceModal calc_InvoiceModal"
                                        value="${item.DiscountAmount ?? 0}">
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end taxable_InvoiceModal"
+                                <input type="number" class="form-control form-control-sm text-end taxable_InvoiceModal calc_InvoiceModal"
                                        value="${item.Taxable ?? 0}">
                             </td>
 
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end gst_InvoiceModal"
+                                <input type="number" class="form-control form-control-sm text-end gst_InvoiceModal calc_InvoiceModal"
                                        value="${gstPercent}">
                             </td>
 
@@ -3816,9 +3935,12 @@ function fetchInvoiceByBookingId(bookingId) {
 
                 updateRowSequence();
                 recalcAll();
-            } else {
+                $('#advancePaid_InvoiceModal').val(data.PaidAmount).attr('disabled', true);
+            }
+            else {
                 addItemRow(); // empty invoice
             }
+            $("#paymentSection").removeClass("d-none");
             /* ---------- ITEMS ---------- */
         },
         error: function (xhr, status, error) {
@@ -3832,16 +3954,38 @@ function resetForm_InvoiceModal() {
     $('#invoiceId_InvoiceModal').val(0);
     $('#bookingId_InvoiceModal').val(0);
     $('#invoiceNo_InvoiceModal').val('');
-    $('#invoiceDate_InvoiceModal').val('');
     $('#customerName_InvoiceModal').val('');
     $('#gstin_InvoiceModal').val('');
     $('#emailId_InvoiceModal').val('');
     $('#address_InvoiceModal').val('');
+
+    //payments
+    $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
+    $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate').val('');
+    $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
+    $('#invoicePayment_NextDueDate').val('');
+    $('#invoicePayment_noteEditor textarea').val('');
+    $('#invoicePayment_DueBalance').val(0).prop('disabled', true);
+
     $('#subTotal_InvoiceModal').val(0);
     $('#totalGST_InvoiceModal').val(0);
     $('#grandTotal_InvoiceModal').val(0);
+
     $('#invoiceItemsBody_InvoiceModal').empty();
-    $('#btnSaveInvoice_InvoiceModal').prop('disabled', false);
+
+    $('#btnSaveInvoice_InvoiceModal').prop('disabled', true);
+
+    const now = new Date();
+    // Format Date → YYYY-MM-DD
+    const date = now.toISOString().split("T")[0];
+    // Format Time → HH:MM (24hr)
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const time = `${hours}:${minutes}`;
+    // Set values
+    $('#invoicePayment_Time').val(time);
+    $('#invoiceDate_InvoiceModal, #invoicePayment_Date').val(date);
+
 }
 
 //SAVE
@@ -3886,6 +4030,18 @@ $('#btnSaveInvoice_InvoiceModal').on('click', function () {
         EmailId: $('#emailId_InvoiceModal').val(),
         CustomerState: parseInt($('#customerState_InvoiceModal').val()) || 0,
 
+        Payment_ModeId: parseInt($('#invoicePayment_Mode').val()) || 0,
+        Payment_AccountId: parseInt($('#invoicePayment_Account').val()) || 0,
+        Payment_TransactionId: $('#invoicePayment_Txn').val()?.trim() || null,
+        Payment_ChequeBank: $('#invoicePayment_ChequeBank').val()?.trim() || null,
+        Payment_ChequeNo: $('#invoicePayment_ChequeNo').val()?.trim() || null,
+        Payment_ChequeDate: $('#invoicePayment_ChequeDate').val() || null,
+        Payment_Amount: parseFloat($('#invoicePayment_Amount').val()) || 0,
+        Payment_PaidDate: $('#invoicePayment_Date').val() || null,
+        Payment_PaidTime: $('#invoicePayment_Time').val() || null,
+        Payment_DueDate: $('#invoicePayment_NextDueDate').val() || null,
+        Payment_Note: $('#invoicePayment_noteEditor textarea').val()?.trim() || null,
+
         SubTotal: parseFloat($('#subTotal_InvoiceModal').val()) || 0,
         BookingDiscount: parseFloat($('#bookingDiscount_InvoiceModal').val()) || 0,
         TotalTaxableAmount: parseFloat($('#totalTaxable_InvoiceModal').val()) || 0,
@@ -3901,7 +4057,7 @@ $('#btnSaveInvoice_InvoiceModal').on('click', function () {
         ActionBy: Number(sessionStorage.getItem('userId') || 0)
 
     };
-    //console.log("save invoice payload:", request);
+    console.log("save invoice payload:", request);
 
     $.ajax({
         url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -4490,13 +4646,13 @@ function setGSTSwitch(isGSTAccepted) {
 
 function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, actionMode = "fullData") {
     var requestData = {
-        BookingId: bookingId,
-        BanquetId: banquetId,
+        BookingId: Number(bookingId),
+        BanquetId: Number(banquetId),
         EventDate: eventDate,
-        YearId: selectedYearId ?? 0,
-        MonthId: selectedMonthId ?? 0
+        YearId: Number(selectedYearId) ?? 0,
+        MonthId: Number(selectedMonthId) ?? 0
     };
-    //console.log("GetBookingCalendar requestData:", requestData);
+    console.log("GetBookingCalendar requestData:", requestData);
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -4747,8 +4903,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
     });
 }
 
-function setInvoiceButtons(data) {
-
+function setInvoiceButtons2(data) {
     // Invoice
     if ((data.InvoiceNo ?? 0) > 0) {
         document.querySelector("#btnInvoiceGenerate .btn-text").textContent = `Invoice #${data.InvoiceNo}`;
@@ -4764,6 +4919,57 @@ function setInvoiceButtons(data) {
     else {
         document.querySelector("#btnProformaInvoiceGenerate .btn-text").textContent = `Proforma Invoice`;
     }
+}
+
+function setInvoiceButtons(data) {
+
+    const hasInvoice = (data.InvoiceNo ?? 0) > 0;
+    const hasProforma = (data.ProformaInvoiceNo ?? 0) > 0;
+
+    // ================= Invoice Text =================
+    if (hasInvoice) {
+        document.querySelector("#btnInvoiceGenerate .btn-text").textContent =
+            `Invoice #${data.InvoiceNo}`;
+    }
+    else {
+        document.querySelector("#btnInvoiceGenerate .btn-text").textContent =
+            `Invoice`;
+    }
+
+    // ================= Proforma Text =================
+    if (hasProforma) {
+        document.querySelector("#btnProformaInvoiceGenerate .btn-text").textContent =
+            `Proforma #${data.ProformaInvoiceNo}`;
+    } 
+    else {
+        document.querySelector("#btnProformaInvoiceGenerate .btn-text").textContent =
+            `Proforma Invoice`;
+    }
+
+    // ================= Disable Buttons Logic =================
+    const shouldDisable = hasInvoice || hasProforma;
+
+    const buttonsToDisable = [
+        "#btnFoodLabels",
+        "#btnVendorWorkOrders",
+        "#btnEdit",
+        "#btnReschedule",
+        "#btnPostBookingFollowups",
+        "#btnPrepareOrder",
+        "#btnExportBooking",
+        "#btnCancelBooking",
+        "#btnDeleteBooking"
+    ];
+
+    buttonsToDisable.forEach(selector => {
+        const btn = document.querySelector(selector);
+        if (btn) {
+            btn.disabled = shouldDisable;
+
+            // Optional: visual style
+            btn.classList.toggle("opacity-50", shouldDisable);
+        }
+    });
 }
 
 function setTimeFrom24Hr(time24, hourId, minuteId, ampmId) {
@@ -5301,6 +5507,8 @@ function resetPaymentModal() {
     // Optionally reset dropdown to default
     $("#PaymentModal_Mode").val("0").trigger("change");
 
+    $('#paymentDueBalance').val(0).prop('disabled', true);
+    
     // Re-select default account manually
     const defaultOption = $("#PaymentModal_AccountId option").filter(function () {
         return $(this).data("isdefault") === true;
@@ -5404,7 +5612,7 @@ function loadAccountDropdown() {
         success: function (res) {
             //console.log("GetAccount res:", res);
 
-            const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId");
+            const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId, #invoicePayment_Account");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
@@ -5448,7 +5656,7 @@ function loadPaymentModeDropdown() {
         data: JSON.stringify(payload),
         success: function (res) {
             //console.log("payment mode res:", res);
-            const ddl = $("#PaymentModal_Mode, #PaymentDetails_Mode");
+            const ddl = $("#PaymentModal_Mode, #PaymentDetails_Mode, #invoicePayment_Mode");
             ddl.empty().append('<option value="0">--Select--</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {

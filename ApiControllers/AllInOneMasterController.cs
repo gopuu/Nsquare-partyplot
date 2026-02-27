@@ -26,7 +26,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-
         [HttpPost]
         [Route("SaveAllInOneMaster")]
         public IActionResult SaveAllInOneMaster([FromBody] SaveAllInOneMasterRequest model)
@@ -100,7 +99,6 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
 
         [HttpPost]
         [Route("DeleteAllInOneMaster")]
@@ -177,18 +175,36 @@ namespace ERPAdmin.ApiControllers
 
                 foreach (DataRow row in dt.Rows)
                 {
+                    long id = row["Id"] != DBNull.Value ? Convert.ToInt64(row["Id"]) : 0;
+                    string title = row["Title"] != DBNull.Value ? Convert.ToString(row["Title"]) : string.Empty;
+                    string link = row["Link"] != DBNull.Value ? Convert.ToString(row["Link"]) : string.Empty;
+                    string imageName = row["Image"] != DBNull.Value ? Convert.ToString(row["Image"]) : string.Empty;
+
+                    string imageUrl = string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(imageName))
+                    {
+                        string relativePath = $"/uploads/org/{domain}/AllInOne/{imageName}";
+                        string physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "org", domain, "AllInOne", imageName);
+
+                        if (System.IO.File.Exists(physicalPath))
+                        {
+                            imageUrl = $"{domainUrl}{relativePath}";
+                        }
+                        else
+                        {
+                            imageUrl = $"{domainUrl}/assets2/img/allinone_default/{imageName}";
+                        }
+                    }
+
                     list.Add(new AllInOneMaster
                     {
-                        Id = Convert.ToInt64(row["Id"]),
-                        Title = Convert.ToString(row["Title"]),
-                        Link = Convert.ToString(row["Link"]),
-                        Image = row["Image"] != DBNull.Value
-                                && !string.IsNullOrEmpty(row["Image"].ToString())
-                            ? domainUrl + "/uploads/org/" + domain + "/AllInOne/" + row["Image"].ToString()
-                            : string.Empty
+                        Id = id,
+                        Title = title ?? string.Empty,
+                        Link = link ?? string.Empty,
+                        Image = imageUrl
                     });
                 }
-
                 apiResponse.status = "Success";
                 apiResponse.message = "All-in-one master list fetched successfully!";
                 apiResponse.data = list;
@@ -205,13 +221,11 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
         [Route("GetAllInOneLinkMaster")]
         public IActionResult GetAllInOneLinkMaster()
         {
             apiResponse apiResponse = new apiResponse();
-            List<AllInOneLinkMaster> list = new List<AllInOneLinkMaster>();
 
             try
             {
@@ -225,6 +239,8 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
+                AllInOnePropertyResponse responseModel = new AllInOnePropertyResponse();
+
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetAllInOneLinkMaster", con))
                 {
@@ -233,25 +249,123 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        while (dr.Read())
+                        if (dr.Read())   // Only expecting one property row
                         {
-                            list.Add(new AllInOneLinkMaster
+                            string logoName = dr["PropertyLogo"] != DBNull.Value ? Convert.ToString(dr["PropertyLogo"]) : string.Empty;
+                            string logoUrl;
+                            if (!string.IsNullOrWhiteSpace(logoName))
                             {
-                                Id = Convert.ToInt64(dr["Id"]),
-                                HallName = Convert.ToString(dr["HallName"]),
-                                Title = Convert.ToString(dr["Title"]),
-                                Link = Convert.ToString(dr["Link"]),
-                                Image = dr["Image"] != DBNull.Value
-                                    ? $"{domainUrl}/uploads/org/{domain}/AllInOne/{dr["Image"]}"
-                                    : "/assets2/img/image_default.png"
-                            });
+                                // Upload folder path
+                                string uploadPhysicalPath = Path.Combine(
+                                    Directory.GetCurrentDirectory(),
+                                    "wwwroot",
+                                    "uploads",
+                                    "org",
+                                    domain,
+                                    "CompanyInvoice_CompanyLogo_Image",
+                                    logoName
+                                );
+
+                                if (System.IO.File.Exists(uploadPhysicalPath))
+                                {
+                                    logoUrl = $"{domainUrl}/uploads/org/{domain}/CompanyInvoice_CompanyLogo_Image/{logoName}";
+                                }
+                                else
+                                {
+                                    // Default folder path
+                                    string defaultPhysicalPath = Path.Combine(
+                                        Directory.GetCurrentDirectory(),
+                                        "wwwroot",
+                                        "assets2",
+                                        "img",
+                                        "allinone_default",
+                                        logoName
+                                    );
+
+                                    if (System.IO.File.Exists(defaultPhysicalPath))
+                                    {
+                                        logoUrl = $"{domainUrl}/assets2/img/allinone_default/{logoName}";
+                                    }
+                                    else
+                                    {
+                                        logoUrl = $"{domainUrl}/assets2/img/allinone_default/default-logo.png";
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                logoUrl = $"{domainUrl}/assets2/img/allinone_default/default-logo.png";
+                            }
+
+                            responseModel.PropertyLogo = logoUrl;
+
+                            responseModel.PropertyName = dr["PropertyName"] != DBNull.Value ? Convert.ToString(dr["PropertyName"]) : string.Empty;
+                            responseModel.CompanyName = dr["CompanyName"] != DBNull.Value ? Convert.ToString(dr["CompanyName"]) : string.Empty;
+
+                            string jsonData = dr["AllInOneJSON"] != DBNull.Value ? Convert.ToString(dr["AllInOneJSON"]) : "[]";
+                            var linkList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<AllInOneLinkMaster>>(jsonData ?? "[]");
+
+                            if (linkList != null)
+                            {
+                                foreach (var item in linkList)
+                                {
+                                    string imageName = item.Image ?? string.Empty;
+                                    string imageUrl;
+
+                                    if (!string.IsNullOrWhiteSpace(imageName))
+                                    {
+                                        string physicalPath = Path.Combine(
+                                            Directory.GetCurrentDirectory(),
+                                            "wwwroot",
+                                            "uploads",
+                                            "org",
+                                            domain,
+                                            "AllInOne",
+                                            imageName
+                                        );
+
+                                        if (System.IO.File.Exists(physicalPath))
+                                        {
+                                            imageUrl = $"{domainUrl}/uploads/org/{domain}/AllInOne/{imageName}";
+                                        }
+                                        else
+                                        {
+                                            string defaultPhysicalPath = Path.Combine(
+                                                Directory.GetCurrentDirectory(),
+                                                "wwwroot",
+                                                "assets2",
+                                                "img",
+                                                "allinone_default",
+                                                imageName
+                                            );
+
+                                            if (System.IO.File.Exists(defaultPhysicalPath))
+                                            {
+                                                imageUrl = $"{domainUrl}/assets2/img/allinone_default/{imageName}";
+                                            }
+                                            else
+                                            {
+                                                imageUrl = $"{domainUrl}/assets2/img/image_default.png";
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        imageUrl = $"{domainUrl}/assets2/img/image_default.png";
+                                    }
+
+                                    item.Image = imageUrl;
+                                }
+                            }
+
+                            responseModel.Links = linkList ?? new List<AllInOneLinkMaster>();
                         }
                     }
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = "All In One Link list fetched successfully!";
-                apiResponse.data = list;
+                apiResponse.data = responseModel;
 
                 return Ok(apiResponse);
             }
@@ -264,6 +378,5 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
     }
 }

@@ -2,20 +2,21 @@
 $(document).ready(function () {
 
     loadCategoryDropdown();
+    loadSubCategoryDropdown();
     loadEmergencyContactData();
 
     // ---------------- ADD BUTTON ----------------
     $(document).on('click', '#btn-add-contact', function () {
 
         const canAdd = (sessionStorage.getItem('CanAdd') || localStorage.getItem('CanAdd')) === 'true';
-    if (!canAdd) {
-        Swal.fire("Access Denied", "You do not have permission to Add.", "error");
-    return;
+            if (!canAdd) {
+                Swal.fire("Access Denied", "You do not have permission to Add.", "error");
+            return;
         }
 
-    resetContactForm();
-    $('#ContactModalTitle').text("Add Emergency Contact");
-    $('#ContactModal').modal('show');
+        resetContactForm();
+        $('#ContactModalTitle').text("Add Emergency Contact");
+        $('#ContactModal').modal('show');
     });
 
     // ---------------- CATEGORY CHANGE → LOAD SUBCATEGORY ----------------
@@ -27,58 +28,59 @@ $(document).ready(function () {
     $("#btnSaveContact").click(function () {
 
         if (!$("#SubCategoryId").val()) {
-        Swal.fire("Validation", "Sub-Category is required!", "warning");
-    return;
+            Swal.fire("Validation", "Sub-Category is required!", "warning");
+            return;
         }
-    if (!$("#ContactName").val()) {
-        Swal.fire("Validation", "Contact Name is required!", "warning");
-    return;
+        if (!$("#ContactName").val()) {
+            Swal.fire("Validation", "Contact Name is required!", "warning");
+            return;
         }
-    if (!$("#MobileNo").val()) {
-        Swal.fire("Validation", "Mobile No is required!", "warning");
-    return;
+        if (!$("#MobileNo").val()) {
+            Swal.fire("Validation", "Mobile No is required!", "warning");
+            return;
         }
 
-    const payload = {
-        Id: Number($("#ContactId").val() || 0),
-    SubCategoryId: Number($("#SubCategoryId").val()),
-    ContactType: $("#ContactType").val(),
-    ContactName: $("#ContactName").val(),
-    MobileNo: $("#MobileNo").val(),
-    MobileNo2: $("#MobileNo2").val(),
-    Location: $("#Location").val(),
-    Remarks: $("#Remarks").val(),
-    IsActive: $("#IsActive").is(":checked"),
-    ActionBy: sessionStorage.getItem("userId") ?? 0
+        const payload = {
+            Id: Number($("#ContactId").val() || 0),
+            SubCategoryId: Number($("#SubCategoryId").val()),
+            ContactType: $("#ContactType").val(),
+            ContactName: $("#ContactName").val(),
+            MobileNo: $("#MobileNo").val(),
+            MobileNo2: $("#MobileNo2").val(),
+            Location: $("#Location").val(),
+            Remarks: $("#Remarks").val(),
+            IsActive: $("#IsActive").is(":checked"),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
-    $("#btnSaveContact").prop("disabled", true);
+        $("#btnSaveContact").prop("disabled", true);
 
-    $.ajax({
-        url: "/api/EmergencyContactMaster/SaveEmergencyContact_Master",
-    type: "POST",
-    contentType: "application/json",
-    data: JSON.stringify(payload),
-    success: function (res) {
+        $.ajax({
+            url: "/api/EmergencyContactMaster/SaveEmergencyContact_Master",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
                 if (res?.status === "Success") {
-        Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "Saved",
-            showConfirmButton: false,
-            timer: 1000
-        });
-    $('#ContactModal').modal('hide');
-    loadEmergencyContactData();
-                } else {
-        Swal.fire("Error", res?.message || "Save failed", "error");
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Saved",
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                    $('#ContactModal').modal('hide');
+                    loadEmergencyContactData();
+                }
+                else {
+                    Swal.fire("Error", res?.message || "Save failed", "error");
                 }
             },
-    error: function (xhr, status, error) {
-        handleApiError(xhr, status, error, "Save Contact Error");
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save Contact Error");
             },
-    complete: function () {
-        $("#btnSaveContact").prop("disabled", false);
+            complete: function () {
+                $("#btnSaveContact").prop("disabled", false);
             }
         });
     });
@@ -87,34 +89,34 @@ $(document).ready(function () {
     $(document).on("click", ".btn-edit", function () {
 
         const canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
-    if (!canEdit) {
-        Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
-    return;
+        if (!canEdit) {
+            Swal.fire("Access Denied", "You do not have permission to Edit.", "error");
+            return;
         }
 
-    let table = $("#tableMain table").DataTable();
-    let rowData = table.row($(this).closest("tr")).data();
+        let table = $("#tableMain table").DataTable();
+        let rowData = table.row($(this).closest("tr")).data();
 
-    resetContactForm();
+        resetContactForm();
 
-    $("#ContactId").val(rowData.Id);
-    $("#ContactType").val(rowData.ContactType);
-    $("#ContactName").val(rowData.ContactName);
-    $("#MobileNo").val(rowData.MobileNo);
-    $("#MobileNo2").val(rowData.MobileNo2);
-    $("#Location").val(rowData.Location);
-    $("#Remarks").val(rowData.Remarks);
-    $("#IsActive").prop("checked", rowData.IsActive);
+        $("#ContactId").val(rowData.Id);
+        $("#ContactType").val(rowData.ContactType);
+        $("#ContactName").val(rowData.ContactName);
+        $("#MobileNo").val(rowData.MobileNo);
+        $("#MobileNo2").val(rowData.MobileNo2);
+        $("#Location").val(rowData.Location);
+        $("#Remarks").val(rowData.Remarks);
+        $("#IsActive").prop("checked", rowData.IsActive);
 
-    loadCategoryDropdown(function () {
-        $("#CategoryId").val(rowData.CategoryId);
-    loadSubCategoryDropdown(rowData.CategoryId, function () {
-        $("#SubCategoryId").val(rowData.SubCategoryId);
+        loadCategoryDropdown(function () {
+            $("#CategoryId").val(rowData.CategoryId);
+            loadSubCategoryDropdown(rowData.CategoryId, function () {
+                $("#SubCategoryId").val(rowData.SubCategoryId);
             });
         });
 
-    $('#ContactModalTitle').text("Edit Emergency Contact");
-    $('#ContactModal').modal('show');
+        $('#ContactModalTitle').text("Edit Emergency Contact");
+        $('#ContactModal').modal('show');
     });
 
     // ---------------- DELETE ----------------
@@ -170,16 +172,16 @@ $(document).ready(function () {
     // ---------------- RESET FORM ----------------
     function resetContactForm() {
         $("#ContactId").val(0);
-    $("#CategoryId").val('');
-    $("#SubCategoryId").val('');
-    $("#ContactType").val('');
-    $("#ContactName").val('');
-    $("#MobileNo").val('');
-    $("#MobileNo2").val('');
-    $("#Location").val('');
-    $("#Remarks").val('');
-    $("#IsActive").prop("checked", true);
-}
+        $("#CategoryId").val('0');
+        $("#SubCategoryId").val('0');
+        $("#ContactType").val('');
+        $("#ContactName").val('');
+        $("#MobileNo").val('');
+        $("#MobileNo2").val('');
+        $("#Location").val('');
+        $("#Remarks").val('');
+        $("#IsActive").prop("checked", true);
+    }
 
     // ---------------- LOAD CATEGORY ----------------
     function loadCategoryDropdown(callback) {
@@ -190,7 +192,7 @@ $(document).ready(function () {
             data: JSON.stringify({ Id: 0 }),
             success: function (res) {
                 let ddl = $("#CategoryId");
-                ddl.empty().append(`<option value="">-- Select Category --</option>`);
+                ddl.empty().append(`<option value="0">-- Select Category --</option>`);
                 (res?.data || []).forEach(x => {
                     ddl.append(`<option value="${x.Id}">${x.Name}</option>`);
                 });
@@ -200,28 +202,28 @@ $(document).ready(function () {
 }
 
     // ---------------- LOAD SUBCATEGORY ----------------
-    function loadSubCategoryDropdown(categoryId, callback) {
+    function loadSubCategoryDropdown(categoryId=0, callback) {
 
-    if (!categoryId) {
-        $("#SubCategoryId").empty().append(`<option value="">-- Select Sub-Category --</option>`);
-    return;
+        //if (!categoryId) {
+        //    $("#SubCategoryId").empty().append(`<option value="">-- Select Sub-Category --</option>`);
+        //    return;
+        //}
+
+        $.ajax({
+            url: "/api/EmergencyContactSubCategoryMaster/GetEmergencyContact_SubCategoryMaster",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({CategoryId: categoryId }),
+            success: function (res) {
+                let ddl = $("#SubCategoryId");
+                ddl.empty().append(`<option value="0">-- Select Sub-Category --</option>`);
+                (res?.data || []).forEach(x => {
+                    ddl.append(`<option value="${x.Id}">${x.SubCategoryName}</option>`);
+                });
+                if (callback) callback();
+            }
+        });
     }
-
-    $.ajax({
-        url: "/api/EmergencyContactSubCategoryMaster/GetEmergencyContact_SubCategoryMaster",
-    type: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({CategoryId: categoryId }),
-    success: function (res) {
-        let ddl = $("#SubCategoryId");
-    ddl.empty().append(`<option value="">-- Select Sub-Category --</option>`);
-            (res?.data || []).forEach(x => {
-        ddl.append(`<option value="${x.Id}">${x.SubCategoryName}</option>`);
-            });
-    if (callback) callback();
-        }
-    });
-}
 
     // ---------------- FETCH CONTACT ----------------
     function loadEmergencyContactData() {

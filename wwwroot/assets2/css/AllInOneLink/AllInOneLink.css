@@ -1,113 +1,144 @@
-﻿.page-content {
-    margin-top: 7rem !important;
-    margin-bottom: 7rem !important;
+﻿/* ================= GLOBAL ================= */
+body {
+    background: #f3f4f6;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-.card-body {
-    border-radius: 18px;
+.page-content {
+    padding: 50px 15px;
+    display: flex;
+    justify-content: center;
+}
+
+/* ================= CARD ================= */
+.profile-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 24px;
     overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    background: #ffffff;
 }
 
-/* Gradient Header */
+/* ================= HEADER ================= */
 .profile-header {
-    padding: 35px 15px 50px;
-    background: linear-gradient(180deg, #065f46, #34d399);
+    padding: 40px 20px 80px;
+    background: linear-gradient(135deg, #065f46, #34d399);
     position: relative;
+    text-align: center;
+    color: #fff;
 }
 
-/* Logo */
 .logo-box {
     width: 110px;
     height: 110px;
-    background: #ffffff;
+    background: #fff;
     border-radius: 50%;
     margin: auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    overflow: hidden; /* IMPORTANT */
 }
 
 .img_logo {
-    width: 115px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures it fills circle properly */
 }
 
-/* White Body */
-.card-body {
-    padding-top: 60px;
-    padding-bottom:60px;
-    background: #ffffff;
+.profile-header h4 {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: 600;
 }
 
-/* Push body down under logo */
+.profile-header h6 {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Curve Effect */
 .profile-header::after {
     content: '';
     position: absolute;
-    bottom: -40px;
+    bottom: -50px;
     left: 0;
     right: 0;
-    height: 80px;
+    height: 100px;
     background: #ffffff;
     border-radius: 100% 100% 0 0;
 }
 
-
-/* 🔷 Footer container */
-.footer-section {
-    background: linear-gradient(180deg, #065f46, #34d399);
-    border-top: 1px solid #e6e9f0;
-    box-shadow: inset 0 8px 12px -10px rgba(0, 0, 0, 0.15);
-    padding: 18px 15px;
+/* ================= BODY ================= */
+.card-body {
+    padding: 50px 20px 10px;
+    background: #ffffff;
+    /*border: 1px solid red;*/
 }
 
-
-/* ✨ CTA Box */
-.cta-box h6 {
-    color: #ffffff;
+/* ================= GRID ================= */
+#allInOneGrid {
+    row-gap: 25px;
+    /*border: 1px solid green;*/
 }
 
-.cta-box p {
-    color: #e6e9f0;
-    font-size: 14px;
-}
-
-/* ➖ Divider */
-.footer-divider {
-    height: 1px;
-    width: 100%;
-    background: linear-gradient(to right, transparent, #d0d5dd, transparent);
-    margin: 18px 0;
-}
-
-/* 👨‍💻 Credit */
-.footer-credit {
-    font-size: 15px;
-    color: #ffffff;
-}
-
-
-
+/* ================= ICON CARD ================= */
 .allinone-item {
-    text-align: center;
+    background: #f9fafb;
+    padding: 18px 10px;
+    border-radius: 16px;
+    transition: all 0.25s ease;
     cursor: pointer;
+    text-align: center;
 }
 
-.allinone-item img {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-    margin-bottom: 8px;
-}
+    .allinone-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+        background: #ffffff;
+    }
+
+    .allinone-item img {
+        width: 55px;
+        height: 55px;
+        object-fit: contain;
+        margin-bottom: 10px;
+    }
 
 .allinone-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
 }
 
 .allinone-item:hover .allinone-title {
-    color: #0d6efd;
-    text-decoration: underline;
+    color: #10b981;
 }
 
+/* ================= FOOTER ================= */
+.footer-section {
+    background: linear-gradient(135deg, #065f46, #34d399);
+    padding: 22px 15px;
+    text-align: center;
+    color: #fff;
+}
 
+.footer-divider {
+    height: 1px;
+    margin: 15px 0;
+    background: linear-gradient(to right, transparent, #d1d5db, transparent);
+}
+
+.footer-credit {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 575px) {
+    .profile-card {
+        max-width: 100%;
+    }
+}

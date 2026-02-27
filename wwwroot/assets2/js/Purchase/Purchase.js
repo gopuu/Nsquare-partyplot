@@ -141,7 +141,8 @@ $(document).ready(function () {
                 $("#purchaseItemsBody").append(newRow);
             });
 
-        } else {
+        } 
+        else {
             addInitialRow();
         }
 
@@ -652,7 +653,7 @@ function loadWidgetsData() {
         method: "GET",
         contentType: "application/json",
         success: function (res) {
-            console.log("res widgets:", res);
+            //console.log("res widgets:", res);
             if (res.status && res.status.toLowerCase() === "success" && res.data) {
                 $("#widget_total_purchase").text(res.data.GrandTotal_Amount);
                 $("#widget_outstanding").text(res.data.Outstanding_Amount);
@@ -678,7 +679,7 @@ function loadVendorPayables(monthDuration, fromDate = null, toDate = null) {
         data: JSON.stringify(payload),
         success: function (res) {
 
-            console.log("Vendor Payables API:", res);
+            //console.log("Vendor Payables API:", res);
 
             let html = "";
 
@@ -763,8 +764,9 @@ function addNewRow() {
             <div class="text-muted small stockHint d-none"></div>`;
 
     //UNITS DROPDOWN
+    console.log("unitMaster:", unitMaster);
     let unit_Html_dropdown = `<select class="form-select form-select-sm unitSelect">`;
-    unit_Html_dropdown += `<option value="0" data-currentqty="0"></option>`;
+    unit_Html_dropdown += `<option value="0" data-currentqty="0">--Select--</option>`;
     unitMaster.forEach(x => {
         unit_Html_dropdown += `
                 <option value="${x.Id}">
@@ -853,12 +855,14 @@ function updateUnitsDropdown(rawMaterialSelect) {
     // Parse JSON_PurchaseUnits
     let unitsJsonRaw = selectedOption.attr("data-unitid");
     // single → double quotes
-    unitsJsonRaw = unitsJsonRaw; //.replace(/'/g, '"');
+    //unitsJsonRaw = unitsJsonRaw; //.replace(/'/g, '"');
     let unitsJson = [];
     try {
-        unitsJson = JSON.parse(unitsJsonRaw);
-    } catch (e) {
+        unitsJson = unitsJsonRaw ? JSON.parse(unitsJsonRaw) : [];
+    }
+    catch (e) {
         console.error("Invalid JSON in data-unitid:", unitsJsonRaw, e);
+        unitsJson = [];
     }
 
     //console.log("unitsJson 2:", unitsJson);
@@ -866,23 +870,36 @@ function updateUnitsDropdown(rawMaterialSelect) {
     let unitDropdown = row.find(".unitSelect");
 
     // Clear existing options
-    unitDropdown.html(`<option value="0">Select</option>`);
+    unitDropdown.html(`<option value="0">--Select--</option>`);
 
     // If JSON is empty → Leave dropdown empty
+    //if (!unitsJson || unitsJson.length === 0) {
+    //    return;
+    //}
+
+    //console.log("unitsJson:", unitsJson, ", unitDropdown:", unitDropdown);
+    // ✅ CASE 1: If no units assigned → show FULL unit list
     if (!unitsJson || unitsJson.length === 0) {
+        unitMaster.forEach(u => {
+            unitDropdown.append(
+                `<option value="${u.Id}">
+                    ${u.UnitName}
+                 </option>`
+            );
+        });
         return;
     }
 
-    //console.log("unitsJson:", unitsJson, ", unitDropdown:", unitDropdown);
-    // Populate allowed units only
+    // ✅ CASE 2: Show only assigned units
     let isFirst = true;
     unitsJson.forEach(u => {
         let unitObj = unitMaster.find(x => x.Id === u.UnitId);
+
         if (unitObj) {
             unitDropdown.append(
                 `<option value="${unitObj.Id}" ${isFirst ? "selected" : ""}>
-                ${unitObj.UnitName}
-             </option>`
+                    ${unitObj.UnitName}
+                 </option>`
             );
             isFirst = false;
         }
@@ -1018,7 +1035,7 @@ function updateSrNo() {
 
 //SHOW GRID TABLE
 function renderTable(data) {
-    console.log("Purchase Data render:", data);
+    //console.log("Purchase Data render:", data);
 
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
@@ -1124,7 +1141,7 @@ function renderTable(data) {
                 data: null,
                 title: "Created By",
                 render: (d) => `
-                        <b>${d.Created_By_EmpName ?? "-"}</b><br>
+                        <small>${d.Created_By_EmpName ?? "-"}</small><br>
                         <small class="text-muted">Created: ${d.Created_On}</small><br>
                         <small class="text-muted">Modified: ${d.Modified_On ?? ""}</small>
                     `

@@ -16,12 +16,15 @@
                 confirmButtonText: "OK"
             });
             event.preventDefault(); // Stop the modal from opening
-            $('#addEventModal').modal('hide');
+            //$('#addEventModal').modal('hide');
+            const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+            modal.hide();
         } else {
             resetFormFields(); // Reset form fields when modal is shown
             $("#addEventModalTitle").text("Add Supplier");
-            $("#addEventModal").modal("show");
-        }
+            //$("#addEventModal").modal("show");
+            const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+            modal.show();        }
     });
 
     // Edit button click
@@ -293,7 +296,7 @@ function renderTable(data) {
             `);
 
         // Reinitialize empty DataTable
-        $('#tableMain').DataTable({
+        $('#tableMain table').DataTable({
             data: [],
             columns: [
                 { data: 'srno', title: 'Sr. No.' },
@@ -349,7 +352,7 @@ function renderTable(data) {
 
     // Destroy old DataTable again to avoid residual config
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
-        $('#tableMain').DataTable().clear().destroy();
+        $('#tableMain table').DataTable().clear().destroy();
     }
 
     // Reinitialize DataTable

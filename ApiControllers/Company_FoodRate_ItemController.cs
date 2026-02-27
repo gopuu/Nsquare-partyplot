@@ -76,15 +76,11 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        /*
         [HttpPost]
-        [Route("GetCompanyFoodItem2")]
-        public IActionResult GetCompanyFoodItem2([FromBody] GetCompanyFoodItemsRequestById model)
+        [Route("DeleteCompanyFoodItem_Items")]
+        public IActionResult DeleteCompanyFoodItem_Items([FromBody] DeleteCompanyFoodItemRequest model)
         {
             apiResponse apiResponse = new apiResponse();
-            List<dynamic> foodItems = new List<dynamic>();
-            Dictionary<string, bool> cuisines = new Dictionary<string, bool>();
-
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
@@ -92,66 +88,33 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
-                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("GetCompanyFoodItems", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id ?? (object)DBNull.Value;
-
-                    con.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    // ---------- 1st Result Set : Food Items ----------
-                    while (reader.Read())
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DeleteCompanyFoodItem_Items", conn))
                     {
-                        var item = new
-                        {
-                            Id = Convert.ToInt64(reader["id"]),
-                            HeaderName = Convert.ToString(reader["header_name"]),
-                            ItemName = Convert.ToString(reader["item_name"]),
-                            Description = Convert.ToString(reader["description"])
-                        };
-                        foodItems.Add(item);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id;
+                        cmd.Parameters.Add("@actionby", SqlDbType.BigInt).Value = model.DeletedBy;
+                        cmd.ExecuteNonQuery();
                     }
-
-                    // ---------- 2nd Result Set : Cuisines ----------
-                    if (reader.NextResult())
-                    {
-                        while (reader.Read())
-                        {
-                            string name = Convert.ToString(reader["name"]);
-                            bool isActive = Convert.ToBoolean(reader["is_active"]);
-
-                            if (!string.IsNullOrEmpty(name))
-                            {
-                                cuisines[name] = isActive;  // ✅ key:value format
-                            }
-                        }
-                    }
-
-                    reader.Close();
-                    con.Close();
+                    conn.Close();
                 }
 
+                apiResponse.message = "Food item deleted successfully!";
                 apiResponse.status = "Success";
-                apiResponse.message = "Data fetched successfully.";
-                apiResponse.data = new
-                {
-                    FoodItems = foodItems,
-                    Cuisines = cuisines   // ✅ will be returned as { "Indian": true, "Chinese": false, ... }
-                };
-
-                return Ok(apiResponse);
+                return Ok(apiResponse); //return Ok(apiResponse);
             }
             catch (Exception ex)
             {
+                // Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
                 apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
         }
-        */
 
         [HttpPost]
         [Route("GetCompanyFoodItem")]

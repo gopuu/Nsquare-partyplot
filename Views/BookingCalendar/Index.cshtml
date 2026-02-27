@@ -1131,9 +1131,8 @@
                 <!-- ITEMS -->
                 <div class="row mt-3">
                     <div class="col-md-12">
-
                         <table class="table table-bordered table-sm invoice-items-table_InvoiceModal">
-                            <thead class="table-light">
+                            <thead class="table-light fw-semibold">
                                 <tr>
                                     <th class="col-index_InvoiceModal">#</th>
                                     <th class="col-desc_InvoiceModal">Description</th>
@@ -1141,9 +1140,9 @@
                                     <th class="col-rate_InvoiceModal">Rate</th>
                                     <th class="col-qty_InvoiceModal">Qty</th>
                                     <th class="col-subtotal_InvoiceModal">SubTotal</th>
-                                    <th class="col-discount-rate_InvoiceModal">Discount</th>
+                                    <th class="col-discount-rate_InvoiceModal">Discount Rate</th>
                                     <th class="col-discount-type_InvoiceModal">Type</th>
-                                    <th class="col-discount-amount_InvoiceModal">Discount</th>
+                                    <th class="col-discount-amount_InvoiceModal">Discount Amt.</th>
                                     <th class="col-taxable_InvoiceModal">Taxable</th>
                                     <th class="col-gst_InvoiceModal">GST%</th>
                                     <th class="col-cgst_InvoiceModal">CGST</th>
@@ -1180,8 +1179,117 @@
 
                 <!-- TOTALS -->
                 <div class="row mt-4">
-                    <!-- EMPTY SPACE (LEFT) -->
-                    <div class="col-md-7"></div>
+
+                    <!-- LEFT SIDE : PAYMENT DETAILS -->
+                    <div class="col-md-7">
+                        <div class="border rounded p-3 bg-white" id="paymentSection">
+                            <!-- 🔹 Payment Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-primary mb-0">
+                                    Payment Details
+                                </h6>
+                                <span class="badge bg-light text-dark border">
+                                    Invoice Payment
+                                </span>
+                            </div>
+
+                            <div class="row g-2">
+
+                                <!-- Mode -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Mode</label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Mode"></select>
+                                </div>
+
+                                <!-- Account -->
+                                <div class="col-md-3">
+                                    <label class="form-label d-flex gap-2 mt-2">
+                                        Account
+                                        <i class="fa fa-info-circle text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                        </i>
+                                    </label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Account"></select>
+                                </div>
+
+                                <!--- Payment Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Date</label>
+                                    <input type="date" id="invoicePayment_Date" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Payment Time -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Time</label>
+                                    <input type="time" id="invoicePayment_Time" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Transaction Id -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Transaction Id</label>
+                                    <input type="text" id="invoicePayment_Txn" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Bank -->
+                                <div class="col-md-4 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Bank</label>
+                                    <input type="text" id="invoicePayment_ChequeBank" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque No -->
+                                <div class="col-md-2 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque No</label>
+                                    <input type="text" id="invoicePayment_ChequeNo" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Date -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Date</label>
+                                    <input type="date" id="invoicePayment_ChequeDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Amount -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="number" id="invoicePayment_Amount" class="form-control form-control-sm" min="0" step="1">
+                                </div>
+
+                                <!-- Due Balance -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Due Balance</label>
+                                    <input type="number" id="invoicePayment_DueBalance" class="form-control form-control-sm" min="0" step="1">
+                                    <input type="hidden" id="invoicePayment_originalDueAmount">
+                                    <small id="invoicePayment_dueMessage" class="text-danger d-none">No Due</small>
+                                </div>
+
+                                <!-- Next Due Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Next Due Date</label>
+                                    <input type="date" id="invoicePayment_NextDueDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Buttons Row -->
+                                <div class="col-md-12 d-flex justify-content-between align-items-center mt-2">
+                                    <!-- Left -->
+                                    <div>
+                                        <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
+                                    </div>
+                                </div>
+
+                                <!-- Note Editor -->
+                                <div class="col-md-12 invoicePayment_EditorContainer mt-2 d-none">
+                                    <div id="invoicePayment_noteEditor">
+                                        <textarea class="form-control"
+                                                  rows="4"
+                                                  placeholder="Write your note here..."></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- TOTALS PANEL (RIGHT) -->
                     <div class="col-md-5">
