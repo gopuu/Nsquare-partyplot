@@ -133,7 +133,7 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost("DeleteSettings")]
-        public IActionResult DeleteSettings([FromBody] DeleteSettingsRequest model)
+        private IActionResult DeleteSettings([FromBody] DeleteSettingsRequest model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -167,7 +167,7 @@ namespace ERPAdmin.ApiControllers
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
 
                 return StatusCode(500, apiResponse);

@@ -182,33 +182,57 @@
         e.preventDefault();
 
         // Validation
-        if (!$("#ddlAccount_Expense").val() || $("#ddlAccount_Expense").val() <= 0) {
+        let mode = parseInt($("#txtPaymentMode_Expense").val()) || 0;
+        let account = parseInt($("#ddlAccount_Expense").val()) || 0;
+        let category = $("#ddlExpenseCategory").val();
+        let amount = parseFloat($("#txtAmount_Expense").val());
+        let transactionDate = $("#txtTransactionDate_Expense").val();
+
+        // Mode
+        if (mode <= 0) {
+            Swal.fire("Validation", "Please select Mode", "warning");
+            $("#txtPaymentMode_Expense").focus();
+            return false;
+        }
+
+        // Account
+        if (account <= 0) {
             Swal.fire("Validation", "Please select Account", "warning");
-            return;
+            $("#ddlAccount_Expense").focus();
+            return false;
         }
-        if (!$("#ddlExpenseCategory").val()) {
+
+        // Category
+        if (!category) {
             Swal.fire("Validation", "Please select Category", "warning");
-            return;
+            $("#ddlExpenseCategory").focus();
+            return false;
         }
-        if (!$("#txtAmount_Expense").val() || parseFloat($("#txtAmount_Expense").val()) <= 0) {
+
+        // Amount
+        if (!amount || isNaN(amount) || amount <= 0) {
             Swal.fire("Validation", "Amount must be greater than 0", "warning");
-            return;
+            $("#txtAmount_Expense").focus();
+            return false;
         }
-        if (!$("#txtTransactionDate_Expense").val()) {
+
+        // Transaction Date
+        if (!transactionDate) {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
-            return;
+            $("#txtTransactionDate_Expense").focus();
+            return false;
         }
 
         const payload = {
             Id: Number($("#ExpenseTransactionId").val() || 0),
             AccountId: Number($("#ddlAccount_Expense").val()),
             CategoryId: Number($("#ddlExpenseCategory").val()),
-            SubCategoryId: $("#ddlSubCategory_Expense").val() ? Number($("#ddlSubCategory_Expense").val()) : null,
+            SubCategoryId: $("#ddlSubCategory_Expense").val() ? Number($("#ddlSubCategory_Expense").val()) : 0,
 
             Amount: parseFloat($("#txtAmount_Expense").val()),
             TransactionDate: $("#txtTransactionDate_Expense").val(),
 
-            PaymentModeId: $("#txtPaymentMode_Expense").val() ? Number($("#txtPaymentMode_Expense").val()) : null,
+            PaymentModeId: $("#txtPaymentMode_Expense").val() ? Number($("#txtPaymentMode_Expense").val()) : 0,
 
             TransactionId: $("#txtTransactionId_Expense").val().trim() || null,
             Notes: $("#txtNotes_Expense").val().trim() || null,
@@ -355,24 +379,45 @@
         e.preventDefault();
 
         // Validation
-        if (!$("#ddlAccount_Income").val() || $("#ddlAccount_Income").val() <= 0) {
+        let mode = parseInt($("#txtPaymentMode_Income").val()) || 0;
+        let account = parseInt($("#ddlAccount_Income").val()) || 0;
+        let category = $("#ddlIncomeCategory").val();
+        let amount = parseFloat($("#txtAmount_Income").val());
+        let transactionDate = $("#txtTransactionDate_Income").val();
+
+        // Mode
+        if (mode <= 0) {
+            Swal.fire("Validation", "Please select Mode", "warning");
+            $("#txtPaymentMode_Income").focus();
+            return false;
+        }
+
+        // Account
+        if (account <= 0) {
             Swal.fire("Validation", "Please select Account", "warning");
-            return;
+            $("#ddlAccount_Income").focus();
+            return false;
         }
 
-        if (!$("#ddlIncomeCategory").val()) {
+        // Category
+        if (!category) {
             Swal.fire("Validation", "Please select Category", "warning");
-            return;
+            $("#ddlIncomeCategory").focus();
+            return false;
         }
 
-        if (!$("#txtAmount_Income").val() || parseFloat($("#txtAmount_Income").val()) <= 0) {
+        // Amount
+        if (!amount || isNaN(amount) || amount <= 0) {
             Swal.fire("Validation", "Amount must be greater than 0", "warning");
-            return;
+            $("#txtAmount_Income").focus();
+            return false;
         }
 
-        if (!$("#txtTransactionDate_Income").val()) {
+        // Transaction Date
+        if (!transactionDate) {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
-            return;
+            $("#txtTransactionDate_Income").focus();
+            return false;
         }
 
         const payload = {
@@ -382,14 +427,14 @@
 
             SubCategoryId: $("#ddlSubCategory_Income").val()
                 ? Number($("#ddlSubCategory_Income").val())
-                : null,
+                : 0,
 
             Amount: parseFloat($("#txtAmount_Income").val()),
             TransactionDate: $("#txtTransactionDate_Income").val(),
 
             PaymentModeId: $("#txtPaymentMode_Income").val()
                 ? Number($("#txtPaymentMode_Income").val())
-                : null,
+                : 0,
 
             TransactionId: $("#txtTransactionId_Income").val().trim() || null,
             Notes: $("#txtNotes_Income").val().trim() || null,

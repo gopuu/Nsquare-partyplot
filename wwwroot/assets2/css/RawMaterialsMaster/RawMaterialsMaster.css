@@ -70,24 +70,42 @@
     padding-right: 6px; /* avoid scrollbar overlap */
 }
 
+
+#conversionScrollArea {
+    max-height: 250px; /* adjust as needed */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Ensure dropdown is above modal body */
+.dropdown-menu {
+    z-index: 2000 !important;
+}
+
 #purchaseUnitsBox {
     max-height: 150px; /* adjust as needed */
     overflow-y: auto; /* vertical scrollbar */
     overflow-x: hidden; /* prevent horizontal scroll */
 }
 
-    #purchaseUnitsBox .form-check {
-        margin-bottom: 4px;
-    }
+#purchaseUnitsBox .form-check {
+    margin-bottom: 4px;
+}
 
+/* Scroll only list area */
 #purchaseUnitsList {
-    max-height: 160px;
+    max-height: 180px;
     overflow-y: auto;
 }
 
 #purchaseUnitsMenu {
-    max-height: 280px;
-    overflow-y: auto;
+    max-height: 300px;
+    overflow: hidden;
 }
 
 .purchase-unit-item {

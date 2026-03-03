@@ -440,7 +440,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
                 
                 string fileName = request.ProformaInvoiceNo > 0 ?
                     $"ProformaInvoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf" :
@@ -455,7 +456,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Invoice Report Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -730,12 +731,7 @@ namespace ERPAdmin.ApiControllers
                 leftTable.WidthPercentage = 100;
 
                 // Feedback image (emoji + stars combined PNG)
-                string imgPath = Path.Combine(
-                                    _env.WebRootPath,
-                                    "assets2",
-                                    "img",
-                                    "feedback-stars.png"
-                                );
+                string imgPath = Path.Combine(_env.WebRootPath, "assets2", "img", "feedback-stars.png");
 
                 Image feedbackImg = Image.GetInstance(imgPath);
                 feedbackImg.ScaleToFit(300f, 200f);
@@ -963,14 +959,17 @@ namespace ERPAdmin.ApiControllers
 
                 /* ================= SAVE ================= */
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
-                string fileName = $"BookingEvent_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string fileName = $"Booking_EventReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                Utils.deleteOldFiles(folder, "Booking_EventReport_*.pdf", 60);
+
                 System.IO.File.WriteAllBytes(Path.Combine(folder, fileName), stream.ToArray());
 
                 response.status = "Success";
                 response.message = "PDF Generated Successfully";
-                response.data = new { FileUrl = $"{Request.Scheme}://{Request.Host}/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
                 return Ok(response);
             }
             catch (Exception ex)
@@ -1204,7 +1203,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Booking_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -1216,7 +1216,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -1298,7 +1298,7 @@ namespace ERPAdmin.ApiControllers
                 worksheet.Columns().AdjustToContents();
 
                 // === Save File ===
-                string reportsDir = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "reports");
+                string reportsDir = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(reportsDir))
                     Directory.CreateDirectory(reportsDir);
 
@@ -1309,7 +1309,7 @@ namespace ERPAdmin.ApiControllers
 
                 workbook.SaveAs(filePath);
 
-                string fileUrl = $"{domainUrl}/uploads/org/{domain}/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Booking Report Excel generated successfully.";
@@ -1518,7 +1518,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"DailySales_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -1530,7 +1531,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -1617,7 +1618,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== Save =====
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "DailySales_Report_*.xlsx");
 
@@ -1628,7 +1630,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Daily Sales Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -1834,7 +1836,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"MonthlySales_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -1846,7 +1849,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -1932,7 +1935,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== Save =====
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "MonthlySales_Report_*.xlsx");
 
@@ -1941,7 +1945,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Monthly Sales Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -2157,7 +2161,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"GST_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -2169,7 +2174,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -2265,7 +2270,8 @@ namespace ERPAdmin.ApiControllers
                 ws.Columns().AdjustToContents();
 
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"GST_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
@@ -2275,7 +2281,7 @@ namespace ERPAdmin.ApiControllers
                     wb.SaveAs(stream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Excel Generated";
@@ -2484,7 +2490,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -2496,7 +2503,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -2581,18 +2588,18 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "RevenueLoss_Report_*.xlsx");
 
-                string fileName =
-                    $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string fileName = $"RevenueLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
                 workbook.SaveAs(Path.Combine(folder, fileName));
 
                 response.status = "Success";
                 response.message = "Revenue Loss Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -2797,7 +2804,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Purchase_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -2809,7 +2817,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -2895,7 +2903,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Purchase_Report_*.xlsx");
 
@@ -2904,7 +2913,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Purchase Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -3110,7 +3119,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -3122,7 +3132,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -3218,7 +3228,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE FILE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
@@ -3230,7 +3241,7 @@ namespace ERPAdmin.ApiControllers
                     wb.SaveAs(stream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Excel Generated";
@@ -3438,7 +3449,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Expense_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -3449,7 +3461,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     stream.WriteTo(fileStream);
                 }
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -3538,7 +3550,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== SAVE =====
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Expense_Report_*.xlsx");
 
@@ -3547,7 +3560,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Expense Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -3752,7 +3765,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Expense_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -3763,7 +3777,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     stream.WriteTo(fileStream);
                 }
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -3852,7 +3866,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ===== SAVE =====
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Expense_Report_*.xlsx");
 
@@ -3861,7 +3876,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Expense Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -4067,7 +4082,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"ProfitLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -4079,7 +4095,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -4166,7 +4182,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"ProfitLoss_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
@@ -4174,7 +4191,7 @@ namespace ERPAdmin.ApiControllers
                 workbook.SaveAs(filePath);
 
                 response.status = "Success";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
                 return Ok(response);
             }
             catch (Exception ex)
@@ -4379,7 +4396,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Cashflow_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -4391,7 +4409,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -4478,7 +4496,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Cashflow_Report_*.xlsx");
 
@@ -4487,7 +4506,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Cashflow Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }
@@ -4692,7 +4711,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = $"Modification_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -4704,7 +4724,7 @@ namespace ERPAdmin.ApiControllers
                     stream.WriteTo(fileStream);
                 }
 
-                string fileUrl = $"/reports/{fileName}";
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
 
                 response.status = "Success";
                 response.message = "Report Generated";
@@ -4791,7 +4811,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Modification_Report_*.xlsx");
 
@@ -4800,7 +4821,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "Modification Excel Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }

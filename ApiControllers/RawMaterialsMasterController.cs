@@ -58,8 +58,6 @@ namespace ERPAdmin.ApiControllers
                     obj.Name = row["Name"]?.ToString() ?? "";
 
                     obj.ConsumptionUnitId = row["ConsumptionUnitId"] == DBNull.Value ? 0 : Convert.ToInt64(row["ConsumptionUnitId"]);
-                    obj.OnePurchaseUnitEquals_ConsumptionUnitQty =
-                        row["OnePurchaseUnitEquals_ConsumptionUnitQty"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(row["OnePurchaseUnitEquals_ConsumptionUnitQty"]);
 
                     obj.ItemCategoryId = row["ItemCategoryId"] == DBNull.Value ? 0 : Convert.ToInt64(row["ItemCategoryId"]);
                     obj.ItemCategoryName = row["ItemCategoryName"] == DBNull.Value ? string.Empty : Convert.ToString(row["ItemCategoryName"]);
@@ -152,15 +150,11 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    // ===============================
-                    // 1️⃣ BASIC FIELDS
-                    // ===============================
+                    // == 1️ BASIC FIELDS ====
                     cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
                     cmd.Parameters.Add("@Name", SqlDbType.NVarChar, 200).Value = model.Name ?? "";
 
-                    // ===============================
-                    // 2️⃣ JSON FIELDS
-                    // ===============================
+                    // == 2️ JSON FIELDS ==
                     cmd.Parameters.Add("@JSON_PurchaseUnits", SqlDbType.NVarChar)
                         .Value = (model.JSON_PurchaseUnits != null && model.JSON_PurchaseUnits.Any())
                             ? JsonConvert.SerializeObject(model.JSON_PurchaseUnits)
@@ -176,83 +170,47 @@ namespace ERPAdmin.ApiControllers
                             ? JsonConvert.SerializeObject(model.JSON_RestockLevel)
                             : DBNull.Value;
 
-                    // ===============================
-                    // 3️⃣ CONSUMPTION UNIT
-                    // ===============================
                     cmd.Parameters.Add("@ConsumptionUnitId", SqlDbType.BigInt).Value = model.ConsumptionUnitId;
-                    cmd.Parameters.Add("@OnePurchaseUnitEquals_ConsumptionUnitQty", SqlDbType.Decimal).Value =
-                        (object)model.OnePurchaseUnitEquals_ConsumptionUnitQty ?? DBNull.Value;
 
-                    // ===============================
-                    // 4️⃣ CATEGORY
-                    // ===============================
+                    // == 3 CATEGORY ===
                     cmd.Parameters.Add("@ItemCategoryId", SqlDbType.BigInt).Value = model.ItemCategoryId;
 
-                    // ===============================
-                    // 5️⃣ PRICES
-                    // ===============================
-                    cmd.Parameters.Add("@PurchasePrice", SqlDbType.Decimal).Value =
-                        (object)model.PurchasePrice ?? DBNull.Value;
-                    cmd.Parameters.Add("@TransferPrice", SqlDbType.Decimal).Value =
-                        (object)model.TransferPrice ?? DBNull.Value;
-                    cmd.Parameters.Add("@ReconciliationPrice", SqlDbType.Decimal).Value =
-                        (object)model.ReconciliationPrice ?? DBNull.Value;
+                    // == 4 PRICES ==
+                    cmd.Parameters.Add("@PurchasePrice", SqlDbType.Decimal).Value = (object)model.PurchasePrice ?? DBNull.Value;
+                    cmd.Parameters.Add("@TransferPrice", SqlDbType.Decimal).Value = (object)model.TransferPrice ?? DBNull.Value;
+                    cmd.Parameters.Add("@ReconciliationPrice", SqlDbType.Decimal).Value = (object)model.ReconciliationPrice ?? DBNull.Value;
 
-                    // ===============================
-                    // 6️⃣ TAXES
-                    // ===============================
-                    cmd.Parameters.Add("@TaxTypeId", SqlDbType.BigInt).Value =
-                        (object)model.TaxTypeId ?? DBNull.Value;
-                    cmd.Parameters.Add("@TaxPercent", SqlDbType.Decimal).Value =
-                        (object)model.TaxPercent ?? DBNull.Value;
-                    cmd.Parameters.Add("@ExciseDutyAmount", SqlDbType.Decimal).Value =
-                        (object)model.ExciseDutyAmount ?? DBNull.Value;
+                    // === 5 TAXES ===
+                    cmd.Parameters.Add("@TaxTypeId", SqlDbType.BigInt).Value = (object)model.TaxTypeId ?? DBNull.Value;
+                    cmd.Parameters.Add("@TaxPercent", SqlDbType.Decimal).Value = (object)model.TaxPercent ?? DBNull.Value;
+                    cmd.Parameters.Add("@ExciseDutyAmount", SqlDbType.Decimal).Value = (object)model.ExciseDutyAmount ?? DBNull.Value;
 
-                    // ===============================
-                    // 7️⃣ STOCK LEVELS
-                    // ===============================
-                    cmd.Parameters.Add("@MinStockUnitId", SqlDbType.BigInt).Value =
-                        (object)model.MinStockUnitId ?? DBNull.Value;
-                    cmd.Parameters.Add("@MinStockLevel", SqlDbType.Decimal).Value =
-                        (object)model.MinStockLevel ?? DBNull.Value;
-                    cmd.Parameters.Add("@AtParStockUnitId", SqlDbType.BigInt).Value =
-                        (object)model.AtParStockUnitId ?? DBNull.Value;
-                    cmd.Parameters.Add("@AtParStockLevel", SqlDbType.Decimal).Value =
-                        (object)model.AtParStockLevel ?? DBNull.Value;
+                    // === 6 STOCK LEVELS ===
+                    cmd.Parameters.Add("@MinStockUnitId", SqlDbType.BigInt).Value = (object)model.MinStockUnitId ?? DBNull.Value;
+                    cmd.Parameters.Add("@MinStockLevel", SqlDbType.Decimal).Value = (object)model.MinStockLevel ?? DBNull.Value;
+                    cmd.Parameters.Add("@AtParStockUnitId", SqlDbType.BigInt).Value = (object)model.AtParStockUnitId ?? DBNull.Value;
+                    cmd.Parameters.Add("@AtParStockLevel", SqlDbType.Decimal).Value = (object)model.AtParStockLevel ?? DBNull.Value;
 
                     cmd.Parameters.Add("@AllowReStockLevel", SqlDbType.Bit).Value = model.AllowReStockLevel;
 
-                    // ===============================
-                    // 8️⃣ BARCODE / HSN / BRAND
-                    // ===============================
-                    cmd.Parameters.Add("@Barcode", SqlDbType.NVarChar, 200).Value =
-                        (object)model.Barcode ?? DBNull.Value;
-                    cmd.Parameters.Add("@HSNCode", SqlDbType.NVarChar, 50).Value =
-                        (object)model.HSNCode ?? DBNull.Value;
+                    // === 7 BARCODE / HSN / BRAND ===
+                    cmd.Parameters.Add("@Barcode", SqlDbType.NVarChar, 200).Value = (object)model.Barcode ?? DBNull.Value;
+                    cmd.Parameters.Add("@HSNCode", SqlDbType.NVarChar, 50).Value = (object)model.HSNCode ?? DBNull.Value;
                     cmd.Parameters.Add("@ExclusiveToRestaurant", SqlDbType.Bit).Value = model.ExclusiveToRestaurant;
                     cmd.Parameters.Add("@IsExpiry", SqlDbType.Bit).Value = model.IsExpiry;
                     cmd.Parameters.Add("@AllowDecimalQty", SqlDbType.Bit).Value = model.AllowDecimalQty;
-                    cmd.Parameters.Add("@Description", SqlDbType.NVarChar).Value =
-                        (object)model.Description ?? DBNull.Value;
-                    cmd.Parameters.Add("@NormalLossPercent", SqlDbType.Decimal).Value =
-                        (object)model.NormalLossPercent ?? DBNull.Value;
-                    cmd.Parameters.Add("@QuantityInGmMl", SqlDbType.Decimal).Value =
-                        (object)model.QuantityInGmMl ?? DBNull.Value;
-                    cmd.Parameters.Add("@GTIN", SqlDbType.NVarChar, 50).Value =
-                        (object)model.GTIN ?? DBNull.Value;
-                    cmd.Parameters.Add("@Brand", SqlDbType.NVarChar, 200).Value =
-                        (object)model.Brand ?? DBNull.Value;
+                    cmd.Parameters.Add("@Description", SqlDbType.NVarChar).Value = (object)model.Description ?? DBNull.Value;
+                    cmd.Parameters.Add("@NormalLossPercent", SqlDbType.Decimal).Value = (object)model.NormalLossPercent ?? DBNull.Value;
+                    cmd.Parameters.Add("@QuantityInGmMl", SqlDbType.Decimal).Value = (object)model.QuantityInGmMl ?? DBNull.Value;
+                    cmd.Parameters.Add("@GTIN", SqlDbType.NVarChar, 50).Value = (object)model.GTIN ?? DBNull.Value;
+                    cmd.Parameters.Add("@Brand", SqlDbType.NVarChar, 200).Value = (object)model.Brand ?? DBNull.Value;
 
                     cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = model.IsActive;
 
-                    // ===============================
-                    // 9️⃣ ACTION BY
-                    // ===============================
+                    // ==== 8 ACTION BY ====
                     cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
 
-                    // ===============================
-                    // 🔟 EXECUTE
-                    // ===============================
+                    // === 9 EXECUTE ===
                     con.Open();
                     object result = cmd.ExecuteScalar();
                     con.Close();

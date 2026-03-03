@@ -130,62 +130,6 @@ $("#delete-record").on("click", function () {
 
 // Load process list from API
 var last_processIndexNo = 0;
-function loadProcessList11() {
-    ////showLoader()();
-    $.ajax({
-        url: "/api/Process/GetProcessList",   // adjust path if needed
-        type: "GET",
-        success: function (response) {
-            console.log("process response:", response);
-            if (response.status === "Success") {
-                let rows = "";
-                let srNo = 1;
-                let options = `<option value="0">-- Select --</option>`; // default option
-
-                $.each(response.data, function (index, item) {
-                    rows += `
-                            <tr data-id="${item.Id}">
-                                <td class="text-center">${srNo++}</td>
-                                <td>${item.Name}</td>
-                                <td class="text-center">${item.IndexNo}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-btn">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-action-xs delete-btn">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    // dropdown options
-                    options += `<option value="${item.Id}">${item.Name}</option>`;
-                    last_processIndexNo = item.IndexNo;
-                    //console.log("loop - last_processIndexNo:", last_processIndexNo);
-                });
-                //console.log("process options:", options);
-                $("#processTable tbody").html(rows);
-                $("#dealProcess").html(options);
-            } else {
-                $("#processTable tbody").html(
-                    `<tr><td colspan="3" class="text-center text-danger">No records found</td></tr>`
-                );
-                $("#dealProcess").html(`<option value="0">No Process Found</option>`); // reset dropdown
-            }
-        },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching process list.",
-                confirmButtonText: "OK",
-            });
-        },
-        complete: function () {
-            //hideLoader();
-        }
-    });
-}
 
 function loadProcessList() {
     $.ajax({
@@ -219,25 +163,31 @@ function renderProcessTable(data) {
     $("#tableMain table").DataTable({
         data: data,
         columns: [
-            { data: "srno", title: "Sr. No." },
+            { data: "srno", title: "#" },
             { data: "Name", title: "Name" },
-            { data: "IndexNo", title: "Index No." },
+            { data: "IndexNo", title: "Steps" },
             {
                 data: null,
                 title: "Actions",
                 render: function (data, type, row) {
+
+                    // If confirmed or lost → do not allow edit
+                    let hideEdit = row.IsConfirmed || row.IsLost;
+
                     return `
-                            <button class="btn btn-outline-warning btn-sm edit-btn"
+                        ${!hideEdit ? `
+                            <button class="btn btn-outline-warning btn-xs edit-btn"
                                     data-id="${row.Id}">
                                 <i class="fa fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm btn-delete"
-                                    data-id="${row.Id}">
-                                <i class="fa fa-trash"></i>
-                            </button>`; 
-                }
+                            </button>` : ``}
 
-            }
+                        <button class="btn btn-outline-danger btn-xs btn-delete d-none"
+                                data-id="${row.Id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    `;
+                }
+            }            
         ],
         pageLength: 10,
         ordering: true,

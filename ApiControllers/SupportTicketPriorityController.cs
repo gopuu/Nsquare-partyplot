@@ -68,7 +68,7 @@ namespace ERPAdmin.ApiControllers
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
 
                 return Ok(apiResponse); // 🔥 Always 200 OK
             }
@@ -165,7 +165,7 @@ namespace ERPAdmin.ApiControllers
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
 
                 return Ok(apiResponse);
             }

@@ -215,7 +215,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("GetBookingCalendar_VendorWorkOrder_SlotMaster")]
-        public IActionResult GetBookingCalendar_VendorWorkOrder_SlotMaster([FromBody] GetSlotMasterRequest request)
+        private IActionResult GetBookingCalendar_VendorWorkOrder_SlotMaster([FromBody] GetSlotMasterRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<SlotMasterResponse> list = new();

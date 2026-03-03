@@ -204,7 +204,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "Inventory" ? "active" : "")" href="/Inventory">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="archive"></span>Manage Inventory
+                                        <span class="me-2 uil" data-feather="archive"></span>Inventory & Closing Stock
                                     </div>
                                 </a>
                             </li>
@@ -549,7 +549,7 @@
                                 <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
-                                        <span><span class="uil fs-8 me-2 uil-setting"></span>Masters</span>
+                                        <span><span class="uil fs-8 me-2 uil-database"></span>Masters</span>
                                     </div>
                                 </a>
                                 <ul class="dropdown-menu modules-mega-menu py-3">
@@ -579,14 +579,9 @@
                                                     <span class="menu-text">Frequency Master</span>
                                                 </a>
 
-                                                <a class="dropdown-link general_masterMenu" href="/InvoiceTemplateMaster">
-                                                    <span class="me-2" data-feather="file-text"></span>
-                                                    <span class="menu-text">Invoice Template Master</span>
-                                                </a>
-
                                                 <a class="dropdown-link general_masterMenu" href="/ProcessMaster">
                                                     <span class="me-2" data-feather="git-branch"></span>
-                                                    <span class="menu-text">Process Master</span>
+                                                    <span class="menu-text">Sales Funnel Master</span>
                                                 </a>
 
                                                 <a class="dropdown-link general_masterMenu" href="/State">
@@ -759,9 +754,17 @@
                                 </ul>
                             </li>
                             <li>
+                                <a class="dropdown-item @(currentController == "Settings" ? "active" : "")" href="/Settings">
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2 uil" data-feather="settings"></span>Settings
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="briefcase"></span>Help
+                                        <span class="me-2 uil" data-feather="help-circle"></span>Help
+
                                     </div>
                                 </a>
                             </li>

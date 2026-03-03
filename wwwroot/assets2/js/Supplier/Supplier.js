@@ -200,7 +200,6 @@
             ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
-        $('#btn-loader').show();
         $.ajax({
             url: "/api/Supplier/DeleteSupplier",
             type: "POST",
@@ -234,11 +233,8 @@
                 //$('#btn-loader').hide();
                 $('#deleteRecordModal').modal('hide');
             },
-            error: function (xhr) {
+            error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "Supplier Delete Error");
-            },
-            complete: function () {
-                $('#btn-loader').hide(); // Ensure loader is hidden in any case
             }
         });
         $('#deleteRecordModal').modal('hide');

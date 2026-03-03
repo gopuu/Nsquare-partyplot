@@ -67,7 +67,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <div class="modal-header bg-warning text-white">
+            <div class="modal-header bg-warning text-white py-2">
                 <h5 class="modal-title text-white" id="addEventModalTitle">Add Raw Material</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -134,7 +134,7 @@
                                         Select Units
                                     </button>
 
-                                    <div class="dropdown-menu p-2 w-100" id="purchaseUnitsMenu" style="max-height: 280px; overflow-y: auto;">
+                                    <div class="dropdown-menu p-2 w-100" id="purchaseUnitsMenu">
 
                                         <!-- SEARCH BOX -->
                                         <input type="text" id="purchaseUnitSearch" class="form-control form-control-sm mb-2" placeholder="Search...">
@@ -157,27 +157,19 @@
                             <div class="col-md-6">
                                 <label class="form-label">Consumption Unit</label>
                                 <select id="consumptionUnitId" class="form-select">
-                                    <option value="">Select Unit</option>
+                                    <option value="0">Select Unit</option>
                                 </select>
                             </div>
 
-                            <div class="col-md-12 d-none" id="conversionRow">
-                                <label class="form-label">
-                                    Conversion
-                                    <i class="fa fa-info-circle text-primary ms-1"
-                                       data-bs-toggle="tooltip"
-                                       data-bs-placement="right"
-                                       title="Purchase unit & Consumption Unit of Milk are as follows.">
-                                    </i>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text" id="purchaseUnitLbl">Piece</span>
-                                    <span class="input-group-text">=</span>
-                                    <input type="number" step="0.01" id="purchaseEqualsQty" class="form-control">
-                                    <span class="input-group-text" id="consumptionUnitLbl">Dish</span>
+                            <div class="col-md-12 d-none" id="conversionContainer">
+                                <label class="form-label fw-semibold">Conversion Rules</label>
+                                <small class="text-muted d-block mb-2">
+                                    Define conversion from Purchase Unit to Consumption Unit.
+                                </small>
+                                <div id="conversionScrollArea">
+                                    <div id="conversionRows"></div>
                                 </div>
                             </div>
-
                         </div>
 
                     </div>

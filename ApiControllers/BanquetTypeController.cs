@@ -73,7 +73,7 @@ namespace ERPAdmin.ApiControllers
                 //Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
@@ -119,7 +119,7 @@ namespace ERPAdmin.ApiControllers
                 //Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }

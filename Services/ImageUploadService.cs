@@ -14,16 +14,28 @@ namespace ERPAdmin.Services
 {
     public class ImageUploadService
     {
+        private readonly IWebHostEnvironment _env;
+        public ImageUploadService(IWebHostEnvironment env) { 
+            _env = env;
+        }
         public string UploadImage(string base64image, string folderName, string fileName, string fileType)
         {
+            //Restrict Extensions
+            var allowedTypes = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
+            if (!allowedTypes.Contains(fileType.ToLower()))
+            {
+                throw new Exception("Invalid file type.");
+            }
+            folderName = folderName?.TrimStart('/', '\\');
             // Define the folder path where the image will be saved
-            string uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
-
+            //string uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
+            string uploadFolder = Path.Combine(_env.WebRootPath, "uploads", folderName);
             // Ensure the directory exists
             if (!Directory.Exists(uploadFolder))
             {
                 Directory.CreateDirectory(uploadFolder);
             }
+
             if (!string.IsNullOrEmpty(base64image))
             {
                 try
@@ -202,10 +214,9 @@ namespace ERPAdmin.Services
 
         public void DeleteImages(string folderPath, string fileNamePrefix)
         {
-            // Define the folder path where the image will be saved
-            string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderPath);
-            //string fullPath = Path.Combine(Directory.GetCurrentDirectory(), folderPath);
-
+            folderPath = folderPath?.TrimStart('/', '\\');
+            //string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderPath);
+            string fullPath = Path.Combine(_env.WebRootPath, "uploads", folderPath);
             if (Directory.Exists(fullPath))
             {
                 var filesToDelete = Directory.GetFiles(fullPath, $"{fileNamePrefix}*"); // Find matching files

@@ -7,7 +7,6 @@
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
 @section Styles {
     <link href="~/assets2/css/customdatatable/customdatatable.css" asp-append-version="true" rel="stylesheet" />
-
 }
 
 <!-- MAIN -->
@@ -303,11 +302,8 @@ $(document).ready(function () {
         //$('#btn-loader').hide();
         $('#deleteRecordModal').modal('hide');
     },
-    error: function (xhr) {
-        handleApiError(xhr, status, error, "Delete PaymentMode Error")
-    },
-    complete: function () {
-        $('#btn-loader').hide(); // Ensure loader is hidden in any case
+    error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Delete PaymentMode Error")
     }
     });
     $('#deleteRecordModal').modal('hide');

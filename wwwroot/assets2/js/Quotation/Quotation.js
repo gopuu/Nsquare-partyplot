@@ -224,6 +224,23 @@
     $("#decorationAmount, #soundAmount, #projectorAmount, #banquetRent").on("input", function () {
             calculateTotals();
     });
+
+    // On Slot Change
+    $(document).on("change", "#slotId", function () {
+        const selectedOption = $(this).find("option:selected");
+
+        const startTime = selectedOption.data("start");
+        const endTime = selectedOption.data("end");
+
+        if ($(this).val() != "0") {
+            $("#startTime").val(startTime || "");
+            $("#endTime").val(endTime || "");
+        } else {
+            $("#startTime").val("");
+            $("#endTime").val("");
+        }
+    });
+
 });
 
 function calculateTotals() {
@@ -635,9 +652,9 @@ function fetchHallDetails(banquetId = 0) {
     });
 }
 function loadSlotDropdown() {
-    var payload = { Id: 0 };
+    var payload = { Id: 0, IsActive: true };
     $.ajax({
-        url: "/api/BookingCalendar_VendorWorkOrder/GetBookingCalendar_VendorWorkOrder_SlotMaster",
+        url: "/api/SlotMaster/GetSlotList",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
@@ -646,7 +663,7 @@ function loadSlotDropdown() {
             const $slotDropdowns = $("#slotId");
             $slotDropdowns.html(`<option value="0">--Select--</option>`);
             response.data.forEach(s => {
-                $slotDropdowns.append(`<option value="${s.Id}">${s.Name}</option>`);
+                $slotDropdowns.append(`<option value="${s.Id}" data-start="${s.StartTime}" data-end="${s.EndTime}">${s.Name} (${s.Code})</option>`);
             });
         },
         error: function (xhr, status, error) {

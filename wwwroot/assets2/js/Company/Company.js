@@ -75,7 +75,6 @@ async function loadAndSetCity(stateId, cityId) {
 
 // 1. Get & Fill Company Profile
 function getCompanyProfile() {
-    //showLoader();
     $.ajax({
         url: `/api/Company_ProfileAndPropertyDetails/GetCompanyProfileAndPropertyDetailsList`,
         type: "GET",
@@ -128,11 +127,6 @@ function getCompanyProfile() {
                 $("#PropertyDetails_MonopolyPreference").val(d.MonopolyPreference);
                 $("#PropertyDetails_HallRatesNegotiable").prop("checked", d.HallRatesNegotiable);
                 $("#PropertyDetails_FoodPreference").prop("checked", d.FoodPreference);
-                $("#PropertyDetails_FullDaySlot").prop("checked", d.FullDaySlot);
-                $("#PropertyDetails_MorningSlot").prop("checked", d.MorningSlot);
-                $("#PropertyDetails_AfternoonSlot").prop("checked", d.AfternoonSlot);
-                $("#PropertyDetails_EveningSlot").prop("checked", d.EveningSlot);
-                $("#PropertyDetails_OvernightSlot").prop("checked", d.OvernightSlot);
                 $("#PropertyDetails_searchLocation").val(d.SearchLocation);
                 $("#PropertyDetails_tnc").val(d.AboutUsAndTnC);
 
@@ -222,7 +216,7 @@ function getCompanyProfile() {
                 // Example: during edit
                 //console.log("url:", d.CompanyPanCardUpload);
 
-                const previewImg = document.getElementById("imageModal");
+                const previewImg = document.getElementById("PanCardPreview");
                 const fullViewImg = document.getElementById("modalImage");
 
                 // if API gives full URL, use it directly
@@ -265,11 +259,8 @@ function getCompanyProfile() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyProfileAndPropertyDetailsList');
-            Swal.fire("Error", "Failed to fetch company profile.", "error");
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to fetch company profile');
+            //Swal.fire("Error", "Failed to fetch company profile.", "error");
         }
     });
 }
@@ -288,7 +279,6 @@ async function saveCompanyProfileData() {
 }
 
 function saveCompanyProfileDataToApi(panCardImage) {
-    //showLoader();
     const payload = {
         Id: companyId,
         // Company Profile Data
@@ -318,26 +308,18 @@ function saveCompanyProfileDataToApi(panCardImage) {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess();
+                getCompanyProfile();
                 if (companyId === 0 && res.data?.Id) {
                     companyId = res.data.Id; // Update company ID if it was a new record
                 }
-            } else {
+            }
+            else {
                 Swal.fire("Error", res.message || "Failed to save data", "error");
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyProfile');
-            Swal.fire("Error", "Failed to save data. Please try again.", "error");
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed Save Company Profile');
         }
     });
 }
@@ -364,11 +346,6 @@ function saveCompanyPropertyDataToApi() {
         MonopolyPreference: $("#PropertyDetails_MonopolyPreference").val(),
         HallRatesNegotiable: $("#PropertyDetails_HallRatesNegotiable").is(":checked"),
         FoodPreference: $("#PropertyDetails_FoodPreference").is(":checked"),
-        FullDaySlot: $("#PropertyDetails_FullDaySlot").is(":checked"),
-        MorningSlot: $("#PropertyDetails_MorningSlot").is(":checked"),
-        AfternoonSlot: $("#PropertyDetails_AfternoonSlot").is(":checked"),
-        EveningSlot: $("#PropertyDetails_EveningSlot").is(":checked"),
-        OvernightSlot: $("#PropertyDetails_OvernightSlot").is(":checked"),
         Facilities: getFacilitiesArray(),
         Rules: getRulesArray(),
         SearchLocation: $("#PropertyDetails_searchLocation").val(),
@@ -399,11 +376,105 @@ function saveCompanyPropertyDataToApi() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyPropertyDetails');
-            Swal.fire("Error", "Failed to save data. Please try again.", "error");
+            handleApiError(xhr, status, error, 'Failed to save property data.');
+        }
+    });
+}
+
+//SAVE SLOST MASTER
+$("#btnSaveSlots").click(function () {
+    //Save Slots
+    let slots = [];
+    $("#slotContainer .time-slot").each(function () {
+        slots.push({
+            Id: parseInt($(this).find(".slot-id").val()) || 0,
+            Name: $(this).find(".slot-name").val().trim(),
+            Code: $(this).find(".slot-code").val().trim(),
+            StartTime: $(this).find(".slot-start").val(),
+            EndTime: $(this).find(".slot-end").val(),
+            IsActive: $(this).find(".slot-active").is(":checked")
+        });
+    });
+
+    var payload = {
+        Slots: slots,
+        ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
+    };
+    console.log("payload:", payload);
+
+    $.ajax({
+        url: "/api/SlotMaster/SaveSlot",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status === "Success") {
+                handleApiSuccess();
+                loadSlots();
+            }
+            else {
+                Swal.fire("Saved Failed", res.message, "info");
+            }
         },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+        error: function (xhr, state, error) {
+            handleApiError(xhr, state, error, "Save Slot Failed");
+        }
+    });
+
+});
+
+//get data from API
+function getSettingsData() {
+    $.ajax({
+        url: "/api/Settings/GetSettings",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            //data = response; // Store the fetched data
+            console.log("response fetchData:", response);
+            var data = response.data;
+            data = data.filter(item =>
+                item.Name?.trim().toLowerCase() === "Booking Grace Time (in Mins)".toLowerCase()
+            );
+
+            if (data.length > 0) {
+
+                const graceMins = parseInt(data[0].Value) || 0;
+
+                let hours = Math.floor(graceMins / 60);
+                let minutes = graceMins % 60;
+
+                let hrText = "";
+
+                if (hours > 0 && minutes > 0) {
+                    hrText = `${hours} hr ${minutes} min`;
+                }
+                else if (hours > 0) {
+                    hrText = `${hours} hr`;
+                }
+                else {
+                    hrText = `${minutes} min`;
+                }
+
+                let explanation =
+                    "Grace Time is extra buffer time automatically added after each booking " +
+                    "to allow cleaning and preparation before the next event. " +
+                    "You can modify this duration from the Settings page.";
+
+                $("#graceTimeLabel")
+                    .text(`Grace Time: ${graceMins} mins (${hrText})`)
+                    .attr("title", explanation);
+
+                // Initialize tooltip
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        },
+        error: function (xhr, statue, error) {
+            handleApiError(xhr, statue, error, "Fetch Settings Failed");
         }
     });
 }
@@ -460,50 +531,42 @@ function addBookingStepWithValue(value = '') {
 }
 
 const fileInput = document.getElementById("CompanyProfile_PanCardUpload");
-const previewImg = document.getElementById("imageModal");
+const previewImg = document.getElementById("PanCardPreview");   // ✅ correct id
 const fullViewImg = document.getElementById("modalImage");
 
 fileInput.addEventListener("change", function () {
     const file = this.files[0];
-    if (file) {
-        const reader = new FileReader();
 
-        reader.onload = function (e) {
-            if (file.type === "application/pdf") {
-                // show pdf icon if pdf
-                previewImg.src = "/assets2/img/pdf_icon.png";
-                fullViewImg.src = "/assets2/img/pdf_icon.png";
-            } else {
-                previewImg.src = e.target.result;
-                fullViewImg.src = e.target.result;
-            }
-        };
-
-        reader.readAsDataURL(file);
-    } else {
-        // reset to default if no file
+    if (!file) {
         previewImg.src = "/assets2/img/image_icon.png";
         fullViewImg.src = "";
+        return;
     }
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        if (file.type === "application/pdf") {
+            previewImg.src = "/assets2/img/pdf_icon.png";
+            fullViewImg.src = "/assets2/img/pdf_icon.png";
+        } else {
+            previewImg.src = e.target.result;
+            fullViewImg.src = e.target.result;
+        }
+    };
+
+    reader.readAsDataURL(file);
 });
 
 // Show modal on preview click
 previewImg.addEventListener("click", function () {
     if (fullViewImg.src) {
-        new bootstrap.Modal(document.getElementById("panCardModal")).show();
+        new bootstrap.Modal(document.getElementById("imageModal")).show();
     }
 });
 
 // Initialize when page loads
 $(document).ready(function () {
-    console.log('DOM loaded');
-
-    // Check if Bootstrap is loaded
-    if (typeof bootstrap === 'undefined') {
-        console.error('Bootstrap not loaded!');
-    } else {
-        console.log('Bootstrap loaded successfully');
-    }
 
     // Test tab functionality
     const testTab = document.querySelector('#companyTabs .nav-link');
@@ -514,6 +577,8 @@ $(document).ready(function () {
     }
 
     // Load data if companyId is set
+    loadSlots();
+    getSettingsData();
     Promise.all([
         loadBanquetTypes(),
         loadStates(),
@@ -534,6 +599,11 @@ $(document).ready(function () {
                 text: 'Failed to load required data. Please refresh the page.'
             });
         });
+
+    //addBookingStep
+    if ($("#bookingStepContainer .booking-step").length === 0) {
+        addBookingStep();
+    }
 
     // Initialize map
     //initMapWithLocation();
@@ -578,16 +648,7 @@ $(document).ready(function () {
                 loadBanquetTypes();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveBanquetType');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error while saving data.',
-                });
-
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving banquet type data');
             }
         });
     });
@@ -635,17 +696,8 @@ $(document).ready(function () {
                         loadBanquetTypes();
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteBanquetType');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting banquet data');
                     }
-
                 });
             }
         });
@@ -697,15 +749,7 @@ $(document).ready(function () {
                 //$('#stateModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveState');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error while saving data.',
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving state data');
             }
         });
     });
@@ -762,15 +806,7 @@ $(document).ready(function () {
                         loadStates();
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteState');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting state data');
                     }
                 });
             }
@@ -834,15 +870,7 @@ $(document).ready(function () {
                 //$('#cityModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveCity');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.message || 'Error while saving data.',
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving city data');
             }
         });
     });
@@ -896,15 +924,7 @@ $(document).ready(function () {
                         loadCities(stateId);
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteCity');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting City');
                     }
                 });
             }
@@ -963,15 +983,7 @@ $(document).ready(function () {
                 //$('#localityModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveLocality');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.message || 'Error while saving data.',
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving Locality data');
             }
         });
     });
@@ -1025,15 +1037,7 @@ $(document).ready(function () {
                         loadLocalities(cityId);
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteLocality');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting Locality data');
                     }
                 });
             }
@@ -1080,15 +1084,7 @@ $(document).ready(function () {
                 //$('#propertyTypeModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SavePropertyType');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.message || 'Error while saving data.',
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving PropertyType data');
             }
         });
     });
@@ -1137,15 +1133,7 @@ $(document).ready(function () {
                         loadPropertyTypes();
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeletePropertyType');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting PropertyType data');
                     }
                 });
             }
@@ -1192,15 +1180,7 @@ $(document).ready(function () {
                 //$('#monopolyPreferenceModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveMonopolyPreference');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.message || 'Error while saving data.',
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving MonopolyPreference data');
             }
         });
     });
@@ -1248,15 +1228,7 @@ $(document).ready(function () {
                         loadMonopolyPreferences();
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteMonopolyPreference');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error while deleting data.',
-                        });
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting MonopolyPreference data');
                     }
                 });
             }
@@ -1310,17 +1282,9 @@ function loadBanquetTypes() {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetBanquetTypeList');
-                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
+                handleApiError(xhr, status, error, 'Error while loading BanquetTypeList');
+                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading BanquetTypeList');
                 reject(errMsg);
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
             }
         });
     });
@@ -1384,13 +1348,8 @@ function loadStates() {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetStateList');
-                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
+                handleApiError(xhr, status, error, 'Error while loading StateList');
+                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading StateList.');
                 reject(errMsg);
             },
             complete: function () {
@@ -1471,17 +1430,9 @@ function loadCities(stateId = 0, isFromMasterModalDropdown = 0) {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetCityList');
+                handleApiError(xhr, status, error, 'Error while loading CityList');
                 const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
                 reject(errMsg);
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
             }
         });
     });
@@ -1564,17 +1515,9 @@ function loadLocalities(cityId = 0, isFromMasterModalDropdown = 0) {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetLocalityList');
+                handleApiError(xhr, status, error, 'Error while loading LocalityList');
                 const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
                 reject(errMsg);
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
             }
         });
     });
@@ -1633,13 +1576,8 @@ function loadPropertyTypes() {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetPropertyTypeList');
-                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
+                handleApiError(xhr, status, error, 'Error while loading PropertyTypeList');
+                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading PropertyTypeList.');
                 reject(errMsg);
             },
             complete: function () {
@@ -1701,17 +1639,9 @@ function loadMonopolyPreferences() {
                 resolve();
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'GetMonopolyPreferenceList');
-                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading localities.');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                });
+                handleApiError(xhr, status, error, 'Error while loading MonopolyPreferenceList');
+                const errMsg = getErrorMessageFromResponse(xhr.responseText, 'Error while loading MonopolyPreferenceList.');
                 reject(errMsg);
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
             }
         });
     });
@@ -1745,7 +1675,95 @@ $("#CompanyProfile_AcceptGST").change(function () {
     }
 });
 
+function loadSlots() {
 
+    $.ajax({
+        url: "/api/SlotMaster/GetSlotList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, IsActive: false }),
+        success: function (res) {
+            console.log("res slot:", res);
+            if (res.status !== "Success") return;
+
+            let container = $("#slotContainer");
+            container.empty();
+
+            res.data.forEach(slot => {
+                let html = `
+                    <div class="time-slot border p-2 mb-3 rounded">
+                        <input type="hidden" class="slot-id" value="${slot.Id}" />
+
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                            <!-- Toggle -->
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input slot-active" type="checkbox" ${slot.IsActive ? "checked" : ""}>
+                            </div>
+
+                            <!-- Name -->
+                            <input type="text" class="form-control slot-name" value="${slot.Name}" style="max-width:180px;" />
+
+                            <!-- Code -->
+                            <input type="text" class="form-control slot-code" value="${slot.Code}" style="max-width:70px;" />
+
+                            <!-- Start Time -->
+                            <select class="form-select slot-start" style="max-width:130px;">
+                                ${generateTimeOptions(convertTo12HourFormat(slot.StartTime))}
+                            </select>
+
+                            <span class="fw-bold">-</span>
+
+                            <!-- End Time -->
+                            <select class="form-select slot-end" style="max-width:130px;">
+                                ${generateTimeOptions(convertTo12HourFormat(slot.EndTime))}
+                            </select>
+
+                        </div>
+                    </div>
+                `;
+                container.append(html);
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "fetch Slots Failed");
+        }
+    });
+}
+
+function generateTimeOptions(selectedValue = "") {
+    let options = "";
+    for (let hour = 0; hour < 24; hour++) {
+        for (let min = 0; min < 60; min += 15) {
+
+            let period = hour >= 12 ? "PM" : "AM";
+            let displayHour = hour % 12;
+            if (displayHour === 0) displayHour = 12;
+
+            let minute = min.toString().padStart(2, "0");
+
+            let value = `${displayHour.toString().padStart(2, "0")}:${minute}${period}`;
+            let selected = value === selectedValue ? "selected" : "";
+
+            options += `<option value="${value}" ${selected}>${value}</option>`;
+        }
+    }
+    return options;
+}
+
+function convertTo12HourFormat(time24) {
+    if (!time24) return "";
+
+    let [hour, minute] = time24.split(":");
+
+    hour = parseInt(hour);
+
+    let period = hour >= 12 ? "PM" : "AM";
+    let displayHour = hour % 12;
+    if (displayHour === 0) displayHour = 12;
+
+    return `${displayHour.toString().padStart(2, "0")}:${minute}${period}`;
+}
 //<!-- TAB 1-2: Company Profile & Property Details -- END -->
 
 //<!-- TAB 3: Hall Rent & Details -- START -->
@@ -1905,16 +1923,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             error: function (xhr, status, error) {
-                printAllErrors(xhr, status, error, 'SaveCompanyHallDetails');
-                //alert("Error while saving hall details!");
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error while saving hall details'
-                });
-            },
-            complete: function () {
-                //hideLoader();  // Hide after request completes (success or error)
+                handleApiError(xhr, status, error, 'Error while saving CompanyHallDetails');
             }
         });
     });
@@ -1984,16 +1993,7 @@ function fetchHallDetails() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyHallDetailsList');
-            //console.error('Error fetching hall details:', xhr.responseText);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: xhr.responseText || 'Failed to fetch hall details.'
-            });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to fetch CompanyHallDetailsList');
         }
     });
 }
@@ -2167,12 +2167,7 @@ function populateHallTable(halls) {
                         $(`#block${hallId}`).closest("tr").remove();
                     },
                     error: function (xhr, status, error) {
-                        printAllErrors(xhr, status, error, 'DeleteCompanyHallDetails');
-                        let msg = xhr.responseJSON?.message || "Error while deleting hall.";
-                        Swal.fire("Error!", msg, "error");
-                    },
-                    complete: function () {
-                        //hideLoader();  // Hide after request completes (success or error)
+                        handleApiError(xhr, status, error, 'Error while deleting Company Hall');
                     }
                 });
             }
@@ -2363,11 +2358,7 @@ function loadInvoiceSetupData() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyInvoiceSetup');
-            Swal.fire("Error", xhr.responseJSON?.message || "Failed to load invoice setup.", "error");
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to load invoice setup');
         }
     });
 }
@@ -2436,11 +2427,7 @@ function saveInvoiceSetupToApi(companyLogo) {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyInvoiceSetup');
-            Swal.fire("Error", xhr.responseJSON?.message || "Failed to save data. Please try again.", "error");
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to save CompanyInvoiceSetup');
         }
     });
 }
@@ -2589,7 +2576,7 @@ function saveFoodItems() {
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'SaveCompanyFoodItems');
+            handleApiError(xhr, status, error, 'Error Saving CompanyFoodItems');
         }
     });
 }
@@ -2811,11 +2798,7 @@ function loadFoodPackageData() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyFoodPackage');
-            Swal.fire("Error", xhr.responseJSON?.message || "Failed to load FoodPackage.", "error");
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to load FoodPackage');
         }
     });
 }
@@ -3097,15 +3080,7 @@ async function saveAllPackages() {
             rowCount = 0;
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyFoodPackage');
-            Swal.fire({
-                icon: 'error',
-                title: 'error',
-                text: 'Error saving packages!'
-            });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Error saving packages!');
         }
     });
 }
@@ -3154,16 +3129,8 @@ function deleteCompanyFoodPackage(id) {
                         });
                     }
                 },
-                error: function (xhr) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error!",
-                        text: "Something went wrong while deleting the package."
-                    });
-                    console.error("Delete API error:", xhr);
-                },
-                complete: function () {
-                    //hideLoader();  // Hide after request completes (success or error)
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete package failed");
                 }
             });
         }
@@ -3304,11 +3271,7 @@ function saveAddonCharges() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyFoodRateAddonCharge');
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save addon charges.' });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to save addon charges.');
         }
     });
 }
@@ -3384,11 +3347,7 @@ function loadAddonCharges() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyFoodRateAddonCharge');
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load addon charges.' });
-        },
-        complete: function () {
-            //hideLoader();
+            handleApiError(xhr, status, error, 'Failed to load addon charges.');
         }
     });
 }
@@ -3633,7 +3592,7 @@ function loadCharges() {
             console.log("GetCompanyFoodRateOtherCharge res data:", data);
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyFoodRateOtherCharge');
+            handleApiError(xhr, status, error, 'GetCompanyFoodRateOtherCharge');
             const fallback = services.map(s => ({
                 ...s,
                 isLumpsum: true,
@@ -3641,9 +3600,6 @@ function loadCharges() {
                 ledgerName: s.ledgerName || ""
             }));
             renderCharges(fallback);
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
         }
     });
 }
@@ -3716,11 +3672,7 @@ function saveCharges() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyFoodRateOtherCharge');
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Saving failed. Please try again.' });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Saving OtherCharge failed. Please try again.');
         }
     });
 }
@@ -3788,15 +3740,7 @@ function saveLabelSetup() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyFoodRateLabelPrinting');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to save label setup.'
-            });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to save label setup');
         }
     });
 }
@@ -3881,15 +3825,7 @@ function loadLabelSetup() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyFoodRateLabelPrinting');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load label setup.'
-            });
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
+            handleApiError(xhr, status, error, 'Failed to load label setup.');
         }
     });
 }
@@ -3997,13 +3933,7 @@ function saveTermsAndConditions() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'SaveCompanyTermsAndConditions');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to save terms and conditions. Please try again.'
-            });
-            console.error('Error saving terms:', xhr.responseText);
+            handleApiError(xhr, status, error, 'Failed to save terms and conditions');
         },
         complete: function () {
             //hideLoader();  // Hide after request completes (success or error)
@@ -4038,12 +3968,9 @@ function getTermsAndConditions() {
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'GetCompanyTermsAndConditions');
+            handleApiError(xhr, status, error, 'Save Failed - Terms & Conditions');
             // Initialize with default content if there's an error
             $('#termsEditor').html('Type Terms & Conditions');
-        },
-        complete: function () {
-            //hideLoader();  // Hide after request completes (success or error)
         }
     });
 }

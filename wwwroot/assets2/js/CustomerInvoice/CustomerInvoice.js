@@ -317,6 +317,35 @@ $(function () {
             });
         });
 
+        //VALIDATION -- START ------------------------------
+        let paymentAmount = parseFloat($("#invoicePayment_Amount").val()) || 0;
+        let paymentMode = parseInt($("#invoicePayment_Mode").val()) || 0;
+        let paymentAccount = parseInt($("#invoicePayment_Account").val()) || 0;
+
+        if (paymentAmount > 0) {
+
+            if (paymentMode === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Payment Mode Required',
+                    text: 'Please select a payment mode.',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+
+            if (paymentAccount === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Account Required',
+                    text: 'Please select an account.',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        }
+        //VALIDATION -- END ------------------------------
+
         const isGstIncluded = $('#isGstIncluded').is(':checked');
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
@@ -1788,9 +1817,9 @@ function loadSubEventList() {
 
 //SLOT DROPDOWN - dropdown -- START ------------------------
 function loadSlotDropdown() {
-    var payload = { Id: 0 };
+    var payload = { Id: 0, IsActive: true };
     $.ajax({
-        url: "/api/BookingCalendar_VendorWorkOrder/GetBookingCalendar_VendorWorkOrder_SlotMaster",
+        url: "/api/SlotMaster/GetSlotList",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),

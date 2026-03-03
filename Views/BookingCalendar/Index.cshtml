@@ -69,8 +69,9 @@
                     </div>
 
                     <!-- Shift Abbreviations -->
-                    <div class="alert alert-secondary p-2 m-2 ml-5">
-                        <b>Shift Abbreviations:</b> FD-Full Day, MO-Morning, AF-Afternoon, EV-Evening, ON-Overnight @* , BF-Breakfast, LN-Lunch, HT-High Tea, DN-Dinner *@
+                    <div class="alert alert-secondary p-2 m-2 ml-5" id="slotAbbreviationsBox">
+                        <b>Shift Abbreviations:</b>
+                        <div id="slotAbbreviations" class="mt-1"></div>
                     </div>
 
                 </div>
@@ -114,24 +115,27 @@
                         <!-- Event & Banquet Info -->
                         <!--banquetDropdown-->
                         <div class="col-md-2">
-                            <label class="form-label">Banquets</label>
+                            <label class="form-label">Banquets <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm" id="banquetDropdown">
                                 <option value="0">Full Property</option>
                             </select>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select banquet</div>
                         </div>
                         <!--fromDate-->
                         <div class="col-md-2">
-                            <label class="form-label">From Date</label>
+                            <label class="form-label">From Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control form-control-sm" id="fromDate">
+                            <div class="text-danger small mt-1 error-msg d-none">Please select from date</div>
                         </div>
                         <!--toDate-->
                         <div class="col-md-2">
-                            <label class="form-label">Till Date</label>
+                            <label class="form-label">Till Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control form-control-sm" id="toDate">
+                            <div class="text-danger small mt-1 error-msg d-none">Please select to date</div>
                         </div>
                         <!-- Function Start Time -->
                         <div class="col-md-3">
-                            <label class="form-label">Function Start Time</label>
+                            <label class="form-label">Function Start Time <span class="text-danger">*</span></label>
                             <div class="d-flex gap-1">
                                 <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;">
                                 <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;">
@@ -140,10 +144,11 @@
                                     <option value="PM">PM</option>
                                 </select>
                             </div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select from time</div>
                         </div>
                         <!-- Function End Time -->
                         <div class="col-md-3">
-                            <label class="form-label">Function End Time</label>
+                            <label class="form-label">Function End Time <span class="text-danger">*</span></label>
                             <div class="d-flex gap-1">
                                 <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;">
                                 <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;">
@@ -152,7 +157,9 @@
                                     <option value="PM">PM</option>
                                 </select>
                             </div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select to time</div>
                         </div>
+                        <div id="slotStatusMsg" class="alert py-1 mt-2 d-none"></div>
 
                         <!-- Client Info -->
                         <div class="col-md-3">
@@ -163,8 +170,9 @@
                         </div>
                         <!-- Client Name-->
                         <div class="col-md-5">
-                            <label class="form-label">Client Name</label>
+                            <label class="form-label">Client Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" placeholder="Enter Client Name" id="clientName">
+                            <div class="text-danger small mt-1 error-msg d-none">Please enter client name</div>
                         </div>
                         <!-- Client Email-->
                         <div class="col-md-4">
@@ -178,8 +186,9 @@
                         </div>
                         <!-- Client Contact-->
                         <div class="col-md-3">
-                            <label class="form-label">Contact</label>
+                            <label class="form-label">Contact <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" placeholder="Enter Client Contact" id="clientContact" maxlength="10">
+                            <div class="text-danger small mt-1 error-msg d-none">Please enter client contact no</div>
                         </div>
                         <!-- Client GSTIN-->
                         <div class="col-md-3">
@@ -202,14 +211,16 @@
                             <div class="row g-2 align-items-end">
                                 <!-- Event (Dropdown, width 3) -->
                                 <div class="col-md-3">
-                                    <label class="form-label">Event</label>
+                                    <label class="form-label">Event <span class="text-danger">*</span></label>
                                     <select class="form-select form-select-sm" id="booking_subEventDropdown"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">Please select event</div>
                                 </div>
 
                                 <!-- Pax (Input, width 2) -->
                                 <div class="col-md-2">
-                                    <label class="form-label">Pax</label>
+                                    <label class="form-label">Pax <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control form-control-sm" value="0" id="booking_pax">
+                                    <div class="text-danger small mt-1 error-msg d-none">Please enter PAX</div>
                                 </div>
 
                                 <!-- Hall Rent (Input, width 2) -->
@@ -226,8 +237,9 @@
 
                                 <!-- Reference (Dropdown, width 3) -->
                                 <div class="col-md-3">
-                                    <label class="form-label">Reference</label>
+                                    <label class="form-label">Reference <span class="text-danger">*</span></label>
                                     <select class="form-select form-select-sm" id="booking_leadReferenceDropdown"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">Please select reference type</div>
                                 </div>
                             </div>
                         </div>
@@ -1654,171 +1666,6 @@
                     Save
                 </button>
             </div>
-
-            <script>
-                // =========================================
-                // ADD NEW PARTICULAR ROW
-                // =========================================
-                $("#btnAddVendorParticular").on("click", function () {
-
-                    const newRow = `
-                        <tr>
-                            <td>
-                                <input type="text"
-                                       class="form-control form-control-sm vw-service"
-                                       placeholder="Service">
-                            </td>
-                            <td>
-                                <input type="number"
-                                       class="form-control form-control-sm vw-qty"
-                                       value="1"
-                                       min="0">
-                            </td>
-                            <td>
-                                <input type="number"
-                                       class="form-control form-control-sm vw-amount"
-                                       value="0"
-                                       min="0"
-                                       step="0.01">
-                            </td>
-                            <td>
-                                <input type="number"
-                                       class="form-control form-control-sm vw-total"
-                                       value="0"
-                                       readonly>
-                            </td>
-                            <td>
-                                <input type="text"
-                                       class="form-control form-control-sm vw-description"
-                                       placeholder="Description">
-                            </td>
-                            <td class="text-center">
-                                <button type="button"
-                                        class="btn btn-outline-danger btn-sm btnRemoveRow">
-                                    ×
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-
-                    $("#vendorParticularsTable tbody").append(newRow);
-                });
-
-                // =========================================
-                // REMOVE ROW (LAST COLUMN ACTION)
-                // =========================================
-                $(document).on("click", ".btnRemoveRow", function () {
-
-                    const rowCount = $("#vendorParticularsTable tbody tr").length;
-
-                    if (rowCount <= 1) {
-                        Swal.fire(
-                            "Not Allowed",
-                            "At least one particular row is required.",
-                            "warning"
-                        );
-                        return;
-                    }
-
-                    $(this).closest("tr").remove();
-                });
-
-                // =========================================
-                // AUTO CALCULATE TOTAL = QTY × AMOUNT
-                // =========================================
-                $(document).on("input", ".vw-qty, .vw-amount", function () {
-
-                    const $row = $(this).closest("tr");
-
-                    const qty = parseFloat($row.find(".vw-qty").val()) || 0;
-                    const amount = parseFloat($row.find(".vw-amount").val()) || 0;
-
-                    const total = qty * amount;
-
-                    $row.find(".vw-total").val(total.toFixed(2));
-                });
-
-                // =========================================
-                // LOAD VENDOR WORK ORDER SERVICES
-                // =========================================
-                loadVendorWorkOrderServices();
-                function loadVendorWorkOrderServices(selectedId = 0) {
-                    $.ajax({
-                        url: "/api/BookingCalendar_VendorWorkOrder_Service/GetBookingCalendar_VendorWorkOrder_Service",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify({ Id: 0 }),
-                        success: function (res) {
-
-                            const $ddl = $("#VendorServiceId");
-                            $ddl.empty();
-                            $ddl.append('<option value="0">Select Service</option>');
-
-                            res.data.forEach(function (item) {
-                                const selected =
-                                    selectedId && item.Id == selectedId
-                                        ? "selected"
-                                        : "";
-
-                                $ddl.append(
-                                    `<option value="${item.Id}" ${selected}>
-                                        ${item.Name}
-                                    </option>`
-                                );
-                            });
-                        },
-                        error: function (xhr, status, error) {
-                            handleAjaxError(xhr, status, error, 'Failed to load vendor services');
-                        }
-                    });
-                }
-
-                //VENDOR DROPDOWN
-                loadSupplierDropdown();
-                function loadSupplierDropdown() {
-                    var payload = { Id: 0};
-                    $.ajax({
-                        url: "/api/Supplier/GetSupplierList",
-                        method: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(payload),
-                        success: function (response) {
-                            //console.log("response supplier:", response);
-                            $("#VendorId").html(`<option value="0">-- Select Vendor --</option>`);
-                            response.data.forEach(s => {
-                                $("#VendorId").append(`<option value="${s.Id}">${s.Name}</option>`);
-                            });
-                        },
-                        error: function (xhr, status, error) {
-                            handleApiError(xhr, status, error, "Vendor Fetch Error");
-                        }
-                    });
-                }
-
-                //SLOT DROPDOWN
-                loadSlotDropdown();
-                function loadSlotDropdown() {
-                    var payload = { Id: 0};
-                    $.ajax({
-                        url: "/api/BookingCalendar_VendorWorkOrder/GetBookingCalendar_VendorWorkOrder_SlotMaster",
-                        method: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(payload),
-                        success: function (response) {
-                            //console.log("response supplier:", response);
-                            const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
-                            $slotDropdowns.html(`<option value="0">-- Select Slot --</option>`);
-                            response.data.forEach(s => {
-                                $slotDropdowns.append(`<option value="${s.Id}">${s.Name}</option>`);
-                            });
-                        },
-                        error: function (xhr, status, error) {
-                            handleApiError(xhr, status, error, "Slot Fetch Error");
-                        }
-                    });
-                }
-
-            </script>
         </div>
     </div>
 </div>
@@ -1887,7 +1734,7 @@
                     <div class="row g-3 px-3 py-2">
 
                         <!-- Banquet -->
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Banquets</label>
                             <select class="form-select" id="reschedule_BanquetId">
                                 <option value="">Select Banquet</option>
@@ -1895,7 +1742,7 @@
                         </div>
 
                         <!-- Slot -->
-                        <div class="col-md-6 d-none">
+                        <div class="col-md-3">
                             <label class="form-label">Slot</label>
                             <select class="form-select" id="reschedule_SlotId">
                                 <option value="">Select Slot</option>

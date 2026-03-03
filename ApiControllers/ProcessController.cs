@@ -62,6 +62,8 @@ namespace ERPAdmin.ApiControllers
                         process.Id = Convert.ToInt64(dr["id"]);
                         process.Name = Convert.ToString(dr["name"]);
                         process.IndexNo = Convert.ToInt64(dr["indexno"]);
+                        process.IsConfirmed = Convert.ToBoolean(dr["IsConfirmed"]);
+                        process.IsLost = Convert.ToBoolean(dr["IsLost"]);
                         processes.Add(process);
                     }
                 }
@@ -75,7 +77,7 @@ namespace ERPAdmin.ApiControllers
                 //Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
@@ -124,7 +126,7 @@ namespace ERPAdmin.ApiControllers
                 //Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
@@ -268,7 +270,7 @@ namespace ERPAdmin.ApiControllers
                 //Log Error
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);

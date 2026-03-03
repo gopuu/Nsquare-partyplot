@@ -1,32 +1,4 @@
-﻿// Helper: Convert abbreviation to full name
-function fullShiftName(abbr) {
-    const map = {
-        FD: "Full Day",
-        MO: "Morning",
-        AF: "Afternoon",
-        EV: "Evening",
-        ON: "Overnight",
-        BF: "Breakfast",
-        LN: "Lunch",
-        HT: "High Tea",
-        DN: "Dinner"
-    };
-    return map[abbr] || abbr;
-}
-
-const shiftTimes = {
-    FD: { start: "07:00 AM", end: "11:00 PM" },
-    MO: { start: "09:00 AM", end: "12:00 PM" },
-    AF: { start: "01:00 PM", end: "05:00 PM" },
-    EV: { start: "06:00 PM", end: "10:00 PM" },
-    ON: { start: "10:00 PM", end: "06:00 AM" },
-    //BF: { start: "07:00 AM", end: "10:00 AM" },
-    //LN: { start: "12:00 PM", end: "03:00 PM" },
-    //HT: { start: "04:00 PM", end: "06:00 PM" },
-    //DN: { start: "07:00 PM", end: "11:00 PM" }
-};
-
-function showTempLoader(title = "Checking Availability") {
+﻿function showTempLoader(title = "Checking Availability") {
     // Show loader before AJAX
     Swal.fire({
         title: title,
@@ -150,6 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //sessionStorage.setItem("userId", userid);
     fetchUserAccessData(userid);
+
     //loadStaffAccountsRights(staffIds);
 
     document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
@@ -294,6 +267,14 @@ function printAllErrors(xhr, status, error, srcApi = "") {
     console.log("srcAPi:", srcApi, ", Full XHR Object:", xhr);               // dump everything
     console.log("-------------------");
 }
+
+// Helper: Convert abbreviation to full name
+let shiftMap = {};      // Code -> Full Name
+let shiftTimes = {};    // Code -> Time Object
+function fullShiftName(abbr) {
+    return shiftMap[abbr] || abbr;
+}
+
 
 //get User Rights
 var userRightsData = null;

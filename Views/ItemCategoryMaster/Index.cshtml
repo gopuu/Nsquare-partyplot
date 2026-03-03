@@ -265,7 +265,6 @@
                 ActionBy: sessionStorage.getItem("userId") ?? 0
             };
 
-            $('#btn-loader').show();
             $.ajax({
                 url: "/api/ItemCategoryMaster/DeleteItemCategory",
                 type: "POST",
@@ -299,18 +298,8 @@
                     //$('#btn-loader').hide();
                     $('#deleteRecordModal').modal('hide');
                 },
-                error: function (xhr) {
-                    //$('#btn-loader').hide();
-                    //alert('Failed to delete record: ' + xhr.responseText);
-                    console.log(xhr.responseText);
-                    Swal.fire({
-                        title: "Delete Category Error",
-                        text: xhr.responseText,
-                        icon: "error"
-                    });
-                },
-                complete: function () {
-                    $('#btn-loader').hide(); // Ensure loader is hidden in any case
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Category failed");
                 }
             });
             $('#deleteRecordModal').modal('hide');
@@ -452,8 +441,6 @@
 
     //get data from API
     function fetchData() {
-        $('#btn-loader').show();
-        $('.search').val('');
 
         $.ajax({
             url: "/api/ItemCategoryMaster/GetItemCategoryList",
@@ -466,17 +453,8 @@
                 var data = response.data;
                 renderTable(data);
             },
-            error: function (xhr) {
-                //$('#btn-loader').hide();
-                console.log(xhr.responseText);
-                Swal.fire({
-                    title: "Fetch ItemCategory Error",
-                    text: xhr.responseText,
-                    icon: "error"
-                });
-            },
-            complete: function () {
-                $('#btn-loader').hide(); // Ensure loader is hidden in any case
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Fetch Item Category failed");
             }
         });
     }

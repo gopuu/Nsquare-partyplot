@@ -1,8 +1,7 @@
 ﻿@{
-    ViewData["Title"] = "Process Master";
+    ViewData["Title"] = "Sales Funnel Master";
     Layout = "_Layout";
 }
-
 
 <!-- MAIN -->
 <div class="content">
@@ -11,9 +10,9 @@
             <div class="col-12 col-xxl-12">
                 <div class="mb-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 text-warning">Process Master</h4>
-                        <button class="btn btn-outline-warning" id="btn-add">
-                            <i class="fa fa-plus-circle"></i> Add Process
+                        <h4 class="mb-0 text-warning">Sales Funnel Master</h4>
+                        <button class="btn btn-outline-warning d-none" id="btn-add">
+                            <i class="fa fa-plus-circle"></i> Add
                         </button>
                     </div>
 
@@ -34,8 +33,8 @@
     <div class="modal-dialog modal-lg">
         <!-- Made modal larger -->
         <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title text-white" id="processModalLabel">Add Process </h5>
+            <div class="modal-header bg-warning py-2">
+                <h5 class="modal-title text-white" id="processModalLabel">Add Sales Funnel </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <!-- Modal Body -->
@@ -46,9 +45,9 @@
 
                     <!-- Process Name -->
                     <div class="flex-grow-1 d-flex flex-column">
-                        <label for="processName" class="form-label">Process Name</label>
+                        <label for="processName" class="form-label">Name</label>
                         <input type="text" class="form-control mt-1" id="processName">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter event type</div>
+                        <div class="text-danger small mt-1 error-msg d-none">Please enter name</div>
                     </div>
 
                     <!-- Index No -->

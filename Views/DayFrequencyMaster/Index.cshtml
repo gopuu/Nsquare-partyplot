@@ -247,7 +247,6 @@
                 ActionBy: sessionStorage.getItem("userId") ?? 0
             };
 
-            $('#btn-loader').show();
             $.ajax({
                 url: "/api/DayFrequencyMaster/DeleteDayFrequency",
                 type: "POST",
@@ -281,11 +280,8 @@
                     //$('#btn-loader').hide();
                     $('#deleteRecordModal').modal('hide');
                 },
-                error: function (xhr) {
-                    handleApiError(xhr, status, error, "Delete DayFrequency Error")
-                },
-                complete: function () {
-                    $('#btn-loader').hide(); // Ensure loader is hidden in any case
+                error: function (xhr, status, error) {
+                   handleApiError(xhr, status, error, "Delete DayFrequency Error")
                 }
             });
             $('#deleteRecordModal').modal('hide');
@@ -411,8 +407,6 @@
 
     //get data from API
     function fetchData() {
-        $('#btn-loader').show();
-        $('.search').val('');
 
         $.ajax({
             url: "/api/DayFrequencyMaster/GetDayFrequencyList",
@@ -425,11 +419,8 @@
                 var data = response.data;
                 renderTable(data);
             },
-            error: function (xhr) {
+            error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "Get DayFrequency Error")
-            },
-            complete: function () {
-                $('#btn-loader').hide(); // Ensure loader is hidden in any case
             }
         });
     }

@@ -166,7 +166,7 @@ function loadDashboardWidgetCounts() {
         FromDate: $("#fromDate").val(),        // yyyy-mm-dd
         ToDate: $("#toDate").val()             // yyyy-mm-dd
     };
-    console.log("requestObj DashboardWidgets:", requestObj);
+    //console.log("requestObj DashboardWidgets:", requestObj);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardWidgetCounts",
@@ -177,7 +177,7 @@ function loadDashboardWidgetCounts() {
             if (res.status === "Success") {
                 // Parse the JSON string returned by the API
                 //let statsJson = JSON.parse(res.data.DashboardStats);
-                console.log("Dashboard Stats:", res.data);
+                //console.log("Dashboard Stats:", res.data);
 
                 // 🔥 FORCE NUMBER CONVERSION
                 const totalSales = Number(res.data.TotalSales) || 0;
@@ -199,7 +199,7 @@ function loadDashboardWidgetCounts() {
                 setAmountWithAutoFont("#totalEventsLost", totalEventsLost);
                 $("#eventLostCount").text("(" + eventLostCount + ")");
 
-                console.log("Dashboard Stats Fetched:", res.data);
+                //console.log("Dashboard Stats Fetched:", res.data);
 
                 // Re-initialize Bootstrap tooltips
                 var tooltipTriggerList = [].slice.call(
@@ -279,7 +279,7 @@ function loadUpcomingEventsWidget() {
         ToDate: $("#toDate").val() || null
     };
 
-    console.log("Upcoming Events Request:", requestObj);
+    //console.log("Upcoming Events Request:", requestObj);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardUpcomingEvents",
@@ -297,7 +297,7 @@ function loadUpcomingEventsWidget() {
 
                 setAmountWithAutoFont("#upcomingEventsAmount", upcomingAmount);
 
-                console.log("Upcoming Events Loaded:", res.data);
+                //console.log("Upcoming Events Loaded:", res.data);
             }
             else {
                 console.warn("Upcoming API Error:", res.message);
@@ -324,7 +324,7 @@ function loadComparativeInsightsChart(filter) {
         contentType: "application/json",
         data: JSON.stringify({ Filter: filter }),
         success: function (res) {
-            console.log("pnl res:", res);
+            //console.log("pnl res:", res);
 
             if (res.status !== "Success" || !res.data || res.data.length === 0) {
                 alert("No data found");
@@ -649,7 +649,7 @@ function loadBookingEventTypeCount() {
         contentType: "application/json",
         data: JSON.stringify(requestObj),
         success: function (res) {
-            console.log("pie res:",res);
+            //console.log("pie res:",res);
             if (res.status !== "Success") {
                 console.warn(res.message);
                 return;
@@ -740,14 +740,14 @@ function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate 
         FromDate: fromDate,
         ToDate: toDate
     }
-    console.log("BookingSubEventTypeCorporate payload:", payload);
+    //console.log("BookingSubEventTypeCorporate payload:", payload);
     $.ajax({
         url: '/api/Dashboard/GetBookingSubEventTypeCorporate',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (response) {
-            console.log("BookingSubEventTypeCorporate response:", response);
+            //console.log("BookingSubEventTypeCorporate response:", response);
             if (response.status === "Success" && response.data.length > 0) {
                 const labels = response.data.map(x => x.EventLabel);
                 const values = response.data.map(x => x.EventCount);
@@ -1311,7 +1311,7 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("Top Revenue Events:", res);
+            //console.log("Top Revenue Events:", res);
 
             let html = "";
 

@@ -64,20 +64,32 @@
         // ===========================
         // Clear all first
         $(".purchase-unit-checkbox").prop("checked", false);
-
+        // Check selected units
         rowData.JSON_PurchaseUnits.forEach(pu => {
             $(`.purchase-unit-checkbox[value="${pu.UnitId}"]`).prop("checked", true);
         });
-
-        updatePurchaseUnitSelection();   // update dropdown text
+        // Update dropdown + render rows
+        updatePurchaseUnitSelection();
 
         // ===========================
         // CONSUMPTION UNIT
         // ===========================
         $("#consumptionUnitId").val(rowData.ConsumptionUnitId);
-        $("#purchaseEqualsQty").val(rowData.OnePurchaseUnitEquals_ConsumptionUnitQty);
+        // Re-render conversion rows (important after setting CU)
+        renderConversionRows();
 
-        handleConversionVisibility();
+        // ===========================
+        // SET CONVERSION VALUES
+        // ===========================
+        rowData.JSON_PurchaseUnits.forEach(pu => {
+            let row = $(`.conversion-item[data-unitid="${pu.UnitId}"]`);
+            let input = row.find(".conversion-input");
+            input.val(pu.ConversionValue);
+            // If same unit → readonly
+            if (parseInt(pu.UnitId) === parseInt(rowData.ConsumptionUnitId)) {
+                input.prop("readonly", true);
+            }
+        });        
 
         // ===========================
         // PRICES
@@ -177,9 +189,21 @@
         validateAddEventForm();
 
         // 1️⃣ Purchase Units JSON
+        //let purchaseUnits = [];
+        //$(".purchase-unit-checkbox:checked").each(function () {
+        //    purchaseUnits.push({
+        //        UnitId: parseInt($(this).val()),
+        //        ConversionValue: 0
+        //    });
+        //});
         let purchaseUnits = [];
-        $(".purchase-unit-checkbox:checked").each(function () {
-            purchaseUnits.push({ UnitId: parseInt($(this).val()) });
+        $(".conversion-item").each(function () {
+            let unitId = $(this).data("unitid");
+            let conversionValue = parseFloat($(this).find(".conversion-input").val()) || 0;
+            purchaseUnits.push({
+                UnitId: parseInt(unitId),
+                ConversionValue: conversionValue
+            });
         });
 
         // 2️⃣ Closing Stock Updated On
@@ -205,14 +229,13 @@
 
             JSON_PurchaseUnits: purchaseUnits,
             ConsumptionUnitId: $("#consumptionUnitId").val() == "0" ? 0 : parseInt($("#consumptionUnitId").val()),
-            OnePurchaseUnitEquals_ConsumptionUnitQty: $("#purchaseEqualsQty").val(),
             JSON_ClosingStockUpdatedOn: closingStock,
 
             ItemCategoryId: $("#itemCategoryId").val() == "0" ? 0 : parseInt($("#itemCategoryId").val()),
 
-            PurchasePrice: $("#purchasePrice").val(),
-            TransferPrice: $("#transferPrice").val(),
-            ReconciliationPrice: $("#reconPrice").val(),
+            PurchasePrice: $("#purchasePrice").val() || 0,
+            TransferPrice: $("#transferPrice").val() || 0,
+            ReconciliationPrice: $("#reconPrice").val() || 0,
 
             TaxTypeId: $("input[name='taxType']:checked").val() || 1,
             TaxPercent: $("#taxPercent").val() || 0,
@@ -236,8 +259,8 @@
             AllowDecimalQty: ($("#allowDecimal").val() == "1"),
 
             Description: $("#description").val(),
-            NormalLossPercent: $("#lossPercent").val(),
-            QuantityInGmMl: $("#qtyGmMl").val(),
+            NormalLossPercent: $("#lossPercent").val() || 0,
+            QuantityInGmMl: $("#qtyGmMl").val() || 0,
 
             IsActive: true,
             ActionBy: sessionStorage.getItem("userId") || 0
@@ -588,15 +611,27 @@ function renderTable(data) {
                 title: 'Actions',
                 render: function (data, type, row) {
                     return `
-                        <div class="d-flex flex-column flex-sm-row gap-2">
-                            <button class="btn btn-outline-warning btn-sm me-1 mb-0 btn-action-xss btn-edit">
-                                <i class="fa fa-edit"></i>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light btn-action-xss dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i>
                             </button>
-                            <button class="btn btn-outline-danger btn-sm me-1 mb-0 btn-action-xss btn-delete">
-                                <i class="fa fa-trash"></i>
-                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item btn-edit">
+                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item btn-delete">
+                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
-                        `;
+                    `;
                 }
             }
         ],
@@ -658,30 +693,48 @@ function fetchData() {
 
 // Reset form fields
 function resetFormFields() {
+
     $("#rmId").val(0);
 
     $("#rmName,#purchaseEqualsQty,#purchasePrice,#transferPrice,#reconPrice,#taxPercent,#minStockLevel,#atParLevel,#barcode,#hsn,#gtin,#brand,#lossPercent,#qtyGmMl,#description").val("");
 
     $("#itemCategoryId,#consumptionUnitId,#minStockUnitId,#atParUnitId").val("0");
 
-    //SET INPUT NUMBER=0
+    // SET INPUT NUMBER = 0
     $("#purchaseEqualsQty,#purchasePrice,#transferPrice,#reconPrice,#taxPercent,#exciseDutyAmount,#minStockLevel,#atParLevel,#lossPercent,#qtyGmMl").val("0");
 
     $("#allowRestock,#exclusiveRest,#isExpiry,#allowDecimal").prop("checked", false);
 
-    // ✔ Set GST as default checked
+    // Default GST
     $("#gstRadio").prop("checked", true).trigger("change");
     $("#vatRadio").prop("checked", false);
 
     $("#restockBody").empty();
-    addRestockRow();  // Default 1 row
+    addRestockRow();
     resetDayFrequencySelection();
 
     $("#restockTableWrapper").addClass("d-none");
-    $("#conversionRow").addClass("d-none");
 
+    // ==========================
+    // PURCHASE UNIT RESET
+    // ==========================
     $(".purchase-unit-checkbox").prop("checked", false);
-    $(".closing-stock-checkbox").prop("checked", false);
+    $("#selectAllPurchaseUnits").prop("checked", false);
+
+    // Clear selected array
+    selectedPurchaseUnits = [];
+
+    // Reset dropdown text
+    $("#purchaseUnitsDropdown").text("Select Units");
+
+    // ==========================
+    // CONVERSION RESET
+    // ==========================
+    $("#conversionRows").empty();                 // remove rows
+    $("#conversionContainer").addClass("d-none"); // hide section
+
+    // Optional: reset consumption dropdown UI text
+    $("#consumptionUnitId").val("0");
 
     showTab(0);
 }
@@ -784,9 +837,6 @@ function GetUnitMasterData() {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetch UnitMaster Error!");
-        },
-        complete: function () {
-            //$('#btn-loader').hide(); // Ensure loader is hidden in any case
         }
     });
 }
@@ -801,6 +851,7 @@ function loadUnitDropdown(selector) {
 
 $("#consumptionUnitId").change(function () {
     loadFilteredUnitDropdowns();
+    renderConversionRows();
 });
 
 function loadFilteredUnitDropdowns() {
@@ -872,7 +923,7 @@ function loadPurchaseUnitsDropdown() {
 
 // Update button label + selected array
 function updatePurchaseUnitSelection() {
-
+    //here2
     selectedPurchaseUnits = [];
     let text = "";
 
@@ -898,6 +949,45 @@ function updatePurchaseUnitSelection() {
     let checked = $(".purchase-unit-checkbox:checked").length;
 
     $("#selectAllPurchaseUnits").prop("checked", total > 0 && total === checked);
+    renderConversionRows();
+}
+
+function renderConversionRows() {
+
+    let consumptionId = $("#consumptionUnitId").val();
+    let consumptionName = $("#consumptionUnitId option:selected").text();
+
+    if (!consumptionId || selectedPurchaseUnits.length === 0) {
+        $("#conversionContainer").addClass("d-none");
+        return;
+    }
+
+    let html = "";
+
+    selectedPurchaseUnits.forEach(p => {
+
+        let isSame = p.UnitId == consumptionId;
+
+        html += `
+            <div class="input-group mb-2 conversion-item"
+                 data-unitid="${p.UnitId}">
+                 
+                <span class="input-group-text">1 ${p.UnitName}</span>
+                <span class="input-group-text">=</span>
+
+                <input type="number"
+                       step="0.01"
+                       class="form-control conversion-input"
+                       value="${isSame ? 1 : ""}"
+                       ${isSame ? "readonly" : ""}>
+
+                <span class="input-group-text">${consumptionName}</span>
+            </div>
+        `;
+    });
+
+    $("#conversionRows").html(html);
+    $("#conversionContainer").removeClass("d-none");
 }
 //DYNAMIC PURCHASE UNITS CHECKBOXES -- END ------------------------
 

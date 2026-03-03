@@ -2,7 +2,7 @@
 
 namespace ERPAdmin.Controllers
 {
-    public class InvoiceTemplateMasterController : Controller
+    public class SettingsController : Controller
     {
         public IActionResult Index()
         {

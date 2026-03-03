@@ -295,18 +295,8 @@
                     //$('#btn-loader').hide();
                     $('#deleteRecordModal').modal('hide');
                 },
-                error: function (xhr) {
-                    //$('#btn-loader').hide();
-                    //alert('Failed to delete record: ' + xhr.responseText);
-                    console.log(xhr.responseText);
-                    Swal.fire({
-                        title: "Delete Unit Error",
-                        text: xhr.responseText,
-                        icon: "error"
-                    });
-                },
-                complete: function () {
-                    $('#btn-loader').hide(); // Ensure loader is hidden in any case
+                error: function (xhr, status, error) {
+                    handleApiError(xhr, status, error, "Delete Unit failed");
                 }
             });
             $('#deleteRecordModal').modal('hide');
@@ -445,8 +435,6 @@
 
     //get data from API
     function fetchData() {
-        $('#btn-loader').show();
-        $('.search').val('');
 
         $.ajax({
             url: "/api/UnitMaster/GetUnitMasterList",
@@ -459,11 +447,8 @@
                 var data = response.data;
                 renderTable(data);
             },
-            error: function (xhr) {
+            error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "UnitMaster Fetch Error")
-            },
-            complete: function () {
-                $('#btn-loader').hide(); // Ensure loader is hidden in any case
             }
         });
     }

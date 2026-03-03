@@ -35,6 +35,7 @@ namespace ERPAdmin.ApiControllers
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
+
         [HttpPost]
         [Route("DeleteCompanyProfileAndPropertyDetails")]
         public IActionResult DeleteCompanyProfileAndPropertyDetails([FromBody] long id)
@@ -70,11 +71,6 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.message = ex.Message;
                 return StatusCode(500, apiResponse);
             }
-        }
-
-        public class GetCompanyProfileRequest
-        {
-            public long? Id { get; set; }
         }
 
         [HttpGet]
@@ -138,11 +134,6 @@ namespace ERPAdmin.ApiControllers
                                 MonopolyPreference = reader["MonopolyPreference"] == DBNull.Value ? (long?)null : Convert.ToInt64(reader["MonopolyPreference"]),
                                 HallRatesNegotiable = reader["HallRatesNegotiable"] == DBNull.Value ? false : Convert.ToBoolean(reader["HallRatesNegotiable"]),
                                 FoodPreference = reader["FoodPreference"] == DBNull.Value ? false : Convert.ToBoolean(reader["FoodPreference"]),
-                                FullDaySlot = reader["FullDaySlot"] == DBNull.Value ? false : Convert.ToBoolean(reader["FullDaySlot"]),
-                                MorningSlot = reader["MorningSlot"] == DBNull.Value ? false : Convert.ToBoolean(reader["MorningSlot"]),
-                                AfternoonSlot = reader["AfternoonSlot"] == DBNull.Value ? false : Convert.ToBoolean(reader["AfternoonSlot"]),
-                                EveningSlot = reader["EveningSlot"] == DBNull.Value ? false : Convert.ToBoolean(reader["EveningSlot"]),
-                                OvernightSlot = reader["OvernightSlot"] == DBNull.Value ? false : Convert.ToBoolean(reader["OvernightSlot"]),
                                 // Split comma-separated strings into arrays
                                 Facilities = reader["Facilities"]?.ToString()?.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>(),
                                 Rules = reader["Rules"]?.ToString()?.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>(),
@@ -168,53 +159,6 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.data = null;
                 return StatusCode(500, apiResponse);
             }
-        }
-
-        public class SaveCompanyProfileRequest : BaseClass
-        {
-            public long Id { get; set; }
-            public string CompanyName { get; set; } = string.Empty;
-            public long BanquetType { get; set; }
-            public long CompanyState { get; set; }
-            public string CompanyCity { get; set; } = string.Empty;
-            public string CompanyEmail { get; set; } = string.Empty;
-            public string CompanyAddress { get; set; } = string.Empty;
-            public string CompanyPanNo { get; set; } = string.Empty;
-            public string CompanyPanCardUpload { get; set; } = string.Empty;
-            public string CompanyMobile { get; set; } = string.Empty;
-            public bool AcceptGST { get; set; }
-            public string GSTIN { get; set; } = string.Empty;
-            public string VATNumber { get; set; } = string.Empty;
-            public bool QuotationsWithTax { get; set; }
-            public bool MultipleFoodGST { get; set; }
-            public bool PrintCustomerDetails { get; set; }
-        }
-
-        public class SaveCompanyPropertyRequest : BaseClass
-        {
-            public long Id { get; set; }
-            public long PropertyCity { get; set; }
-            public long Locality { get; set; }
-            public string Pincode { get; set; } = string.Empty;
-            public string ManagerName { get; set; } = string.Empty;
-            public string PropertyName { get; set; } = string.Empty;
-            public long PropertyType { get; set; }
-            public string PropertyEmail { get; set; } = string.Empty;
-            public string PropertyAddress { get; set; } = string.Empty;
-            public string ManagerMobile { get; set; } = string.Empty;
-            public long MonopolyPreference { get; set; }
-            public bool HallRatesNegotiable { get; set; }
-            public bool FoodPreference { get; set; }
-            public bool FullDaySlot { get; set; }
-            public bool MorningSlot { get; set; }
-            public bool AfternoonSlot { get; set; }
-            public bool EveningSlot { get; set; }
-            public bool OvernightSlot { get; set; }
-            public List<string>? Facilities { get; set; }
-            public List<string>? Rules { get; set; }
-            public List<string>? BookingSteps { get; set; }
-            public string SearchLocation { get; set; } = string.Empty;
-            public string AboutUsAndTnC { get; set; } = string.Empty;
         }
 
         [HttpPost]
@@ -257,10 +201,9 @@ namespace ERPAdmin.ApiControllers
                     {
                         string imgType = _imageUploadService.GetFileTypeFromBase64(model.CompanyPanCardUpload);
 
-                        string folderPath = $"/org/{domain}/CompanyProfile_PanCard_Image"; // Updated to include domain
-                        //string folderPath = $"/CompanyProfile_PanCard_Image"; // Updated to include domain
+                        //string folderPath = $"/org/{domain}/CompanyProfile_PanCard_Image"; // Updated to include domain
+                        string folderPath = Path.Combine("org", domain, "CompanyProfile_PanCard_Image");
                         _imageUploadService.DeleteImages(folderPath, rowid.ToString());
-                        //model.Logo = _imageUploadService.UploadImage(model.Logo, folderPath, rowid.ToString(), imgType);
                         model.CompanyPanCardUpload = _imageUploadService.UploadImage(model.CompanyPanCardUpload, folderPath, rowid.ToString(), imgType);
 
                         //update table
@@ -270,7 +213,7 @@ namespace ERPAdmin.ApiControllers
                         cmd2.Parameters.Add("@CompanyPanCardUpload", SqlDbType.NVarChar, -1).Value = model.CompanyPanCardUpload; // Kept max for nvarchar(max)
                         cmd2.ExecuteNonQuery();
 
-                        latestImagePath = domainUrl + $"/uploads/org/{domain}/CompanyProfile_PanCard_Image/" + model.CompanyPanCardUpload;
+                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/CompanyProfile_PanCard_Image/{model.CompanyPanCardUpload}";
                     }
 
                     con.Close();
@@ -324,11 +267,6 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@MonopolyPreference", SqlDbType.BigInt).Value = model.MonopolyPreference;
                     cmd.Parameters.Add("@HallRatesNegotiable", SqlDbType.Bit).Value = model.HallRatesNegotiable;
                     cmd.Parameters.Add("@FoodPreference", SqlDbType.Bit).Value = model.FoodPreference;
-                    cmd.Parameters.Add("@FullDaySlot", SqlDbType.Bit).Value = model.FullDaySlot;
-                    cmd.Parameters.Add("@MorningSlot", SqlDbType.Bit).Value = model.MorningSlot;
-                    cmd.Parameters.Add("@AfternoonSlot", SqlDbType.Bit).Value = model.AfternoonSlot;
-                    cmd.Parameters.Add("@EveningSlot", SqlDbType.Bit).Value = model.EveningSlot;
-                    cmd.Parameters.Add("@OvernightSlot", SqlDbType.Bit).Value = model.OvernightSlot;
                     cmd.Parameters.Add("@Facilities", SqlDbType.NVarChar, -1).Value = facilitiesString;
                     cmd.Parameters.Add("@Rules", SqlDbType.NVarChar, -1).Value = rulesString;
                     cmd.Parameters.Add("@BookingSteps", SqlDbType.NVarChar, -1).Value = bookingStepsString;
@@ -357,5 +295,3 @@ namespace ERPAdmin.ApiControllers
         }
     }
 }
-
-

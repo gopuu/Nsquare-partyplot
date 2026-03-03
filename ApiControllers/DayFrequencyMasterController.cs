@@ -76,7 +76,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 apiResponse.data = null;
 
@@ -128,7 +128,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 apiResponse.data = null;
 

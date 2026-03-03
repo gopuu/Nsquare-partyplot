@@ -752,7 +752,7 @@ namespace ERPAdmin.ApiControllers
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
 
                 return StatusCode(500, apiResponse);

@@ -214,6 +214,7 @@ function fetchHallDetails(bookingData, banquetId = 0) {
                     options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
                 });
                 $("#banquetDropdown, #reschedule_BanquetId").html(options);
+
                 // ✅ If banquetId is passed → select & STOP
                 if (banquetId > 0) {
                     $("#banquetDropdown, #reschedule_BanquetId").val(String(banquetId)).trigger("change");
@@ -1276,43 +1277,13 @@ function populateMonthButtons(months) {
 }
 
 //Generate Days for Selected Month
-function generateDays2(year, month) {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dateObj = new Date(year, month, d);
-        const dayName = dateObj.toLocaleDateString("en-US", { weekday: "short" });
-        //days.push({date:d.toString().padStart(2,"0"), day:dayName, dateObj, enquiries:Math.floor(Math.random()*10)+1});
-        days.push({
-            date: d.toString().padStart(2, "0"),
-            day: dayName,
-            dateObj,
-            enquiries: 2,  // ✅ always 0 (will fetch later)
-            enquiryList: [
-                {
-                    Name: "Ajay Patel",
-                    Amount: 15000
-                },
-                {
-                    Name: "Meera Shah",
-                    Amount: 22000
-                }
-            ]
-        });
-    }
-    return days;
-}
-
-// -----------------------------
-// Async helper: fetch calendar days from API
-// -----------------------------
 function generateDays(year, month) {
     return new Promise((resolve) => {
         const req = {
             Year: year,
             Month: month + 1 // JS month 0-based -> API month 1-based
         };
-        console.log("GetEnquiryCalendarMock payload:", req);
+        //console.log("GetEnquiryCalendarMock payload:", req);
         $.ajax({
             url: "/api/BookingCalendar/GetEnquiryCalendarMock",
             type: "POST",
@@ -1382,9 +1353,9 @@ function generateShiftDataPerDay(dateObj) {
     });
 }
 
-//main booking board //here2
+//main booking board
 async function renderBoard(bookingData = null) {
-    //console.log("renderBoard bookingData:", bookingData);
+    console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
@@ -1431,8 +1402,7 @@ async function renderBoard(bookingData = null) {
     });
     board.appendChild(dateRow);
 
-    //var bookingCount = 0;
-    //var bookingCountTemp = 0;
+    console.log("shiftTimes:", shiftTimes);
     // Resource Rows
     banquetHallsList.forEach(hall => {
         const row = document.createElement("div");
@@ -1443,7 +1413,7 @@ async function renderBoard(bookingData = null) {
         nameCell.className = "text-center rounded p-2 name-cell";
         nameCell.textContent = hall.HallName;
         row.appendChild(nameCell);
-
+        
         cachedShiftData[hall.Id].forEach((shiftArr, dayIndex) => {
             const cell = document.createElement("div");
             cell.className = "border rounded p-1 text-center day-cell"; // ✅ green default
@@ -1476,9 +1446,12 @@ async function renderBoard(bookingData = null) {
                 // CURRENT & FUTURE DAY
                 cell.classList.add("bg-success", "text-white");
             }
-
+            /* OLD code
+            let skipNextSlots = new Set();
             // Populate cell with shift data
             cell.innerHTML = shiftArr.map((color, i) => {
+                if (skipNextSlots.has(i)) return "";
+
                 let finalColor = color;
                 if (isToday) {
                     finalColor = "success"; // ✅ Force all shifts green for today
@@ -1502,11 +1475,15 @@ async function renderBoard(bookingData = null) {
                 var clientContact = null;
                 var eventDateRange = null;
 
+                const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
+                const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
+
                 // 🔍 Check if this cell is booked in bookingData
                 let isBookingConfirmed = false;
                 let isBookingTentative = false;
                 let isBlocked = false;
-                //work HERE
+
+                let bookingMatch = null;
 
                 //console.log("bookingData:", bookingData);
                 if (Array.isArray(bookingData)) {
@@ -1530,8 +1507,15 @@ async function renderBoard(bookingData = null) {
                         }
 
                         // 🟢 Normal shift-based booking
-                        if (booking.ShiftCode === shiftCode) {
-                            console.log("bookingId:", booking.BookingId, ", booking.ShiftCode:", booking.ShiftCode, ", shiftCode:", shiftCode);
+                        const bookingStart = timeToMinutes(booking.StartTime_Full);
+                        const bookingEnd = timeToMinutes(booking.EndTime_Full);
+
+                        const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
+                        const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
+
+                        if (isTimeOverlap(bookingStart, bookingEnd, slotStart, slotEnd)) {
+                        //if (booking.ShiftCode === shiftCode) {
+                            //console.log("bookingId:", booking.BookingId, ", booking.ShiftCode:", booking.ShiftCode, ", shiftCode:", shiftCode);
 
                             //bookingCountTemp++;
 
@@ -1599,6 +1583,235 @@ async function renderBoard(bookingData = null) {
                             ${shiftCode}
                         </div>`;
 
+                return `<div
+                    class="badge bg-danger d-block mb-1 text-white"
+                    style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"
+                    data-bookingid="${bookingId}">
+                    ${shiftCode}
+                </div>`;
+
+            }).join("");
+            */
+
+            const yyyy = selectedYear;
+            const mm = String(selectedMonth + 1).padStart(2, "0");
+            const dd = String(cachedDays[dayIndex].date).padStart(2, "0");
+
+            const dateStr = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;
+            const dateStr_Format = `${dd}-${mm}-${yyyy}`;
+            const dateStr_ISO = `${yyyy}-${mm}-${dd}`;
+
+            let bookingsToday = [];
+            if (Array.isArray(bookingData)) {
+                bookingsToday = bookingData.filter(b => {
+
+                    if (b.BanquetId !== hall.Id)
+                        return false;
+
+                    const fromDate = new Date(b.FromDate);
+                    const tillDate = new Date(b.TillDate);
+                    const currentDate = new Date(dateStr_ISO);
+
+                    return currentDate >= fromDate && currentDate <= tillDate;
+                });
+            }
+
+            let skipNextSlots = new Set();
+            // Populate cell with shift data
+            cell.innerHTML = shiftArr.map((color, i) => {
+
+                if (skipNextSlots.has(i)) return "";
+
+                let finalColor = color;
+                if (isToday) {
+                    finalColor = "success";
+                }
+
+                var textColor = finalColor === "light" ? "text-black" : "text-white";
+
+                const shiftCode = shiftNames[i];
+                const shiftFull = fullShiftName(shiftCode);
+
+                var bookingId = 0;
+                var eventName = null;
+                var clientName = null;
+                var clientContact = null;
+                var eventDateRange = null;
+
+                //console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
+                //console.log("shiftTimes[shiftCode].end:", shiftTimes[shiftCode].end);
+                const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
+                const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
+                //console.log("slotStart:", slotStart);
+                //console.log("slotEnd:", slotEnd);
+
+                let isBookingConfirmed = false;
+                let isBookingTentative = false;
+                let isBlocked = false;
+
+                let bookingMatch = null;
+                // Determine display text
+                let displayText = shiftCode;
+                if (Array.isArray(bookingData)) {
+                    // Filter bookings for this hall & date
+                    const bookingsToday = bookingData.filter(b => {
+
+                        if (b.BanquetId !== hall.Id)
+                            return false;
+
+                        const fromDate = new Date(b.FromDate);
+                        const tillDate = new Date(b.TillDate);
+                        const currentDate = new Date(dateStr_ISO);
+
+                        return currentDate >= fromDate && currentDate <= tillDate;
+                    });
+
+                    // If FD booking exists → show FD
+                    const fdBooking = bookingsToday.find(b => b.ShiftCode === "FD");
+                    if (fdBooking) {
+                        displayText = "FD";
+                    }
+                    else if (bookingsToday.length > 0) {
+
+                        // Count unique booking IDs (each booking = 1 group)
+                        const uniqueBookingIds = [...new Set(bookingsToday.map(b => b.BookingId))];
+
+                        displayText = uniqueBookingIds.length;
+                    }
+
+                    for (const booking of bookingData) {
+
+                        if (booking.BanquetId !== hall.Id)
+                            continue;
+
+                        const fromDate = new Date(booking.FromDate);
+                        const tillDate = new Date(booking.TillDate);
+                        const currentDate = new Date(dateStr_ISO);
+
+                        if (!(currentDate >= fromDate && currentDate <= tillDate))
+                            continue;
+
+                        // FULL DAY BLOCK
+                        if (booking.BookingCalendar_IsBlocked && booking.ShiftCode === "FD") {
+                            isBlocked = true;
+                            bookingMatch = booking;
+                            break;
+                        }
+
+                        //console.log("bookingData 2:", bookingData);
+                        const bookingStart = timeToMinutes(booking.StartTime_Full);
+                        const bookingEnd = timeToMinutes(booking.EndTime_Full);
+                        //console.log("bookingStart:", bookingStart, ", bookingEnd:", bookingEnd, ", slotStart:", slotStart, "slotEnd:", slotEnd);
+                        if (isTimeOverlap(bookingStart, bookingEnd, slotStart, slotEnd)) {
+
+                            bookingMatch = booking;
+
+                            if (booking.BookingCalendar_IsBlocked) {
+                                isBlocked = true;
+                                break;
+                            }
+
+                            bookingId = booking.BookingId;
+                            eventName = booking.Booking_TypeName;
+                            clientName = booking.Client_Name;
+                            clientContact = booking.Client_Contact;
+
+                            eventDateRange =
+                                booking.FromDate_Short + ' ' +
+                                booking.StartTime_Full + ' - ' +
+                                booking.TillDate_Short + ' ' +
+                                booking.EndTime_Full;
+
+                            if (booking.Booking_TypeId == 2) {
+                                isBookingTentative = true;
+                            } else {
+                                isBookingConfirmed = true;
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                // 🎯 MULTI-SLOT MERGE LOGIC
+                let spanCount = 1;
+
+                if (bookingMatch && !isBlocked) {
+
+                    const bookingStart = timeToMinutes(bookingMatch.StartTime_Full);
+                    const bookingEnd = timeToMinutes(bookingMatch.EndTime_Full);
+
+                    for (let j = i + 1; j < shiftNames.length; j++) {
+
+                        const nextShift = shiftNames[j];
+                        const nextStart = timeToMinutes(shiftTimes[nextShift].start);
+                        const nextEnd = timeToMinutes(shiftTimes[nextShift].end);
+
+                        if (isTimeOverlap(bookingStart, bookingEnd, nextStart, nextEnd)) {
+                            spanCount++;
+                            skipNextSlots.add(j);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                if (isBookingConfirmed) {
+                    finalColor = "danger";
+                    textColor = "text-white";
+                }
+                else if (isBookingTentative) {
+                    finalColor = "white";
+                    textColor = "text-dark";
+                }
+                else if (isBlocked) {
+                    finalColor = "dark";
+                    textColor = "text-white";
+                }
+
+                const mergeStyle = spanCount > 1
+                    ? `style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"`
+                    : "";
+
+                return `<div
+                    class="badge bg-${finalColor} d-block mb-1 ${textColor}"
+                    ${mergeStyle}
+                    data-bookingid="${bookingId}"
+                    data-eventname="${eventName}"
+                    data-clientname="${clientName}"
+                    data-clientcontact="${clientContact}"
+                    data-eventdaterange="${eventDateRange}"
+                    data-shift="${shiftCode}"
+                    data-shiftname="${shiftFull}"
+                    data-date="${dateStr}"
+                    data-date_format="${dateStr_Format}"
+                    data-date_iso="${dateStr_ISO}"
+                    data-hallname="${hall.HallName}"
+                    data-hallid="${hall.Id}">
+                    ${getDisplayText()}
+                </div>`;
+
+                function getDisplayText() {
+
+                    // If real FD booking
+                    if (bookingsToday.some(b => b.ShiftCode === "FD")) {
+                        return "FD";
+                    }
+
+                    // Count unique booking IDs
+                    const uniqueIds = [...new Set(bookingsToday.map(b => b.BookingId))];
+
+                    if (uniqueIds.length === 0)
+                        return shiftCode;
+
+                    // Only show count in first shift (FD row)
+                    if (shiftCode === "FD")
+                        return uniqueIds.length;
+
+                    return shiftCode;
+                }
+
+
             }).join("");
 
             // ✅ Handle click on individual badge inside this cell
@@ -1632,91 +1845,166 @@ async function renderBoard(bookingData = null) {
     // Reference tooltip
     const tooltip = document.getElementById("customTooltip");
 
+    let tooltipLocked = false;
     // 🪄 Attach hover listeners to badges
     document.addEventListener("mouseover", function (e) {
         const badge = e.target.closest(".badge[data-shift]");
-        if (badge) {
-            const shiftname = badge.dataset.shiftname;
-            const date_full = badge.dataset.date;
+        if (!badge) return;
 
-            const shiftcode = badge.dataset.shift;
-            const bookingid = badge.dataset.bookingid;
-            const eventName = badge.dataset.eventname || "";
-            const clientName = badge.dataset.clientname || "";
-            const clientContact = badge.dataset.clientcontact || "";
-            const eventDateRange = badge.dataset.eventdaterange || "";
+        const shiftcode = badge.dataset.shift;
+        const badgeText = badge.textContent.trim();
+        const dateISO = badge.dataset.date_iso;
+        const hallId = parseInt(badge.dataset.hallid);
 
-            if (bookingid > 0) {
-                // Tooltip rich layout (multi-line, readable)
-                tooltip.innerHTML = `
-                        <div>
-                            <strong><i class="fa-solid fa-calendar-alt"></i> ${eventName} (${shiftcode})</strong>
-                        </div>
-                        <div>
-                            <i class="fa-solid fa-user"></i> ${clientName}
-                        </div>
-                        <div>
-                            <i class="fa-solid fa-phone"></i> ${clientContact}
-                        </div>
-                        <div>
-                            <i class="fa-solid fa-clock"></i> ${eventDateRange}
-                        </div>
+        // 🔎 Get all bookings for this hall & date
+        const bookingsForDay = bookingData.filter(b => {
+
+            if (b.BanquetId !== hallId)
+                return false;
+
+            const fromDate = new Date(b.FromDate);
+            const tillDate = new Date(b.TillDate);
+            const currentDate = new Date(dateISO);
+
+            return currentDate >= fromDate && currentDate <= tillDate;
+        });
+
+        // ✅ If badge shows COUNT (numeric)
+        if (!isNaN(badgeText) && badgeText !== "") {
+            if (bookingsForDay.length === 0) return;
+
+            // ✅ Sort bookings
+            const shiftOrder = {
+                FD: 1,
+                MO: 2,
+                AF: 3,
+                EV: 4,
+                ON: 5
+            };
+
+            bookingsForDay.sort((a, b) => {
+                return (shiftOrder[a.ShiftCode] || 99) - (shiftOrder[b.ShiftCode] || 99);
+            });
+
+            let html = "";
+            bookingsForDay.forEach((b, index) => {
+
+                html += `
+                    <div style="padding-bottom:8px;">
+                        <strong>
+                            <i class="fa-solid fa-calendar-alt"></i> 
+                            ${b.Booking_TypeName} (${b.ShiftCode})
+                        </strong><br>
+                        <i class="fa-solid fa-user"></i> ${b.Client_Name}<br>
+                        <i class="fa-solid fa-phone"></i> ${b.Client_Contact}<br>
+                        <i class="fa-solid fa-clock"></i> 
+                        ${b.FromDate_Short} ${b.StartTime_Full} - 
+                        ${b.TillDate_Short} ${b.EndTime_Full}
+                    </div>
+                `;
+
+                // Add separator except for last item
+                if (index !== bookingsForDay.length - 1) {
+                    html += `
+                        <hr style="
+                            border: 1px solid #fff;
+                            margin: 6px 0;
+                        ">
                     `;
-                tooltip.style.background = "#e11d48"; // 🔴 red for booked
-                tooltip.style.color = "#fff";
-                tooltip.style.display = "block";
-            }
-            else {
-                if (badge.classList.contains("bg-secondary") || badge.classList.contains("bg-dark")) {
-                    tooltip.style.display = "none";
-                    return; // stop tooltip processing
                 }
+            });            
 
-                const shiftIcons = {
-                    FD: "fa-solid fa-sun",
-                    MO: "fa-solid fa-cloud-sun",
-                    AF: "fa-solid fa-sun",          // or fa-sun-haze if available
-                    EV: "fa-solid fa-cloud-moon",
-                    ON: "fa-solid fa-moon"
-                };
-                const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock"; // fallback
-                tooltip.innerHTML = `
-                        <div>
-                            <strong><i class="${iconClass}"></i> ${shiftname} (${shiftcode})</strong>
-                        </div>
-                        <div>
-                            <i class="fa-solid fa-calendar"></i> ${date_full}
-                        </div>
-                    `;
-                tooltip.style.background = "#22c55e"; // ✅ light green (Tailwind green-500)
-                tooltip.style.color = "#fff";
-                tooltip.style.display = "block";
-            }
+            tooltip.innerHTML = html;
+            tooltip.style.background = "#e11d48";
+            tooltip.style.color = "#fff";
+            tooltip.style.display = "block";
+            tooltip.style.maxHeight = "500px";
+            tooltip.style.overflowY = "auto";
+            tooltip.style.transition = "opacity 0.15s ease";
+
+            tooltipLocked = true;
+
+            // Position near badge instead of cursor
+            const rect = badge.getBoundingClientRect();
+            tooltip.style.left = rect.right + 10 + "px";
+            tooltip.style.top = rect.top + "px";
+
+            return;
+        }
+
+        // 🔴 Normal single booking tooltip
+        const bookingid = badge.dataset.bookingid;
+
+        if (bookingid > 0) {
+
+            const booking = bookingsForDay.find(b => b.BookingId == bookingid);
+            if (!booking) return;
+
+            tooltip.innerHTML = `
+                <div>
+                    <strong><i class="fa-solid fa-calendar-alt"></i> ${booking.Booking_TypeName} (${booking.ShiftCode})</strong>
+                </div>
+                <div>
+                    <i class="fa-solid fa-user"></i> ${booking.Client_Name}
+                </div>
+                <div>
+                    <i class="fa-solid fa-phone"></i> ${booking.Client_Contact}
+                </div>
+                <div>
+                    <i class="fa-solid fa-clock"></i> 
+                    ${booking.FromDate_Short} ${booking.StartTime_Full} - 
+                    ${booking.TillDate_Short} ${booking.EndTime_Full}
+                </div>
+            `;
+
+            tooltip.style.background = "#e11d48";
+            tooltip.style.color = "#fff";
+            tooltip.style.display = "block";
+            tooltip.style.maxHeight = "250px";
+            tooltip.style.overflowY = "auto";
         }
     });
 
     document.addEventListener("mousemove", function (e) {
-        if (tooltip.style.display === "block") {
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-            const offset = 15;
 
-            // Keep tooltip inside viewport
-            let left = e.pageX + offset;
-            let top = e.pageY + offset;
-            if (left + tooltipWidth > window.innerWidth) left = e.pageX - tooltipWidth - offset;
-            if (top + tooltipHeight > window.innerHeight) top = e.pageY - tooltipHeight - offset;
+        if (!tooltip || tooltip.style.display !== "block")
+            return;
 
-            tooltip.style.left = left + "px";
-            tooltip.style.top = top + "px";
-        }
+        // If locked (scrollable tooltip), don't follow cursor
+        if (tooltipLocked)
+            return;
+
+        const tooltipWidth = tooltip.offsetWidth;
+        const tooltipHeight = tooltip.offsetHeight;
+        const offset = 15;
+
+        let left = e.pageX + offset;
+        let top = e.pageY + offset;
+
+        if (left + tooltipWidth > window.innerWidth)
+            left = e.pageX - tooltipWidth - offset;
+
+        if (top + tooltipHeight > window.innerHeight)
+            top = e.pageY - tooltipHeight - offset;
+
+        tooltip.style.left = left + "px";
+        tooltip.style.top = top + "px";
     });
 
     document.addEventListener("mouseout", function (e) {
-        const badge = e.target.closest(".badge[data-shift]");
-        if (badge) {
-            tooltip.style.display = "none";
+
+        if (!tooltip) return;
+
+        const related = e.relatedTarget;
+
+        // If moving between badge and tooltip, don't hide
+        if (related && (related.closest?.(".badge[data-shift]") || related.id === "customTooltip")) {
+            return;
         }
+
+        tooltip.style.display = "none";
+        tooltip.style.transition = "opacity 0.15s ease";
+        tooltipLocked = false;
     });
     //on cell hover - tooltip ---- END --------------------
 
@@ -1726,63 +2014,47 @@ async function renderBoard(bookingData = null) {
     enableEnquiryTooltips();
     attachShiftClickListeners();
 }
+function timeToMinutes2(timeStr) {
+    // Supports "07:00", "6:00AM", "02:00 PM"
+    const d = new Date("1970-01-01 " + timeStr);
+    return d.getHours() * 60 + d.getMinutes();
+}
+function timeToMinutes(timeStr) {
+
+    if (!timeStr) return 0;
+
+    timeStr = timeStr.trim().toUpperCase();
+
+    // Handle 24-hour format (07:00 or 14:30)
+    if (timeStr.includes(":") && !timeStr.includes("AM") && !timeStr.includes("PM")) {
+        const [h, m] = timeStr.split(":");
+        return parseInt(h, 10) * 60 + parseInt(m, 10);
+    }
+
+    // Handle 12-hour format (9:00PM or 9:00 PM)
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/);
+
+    if (!match) return 0;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3];
+
+    if (period === "PM" && hours !== 12) {
+        hours += 12;
+    }
+
+    if (period === "AM" && hours === 12) {
+        hours = 0;
+    }
+
+    return hours * 60 + minutes;
+}
+function isTimeOverlap(start1, end1, start2, end2) {
+    return start1 < end2 && end1 > start2;
+}
 
 //enquiry count - tooltip
-function enableEnquiryTooltips2() {
-    const tooltip = document.getElementById("enquiryTooltip");
-
-    // Show tooltip on hover
-    document.addEventListener("mouseover", function (e) {
-        const badge = e.target.closest(".badge-enquiries");
-        if (!badge) return;
-
-        const list = badge.dataset.enquiryList ? JSON.parse(badge.dataset.enquiryList) : [];
-        const count = parseInt(badge.innerText);
-
-        // No tooltip if empty
-        if (count === 0 || list.length === 0) {
-            tooltip.style.display = "none";
-            return;
-        }
-
-        // Build tooltip table
-        let html = `
-                <table class="table table-sm table-bordered m-0">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th class="text-end">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-        list.forEach(x => {
-            html += `
-                    <tr>
-                        <td>${x.Name}</td>
-                        <td class="text-end">₹${(+x.Amount).toLocaleString()}</td>
-                    </tr>
-                `;
-        });
-
-        html += `</tbody></table>`;
-
-        tooltip.innerHTML = html;
-        tooltip.style.display = "block";
-
-        const rect = badge.getBoundingClientRect();
-        tooltip.style.left = (rect.right + 10 + window.scrollX) + "px";
-        tooltip.style.top = (rect.top + window.scrollY) + "px";
-    });
-
-    // Hide tooltip when leaving the badge
-    document.addEventListener("mouseout", function (e) {
-        if (e.target.closest(".badge-enquiries")) {
-            tooltip.style.display = "none";
-        }
-    });
-}
 function enableEnquiryTooltips() {
 
     const tooltip = document.getElementById("enquiryTooltip");
@@ -1859,33 +2131,6 @@ function adjustFontSizeForDays(daysCount) {
     const scale = daysCount > 30 ? 0.65 : daysCount > 29 ? 0.7 : 0.75;
     document.querySelectorAll("#booking-board .day-cell").forEach(cell => {
         cell.style.fontSize = `${scale}rem`;
-    });
-}
-
-function renderListViewTable2() {
-    listTableBody.innerHTML = "";
-    cachedDays.forEach((d, index) => {
-        banquetHallsList.forEach(hall => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                    <td>${d.date}-${monthNames[selectedMonth]}-${selectedYear}</td>
-                    <td>${d.day}</td>
-                    <td>
-                        <div class="badge-container">
-                            <span class="badge border border-dark text-black bg-white cursor-pointer">${d.enquiries}</span>
-                        </div>
-                    </td>
-                    <td>${hall.HallName}</td>
-                    <td>
-                        <div class="badge-container">
-                            ${cachedShiftData[hall.Id][index].map((color, i) => {
-                const textColor = color === "light" ? "text-black" : "text-white";
-                return `<span class="badge bg-${color} ${textColor}">${shiftNames[i]}</span>`;
-            }).join(" ")}
-                        </div>
-                    </td>`;
-            listTableBody.appendChild(tr);
-        });
     });
 }
 
@@ -2058,6 +2303,13 @@ function attachShiftClickListeners() {
             return; // skip attaching click event
         }
 
+        const badgeText = badge.textContent.trim();
+        // ✅ If badge text is numeric (count), disable click
+        if (!isNaN(badgeText) && badgeText !== "") {
+            badge.style.cursor = "default";
+            return; // do not attach click
+        }
+
         badge.style.cursor = "pointer";
         badge.addEventListener("click", () => {
             const color = badge.className.match(/bg-([a-z]+)/)?.[1];
@@ -2082,18 +2334,18 @@ function attachShiftClickListeners() {
                     //color === legendColors.future ||
                     (color === legendColors.past && bookingid > 0)
                 )
-            )
-            { 
+            ) {
 
                 resetBooking();
                 //console.log(`Edit Booking → Shift: ${shift} (${shiftname}) | Date: ${date} (format: ${dateformat}, iso: ${dateiso}) | Hall: ${hallname} (${hallid}) | BookingId: ${bookingid}`);
-
+                console.log("event dateiso:", dateiso);
                 $("#BookingId").val(bookingid);
                 // 🟢 Update label content & attributes - using jQuery
                 $("#label_date_shift")
-                    .text(`${date}, ${shiftname} Slot`)        // visible text
-                    .attr("data-eventdate", dateiso)           // yyyy-mm-dd
-                    .attr("data-shiftid", shift);              // FD, MO, etc.
+                    .text(`${date}, ${shiftname} Slot`)
+                    .data("eventdate", dateiso)
+                    .data("shiftid", shift);
+
                 $("#banquetDropdown").val(hallid);
                 setShiftTime(shift);
                 $("#PaymentDetails_DueDate").val('');
@@ -2114,6 +2366,7 @@ function attachShiftClickListeners() {
                     //bookingModal.show();
                     const bookingModal2 = new bootstrap.Modal(document.getElementById('bookingModal'));
                     bookingModal2.show();
+                    $("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
                 }
             }
             //For Past Days
@@ -2122,6 +2375,7 @@ function attachShiftClickListeners() {
 }
 
 function setShiftTime(shiftAbbr) {
+    console.log("shiftTimes:", shiftTimes);
     const times = shiftTimes[shiftAbbr];
     if (!times) return; // invalid shift — do nothing
 
@@ -2190,6 +2444,8 @@ var vendorWorkOrder_eventTime = 0;
 var vendorWorkOrder_slotId = 0;
 // Initial Load
 document.addEventListener("DOMContentLoaded", function () {
+    $("#btnBook").prop("disabled", true);
+
     const bookingId = getBookingId();
 
     populateYearDropdown();
@@ -2810,7 +3066,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return match ? parseInt(match[1], 10) : 0;
     }
 
-
     // 🧾 Download Function Prospect
     document.getElementById("btnDownloadPDF").addEventListener("click", function () {
         showReportOptions();
@@ -3155,14 +3410,8 @@ Your feedback helps us improve our service.`;
                     });
                 }
             },
-            error: function (xhr) {
-                console.error("❌ API Error:", xhr);
-
-                Swal.fire({
-                    icon: "error",
-                    title: "Error Occurred",
-                    text: xhr.responseJSON?.message || "Something went wrong."
-                });
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Booking Cancel failed");
             }
         });
 
@@ -3601,6 +3850,89 @@ Your feedback helps us improve our service.`;
         $("#btnSaveHallBlock").text("Save");
     }
     //Hall Block --- END ------------------------------
+
+    //Check Slot Availability ------- START ------------------------------------
+    // Trigger on date, time, banquet change
+    $("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").on("change", function () {
+        
+        let eventDate = $("#fromDate").val()?.trim();
+        let banquetId = parseInt($("#banquetDropdown").val()) || 0;
+
+        // Get start time parts
+        let sh = $("#startHour").val();
+        let sm = $("#startMinute").val();
+        let sampm = $("#startAMPM").val();
+
+        // Get end time parts
+        let eh = $("#endHour").val();
+        let em = $("#endMinute").val();
+        let eampm = $("#endAMPM").val();
+
+        $("#slotStatusMsg").addClass("d-none");
+
+        // Basic validation
+        if (!eventDate || !sh || !sm || !eh || !em) {
+            return;
+        }
+
+        // Format 12-hour time properly
+        let eventStart = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')} ${sampm}`;
+        let eventEnd = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')} ${eampm}`;
+
+        // Optional: prevent same time
+        if (eventStart === eventEnd) {
+            $("#slotStatusMsg")
+                .removeClass("d-none text-success")
+                .addClass("text-danger")
+                .text("Start time and End time cannot be same.");
+            return;
+        }
+
+        let payload = {
+            EventDate: eventDate,
+            StartTime: eventStart,   // 12-hour format
+            EndTime: eventEnd,
+            BanquetId: banquetId
+        };
+
+        //console.log("CHECKING SLOT:", payload);
+
+        showTempLoader("Checking Availability");
+
+        $("#btnBook").prop("disabled", true);
+
+        $.ajax({
+            url: "/api/EnquiryDeal/CheckBookingSlotAvailability",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+                Swal.close();
+
+                let isAvailable = res.data?.IsAvailable === 1;
+                let msgBox = $("#slotStatusMsg");
+
+                msgBox
+                    .removeClass("d-none text-danger text-success bg-success-subtle bg-danger-subtle")
+                    .addClass(isAvailable
+                        ? "text-success bg-success-subtle"
+                        : "text-danger bg-danger-subtle")
+                    .text(res.message);
+
+                // 🔹 Enable / Disable Book Button
+                $("#btnBook").prop("disabled", !isAvailable);                
+            },
+            error: function () {
+                Swal.close();
+                $("#slotStatusMsg")
+                    .removeClass("d-none text-success")
+                    .addClass("text-danger")
+                    .text("Unable to check slot availability");
+            }
+        });
+
+    });
+    //Check Slot Availability ------- END ------------------------------------
 });
 
 // Invoice GENEARTE -- START --------------------------------
@@ -4652,7 +4984,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         YearId: Number(selectedYearId) ?? 0,
         MonthId: Number(selectedMonthId) ?? 0
     };
-    console.log("GetBookingCalendar requestData:", requestData);
+    //console.log("GetBookingCalendar requestData:", requestData);
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -4661,7 +4993,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                console.log("Booking List:",data);
+                //console.log("Booking List:",data);
                 if (actionMode === "fullData") {
                     //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);
@@ -4690,7 +5022,18 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     //Booking Details
                     $("#bookingReport_BookingRef").text(bookingId || "—");
-                    $("#bookingReport_Invoice").text("#" + data.InvoiceNo);
+                    //$("#bookingReport_Invoice").text("#" + data.InvoiceNo);
+                    if (data.InvoiceNo && data.InvoiceNo !== 0) {
+                        $("#bookingReport_Invoice")
+                            .removeClass()
+                            .addClass("badge bg-success")
+                            .text("#" + data.InvoiceNo);
+                    } else {
+                        $("#bookingReport_Invoice")
+                            .removeClass()
+                            .addClass("badge bg-secondary")
+                            .text("Invoice Pending");
+                    }
                     $("#bookingReport_EventDate").text(data.FromDate_Full || "—");
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
                     $("#bookingReport_Slot").text(`${data.ShiftCode} (${fullShiftName(data.ShiftCode)})` || "—");
@@ -4757,8 +5100,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
                         .text(`${data.EventDate_Format}, ${fullShiftName(data.ShiftCode)} Slot`)        // visible text
-                        .attr("data-eventdate", data.EventDate)           // yyyy-mm-dd
-                        .attr("data-shiftid", data.ShiftCode);              // FD, MO, etc.
+                        .data("eventdate", data.EventDate)
+                        .data("shiftid", data.ShiftCode);
 
                     $("#gstSwitch").prop("checked", !!data.GSTAccepted).trigger("change");
 
@@ -4857,6 +5200,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#paymentSummary_BookingAmount").text(formatAmount(data.PaymentSummary_BookingDiscount_Total));
                     // Payable Amount
                     $("#paymentSummary_payableAmount").text(formatAmount(data.PaymentSummary_PayableAmount));
+
+                    $("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
 
                     $("#Section_PaymentDetails").hide();
                 }
@@ -4993,7 +5338,86 @@ function formatAmount(val) {
     return Number(val || 0).toFixed(2);
 }
 
+function validateBookingForm() {
+
+    clearAllErrors();
+    let isValid = true;
+
+    /* ================= BASIC BOOKING ================= */
+
+    if (!$("#fromDate").val()) {
+        showFieldError($("#fromDate"), "Please select from date");
+        isValid = false;
+    }
+
+    if (!$("#toDate").val()) {
+        showFieldError($("#toDate"), "Please select to date");
+        isValid = false;
+    }
+
+    if (!$("#startHour").val() || !$("#startMinute").val()) {
+        showFieldError($("#startHour"), "Please select start time");
+        isValid = false;
+    }
+
+    if (!$("#endHour").val() || !$("#endMinute").val()) {
+        showFieldError($("#endHour"), "Please select end time");
+        isValid = false;
+    }
+
+    if (!$("#clientName").val().trim()) {
+        showFieldError($("#clientName"), "Please enter client name");
+        isValid = false;
+    }
+
+    let contact = $("#clientContact").val().trim();
+    if (!contact || contact.length !== 10 || !/^\d+$/.test(contact)) {
+        showFieldError($("#clientContact"), "Enter valid 10 digit contact");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_subEventDropdown").val()) <= 0) {
+        showFieldError($("#booking_subEventDropdown"), "Please select event");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_pax").val()) <= 0) {
+        showFieldError($("#booking_pax"), "Please enter valid PAX");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_leadReferenceDropdown").val()) <= 0) {
+        showFieldError($("#booking_leadReferenceDropdown"), "Please select reference type");
+        isValid = false;
+    }
+
+
+    /* ================= PAYMENT VALIDATION ================= */
+
+    let paymentAmount = parseFloat($("#PaymentDetails_Amount").val()) || 0;
+    let paymentMode = parseInt($("#PaymentDetails_Mode").val()) || 0;
+    let paymentAccount = parseInt($("#PaymentDetails_AccountId").val()) || 0;
+
+    if (paymentAmount > 0) {
+
+        if (paymentMode === 0) {
+            showFieldError($("#PaymentDetails_Mode"), "Select payment mode");
+            isValid = false;
+        }
+
+        if (paymentAccount === 0) {
+            showFieldError($("#PaymentDetails_AccountId"), "Select account");
+            isValid = false;
+        }
+    }
+
+    return isValid;
+}
+
 function saveBooking() {
+    if (!validateBookingForm()) {
+        return;
+    }
     //const form = $("#bookingForm");
     const $label = $("#label_date_shift");
 
@@ -5147,7 +5571,7 @@ function saveBooking() {
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
 
-    //console.log("Final Booking JSON:", bookingData);
+    console.log("Final Booking JSON:", bookingData);
 
     // 🔹 4. AJAX POST
     $.ajax({
@@ -5196,10 +5620,35 @@ function saveBooking() {
         }
     });
 }
+function showFieldError($field, message) {
+    $field.addClass("is-invalid");
+    $field.closest(".col-md-2, .col-md-3, .col-md-5")
+        .find(".error-msg")
+        .removeClass("d-none")
+        .text(message);
+}
+
+function clearFieldError($field) {
+    $field.removeClass("is-invalid");
+    $field.closest(".col-md-2, .col-md-3, .col-md-5")
+        .find(".error-msg")
+        .addClass("d-none");
+}
+
+function clearAllErrors() {
+    $(".error-msg").addClass("d-none");
+    $(".form-control, .form-select").removeClass("is-invalid");
+}
 
 function resetBooking() {
+    clearAllErrors();
     // Reset all form fields
     $("#bookingForm").trigger("reset");
+    $("#label_date_shift")
+        .text("")                     // clear visible text
+        .data("eventdate", null)      // clear stored date
+        .data("shiftid", null);       // clear stored shift
+
     // Reset any special fields
     $("#gstSwitch").prop("checked", false);
     $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
@@ -5230,6 +5679,19 @@ function resetBooking() {
     });
     if (defaultOption.length) {
         $("#PaymentDetails_AccountId").val(defaultOption.val());
+    }
+
+    //SET STATE
+    const $stateDropdown = $("#clientStateDropdown");
+    // Find option with text "Gujarat"
+    const gujaratOption = $stateDropdown.find("option").filter(function () {
+        return $(this).text().trim().toLowerCase() === "gujarat";
+    });
+    if (gujaratOption.length > 0) {
+        $stateDropdown.val(gujaratOption.val()).trigger("change");
+    }
+    else {
+        $stateDropdown.val("0").trigger("change");
     }
 
 }
@@ -5541,6 +6003,14 @@ $("#btnSavePayment").click(function () {
         Swal.fire("Validation", "Booking Id missing!", "warning");
         return;
     }
+    if (!accountId || accountId <= 0 ) {
+        Swal.fire("Validation", "Payment Account is required!", "warning");
+        return;
+    }
+    if (!modeId || modeId <= 0 ) {
+        Swal.fire("Validation", "Payment Mode is required!", "warning");
+        return;
+    }
     if (!paymentDate) {
         Swal.fire("Validation", "Payment date is required!", "warning");
         return;
@@ -5819,4 +6289,233 @@ $(document).on("click", ".btn-download-all", function () {
 });
 
 
+// Vendor Work Order Modal -- START --------------------
+// =========================================
+// ADD NEW PARTICULAR ROW
+// =========================================
+$("#btnAddVendorParticular").on("click", function () {
 
+    const newRow = `
+                        <tr>
+                            <td>
+                                <input type="text"
+                                       class="form-control form-control-sm vw-service"
+                                       placeholder="Service">
+                            </td>
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm vw-qty"
+                                       value="1"
+                                       min="0">
+                            </td>
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm vw-amount"
+                                       value="0"
+                                       min="0"
+                                       step="0.01">
+                            </td>
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm vw-total"
+                                       value="0"
+                                       readonly>
+                            </td>
+                            <td>
+                                <input type="text"
+                                       class="form-control form-control-sm vw-description"
+                                       placeholder="Description">
+                            </td>
+                            <td class="text-center">
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm btnRemoveRow">
+                                    ×
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
+    $("#vendorParticularsTable tbody").append(newRow);
+});
+
+// =========================================
+// REMOVE ROW (LAST COLUMN ACTION)
+// =========================================
+$(document).on("click", ".btnRemoveRow", function () {
+
+    const rowCount = $("#vendorParticularsTable tbody tr").length;
+
+    if (rowCount <= 1) {
+        Swal.fire(
+            "Not Allowed",
+            "At least one particular row is required.",
+            "warning"
+        );
+        return;
+    }
+
+    $(this).closest("tr").remove();
+});
+
+// =========================================
+// AUTO CALCULATE TOTAL = QTY × AMOUNT
+// =========================================
+$(document).on("input", ".vw-qty, .vw-amount", function () {
+
+    const $row = $(this).closest("tr");
+
+    const qty = parseFloat($row.find(".vw-qty").val()) || 0;
+    const amount = parseFloat($row.find(".vw-amount").val()) || 0;
+
+    const total = qty * amount;
+
+    $row.find(".vw-total").val(total.toFixed(2));
+});
+
+// =========================================
+// LOAD VENDOR WORK ORDER SERVICES
+// =========================================
+loadVendorWorkOrderServices();
+function loadVendorWorkOrderServices(selectedId = 0) {
+    $.ajax({
+        url: "/api/BookingCalendar_VendorWorkOrder_Service/GetBookingCalendar_VendorWorkOrder_Service",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+
+            const $ddl = $("#VendorServiceId");
+            $ddl.empty();
+            $ddl.append('<option value="0">Select Service</option>');
+
+            res.data.forEach(function (item) {
+                const selected =
+                    selectedId && item.Id == selectedId
+                        ? "selected"
+                        : "";
+
+                $ddl.append(
+                    `<option value="${item.Id}" ${selected}>
+                                        ${item.Name}
+                                    </option>`
+                );
+            });
+        },
+        error: function (xhr, status, error) {
+            handleAjaxError(xhr, status, error, 'Failed to load vendor services');
+        }
+    });
+}
+
+//VENDOR DROPDOWN
+loadSupplierDropdown();
+function loadSupplierDropdown() {
+    var payload = { Id: 0 };
+    $.ajax({
+        url: "/api/Supplier/GetSupplierList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //console.log("response supplier:", response);
+            $("#VendorId").html(`<option value="0">-- Select Vendor --</option>`);
+            response.data.forEach(s => {
+                $("#VendorId").append(`<option value="${s.Id}">${s.Name}</option>`);
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Vendor Fetch Error");
+        }
+    });
+}
+
+//SLOT DROPDOWN
+loadSlotDropdown();
+function loadSlotDropdown() {
+    var payload = { Id: 0, IsActive: true };
+    $.ajax({
+        url: "/api/SlotMaster/GetSlotList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //console.log("response supplier:", response);
+            const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
+            const $abbrContainer = $("#slotAbbreviations");
+
+            $slotDropdowns.html(`<option value="0">-- Select Slot --</option>`);
+            $abbrContainer.html(""); // clear old abbreviations
+
+            shiftMap = {};
+            shiftTimes = {};
+            response.data.forEach(s => {
+                $slotDropdowns.append(`
+                    <option value="${s.Id}" 
+                            data-start="${s.StartTime}" 
+                            data-end="${s.EndTime}" 
+                            data-start2="${s.StartTime2}" 
+                            data-end2="${s.EndTime2}">${s.Name} (${s.Code})
+                    </option>`);
+
+                // 2️⃣ Abbreviation text
+                const timeRange = `${s.StartTime2}-${s.EndTime2}`;
+
+                $abbrContainer.append(`
+                    <span class="me-3">
+                        <b>${s.Code}</b> (${s.Name} ${timeRange})
+                    </span>
+                `);
+
+                // SLOT ABBREVIATIONS
+                const code = s.Code;
+                // Dynamic full name mapping
+                shiftMap[code] = s.Name;
+                // Dynamic time mapping
+                shiftTimes[code] = {
+                    start: s.StartTime2 || s.StartTime,
+                    end: s.EndTime2 || s.EndTime
+                };
+
+            });
+            console.log("Shift Map:", shiftMap);
+            console.log("Shift Times:", shiftTimes);
+
+
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Slot Fetch Error");
+        }
+    });
+}
+
+// Slot Change for Reschedule
+$(document).on("change", "#reschedule_SlotId", function () {
+
+    const selectedOption = $(this).find("option:selected");
+
+    const start2 = selectedOption.data("start2"); // 9:00AM or 09:00AM
+    const end2 = selectedOption.data("end2");
+
+    if ($(this).val() != "0" && start2 && end2) {
+
+        const startMatch = start2.match(/^(\d{1,2}):(\d{2})(AM|PM)$/);
+        const endMatch = end2.match(/^(\d{1,2}):(\d{2})(AM|PM)$/);
+
+        if (startMatch) {
+            $("#reschedule_startHour").val(startMatch[1]);
+            $("#reschedule_startMinute").val(startMatch[2]);
+            $("#reschedule_startAMPM").val(startMatch[3]);
+        }
+
+        if (endMatch) {
+            $("#reschedule_endHour").val(endMatch[1]);
+            $("#reschedule_endMinute").val(endMatch[2]);
+            $("#reschedule_endAMPM").val(endMatch[3]);
+        }
+
+    } else {
+        $("#reschedule_startHour, #reschedule_startMinute, #reschedule_endHour, #reschedule_endMinute").val("");
+        $("#reschedule_startAMPM, #reschedule_endAMPM").val("AM");
+    }
+});
+// Vendor Work Order Modal -- END --------------------

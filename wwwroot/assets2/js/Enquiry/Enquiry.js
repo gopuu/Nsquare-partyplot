@@ -1,5 +1,40 @@
-﻿//<!--MAIN-->
+﻿//SLOT MASTER
+loadSlotMaster();
+function loadSlotMaster() {
+    var payload = { Id: 0, IsActive: true };
+    $.ajax({
+        url: "/api/SlotMaster/GetSlotList",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //console.log("response supplier:", response);
 
+            shiftMap = {};
+            shiftTimes = {};
+            response.data.forEach(s => {
+                // SLOT ABBREVIATIONS
+                const code = s.Code;
+                // Dynamic full name mapping
+                shiftMap[code] = s.Name;
+                // Dynamic time mapping
+                shiftTimes[code] = {
+                    start: s.StartTime2 || s.StartTime,
+                    end: s.EndTime2 || s.EndTime
+                };
+
+            });
+            console.log("Shift Map:", shiftMap);
+            console.log("Shift Times:", shiftTimes);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Slot Fetch Error");
+        }
+    });
+}
+
+
+//<!--MAIN-->
 let userId = 0;
 // Sample data (replace later with API fetch)
 let processes = [];
@@ -1494,15 +1529,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 }
             },
-            error: function (xhr) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error!",
-                    text: xhr.responseText || "Something went wrong while saving."
-                });
-            },
-            complete: function () {
-                ////hideLoader();
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Enquiry Save failed");
             }
         });
     });
@@ -1978,8 +2006,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#eventDate, #eventStart, #eventEnd, #banquetHallDropdown").on("change", function () {
 
         let eventDate = $("#eventDate").val().trim();
-        let eventStart = $("#eventStart").val().trim(); // "02:30 PM"
-        let eventEnd = $("#eventEnd").val().trim();   // "05:00 PM"
+        let eventStart = $("#eventStart").val().trim();
+        let eventEnd = $("#eventEnd").val().trim();   
         let banquetId = parseInt($("#banquetHallDropdown").val(), 10) || 0;
 
         $("#slotStatusMsg").addClass("d-none");
@@ -2760,7 +2788,6 @@ function resetBooking() {
     if (defaultOption.length) {
         $("#PaymentDetails_AccountId").val(defaultOption.val());
     }
-
 }
 function recalculatePaymentSummary() {
 
@@ -2848,7 +2875,87 @@ $("#btnBook").on("click", function () { saveBooking(); });
 $("#btnReset").on("click", function () { resetBooking(); });
 //SAVE BOOKING ------ END --------------------------------
 
+function validateBookingForm() {
+
+    clearAllErrors();
+    let isValid = true;
+
+    /* ================= BASIC BOOKING ================= */
+
+    if (!$("#fromDate").val()) {
+        showFieldError($("#fromDate"), "Please select from date");
+        isValid = false;
+    }
+
+    if (!$("#toDate").val()) {
+        showFieldError($("#toDate"), "Please select to date");
+        isValid = false;
+    }
+
+    if (!$("#startHour").val() || !$("#startMinute").val()) {
+        showFieldError($("#startHour"), "Please select start time");
+        isValid = false;
+    }
+
+    if (!$("#endHour").val() || !$("#endMinute").val()) {
+        showFieldError($("#endHour"), "Please select end time");
+        isValid = false;
+    }
+
+    if (!$("#clientName").val().trim()) {
+        showFieldError($("#clientName"), "Please enter client name");
+        isValid = false;
+    }
+
+    let contact = $("#clientContact").val().trim();
+    if (!contact || contact.length !== 10 || !/^\d+$/.test(contact)) {
+        showFieldError($("#clientContact"), "Enter valid 10 digit contact");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_subEventDropdown").val()) <= 0) {
+        showFieldError($("#booking_subEventDropdown"), "Please select event");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_pax").val()) <= 0) {
+        showFieldError($("#booking_pax"), "Please enter valid PAX");
+        isValid = false;
+    }
+
+    if (parseInt($("#booking_leadReferenceDropdown").val()) <= 0) {
+        showFieldError($("#booking_leadReferenceDropdown"), "Please select reference type");
+        isValid = false;
+    }
+
+
+    /* ================= PAYMENT VALIDATION ================= */
+
+    let paymentAmount = parseFloat($("#PaymentDetails_Amount").val()) || 0;
+    let paymentMode = parseInt($("#PaymentDetails_Mode").val()) || 0;
+    let paymentAccount = parseInt($("#PaymentDetails_AccountId").val()) || 0;
+
+    if (paymentAmount > 0) {
+
+        if (paymentMode === 0) {
+            showFieldError($("#PaymentDetails_Mode"), "Select payment mode");
+            isValid = false;
+        }
+
+        if (paymentAccount === 0) {
+            showFieldError($("#PaymentDetails_AccountId"), "Select account");
+            isValid = false;
+        }
+    }
+
+    return isValid;
+}
+
 function saveBooking() {
+    if (!validateBookingForm()) {
+        return;
+    }
+
     //const form = $("#bookingForm");
     const $label = $("#label_date_shift");
 

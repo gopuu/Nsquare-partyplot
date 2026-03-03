@@ -197,8 +197,8 @@ function loadStockLevel(itemCategoryId = 0) {
                 $("#stockList").html("<div class='text-muted text-center'>No stock data found</div>");
             }
         },
-        error: function (xhr) {
-            console.error("Stock API failed", xhr);
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Stock Level failed");
             $("#stockList").html("<div class='text-danger text-center'>Failed to load stock data</div>");
         }
     });

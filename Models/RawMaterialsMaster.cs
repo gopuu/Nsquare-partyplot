@@ -56,6 +56,7 @@
     public class RM_PurchaseUnit
     {
         public long UnitId { get; set; }
+        public decimal? ConversionValue { get; set; }
     }
 
     public class RM_ClosingStockUpdatedOn
@@ -79,7 +80,6 @@
         public List<PurchaseUnitModel>? JSON_PurchaseUnits { get; set; }
         // Units
         public long ConsumptionUnitId { get; set; }
-        public decimal? OnePurchaseUnitEquals_ConsumptionUnitQty { get; set; }
 
         public long ItemCategoryId { get; set; }
 
@@ -128,6 +128,7 @@
     public class PurchaseUnitModel
     {
         public long UnitId { get; set; }
+        public decimal? ConversionValue { get; set; }
     }
 
     public class ClosingStockUpdatedOnModel

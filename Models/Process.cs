@@ -5,6 +5,8 @@
         public Int64 Id { get; set; }
         public string? Name { get; set; }
         public Int64 IndexNo { get; set; }
+        public bool IsConfirmed { get; set; }
+        public bool IsLost { get; set; }
     }
     public class SaveProcess : BaseClass
     {

@@ -83,7 +83,10 @@ namespace ERPAdmin.ApiControllers
                         VoucherNo = Convert.ToString(row["VoucherNo"]),
                         ChequeBank = Convert.ToString(row["ChequeBank"]),
                         ChequeNo = Convert.ToString(row["ChequeNo"]),
-                        ChequeDate = row["ChequeDate"] == DBNull.Value ? null : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
+                        ChequeDate = row["ChequeDate"] == DBNull.Value
+                            || string.IsNullOrWhiteSpace(row["ChequeDate"]?.ToString())
+                                ? string.Empty
+                                : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd")
                     });
                 }
 
@@ -96,7 +99,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 return StatusCode(500, apiResponse);
             }
         }
@@ -148,7 +151,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 return StatusCode(500, apiResponse);
             }
         }
@@ -185,7 +188,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
                 apiResponse.status = "Error";
-                apiResponse.message = "Error details: " + ex.Message;
+                apiResponse.message = ex.Message;
                 return StatusCode(500, apiResponse);
             }
         }

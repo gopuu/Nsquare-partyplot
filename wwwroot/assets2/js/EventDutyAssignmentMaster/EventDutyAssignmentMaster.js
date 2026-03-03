@@ -73,8 +73,8 @@
                     });
                 }
             },
-            error: function (xhr) {
-                handleApiError(xhr);   // <-- your custom error handler
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Save Duty failed");
             },
             complete: function () {
                 $("#btnSaveDuty").prop("disabled", false).text("Save");

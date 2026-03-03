@@ -399,18 +399,8 @@ $(document).ready(function () {
                 //$('#btn-loader').hide();
                 $('#deleteRecordModal').modal('hide');
             },
-            error: function (xhr) {
-                //$('#btn-loader').hide();
-                //alert('Failed to delete record: ' + xhr.responseText);
-                //console.log(xhr.responseText);
-                Swal.fire({
-                    title: "Delete City Error",
-                    text: xhr.responseText,
-                    icon: "error"
-                });
-            },
-            complete: function () {
-                $('#btn-loader').hide(); // Ensure loader is hidden in any case
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Delete Purchase failed");
             }
         });
         $('#deleteRecordModal').modal('hide');
@@ -530,6 +520,43 @@ $(document).ready(function () {
     //btnSaveOutstanding
     $("#btnSaveOutstanding").click(function () {
 
+        /* ================= BASIC REQUIRED CHECK ================= */
+        if (!payload.PaymentDate) {
+            Swal.fire("Warning", "Payment Date is required", "warning");
+            $("#outPaymentDate").focus();
+            return false;
+        }
+
+        if (payload.PaymentModeId <= 0) {
+            Swal.fire("Warning", "Please select Payment Mode", "warning");
+            $("#outPaymentModeId").focus();
+            return false;
+        }
+
+        if (payload.AccountId <= 0) {
+            Swal.fire("Warning", "Please select Account", "warning");
+            $("#outAccountId").focus();
+            return false;
+        }
+
+        /* ================= AMOUNT VALIDATION ================= */
+
+        if (!payload.PaidAmount || isNaN(payload.PaidAmount) || payload.PaidAmount <= 0) {
+            Swal.fire("Warning", "Paid amount must be greater than zero", "warning");
+            $("#outPaidAmount").focus();
+            return false;
+        }
+
+        if (payload.PaidAmount > remaining) {
+            Swal.fire(
+                "Invalid Amount",
+                `Paid amount cannot exceed remaining amount (₹ ${remaining.toLocaleString("en-IN")})`,
+                "warning"
+            );
+            $("#outPaidAmount").focus();
+            return false;
+        }
+
         const remaining = Number($("#outRemainingAmount").val()) || 0;
 
         const payload = {
@@ -545,27 +572,6 @@ $(document).ready(function () {
             ChequeDate: $("#outChequeDate").val(),
             ActionBy: Number(sessionStorage.getItem("userId") || 0)
         };
-
-        /* ================= BASIC REQUIRED CHECK ================= */
-        if (!payload.PaymentDate || !payload.PaymentModeId || !payload.AccountId) {
-            Swal.fire("Warning", "Please fill all required fields", "warning");
-            return;
-        }
-
-        /* ================= AMOUNT VALIDATION ================= */
-        if (!payload.PaidAmount || payload.PaidAmount <= 0) {
-            Swal.fire("Warning", "Paid amount must be greater than zero", "warning");
-            return;
-        }
-
-        if (payload.PaidAmount > remaining) {
-            Swal.fire(
-                "Invalid Amount",
-                `Paid amount cannot exceed remaining amount (₹ ${remaining.toLocaleString("en-IN")})`,
-                "warning"
-            );
-            return;
-        }
 
         $.ajax({
             url: "/api/Purchase/SavePurchaseOutstandingPayment",
@@ -1372,21 +1378,39 @@ function validatePurchaseForm() {
     // If Payment Type = Paid, validate fields
     if ($("#payPaid").is(":checked")) {
 
-        if (!$("#paymentDate").val()) {
+        let paymentDate = $("#paymentDate").val();
+        let paidAmount = parseFloat($("#paidAmount").val());
+        let paymentModeId = parseInt($("#paymentModeId").val()) || 0;
+        let paymentAccountId = parseInt($("#paymentAccountId").val()) || 0;
+
+        // Payment Date
+        if (!paymentDate) {
             Swal.fire("Validation", "Payment Date is required", "warning");
+            $("#paymentDate").focus();
             return false;
         }
 
-        if ($("#paidAmount").val() === "" || $("#paidAmount").val() <= 0) {
+        // Paid Amount
+        if (!paidAmount || isNaN(paidAmount) || paidAmount <= 0) {
             Swal.fire("Validation", "Paid Amount must be greater than 0", "warning");
+            $("#paidAmount").focus();
             return false;
         }
 
-        if ($("#paymentModeId").val() == "0") {
+        // Payment Mode
+        if (paymentModeId <= 0) {
             Swal.fire("Validation", "Select a Payment Mode", "warning");
+            $("#paymentModeId").focus();
             return false;
         }
-    }
+
+        // Payment Account
+        if (paymentAccountId <= 0) {
+            Swal.fire("Validation", "Select a Payment Account", "warning");
+            $("#paymentAccountId").focus();
+            return false;
+        }
+    }    
 
     return true; // All validations passed
 }
