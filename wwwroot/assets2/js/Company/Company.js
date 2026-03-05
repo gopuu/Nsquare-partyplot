@@ -1021,18 +1021,18 @@ $(document).ready(function () {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                //showLoader();
+
+                let payload = {
+                    Id: id,
+                    ActionBy: sessionStorage.getItem("userId") ?? 0
+                };
                 $.ajax({
-                    url: "/api/locality/DeleteLocality/" + id,
-                    method: "DELETE",
+                    url: "/api/Locality/DeleteLocality",
+                    method: "POST",
+                    data: JSON.stringify(payload),
+                    contentType: "application/json",
                     success: function (res) {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Deleted!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handleApiSuccess("Deleted!");
                         const cityId = $("#localityCity").val() || 0;
                         loadLocalities(cityId);
                     },
@@ -1215,10 +1215,17 @@ $(document).ready(function () {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                //showLoader();
+
+                let payload = {
+                    Id: id,
+                    ActionBy: sessionStorage.getItem("userId") ?? 0
+                };
+
                 $.ajax({
-                    url: "/api/monopolypreference/DeleteMonopolyPreference/" + id,
-                    method: "DELETE",
+                    url: "/api/MonopolyPreference/DeleteMonopolyPreference",
+                    method: "POST",
+                    data: JSON.stringify(payload),
+                    contentType: "application/json",
                     success: function (res) {
                         Swal.fire({
                             icon: 'success',

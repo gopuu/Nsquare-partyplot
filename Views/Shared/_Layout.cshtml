@@ -267,11 +267,13 @@
                             </li>
 
                             <!--RevenueReport-->
-                            <li class="dropdown">
+                            <li class="dropdown dropdown-inside">
                                 <a class="dropdown-item dropdown-toggle @(currentController == "RevenueReport" ? "active" : "")"
+                                   id="revenueReportMenu"
                                    href="#"
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside">
+
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
@@ -279,8 +281,8 @@
                                             Revenue Report
                                         </span>
                                     </div>
-                                </a>
 
+                                </a>
                                 <ul class="dropdown-menu">
                                     <li>
                                         <a class="dropdown-item" href="/Report_DailySales">
@@ -414,8 +416,9 @@
                                 </a>
                             </li>
                             <!--DutyManagement-->
-                            <li class="dropdown">
+                            <li class="dropdown dropdown-inside">
                                 <a class="dropdown-item dropdown-toggle @(currentController == "DutyManagement" ? "active" : "")"
+                                   id="dutyManagementMenu"
                                    href="#"
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside">
@@ -423,13 +426,15 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <span class="feather-icon me-2" data-feather="briefcase"></span>
+                                            <span class="me-2" data-feather="briefcase"></span>
                                             Duty Management
                                         </span>
                                     </div>
+
                                 </a>
 
                                 <ul class="dropdown-menu">
+
                                     <li>
                                         <a class="dropdown-item" href="/DutyRoleMaster">
                                             <div class="dropdown-item-wrapper">
@@ -447,11 +452,13 @@
                                             </div>
                                         </a>
                                     </li>
+
                                 </ul>
                             </li>
-
-                            <li class="dropdown">
+                            <!--TaskManagement-->
+                            <li class="dropdown dropdown-inside">
                                 <a class="dropdown-item dropdown-toggle @(currentController == "TaskManagement" ? "active" : "")"
+                                   id="taskManagementMenu"
                                    href="#"
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside">
@@ -459,13 +466,15 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <span class="feather-icon me-2" data-feather="clipboard"></span>
+                                            <span class="me-2" data-feather="clipboard"></span>
                                             Task Management
                                         </span>
                                     </div>
+
                                 </a>
 
                                 <ul class="dropdown-menu">
+
                                     <li>
                                         <a class="dropdown-item" href="/TaskCategoryMaster">
                                             <div class="dropdown-item-wrapper">
@@ -492,6 +501,7 @@
                                             </div>
                                         </a>
                                     </li>
+
                                 </ul>
                             </li>
                         </ul>
@@ -545,6 +555,67 @@
                                     </div>
                                 </a>
                             </li>
+
+                            <!--Asset Management-->
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "AssetManagement" ? "active" : "")"
+                                   id="assetManagementMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="me-2" data-feather="briefcase"></span>
+                                            Asset Management
+                                        </span>
+                                    </div>
+
+                                </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="dropdown-item" href="/AssetLedger">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="file-text"></span>
+                                                Asset Ledger
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/AssetPurchase">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="shopping-cart"></span>
+                                                Asset Purchase
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/AssetRemove">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="trash-2"></span>
+                                                Asset Remove
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/AssetRepair">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="tool"></span>
+                                                Asset Repair
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+
+                            <!--Master-->
                             <li class="dropdown dropdown-submenu dropstart modules-parent master_link">
                                 <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <div class="dropdown-item-wrapper">
@@ -658,19 +729,13 @@
                                                 <!-- Category Master -->
                                                 <a class="dropdown-link asset_masterMenu" href="/AssetCategoryMaster">
                                                     <span class="me-2" data-feather="layers"></span>
-                                                    <span class="menu-text">Category Master</span>
+                                                    <span class="menu-text">Asset Category Master</span>
                                                 </a>
 
                                                 <!-- SubCategory Master -->
                                                 <a class="dropdown-link asset_masterMenu" href="/AssetSubCategoryMaster">
                                                     <span class="me-2" data-feather="grid"></span>
-                                                    <span class="menu-text">SubCategory Master</span>
-                                                </a>
-
-                                                <!-- Asset Purchase -->
-                                                <a class="dropdown-link asset_masterMenu" href="/AssetPurchase">
-                                                    <span class="me-2" data-feather="shopping-cart"></span>
-                                                    <span class="menu-text">Asset Purchase</span>
+                                                    <span class="menu-text">Asset SubCategory Master</span>
                                                 </a>
 
                                                 <!-- Remove Reason Master -->
@@ -679,22 +744,10 @@
                                                     <span class="menu-text">Remove Reason Master</span>
                                                 </a>
 
-                                                <!-- Asset Remove -->
-                                                <a class="dropdown-link asset_masterMenu" href="/AssetRemove">
-                                                    <span class="me-2" data-feather="trash-2"></span>
-                                                    <span class="menu-text">Asset Remove</span>
-                                                </a>
-
                                                 <!-- Repair Status Master -->
                                                 <a class="dropdown-link asset_masterMenu" href="/AssetRepair_StatusMaster">
                                                     <span class="me-2" data-feather="clipboard"></span>
                                                     <span class="menu-text">Repair Status Master</span>
-                                                </a>
-
-                                                <!-- Asset Repair -->
-                                                <a class="dropdown-link asset_masterMenu" href="/AssetRepair">
-                                                    <span class="me-2" data-feather="tool"></span>
-                                                    <span class="menu-text">Asset Repair</span>
                                                 </a>
                                             </div>
 

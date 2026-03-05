@@ -1,7 +1,8 @@
 ﻿let rowIndex = 0;
-let nextInvoiceNo = 0;
 $(document).ready(function () {
+    loadBookingDropdown();
     loadAssetsMasterDropdown();
+    loadRepairStatusMasterDropdown();
     fetchData();
 
     // Add button click
@@ -17,16 +18,12 @@ $(document).ready(function () {
                 confirmButtonText: "OK"
             });
             event.preventDefault(); // Stop the modal from opening
-            $('#assetPurchaseModal').modal('hide');
+            $('#assetRepairModal').modal('hide');
         } else {
             resetFormFields(); // Reset form fields when modal is shown
-            $("#purchaseModalTitle").text("Add Purchase Order");
-            $("#assetPurchaseModal").modal("show");
+            $("#RepairModalTitle").text("Add Asset-Repair Details");
+            $("#assetRepairModal").modal("show");
         }
-    });
-
-    $("#btnResetForm").on("click", function () {
-        resetPurchaseForm();
     });
 
     // Edit button click
@@ -45,107 +42,104 @@ $(document).ready(function () {
             return;
         }
 
-        resetFormFields('edit');
+        resetFormFields("edit");
 
         let table = $('#tableMain table').DataTable();
         let rowData = table.row($(this).closest("tr")).data();
 
         if (!rowData) return;
 
-        // =========================================
-        // HEADER DATA
-        // =========================================
         console.log("rowData:", rowData);
 
-        $("#purchaseId").val(rowData.Id);
+        // HEADER
+        $("#RepairId").val(rowData.Id);
 
-        $("#purchaseDate").val(rowData.PurchaseDate ?? "");
-        $("#vendorName").val(rowData.VendorName ?? "");
-        $("#invoiceNo").val(rowData.InvoiceNo ?? "");
+        $("#bookingId").val(rowData.BookingId ?? 0);
+
+        $("#repairVendor").val(rowData.RepairVendor ?? "");
+
+        $("#repairTotalCost").val(rowData.RepairTotalCost ?? 0);
+
         $("#remarks").val(rowData.Remarks ?? "");
-        $("#netTotalAmount").val(rowData.NetTotalAmount ?? "0");
 
-        // =========================================
-        // LOAD ITEMS
-        // =========================================
-
-        $("#purchaseItemsBody").empty();
+        // ITEMS
+        $("#RepairItemsBody").empty();
         rowIndex = 0;
-
         if (Array.isArray(rowData.Items) && rowData.Items.length > 0) {
             rowData.Items.forEach(item => {
                 let newRow = buildRowForEdit(item);
-                $("#purchaseItemsBody").append(newRow);
+                $("#RepairItemsBody").append(newRow);
             });
         }
         else {
             addNewRow();
         }
+
         updateSrNo();
-        //calculateSubTotals();
 
-        // =========================================
         // OPEN MODAL
-        // =========================================
+        $("#RepairModalTitle").text("Edit Asset Repair");
 
-        $("#purchaseModalTitle").text("Edit Asset Purchase");
-        $("#assetPurchaseModal").modal("show");
+        $("#assetRepairModal").modal("show");
 
     });
 
     // SAVE - Handle form submission
-    $("#btnSavePurchase").click(function (event) {
+    $("#btnSaveRepair").click(function (event) {
         event.preventDefault();
-        if (!validatePurchaseForm()) return;
-
-        let purchaseId = $("#purchaseId").val();
+        if (!validateRepairForm()) return;
         let payload = {
-            Id: purchaseId,
-            PurchaseDate: $("#purchaseDate").val(),
-            VendorName: $("#vendorName").val(),
-            InvoiceNo: $("#invoiceNo").val(),
+            Id: $("#RepairId").val(),
+            BookingId: $("#bookingId").val() || null,
+            RepairVendor: $("#repairVendor").val(),
+            RepairTotalCost: parseFloat($("#repairTotalCost").val()) || 0,
             Remarks: $("#remarks").val(),
-            NetTotalAmount: parseFloat($("#netTotalAmount").val()) || 0,
-            Items: collectItems(),
-            ActionBy: sessionStorage.getItem("userId") || 0
+            Items: collectRepairItems(),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
+        console.log("payload:", payload);
+
         $.ajax({
-            url: "/api/AssetPurchase/SaveAssetPurchase",
+            url: "/api/AssetRepair/SaveAssetRepair",
             type: "POST",
             data: JSON.stringify(payload),
             contentType: "application/json",
             success: function (response) {
-                if (response.status.toLowerCase() == "success") {
+                if (response.status.toLowerCase() === "success") {
                     handleApiSuccess("Saved!");
                     fetchData();
                     resetFormFields();
+                    $("#assetRepairModal").modal("hide");
                 }
                 else {
                     Swal.fire("Error", response.message, "error");
                 }
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Asset Purchase Save Error");
+                handleApiError(xhr, status, error, "Asset Repair Save Error");
             }
         });
-
     });
-    function collectItems() {
+    function collectRepairItems() {
         let items = [];
-        $("#purchaseItemsBody tr").each(function () {
+        $("#RepairItemsBody tr").each(function () {
             let row = $(this);
             items.push({
                 AssetMaster_Id: row.find(".assetSelect").val(),
                 Qty: parseFloat(row.find(".qtyInput").val()) || 0,
-                UnitPrice: parseFloat(row.find(".priceInput").val()) || 0,
-                GrossTotalAmount: parseFloat(row.find(".amountInput").val()) || 0
+                CostPerItem: parseFloat(row.find(".costInput").val()) || 0,
+                RepairCost: parseFloat(row.find(".repairCostInput").val()) || 0,
+                AssetRepair_StatusMaster_Id: row.find(".repairStatusSelect").val(),
+                SentDate: row.find(".sentDateInput").val(),
+                ReceivedDate: row.find(".receivedDateInput").val()
             });
         });
+        console.log("save items:", items);
         return items;
     }
 
-    // Delete Event handler for remove button click
+    // Delete Event handler for repair button click
     $(document).on('click', '.btn-delete', function (event) {
         var canDelete = (sessionStorage.getItem('CanDelete') || localStorage.getItem('CanDelete')) === 'true';
         if (!canDelete) {
@@ -184,13 +178,15 @@ $(document).ready(function () {
 
         $('#btn-loader').show();
         $.ajax({
-            url: "/api/AssetPurchase/DeleteAssetPurchase",
+            url: "/api/AssetRepair/DeleteAssetRepair",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (response) {
                 if (response.status === "Success") {
                     handleApiSuccess("Deleted!");
+                    fetchData();
+                    loadAssetsMasterDropdown();
                 }
                 else {
                     Swal.fire({
@@ -199,11 +195,10 @@ $(document).ready(function () {
                         icon: "error"
                     });
                 }
-                fetchData();
                 $('#deleteRecordModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Delete Purchase failed");
+                handleApiError(xhr, status, error, "Delete AssetRepair failed");
             }
         });
         $('#deleteRecordModal').modal('hide');
@@ -211,13 +206,12 @@ $(document).ready(function () {
 
     // DELETE ROW
     $(document).on("click", ".btnDeleteRow", function () {
-        $(this).closest("tr").remove();
+        $(this).closest("tr").repair();
         updateSrNo();
-        calculateSubTotals();
     });
 
     // ADD NEW ROW BUTTON
-    $("#btnAddPurchaseItem").on("click", function () {
+    $("#btnAddRepairItem").on("click", function () {
         addNewRow();
     });
 
@@ -239,10 +233,69 @@ function loadAssetsMasterDropdown() {
     });
 }
 
+let repairStatusMaster = [];
+function loadRepairStatusMasterDropdown() {
+    $.ajax({
+        url: "/api/AssetRepair_StatusMaster/GetAssetRepairStatus",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            repairStatusMaster = res.data || [];
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Status Master Failed");
+        }
+    });
+}
+
+function loadBookingDropdown(bookingId = 0, banquetId = 0, eventDate = null) {
+    var requestData = {
+        BookingId: Number(bookingId),
+        BanquetId: Number(banquetId),
+        EventDate: eventDate,
+        YearId: 0,
+        MonthId: 0
+    };
+    //console.log("GetBookingCalendar requestData:", requestData);
+    $.ajax({
+        url: "/api/BookingCalendar/GetBookingCalendar",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestData),
+        success: function (response) {
+            if (response.status === "Success") {
+                var data = response.data; //BookingId, Client_Name (Booking_PAX, ShiftCode) 
+
+                let dropdown = $("#bookingId");
+                dropdown.empty();
+                dropdown.append(`<option value="0">-- Select Booking --</option>`);
+                data.forEach(function (item) {
+                    dropdown.append(`<option value="${item.BookingId}">
+                                        ${item.Client_Name} (PAX: ${item.Booking_PAX}, Slot: ${item.ShiftCode})
+                                    </option>
+                    `);
+                });
+            }
+            else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data Found',
+                    text: response.message || 'No bookings available.',
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "getBooking fetch fail")
+        }
+    });
+}
+
+
 /// TABLE ITEMS GRID ----- START -------------------------------
 // CALL THIS ON RESET OR MODAL OPEN
 function addInitialRow() {
-    $("#purchaseItemsBody").empty();
+    $("#RepairItemsBody").empty();
     rowIndex = 0;
     addNewRow();
 }
@@ -255,17 +308,24 @@ function addNewRow() {
     // ASSET DROPDOWN
     let assetDropdown = `<select class="form-select form-select-sm assetSelect">`;
     assetDropdown += `<option value="0">--Select Asset--</option>`;
-
     assetMasterData.forEach(x => {
-
         assetDropdown += `
-            <option value="${x.Id}">
-                ${x.AssetName ?? x.Name}
+            <option value="${x.Id}" data-stock="${x.ClosingQty}">
+                ${x.AssetName} (Available Stock: ${x.ClosingQty})
             </option>
         `;
-
     });
     assetDropdown += `</select>`;
+
+    // STATUS DROPDOWN
+    let statusDropdown = `<select class="form-select form-select-sm repairStatusSelect">`;
+    statusDropdown += `<option value="0">-- Status --</option>`;
+    repairStatusMaster.forEach(x => {
+        statusDropdown += `<option value="${x.Id}">${x.StatusTitle}</option>`;
+    });
+    statusDropdown += `</select>`;
+
+    let today = new Date().toISOString().split("T")[0];
 
     let newRow = $(`
         <tr data-index="${rowIndex}">
@@ -274,34 +334,45 @@ function addNewRow() {
             <td class="text-center align-middle sr-no">${rowIndex}</td>
 
             <!-- Asset -->
-            <td>
-                ${assetDropdown}
-            </td>
+            <td>${assetDropdown}</td>
 
             <!-- Qty -->
             <td>
-                <input type="number" 
-                       class="form-control form-control-sm qtyInput" 
-                       min="0" step="0.01" value="0">
+                <input type="number" class="form-control form-control-sm qtyInput" min="0" step="1" value="0">
             </td>
 
-            <!-- Unit Price -->
             <td>
-                <input type="number" 
-                       class="form-control form-control-sm priceInput" 
-                       min="0" step="0.01" value="0">
+                <input type="number" class="form-control form-control-sm costInput" value="0">
             </td>
 
-            <!-- Amount -->
             <td>
-                <input type="number" 
-                       class="form-control form-control-sm amountInput" 
-                       readonly value="0">
+                <input type="number" class="form-control form-control-sm repairCostInput" value="0" readonly>
+            </td>
+
+            <!-- Status -->
+            <td>${statusDropdown}</td>
+
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="date" class="form-control sentDateInput" value="${today}">
+                    <button class="btn btn-outline-secondary btnClearDate" type="button">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </td>
+
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="date" class="form-control receivedDateInput">
+                    <button class="btn btn-outline-secondary btnClearDate" type="button">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
             </td>
 
             <!-- Delete -->
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-danger btnDeleteRow">
+                <button class="btn btn-xs btn-outline-danger btnDeleteRow">
                     <i class="fa fa-trash"></i>
                 </button>
             </td>
@@ -309,43 +380,54 @@ function addNewRow() {
         </tr>
     `);
 
-    $("#purchaseItemsBody").append(newRow);
+    $("#RepairItemsBody").append(newRow);
 
     updateSrNo();
-
 }
 function buildRowForEdit(item) {
 
     rowIndex++;
+    console.log("edit item:", item);
 
     let assetId = item.AssetMaster_Id;
     let qty = item.Qty ?? 0;
-    let price = item.UnitPrice ?? 0;
-    let amount = item.GrossTotalAmount ?? 0;
+    let cost = item.CostPerItem ?? 0;
+    let repairCost = item.RepairCost ?? 0;
+    let statusId = item.AssetRepair_StatusMaster_Id ?? 0;
+    let sentDate = item.SentDate ?? "";
+    let receivedDate = item.ReceivedDate ?? "";
 
+    // ASSET DROPDOWN
     let assetDropdown = `<select class="form-select form-select-sm assetSelect">
         <option value="0">--Select Asset--</option>`;
 
     assetMasterData.forEach(x => {
-
-        assetDropdown += `<option value="${x.Id}">
-            ${x.AssetName ?? x.Name}
-        </option>`;
-
+        assetDropdown += `
+            <option value="${x.Id}" data-stock="${x.ClosingQty}">
+                ${x.AssetName} (Available Stock: ${x.ClosingQty})
+            </option>`;
     });
 
     assetDropdown += `</select>`;
 
+    // STATUS DROPDOWN
+    let statusDropdown = `<select class="form-select form-select-sm repairStatusSelect">
+        <option value="0">-- Status --</option>`;
+
+    repairStatusMaster.forEach(x => {
+        statusDropdown += `<option value="${x.Id}">
+            ${x.StatusTitle}
+        </option>`;
+    });
+
+    statusDropdown += `</select>`;
 
     let row = $(`
-
         <tr data-index="${rowIndex}">
 
             <td class="text-center sr-no">${rowIndex}</td>
 
-            <td>
-                ${assetDropdown}
-            </td>
+            <td>${assetDropdown}</td>
 
             <td>
                 <input type="number"
@@ -355,35 +437,58 @@ function buildRowForEdit(item) {
 
             <td>
                 <input type="number"
-                       class="form-control form-control-sm priceInput"
-                       value="${price}">
+                       class="form-control form-control-sm costInput"
+                       value="${cost}">
             </td>
 
             <td>
                 <input type="number"
-                       class="form-control form-control-sm amountInput"
-                       value="${amount}" readonly>
+                       class="form-control form-control-sm repairCostInput"
+                       value="${repairCost}"
+                       readonly>
+            </td>
+
+            <td>${statusDropdown}</td>
+
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="date"
+                           class="form-control sentDateInput"
+                           value="${sentDate}">
+                    <button class="btn btn-outline-secondary btnClearDate" type="button">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </td>
+
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="date"
+                       class="form-control form-control-sm receivedDateInput"
+                       value="${receivedDate}">
+                    <button class="btn btn-outline-secondary btnClearDate" type="button">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
             </td>
 
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-danger btnDeleteRow">
+                <button class="btn btn-xs btn-outline-danger btnDeleteRow">
                     <i class="fa fa-trash"></i>
                 </button>
             </td>
 
         </tr>
-
     `);
 
     row.find(".assetSelect").val(assetId);
+    row.find(".repairStatusSelect").val(statusId);
 
     return row;
-
 }
-
 // UPDATE SR NO AFTER DELETE
 function updateSrNo() {
-    $("#purchaseItemsBody tr").each(function (i) {
+    $("#RepairItemsBody tr").each(function (i) {
         $(this).find(".sr-no").text(i + 1);
     });
 }
@@ -395,17 +500,17 @@ function fetchData() {
 
     var payload = { Id: 0 };
     $.ajax({
-        url: "/api/AssetPurchase/GetAssetPurchase",
+        url: "/api/AssetRepair/GetAssetRepair",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("asset Purchase Fetch:", response);
+            //console.log("asset Repair Fetch:", response);
             var data = response.data ?? [];
             renderTable(data);
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "AssetPurchase Fetch Error");
+            handleApiError(xhr, status, error, "AssetRepair Fetch Error");
         }
     });
 }
@@ -431,10 +536,11 @@ function renderTable(data) {
             data: [],
             columns: [
                 { title: "#" },
-                { title: "Purchase Date" },
+                { title: "Booking Client" },
                 { title: "Vendor" },
-                { title: "Invoice No" },
-                { title: "Total Amount" },
+                { title: "Total Items" },
+                { title: "Total Qty" },
+                { title: "Repair Cost" },
                 { title: "Action" }
             ]
         });
@@ -442,44 +548,62 @@ function renderTable(data) {
         return;
     }
 
-    // Add SR No.
-    data.forEach((x, i) => x.srno = i + 1);
+    // Add SR No + calculate totals
+    data.forEach((x, i) => {
+
+        x.srno = i + 1;
+
+        if (Array.isArray(x.Items)) {
+
+            x.TotalItems = x.Items.length;
+
+            x.TotalQty = x.Items.reduce((sum, item) => {
+                return sum + (parseFloat(item.Qty) || 0);
+            }, 0);
+
+        } else {
+
+            x.TotalItems = 0;
+            x.TotalQty = 0;
+        }
+
+    });
 
     $('#tableMain table').DataTable({
-
         data: data,
-
         columns: [
-
             { data: "srno", title: "#" },
-
             {
-                data: "PurchaseDate1",
-                title: "Purchase Date"
-            },
-
-            {
-                data: "VendorName",
-                title: "Vendor",
+                data: "BookingClientName",
+                title: "Booking Client",
                 render: function (d) {
                     return d ? `<b>${d}</b>` : "-";
                 }
             },
-
             {
-                data: "InvoiceNo",
-                title: "Invoice No",
+                data: "RepairVendor",
+                title: "Vendor",
                 render: function (d) {
-                    if (!d) return "-";
-                    return `#${d}`;
+                    return d ? d : "-";
                 }
+            },
+            {
+                data: "TotalItems",
+                title: "Total Items",
+                className: "text-center"
             },
 
             {
-                data: "NetTotalAmount",
-                title: "Total Amount",
-                render: function (x) {
-                    return `₹ ${x ?? 0}`;
+                data: "TotalQty",
+                title: "Total Qty",
+                className: "text-center"
+            },
+
+            {
+                data: "RepairTotalCost",
+                title: "Repair Cost",
+                render: function (d) {
+                    return `₹ ${parseFloat(d || 0).toFixed(2)}`;
                 }
             },
 
@@ -487,26 +611,30 @@ function renderTable(data) {
                 data: null,
                 title: "Action",
                 render: function (data, type, row) {
+
                     return `
                         <div class="dropdown">
 
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle btn-action-xss"
                                     type="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
+                                    data-bs-toggle="dropdown">
                                 <i class="fa fa-ellipsis-v"></i>
                             </button>
 
                             <ul class="dropdown-menu dropdown-menu-end">
 
                                 <li>
-                                    <a class="dropdown-item btn-edit" href="javascript:void(0)" data-id="${row.Id}">
+                                    <a class="dropdown-item btn-edit"
+                                       href="javascript:void(0)"
+                                       data-id="${row.Id}">
                                         <i class="fa fa-edit text-warning me-2"></i> Edit
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item btn-delete" href="javascript:void(0)" data-id="${row.Id}">
+                                    <a class="dropdown-item btn-delete"
+                                       href="javascript:void(0)"
+                                       data-id="${row.Id}">
                                         <i class="fa fa-trash text-danger me-2"></i> Delete
                                     </a>
                                 </li>
@@ -514,7 +642,7 @@ function renderTable(data) {
                             </ul>
 
                         </div>
-                        `;
+                    `;
                 }
             }
 
@@ -530,67 +658,33 @@ function renderTable(data) {
 
 }
 
-function fetchInvoiceNo() {
-
-    $.ajax({
-        url: "/api/AssetPurchase/GetNextAssetPurchaseInvoiceNumber",
-        method: "GET",
-        contentType: "application/json",
-        success: function (response) {
-            var data = response.data ?? [];
-            nextInvoiceNo = data.NextInvoiceNumber;
-            $("#invoiceNo").val(nextInvoiceNo);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "AssetPurchase Fetch InvoiceNo Error");
-        }
-    });
-}
-
 // Reset form fields
-function resetFormFields(flag = 'add') {
-    $("#purchaseId").val(0);
-    $("#purchaseDate").val(new Date().toISOString().split("T")[0]);
-    $("#vendorName").val("");
-    if (flag === 'add') {
-        fetchInvoiceNo();
-    }
+function resetFormFields(mode = "add") {
+
+    $("#RepairId").val(0);
+
+    $("#bookingId").val(0);
+
+    $("#repairVendor").val("");
+
+    $("#repairTotalCost").val("0");
+
     $("#remarks").val("");
-    $("#netTotalAmount").val("0");
-    $("#purchaseItemsBody").empty();
+
+    $("#RepairItemsBody").empty();
 
     rowIndex = 0;
-    addNewRow();   // important
+
+    addNewRow();
+
     $(".modal-body").scrollTop(0);
 }
-function validatePurchaseForm() {
+//validation
+function validateRepairForm() {
 
-    // Vendor required
-    if ($("#vendorName").val().trim() === "") {
+    if ($("#RepairItemsBody tr").length === 0) {
 
-        Swal.fire("Validation", "Vendor name is required", "warning");
-
-        $("#vendorName").focus();
-
-        return false;
-
-    }
-
-    // Purchase Date required
-    if ($("#purchaseDate").val() === "") {
-
-        Swal.fire("Validation", "Purchase date is required", "warning");
-
-        $("#purchaseDate").focus();
-
-        return false;
-
-    }
-
-    // Ensure items exist
-    if ($("#purchaseItemsBody tr").length === 0) {
-
-        Swal.fire("Validation", "Add at least one asset item", "warning");
+        Swal.fire("Validation", "Add at least one repair item", "warning");
 
         return false;
 
@@ -598,13 +692,14 @@ function validatePurchaseForm() {
 
     let isValid = true;
 
-    $("#purchaseItemsBody tr").each(function () {
+    $("#RepairItemsBody tr").each(function () {
 
         let row = $(this);
 
         let assetId = row.find(".assetSelect").val();
         let qty = parseFloat(row.find(".qtyInput").val());
-        let price = parseFloat(row.find(".priceInput").val());
+        let cost = parseFloat(row.find(".costInput").val());
+        let statusId = row.find(".repairStatusSelect").val();
 
         if (!assetId || assetId == "0") {
 
@@ -615,7 +710,6 @@ function validatePurchaseForm() {
             isValid = false;
 
             return false;
-
         }
 
         if (!qty || qty <= 0) {
@@ -627,50 +721,78 @@ function validatePurchaseForm() {
             isValid = false;
 
             return false;
-
         }
 
-        if (price === undefined || price < 0) {
+        if (cost === undefined || cost < 0) {
 
-            Swal.fire("Validation", "Unit price must be valid", "warning");
+            Swal.fire("Validation", "Cost per item must be valid", "warning");
 
-            row.find(".priceInput").focus();
+            row.find(".costInput").focus();
 
             isValid = false;
 
             return false;
+        }
 
+        if (!statusId || statusId == "0") {
+
+            Swal.fire("Validation", "Please select repair status", "warning");
+
+            row.find(".repairStatusSelect").focus();
+
+            isValid = false;
+
+            return false;
+        }
+
+        // stock validation
+        let stock = row.find(".assetSelect option:selected").data("stock") || 0;
+
+        if (qty > stock) {
+
+            Swal.fire("Validation", "Qty exceeds available stock", "warning");
+
+            row.find(".qtyInput").focus();
+
+            isValid = false;
+
+            return false;
         }
 
     });
 
     return isValid;
-
 }
 
-//<!--BEHAVIOUR - START -->
-$(document).on("input", ".qtyInput, .priceInput", function () {
+$(document).on("input", ".qtyInput, .costInput", function () {
 
     let row = $(this).closest("tr");
 
     let qty = parseFloat(row.find(".qtyInput").val()) || 0;
-    let price = parseFloat(row.find(".priceInput").val()) || 0;
+    let cost = parseFloat(row.find(".costInput").val()) || 0;
 
-    let amount = qty * price;
+    let total = qty * cost;
 
-    row.find(".amountInput").val(amount.toFixed(2));
+    row.find(".repairCostInput").val(total.toFixed(2));
 
-    calculateSubTotals();
+    calculateRepairTotal();
 
 });
-function calculateSubTotals() {
+
+function calculateRepairTotal() {
+
     let total = 0;
-    $("#purchaseItemsBody tr").each(function () {
-        let amount = parseFloat($(this).find(".amountInput").val()) || 0;
-        total += amount;
+
+    $("#RepairItemsBody tr").each(function () {
+
+        total += parseFloat($(this).find(".repairCostInput").val()) || 0;
+
     });
-    $("#netTotalAmount").val(total.toFixed(2));
+
+    $("#repairTotalCost").val(total.toFixed(2));
 }
 
-//<!--BEHAVIOUR - END -->
-
+//btnClearDate
+$(document).on("click", ".btnClearDate", function () {
+    $(this).closest(".input-group").find("input[type='date']").val("");
+});

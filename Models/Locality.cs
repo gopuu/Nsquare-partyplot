@@ -18,4 +18,8 @@
         public Int64 Id { get; set; }
         public Int64 CityId { get; set; }
     }
+    public class DeleteLocality : BaseClass
+    {
+        public Int64 Id { get; set; }
+    }
 }

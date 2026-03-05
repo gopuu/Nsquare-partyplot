@@ -126,8 +126,9 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        [HttpDelete("DeleteMonopolyPreference/{id}")]
-        public IActionResult DeleteMonopolyPreference(Int64 id)
+        [HttpPost]
+        [Route("DeleteMonopolyPreference")]
+        public IActionResult DeleteMonopolyPreference([FromBody] DeleteMonopolyPreference model)
         {
             apiResponse apiResponse = new apiResponse();
             try
@@ -140,7 +141,8 @@ namespace ERPAdmin.ApiControllers
                     conn.Open();
                     SqlCommand cmd = new SqlCommand("DeleteMonopolyPreference", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@id", SqlDbType.BigInt).Value = id;
+                    cmd.Parameters.AddWithValue("@id", SqlDbType.BigInt).Value = model.Id;
+                    cmd.Parameters.AddWithValue("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
                     cmd.ExecuteNonQuery();
                     conn.Close();
                 }

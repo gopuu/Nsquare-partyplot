@@ -58,10 +58,12 @@ namespace ERPAdmin.ApiControllers
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         BookingId = row["BookingId"] == DBNull.Value ? null : Convert.ToInt64(row["BookingId"]),
+                        BookingClientName = Convert.ToString(row["BookingClientName"]),
                         RepairVendor = Convert.ToString(row["RepairVendor"]),
+                        TotalItems = row["TotalItems"] == DBNull.Value ? 0 : Convert.ToDecimal(row["TotalItems"]),
+                        TotalQty = row["TotalQty"] == DBNull.Value ? 0 : Convert.ToDecimal(row["TotalQty"]),
                         RepairTotalCost = row["RepairTotalCost"] == DBNull.Value ? 0 : Convert.ToDecimal(row["RepairTotalCost"]),
                         Remarks = Convert.ToString(row["Remarks"]),
-
                         Items = string.IsNullOrEmpty(Convert.ToString(row["Items"]))
                             ? new List<AssetRepairItemModel>()
                             : JsonConvert.DeserializeObject<List<AssetRepairItemModel>>(row["Items"].ToString())

@@ -58,8 +58,13 @@ namespace ERPAdmin.ApiControllers
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         BookingId = Convert.ToInt64(row["BookingId"]),
+                        BookingClientName = Convert.ToString(row["BookingClientName"]),
                         RemovedDate = Convert.ToString(row["RemovedDate"]),
+                        RemovedDate1 = Convert.ToString(row["RemovedDate1"]),
                         Remarks = Convert.ToString(row["Remarks"]),
+
+                        TotalItems = Convert.ToInt64(row["TotalItems"]),
+                        TotalQty = Convert.ToDecimal(row["TotalQty"]),
 
                         Items = string.IsNullOrEmpty(Convert.ToString(row["Items"]))
                             ? new List<AssetRemoveItemModel>()

@@ -1,7 +1,8 @@
 ﻿let rowIndex = 0;
-let nextInvoiceNo = 0;
 $(document).ready(function () {
+    loadBookingDropdown();
     loadAssetsMasterDropdown();
+    loadRemoveReasonMasterDropdown();
     fetchData();
 
     // Add button click
@@ -17,16 +18,12 @@ $(document).ready(function () {
                 confirmButtonText: "OK"
             });
             event.preventDefault(); // Stop the modal from opening
-            $('#assetPurchaseModal').modal('hide');
+            $('#assetRemoveModal').modal('hide');
         } else {
             resetFormFields(); // Reset form fields when modal is shown
-            $("#purchaseModalTitle").text("Add Purchase Order");
-            $("#assetPurchaseModal").modal("show");
+            $("#RemoveModalTitle").text("Add Asset-Remove Details");
+            $("#assetRemoveModal").modal("show");
         }
-    });
-
-    $("#btnResetForm").on("click", function () {
-        resetPurchaseForm();
     });
 
     // Edit button click
@@ -52,66 +49,72 @@ $(document).ready(function () {
 
         if (!rowData) return;
 
+        console.log("rowData:", rowData);
+
         // =========================================
         // HEADER DATA
         // =========================================
-        console.log("rowData:", rowData);
 
-        $("#purchaseId").val(rowData.Id);
+        $("#RemoveId").val(rowData.Id);
 
-        $("#purchaseDate").val(rowData.PurchaseDate ?? "");
-        $("#vendorName").val(rowData.VendorName ?? "");
-        $("#invoiceNo").val(rowData.InvoiceNo ?? "");
+        $("#bookingId").val(rowData.BookingId ?? 0);
+
+        $("#removeDate").val(rowData.RemovedDate ?? "");
+
         $("#remarks").val(rowData.Remarks ?? "");
-        $("#netTotalAmount").val(rowData.NetTotalAmount ?? "0");
 
         // =========================================
         // LOAD ITEMS
         // =========================================
 
-        $("#purchaseItemsBody").empty();
+        $("#RemoveItemsBody").empty();
         rowIndex = 0;
 
         if (Array.isArray(rowData.Items) && rowData.Items.length > 0) {
+
             rowData.Items.forEach(item => {
+
                 let newRow = buildRowForEdit(item);
-                $("#purchaseItemsBody").append(newRow);
+
+                $("#RemoveItemsBody").append(newRow);
+
             });
+
         }
         else {
-            addNewRow();
+
+            addRemoveRow();
+
         }
+
         updateSrNo();
-        //calculateSubTotals();
 
         // =========================================
         // OPEN MODAL
         // =========================================
 
-        $("#purchaseModalTitle").text("Edit Asset Purchase");
-        $("#assetPurchaseModal").modal("show");
+        $("#RemoveModalTitle").text("Edit Asset Remove");
+
+        $("#assetRemoveModal").modal("show");
 
     });
 
     // SAVE - Handle form submission
-    $("#btnSavePurchase").click(function (event) {
+    $("#btnSaveRemove").click(function (event) {
         event.preventDefault();
-        if (!validatePurchaseForm()) return;
+        if (!validateRemoveForm()) return;
 
-        let purchaseId = $("#purchaseId").val();
         let payload = {
-            Id: purchaseId,
-            PurchaseDate: $("#purchaseDate").val(),
-            VendorName: $("#vendorName").val(),
-            InvoiceNo: $("#invoiceNo").val(),
+            Id: $("#RemoveId").val(),
+            BookingId: $("#bookingId").val(),
+            RemovedDate: $("#removeDate").val(),
             Remarks: $("#remarks").val(),
-            NetTotalAmount: parseFloat($("#netTotalAmount").val()) || 0,
-            Items: collectItems(),
-            ActionBy: sessionStorage.getItem("userId") || 0
+            Items: collectRemoveItems(),
+            ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
         $.ajax({
-            url: "/api/AssetPurchase/SaveAssetPurchase",
+            url: "/api/AssetRemove/SaveAssetRemove",
             type: "POST",
             data: JSON.stringify(payload),
             contentType: "application/json",
@@ -120,29 +123,40 @@ $(document).ready(function () {
                     handleApiSuccess("Saved!");
                     fetchData();
                     resetFormFields();
+                    loadAssetsMasterDropdown();
                 }
                 else {
                     Swal.fire("Error", response.message, "error");
                 }
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Asset Purchase Save Error");
+                handleApiError(xhr, status, error, "Asset Remove Save Error");
             }
         });
 
     });
-    function collectItems() {
+    function collectRemoveItems() {
+
         let items = [];
-        $("#purchaseItemsBody tr").each(function () {
+
+        $("#RemoveItemsBody tr").each(function () {
+
             let row = $(this);
+
             items.push({
+
                 AssetMaster_Id: row.find(".assetSelect").val(),
+
                 Qty: parseFloat(row.find(".qtyInput").val()) || 0,
-                UnitPrice: parseFloat(row.find(".priceInput").val()) || 0,
-                GrossTotalAmount: parseFloat(row.find(".amountInput").val()) || 0
+
+                AssetRemove_ReasonMaster_Id: row.find(".reasonSelect").val()
+
             });
+
         });
+
         return items;
+
     }
 
     // Delete Event handler for remove button click
@@ -184,13 +198,15 @@ $(document).ready(function () {
 
         $('#btn-loader').show();
         $.ajax({
-            url: "/api/AssetPurchase/DeleteAssetPurchase",
+            url: "/api/AssetRemove/DeleteAssetRemove",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (response) {
                 if (response.status === "Success") {
                     handleApiSuccess("Deleted!");
+                    fetchData();
+                    loadAssetsMasterDropdown();
                 }
                 else {
                     Swal.fire({
@@ -199,11 +215,10 @@ $(document).ready(function () {
                         icon: "error"
                     });
                 }
-                fetchData();
                 $('#deleteRecordModal').modal('hide');
             },
             error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Delete Purchase failed");
+                handleApiError(xhr, status, error, "Delete AssetRemove failed");
             }
         });
         $('#deleteRecordModal').modal('hide');
@@ -213,11 +228,10 @@ $(document).ready(function () {
     $(document).on("click", ".btnDeleteRow", function () {
         $(this).closest("tr").remove();
         updateSrNo();
-        calculateSubTotals();
     });
 
     // ADD NEW ROW BUTTON
-    $("#btnAddPurchaseItem").on("click", function () {
+    $("#btnAddRemoveItem").on("click", function () {
         addNewRow();
     });
 
@@ -239,10 +253,69 @@ function loadAssetsMasterDropdown() {
     });
 }
 
+let reasonMasterData = [];
+function loadRemoveReasonMasterDropdown() {
+    $.ajax({
+        url: "/api/AssetRemove_ReasonMaster/GetAssetRemoveReason",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (res) {
+            reasonMasterData = res.data || [];
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Reason Master Failed");
+        }
+    });
+}
+
+function loadBookingDropdown(bookingId = 0, banquetId = 0, eventDate = null) {
+    var requestData = {
+        BookingId: Number(bookingId),
+        BanquetId: Number(banquetId),
+        EventDate: eventDate,
+        YearId: 0,
+        MonthId: 0
+    };
+    //console.log("GetBookingCalendar requestData:", requestData);
+    $.ajax({
+        url: "/api/BookingCalendar/GetBookingCalendar",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestData),
+        success: function (response) {
+            if (response.status === "Success") {
+                var data = response.data; //BookingId, Client_Name (Booking_PAX, ShiftCode) 
+
+                let dropdown = $("#bookingId");
+                dropdown.empty();
+                dropdown.append(`<option value="0">-- Select Booking --</option>`);
+                data.forEach(function (item) {
+                    dropdown.append(`<option value="${item.BookingId}">
+                                        ${item.Client_Name} (PAX: ${item.Booking_PAX}, Slot: ${item.ShiftCode})
+                                    </option>
+                    `);
+                });
+            }
+            else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data Found',
+                    text: response.message || 'No bookings available.',
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "getBooking fetch fail")
+        }
+    });
+}
+
+
 /// TABLE ITEMS GRID ----- START -------------------------------
 // CALL THIS ON RESET OR MODAL OPEN
 function addInitialRow() {
-    $("#purchaseItemsBody").empty();
+    $("#RemoveItemsBody").empty();
     rowIndex = 0;
     addNewRow();
 }
@@ -255,17 +328,26 @@ function addNewRow() {
     // ASSET DROPDOWN
     let assetDropdown = `<select class="form-select form-select-sm assetSelect">`;
     assetDropdown += `<option value="0">--Select Asset--</option>`;
-
     assetMasterData.forEach(x => {
-
         assetDropdown += `
-            <option value="${x.Id}">
-                ${x.AssetName ?? x.Name}
+            <option value="${x.Id}" data-stock="${x.ClosingQty}">
+                ${x.AssetName} (Available Stock: ${x.ClosingQty})
             </option>
         `;
-
     });
     assetDropdown += `</select>`;
+
+    // REMOVE DROPDOWN
+    let reasonDropdown = `<select class="form-select form-select-sm reasonSelect">`;
+    reasonDropdown += `<option value="0">--Select Reason--</option>`;
+    reasonMasterData.forEach(x => {
+        reasonDropdown += `
+            <option value="${x.Id}">
+                ${x.ReasonTitle}
+            </option>
+        `;
+    });
+    reasonDropdown += `</select>`;
 
     let newRow = $(`
         <tr data-index="${rowIndex}">
@@ -282,21 +364,12 @@ function addNewRow() {
             <td>
                 <input type="number" 
                        class="form-control form-control-sm qtyInput" 
-                       min="0" step="0.01" value="0">
+                       min="0" step="1" value="0">
             </td>
 
-            <!-- Unit Price -->
+            <!-- Reason -->
             <td>
-                <input type="number" 
-                       class="form-control form-control-sm priceInput" 
-                       min="0" step="0.01" value="0">
-            </td>
-
-            <!-- Amount -->
-            <td>
-                <input type="number" 
-                       class="form-control form-control-sm amountInput" 
-                       readonly value="0">
+                ${reasonDropdown}
             </td>
 
             <!-- Delete -->
@@ -309,10 +382,9 @@ function addNewRow() {
         </tr>
     `);
 
-    $("#purchaseItemsBody").append(newRow);
+    $("#RemoveItemsBody").append(newRow);
 
     updateSrNo();
-
 }
 function buildRowForEdit(item) {
 
@@ -320,33 +392,34 @@ function buildRowForEdit(item) {
 
     let assetId = item.AssetMaster_Id;
     let qty = item.Qty ?? 0;
-    let price = item.UnitPrice ?? 0;
-    let amount = item.GrossTotalAmount ?? 0;
+    let reasonId = item.AssetRemove_ReasonMaster_Id;
 
+    //asset dropdown
     let assetDropdown = `<select class="form-select form-select-sm assetSelect">
         <option value="0">--Select Asset--</option>`;
-
     assetMasterData.forEach(x => {
-
-        assetDropdown += `<option value="${x.Id}">
-            ${x.AssetName ?? x.Name}
+        assetDropdown += `<option value="${x.Id}" data-stock="${x.ClosingQty}">
+            ${x.AssetName} (Available Stock: ${x.ClosingQty})
         </option>`;
-
     });
-
     assetDropdown += `</select>`;
 
+    //Remove dropdown
+    let reasonDropdown = `<select class="form-select form-select-sm reasonSelect">
+        <option value="0">--Select Remove--</option>`;
+    reasonMasterData.forEach(x => {
+        reasonDropdown += `<option value="${x.Id}">
+            ${x.ReasonTitle}
+        </option>`;
+    });
+    reasonDropdown += `</select>`;
 
     let row = $(`
-
         <tr data-index="${rowIndex}">
-
             <td class="text-center sr-no">${rowIndex}</td>
-
             <td>
                 ${assetDropdown}
             </td>
-
             <td>
                 <input type="number"
                        class="form-control form-control-sm qtyInput"
@@ -354,15 +427,7 @@ function buildRowForEdit(item) {
             </td>
 
             <td>
-                <input type="number"
-                       class="form-control form-control-sm priceInput"
-                       value="${price}">
-            </td>
-
-            <td>
-                <input type="number"
-                       class="form-control form-control-sm amountInput"
-                       value="${amount}" readonly>
+                ${reasonDropdown}
             </td>
 
             <td class="text-center">
@@ -376,6 +441,7 @@ function buildRowForEdit(item) {
     `);
 
     row.find(".assetSelect").val(assetId);
+    row.find(".reasonSelect").val(reasonId);
 
     return row;
 
@@ -383,7 +449,7 @@ function buildRowForEdit(item) {
 
 // UPDATE SR NO AFTER DELETE
 function updateSrNo() {
-    $("#purchaseItemsBody tr").each(function (i) {
+    $("#RemoveItemsBody tr").each(function (i) {
         $(this).find(".sr-no").text(i + 1);
     });
 }
@@ -395,17 +461,17 @@ function fetchData() {
 
     var payload = { Id: 0 };
     $.ajax({
-        url: "/api/AssetPurchase/GetAssetPurchase",
+        url: "/api/AssetRemove/GetAssetRemove",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("asset Purchase Fetch:", response);
+            //console.log("asset Remove Fetch:", response);
             var data = response.data ?? [];
             renderTable(data);
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "AssetPurchase Fetch Error");
+            handleApiError(xhr, status, error, "AssetRemove Fetch Error");
         }
     });
 }
@@ -421,7 +487,7 @@ function renderTable(data) {
 
         $('#tableMain tbody').html(`
             <tr>
-                <td colspan="7" class="text-center fw-bold text-danger">
+                <td colspan="6" class="text-center fw-bold text-danger">
                     No Data Found !!
                 </td>
             </tr>
@@ -431,10 +497,10 @@ function renderTable(data) {
             data: [],
             columns: [
                 { title: "#" },
-                { title: "Purchase Date" },
-                { title: "Vendor" },
-                { title: "Invoice No" },
-                { title: "Total Amount" },
+                { title: "Booking Client Name" },
+                { title: "Removed Date" },
+                { title: "Total Items" },
+                { title: "Total Qty" },
                 { title: "Action" }
             ]
         });
@@ -445,44 +511,24 @@ function renderTable(data) {
     // Add SR No.
     data.forEach((x, i) => x.srno = i + 1);
 
+    console.log("data:", data);
     $('#tableMain table').DataTable({
-
         data: data,
-
         columns: [
-
             { data: "srno", title: "#" },
-
             {
-                data: "PurchaseDate1",
-                title: "Purchase Date"
+                data: "BookingClientName",
+                title: "Booking Client Name"
             },
-
             {
-                data: "VendorName",
-                title: "Vendor",
+                data: "RemovedDate1",
+                title: "Date",
                 render: function (d) {
                     return d ? `<b>${d}</b>` : "-";
                 }
             },
-
-            {
-                data: "InvoiceNo",
-                title: "Invoice No",
-                render: function (d) {
-                    if (!d) return "-";
-                    return `#${d}`;
-                }
-            },
-
-            {
-                data: "NetTotalAmount",
-                title: "Total Amount",
-                render: function (x) {
-                    return `₹ ${x ?? 0}`;
-                }
-            },
-
+            { data: "TotalItems", title: "Total Items" },
+            { data: "TotalQty", title: "Total Qty" },
             {
                 data: null,
                 title: "Action",
@@ -530,147 +576,71 @@ function renderTable(data) {
 
 }
 
-function fetchInvoiceNo() {
-
-    $.ajax({
-        url: "/api/AssetPurchase/GetNextAssetPurchaseInvoiceNumber",
-        method: "GET",
-        contentType: "application/json",
-        success: function (response) {
-            var data = response.data ?? [];
-            nextInvoiceNo = data.NextInvoiceNumber;
-            $("#invoiceNo").val(nextInvoiceNo);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "AssetPurchase Fetch InvoiceNo Error");
-        }
-    });
-}
-
 // Reset form fields
-function resetFormFields(flag = 'add') {
-    $("#purchaseId").val(0);
-    $("#purchaseDate").val(new Date().toISOString().split("T")[0]);
-    $("#vendorName").val("");
-    if (flag === 'add') {
-        fetchInvoiceNo();
-    }
+function resetFormFields(mode="add") {
+    $("#RemoveId").val(0);
+    $("#bookingId").val(0);
+    $("#removeDate").val(new Date().toISOString().split("T")[0]);
     $("#remarks").val("");
-    $("#netTotalAmount").val("0");
-    $("#purchaseItemsBody").empty();
-
+    $("#RemoveItemsBody").empty();
     rowIndex = 0;
-    addNewRow();   // important
+    addNewRow();
     $(".modal-body").scrollTop(0);
 }
-function validatePurchaseForm() {
 
-    // Vendor required
-    if ($("#vendorName").val().trim() === "") {
+//validation
+function validateRemoveForm() {
 
-        Swal.fire("Validation", "Vendor name is required", "warning");
-
-        $("#vendorName").focus();
-
+    if ($("#removeDate").val() === "") {
+        Swal.fire("Validation", "Remove date is required", "warning");
+        $("#removeDate").focus();
         return false;
-
     }
 
-    // Purchase Date required
-    if ($("#purchaseDate").val() === "") {
-
-        Swal.fire("Validation", "Purchase date is required", "warning");
-
-        $("#purchaseDate").focus();
-
-        return false;
-
-    }
-
-    // Ensure items exist
-    if ($("#purchaseItemsBody tr").length === 0) {
-
+    if ($("#RemoveItemsBody tr").length === 0) {
         Swal.fire("Validation", "Add at least one asset item", "warning");
-
         return false;
-
     }
 
     let isValid = true;
 
-    $("#purchaseItemsBody tr").each(function () {
-
+    $("#RemoveItemsBody tr").each(function () {
         let row = $(this);
 
         let assetId = row.find(".assetSelect").val();
         let qty = parseFloat(row.find(".qtyInput").val());
-        let price = parseFloat(row.find(".priceInput").val());
+        let reasonId = row.find(".reasonSelect").val();
 
         if (!assetId || assetId == "0") {
-
             Swal.fire("Validation", "Please select an Asset in all rows", "warning");
-
             row.find(".assetSelect").focus();
-
             isValid = false;
-
             return false;
-
         }
 
         if (!qty || qty <= 0) {
-
             Swal.fire("Validation", "Qty must be greater than 0", "warning");
-
             row.find(".qtyInput").focus();
-
             isValid = false;
-
             return false;
-
         }
 
-        if (price === undefined || price < 0) {
-
-            Swal.fire("Validation", "Unit price must be valid", "warning");
-
-            row.find(".priceInput").focus();
-
+        if (!reasonId || reasonId == "0") {
+            Swal.fire("Validation", "Please select a Remove Reason", "warning");
+            row.find(".reasonSelect").focus();
             isValid = false;
-
             return false;
-
         }
 
+        let stock = row.find(".assetSelect option:selected").data("stock");
+        if (qty > stock) {
+            Swal.fire("Validation", "Qty exceeds available stock", "warning");
+            isValid = false;
+            return false;
+        }
     });
 
     return isValid;
 
 }
-
-//<!--BEHAVIOUR - START -->
-$(document).on("input", ".qtyInput, .priceInput", function () {
-
-    let row = $(this).closest("tr");
-
-    let qty = parseFloat(row.find(".qtyInput").val()) || 0;
-    let price = parseFloat(row.find(".priceInput").val()) || 0;
-
-    let amount = qty * price;
-
-    row.find(".amountInput").val(amount.toFixed(2));
-
-    calculateSubTotals();
-
-});
-function calculateSubTotals() {
-    let total = 0;
-    $("#purchaseItemsBody tr").each(function () {
-        let amount = parseFloat($(this).find(".amountInput").val()) || 0;
-        total += amount;
-    });
-    $("#netTotalAmount").val(total.toFixed(2));
-}
-
-//<!--BEHAVIOUR - END -->
 

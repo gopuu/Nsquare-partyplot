@@ -128,8 +128,10 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        [HttpDelete("DeleteLocality/{id}")]
-        public IActionResult DeleteLocality(Int64 id)
+        [HttpPost]
+        [Route("DeleteLocality")]
+
+        public IActionResult DeleteLocality([FromBody] DeleteLocality model)
         {
             apiResponse apiResponse = new apiResponse();
             try
@@ -142,7 +144,8 @@ namespace ERPAdmin.ApiControllers
                     conn.Open();
                     SqlCommand cmd = new SqlCommand("DeleteLocality", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@id", SqlDbType.BigInt).Value = id;
+                    cmd.Parameters.AddWithValue("@id", SqlDbType.BigInt).Value = model.Id;
+                    cmd.Parameters.AddWithValue("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
                     cmd.ExecuteNonQuery();
                     conn.Close();
                 }
