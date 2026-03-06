@@ -4,6 +4,7 @@
     public class GetEmergencyContactRequest
     {
         public long? Id { get; set; }
+        public long? CategoryId { get; set; }
         public long? SubCategoryId { get; set; }
         public bool? IsActive { get; set; }
     }

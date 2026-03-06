@@ -92,6 +92,10 @@
     // SAVE - Handle form submission
     $("#btnSave").click(function (event) {
         event.preventDefault(); // Prevent the default form submission
+
+        if (!validateAddEventForm())
+            return;
+
         saveSupplier();
     });
 
@@ -139,13 +143,7 @@
             contentType: "application/json",
             success: function (response) {
                 if (response.status.toLowerCase() == "success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess('Saved!');
                     fetchData();
                     resetFormFields();
                     $('#addEventModal').modal('hide');
@@ -156,9 +154,6 @@
             },
             error: function (xhr, status, error) {
                 handleApiError(xhr, status, error, "Supplier Save Error");
-            },
-            complete: function () {
-                $('#btn-loader').hide();
             }
         });
     }
@@ -370,15 +365,32 @@ function renderTable(data) {
                 title: 'Actions',
                 render: function (data, type, row) {
                     return `
-                            <div class="d-flex flex-column flex-sm-row gap-2">
-                                <button class="btn btn-outline-warning btn-sm btn-action-xss btn-edit" data-id="${row.id}">
-                                    <i class="fa fa-edit"></i>
-                                </button>
+                        <div class="dropdown">
 
-                                <button class="btn btn-outline-danger btn-sm btn-action-xss btn-delete" data-id="${row.id}">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </div>
+                            <button class="btn btn-outline-secondary btn-sm btn-action-xss dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item btn-edit" data-id="${row.id}">
+                                        <i class="fa fa-edit text-warning me-2"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-delete" data-id="${row.id}">
+                                        <i class="fa fa-trash text-danger me-2"></i> Delete
+                                    </a>
+                                </li>
+
+                            </ul>
+
+                        </div>
                         `;
                 }
             }
@@ -476,53 +488,61 @@ function resetFormFields() {
 function validateAddEventForm() {
 
     let name = $("#supName").val().trim();
+    let company = $("#supCompany").val().trim();
     let phone = $("#supPhone").val().trim();
-    let gst = $("#supGST").val().trim();
-    let regState = $("#supRegStateId").val();
-    let regCity = $("#supRegCity").val();
-    let regPincode = $("#supRegPincode").val().trim();
+    //let gst = $("#supGST").val().trim();
+    //let regState = $("#supRegStateId").val();
+    //let regCity = $("#supRegCity").val();
+    //let regPincode = $("#supRegPincode").val().trim();
 
     // Required fields
     if (name === "") {
-        Swal.fire("Validation", "Supplier Name is required", "warning");
+        Swal.fire("Missing", "Supplier Name is required", "warning");
         return false;
     }
+
+    // Required fields
+    if (company === "") {
+        Swal.fire("Missing", "Company Name is required", "warning");
+        return false;
+    }
+
     // Optional: Basic phone validation
     if (!/^[0-9]{10}$/.test(phone)) {
-        Swal.fire("Validation", "Phone number must be 10 digits.", "warning");
+        Swal.fire("Missing", "Phone number must be 10 digits.", "warning");
         return false;
     }
 
-    if (gst !== "" && gst.length !== 15) {
-        Swal.fire("Validation", "Invalid GST Number", "warning");
-        return false;
-    }
+    //if (gst !== "" && gst.length !== 15) {
+    //    Swal.fire("Validation", "Invalid GST Number", "warning");
+    //    return false;
+    //}
 
-    if (!regState) { // || regState === "0") {
-        Swal.fire("Validation", "Please select Register State", "warning");
-        return false;
-    }
+    //if (!regState) { // || regState === "0") {
+    //    Swal.fire("Validation", "Please select Register State", "warning");
+    //    return false;
+    //}
 
-    if (!regCity) { //} === "" || regCity === null) {
-        Swal.fire("Validation", "Please select Register City", "warning");
-        return false;
-    }
+    //if (!regCity) { //} === "" || regCity === null) {
+    //    Swal.fire("Validation", "Please select Register City", "warning");
+    //    return false;
+    //}
 
-    if (regPincode === "") {
-        Swal.fire("Validation", "Register Pincode is required", "warning");
-        return false;
-    }
+    //if (regPincode === "") {
+    //    Swal.fire("Validation", "Register Pincode is required", "warning");
+    //    return false;
+    //}
 
-    if (regPincode.length < 6) {
-        Swal.fire("Validation", "Invalid Pincode", "warning");
-        return false;
-    }
+    //if (regPincode.length < 6) {
+    //    Swal.fire("Validation", "Invalid Pincode", "warning");
+    //    return false;
+    //}
 
-    let file = $("#supFile")[0].files[0];
-    if (file && file.size > 2 * 1024 * 1024) {
-        Swal.fire("Validation", "File size must be less than 2MB", "warning");
-        return;
-    }
+    //let file = $("#supFile")[0].files[0];
+    //if (file && file.size > 2 * 1024 * 1024) {
+    //    Swal.fire("Validation", "File size must be less than 2MB", "warning");
+    //    return;
+    //}
 
     return true; // valid
 }

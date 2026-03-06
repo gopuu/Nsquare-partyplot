@@ -46,9 +46,9 @@ namespace ERPAdmin.ApiControllers
 
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", request?.Id ?? 0);
+                cmd.Parameters.AddWithValue("@CategoryId", request?.CategoryId ?? 0);
                 cmd.Parameters.AddWithValue("@SubCategoryId", request?.SubCategoryId ?? 0);
-                cmd.Parameters.AddWithValue("@IsActive",
-                    request?.IsActive ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@IsActive", request?.IsActive ?? (object)DBNull.Value);
 
                 con.Open();
 

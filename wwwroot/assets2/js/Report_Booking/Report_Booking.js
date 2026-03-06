@@ -235,8 +235,6 @@ function loadCompanyHallDropdown(selectedId = "") {
     });
 }
 function ViewBookingReport(actionName = "viewPDF") {
-    $('#btn-loader').show();
-
     const withHeader = sessionStorage.getItem(HEADER_KEY) === "true";
     console.log("With Header:", withHeader);
     const userId = parseInt(sessionStorage.getItem('userId') || 0);
@@ -308,8 +306,6 @@ function ViewBookingReport(actionName = "viewPDF") {
             handleApiError(xhr, status, error, "Error fetching Booking report")
         }
     });
-
-
 }
 
 function setCurrentMonthDates() {

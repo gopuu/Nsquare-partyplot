@@ -4833,6 +4833,325 @@ namespace ERPAdmin.ApiControllers
             }
         }
         #endregion
+
+        #region REPORT 12 - Emergency Contact REPORT
+
+        [HttpPost]
+        [Route("Report_EmergencyContact")]
+        public IActionResult Report_EmergencyContact([FromBody] EmergencyContactReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                // Ensure JSON columns
+                if (string.IsNullOrWhiteSpace(request.Columns))
+                {
+                    request.Columns = "[\"CategoryName\",\"SubCategoryName\",\"ContactType\",\"ContactName\",\"MobileNo\",\"MobileNo2\",\"Location\",\"Remarks\",\"IsActive\"]";
+                }
+
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
+
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // Company Header
+                    using (SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
+
+                        new SqlDataAdapter(cmd).Fill(dtCompany);
+                    }
+
+                    // Report Data
+                    using (SqlCommand cmd = new SqlCommand("Report_GetEmergencyContact", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = request.Columns;
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                        cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
+                        cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
+                        cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value =
+                            request.IsActive == null ? DBNull.Value : request.IsActive;
+
+                        new SqlDataAdapter(cmd).Fill(dsReport);
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete.");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+
+                writer.PageEvent = new PdfPageEvents(request.ActionBy.ToString() ?? "");
+
+                document.Open();
+
+                // ================= HEADER =================
+                if (request.WithHeader ?? false)
+                {
+                    string companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                    string companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                    string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                    string logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+
+                    Image logo = null;
+
+                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    {
+                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                        if (System.IO.File.Exists(logoPath))
+                            logo = Image.GetInstance(logoPath);
+                    }
+
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    PdfPCell logoCell;
+
+                    if (logo != null)
+                    {
+                        logo.ScaleToFit(70f, 70f);
+                        logoCell = new PdfPCell(logo);
+                    }
+                    else
+                    {
+                        logoCell = new PdfPCell(new Phrase(""));
+                    }
+
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
+                    document.Add(headerTable);
+                }
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                // ================= REPORT TITLE =================
+
+                Font reportTitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
+
+                Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 12f
+                };
+
+                document.Add(reportTitle);
+
+                // ================= TABLE =================
+
+                int columnCount = dataTableDB.Columns.Count;
+
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+
+                float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
+                table.SetWidths(widths);
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                BaseColor thColor = new BaseColor(0, 121, 182);
+
+                // Header
+                for (int i = 0; i < headerTableDB.Rows.Count; i++)
+                {
+                    table.AddCell(CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
+                }
+
+                table.HeaderRows = 1;
+
+                // Data
+                if (dataTableDB.Rows.Count == 0)
+                {
+                    PdfPCell noDataCell = new PdfPCell(new Phrase("No Data Found"))
+                    {
+                        Colspan = columnCount,
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 12f
+                    };
+
+                    table.AddCell(noDataCell);
+                }
+                else
+                {
+                    foreach (DataRow row in dataTableDB.Rows)
+                    {
+                        for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        {
+                            table.AddCell(CreateBodyCell(row[i]?.ToString() ?? "-", tdFont));
+                        }
+                    }
+                }
+
+                document.Add(table);
+                document.Close();
+
+                // Save file
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "EmergencyContactReport_*.pdf");
+
+                string fileName = $"EmergencyContactReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+                string filePath = Path.Combine(folder, fileName);
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fileStream);
+                }
+
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Emergency Contact Report Generated";
+                response.data = new { FileUrl = fileUrl };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_EmergencyContact_Excel")]
+        public IActionResult Report_EmergencyContact_Excel([FromBody] EmergencyContactReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                if (string.IsNullOrWhiteSpace(request.Columns))
+                {
+                    request.Columns = "[\"CategoryName\",\"SubCategoryName\",\"ContactType\",\"ContactName\",\"MobileNo\",\"MobileNo2\",\"Location\",\"Remarks\",\"IsActive\"]";
+                }
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    using (SqlCommand cmd = new SqlCommand("Report_GetEmergencyContact", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = request.Columns;
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                        cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
+                        cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
+                        cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value =
+                            request.IsActive == null ? DBNull.Value : request.IsActive;
+
+                        new SqlDataAdapter(cmd).Fill(dsReport);
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("EmergencyContacts");
+
+                int colCount = headerTableDB.Rows.Count;
+
+                // Headers
+                for (int i = 0; i < colCount; i++)
+                {
+                    worksheet.Cell(1, i + 1).Value = headerTableDB.Rows[i][0].ToString();
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    worksheet.Cell(1, i + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // Data
+                int row = 2;
+
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < colCount; i++)
+                    {
+                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+                    }
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                string reportsDir = Path.Combine(_env.WebRootPath, "reports");
+
+                if (!Directory.Exists(reportsDir))
+                    Directory.CreateDirectory(reportsDir);
+
+                Utils.deleteOldFiles(reportsDir, "EmergencyContactReport_*.xlsx");
+
+                string fileName = $"EmergencyContactReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                string filePath = Path.Combine(reportsDir, fileName);
+
+                workbook.SaveAs(filePath);
+
+                string fileUrl = $"{domainUrl}/reports/{fileName}";
+
+                response.status = "Success";
+                response.message = "Emergency Contact Report Excel generated successfully.";
+                response.data = new { FileUrl = fileUrl };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+        #endregion
     }
 }
 
