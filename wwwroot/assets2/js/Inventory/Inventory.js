@@ -81,6 +81,81 @@ $(document).ready(function () {
     });
 });
 
+$(document).on("click", ".btn-history", function () {
+    let id = $(this).data("id");
+    let name = $(this).data("name");
+
+    $("#historyItemName").text(name);
+    loadHistory(id);
+});
+function loadHistory(id) {
+    $("#historyTimeline").html("<p>Loading...</p>");
+
+    var payload = {
+        RawMaterialId: id
+    };
+
+    console.log("payload:", payload);
+
+    $.ajax({
+        url: "/api/Inventory/GetStockOutHistory",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            if (res.status !== "Success") {
+                $("#historyTimeline").html("<p>No history found</p>");
+                return;
+            }
+
+            let html = `<div class="timeline">`;
+
+            res.data.forEach(x => {
+
+                html += `
+                <div class="timeline-item">
+
+                    <div class="timeline-dot"></div>
+
+                    <div class="timeline-content">
+
+                        <div class="fw-bold">
+                            ${x.Quantity} ${x.UnitName}
+                        </div>
+
+                        <div class="text-muted small">
+                            ${x.ModifiedOn2}
+                        </div>
+
+                        <div class="small">
+                            ${x.Remarks || ""}
+                        </div>
+
+                        <div class="small text-primary">
+                            By ${x.ModifiedBy}
+                        </div>
+
+                    </div>
+
+                </div>
+                `;
+            });
+
+            html += `</div>`;
+
+            $("#historyTimeline").html(html);
+
+            $("#historyModal").modal("show");
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading history");
+            $("#historyTimeline").html("<p>Error loading history</p>");
+        }
+    });
+}
+
+
 /* ====== RENDER TABLE ====== */
 function renderTable(data) {
 
@@ -121,6 +196,15 @@ function renderTable(data) {
                                class="form-control form-control-sm"
                                id="${remarksId}"
                                placeholder="Remarks">
+                    </td>
+
+                    <td>
+                        <button class="btn btn-sm btn-outline-warning btn-history"
+                                data-id="${r.RawMaterialId}"
+                                data-name="${r.RawMaterialName}"
+                                title="View History">
+                            <i class="fa fa-history"></i>
+                        </button>
                     </td>
                 </tr>
             `;

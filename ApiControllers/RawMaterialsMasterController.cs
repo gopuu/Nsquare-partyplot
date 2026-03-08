@@ -62,6 +62,8 @@ namespace ERPAdmin.ApiControllers
                     obj.ItemCategoryId = row["ItemCategoryId"] == DBNull.Value ? 0 : Convert.ToInt64(row["ItemCategoryId"]);
                     obj.ItemCategoryName = row["ItemCategoryName"] == DBNull.Value ? string.Empty : Convert.ToString(row["ItemCategoryName"]);
 
+                    obj.CurrentQty = row["CurrentQty"] == DBNull.Value ? 0 : Convert.ToDecimal(row["CurrentQty"]);
+
                     obj.PurchasePrice = row["PurchasePrice"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(row["PurchasePrice"]);
                     obj.TransferPrice = row["TransferPrice"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(row["TransferPrice"]);
                     obj.ReconciliationPrice = row["ReconciliationPrice"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(row["ReconciliationPrice"]);
@@ -174,6 +176,8 @@ namespace ERPAdmin.ApiControllers
 
                     // == 3 CATEGORY ===
                     cmd.Parameters.Add("@ItemCategoryId", SqlDbType.BigInt).Value = model.ItemCategoryId;
+
+                    cmd.Parameters.Add("@CurrentQty", SqlDbType.Decimal).Value = (object)model.CurrentQty ?? DBNull.Value;
 
                     // == 4 PRICES ==
                     cmd.Parameters.Add("@PurchasePrice", SqlDbType.Decimal).Value = (object)model.PurchasePrice ?? DBNull.Value;
@@ -404,7 +408,5 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-
-
     }
 }

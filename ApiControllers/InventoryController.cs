@@ -154,5 +154,72 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        [HttpPost]
+        [Route("GetStockOutHistory")]
+        public IActionResult GetStockOutHistory([FromBody] GetStockOutHistoryRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<GetStockOutHistoryList> list = new List<GetStockOutHistoryList>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                SqlConnection con = new SqlConnection(connString);
+                SqlCommand cmd = new SqlCommand("GetStockOutHistory", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@RawMaterialId", SqlDbType.BigInt)
+                    .Value = request.RawMaterialId == 0 ? 0 : request.RawMaterialId;
+
+                DataTable dt = new DataTable();
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+                con.Close();
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    GetStockOutHistoryList obj = new GetStockOutHistoryList();
+
+                    obj.Id = row["Id"] == DBNull.Value ? 0 : Convert.ToInt64(row["Id"]);
+                    obj.RawMaterialId = row["RawMaterialId"] == DBNull.Value ? 0 : Convert.ToInt64(row["RawMaterialId"]);
+                    obj.RawMaterialName = row["RawMaterialName"]?.ToString() ?? "";
+
+                    obj.UnitId = row["UnitId"] == DBNull.Value ? 0 : Convert.ToInt64(row["UnitId"]);
+                    obj.UnitName = row["UnitName"]?.ToString() ?? "";
+
+                    obj.Quantity = row["Quantity"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Quantity"]);
+                    obj.Remarks = row["Remarks"]?.ToString() ?? "";
+
+                    obj.ModifiedOn = Convert.ToString(row["ModifiedOn"]);
+                    obj.ModifiedOn2 = row["ModifiedOn2"]?.ToString() ?? "";
+
+                    obj.ModifiedBy = row["ModifiedBy"]?.ToString() ?? "";
+
+                    list.Add(obj);
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Stock Out History fetched successfully!";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+
     }
 }

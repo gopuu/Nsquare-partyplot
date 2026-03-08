@@ -8,6 +8,18 @@
     border-bottom: 1px solid #ddd;
 }
 
+#banquetTypeTable td,
+#banquetTypeTable th {
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+
+/*User profile*/
+.profile-dropdown {
+    min-width: 160px !important;
+    width: 160px;
+}
+
 /*SLOT MASTER*/
 .time-slot {
     background: #f8f9fa;

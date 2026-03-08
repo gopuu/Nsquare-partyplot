@@ -1163,7 +1163,7 @@ function updateAddonButton(selectedItems) {
 //Food Addons ----- /END ------------------------------------------------------------------
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const shiftNames = ["FD", "MO", "AF", "EV", "ON"]; //,"BF","LN","HT","DN"];
+let shiftNames = ["FD", "MO", "AF", "EV", "ON"]; //,"BF","LN","HT","DN"];
 const legendColors = { available: "success", past: "secondary", confirmed: "danger", online: "primary", tentative: "light", blocked: "dark", mahurat: "pink" };
 
 const yearSelect = document.getElementById("yearSelect");
@@ -1638,7 +1638,8 @@ async function renderBoard(bookingData = null) {
                 var clientContact = null;
                 var eventDateRange = null;
 
-                //console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
+                console.log("shiftTimes:", shiftTimes, ", shiftCode:", shiftCode);
+                console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
                 //console.log("shiftTimes[shiftCode].end:", shiftTimes[shiftCode].end);
                 const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
                 const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
@@ -6439,7 +6440,7 @@ function loadSlotDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("response supplier:", response);
+            console.log("response SlotMaster:", response);
             const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
             const $abbrContainer = $("#slotAbbreviations");
 
@@ -6448,6 +6449,7 @@ function loadSlotDropdown() {
 
             shiftMap = {};
             shiftTimes = {};
+            shiftNames = [];   // reset
             response.data.forEach(s => {
                 $slotDropdowns.append(`
                     <option value="${s.Id}" 
@@ -6468,6 +6470,9 @@ function loadSlotDropdown() {
 
                 // SLOT ABBREVIATIONS
                 const code = s.Code;
+                // collect dynamic shift codes
+                shiftNames.push(s.Code);
+
                 // Dynamic full name mapping
                 shiftMap[code] = s.Name;
                 // Dynamic time mapping
@@ -6479,8 +6484,7 @@ function loadSlotDropdown() {
             });
             console.log("Shift Map:", shiftMap);
             console.log("Shift Times:", shiftTimes);
-
-
+            console.log("Shift Names:", shiftNames);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Slot Fetch Error");

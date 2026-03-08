@@ -30,6 +30,14 @@ function formatINR(amount) {
     if (!amount) return "0";
     return amount.toLocaleString("en-IN");
 }
+function formatINR2(amount) {
+    if (!amount) return "₹ 0.00";
+
+    return "₹ " + Number(amount).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
 function calcPercent(value, total) {
     return Math.round((value / total) * 100);
 }

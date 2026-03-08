@@ -1488,7 +1488,9 @@ function loadSupplierDropdown() {
             //console.log("response supplier:", response);
             $("#purchaseSupplier").html(`<option value="0">-- Select Supplier --</option>`);
             response.data.forEach(s => {
-                $("#purchaseSupplier").append(`<option value="${s.Id}">${s.Name}</option>`);
+                $("#purchaseSupplier").append(
+                    `<option value="${s.Id}">${s.CompanyName && s.CompanyName.trim() !== "" ? s.CompanyName : s.Name}</option>`
+                );
             });
         },
         error: function (xhr, status, error) {

@@ -62,25 +62,25 @@
                                                 <!-- Company Name -->
                                                 <div class="col-12">
                                                     <label class="form-label fw-semibold">Company's Name</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_CompanyName" maxlength="200" placeholder="Enter Company Name" />
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_CompanyName" maxlength="200" placeholder="Enter Company Name" />
                                                 </div>
 
                                                 <!-- Address -->
                                                 <div class="col-12">
                                                     <label class="form-label fw-semibold">Address</label>
-                                                    <textarea class="form-control" id="CompanyProfile_Address" maxlength="200" placeholder="Enter Address" rows="3"></textarea>
+                                                    <textarea class="form-control form-control-sm" id="CompanyProfile_Address" maxlength="200" placeholder="Enter Address" rows="3"></textarea>
                                                 </div>
 
                                                 <!-- PAN -->
-                                                <div class="col-12">
+                                                <div class="col-6">
                                                     <label class="form-label fw-semibold">PAN No.</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_PanNo" maxlength="10" placeholder="Enter PAN Number" />
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_PanNo" maxlength="10" placeholder="Enter PAN Number" />
                                                 </div>
 
                                                 <!-- VAT -->
-                                                <div class="col-12">
+                                                <div class="col-6">
                                                     <label class="form-label fw-semibold">Liquor/VAT Number</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_VATNumber" maxlength="15" placeholder="Enter VAT Number" />
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_VATNumber" maxlength="15" placeholder="Enter VAT Number" />
                                                 </div>
 
                                                 <!-- Switches -->
@@ -107,18 +107,18 @@
 
                                                 <!-- City -->
                                                 <div class="col-6">
-                                                    <label class="form-label fw-semibold">City</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_City" maxlength="200" placeholder="Enter City" />
+                                                    <label class="form-label fw-semibold">Place</label>
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_City" maxlength="200" placeholder="Enter City" />
                                                 </div>
 
                                                 <!-- State -->
                                                 <div class="col-6">
                                                     <label class="form-label fw-semibold">State</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" id="CompanyProfile_State" onchange="loadCities(this.value)">
+                                                    <div class="input-group input-group-sm">
+                                                        <select class="form-select form-select-sm" id="CompanyProfile_State" onchange="loadCities(this.value)">
                                                             <option value="">Loading...</option>
                                                         </select>
-                                                        <button type="button" class="btn btn-outline-primary" id="btnAddState" data-bs-toggle="modal" data-bs-target="#stateModal">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddState" data-bs-toggle="modal" data-bs-target="#stateModal">
                                                             <i class="bi bi-plus"></i>
                                                         </button>
                                                     </div>
@@ -128,7 +128,7 @@
                                                 <div class="col-12">
                                                     <label class="form-label fw-semibold">Upload PAN Card</label>
                                                     <div class="d-flex align-items-center gap-3">
-                                                        <input type="file" class="form-control" id="CompanyProfile_PanCardUpload" accept=".jpg,.jpeg,.png,.pdf" />
+                                                        <input type="file" class="form-control form-control-sm" id="CompanyProfile_PanCardUpload" accept=".jpg,.jpeg,.png,.pdf" />
                                                         <img id="PanCardPreview" src="/assets2/img/image_icon.png"
                                                              alt="PAN Preview"
                                                              class="img-thumbnail"
@@ -139,32 +139,32 @@
                                                 <!-- Email -->
                                                 <div class="col-6">
                                                     <label class="form-label fw-semibold">Email</label>
-                                                    <input type="email" class="form-control" id="CompanyProfile_Email" maxlength="200" placeholder="Enter Email" />
+                                                    <input type="email" class="form-control form-control-sm" id="CompanyProfile_Email" maxlength="200" placeholder="Enter Email" />
                                                 </div>
 
                                                 <!-- Mobile -->
                                                 <div class="col-6">
                                                     <label class="form-label fw-semibold">Mobile</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_Mobile" maxlength="10" placeholder="Enter Mobile Number" />
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_Mobile" maxlength="10" placeholder="Enter Mobile Number" />
                                                 </div>
 
                                                 <!-- Banquet Type -->
-                                                <div class="col-12">
+                                                <div class="col-6">
                                                     <label class="form-label fw-semibold">Banquet Type</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" id="CompanyProfile_BanquetType">
+                                                    <div class="input-group input-group-sm">
+                                                        <select class="form-select form-select-sm" id="CompanyProfile_BanquetType">
                                                             <option value="">Loading...</option>
                                                         </select>
-                                                        <button type="button" class="btn btn-outline-primary" id="btnAddBanquetType" data-bs-toggle="modal" data-bs-target="#banquetTypeModal">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddBanquetType" data-bs-toggle="modal" data-bs-target="#banquetTypeModal">
                                                             <i class="bi bi-plus"></i>
                                                         </button>
                                                     </div>
                                                 </div>
 
                                                 <!-- GSTIN -->
-                                                <div class="col-12" id="gstinContainer" style="display:none;">
+                                                <div class="col-6" id="gstinContainer" style="display:none;">
                                                     <label class="form-label fw-semibold">GSTIN</label>
-                                                    <input type="text" class="form-control" id="CompanyProfile_GSTIN" maxlength="15" placeholder="Enter GSTIN" />
+                                                    <input type="text" class="form-control form-control-sm" id="CompanyProfile_GSTIN" maxlength="15" placeholder="Enter GSTIN" />
                                                 </div>
                                             </div>
                                         </div>
@@ -194,66 +194,93 @@
                             <div class="row g-3">
 
                                 <!-- City -->
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <div style="flex: 1;">
-                                        <label class="form-label">City</label>
-                                        <select class="form-select" id="PropertyDetails_City" onchange="loadLocalities(this.value,0)">
-                                            <option value="">Loading....</option>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">City</label>
+                                    <div class="input-group input-group-sm">
+
+                                        <select class="form-select form-select-sm"
+                                                id="PropertyDetails_City"
+                                                onchange="loadLocalities(this.value,0)">
+                                            <option value="">Loading...</option>
                                         </select>
+
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                id="btnAddCity"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#cityModal">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary ms-2" id="btnAddCity" data-bs-toggle="modal" data-bs-target="#cityModal">
-                                        +
-                                    </button>
                                 </div>
 
                                 <!-- Locality -->
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <div style="flex: 1;">
-                                        <label class="form-label">Locality</label>
-                                        <select class="form-select" id="PropertyDetails_Locality">
-                                            <option value="">Loading....</option>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Locality</label>
+
+                                    <div class="input-group input-group-sm">
+
+                                        <select class="form-select form-select-sm"
+                                                id="PropertyDetails_Locality">
+                                            <option value="">Loading...</option>
                                         </select>
+
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                id="btnAddLocality"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#localityModal">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary ms-2" id="btnAddLocality" data-bs-toggle="modal" data-bs-target="#localityModal">
-                                        +
-                                    </button>
                                 </div>
 
                                 <!-- Pincode -->
                                 <div class="col-md-2">
                                     <label class="form-label">Pincode</label>
-                                    <input type="text" class="form-control" id="PropertyDetails_Pincode" maxlength="6" />
+                                    <input type="text" class="form-control form-control-sm" id="PropertyDetails_Pincode" maxlength="6" />
                                 </div>
 
                                 <!-- Manager Name -->
                                 <div class="col-md-4">
                                     <label class="form-label">Manager</label>
-                                    <input type="text" class="form-control" id="PropertyDetails_ManagerName" maxlength="200" />
+                                    <input type="text" class="form-control form-control-sm" id="PropertyDetails_ManagerName" maxlength="200" />
                                 </div>
 
                                 <!-- Property Name -->
                                 <div class="col-md-4">
                                     <label class="form-label">Name of Property</label>
-                                    <input type="text" class="form-control" id="PropertyDetails_PropertyName" maxlength="200" />
+                                    <input type="text" class="form-control form-control-sm" id="PropertyDetails_PropertyName" maxlength="200" />
                                 </div>
 
                                 <!-- Property Type -->
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <div style="flex: 1;">
-                                        <label class="form-label">Property Type</label>
-                                        <select class="form-select" id="PropertyDetails_PropertyType">
-                                            <option value="">Loading....</option>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Property Type</label>
+
+                                    <div class="input-group input-group-sm">
+
+                                        <select class="form-select form-select-sm"
+                                                id="PropertyDetails_PropertyType">
+                                            <option value="">Loading...</option>
                                         </select>
+
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                id="btnAddPropertyType"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#propertyTypeModal">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary ms-2" id="btnAddPropertyType" data-bs-toggle="modal" data-bs-target="#propertyTypeModal">
-                                        +
-                                    </button>
                                 </div>
 
                                 <!-- Email -->
                                 <div class="col-md-4">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="PropertyDetails_Email" maxlength="200" />
+                                    <input type="email" class="form-control form-control-sm" id="PropertyDetails_Email" maxlength="200" />
                                 </div>
 
                                 <!--Address, Mobile, Monopoly, Are Hall Rates Negotiable?, Food Preference (Pure Veg)-->
@@ -270,21 +297,29 @@
                                             <!-- Row 1: Mobile & Monopoly -->
                                             <div class="col-md-6">
                                                 <label class="form-label">Manager's Mobile</label>
-                                                <input type="text" class="form-control" id="PropertyDetails_ManagerMobile" maxlength="10" />
+                                                <input type="text" class="form-control form-control-sm" id="PropertyDetails_ManagerMobile" maxlength="10" />
                                             </div>
                                             <!-- Monopoly Preference -->
-                                            <div class="col-md-6 d-flex align-items-end">
-                                                <div style="flex: 1;">
-                                                    <label class="form-label">Monopoly Preference</label>
-                                                    <select class="form-select" id="PropertyDetails_MonopolyPreference">
-                                                        <option value="">Loading....</option>
-                                                    </select>
-                                                </div>
-                                                <button type="button" class="btn btn-outline-primary ms-2" id="btnAddMonopolyPreference" data-bs-toggle="modal" data-bs-target="#monopolyPreferenceModal">
-                                                    +
-                                                </button>
-                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Monopoly Preference</label>
 
+                                                <div class="input-group input-group-sm">
+
+                                                    <select class="form-select form-select-sm"
+                                                            id="PropertyDetails_MonopolyPreference">
+                                                        <option value="">Loading...</option>
+                                                    </select>
+
+                                                    <button type="button"
+                                                            class="btn btn-outline-primary btn-sm"
+                                                            id="btnAddMonopolyPreference"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#monopolyPreferenceModal">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+
+                                                </div>
+                                            </div>
                                             <!-- Row 2: Both Switch Buttons -->
                                             <div class="col-md-6 d-flex align-items-center">
                                                 <div class="form-check form-switch m-0">
@@ -337,6 +372,11 @@
                                         <!-- Dynamic Slots Here -->
                                     </div>
 
+                                    <!-- About Us and Terms & Conditions -->
+                                    <div class="col-12">
+                                        <label class="form-label">About Us and Terms & Conditions</label>
+                                        <textarea class="form-control form-control-sm" rows="5" placeholder="Write here..." id="PropertyDetails_tnc"></textarea>
+                                    </div>
                                 </div>
                                 <!-- Time Slot Toggles -- END -->
 
@@ -629,20 +669,14 @@
                                         </div>
                                     </div>
 
-                                    <!-- About Us and Terms & Conditions -->
-                                    <div class="col-md-8">
-                                        <label class="form-label">About Us and Terms & Conditions</label>
-                                        <textarea class="form-control" rows="5" placeholder="Write here..." id="PropertyDetails_tnc"></textarea>
-                                    </div>
-
                                     <!-- Post Booking Steps (20%) -->
                                     <div class="col-md-4">
-                                        <label class="form-label">Post Booking Steps</label>
-                                        <div id="PropertyDetails_bookingStepsContainer">
+                                        <label class="form-label d-none">Post Booking Steps</label>
+                                        <div id="PropertyDetails_bookingStepsContainer" class="d-none">
                                             <input type="text" class="form-control mb-2" placeholder="Enter step">
                                         </div>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addBookingStep()">+ Add More</button>
-                                        <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()">Save</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm d-none" onclick="addBookingStep()">+ Add More</button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()">Save Property Details</button>
                                     </div>
                                 </div>
                             </div>
@@ -715,7 +749,7 @@
                                     <div class="col-md-3">
                                         <label for="HallName" class="form-label">Name of the Hall</label>
                                         <input type="hidden" id="HallId" value="0">
-                                        <input type="text" id="HallName" class="form-control" placeholder="Name of the hall" />
+                                        <input type="text" id="HallName" class="form-control form-control-sm" placeholder="Name of the hall" />
                                     </div>
 
                                     <div class="col-md-2">
@@ -737,7 +771,7 @@
 
                                     <div class="col-md-2">
                                         <label for="HallRent" class="form-label">Rent</label>
-                                        <input type="number" id="HallRent" class="form-control" placeholder="Rent" />
+                                        <input type="number" id="HallRent" class="form-control form-control-sm" placeholder="Rent" />
                                     </div>
 
                                     <div class="col-md-1 d-flex align-items-center">
@@ -752,17 +786,17 @@
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-4">
                                         <label for="Video360Link" class="form-label">360° Video Link</label>
-                                        <input type="url" id="Video360Link" class="form-control" placeholder="360° Video Link" />
+                                        <input type="url" id="Video360Link" class="form-control form-control-sm" placeholder="360° Video Link" />
                                     </div>
 
                                     <div class="col-md-4">
                                         <label for="PromoVideo1" class="form-label">Promotional Video 1</label>
-                                        <input type="url" id="PromoVideo1" class="form-control" placeholder="Promotional Video Link" />
+                                        <input type="url" id="PromoVideo1" class="form-control form-control-sm" placeholder="Promotional Video Link" />
                                     </div>
 
                                     <div class="col-md-4">
                                         <label for="PromoVideo2" class="form-label">Promotional Video 2</label>
-                                        <input type="url" id="PromoVideo2" class="form-control" placeholder="Promotional Video Link" />
+                                        <input type="url" id="PromoVideo2" class="form-control form-control-sm" placeholder="Promotional Video Link" />
                                     </div>
                                 </div>
 
@@ -1080,11 +1114,11 @@
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label">Start Invoice No. With</label>
-                                                    <input type="text" class="form-control" id="GSTInvoiceStartNo" placeholder="1" />
+                                                    <input type="text" class="form-control form-control-sm" id="GSTInvoiceStartNo" placeholder="1" />
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">Invoice Prefix</label>
-                                                    <input type="text" class="form-control" id="GSTInvoicePrefix" placeholder="prefix" />
+                                                    <input type="text" class="form-control form-control-sm" id="GSTInvoicePrefix" placeholder="prefix" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1095,11 +1129,11 @@
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label">Start Invoice No. With</label>
-                                                    <input type="text" class="form-control" id="ProformaInvoiceStartNo" placeholder="1" />
+                                                    <input type="text" class="form-control form-control-sm" id="ProformaInvoiceStartNo" placeholder="1" />
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">Invoice Prefix</label>
-                                                    <input type="text" class="form-control" id="ProformaInvoicePrefix" placeholder="prefix" />
+                                                    <input type="text" class="form-control form-control-sm" id="ProformaInvoicePrefix" placeholder="prefix" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1110,7 +1144,7 @@
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label">Receipt Prefix</label>
-                                                    <input type="text" class="form-control" id="ReceiptPrefix" placeholder="prefix" />
+                                                    <input type="text" class="form-control form-control-sm" id="ReceiptPrefix" placeholder="prefix" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1140,7 +1174,7 @@
                                             <div class="row g-3 mb-2" id="customReceiptNoContainer" style="display: none;">
                                                 <div class="col-md-6 offset-md-1">
                                                     <label class="form-label">Start receipt no. from</label>
-                                                    <input type="text" class="form-control" id="CustomReceiptStartNo" />
+                                                    <input type="text" class="form-control form-control-sm" id="CustomReceiptStartNo" />
                                                 </div>
                                             </div>
                                             <div class="form-check mb-3">
@@ -1171,25 +1205,25 @@
                                             </div>
 
                                             <div class="row g-3" id="bankDetailsContainer" style="display: none;">
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Bank Name</label>
-                                                    <input type="text" class="form-control" id="BankName" />
+                                                <div class="col-md-12">
+                                                    <label class="form-label">Bank Details</label>
+                                                    <input type="text" class="form-control form-control-sm" id="BankName" />
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">A/c No</label>
-                                                    <input type="text" class="form-control" id="AccountNo" />
+                                                <div class="col-md-12">
+                                                    <label class="form-label">A/C No</label>
+                                                    <input type="text" class="form-control form-control-sm" id="AccountNo" />
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-12">
                                                     <label class="form-label">Branch Details</label>
-                                                    <input type="text" class="form-control" id="BranchDetails" />
+                                                    <input type="text" class="form-control form-control-sm" id="BranchDetails" />
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-12">
                                                     <label class="form-label">IFSC</label>
-                                                    <input type="text" class="form-control" id="IFSCCode" />
+                                                    <input type="text" class="form-control form-control-sm" id="IFSCCode" />
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-12">
                                                     <label class="form-label">UPI Id</label>
-                                                    <input type="text" class="form-control" id="UPIId" />
+                                                    <input type="text" class="form-control form-control-sm" id="UPIId" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1199,7 +1233,7 @@
                                             <label class="form-label">Upload Company Logo</label>
                                             <div class="row g-3">
                                                 <div class="col-md-6">
-                                                    <input type="file" class="form-control" id="CompanyLogoUpload" accept="image/*" />
+                                                    <input type="file" class="form-control form-control-sm" id="CompanyLogoUpload" accept="image/*" />
                                                 </div>
                                                 <div class="col-md-6">
                                                     <img id="logoPreview" src="/assets2/img/image_icon.png" alt="Logo Preview"
@@ -1445,7 +1479,7 @@
 
                                                 <div class="mt-3">
                                                     <label for="fontSize" class="form-label">Select Font Size</label>
-                                                    <select id="fontSize" class="form-control" style="width:100px;">
+                                                    <select id="fontSize" class="form-control form-control-sm" style="width:100px;">
                                                         <!-- options added by JS -->
                                                     </select>
                                                 </div>
@@ -1582,9 +1616,9 @@
         <div class="modal-content">
 
             <!-- Modal Header -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="banquetTypeModalLabel">Manage Banquet Types</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-warning py-2">
+                <h5 class="modal-title text-white" id="banquetTypeModalLabel">Manage Banquet Types</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -1594,7 +1628,7 @@
                 <div class="row mb-3">
                     <div class="col-md-8">
                         <label class="form-label">Banquet Type Name</label>
-                        <input type="text" id="banquetTypeName" class="form-control" placeholder="Enter banquet type name">
+                        <input type="text" id="banquetTypeName" class="form-control form-control-sm" placeholder="Enter banquet type name">
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-primary me-2" id="btnSaveBanquetType">Save</button>
@@ -1604,12 +1638,12 @@
 
                 <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="banquetTypeTable">
+                    <table class="table table-sm" id="banquetTypeTable">
                         <thead>
                             <tr>
                                 <th class="text-center">#</th>
                                 <th>Banquet Type</th>
-                                <th style="width: 120px;">Actions</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1642,12 +1676,12 @@
                     <div class="row mb-3">
                         <div class="col-md-8">
                             <label class="form-label">State Name <span class="text-danger">*</span></label>
-                            <input type="text" id="stateName" class="form-control" placeholder="Enter state name">
+                            <input type="text" id="stateName" class="form-control form-control-sm" placeholder="Enter state name">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">State Code <span class="text-danger">*</span></label>
-                            <input type="text" id="stateCode" class="form-control" placeholder="Enter state code">
+                            <input type="text" id="stateCode" class="form-control form-control-sm" placeholder="Enter state code">
                         </div>
                     </div>
 
@@ -1710,13 +1744,13 @@
                         <!-- City Name -->
                         <div class="col-md-4">
                             <label class="form-label">City Name <span class="text-danger">*</span></label>
-                            <input type="text" id="cityName" class="form-control" placeholder="Enter city name">
+                            <input type="text" id="cityName" class="form-control form-control-sm" placeholder="Enter city name">
                         </div>
 
                         <!-- City Pincode -->
                         <div class="col-md-4">
                             <label class="form-label">City Pincode <span class="text-danger">*</span></label>
-                            <input type="text" id="cityPincode" class="form-control" placeholder="Enter pincode">
+                            <input type="text" id="cityPincode" class="form-control form-control-sm" placeholder="Enter pincode">
                         </div>
                     </div>
 
@@ -1773,7 +1807,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Locality Name</label>
-                        <input type="text" id="localityName" class="form-control" placeholder="Enter locality name">
+                        <input type="text" id="localityName" class="form-control form-control-sm" placeholder="Enter locality name">
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-primary me-2" id="btnSaveLocality">Save</button>
@@ -1817,7 +1851,7 @@
                 <div class="row mb-3">
                     <div class="col-md-8">
                         <label class="form-label">Property Type Name</label>
-                        <input type="text" id="propertyTypeName" class="form-control" placeholder="Enter property type name">
+                        <input type="text" id="propertyTypeName" class="form-control form-control-sm" placeholder="Enter property type name">
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-primary me-2" id="btnSavePropertyType">Save</button>
@@ -1860,7 +1894,7 @@
                 <div class="row mb-3">
                     <div class="col-md-8">
                         <label class="form-label">Monopoly Preference Name</label>
-                        <input type="text" id="monopolyPreferenceName" class="form-control" placeholder="Enter monopoly preference name">
+                        <input type="text" id="monopolyPreferenceName" class="form-control form-control-sm" placeholder="Enter monopoly preference name">
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-primary me-2" id="btnSaveMonopolyPreference">Save</button>

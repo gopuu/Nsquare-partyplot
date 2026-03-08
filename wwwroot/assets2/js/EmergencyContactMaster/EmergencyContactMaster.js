@@ -10,7 +10,7 @@
     { field: "IsActive", label: "Active Status" }
 ];
 const COLUMN_STORAGE_KEY = "EmergencyContactReportColumns";
-const HEADER_KEY_EMERGENCY = "EmergencyReportWithHeader";
+const HEADER_KEY_EMERGENCY = "printWithHeader";
 
 $(document).ready(function () {
     loadCategoryDropdown();
@@ -350,14 +350,36 @@ function renderContactTable(data) {
             {
                 data: null,
                 title: "Actions",
-                render: () => `
-    <button class="btn btn-outline-warning btn-sm btn-action-xss btn-edit">
-        <i class="fa fa-edit"></i>
-    </button>
-    <button class="btn btn-outline-danger btn-sm btn-action-xss btn-delete">
-        <i class="fa fa-trash"></i>
-    </button>`
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `
+                        <div class="dropdown text-center">
+                            <button class="btn btn-outline-secondary btn-sm btn-action-xss dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item btn-edit">
+                                        <i class="fa fa-edit text-warning me-2"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-delete">
+                                        <i class="fa fa-trash text-danger me-2"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        `;
+                }
             }
+
         ]
     });
 }
@@ -404,7 +426,6 @@ function loadColumnCheckboxes() {
 
     updateSelectAllState();
 }
-
 function getSelectedColumns() {
     let saved = localStorage.getItem(COLUMN_STORAGE_KEY);
     if (saved) {
@@ -421,7 +442,7 @@ function updateSelectAllState() {
 
 function ViewEmergencyContactReport(actionName = "downloadPDF") {
 
-    const withHeader = sessionStorage.getItem("EmergencyReportWithHeader") === "true";
+    const withHeader = sessionStorage.getItem("printWithHeader") === "true";
     const userId = parseInt(sessionStorage.getItem('userId') || 0);
 
     const categoryId = parseInt($("#ddlFilter_Category").val());

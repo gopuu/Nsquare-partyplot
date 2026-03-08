@@ -91,7 +91,17 @@ function getCompanyProfile() {
 
                 // Company Profile Tab
                 $("#CompanyProfile_CompanyName").val(d.CompanyName);
+
+                let banquetType = d.BanquetType;
+                if (!banquetType || banquetType === "0") {
+                    $("#CompanyProfile_BanquetType option").each(function () {
+                        if ($(this).text().trim() === "Banquet Hall") {
+                            banquetType = $(this).val();
+                        }
+                    });
+                }
                 $("#CompanyProfile_BanquetType").val(d.BanquetType);
+
                 //loadCities(d.CompanyState);
                 $("#CompanyProfile_State").val(d.CompanyState);
                 $("#CompanyProfile_City").val(d.CompanyCity);
@@ -1268,15 +1278,36 @@ function loadBanquetTypes() {
                                 <tr>
                                     <td class="text-center">${index + 1}</td>
                                     <td>${item.Name}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-warning edit-banquet"
-                                            data-id="${item.Id}" data-name="${item.Name}">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger delete-banquet"
-                                            data-id="${item.Id}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+
+                                            <button class="btn btn-xs btn-outline-secondary p-1"
+                                                    type="button"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                                <li>
+                                                    <a class="dropdown-item edit-banquet"
+                                                       data-id="${item.Id}"
+                                                       data-name="${item.Name}">
+                                                        <i class="bi bi-pencil-square text-warning me-2"></i> Edit
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item delete-banquet"
+                                                       data-id="${item.Id}">
+                                                        <i class="bi bi-trash text-danger me-2"></i> Delete
+                                                    </a>
+                                                </li>
+
+                                            </ul>
+
+                                        </div>
                                     </td>
                                 </tr>
                             `);

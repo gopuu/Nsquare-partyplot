@@ -1,4 +1,33 @@
-﻿#fixedSaveBar {
+﻿/*HISTORY __ START */
+.timeline {
+    border-left: 3px solid #0d6efd;
+    margin-left: 15px;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: #0d6efd;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+}
+/*HISTORY __ END */
+
+#fixedSaveBar {
     position: fixed;
     right: 20px;
     bottom: 14px;

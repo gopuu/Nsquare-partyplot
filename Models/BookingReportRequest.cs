@@ -1,16 +1,6 @@
 ﻿namespace ERPAdmin.Models
 {
-    public class BookingReportRequest : BaseClass
-    {
-        public long EventTypeId { get; set; } = 0;
-        public long EventSubTypeId { get; set; } = 0;
-        public long HallId { get; set; } = 0;
-        public string? FromDate { get; set; }
-        public string? ToDate { get; set; }
-        public string? FilterDuration { get; set; }
-        public bool? WithHeader { get; set; }
 
-    }
     public class DailySalesDetailsRequest : BaseClass
     {
         public string? FromDate { get; set; }

@@ -59,6 +59,8 @@
         $("#rmName").val(rowData.Name);
         $("#itemCategoryId").val(rowData.ItemCategoryId);
 
+        $("#currentQty").val(rowData.CurrentQty);
+
         // ===========================
         // PURCHASE UNITS (MULTI-SELECT)
         // ===========================
@@ -233,6 +235,7 @@
 
             ItemCategoryId: $("#itemCategoryId").val() == "0" ? 0 : parseInt($("#itemCategoryId").val()),
 
+            CurrentQty: $("#currentQty").val() || 0,
             PurchasePrice: $("#purchasePrice").val() || 0,
             TransferPrice: $("#transferPrice").val() || 0,
             ReconciliationPrice: $("#reconPrice").val() || 0,
@@ -278,14 +281,7 @@
                 var obj = response;
                 //console.log("submit obj:", obj);
                 if (obj.status.toLowerCase() == "success") {
-                    //$('#btn-loader').hide();
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Saved!");
                     fetchData();
                     resetFormFields();  // Reset the form fields
                     $('#addEventModal').modal('hide');  // Close the modal
@@ -489,7 +485,6 @@
     });
 
 });
-
 function renderTable(data) {
     console.log("data:", data);
 
@@ -516,6 +511,7 @@ function renderTable(data) {
                 { data: 'srno', title: 'Sr. No.' },
                 { data: "Name", title: "Name" },
                 { data: "ItemCategoryName", title: "Category" },
+                { data: "CurrentQty", title: "CurrentQty" },
                 {
                     data: "IsFavourite",
                     title: "Set As Favourite",
@@ -586,6 +582,7 @@ function renderTable(data) {
             { data: 'srno', title: 'Sr. No.' },
             { data: "Name", title: "Name" },
             { data: "ItemCategoryName", title: "Category" },
+            { data: "CurrentQty", title: "CurrentQty" },
             {
                 data: "IsFavourite",
                 title: "Set As Favourite",
@@ -624,6 +621,7 @@ function renderTable(data) {
                                         <i class="fa fa-edit me-2 text-warning"></i> Edit
                                     </button>
                                 </li>
+
                                 <li>
                                     <button class="dropdown-item btn-delete">
                                         <i class="fa fa-trash me-2 text-danger"></i> Delete
@@ -695,6 +693,7 @@ function fetchData() {
 function resetFormFields() {
 
     $("#rmId").val(0);
+    $("#currentQty").val(0);
 
     $("#rmName,#purchaseEqualsQty,#purchasePrice,#transferPrice,#reconPrice,#taxPercent,#minStockLevel,#atParLevel,#barcode,#hsn,#gtin,#brand,#lossPercent,#qtyGmMl,#description").val("");
 

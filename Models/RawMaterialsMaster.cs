@@ -83,6 +83,8 @@
 
         public long ItemCategoryId { get; set; }
 
+        public decimal? CurrentQty { get; set; }
+
         // Pricing
         public decimal? PurchasePrice { get; set; }
         public decimal? TransferPrice { get; set; }
@@ -174,5 +176,26 @@
         public string? CategoryName { get; set; }
         public long RawMaterialsCount { get; set; }
     }
+    //Stock Out History
+    public class GetStockOutHistoryRequest
+    {
+        public long RawMaterialId { get; set; } = 0;
+    }
+    public class GetStockOutHistoryList
+    {
+        public long Id { get; set; }
+        public long RawMaterialId { get; set; }
+        public string? RawMaterialName { get; set; }
 
+        public long UnitId { get; set; }
+        public string? UnitName { get; set; }
+
+        public decimal Quantity { get; set; }
+        public string? Remarks { get; set; }
+
+        public string? ModifiedOn { get; set; }
+        public string? ModifiedOn2 { get; set; }
+
+        public string? ModifiedBy { get; set; }
+    }
 }
