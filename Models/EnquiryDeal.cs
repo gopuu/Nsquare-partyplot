@@ -99,6 +99,7 @@
         public string StartTime { get; set; }   // HH:mm or hh:mm tt
         public string EndTime { get; set; }     // HH:mm or hh:mm tt
         public long BanquetId { get; set; }
+        public long? BookingId { get; set; } = 0;
     }
 
 }

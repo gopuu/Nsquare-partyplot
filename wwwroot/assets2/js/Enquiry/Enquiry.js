@@ -33,7 +33,6 @@ function loadSlotMaster() {
     });
 }
 
-
 //<!--MAIN-->
 let userId = 0;
 // Sample data (replace later with API fetch)
@@ -343,18 +342,9 @@ $(document).on("click", ".delete-followup", function () {
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(deleteObj),
-
                 success: function (res) {
                     if (res.status === "Success") {
-
-                        Swal.fire({
-                            icon: "success",
-                            title: "Deleted!",
-                            position: "top-end",
-                            toast: true,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
+                        handleApiSuccess('Deleted!');
 
                         loadFollowUpHistoryById(enquiryId); // Reload table
                     }
@@ -525,9 +515,15 @@ function renderBoard() {
                     // 🔒 Validation: Prevent edit if already booked
                     if (bookingId > 0) {
                         // 🔥 Change modal title for edit mode
-                        $("#dealModalLabel").text("Deal Details (Enquiry)");
+                        $("#dealModalLabel").text("Lead Details (Enquiry)");
                         $("#deleteDealBtn").addClass("d-none").data("deal-id", "0"); // hide delete btn
                         $("#saveDealBtn").addClass("d-none"); // hide delete btn
+
+                        // 🔒 Make all fields readonly
+                        $("#dealForm")
+                            .find("input, textarea, select, button")
+                            .not("#deleteDealBtn, #saveDealBtn")
+                            .prop("disabled", true);
                     }
                     else {
                         // 🔥 Change modal title for edit mode
@@ -561,7 +557,7 @@ function renderBoard() {
                     $("#packageDropdown").val(data.PackageId).trigger("change");
                     $("#followUpDate").val(data.FollowUpDate_Format2);
 
-                    $("#estimatedAmount").val(data.EstimatedAmount);
+                    $("#estimatedAmount").val(data.EstimatedAmount).prop("readonly", true);
                     $("#leadSourceDropdown").val(data.LeadSourceId);
                     $("#remark").val(data.Remarks || "");
 
@@ -660,17 +656,28 @@ function renderBoard() {
             data: JSON.stringify(obj),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess('Saved!');
                     saveFollowUpAndMoveDeal();
                     resetFollowUpForm();
                     loadFollowUpHistoryById(enquiryId);
                     loadEnquiryDeals();
+
+                    $("#followup_title").text("(Optional) Skip If not needed");
+                    $("#followup_closebutton").removeClass("d-none");
+
+                    // Dispose existing instance
+                    let modalInstance = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
+                    if (modalInstance) {
+                        modalInstance.dispose();
+                    }
+
+                    // Recreate modal with normal behavior
+                    const followupModal = new bootstrap.Modal(document.getElementById('followupModal'), {
+                        keyboard: true,
+                        backdrop: true
+                    });
+                    followupModal.hide();
+
 
                     // ✅ Call your moveDeal function with parameters
                     //moveDeal(
@@ -927,6 +934,9 @@ function enableDragDrop() {
                 // 🎯 If dropped in Lost column (optional handling)
                 if (isLost) {
                     console.log("Lost");
+                    $("#followup_title").text("(Compulsory, If Lead Lost)");
+                    // Open follow-up modal
+                    openFollowUp(dealId, "lost");
                     return;
                 }
 
@@ -968,6 +978,7 @@ function saveFollowUpAndMoveDeal() {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
+                handleApiSuccess('Saved!');
                 // Close modal
                 $("#followupModal").modal("hide");
 
@@ -1006,6 +1017,23 @@ function openFollowUp(enquiryDealId, moveContext = null) {
 
     loadFollowUpHistoryById(enquiryDealId);
 
+    $("#followup_closebutton").removeClass("d-none");
+    if (moveContext == "lost") {
+        $("#followup_closebutton").addClass("d-none");
+        // Dispose existing instance
+        let modalInstance = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
+        if (modalInstance) {
+            modalInstance.dispose();
+        }
+
+        const followupModal = new bootstrap.Modal(document.getElementById('followupModal'), {
+            keyboard: false,
+            backdrop: 'static'
+        });
+
+        followupModal.show();
+        return;
+    }
     $("#followupModal").modal("show");
 }
 
@@ -1032,7 +1060,7 @@ function resetDealForm() {
     $("#pax").val("0");
     $("#leadSourceDropdown").val("0");
     $("#followUpDate").val("");
-    $("#estimatedAmount").val("0");
+    $("#estimatedAmount").val("0").prop("readonly", true);
     $("#remark").val("");
 
     // Hide all error messages
@@ -1198,14 +1226,12 @@ function parseTime(timeStr) {
 }
 
 function calculateEstimatedAmount() {
-
     const pax = parseFloat(document.getElementById("pax").value) || 0;
     const packageAmount = parseFloat(document.getElementById("packageAmount").value) || 0;
 
     const total = pax * packageAmount;
 
-    document.getElementById("estimatedAmount").value =
-        total > 0 ? total.toFixed(2) : "";
+    $("#estimatedAmount").val(total > 0 ? total.toFixed(2) : "0").prop("readonly", true);
 }
 
 // Initial load
@@ -1508,13 +1534,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(enquiryData),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess('Saved!');
                     loadEnquiryDeals();
                     resetDealForm();
                     bootstrap.Modal.getInstance(document.getElementById("dealModal")).hide();
@@ -1564,13 +1584,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data: JSON.stringify(inputData),
                     success: function (response) {
                         if (response.status === "Success") {
-                            Swal.fire({
-                                position: "top-end",
-                                icon: "success",
-                                title: "Deal Deleted!",
-                                showConfirmButton: false,
-                                timer: 900
-                            });
+                            handleApiSuccess('Deal Deleted!');
                             loadEnquiryDeals();
                             resetDealForm();
                             //bootstrap.Modal.getInstance(document.getElementById("dealModal")).hide();
@@ -1626,13 +1640,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(inputData),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess('Saved!');
                     resetEventTypeForm();
                     loadEventTypeList();
                 } else {
@@ -1698,13 +1706,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data: JSON.stringify(inputData),
                     success: function (response) {
                         if (response.status === "Success") {
-                            Swal.fire({
-                                position: "top-end",
-                                icon: "success",
-                                title: "Deleted!",
-                                showConfirmButton: false,
-                                timer: 900
-                            });
+                            handleApiSuccess('Deleted!');
                             loadEventTypeList();
                         } else {
                             Swal.fire({
@@ -1833,13 +1835,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data: JSON.stringify(inputData),
                     success: function (response) {
                         if (response.status === "Success") {
-                            Swal.fire({
-                                position: "top-end",
-                                icon: "success",
-                                title: "Deleted!",
-                                showConfirmButton: false,
-                                timer: 900
-                            });
+                            handleApiSuccess('Deleted!');
                             loadEventSubTypeList();
                         } else {
                             Swal.fire({
@@ -1892,13 +1888,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(inputData),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess('Saved!');
                     resetLeadSourceForm();
                     loadLeadSourceList();
                 } else {
@@ -1963,13 +1953,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data: JSON.stringify(inputData),
                     success: function (response) {
                         if (response.status === "Success") {
-                            Swal.fire({
-                                position: "top-end",
-                                icon: "success",
-                                title: "Deleted!",
-                                showConfirmButton: false,
-                                timer: 900
-                            });
+                            handleApiSuccess('Deleted!');
                             loadLeadSourceList();
                         } else {
                             Swal.fire({
@@ -2034,13 +2018,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 Swal.close(); // Close loader
                 if (res.status === "Success") {
                     let isAvailable = res.data?.IsAvailable === 1;
+
                     let msgBox = $("#slotStatusMsg");
+                    let warningBox = $("#slotStatusWarning");
+
                     msgBox
                         .removeClass("d-none text-danger text-success bg-success-subtle bg-danger-subtle")
                         .addClass(isAvailable
                             ? "text-success bg-success-subtle"
                             : "text-danger bg-danger-subtle")
                         .text(res.message);
+
+                    // Show warning only if WarningMessage exists
+                    if (res.data && res.data.WarningMessage && res.data.WarningMessage.trim() !== "") {
+                        warningBox
+                            .removeClass("d-none")
+                            .addClass("bg-warning-subtle text-dark")
+                            .text(res.data.WarningMessage);
+                    }
+                    else {
+                        warningBox.addClass("d-none");
+                    }
                 }
             },
             error: function (xhr, status, error) {

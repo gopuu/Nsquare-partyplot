@@ -546,6 +546,7 @@ namespace ERPAdmin.ApiControllers
 
                 int isAvailable = 0;
                 string message = "";
+                string warningMessage = "";
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("CheckBookingSlotAvailability", con))
@@ -555,6 +556,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@StartTime", SqlDbType.NVarChar, 20).Value = model.StartTime ?? "";
                     cmd.Parameters.Add("@EndTime", SqlDbType.NVarChar, 20).Value = model.EndTime ?? "";
                     cmd.Parameters.Add("@BanquetId", SqlDbType.BigInt).Value = model.BanquetId;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = model.BookingId ?? 0;
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -562,7 +564,8 @@ namespace ERPAdmin.ApiControllers
                         if (dr.Read())
                         {
                             isAvailable = Convert.ToInt32(dr["IsAvailable"]);
-                            message = dr["Message"].ToString();
+                            message = dr["Message"].ToString() ?? "";
+                            warningMessage = dr["WarningMessage"].ToString() ?? "";
                         }
                     }
                     con.Close();
@@ -572,6 +575,7 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.message = message;
                 apiResponse.data = new
                 {
+                    WarningMessage = warningMessage,
                     IsAvailable = isAvailable
                 };
 

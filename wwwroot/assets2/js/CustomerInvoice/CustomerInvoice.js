@@ -397,12 +397,7 @@ $(function () {
             success: function (res) {
 
                 if (res.status === 'Success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Saved',
-                        text: 'Invoice saved successfully',
-                        confirmButtonText: 'OK'
-                    });
+                    handleApiSuccess('Invoice saved successfully');
                     fetchData();
                     getNextInvoiceNumbers();
                     //resetForm();

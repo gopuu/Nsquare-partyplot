@@ -1355,7 +1355,7 @@ function generateShiftDataPerDay(dateObj) {
 
 //main booking board
 async function renderBoard(bookingData = null) {
-    console.log("renderBoard bookingData:", bookingData);
+    //console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
@@ -1402,7 +1402,7 @@ async function renderBoard(bookingData = null) {
     });
     board.appendChild(dateRow);
 
-    console.log("shiftTimes:", shiftTimes);
+    //console.log("shiftTimes:", shiftTimes);
     // Resource Rows
     banquetHallsList.forEach(hall => {
         const row = document.createElement("div");
@@ -1638,8 +1638,8 @@ async function renderBoard(bookingData = null) {
                 var clientContact = null;
                 var eventDateRange = null;
 
-                console.log("shiftTimes:", shiftTimes, ", shiftCode:", shiftCode);
-                console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
+                //console.log("shiftTimes:", shiftTimes, ", shiftCode:", shiftCode);
+                //console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
                 //console.log("shiftTimes[shiftCode].end:", shiftTimes[shiftCode].end);
                 const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
                 const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
@@ -1678,9 +1678,11 @@ async function renderBoard(bookingData = null) {
                         const uniqueBookingIds = [...new Set(bookingsToday.map(b => b.BookingId))];
 
                         displayText = uniqueBookingIds.length;
+                        //console.log("uniqueBookingIds:", uniqueBookingIds);
                     }
 
                     for (const booking of bookingData) {
+                        //console.log("bookingData:", bookingData);
 
                         if (booking.BanquetId !== hall.Id)
                             continue;
@@ -1736,7 +1738,6 @@ async function renderBoard(bookingData = null) {
 
                 // 🎯 MULTI-SLOT MERGE LOGIC
                 let spanCount = 1;
-
                 if (bookingMatch && !isBlocked) {
 
                     const bookingStart = timeToMinutes(bookingMatch.StartTime_Full);
@@ -1830,6 +1831,7 @@ async function renderBoard(bookingData = null) {
                 });
             });
 
+
             row.appendChild(cell);
         });
         board.appendChild(row);
@@ -1852,10 +1854,32 @@ async function renderBoard(bookingData = null) {
         const badge = e.target.closest(".badge[data-shift]");
         if (!badge) return;
 
+        //const isBlocked = badge.dataset.isblocked;
+        const shiftname = badge.dataset.shiftname;
+        const date_full = badge.dataset.date;
+
         const shiftcode = badge.dataset.shift;
+        const bookingid = badge.dataset.bookingid;
+        const eventName = badge.dataset.eventname || "";
+        const clientName = badge.dataset.clientname || "";
+        const clientContact = badge.dataset.clientcontact || "";
+        const eventDateRange = badge.dataset.eventdaterange || "";
+
         const badgeText = badge.textContent.trim();
         const dateISO = badge.dataset.date_iso;
         const hallId = parseInt(badge.dataset.hallid);
+
+        let isTentative = false;
+        if (badge.classList.contains("bg-white")) {
+            isTentative = true;
+            //console.log("tentative");
+        }
+
+        let isBlocked = false;
+        if (badge.classList.contains("bg-dark")) {
+            isBlocked = true;
+            //console.log("isBlocked");
+        }
 
         // 🔎 Get all bookings for this hall & date
         const bookingsForDay = bookingData.filter(b => {
@@ -1918,6 +1942,10 @@ async function renderBoard(bookingData = null) {
             tooltip.innerHTML = html;
             tooltip.style.background = "#e11d48";
             tooltip.style.color = "#fff";
+            if (isTentative) {
+                tooltip.style.background = "#fff";
+                tooltip.style.color = "#e11d48";
+            }
             tooltip.style.display = "block";
             tooltip.style.maxHeight = "500px";
             tooltip.style.overflowY = "auto";
@@ -1926,16 +1954,33 @@ async function renderBoard(bookingData = null) {
             tooltipLocked = true;
 
             // Position near badge instead of cursor
+            //If badge is in left 50 % of screen → show tooltip on right
+            //If badge is in right 50 % of screen → show tooltip on left
             const rect = badge.getBoundingClientRect();
-            tooltip.style.left = rect.right + 10 + "px";
+            const screenMid = window.innerWidth / 2;
+            const tooltipWidth = tooltip.offsetWidth || 280; // fallback width
+            const gap = 30;
+
+            let left;
+
+            // If badge is on right half → show tooltip on LEFT
+            if (rect.left > screenMid) {
+                left = rect.left - tooltipWidth - gap;
+            }
+            // If badge is on left half → show tooltip on RIGHT
+            else {
+                left = rect.right + gap;
+            }
+
+            tooltip.style.left = left + "px";
             tooltip.style.top = rect.top + "px";
 
             return;
         }
 
         // 🔴 Normal single booking tooltip
-        const bookingid = badge.dataset.bookingid;
-
+        //const bookingid = badge.dataset.bookingid;
+        console.log("isBlocked:", isBlocked, ", bookingid: ",bookingid);
         if (bookingid > 0) {
 
             const booking = bookingsForDay.find(b => b.BookingId == bookingid);
@@ -1960,10 +2005,41 @@ async function renderBoard(bookingData = null) {
 
             tooltip.style.background = "#e11d48";
             tooltip.style.color = "#fff";
+            if (isTentative) {
+                tooltip.style.background = "#fff";
+                tooltip.style.color = "#e11d48";
+            }
             tooltip.style.display = "block";
             tooltip.style.maxHeight = "250px";
             tooltip.style.overflowY = "auto";
         }
+        else {
+            if (badge.classList.contains("bg-secondary") || isBlocked) {
+                tooltip.style.display = "none";
+                return; // stop tooltip processing
+            }
+
+            const shiftIcons = {
+                FD: "fa-solid fa-sun",
+                MO: "fa-solid fa-cloud-sun",
+                AF: "fa-solid fa-sun",          // or fa-sun-haze if available
+                EV: "fa-solid fa-cloud-moon",
+                ON: "fa-solid fa-moon"
+            };
+            const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock"; // fallback
+            tooltip.innerHTML = `
+                <div>
+                    <strong><i class="${iconClass}"></i> ${shiftname} (${shiftcode})</strong>
+                </div>
+                <div>
+                    <i class="fa-solid fa-calendar"></i> ${date_full}
+                </div>
+            `;
+            tooltip.style.background = "#22c55e"; // ✅ light green (Tailwind green-500)
+            tooltip.style.color = "#fff";
+            tooltip.style.display = "block";
+        }
+        
     });
 
     document.addEventListener("mousemove", function (e) {
@@ -2305,8 +2381,8 @@ function attachShiftClickListeners() {
         }
 
         const badgeText = badge.textContent.trim();
-        // ✅ If badge text is numeric (count), disable click
-        if (!isNaN(badgeText) && badgeText !== "") {
+        // If badge text is numeric and greater than 1 → disable click
+        if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
             badge.style.cursor = "default";
             return; // do not attach click
         }
@@ -2376,7 +2452,7 @@ function attachShiftClickListeners() {
 }
 
 function setShiftTime(shiftAbbr) {
-    console.log("shiftTimes:", shiftTimes);
+    //console.log("shiftTimes:", shiftTimes);
     const times = shiftTimes[shiftAbbr];
     if (!times) return; // invalid shift — do nothing
 
@@ -3858,6 +3934,7 @@ Your feedback helps us improve our service.`;
         
         let eventDate = $("#fromDate").val()?.trim();
         let banquetId = parseInt($("#banquetDropdown").val()) || 0;
+        let bookingId = getBookingId();
 
         // Get start time parts
         let sh = $("#startHour").val();
@@ -3893,7 +3970,8 @@ Your feedback helps us improve our service.`;
             EventDate: eventDate,
             StartTime: eventStart,   // 12-hour format
             EndTime: eventEnd,
-            BanquetId: banquetId
+            BanquetId: banquetId,
+            BookingId: bookingId
         };
 
         //console.log("CHECKING SLOT:", payload);
@@ -3911,7 +3989,9 @@ Your feedback helps us improve our service.`;
                 Swal.close();
 
                 let isAvailable = res.data?.IsAvailable === 1;
+
                 let msgBox = $("#slotStatusMsg");
+                let warningBox = $("#slotStatusWarning");
 
                 msgBox
                     .removeClass("d-none text-danger text-success bg-success-subtle bg-danger-subtle")
@@ -3919,6 +3999,17 @@ Your feedback helps us improve our service.`;
                         ? "text-success bg-success-subtle"
                         : "text-danger bg-danger-subtle")
                     .text(res.message);
+
+                // Show warning only if WarningMessage exists
+                if (res.data && res.data.WarningMessage && res.data.WarningMessage.trim() !== "") {
+                    warningBox
+                        .removeClass("d-none")
+                        .addClass("bg-warning-subtle text-dark")
+                        .text(res.data.WarningMessage);
+                }
+                else {
+                    warningBox.addClass("d-none");
+                }
 
                 // 🔹 Enable / Disable Book Button
                 $("#btnBook").prop("disabled", !isAvailable);                
@@ -5202,7 +5293,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     // Payable Amount
                     $("#paymentSummary_payableAmount").text(formatAmount(data.PaymentSummary_PayableAmount));
 
-                    $("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
+                    //$("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
 
                     $("#Section_PaymentDetails").hide();
                 }
@@ -5659,6 +5750,13 @@ function resetBooking() {
 
     // ✅ Store FULL package array in button as JSON
     $("#btnFoodLabels").data("foodpackage", "");
+
+    const now = new Date();
+    const paidTime =
+        String(now.getHours()).padStart(2, '0') + ":" +
+        String(now.getMinutes()).padStart(2, '0'); // + ":" +
+        //String(now.getSeconds()).padStart(2, '0');
+    $("#PaymentDetails_PaidTime").val(paidTime);
 
     // Reset amounts to defaults
     //resetOtherCharges(false);
@@ -6440,7 +6538,7 @@ function loadSlotDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            console.log("response SlotMaster:", response);
+            //console.log("response SlotMaster:", response);
             const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
             const $abbrContainer = $("#slotAbbreviations");
 
@@ -6482,9 +6580,9 @@ function loadSlotDropdown() {
                 };
 
             });
-            console.log("Shift Map:", shiftMap);
-            console.log("Shift Times:", shiftTimes);
-            console.log("Shift Names:", shiftNames);
+            //console.log("Shift Map:", shiftMap);
+            //console.log("Shift Times:", shiftTimes);
+            //console.log("Shift Names:", shiftNames);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Slot Fetch Error");
