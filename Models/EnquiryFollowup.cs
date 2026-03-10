@@ -15,6 +15,22 @@
         public int Id { get; set; }
         public string Name { get; set; }
     }
+    public class LeadLostCategoryResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    public class LeadLostReasonRequest {
+        public int? LeadLostCategoryId { get; set; } = 0;
+
+    }
+    public class LeadLostReasonResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int LeadLostCategoryId { get; set; }
+        public string LeadLostCategoryName { get; set; }
+    }
 
     public class GetEnquiryFollowUpRequest
     {
@@ -35,6 +51,12 @@
 
         public long? FollowUpTypeId { get; set; }
         public string? FollowUpTypeName { get; set; }  // optional for UI, if joined later
+
+        public long? FollowUpLeadLostReasonId { get; set; }
+        public string? FollowUpLeadLostReasonName { get; set; }  // optional for UI, if joined later
+
+        public long? FollowUpLeadLostReasonCategoryId { get; set; }
+        public string? FollowUpLeadLostReasonCategoryName { get; set; }  // optional for UI, if joined later
 
         public string? FollowUpDateTime { get; set; }
         public string? FollowUpDateTime2 { get; set; }
@@ -96,6 +118,8 @@
 
         public long? EnquiryId { get; set; }
         public long? FollowUpTypeId { get; set; }
+        public long? FollowUpLeadLostReasonCategoryId { get; set; }
+        public long? FollowUpLeadLostReasonId { get; set; }
 
         public string? FollowUpDateTime { get; set; }   // string? because SP accepts NVARCHAR(30)
         public string? NextFollowUpDateTime { get; set; }

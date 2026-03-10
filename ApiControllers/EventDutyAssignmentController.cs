@@ -79,7 +79,7 @@ public class EventDutyAssignmentController : MasterController
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.message = ex.Message;
             apiResponse.status = "Error";
             return StatusCode(500, apiResponse);
         }
@@ -134,7 +134,7 @@ public class EventDutyAssignmentController : MasterController
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.message = ex.Message;
             apiResponse.status = "Error";
             return StatusCode(500, apiResponse);
         }
@@ -176,7 +176,7 @@ public class EventDutyAssignmentController : MasterController
         {
             ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-            apiResponse.message = "Error: " + ex.Message;
+            apiResponse.message = ex.Message;
             apiResponse.status = "Error";
             return StatusCode(500, apiResponse);
         }

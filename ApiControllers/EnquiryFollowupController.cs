@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
@@ -102,7 +103,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
@@ -127,6 +128,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@FollowUpId", SqlDbType.BigInt).Value = model.FollowUpId > 0 ? model.FollowUpId : 0;
                     cmd.Parameters.Add("@EnquiryId", SqlDbType.BigInt).Value = model.EnquiryId;
                     cmd.Parameters.Add("@FollowUpTypeId", SqlDbType.BigInt).Value = model.FollowUpTypeId;
+                    cmd.Parameters.Add("@FollowUpLeadLostReasonCategoryId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonCategoryId;
+                    cmd.Parameters.Add("@FollowUpLeadLostReasonId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonId;
 
                     cmd.Parameters.Add("@FollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.FollowUpDateTime ?? "";
                     cmd.Parameters.Add("@NextFollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.NextFollowUpDateTime ?? "";
@@ -181,7 +184,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
@@ -266,7 +269,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
@@ -314,7 +317,7 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
@@ -362,11 +365,110 @@ namespace ERPAdmin.ApiControllers
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = "Error: " + ex.Message;
+                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }
         }
+
+        [HttpGet]
+        [Route("GetEnquiryFollowUp_LeadLostReasonCategoryList")]
+        public IActionResult GetEnquiryFollowUp_LeadLostReasonCategoryList()
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<LeadLostCategoryResponse> list = new List<LeadLostCategoryResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetEnquiryFollowUp_LeadLostReasonCategoryList", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    list.Add(new LeadLostCategoryResponse
+                    {
+                        Id = Convert.ToInt32(row["Id"]),
+                        Name = Convert.ToString(row["Name"])
+                    });
+                }
+
+                apiResponse.message = "Reason list fetched successfully!";
+                apiResponse.data = list;
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetEnquiryFollowUp_LeadLostReasonList")]
+        public IActionResult GetEnquiryFollowUp_LeadLostReasonList([FromBody] LeadLostReasonRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<LeadLostReasonResponse> list = new List<LeadLostReasonResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetEnquiryFollowUp_LeadLostReasonList", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@LeadLostCategoryId", SqlDbType.BigInt).Value = request.LeadLostCategoryId;
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+                con.Close();
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(new LeadLostReasonResponse
+                {
+                    Id = Convert.ToInt32(row["Id"]),
+                    Name = Convert.ToString(row["Name"]),
+                    LeadLostCategoryId = Convert.ToInt32(row["LeadLostCategoryId"]),
+                    LeadLostCategoryName = Convert.ToString(row["LeadLostCategoryName"])
+                });
+            }
+
+            apiResponse.message = "Reason Category list fetched successfully!";
+            apiResponse.data = list;
+            apiResponse.status = "Success";
+            return Ok(apiResponse);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+            apiResponse.message = ex.Message;
+            apiResponse.status = "Error";
+            return StatusCode(500, apiResponse);
+        }
+    }
 
 
     }

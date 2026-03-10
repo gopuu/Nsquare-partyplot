@@ -27,7 +27,7 @@ $(document).ready(function () {
             $('#addEventModal').modal('hide');
         } else {
             resetFormFields(); // Reset form fields when modal is shown
-            $("#addEventModalTitle").text("Add Purchase Order");
+            $("#addEventModalTitle").text("Add Purchase Invoice");
             $("#addEventModal").modal("show");
         }
     });
@@ -156,7 +156,7 @@ $(document).ready(function () {
         // =========================================
         // OPEN MODAL
         // =========================================
-        $("#addEventModalTitle").text("Edit Purchase Order");
+        $("#addEventModalTitle").text("Edit Purchase Invoice");
         $("#addEventModal").modal("show");
     });
 
@@ -1041,7 +1041,7 @@ function updateSrNo() {
 
 //SHOW GRID TABLE
 function renderTable(data) {
-    //console.log("Purchase Data render:", data);
+    console.log("Purchase Data render:", data);
 
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
@@ -1084,7 +1084,7 @@ function renderTable(data) {
                 data: null,
                 title: "From",
                 render: (d) => `
-                        <b>${d.SupplierName ?? ""}</b><br>
+                        <b>${d.SupplierCompany ?? d.SupplierName}</b><br>
                         <small class="text-muted">${d.PurchaseFromName ?? ""}</small>
                     `
             },

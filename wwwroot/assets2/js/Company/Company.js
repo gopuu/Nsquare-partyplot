@@ -2525,7 +2525,7 @@ function addNewHeader_items(headerDbId = 0) {
                 </div>
             </div>
 
-            <div class="mt-2 mb-2 px-2" id="${headerId}">
+            <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:400px; overflow-y:auto;">
                 ${generateFoodItemRow_items()}
                 <div class="mt-2">
                     <button class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${headerId}')">+ Add more</button>
@@ -2541,6 +2541,7 @@ function generateFoodItemRow_items() {
                 <input type="hidden" class="food-item-id" value="0"/>
                 <input type="text" class="form-control food-item-name" placeholder="Food Item Name" />
                 <input type="text" class="form-control food-item-description ms-2" placeholder="Description (optional)" />
+                <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteFoodItem_Items(this)">X</button>
             </div>
         `;
 }
@@ -2575,6 +2576,9 @@ function saveFoodItems() {
             let itemId = $(this).find(".food-item-id").val() || 0;
             let itemName = $(this).find(".food-item-name").val();
             let description = $(this).find(".food-item-description").val();
+
+            // Skip empty rows
+            if (!itemName && !description) return;
 
             items.push({
                 ItemId: itemId,  // match your C# model property
@@ -3260,6 +3264,9 @@ function saveAddonCharges() {
         const amount = parseFloat($(this).find(".addon-charge-amount").val()) || 0;
         const description = $(this).find(".addon-charge-description").val();
 
+        // Skip empty rows
+        if (!itemName && !description && (!amount || amount==0)) return;
+
         addonCharges.push({
             Id: id,
             HeaderName: headerName,
@@ -3401,7 +3408,7 @@ function deleteAddonCharge(button) {
 
     const payload = {
         Id: parseInt(id),
-        ActionBy: sessionStorage.getItem("userId") || 1
+        ActionBy: sessionStorage.getItem("userId") || 0
     };
     //showLoader();
 

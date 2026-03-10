@@ -107,6 +107,55 @@ function loadMoodList() {
         }
     });
 }
+function loadLeadLostReasonCategoryList() {
+    $.ajax({
+        url: "/api/EnquiryFollowup/GetEnquiryFollowUp_LeadLostReasonCategoryList",
+        type: "GET",
+        success: function (res) {
+            //console.log("res mood:", res);
+            if (res.status === "Success") {
+                let ddl = $("#ddlLeadLostReasonCategory");
+                ddl.empty();
+
+                ddl.append('<option value="0">-- Select Reason Category --</option>');
+
+                $.each(res.data, function (i, item) {
+                    ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                });
+            }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, error, status, "Failed to fetch reason category list");
+        }
+    });
+}
+function loadLeadLostReasonList(categoryId=0) {
+
+    $.ajax({
+        url: "/api/EnquiryFollowup/GetEnquiryFollowUp_LeadLostReasonList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            LeadLostCategoryId: categoryId
+        }),
+        success: function (res) {
+            //console.log("res mood:", res);
+            if (res.status === "Success") {
+                let ddl = $("#ddlLeadLostReason");
+                ddl.empty();
+
+                ddl.append('<option value="0">-- Select Reason --</option>');
+
+                $.each(res.data, function (i, item) {
+                    ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                });
+            }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, error, status, "Failed to fetch lead lost reason list");
+        }
+    });
+}
 
 function loadFollowUpHistoryById(enquiryId) {
     const requestObj = {
@@ -192,6 +241,7 @@ function renderFollowUpHistory(list) {
                 </td>
                 <td>${item.AssignedToName}</td>
                 <td>${item.Probability}%</td>
+                <td>${item.FollowUpLeadLostReasonName}</td>
                 <td>
                     <button class="btn btn-action-xs btn-outline-warning edit-followup" data-id="${item.FollowUpId}">
                         <i class="fa fa-pencil"></i>
@@ -217,6 +267,7 @@ function loadTimeDropdown() {
     let ddl = $("#nextFollowUpTime_modalFollowup");
     ddl.empty();
 
+    ddl.append(`<option value = "">Time</option> `);
     for (let hour = 0; hour < 24; hour++) {
         for (let min = 0; min < 60; min += 30) {
 
@@ -251,13 +302,17 @@ function resetFollowUpForm() {
     $("#nextFollowUpDate_modalFollowup").val("");
 
     // Set first time option
-    //let firstTime = $("#nextFollowUpTime_modalFollowup option:first").val();
     $("#nextFollowUpTime_modalFollowup").val("");
-    $("#nextFollowUpTime_modalFollowup").prop("selectedIndex", 0).trigger("change");
+    //$("#nextFollowUpTime_modalFollowup").prop("selectedIndex", 0).trigger("change");
 
     //updateNextFollowUpValue();
 
     $("#txtProbability").val("0");
+
+    $("#hfIsLeadLost").val(0);
+    $(".leadLostReasonSection").hide();
+    $("#ddlLeadLostReasonCategory").val("0");
+    $("#ddlLeadLostReason").val("0");
 }
 
 function updateNextFollowUpValue() {
@@ -293,6 +348,7 @@ $(document).on("click", ".edit-followup", function () {
                 let f = res.data.FollowUps;
                 let item = f[0];
 
+                resetFollowUpForm();
                 // Fill modal fields
                 $("#ddlFollowUpType").val(item.FollowUpTypeId);
                 $("#ddlStatus").val(item.StatusId);
@@ -306,6 +362,13 @@ $(document).on("click", ".edit-followup", function () {
                 $("#txtNextFollowUpDateTime").val(item.NextFollowUpDate + 'T' + item.NextFollowUpTime);
 
                 $("#txtProbability").val(item.Probability);
+
+                if (item.FollowUpLeadLostReasonCategoryId > 0) {
+                    $(".leadLostReasonSection").show();
+                    $("#hfIsLeadLost").val(1);
+                }
+                $("#ddlLeadLostReasonCategory").val(item.FollowUpLeadLostReasonCategoryId);
+                $("#ddlLeadLostReason").val(item.FollowUpLeadLostReasonId);
                 // Store ID for update
                 $("#hfFollowUpId").val(followUpId);
             }
@@ -590,30 +653,53 @@ function renderBoard() {
     });
 
     function validateFollowUp() {
+
         const followUpDateTime = new Date(); // current datetime
         const nextFollowUpInput = $("#txtNextFollowUpDateTime").val();
 
-        // If no next follow-up entered → consider valid
+        let isLeadLost = $("#hfIsLeadLost").val() === "1";
+        if (isLeadLost) {
+            console.log("validate isLeadLost");
+
+            let categoryId = $("#ddlLeadLostReasonCategory").val();
+            let reasonId = $("#ddlLeadLostReason").val();
+
+            if (!categoryId || categoryId == "0") {
+                Swal.fire(
+                    "Lead Lost Reason Required",
+                    "Please select Lead Lost Reason Category.",
+                    "warning"
+                );
+                $("#ddlLeadLostReasonCategory").focus();
+                return false;
+            }
+
+            if (!reasonId || reasonId == "0") {
+                Swal.fire(
+                    "Lead Lost Reason Required",
+                    "Please select Lead Lost Reason.",
+                    "warning"
+                );
+                $("#ddlLeadLostReason").focus();
+                return false;
+            }
+        }
+
+        // If no next follow-up entered → valid
         if (!nextFollowUpInput) return true;
 
         const nextFollowUpDate = new Date(nextFollowUpInput);
 
-        // Invalid date
-        //if (isNaN(nextFollowUpDate.getTime())) {
-        //    Swal.fire("Invalid Date", "Please enter a valid next follow-up date & time.", "error");
-        //    return false;
-        //}
-
-        // Must be greater than current follow-up time
         if (nextFollowUpDate <= followUpDateTime) {
             Swal.fire(
                 "Invalid Next Follow-Up",
-                "Next Follow-Up Date/Time must be greater than the current Follow-Up Date/Time.",
+                "Next FollowUp Date-Time must be greater than the current FollowUp Date-Time.",
                 "error"
             );
             return false;
         }
-        return true; // Valid
+
+        return true;
     }
 
     $("#btnSaveFollowUp").off("click").on("click", function () {
@@ -630,13 +716,15 @@ function renderBoard() {
         const fileUpload_base64 = document.getElementById("attachmentBase64_followUp").value.trim();
 
         const obj = {
-            FollowUpId: $("#hfFollowUpId").val() || 0,  // always insert new record
-            EnquiryId: enquiryId,
-            FollowUpTypeId: $("#ddlFollowUpType").val(),
-            FollowUpDateTime: new Date().toISOString(),   // server accepts nvarchar(30)
+            FollowUpId: Number($("#hfFollowUpId").val() || 0),  // always insert new record
+            EnquiryId: Number(enquiryId),
+            FollowUpTypeId: Number($("#ddlFollowUpType").val() || 0),
+            FollowUpLeadLostReasonCategoryId: Number( $("#ddlLeadLostReasonCategory").val() || 0 ),
+            FollowUpLeadLostReasonId: Number( $("#ddlLeadLostReason").val() || 0),
+            FollowUpDateTime: formatDateTime(),
             NextFollowUpDateTime: $("#txtNextFollowUpDateTime").val() || null,
-            StatusId: $("#ddlStatus").val(),
-            MoodId: $("#ddlMood").val(),
+            StatusId: Number( $("#ddlStatus").val() || 0),
+            MoodId: Number( $("#ddlMood").val() || 0),
             OutcomeId: null,             // you can add later
             Probability: $("#txtProbability").val() || null,
             DiscussionNotes: $("#txtDiscussionNotes").val(),
@@ -645,7 +733,7 @@ function renderBoard() {
             FileUpload: fileUpload_base64,
             AssignedTo: 1,               // dynamic later
             IsClosed: false,
-            ActionBy: sessionStorage.getItem("userId") ?? 0
+            ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
         };
         console.log("Saving Follow-Up:", obj);
 
@@ -664,20 +752,13 @@ function renderBoard() {
 
                     $("#followup_title").text("(Optional) Skip If not needed");
                     $("#followup_closebutton").removeClass("d-none");
-
-                    // Dispose existing instance
+                   
+                    // Recreate modal with normal behavior
                     let modalInstance = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
                     if (modalInstance) {
-                        modalInstance.dispose();
+                        //modalInstance.dispose();
+                        modalInstance.hide();
                     }
-
-                    // Recreate modal with normal behavior
-                    const followupModal = new bootstrap.Modal(document.getElementById('followupModal'), {
-                        keyboard: true,
-                        backdrop: true
-                    });
-                    followupModal.hide();
-
 
                     // ✅ Call your moveDeal function with parameters
                     //moveDeal(
@@ -1019,6 +1100,9 @@ function openFollowUp(enquiryDealId, moveContext = null) {
 
     $("#followup_closebutton").removeClass("d-none");
     if (moveContext == "lost") {
+        $(".leadLostReasonSection").show();
+        $("#hfIsLeadLost").val(1);
+
         $("#followup_closebutton").addClass("d-none");
         // Dispose existing instance
         let modalInstance = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
@@ -1034,6 +1118,24 @@ function openFollowUp(enquiryDealId, moveContext = null) {
         followupModal.show();
         return;
     }
+    else {
+        $(".leadLostReasonSection").hide();
+        $("#hfIsLeadLost").val(0);
+
+        // Dispose existing instance
+        let modalInstance = bootstrap.Modal.getInstance(document.getElementById('followupModal'));
+        if (modalInstance) {
+            modalInstance.dispose();
+        }
+
+        const followupModal = new bootstrap.Modal(document.getElementById('followupModal'), {
+            keyboard: true,
+            backdrop: true
+        });
+
+        followupModal.show();
+    }
+
     $("#followupModal").modal("show");
 }
 
@@ -1260,6 +1362,8 @@ document.addEventListener("DOMContentLoaded", function () {
     loadFollowUpTypes();
     loadFollowUpStatus();
     loadMoodList();
+    loadLeadLostReasonCategoryList();
+    loadLeadLostReasonList();
     loadTimeDropdown();
 
     fetchHallDetails();
@@ -1291,6 +1395,12 @@ document.addEventListener("DOMContentLoaded", function () {
             $("#toDate_filter").val("");
         }
     });
+
+    $("#ddlLeadLostReasonCategory").on("change", function () {
+        const cid = $(this).val();
+        loadLeadLostReasonList(cid);
+    });
+
 
     $("#btnApplyFilters").on("click", function () {
         loadEnquiryDeals();

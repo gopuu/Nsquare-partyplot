@@ -453,6 +453,7 @@
 
                 <input type="hidden" id="hfEnquiryDealId" />
                 <input type="hidden" id="hfFollowUpId" value="0">
+                <input type="hidden" id="hfIsLeadLost" value="0">
 
                 <!-- SECTION 1 : enquiry DETAILS (Display Only) -->
                 <div class="small mb-2 border p-2 shadow-sm rounded" id="enquiryDetails">
@@ -550,7 +551,7 @@
                                 </div>
 
                                 <div class="col-4">
-                                    <select class="form-select form-select-sm" id="nextFollowUpTime_modalFollowup"></select>
+                                    <select class="form-select" id="nextFollowUpTime_modalFollowup"></select>
                                 </div>
                             </div>
 
@@ -563,8 +564,18 @@
                             <input type="number" class="form-control form-control-sm" id="txtProbability" min="0" max="100">
                         </div>
 
+                        <div class="col-4 leadLostReasonSection">
+                            <label class="form-label">Lead Lost Reason Category <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="ddlLeadLostReasonCategory"></select>
+                        </div>
+
+                        <div class="col-4 leadLostReasonSection">
+                            <label class="form-label">Lead Lost Reason <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="ddlLeadLostReason"></select>
+                        </div>
+
                         <div class="col-6">
-                            <label class="form-label">Discussion Notes</label>
+                            <label class="form-label">Discussion Notes / Remarks</label>
                             <textarea class="form-control form-control-sm" id="txtDiscussionNotes" rows="7"></textarea>
                         </div>
 
@@ -605,6 +616,7 @@
                                 <th>Notes</th>
                                 <th>Assigned</th>
                                 <th>Probability</th>
+                                <th>Lead Lost</th>
                                 <th>Action</th>
                             </tr>
                         </thead>

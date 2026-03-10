@@ -526,6 +526,7 @@ $(function () {
             }
         });
     });
+
     $('#tableMain').on('click', '.btn-outstanding', function () {
         $("#outstanding_paymentForm")[0].reset();
 
@@ -533,11 +534,11 @@ $(function () {
         const dueAmount = Number($(this).data('outstandingamount')) || 0;
         if (dueAmount <= 0) {
             $("#dueMessage").removeClass("d-none");
-            $("#outstandingPayment_Amount").prop("disabled", true);;
+            $("#outstandingPayment_Amount").prop("readonly", true);;
         }
         else {
             $("#dueMessage").addClass("d-none");
-            $("#outstandingPayment_Amount").prop("disabled", false);
+            $("#outstandingPayment_Amount").prop("readonly", false);
         }
 
         console.log("Outstanding clicked for BookingId:", bookingId);
@@ -556,26 +557,28 @@ $(function () {
         const originalDue = Number($("#outstandingPayment_originalDueAmount").val()) || 0;
         let payAmount = Number($(this).val()) || 0;
 
-        if (payAmount > originalDue) {
+        //if (payAmount > originalDue) {
             //payAmount = originalDue;
-            $(this).val(originalDue);
-        }
-
+            //$(this).val(originalDue);
+        //}
+        //$(this).val(payAmount);
         const remaining = originalDue - payAmount;
-        $("#outstandingPayment_DueBalance").val(remaining);
+        $("#outstandingPayment_DueBalance").val(remaining.toFixed(2));
     });
+
     //invoicePayment_Amount - Input
     $(document).on("input", "#invoicePayment_Amount", function () {
         const originalDue = Number($("#invoicePayment_originalDueAmount").val()) || 0;
         let payAmount = Number($(this).val()) || 0;
 
         // 🔒 Prevent overpayment
-        if (payAmount > originalDue) {
+        //if (payAmount > originalDue) {
             //payAmount = originalDue;
-            $(this).val(originalDue);
-        }
+            //$(this).val(originalDue);
+        //}
+        //$(this).val(payAmount);
         const remaining = originalDue - payAmount;
-        $("#invoicePayment_DueBalance, #balanceAmount").val(remaining);
+        $("#invoicePayment_DueBalance, #balanceAmount").val(remaining.toFixed(2));
     });
 
     //outstandingPayment_btnwritrnote - click
@@ -634,6 +637,7 @@ $(function () {
             $("#outstandingPayment_Txn").closest(".paymentModal_Fields").removeClass("d-none");
         }
     });
+
     //invoicePayment_Mode - change
     $(document).on("change", "#invoicePayment_Mode", function () {
 
@@ -1020,10 +1024,10 @@ function recalcAll() {
 
     // Set values
     $('#grandTotal').val(roundedTotal.toFixed(2));
-    $('#roundOff').prop('disabled', true).val(roundOff.toFixed(2));
+    $('#roundOff').prop('readonly', true).val(roundOff.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').prop('disabled', true).val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').prop('readonly', true).val((grandTotal - advance).toFixed(2));
 }
 
 //proforma & invoice -- fetch EDIT -- START
@@ -1062,7 +1066,7 @@ function fetchInvoiceById(params) {
             $('#totalGST').val(data.TotalGST);
             $('#grandTotal').val(data.GrandTotal);
             $('#roundOff').val(data.RoundOff);
-            $('#advancePaid').val(data.TotalAdvancePaid).attr('disabled', true);
+            $('#advancePaid').val(data.TotalAdvancePaid).attr('readonly', true);
             $('#balanceAmount').val(data.BalanceAmount);
             /* ---------- ITEMS ---------- */
             $('#invoiceItemsBody').empty();
@@ -1239,7 +1243,7 @@ function fetchInvoiceByBookingId(bookingId) {
 
                 updateRowSequence();
                 recalcAll();
-                $('#advancePaid').val(data.PaidAmount).attr('disabled', true);
+                $('#advancePaid').val(data.PaidAmount).attr('readonly', true);
             } else {
                 addItemRow(); // empty invoice
             }
@@ -1315,12 +1319,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                         //here contnue for food label
                         // ✅ Store FULL package array in button as JSON
                         $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
-                        //$("#btnFoodLabels").prop("disabled", false);
+                        //$("#btnFoodLabels").prop("readonly", false);
                     }
                     else {
                         $("#bookingReport_FoodAmount").text("0");
                         $("#bookingReport_FoodRate").text("—");
-                        //$("#btnFoodLabels").prop("disabled", true);
+                        //$("#btnFoodLabels").prop("readonly", true);
                     }
 
                     // Payment Trail
@@ -1748,7 +1752,8 @@ function resetForm() {
     $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
     $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
     $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
-    $('#invoicePayment_DueBalance').val(0).prop('disabled', false);
+    $('#invoicePayment_DueBalance').val(0).prop('readonly', false);
+    $('#advancePaid').val(0).attr('readonly', true);
 
     $('#subTotal').val(0);
     $('#totalGST').val(0);
