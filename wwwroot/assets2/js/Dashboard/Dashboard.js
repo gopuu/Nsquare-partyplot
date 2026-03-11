@@ -26,7 +26,7 @@ $(document).ready(function () {
 
         selectedRevenueDuration = newFilter;
 
-        $(".payment-option").removeClass("active");
+        $(".revenuchart-option").removeClass("active");
         $(this).addClass("active");
 
         $("#RevenueChartFilter").text($(this).text());

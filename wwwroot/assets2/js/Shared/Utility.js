@@ -39,3 +39,4 @@ function generateInvoicePdf(request) {
     });
 }
 //INVOICE REPORT MODAL --- END ------------------------
+

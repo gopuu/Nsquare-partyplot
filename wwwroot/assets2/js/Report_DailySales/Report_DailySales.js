@@ -15,6 +15,7 @@
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "dailySalesPrintWithHeader";
+let selectedInvoiceDate = null;
 
 /* ─────────────────────────────────────────────
    INIT
@@ -138,6 +139,19 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#chk-select-all").on("change", function () {
         $(".column-checkbox").prop("checked", this.checked);
     });
+
+    $(document).on("click", ".daily-sales-date", function () {
+        selectedInvoiceDate = $(this).data("date");
+        console.log("invoiceDate:", selectedInvoiceDate);
+        loadDailySalesDateDetails(selectedInvoiceDate);
+        $("#dailySalesDetailsModal").modal("show");
+    });
+
+    //Recalculate Columns When Modal Opens
+    $('#dailySalesDetailsModal').on('shown.bs.modal', function () {
+        $('#tblDailySalesDetails').DataTable().columns.adjust();
+    });
+
 });
 
 /* ─────────────────────────────────────────────
@@ -156,15 +170,24 @@ function loadDailySalesGrid() {
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
+
         success: function (res) {
+            console.log("GetDailySalesGrid res:", res);
+
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
-            renderDailySalesTable(res.data);
+
+            const rows = res.data?.rows || [];
+            const totals = res.data?.totals || null;
+
+            renderDailySalesTable(rows, totals);
         },
+
         error: function (xhr, status, error) {
             console.error("Fetch Daily Sales Failed", xhr, status, error);
+            Swal.fire("Error", "Failed to load daily sales data", "error");
         }
     });
 }
@@ -172,7 +195,7 @@ function loadDailySalesGrid() {
 /* ─────────────────────────────────────────────
    RENDER TABLE
 ───────────────────────────────────────────── */
-function renderDailySalesTable(data) {
+function renderDailySalesTable(data, totals) {
 
     if ($.fn.DataTable.isDataTable("#tableMain table")) {
         $("#tableMain table").DataTable().clear().destroy();
@@ -184,88 +207,87 @@ function renderDailySalesTable(data) {
         pageLength: 25,
         scrollX: true,
         order: [[1, "asc"]],
+
         columns: [
-            {
-                data: "SrNo",
-                title: "#"
-            },
+            { data: "SrNo", title: "#" },
+
             {
                 data: "Date",
-                title: "Date"
+                title: "Date",
+                render: function (data, type, row) {
+                    return `<a href="javascript:void(0)" 
+                            class="daily-sales-date"
+                            data-date="${row.InvoiceDate}">
+                            ${data}
+                        </a>`;
+                }
             },
-            {
-                data: "InvoiceNos",
-                title: "Invoice Nos"
-            },
+
             {
                 data: "TotalInvoices",
-                title: "Total Invoices",
+                title: "Invoices",
                 className: "text-center"
             },
+
             {
                 data: "GrossSales",
                 title: "Gross Sales",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
-                data: "GST",
-                title: "GST",
+                data: "Taxes",
+                title: "Taxes",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
                 data: "NetSales",
                 title: "Net Sales",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
-                data: "Cash",
-                title: "Cash",
+                data: "PaymentAmount",
+                title: "Payment Amount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
-                data: "Online",
-                title: "Online",
-                className: "text-end",
-                render: d => formatINR2(d)
+                data: "PaymentMode",
+                title: "Payment Mode",
+                className: "text-center"
             },
+
             {
-                data: "Due",
-                title: "Due",
+                data: "DuePayments",
+                title: "Due Payments",
                 className: "text-end",
-                render: d => formatINR2(d)
-            },
-            {
-                data: "Total",
-                title: "Total",
-                className: "text-end fw-bold",
                 render: d => formatINR2(d)
             }
         ],
 
-        /* ── Footer totals row ── */
-        footerCallback: function (row, data, start, end, display) {
+        /* ── Footer totals ── */
 
-            const api = this.api();
+        footerCallback: function () {
 
-            const sumCol = (colIndex) =>
-                api.column(colIndex, { page: "all" })
-                    .data()
-                    .reduce((a, b) => a + (parseFloat(b) || 0), 0);
+            if (!totals) return;
 
             const fmt = v => formatINR2(v);
+            const api = this.api();
 
-            $(api.column(4).footer()).html(`<strong>${fmt(sumCol(4))}</strong>`);
-            $(api.column(5).footer()).html(`<strong>${fmt(sumCol(5))}</strong>`);
-            $(api.column(6).footer()).html(`<strong>${fmt(sumCol(6))}</strong>`);
-            $(api.column(7).footer()).html(`<strong>${fmt(sumCol(7))}</strong>`);
-            $(api.column(8).footer()).html(`<strong>${fmt(sumCol(8))}</strong>`);
-            $(api.column(9).footer()).html(`<strong>${fmt(sumCol(9))}</strong>`);
-            $(api.column(10).footer()).html(`<strong>${fmt(sumCol(10))}</strong>`);
-        }
+            $(api.column(0).footer()).html("<strong>TOTAL</strong>");
+            $(api.column(2).footer()).html(`<strong>${totals.TotalInvoices ?? ""}</strong>`);
+            $(api.column(3).footer()).html(`<strong>${fmt(totals.GrossSales)}</strong>`);
+            $(api.column(4).footer()).html(`<strong>${fmt(totals.Taxes)}</strong>`);
+            $(api.column(5).footer()).html(`<strong>${fmt(totals.NetSales)}</strong>`);
+            $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalPayments)}</strong>`);
+            $(api.column(8).footer()).html(`<strong>${fmt(totals.DuePayments)}</strong>`);
+        }        
     });
 }
 
@@ -288,7 +310,7 @@ function ViewDailySalesReport(actionName) {
 
     const url = (actionName === "downloadExcel")
         ? "/api/Report_DailySales/DownloadDailySalesReport_Excel"
-        : "/api/Report_DailySales/DownloadDailySalesReport";
+        : "/api/Report_DailySales/DownloadDailySalesReport_Pdf";
 
     showTempLoader("Generating Report...");
 
@@ -306,6 +328,8 @@ function ViewDailySalesReport(actionName) {
             }
 
             const fileUrl = res.data.FileUrl;
+            console.log("fileUrl:", fileUrl);
+
             const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
             const ts = new Date().toISOString().replace(/[:.-]/g, "");
 
@@ -317,6 +341,7 @@ function ViewDailySalesReport(actionName) {
             document.body.removeChild(link);
         },
         error: function (xhr, status, error) {
+            Swal.close();
             console.error("Download Daily Sales Failed", xhr, status, error);
             Swal.fire("Error", "Failed to generate report.", "error");
         }
@@ -360,3 +385,156 @@ function updateSelectAllState() {
     const checked = $(".column-checkbox:checked").length;
     $("#chk-select-all").prop("checked", total === checked);
 }
+
+//Details modal - START
+function loadDailySalesDateDetails(invoiceDate) {
+    var payload = {
+        InvoiceDate: invoiceDate
+    };
+
+    $.ajax({
+        url: "/api/Report_DailySales/GetDailySalesDateDetails",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+            renderDailySalesDetailsTable(res.data.rows, res.data.totals);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load invoice details");
+        }
+    });
+
+}
+function renderDailySalesDetailsTable(rows, totals) {
+
+    const table = $("#tblDailySalesDetails");
+
+    if ($.fn.DataTable.isDataTable(table)) {
+        table.DataTable().clear().destroy();
+    }
+
+    table.DataTable({
+        data: rows,
+        paging: false,
+        searching: false,
+        info: false,
+        scrollX: true,
+        scrollY: "350px",
+        scrollCollapse: true,
+        autoWidth: false,
+        destroy: true,
+
+        columns: [
+            { data: "SrNo", width: "50px" },
+
+            { data: "InvoiceNo", width: "120px" },
+
+            { data: "InvoiceDate", width: "120px" },
+
+            { data: "ClientName", width: "200px" },
+
+            {
+                data: "GrossAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "Taxes",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "NetAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "PaidAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "DueAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "PaymentModes",
+                width: "160px"
+            }
+        ],    
+
+        footerCallback: function () {
+
+            if (!totals) return;
+
+            const api = this.api();
+
+            $(api.column(4).footer()).html(formatINR2(totals.GrossAmount));
+            $(api.column(5).footer()).html(formatINR2(totals.Taxes));
+            $(api.column(6).footer()).html(formatINR2(totals.NetAmount));
+            $(api.column(7).footer()).html(formatINR2(totals.PaidAmount));
+            $(api.column(8).footer()).html(formatINR2(totals.DueAmount));
+
+            $(api.column(0).footer()).html("TOTAL");
+        }
+    });
+}
+
+function ViewDailySalesDetailsReport(actionName) {
+
+    const payload = {
+        InvoiceDate: selectedInvoiceDate,
+        Columns: null,
+        WithHeader: true
+    };
+
+    const url = actionName === "downloadPDF"
+        ? "/api/Report_DailySales/DownloadDailySalesDateDetailsReport_Pdf"
+        : "/api/Report_DailySales/DownloadDailySalesDateDetailsReport_Excel";
+
+    showTempLoader("Generating Report...");
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            Swal.close();
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            const fileUrl = res.data.FileUrl;
+            console.log("details fileUrl:", fileUrl);
+            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
+            const ts = new Date().toISOString().replace(/[:.-]/g, "");
+
+            const link = document.createElement("a");
+            link.href = fileUrl;
+            link.download = `DailySales_Report_${ts}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        },
+        error: function (xhr, status, error) {
+            Swal.close();
+            Swal.fire("Error", "Failed to generate details report.", "error");
+            handleApiError(xhr, status, error, "Failed to generate details report");
+        }
+    });
+}
+//Details modal - END
