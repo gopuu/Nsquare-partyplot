@@ -58,17 +58,28 @@
         </div>
     </div>
 
-    <!-- GRID -->
+    <!-- GRID VIEW -->
     <div id="tableMain">
-        <table id="tblGSTSales" class="table table-striped table-bordered w-100">
+        <table class="table table-striped table-bordered w-100">
+            <thead></thead>
+
             <tfoot>
                 <tr>
                     <th></th>
                     <th></th>
                     <th></th>
                     <th></th>
+
                     <th></th>
                     <th></th>
+                    <th></th>
+                    <th></th>
+
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+
                     <th></th>
                     <th></th>
                     <th></th>
@@ -76,7 +87,6 @@
             </tfoot>
         </table>
     </div>
-
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -113,6 +123,22 @@
                 <label class="form-label">To Date</label>
                 <input type="date" id="toDate" class="form-control form-control-sm">
             </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Name / Email / Contact</label>
+            <input type="text"
+                   id="txtSearch"
+                   class="form-control form-control-sm"
+                   placeholder="Search by Name, Email or Contact">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Invoice No</label>
+            <input type="text"
+                   id="txtSearchInvoiceNo"
+                   class="form-control form-control-sm"
+                   placeholder="Search Invoice No">
         </div>
 
     </div>
@@ -155,6 +181,310 @@
                 <button class="btn btn-warning" id="btn-save-columns">
                     <i class="fa fa-save"></i> Save
                 </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT INVOICE MODAL -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xxl">
+        <div class="modal-content">
+            <div class="modal-header bg-warning py-1 text-white">
+
+                <h6 class="modal-title text-white mb-0" id="invoiceModalTitle">
+                    Add Invoice
+                </h6>
+
+                <!-- Push buttons to extreme right -->
+                <div class="ms-auto d-flex align-items-center gap-2">
+
+                    <!-- Delete Button -->
+                    <button type="button"
+                            class="btn btn-sm btn-danger d-none"
+                            id="btnDeleteInvoice">
+                        <i class="fa fa-trash me-1"></i> Delete
+                    </button>
+
+                    <!-- Close Button -->
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body invoice-modal-body">
+                <input type="hidden" id="invoiceId" value="0" />
+                <input type="hidden" id="bookingId" value="0" />
+
+                <!-- CUSTOMER / INVOICE INFO -->
+                <div class="row g-2 customerInfo">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" id="customerName" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" id="invoiceDate" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">GSTIN</label>
+                        <input type="text" id="gstin" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="emailId" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">State</label>
+                        <select id="customerState" class="form-select">
+                        </select>
+                    </div>
+
+                    <div class="col-md-10">
+                        <label class="form-label">Address</label>
+                        <input type="text" id="address" class="form-control">
+                    </div>
+
+                    <div class="col-md-2 mt-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isGstIncluded" checked>
+                            <label class="form-check-label form-label" for="isGstIncluded">
+                                Include GST?
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ITEMS -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+
+                        <table class="table table-bordered table-sm invoice-items-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="col-index">#</th>
+                                    <th class="col-desc">Description</th>
+                                    <th class="col-hsn">HSN</th>
+                                    <th class="col-rate">Rate</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-subtotal">SubTotal</th>
+                                    <th class="col-discount-rate">Discount Rate</th>
+                                    <th class="col-discount-type">Type</th>
+                                    <th class="col-discount-amount">Discount Amt.</th>
+                                    <th class="col-taxable">Taxable</th>
+                                    <th class="col-gst">GST%</th>
+                                    <th class="col-cgst">CGST</th>
+                                    <th class="col-sgst">SGST</th>
+                                    <th class="col-total">Total</th>
+                                    <th style="width:5px; padding:10px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceItemsBody"></tbody>
+                        </table>
+
+                        <!-- ACTION ROW -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <!-- RIGHT -->
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="fw-semibold mb-0">Subtotal:</label>
+                                <input type="number"
+                                       id="subTotal"
+                                       class="form-control form-control-sm text-end"
+                                       style="width:160px"
+                                       readonly>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- TOTALS -->
+                <div class="row mt-4">
+
+                    <!-- LEFT SIDE : PAYMENT DETAILS -->
+                    <div class="col-md-7">
+                        <div class="border rounded p-3 bg-white" id="paymentSection">
+                            <!-- 🔹 Payment Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-primary mb-0">
+                                    Payment Details
+                                </h6>
+                                <span class="badge bg-light text-dark border">
+                                    Invoice Payment
+                                </span>
+                            </div>
+
+                            <div class="row g-2">
+
+                                <!-- Mode -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Mode</label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Mode"></select>
+                                </div>
+
+                                <!-- Account -->
+                                <div class="col-md-3">
+                                    <label class="form-label d-flex gap-2">
+                                        Account
+                                        <i class="fa fa-info-circle text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                        </i>
+                                    </label>
+                                    <select class="form-select form-select-sm" id="invoicePayment_Account"></select>
+                                </div>
+
+                                <!-- Payment Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Date</label>
+                                    <input type="date" id="invoicePayment_Date" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Payment Time -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Payment Time</label>
+                                    <input type="time" id="invoicePayment_Time" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Transaction Id -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Transaction Id</label>
+                                    <input type="text" id="invoicePayment_Txn" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Bank -->
+                                <div class="col-md-4 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Bank</label>
+                                    <input type="text" id="invoicePayment_ChequeBank" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque No -->
+                                <div class="col-md-2 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque No</label>
+                                    <input type="text" id="invoicePayment_ChequeNo" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Cheque Date -->
+                                <div class="col-md-3 invoicePayment_Fields d-none">
+                                    <label class="form-label">Cheque Date</label>
+                                    <input type="date" id="invoicePayment_ChequeDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Amount -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="number" id="invoicePayment_Amount" class="form-control form-control-sm" min="0" step="1.0">
+                                </div>
+
+                                <!-- Due Balance -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Due Balance</label>
+                                    <input type="number" id="invoicePayment_DueBalance" class="form-control form-control-sm" min="0" step="1">
+                                    <input type="hidden" id="invoicePayment_originalDueAmount">
+                                    <small id="invoicePayment_dueMessage" class="text-danger d-none">No Due</small>
+                                </div>
+
+                                <!-- Next Due Date -->
+                                <div class="col-md-3">
+                                    <label class="form-label">Next Due Date</label>
+                                    <input type="date" id="invoicePayment_NextDueDate" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Buttons Row -->
+                                <div class="col-md-12 d-flex justify-content-between align-items-center mt-2">
+                                    <!-- Left -->
+                                    <div>
+                                        <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
+                                    </div>
+                                </div>
+
+                                <!-- Note Editor -->
+                                <div class="col-md-12 invoicePayment_EditorContainer mt-2 d-none">
+                                    <div id="invoicePayment_noteEditor">
+                                        <textarea class="form-control"
+                                                  rows="4"
+                                                  placeholder="Write your note here..."></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTALS PANEL (RIGHT) -->
+                    <div class="col-md-5">
+                        <div class="totals-box border rounded p-3 bg-light">
+
+                            <div class="total-row">
+                                <span>Booking Discount</span>
+                                <input type="number"
+                                       id="bookingDiscount"
+                                       class="form-control form-control-sm text-end">
+                            </div>
+
+                            <div class="total-row">
+                                <span>Total Taxable</span>
+                                <input type="number"
+                                       id="totalTaxable"
+                                       class="form-control form-control-sm text-end"
+                                       readonly>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Total GST</span>
+                                <input type="number"
+                                       id="totalGST"
+                                       class="form-control form-control-sm text-end"
+                                       readonly>
+                            </div>
+
+                            <div class="total-row fw-bold border-top pt-2">
+                                <span>Grand Total</span>
+                                <input type="number"
+                                       id="grandTotal"
+                                       class="form-control form-control-sm text-end fw-bold"
+                                       readonly>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Round Off</span>
+                                <input type="number"
+                                       id="roundOff"
+                                       class="form-control form-control-sm text-end">
+                            </div>
+
+                            <div class="total-row">
+                                <span>Advance Paid</span>
+                                <input type="number"
+                                       id="advancePaid"
+                                       class="form-control form-control-sm text-end">
+                            </div>
+
+                            <div class="total-row fw-bold">
+                                <span>Balance</span>
+                                <input type="number"
+                                       id="balanceAmount"
+                                       class="form-control form-control-sm text-end fw-bold">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             </div>
 
         </div>

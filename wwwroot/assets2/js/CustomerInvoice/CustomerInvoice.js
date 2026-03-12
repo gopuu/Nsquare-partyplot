@@ -1048,6 +1048,7 @@ function fetchInvoiceById(params) {
                 return;
             }
             const data = res.data;
+            //console.log("GetCustomerInvoiceById data:", data);
 
             /* ---------- MASTER ---------- */
             $('#invoiceId').val(data.Id);

@@ -29,76 +29,95 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - GST SALES
-
         [HttpPost]
         [Route("GetGSTSalesGrid")]
         public IActionResult GetGSTSalesGrid([FromBody] GSTSalesGridRequest request)
         {
-            apiResponse apiResponse = new apiResponse();
-            List<GSTSalesGridModel> rows = new List<GSTSalesGridModel>();
+            apiResponse response = new apiResponse();
+            List<GSTSalesGridModel> rows = new();
+            GSTSalesTotalsModel totals = new GSTSalesTotalsModel();
 
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                DataTable dt = new DataTable();
+                using SqlConnection con = new SqlConnection(connString);
+                using SqlCommand cmd = new SqlCommand("Report_GetGSTSales_GRID", con);
+                cmd.CommandType = CommandType.StoredProcedure;
 
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("Report_GetGSTSales_GRID", con))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandTimeout = 120;
+                cmd.Parameters.AddWithValue("@FromDate",
+                    string.IsNullOrWhiteSpace(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                cmd.Parameters.AddWithValue("@ToDate",
+                    string.IsNullOrWhiteSpace(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                cmd.Parameters.AddWithValue("@FilterDuration",
+                    string.IsNullOrWhiteSpace(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                cmd.Parameters.AddWithValue("@InvoiceNo",
+                    request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@NameEmailContactNo",
+                    string.IsNullOrWhiteSpace(request.NameEmailContactNo) ? (object)DBNull.Value : request.NameEmailContactNo);
 
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                con.Open();
+                using SqlDataReader dr = cmd.ExecuteReader();
 
-                    con.Open();
-
-                    using SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    da.Fill(dt);
-                }
-
-                foreach (DataRow row in dt.Rows)
+                /* ── Result Set 1 : Grid ── */
+                while (dr.Read())
                 {
                     rows.Add(new GSTSalesGridModel
                     {
-                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        Yr = row["Yr"] != DBNull.Value ? Convert.ToInt32(row["Yr"]) : 0,
-                        Mn = row["Mn"] != DBNull.Value ? Convert.ToInt32(row["Mn"]) : 0,
-                        Month = row["Month"] != DBNull.Value ? Convert.ToString(row["Month"]) : "-",
-                        GSTType = row["GSTType"] != DBNull.Value ? Convert.ToString(row["GSTType"]) : "-",
-                        TaxableAmount = row["TaxableAmount"] != DBNull.Value ? Convert.ToDecimal(row["TaxableAmount"]) : 0,
-                        CGST = row["CGST"] != DBNull.Value ? Convert.ToDecimal(row["CGST"]) : 0,
-                        SGST = row["SGST"] != DBNull.Value ? Convert.ToDecimal(row["SGST"]) : 0,
-                        IGST = row["IGST"] != DBNull.Value ? Convert.ToDecimal(row["IGST"]) : 0,
-                        TotalGST = row["TotalGST"] != DBNull.Value ? Convert.ToDecimal(row["TotalGST"]) : 0,
-                        GrandTotal = row["GrandTotal"] != DBNull.Value ? Convert.ToDecimal(row["GrandTotal"]) : 0
+                        InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
+                        InvoiceDate = dr["InvoiceDate"]?.ToString(),
+                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
+                        Name = dr["Name"]?.ToString(),
+                        GSTIN = dr["GSTIN"]?.ToString(),
+                        EventType = dr["EventType"]?.ToString(),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
+                        SGST = Convert.ToDecimal(dr["SGST"]),
+                        CGST = Convert.ToDecimal(dr["CGST"]),
+                        IGST = Convert.ToDecimal(dr["IGST"]),
+                        TotalTax = Convert.ToDecimal(dr["TotalTax"]),
+                        TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+                        PaymentMode = dr["PaymentMode"]?.ToString(),
+                        PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
+                        DueAmount = Convert.ToDecimal(dr["DueAmount"])
                     });
                 }
 
-                apiResponse.message = "GST sales report fetched successfully!";
-                apiResponse.data = rows;
-                apiResponse.status = "Success";
-                return Ok(apiResponse);
+                // NOTE: Report_GetGSTSales_GRID SP currently returns only one result set (grid).
+                // If you add a totals result set to the SP later, uncomment the block below:
+                //
+                if (dr.NextResult() && dr.Read())
+                {
+                    totals = new GSTSalesTotalsModel
+                    {
+                        TotalSubTotal = Convert.ToDecimal(dr["TotalSubTotal"]),
+                        TotalCGST = Convert.ToDecimal(dr["TotalCGST"]),
+                        TotalSGST = Convert.ToDecimal(dr["TotalSGST"]),
+                        TotalIGST = Convert.ToDecimal(dr["TotalIGST"]),
+                        TotalTax = Convert.ToDecimal(dr["TotalTax"]),
+                        TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+                        TotalPaidAmount = Convert.ToDecimal(dr["TotalPaidAmount"]),
+                        TotalDueAmount = Convert.ToDecimal(dr["TotalDueAmount"])
+                    };
+                }
+
+                response.status = "Success";
+                response.message = "GST sales grid fetched successfully";
+                response.data = new { rows, totals };
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null ?? "");
-                apiResponse.message = ex.Message;
-                apiResponse.status = "Error";
-                return StatusCode(500, apiResponse);
+                response.status = "Error";
+                response.message = ex.Message;
+                return StatusCode(500, response);
             }
         }
 
         [HttpPost]
-        [Route("DownloadGSTSalesReport")]
-        public IActionResult DownloadGSTSalesReport([FromBody] GSTSalesReportRequest request)
+        [Route("DownloadGSTSalesReport_Pdf")]
+        public IActionResult DownloadGSTSalesReport_Pdf([FromBody] GSTSalesReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -110,7 +129,7 @@ namespace ERPAdmin.ApiControllers
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
 
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4.Rotate(), 36, 36, topMargin, 50);
+                Document document = new Document(PageSize.A4.Rotate(), 36, 36, topMargin, 50); // landscape for more columns
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
 
@@ -121,39 +140,33 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    // ── Company ──
+                    // Company Header
                     SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                    // ── Report ──
-                    cmd = new SqlCommand("Report_GetGSTSales", con);
+                    // Report Data
+                    cmd = new SqlCommand("Report_GetGSTSales_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandTimeout = 120;
 
                     string columnsJson = request.Columns != null
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = (object?)columnsJson ?? DBNull.Value;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.NVarChar, 20).Value = (object?)request.FromDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.NVarChar, 20).Value = (object?)request.ToDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@FilterDuration", SqlDbType.NVarChar, 50).Value = (object?)request.FilterDuration ?? DBNull.Value;
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value;
+                    cmd.Parameters.Add("@NameEmailContactNo", SqlDbType.NVarChar, 50).Value = (object?)request.NameEmailContactNo ?? DBNull.Value;
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
                 // ── Company info ──
-                string companyName = string.Empty,
-                       companyAddress = string.Empty,
-                       companyphoneNo = string.Empty,
-                       logoFile = string.Empty,
-                       userName = string.Empty;
+                string companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
                 Image logo = null;
 
                 if (request.WithHeader ?? false)
@@ -182,14 +195,13 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 if (dsReport.Tables.Count < 3)
-                    throw new Exception("Report data is incomplete. Required tables are missing.");
+                    throw new Exception("Report data not found");
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
                 DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
-                writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
                 // ── Page header ──
@@ -218,57 +230,82 @@ namespace ERPAdmin.ApiControllers
                     document.Add(headerTable);
                 }
 
-                // ── Report title ──
-                document.Add(new Paragraph(reportName.ToUpper(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK))
+                Paragraph reportTitle = new Paragraph(reportName.ToUpper(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
                 {
                     Alignment = Element.ALIGN_CENTER,
                     SpacingAfter = 18f
-                });
+                };
+                document.Add(reportTitle);
 
-                // ── Data table ──
                 int columnCount = dataTableDB.Columns.Count;
+
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
-                table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 7, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 7);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
+                // Header row
                 foreach (DataRow hRow in headerTableDB.Rows)
                     table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
+                // Data rows
                 foreach (DataRow row in dataTableDB.Rows)
+                {
                     foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    {
+                        string colName = col.ColumnName.Trim().ToLower();
 
-                // ── Totals row ──
+                        int align = colName switch
+                        {
+                            "invoice no" => Element.ALIGN_CENTER,
+                            "invoice date" => Element.ALIGN_CENTER,
+                            "customer name" => Element.ALIGN_LEFT,
+                            "gstin" => Element.ALIGN_LEFT,
+                            "event type" => Element.ALIGN_LEFT,
+                            "payment mode" => Element.ALIGN_LEFT,
+                            _ => Element.ALIGN_RIGHT
+                        };
+
+                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                    }
+                }
+
+                // Total row
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 7, Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
+                        int align = Element.ALIGN_RIGHT;
                         string value = col.ColumnName switch
                         {
-                            "Taxable Amount" => $"{totalRow["TotalTaxableAmount"]}",
-                            "CGST" => $"{totalRow["TotalCGST"]}",
-                            "SGST" => $"{totalRow["TotalSGST"]}",
-                            "IGST" => $"{totalRow["TotalIGST"]}",
-                            "Total GST" => $"{totalRow["TotalGST"]}",
-                            "Grand Total" => $"{totalRow["TotalGrandTotal"]}",
+                            "Sub Total" => totalRow["TotalSubTotal"].ToString() ?? "-",
+                            "CGST" => totalRow["TotalCGST"].ToString() ?? "-",
+                            "SGST" => totalRow["TotalSGST"].ToString() ?? "-",
+                            "IGST" => totalRow["TotalIGST"].ToString() ?? "-",
+                            "Total GST" => totalRow["TotalTax"].ToString() ?? "-",
+                            "Invoice Amount" => totalRow["TotalInvoiceAmount"].ToString() ?? "-",
+                            "Paid Amount" => totalRow["TotalPaidAmount"].ToString() ?? "-",
+                            "Due Amount" => totalRow["TotalDueAmount"].ToString() ?? "-",
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
 
+                        if (value == "TOTAL") align = Element.ALIGN_CENTER;
+
                         table.AddCell(new PdfPCell(new Phrase(value, totalFont))
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220),
+                            BorderWidth = 0.5f
                         });
                     }
                 }
@@ -276,7 +313,6 @@ namespace ERPAdmin.ApiControllers
                 document.Add(table);
                 document.Close();
 
-                // ── Save ──
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
@@ -291,6 +327,7 @@ namespace ERPAdmin.ApiControllers
                 response.status = "Success";
                 response.message = "Report Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -318,22 +355,19 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetGSTSales", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetGSTSales_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandTimeout = 120;
 
                     string columnsJson = request.Columns != null
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = (object?)columnsJson ?? DBNull.Value;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.NVarChar, 20).Value = (object?)request.FromDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.NVarChar, 20).Value = (object?)request.ToDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@FilterDuration", SqlDbType.NVarChar, 50).Value = (object?)request.FilterDuration ?? DBNull.Value;
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value;
+                    cmd.Parameters.Add("@NameEmailContactNo", SqlDbType.NVarChar, 50).Value = (object?)request.NameEmailContactNo ?? DBNull.Value;
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -341,7 +375,6 @@ namespace ERPAdmin.ApiControllers
                 if (dsReport.Tables.Count < 3)
                     throw new Exception("Report data not found");
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"].ToString();
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
                 DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
@@ -349,7 +382,7 @@ namespace ERPAdmin.ApiControllers
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("GST Sales");
 
-                // ── Headers ──
+                // Header row
                 int col = 1;
                 foreach (DataRow hRow in headerTableDB.Rows)
                 {
@@ -360,7 +393,7 @@ namespace ERPAdmin.ApiControllers
                     col++;
                 }
 
-                // ── Data ──
+                // Data rows
                 int row = 2;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
@@ -369,7 +402,7 @@ namespace ERPAdmin.ApiControllers
                     row++;
                 }
 
-                // ── Totals row ──
+                // Total row
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -378,14 +411,16 @@ namespace ERPAdmin.ApiControllers
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
 
-                        string value = columnName switch
+                        string? value = columnName switch
                         {
-                            "Taxable Amount" => totalRow["TotalTaxableAmount"].ToString(),
+                            "Sub Total" => totalRow["TotalSubTotal"].ToString(),
                             "CGST" => totalRow["TotalCGST"].ToString(),
                             "SGST" => totalRow["TotalSGST"].ToString(),
                             "IGST" => totalRow["TotalIGST"].ToString(),
-                            "Total GST" => totalRow["TotalGST"].ToString(),
-                            "Grand Total" => totalRow["TotalGrandTotal"].ToString(),
+                            "Total GST" => totalRow["TotalTax"].ToString(),
+                            "Invoice Amount" => totalRow["TotalInvoiceAmount"].ToString(),
+                            "Paid Amount" => totalRow["TotalPaidAmount"].ToString(),
+                            "Due Amount" => totalRow["TotalDueAmount"].ToString(),
                             _ => i == 0 ? "TOTAL" : ""
                         };
 
@@ -405,11 +440,13 @@ namespace ERPAdmin.ApiControllers
 
                 string fileName = $"GSTSales_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
+
                 workbook.SaveAs(filePath);
 
                 response.status = "Success";
                 response.message = "GST Sales Excel generated successfully.";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -420,6 +457,5 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        #endregion
     }
 }
