@@ -1,20 +1,34 @@
 ﻿const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No", visible: true },
     { key: "Date", label: "Date", visible: true },
-    { key: "InvoiceNos", label: "Invoice Nos", visible: true },
     { key: "TotalInvoices", label: "Total No of Invoice", visible: true },
     { key: "GrossSales", label: "Gross Sales", visible: true },
-    { key: "GST", label: "GST", visible: true },
+    { key: "Taxes", label: "Taxes", visible: true },
     { key: "NetSales", label: "Net Sales", visible: true },
-    { key: "Cash", label: "Cash", visible: true },
-    { key: "Online", label: "Online", visible: true },
-    { key: "Due", label: "Due", visible: true },
-    { key: "Total", label: "Total", visible: true }
+    { key: "PaymentAmount", label: "Paid Amount", visible: true },
+    { key: "PaymentMode", label: "Payment Mode", visible: true },
+    { key: "DuePayments", label: "Due", visible: true }
+];
+const DETAILREPORT_COLUMNS = [
+    { key: "SrNo", label: "Sr No", visible: true },
+    { key: "InvoiceNo", label: "Invoice No", visible: true },
+    { key: "InvoiceDate", label: "Invoice Date", visible: true },
+    { key: "BookingId", label: "Booking ID", visible: true },
+    { key: "ClientName", label: "Client Name", visible: true },
+    { key: "GrossAmount", label: "Gross Amount", visible: true },
+    { key: "Taxes", label: "Taxes", visible: true },
+    { key: "NetAmount", label: "Net Amount", visible: true },
+    { key: "PaidAmount", label: "Paid Amount", visible: true },
+    { key: "DueAmount", label: "Due Amount", visible: true },
+    { key: "PaymentModes", label: "Payment Mode", visible: true }
 ];
 
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
-let selectedMonthDuration = "thismonth";
+let selectedColumns_Details = DETAILREPORT_COLUMNS.map(c => c.key);
+
 const HEADER_KEY = "dailySalesPrintWithHeader";
+
+let selectedMonthDuration = "thismonth";
 let selectedInvoiceDate = null;
 
 /* ─────────────────────────────────────────────
@@ -121,10 +135,19 @@ document.addEventListener("DOMContentLoaded", function () {
         loadColumnCheckboxes();
         $("#modalColumns").modal("show");
     });
+    $("#btn-select-columns-detail").on("click", function () {
+        loadColumnCheckboxes_Detail();
+        $("#columns-section-detail").toggle();
+    });
 
     $("#btn-reset-columns").on("click", function () {
         $(".column-checkbox").prop("checked", true);
         $("#chk-select-all").prop("checked", true);
+    });
+    $("#btn-reset-columns-detail").on("click", function () {
+        $(".column-checkbox-detail").prop("checked", true);
+        $("#chk-select-all-detail").prop("checked", true);
+        updateSelectedColumnsDetails();
     });
 
     $("#btn-save-columns").on("click", function () {
@@ -133,11 +156,23 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedColumns.push($(this).val());
         });
         $("#modalColumns").modal("hide");
-        loadDailySalesGrid();
+        //loadDailySalesGrid();
     });
 
     $("#chk-select-all").on("change", function () {
         $(".column-checkbox").prop("checked", this.checked);
+    });
+    $("#chk-select-all-detail").on("change", function () {
+        $(".column-checkbox-detail").prop("checked", this.checked);
+        updateSelectedColumnsDetails();
+    });
+    $(document).on("change", ".column-checkbox-detail", function () {
+        const total = $(".column-checkbox-detail").length;
+        const checked = $(".column-checkbox-detail:checked").length;
+
+        $("#chk-select-all-detail").prop("checked", total === checked);
+
+        updateSelectedColumnsDetails();
     });
 
     $(document).on("click", ".daily-sales-date", function () {
@@ -260,7 +295,17 @@ function renderDailySalesTable(data, totals) {
             {
                 data: "PaymentMode",
                 title: "Payment Mode",
-                className: "text-center"
+                className: "text-center",
+                render: function (data, type, row) {
+                    if (!data) return "";
+
+                    if (data.length > 10) {
+                        return `<span data-bs-toggle="tooltip" title="${data}">
+                        ${data.substring(0, 10)}...
+                    </span>`;
+                    }
+                    return data;
+                }
             },
 
             {
@@ -379,15 +424,49 @@ function loadColumnCheckboxes() {
     $("#column-list").html(html);
     updateSelectAllState();
 }
+function loadColumnCheckboxes_Detail() {
+    let html = "";
+
+    DETAILREPORT_COLUMNS.forEach(col => {
+        const isChecked = selectedColumns_Details.includes(col.key);
+        html += `
+        <div class="col-md-2 mb-2">
+            <div class="form-check">
+                <input class="form-check-input column-checkbox-detail"
+                       type="checkbox"
+                       value="${col.key}"
+                       ${isChecked ? "checked" : ""}>
+                <label class="form-check-label">${col.label}</label>
+            </div>
+        </div>`;
+    });
+
+    $("#column-list-details").html(html);
+    updateSelectAllState_Detail();
+}
 
 function updateSelectAllState() {
     const total = $(".column-checkbox").length;
     const checked = $(".column-checkbox:checked").length;
     $("#chk-select-all").prop("checked", total === checked);
 }
+function updateSelectAllState_Detail() {
+    const total = $(".column-checkbox-detail").length;
+    const checked = $(".column-checkbox-detail:checked").length;
+    $("#chk-select-all-detail").prop("checked", total === checked);
+}
+function updateSelectedColumnsDetails() {
+    selectedColumns_Details = [];
+    $(".column-checkbox-detail:checked").each(function () {
+        selectedColumns_Details.push($(this).val());
+    });
+    console.log("selectedColumns_Details:", selectedColumns_Details);
+}
 
 //Details modal - START
 function loadDailySalesDateDetails(invoiceDate) {
+    $("#columns-section-detail").hide();
+
     var payload = {
         InvoiceDate: invoiceDate
     };
@@ -402,7 +481,12 @@ function loadDailySalesDateDetails(invoiceDate) {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
-            renderDailySalesDetailsTable(res.data.rows, res.data.totals);
+            renderDailySalesDetailsTable(res.data.Rows, res.data.Totals);
+            // show after render
+            //$("#tblDailySalesDetails").css("visibility", "visible");
+            //$("#dailySalesLoader").hide();
+            //$("#tblDailySalesDetails").show();
+
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Failed to load invoice details");
@@ -428,6 +512,7 @@ function renderDailySalesDetailsTable(rows, totals) {
         scrollCollapse: true,
         autoWidth: false,
         destroy: true,
+        //deferRender: true,
 
         columns: [
             { data: "SrNo", width: "50px" },
@@ -470,8 +555,20 @@ function renderDailySalesDetailsTable(rows, totals) {
 
             {
                 data: "PaymentModes",
-                width: "160px"
+                title: "Payment Mode",
+                className: "text-center",
+                render: function (data, type, row) {
+                    if (!data) return "";
+
+                    if (data.length > 10) {
+                        return `<span data-bs-toggle="tooltip" title="${data}">
+                        ${data.substring(0, 10)}...
+                    </span>`;
+                    }
+                    return data;
+                }
             }
+
         ],    
 
         footerCallback: function () {
@@ -492,11 +589,14 @@ function renderDailySalesDetailsTable(rows, totals) {
 }
 
 function ViewDailySalesDetailsReport(actionName) {
+    const withHeader = $("#toggleWithHeader").is(":checked");
+    const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
     const payload = {
         InvoiceDate: selectedInvoiceDate,
-        Columns: null,
-        WithHeader: true
+        WithHeader: withHeader,
+        Columns: selectedColumns_Details,
+        ActionBy: userId
     };
 
     const url = actionName === "downloadPDF"
@@ -504,7 +604,7 @@ function ViewDailySalesDetailsReport(actionName) {
         : "/api/Report_DailySales/DownloadDailySalesDateDetailsReport_Excel";
 
     showTempLoader("Generating Report...");
-
+    console.log("payload details:", payload);
     $.ajax({
         url: url,
         type: "POST",

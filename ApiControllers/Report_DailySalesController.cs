@@ -1,16 +1,18 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office.CoverPageProps;
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ExcelDataReader.Log;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
-using Newtonsoft.Json;
 
 namespace ERPAdmin.ApiControllers
 {
@@ -129,8 +131,8 @@ namespace ERPAdmin.ApiControllers
         {
             apiResponse response = new apiResponse();
 
-            List<DailySalesDateDetailsModel> rows = new();
-            DailySalesDateDetailsTotalsModel totals = new();
+            List<DailySalesDateDetailsModel> Rows = new();
+            DailySalesDateDetailsTotalsModel Totals = new();
 
             try
             {
@@ -155,7 +157,7 @@ namespace ERPAdmin.ApiControllers
 
                 while (dr.Read())
                 {
-                    rows.Add(new DailySalesDateDetailsModel
+                    Rows.Add(new DailySalesDateDetailsModel
                     {
                         SrNo = Convert.ToInt64(dr["SrNo"]),
                         InvoiceNo = dr["InvoiceNo"]?.ToString(),
@@ -176,7 +178,7 @@ namespace ERPAdmin.ApiControllers
 
                 if (dr.NextResult() && dr.Read())
                 {
-                    totals = new DailySalesDateDetailsTotalsModel
+                    Totals = new DailySalesDateDetailsTotalsModel
                     {
                         TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
                         GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
@@ -191,8 +193,8 @@ namespace ERPAdmin.ApiControllers
                 response.message = "Invoice details fetched.";
                 response.data = new
                 {
-                    rows,
-                    totals
+                    Rows,
+                    Totals
                 };
 
                 return Ok(response);
@@ -256,6 +258,36 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
+                // ── Company info ──
+                string companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+
+                    if (isCompanyAvailable)
+                    {
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                            if (System.IO.File.Exists(logoPath))
+                                logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                    else
+                    {
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                    }
+                }
+
                 if (dsReport.Tables.Count < 3)
                     throw new Exception("Report data not found");
 
@@ -266,6 +298,32 @@ namespace ERPAdmin.ApiControllers
                 DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
                 document.Open();
+
+                // ── Page header ──
+                if (request.WithHeader ?? false)
+                {
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
+                    if (logo != null) logo.ScaleToFit(70f, 70f);
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    headerTable.AddCell(detailCell);
+                    document.Add(headerTable);
+                }
 
                 Paragraph reportTitle = new Paragraph(reportName.ToUpper(),
                     FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
@@ -281,8 +339,8 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
 
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
@@ -294,7 +352,30 @@ namespace ERPAdmin.ApiControllers
                 foreach (DataRow row in dataTableDB.Rows)
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    {
+                        int align = Element.ALIGN_RIGHT; // default
+
+                        string colName = col.ColumnName.Trim().ToLower();
+
+                        if (colName == "sr. no." ||
+                            colName == "date" ||
+                            colName == "no of invoice generated") 
+                        {
+                            align = Element.ALIGN_CENTER;
+                        }
+                        else if (colName == "payment mode")
+                        {
+                            align = Element.ALIGN_LEFT;
+                        }
+
+                        table.AddCell(
+                            Utils.CreateBodyCell(
+                                row[col]?.ToString() ?? "-",
+                                tdFont,
+                                align
+                            )
+                        );
+                    }
                 }
 
                 // ===== TOTAL ROW =====
@@ -303,25 +384,33 @@ namespace ERPAdmin.ApiControllers
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
 
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string value = col.ColumnName switch
+                        int align = Element.ALIGN_RIGHT; // default
+                        string? value = col.ColumnName switch
                         {
-                            "No of Invoice Generated" => totalRow["TotalInvoices"].ToString(),
-                            "Gross Sales" => totalRow["GrossSales"].ToString(),
-                            "Taxes" => totalRow["Taxes"].ToString(),
-                            "Net Sales" => totalRow["NetSales"].ToString(),
-                            "Due Payments" => totalRow["DuePayments"].ToString(),
+                            "No of Invoice Generated" => totalRow["TotalInvoices"].ToString() ?? "-",
+                            "Gross Sales" => totalRow["GrossSales"].ToString() ?? "-",
+                            "Taxes" => totalRow["Taxes"].ToString() ?? "-",
+                            "Net Sales" => totalRow["NetSales"].ToString() ?? "-",
+                            "Due Payments" => totalRow["DuePayments"].ToString() ?? "-",
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
 
+                        if (col.ColumnName == "No of Invoice Generated" || value == "TOTAL")
+                        {
+                            align = Element.ALIGN_CENTER;
+                        }
+
                         table.AddCell(new PdfPCell(new Phrase(value, totalFont))
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
                         });
                     }
                 }
@@ -518,6 +607,36 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
+                // ── Company info ──
+                string companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+
+                    if (isCompanyAvailable)
+                    {
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                            if (System.IO.File.Exists(logoPath))
+                                logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                    else
+                    {
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                    }
+                }
+
                 if (dsReport.Tables.Count < 3)
                     throw new Exception("Report data missing");
 
@@ -527,6 +646,32 @@ namespace ERPAdmin.ApiControllers
                 DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
                 document.Open();
+
+                // ── Page header ──
+                if (request.WithHeader ?? false)
+                {
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
+                    if (logo != null) logo.ScaleToFit(70f, 70f);
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    headerTable.AddCell(detailCell);
+                    document.Add(headerTable);
+                }
 
                 Paragraph title = new Paragraph(reportName,
                     FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
@@ -541,8 +686,13 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                int fontSize = 8;
+                if (headerTableDB.Rows.Count > 10) {
+                    fontSize = 7;
+                }
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, fontSize);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
                 foreach (DataRow hRow in headerTableDB.Rows)
@@ -551,17 +701,45 @@ namespace ERPAdmin.ApiControllers
                 table.HeaderRows = 1;
 
                 foreach (DataRow row in dataTableDB.Rows)
+                {
                     foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    {
+                        //table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                        int align = Element.ALIGN_RIGHT; // default
+
+                        string colName = col.ColumnName.Trim().ToLower();
+
+                        if (colName == "sr. no." ||
+                            colName == "invoice no" ||
+                            colName == "invoice date" ||
+                            colName == "booking id" ||
+                            colName == "client name" ||
+                            colName == "payment modes")
+                        {
+                            align = Element.ALIGN_CENTER;
+                        }
+
+                        table.AddCell(
+                            Utils.CreateBodyCell(
+                                row[col]?.ToString() ?? "-",
+                                tdFont,
+                                align
+                            )
+                        );
+
+                    }
+                }
 
                 // TOTAL ROW
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+                    Font totalFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
+                        int align = Element.ALIGN_RIGHT; // default
+
                         string value = col.ColumnName switch
                         {
                             "Gross Amount" => totalRow["GrossAmount"].ToString(),
@@ -571,11 +749,19 @@ namespace ERPAdmin.ApiControllers
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
 
+                        if (value == "TOTAL")
+                        {
+                            align = Element.ALIGN_CENTER;
+                        }
+
                         table.AddCell(new PdfPCell(new Phrase(value, totalFont))
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
+
                         });
                     }
                 }
@@ -713,6 +899,5 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
     }
 }

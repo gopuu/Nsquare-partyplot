@@ -1,48 +1,113 @@
 ﻿namespace ERPAdmin.Models
 {
+
+    /* === 1️ GRID REQUEST ====== */
     public class MonthlySalesGridRequest
     {
-        public string? FromDate { get; set; }
-        public string? ToDate { get; set; }
-        public string? FilterDuration { get; set; }
+        public int? YearId { get; set; }
+        public int? Year { get; set; }
+        public int? MonthId_From { get; set; }
+        public int? MonthId_To { get; set; }
     }
 
-    public class MonthlySalesReportRequest
+    /* == 2️ MONTHLY REPORT EXPORT REQUEST ==*/
+    public class MonthlySalesReportRequest : BaseClass
     {
-        public string? FromDate { get; set; }
-        public string? ToDate { get; set; }
-        public string? FilterDuration { get; set; }
+        public int? YearId { get; set; }
+        public int? Year { get; set; }
+        public int? MonthId_From { get; set; }
+        public int? MonthId_To { get; set; }
+
         public List<string>? Columns { get; set; }
+
         public bool? WithHeader { get; set; }
-        public long ActionBy { get; set; }
     }
 
+    /* == 3️ MONTHLY GRID MODEL== */
     public class MonthlySalesGridModel
     {
         public long SrNo { get; set; }
-        public int Yr { get; set; }
-        public int Mn { get; set; }
-        public string? Month { get; set; }
-        public string? InvoiceNos { get; set; }
-        public int TotalInvoices { get; set; }
+        public long MonthId { get; set; }
+
+        public string? MonthName { get; set; }
+
+        public int InvoiceGeneratedCount { get; set; }
+
         public decimal GrossSales { get; set; }
-        public decimal CGST { get; set; }
+
+        public decimal Taxes { get; set; }
+
         public decimal NetSales { get; set; }
-        public decimal Cash { get; set; }
-        public decimal Online { get; set; }
-        public decimal Due { get; set; }
-        public decimal Total { get; set; }
+
+        public decimal PaidAmount { get; set; }
+
+        public string? PaymentMode { get; set; }
     }
 
+    /* == 4️ MONTHLY GRID TOTALS ==*/
     public class MonthlySalesTotalsModel
     {
         public int TotalInvoices { get; set; }
+
         public decimal GrossSales { get; set; }
-        public decimal CGST { get; set; }
+
+        public decimal Taxes { get; set; }
+
         public decimal NetSales { get; set; }
-        public decimal Cash { get; set; }
-        public decimal Online { get; set; }
-        public decimal Due { get; set; }
-        public decimal Total { get; set; }
+
+        public decimal TotalPayments { get; set; }
     }
+
+    /* == 5️ MONTH DETAILS REQUEST (Drilldown) == */
+    public class MonthlySalesMonthDetailsRequest : BaseClass
+    {
+        public int MonthId { get; set; }
+
+        public List<string>? Columns { get; set; }
+
+        public bool? WithHeader { get; set; }
+    }
+
+    /* == 6️ MONTH DETAILS GRID MODEL == */
+    public class MonthlySalesMonthDetailsModel
+    {
+        public long SrNo { get; set; }
+
+        public string? InvoiceNo { get; set; }
+
+        public string? InvoiceDate { get; set; }
+
+        public long BookingId { get; set; }
+
+        public string? ClientName { get; set; }
+
+        public decimal GrossAmount { get; set; }
+
+        public decimal Taxes { get; set; }
+
+        public decimal NetAmount { get; set; }
+
+        public decimal PaidAmount { get; set; }
+
+        public decimal DueAmount { get; set; }
+
+        public string? PaymentModes { get; set; }
+    }
+
+    /* == 7️ MONTH DETAILS TOTALS == */
+    public class MonthlySalesMonthDetailsTotalsModel
+    {
+        public int TotalInvoices { get; set; }
+
+        public decimal GrossAmount { get; set; }
+
+        public decimal Taxes { get; set; }
+
+        public decimal NetAmount { get; set; }
+
+        public decimal PaidAmount { get; set; }
+
+        public decimal DueAmount { get; set; }
+    }
+
 }
