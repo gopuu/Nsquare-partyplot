@@ -6,15 +6,16 @@ const paymentModal = document.getElementById('paymentModal');
 
 var invoiceNo = 0;
 var proformaInvoiceNo = 0;
-var gstInvoiceNo = 0;
+var gstInvoiceNo = "A0";
 var invoiceType = null;
 
 let selectedPaymentDuration = "thismonth";
+let gstList = [];
 
 $(function () {
     const flag_ShowOnlyInvoice = sessionStorage.getItem("IsShowTotalSalesList") === "true";
     if (flag_ShowOnlyInvoice) {
-        console.log("Show Total Sales List is enabled");
+        //console.log("Show Total Sales List is enabled");
         // clear after use
         sessionStorage.removeItem("IsShowTotalSalesList");
     }
@@ -24,6 +25,7 @@ $(function () {
     loadSlotDropdown();
     getNextInvoiceNumbers();
     loadState();
+    loadGSTMaster();
 
     loadPaymentCollection(selectedPaymentDuration);
 
@@ -38,7 +40,7 @@ $(function () {
     //SUMMARY -- START 
     $(document).on('click', '.btn-summary', function () {
         var bookingId = $(this).data('bookingid');
-        console.log('Summary BookingId:', bookingId);
+        //console.log('Summary BookingId:', bookingId);
         loadBookingCalendar(bookingId);
     });
     //SUMMARY -- END
@@ -48,32 +50,34 @@ $(function () {
         resetForm();
 
         const bookingId = $(this).data('bookingid');
-        console.log('Create Proforma BookingId:', bookingId);
+        //console.log('Create Proforma BookingId:', bookingId);
         $('#bookingId').val(bookingId);
 
         invoiceType = "proforma";
         $('#invoiceModalTitle').text('Create Proforma Invoice #' + proformaInvoiceNo);
         invoiceModal.show();
 
-        fetchInvoiceByBookingId(bookingId);
+        const isInclusiveGST = false;
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
     });
     //CREATE PROFORMA INVOICE -- END
 
-    //CREATE INVOICE -- START
+    //CREATE INVOICE - START
     $(document).on('click', '.btn-create-invoice', function () {
         resetForm();
 
         const bookingId = $(this).data('bookingid');
-        console.log('Create Invoice BookingId:', bookingId);
+        //console.log('Create Invoice BookingId:', bookingId);
         $('#bookingId').val(bookingId);
 
         invoiceType = "invoice";
         $('#invoiceModalTitle').text('Create Invoice #' + invoiceNo);
         invoiceModal.show();
 
-        fetchInvoiceByBookingId(bookingId);
+        const isInclusiveGST = $(this).data('isinclusivegst') === true;      
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
     });
-    //CREATE INVOICE -- END
+    //CREATE INVOICE - END
 
     //EDIT INVOICE -- START
     $(document).on('click', '.btn-edit-invoice', function () {
@@ -251,7 +255,7 @@ $(function () {
             BookingId: bookingId,
             InvoiceNo: invoiceNo,
             ProformaInvoiceNo: null,
-            GSTInvoiceNo: invoiceNo,   // GST invoice
+            GSTInvoiceNo: null,   // GST invoice
             WithHeader: true
         };
         generateInvoicePdf(request);
@@ -271,14 +275,6 @@ $(function () {
 
     // On Advance input change
     $(document).on('input', '#advancePaid, #bookingDiscount', function () {
-        recalcAll();
-    });
-
-    // On GST switch toggle
-    $('#isGstIncluded').on('change', function () {
-        $('#invoiceItemsBody tr').each(function () {
-            recalcRow($(this));
-        });
         recalcAll();
     });
 
@@ -312,6 +308,7 @@ $(function () {
                 GSTRate: parseFloat(row.find('.gst').val()) || 0,
                 CGST: parseFloat(row.find('.cgst').val()) || 0,
                 SGST: parseFloat(row.find('.sgst').val()) || 0,
+                IGST: parseFloat(row.find('.igst').val()) || 0,
 
                 Total: parseFloat(row.find('.total').val()) || 0
             });
@@ -345,14 +342,15 @@ $(function () {
             }
         }
         //VALIDATION -- END ------------------------------
-
-        const isGstIncluded = $('#isGstIncluded').is(':checked');
+        //here
+        //const isGstIncluded = $('#isGstIncluded').is(':checked');
+        var totalGst = parseFloat($('#totalGST').val()) || 0;
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
             BookingId: parseInt($('#bookingId').val()) || 0,
             InvoiceNo: invoiceType === "invoice" ? invoiceNo : null,
             ProformaInvoiceNo: invoiceType === "proforma" ? proformaInvoiceNo : null,
-            GSTInvoiceNo: (invoiceType === "invoice" && isGstIncluded) ? gstInvoiceNo : null,
+            GSTInvoiceNo: (invoiceType === "invoice" && totalGst==0) ? gstInvoiceNo : null,
 
             CustomerName: $('#customerName').val(),
             InvoiceDate: $('#invoiceDate').val(),
@@ -377,7 +375,7 @@ $(function () {
             BookingDiscount: parseFloat($('#bookingDiscount').val()) || 0,
             TotalTaxableAmount: parseFloat($('#totalTaxable').val()) || 0,
             TotalDiscountAcrossAllServices: 0,     // if not used
-            TotalGST: parseFloat($('#totalGST').val()) || 0,
+            TotalGST: totalGst, //parseFloat($('#totalGST').val()) || 0,
             TotalVAT: 0,
             GrandTotal: parseFloat($('#grandTotal').val()) || 0,
             RoundOff: parseFloat($('#roundOff').val()) || 0,
@@ -387,7 +385,7 @@ $(function () {
             JSON_Items: items,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
-        console.log("save payload:", request);
+        //console.log("save payload:", request);
 
         $.ajax({
             url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -495,7 +493,7 @@ $(function () {
             ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
         };
 
-        //console.log("Save Payment Payload :", payload);
+        ////console.log("Save Payment Payload :", payload);
 
         $("#btnSavePayment").prop("disabled", true);
 
@@ -541,7 +539,7 @@ $(function () {
             $("#outstandingPayment_Amount").prop("readonly", false);
         }
 
-        console.log("Outstanding clicked for BookingId:", bookingId);
+        //console.log("Outstanding clicked for BookingId:", bookingId);
 
         $("#outstandingPayment_DueBalance, #outstandingPayment_originalDueAmount").val(dueAmount);
         $("#outstanding_paymentBookingId").val(bookingId);
@@ -608,9 +606,9 @@ $(function () {
 
     //outstandingPayment_Mode - change
     $(document).on("change", "#outstandingPayment_Mode", function () {
-        console.log("outstandingPayment_Mode called");
+        //console.log("outstandingPayment_Mode called");
         let selectedText = $("#outstandingPayment_Mode option:selected").text().toLowerCase();
-        console.log("selectedText:", selectedText);
+        //console.log("selectedText:", selectedText);
 
         // Hide all first
         $(".paymentModal_Fields").addClass("d-none");
@@ -641,13 +639,13 @@ $(function () {
     //invoicePayment_Mode - change
     $(document).on("change", "#invoicePayment_Mode", function () {
 
-        console.log("invoicePayment_Mode called");
+        //console.log("invoicePayment_Mode called");
 
         let selectedText = $("#invoicePayment_Mode option:selected")
             .text()
             .toLowerCase();
 
-        console.log("selectedText:", selectedText);
+        //console.log("selectedText:", selectedText);
 
         // 🔹 Hide all invoice dynamic fields first
         $(".invoicePayment_Fields").addClass("d-none");
@@ -817,6 +815,31 @@ function ShowHide_DeleteButton() {
     }
 }
 
+function loadGSTMaster() {
+    $.ajax({
+        url: "/api/GSTMaster/GetGSTMaster",
+        type: "GET",
+        success: function (res) {
+            if (res.status === "Success") {
+                gstList = res.data;
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load GST master.");
+        }
+    });
+}
+
+function buildGSTDropdown(selectedGST = 0) {
+    let options = '';
+    gstList.forEach(g => {
+        const selected = parseFloat(g.GSTValue) === parseFloat(selectedGST)
+            ? 'selected'
+            : '';
+        options += `<option value="${g.GSTValue}" ${selected}>${g.GSTText}</option>`;
+    });
+    return options;
+}
 function setCurrentPaymentDateTime() {
 
     const now = new Date();
@@ -838,6 +861,7 @@ function setCurrentPaymentDateTime() {
     $("#outstandingPayment_Time").val(formattedTime);
 }
 function addItemRow() {
+    const gstOptions = buildGSTDropdown();
     const row = `
         <tr>
             <td class="text-center col-index p-1"></td>
@@ -882,7 +906,9 @@ function addItemRow() {
             </td>
 
             <td class="col-gst p-1">
-                <input type="number" class="form-control form-control-sm text-end gst calc p-1" value="0">
+                <select class="form-select form-select-sm gst calc p-1">
+                    ${gstOptions}
+                </select>
             </td>
 
             <td class="col-tax p-1">
@@ -891,6 +917,10 @@ function addItemRow() {
 
             <td class="col-tax p-1">
                 <input type="number" class="form-control form-control-sm text-end sgst p-1" readonly>
+            </td>
+
+            <td class="col-tax p-1">
+                <input type="number" class="form-control form-control-sm text-end igst p-1" readonly>
             </td>
 
             <td class="col-total p-1">
@@ -921,7 +951,6 @@ function recalcRow(row) {
     const discountRate = parseFloat(row.find('.discountrate').val()) || 0;
     const discountType = row.find('.discounttype').val();
 
-    const isGstIncluded = $('#isGstIncluded').is(':checked');
     const gstFactor = 1 + (gstRate / 100);
 
     // Step 1: Subtotal
@@ -946,74 +975,68 @@ function recalcRow(row) {
     // Step 4: GST Calculation
     let gstAmount = 0;
 
-    if (isGstIncluded) {
-        const gross = taxable;
-        taxable = gross / gstFactor;
-        gstAmount = gross - taxable;
-    }
-    else {
+    //if (isGstIncluded) {
+    //const gross = taxable;
+    //taxable = gross / gstFactor;
+    //gstAmount = gross - taxable;
+    //}
+    //else {
         gstAmount = taxable * gstRate / 100;
-    }
+    //}
 
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
+    const igst = 0;
     const total = taxable + gstAmount;
 
     row.find('.cgst').val(cgst.toFixed(2));
     row.find('.sgst').val(sgst.toFixed(2));
+    row.find('.igst').val(igst.toFixed(2));
     row.find('.total').val(total.toFixed(2));
 }
 function recalcAll() {
 
     let subTotal = 0;
+    let totalTaxable = 0;
     let totalGST = 0;
 
-    const isGstIncluded = $('#isGstIncluded').is(':checked');
+    //const isGstIncluded = $('#isGstIncluded').is(':checked');
 
     $('#invoiceItemsBody tr').each(function () {
 
         const row = $(this);
         const rate = parseFloat(row.find('.rate').val()) || 0;
         const qty = parseFloat(row.find('.qty').val()) || 0;
-        const gstRate = parseFloat(row.find('.gst').val()) || 0;
+        let subTotalRow = rate * qty;
 
-        const gstFactor = 1 + (gstRate / 100);
-        let taxable = 0;
-        let gstAmount = 0;
-
-        if (isGstIncluded) {
-            const gross = rate * qty;
-            taxable = gross / gstFactor;
-            gstAmount = gross - taxable;
+        const discountRate = parseFloat(row.find('.discountrate').val()) || 0;
+        const discountType = row.find('.discounttype').val();
+        let discountAmount = 0;
+        if (discountType === "1") {
+            discountAmount = subTotalRow * discountRate / 100;
         }
         else {
-            //taxable = rate * qty;
-            let subTotalRow = rate * qty;
-
-            const discountRate = parseFloat(row.find('.discountrate').val()) || 0;
-            const discountType = row.find('.discounttype').val();
-
-            let discountAmount = 0;
-
-            if (discountType === "1") {
-                discountAmount = subTotalRow * discountRate / 100;
-            } else {
-                discountAmount = discountRate;
-            }
-
-            taxable = subTotalRow - discountAmount;
-            gstAmount = taxable * gstRate / 100;
+            discountAmount = discountRate;
         }
 
-        subTotal += taxable;
+        let taxable = subTotalRow - discountAmount;
+
+        const gstRate = parseFloat(row.find('.gst').val()) || 0;
+        //const gstFactor = 1 + (gstRate / 100);
+        let gstAmount = taxable * (gstRate / 100);
+
+        let total = taxable + gstAmount;
+
+        totalTaxable += taxable;
+        subTotal += total; //subTotal + taxable + gstAmount;
         totalGST += gstAmount;
     });
 
     const discount = parseFloat($('#bookingDiscount').val()) || 0;
-    const grandTotal = subTotal + totalGST - discount;
+    const grandTotal = totalTaxable + totalGST - discount;
 
     $('#subTotal').val(subTotal.toFixed(2));
-    $('#totalTaxable').val(subTotal.toFixed(2));
+    $('#totalTaxable').val(totalTaxable.toFixed(2));
     $('#totalGST').val(totalGST.toFixed(2));
 
     let actualTotal = parseFloat(grandTotal);
@@ -1048,7 +1071,7 @@ function fetchInvoiceById(params) {
                 return;
             }
             const data = res.data;
-            //console.log("GetCustomerInvoiceById data:", data);
+            ////console.log("GetCustomerInvoiceById data:", data);
 
             /* ---------- MASTER ---------- */
             $('#invoiceId').val(data.Id);
@@ -1075,7 +1098,7 @@ function fetchInvoiceById(params) {
             if (data.Items && data.Items.length > 0) {
 
                 data.Items.forEach(item => {
-
+                    const gstOptions = buildGSTDropdown(item.GSTRate);
                     const row = `
                         <tr>
                             <td class="text-center col-index"></td>
@@ -1097,10 +1120,16 @@ function fetchInvoiceById(params) {
                             <td><input class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount}"></td>
 
                             <td><input class="form-control form-control-sm text-end taxable p-1 calc" value="${item.TaxableAmount}"></td>
-                            <td><input class="form-control form-control-sm text-end gst p-1 calc" value="${item.GSTRate}"></td>
+
+                            <td class="col-gst p-1">
+                                <select class="form-select form-select-sm gst calc p-1">
+                                    ${gstOptions}
+                                </select>
+                            </td>
 
                             <td><input class="form-control form-control-sm text-end cgst p-1" value="${item.CGST}" readonly></td>
                             <td><input class="form-control form-control-sm text-end sgst p-1" value="${item.SGST}" readonly></td>
+                            <td><input class="form-control form-control-sm text-end igst p-1" value="${item.IGST}" readonly></td>
                             <td><input class="form-control form-control-sm text-end fw-bold total p-1" value="${item.Total}" readonly></td>
 
                             <td class="text-center">
@@ -1124,15 +1153,21 @@ function fetchInvoiceById(params) {
 //proforma & invoice -- fetch EDIT -- END
 
 //proforma & invoice -- fetch -- START
-function fetchInvoiceByBookingId(bookingId) {
+function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
     $("#paymentSection").removeClass("d-none");
+    var payload = {
+        BookingId: bookingId,
+        IsInclusiveGST: isInclusiveGST
+    };
+    //console.log("payload fetchInvoiceByBookingId:", payload);
     $.ajax({
+
         url: '/api/CustomerInvoice/GetCustomerInvoiceByBookingId', // adjust if needed
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ BookingId: bookingId }),
+        data: JSON.stringify(payload),
         success: function (res) {
-            console.log("fetch ByBookingId res:", res);
+            //console.log("fetch ByBookingId res:", res);
             if (res.status !== 'Success' || !res.data) {
                 Swal.fire({
                     icon: 'warning',
@@ -1151,7 +1186,7 @@ function fetchInvoiceByBookingId(bookingId) {
             $('#address').val(data.Address);
             $('#customerState').val(data.ClientStateId);
 
-            $('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
+            //$('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
 
             $('#invoiceItemsBody').empty();
 
@@ -1160,7 +1195,8 @@ function fetchInvoiceByBookingId(bookingId) {
                 data.ItemsJson.forEach(item => {
 
                     const taxable = parseFloat(item.Taxable) || 0;
-                    const gstPercent = taxable > 0 && item.GSTRate ? ((item.GSTRate / taxable) * 100).toFixed(2) : 0;
+                    //const gstPercent = taxable > 0 && item.GSTRate ? ((item.GSTRate / taxable) * 100).toFixed(2) : 0;
+                    const gstOptions = buildGSTDropdown(item.GSTRate);
 
                     const row = `
                         <tr>
@@ -1213,10 +1249,12 @@ function fetchInvoiceByBookingId(bookingId) {
                                        value="${item.Taxable ?? 0}">
                             </td>
 
-                            <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end gst p-1 calc"
-                                       value="${gstPercent}">
+                            <td class="col-gst p-1">
+                                <select class="form-select form-select-sm gst calc p-1">
+                                    ${gstOptions}
+                                </select>
                             </td>
+
 
                             <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end cgst p-1"
@@ -1226,6 +1264,11 @@ function fetchInvoiceByBookingId(bookingId) {
                             <td class="p-1">
                                 <input type="number" class="form-control form-control-sm text-end sgst p-1"
                                        value="${(item.SGST ?? 0).toFixed(2)}" readonly>
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number" class="form-control form-control-sm text-end igst p-1"
+                                       value="${(item.IGST ?? 0).toFixed(2)}" readonly>
                             </td>
 
                             <td class="p-1">
@@ -1277,7 +1320,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 if (actionMode === "singleData") {
                     //resetBooking();
                     data = data[0];
-                    console.log("singleData - Booking API Response:", data);
+                    //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
                     $("#bookingReport_clientName").text(data.Client_Name || "—");
@@ -1355,7 +1398,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 }
             }
             else {
-                console.warn("API returned error:", response.message);
+                //console.warn("API returned error:", response.message);
                 Swal.fire({
                     icon: 'warning',
                     title: 'No Data Found',
@@ -1385,7 +1428,7 @@ function fillPaymentTrailTable(paymentList = []) {
         return;
     }
 
-    console.log("paymentList:", paymentList);
+    //console.log("paymentList:", paymentList);
 
     paymentList.forEach((item, index) => {
         tbody.append(`
@@ -1445,9 +1488,9 @@ function getNextInvoiceNumbers() {
                 proformaInvoiceNo = res.data.NextProformaInvoiceNo;
                 gstInvoiceNo = res.data.NextGSTInvoiceNo;
 
-                console.log('Invoice No:', invoiceNo);
-                console.log('Proforma Invoice No:', proformaInvoiceNo);
-                console.log('GST Invoice No:', gstInvoiceNo);
+                //console.log('Invoice No:', invoiceNo);
+                //console.log('Proforma Invoice No:', proformaInvoiceNo);
+                //console.log('GST Invoice No:', gstInvoiceNo);
 
                 // OPTIONAL: Assign to inputs
                 //$('#invoiceNo').val(invoiceNo);
@@ -1474,14 +1517,14 @@ function fetchData(isOnlyInvoice=false) {
         PaymentStatusId: $('#fltPaymentStatus').val() || 0,
         IsOnlyInvoice: isOnlyInvoice
     };
-    console.log("payload:", payload);
+    //console.log("payload:", payload);
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoice_GRID',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("fetch res:", res);
+            ////console.log("fetch res:", res);
             renderTable(res.data || []);
         },
         error: function (xhr, status, error) {
@@ -1491,7 +1534,7 @@ function fetchData(isOnlyInvoice=false) {
 }
 
 function renderTable(data) {
-    console.log("render data:", data);
+    //console.log("render data:", data);
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
     }
@@ -1500,6 +1543,7 @@ function renderTable(data) {
     //const isSuperUser = sessionStorage.getItem("isSuperUser") === "true";
 
     const hasValidNo = v => v !== null && v !== undefined && Number(v) > 0;
+
     $('#tableMain table').DataTable({
         data: data,
         responsive: true,
@@ -1525,22 +1569,22 @@ function renderTable(data) {
                             ? row.InvoiceNo
                             : null;
 
-                    const proformaNo =
-                        row.ProformaInvoiceNo !== null && row.ProformaInvoiceNo !== undefined && row.ProformaInvoiceNo > 0
-                            ? row.ProformaInvoiceNo
-                            : null;
+                    //const proformaNo =
+                    //    row.ProformaInvoiceNo !== null && row.ProformaInvoiceNo !== undefined && row.ProformaInvoiceNo > 0
+                    //        ? row.ProformaInvoiceNo
+                    //        : null;
 
-                    if (invoiceNo && proformaNo) {
-                        return `<strong>${invoiceNo} / ${proformaNo}</strong>`;
-                    }
+                    //if (invoiceNo && proformaNo) {
+                    //    return `<strong>${invoiceNo} / ${proformaNo}</strong>`;
+                    //}
 
                     if (invoiceNo) {
-                        return `<strong>${invoiceNo}</strong>`;
+                        return `<strong>#${invoiceNo}</strong>`;
                     }
 
-                    if (proformaNo) {
-                        return `<strong>${proformaNo}</strong>`;
-                    }
+                    //if (proformaNo) {
+                    //    return `<strong>${proformaNo}</strong>`;
+                    //}
 
                     return '-';
                 }
@@ -1669,9 +1713,14 @@ function renderTable(data) {
                             return `
                                 <span title="You can create Invoice only on or after the event date.">
                                     <button class="btn btn-success btn-action-xs2 mb-1"
-                                            data-bookingid="${row.BookingId}"
+                                            data-bookingid="${row.BookingId}" data-isinclusivegst="false"
                                             disabled>
-                                        Create Invoice
+                                        Create Invoice (Rates Exclusive of GST)
+                                    </button>
+                                    <button class="btn btn-warning btn-action-xs2 mb-1"
+                                            data-bookingid="${row.BookingId}" data-isinclusivegst="true"
+                                            disabled>
+                                        Create Invoice (Rates Inclusive of GST)
                                     </button>
                                 </span>
                             `;
@@ -1679,8 +1728,12 @@ function renderTable(data) {
 
                         return `
                             <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
-                                    data-bookingid="${row.BookingId}">
-                                Create Invoice
+                                    data-bookingid="${row.BookingId}" data-isinclusivegst="false">
+                                Create Invoice (Rates Exclusive of GST)
+                            </button>
+                            <button class="btn btn-warning btn-action-xs2 mb-1 btn-create-invoice"
+                                    data-bookingid="${row.BookingId}" data-isinclusivegst="true">
+                                Create Invoice (Rates Inclusive of GST)
                             </button>
                         `;
                     }
@@ -1753,12 +1806,11 @@ function resetForm() {
     $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
     $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
     $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
-    $('#invoicePayment_DueBalance').val(0).prop('readonly', false);
-    $('#advancePaid').val(0).attr('readonly', true);
+    $('#invoicePayment_DueBalance').val("0.00").prop('readonly', false);
+    $('#advancePaid').val("0.00").attr('readonly', true);
 
-    $('#subTotal').val(0);
-    $('#totalGST').val(0);
-    $('#grandTotal').val(0);
+    $('#subTotal, #bookingDiscount, #totalTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
+
     $('#invoiceItemsBody').empty();
     $('#btnSaveInvoice').prop('disabled', false);
 
@@ -1785,7 +1837,7 @@ function resetFilter() {
     $('#fltBookedTill').val('');
     $('#fltEvent').val('0');
 
-    console.log('Filters reset');
+    //console.log('Filters reset');
     fetchData();
 }
 
@@ -1847,7 +1899,7 @@ function loadState() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
-            console.log("response state:", response);
+            //console.log("response state:", response);
             const $stateDropdowns = $("#customerState");
             $stateDropdowns.html(`<option value="0">-- Select --</option>`);
             response.data.forEach(s => {
@@ -1874,7 +1926,7 @@ function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
             ToDate: toDate
         }),
         success: function (res) {
-            console.log("res count PaymentCollection finance:", res);
+            //console.log("res count PaymentCollection finance:", res);
 
             if (res.status === "Success" && res.data) {
 

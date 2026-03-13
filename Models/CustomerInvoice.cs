@@ -15,7 +15,7 @@
     {
         public long NextInvoiceNo { get; set; }
         public long NextProformaInvoiceNo { get; set; }
-        public long NextGSTInvoiceNo { get; set; }
+        public string? NextGSTInvoiceNo { get; set; }
     }
 
 
@@ -38,7 +38,7 @@
         public long BookingId { get; set; }
         public long InvoiceNo { get; set; }
         public long ProformaInvoiceNo { get; set; }
-        public long GSTInvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public bool? IsInvoiceBlocked { get; set; }
@@ -58,7 +58,7 @@
 
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
-        public long? GSTInvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }
@@ -112,6 +112,7 @@
         public decimal GSTRate { get; set; }
         public decimal CGST { get; set; }
         public decimal SGST { get; set; }
+        public decimal? IGST { get; set; } = 0;
 
         public decimal Total { get; set; }
     }
@@ -144,6 +145,7 @@
     public class CustomerInvoiceRequest_BookingId
     {
         public long BookingId { get; set; }
+        public bool? IsInclusiveGST { get; set; } = false;
     }
 
     public class CustomerInvoiceResponse_BookingId
@@ -173,9 +175,11 @@
         public decimal? DiscountAmount { get; set; }
 
         public decimal? Taxable { get; set; }
+        public decimal? GSTAmount { get; set; }
         public decimal? GSTRate { get; set; }
         public decimal? CGST { get; set; }
         public decimal? SGST { get; set; }
+        public decimal? IGST { get; set; }
 
         public decimal? Total { get; set; }
     }
@@ -208,6 +212,7 @@
         public decimal? GSTRate { get; set; }
         public decimal? CGST { get; set; }
         public decimal? SGST { get; set; }
+        public decimal? IGST { get; set; }
 
         public decimal? Total { get; set; }
     }
@@ -217,7 +222,7 @@
 
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
-        public long? GSTInvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }

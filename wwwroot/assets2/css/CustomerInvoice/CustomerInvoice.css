@@ -1,4 +1,8 @@
-﻿/*WIdgets tooltip*/
+﻿#tableMain table.dataTable tbody tr {
+    border-bottom: 1px solid #9ca3af;
+}
+ 
+/*Widgets tooltip*/
 .kpi-wide-tooltip .tooltip-inner {
     max-width: 350px; /* increase width */
     width: 350px; /* fixed width */
@@ -102,7 +106,8 @@
 .invoice-items-table td {
     /*padding: 4px 6px;*/
     vertical-align: middle;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
 }
 
 /* Header */
