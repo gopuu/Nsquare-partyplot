@@ -9,9 +9,10 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
+        public string? VoucherNo { get; set; }
     }
 
-    public class ExpenseReportRequest
+    public class ExpenseReportRequest : BaseClass
     {
         public long CategoryId { get; set; } = 0;
         public long SubCategoryId { get; set; } = 0;
@@ -22,7 +23,7 @@
         public string? FilterDuration { get; set; }
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }
-        public long ActionBy { get; set; }
+        public string? VoucherNo { get; set; }
     }
 
     public class ExpenseReportGridModel
@@ -30,6 +31,7 @@
         public long SrNo { get; set; }
         public long TransactionId { get; set; }
         public string? TransactionDate { get; set; }
+        public string? VoucherNo { get; set; }
         public string? AccountName { get; set; }
         public string? CategoryName { get; set; }
         public long CategoryId { get; set; }

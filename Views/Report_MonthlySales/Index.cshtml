@@ -106,7 +106,7 @@
 <!-- /MAIN -->
 
 <!-- FILTER PANEL -->
-<div id="filterPanel" class="filter-panel">
+<div id="filterPanel" class="filter-panel" tabindex="-1">
 
     <div class="filter-header bg-warning d-flex justify-content-between align-items-center px-3 py-2">
         <h6 class="mb-0 text-white">Filters</h6>
@@ -159,7 +159,7 @@
 </div>
 
 <!-- COLUMN SELECTOR MODAL -->
-<div class="modal fade" id="modalColumns">
+<div class="modal fade" id="modalColumns" tabindex="-1">
 
     <div class="modal-dialog modal-md">
 
@@ -227,7 +227,7 @@
 </div>
 
 <!-- MONTH DETAILS MODAL -->
-<div class="modal fade" id="monthlySalesDetailsModal">
+<div class="modal fade" id="monthlySalesDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-xxl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-warning py-2 d-flex align-items-center justify-content-between">
@@ -358,23 +358,11 @@
 
 
 @section Scripts {
-
-    <script src="~/assets2/js/report_monthlysales/report_monthlysales.js"
-            asp-append-version="true"></script>
-
-    <script src="~/assets2/js/Shared/utility.js"
-            asp-append-version="true"></script>
-
+    <script src="~/assets2/js/report_monthlysales/report_monthlysales.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/Shared/utility.js" asp-append-version="true"></script>
 }
 
 @section Styles {
-
-    <link href="~/assets2/css/report_monthlysales/report_monthlysales.css"
-          rel="stylesheet"
-          asp-append-version="true" />
-
-    <link href="~/assets2/css/report_filters/report_filters.css"
-          rel="stylesheet"
-          asp-append-version="true" />
-
+    <link href="~/assets2/css/report_monthlysales/report_monthlysales.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/assets2/css/report_filters/report_filters.css" rel="stylesheet" asp-append-version="true" />
 }

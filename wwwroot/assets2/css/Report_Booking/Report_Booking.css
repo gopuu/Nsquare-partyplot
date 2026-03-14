@@ -1,1 +1,8 @@
-﻿
+﻿#tableMain table {
+    font-size: 13px;
+}
+
+#tableMain table th,
+#tableMain table td {
+    padding: 4px 6px;
+}

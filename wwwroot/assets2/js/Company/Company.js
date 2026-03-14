@@ -263,9 +263,10 @@ function getCompanyProfile() {
                     fullViewImg.src = "";
                 }
 
-            } else {
+            }
+            else {
                 //Swal.fire("Info", "No company profile found.", "info");
-                Swal.fire("Info", "Please add company profile data.", "info");
+                //Swal.fire("Info", "Please add company profile data.", "info");
             }
         },
         error: function (xhr, status, error) {

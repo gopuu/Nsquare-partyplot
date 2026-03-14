@@ -572,7 +572,7 @@ $(document).on("input", ".food-block .pax, .food-block .perPlate, .food-block .a
     const row = $(this).closest(".food-block");
     calculateFoodRowTotals(row);
 });
-$(document).on("input change","#paymentSummary_BookingAmount_Type, #paymentSummary_BookingAmount_Amount",
+$(document).on("input change","#paymentSummary_BookingDiscount_Type, #paymentSummary_BookingDiscount_Amount",
     function () {
         recalculatePaymentSummary();
 });
@@ -2895,13 +2895,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     //discount change
-    $("#paymentSummary_BookingAmount_Type").on("change", function () {
-        $("#paymentSummary_BookingAmount_Amount").val(0);
+    $("#paymentSummary_BookingDiscount_Type").on("change", function () {
+        $("#paymentSummary_BookingDiscount_Amount").val(0);
         //updateBookingDiscount();
         recalculatePaymentSummary();
     });
 
-    $("#paymentSummary_BookingAmount_Amount").on("input", function () {
+    $("#paymentSummary_BookingDiscount_Amount").on("input", function () {
         //updateBookingDiscount();
         recalculatePaymentSummary();
 
@@ -5286,8 +5286,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#paymentSummary_IGST").text(formatAmount(data.PaymentSummary_IGST));
                     $("#paymentSummary_Total").text(formatAmount(data.PaymentSummary_TotalAmount));
                     // Booking Amount Type & Input
-                    $("#paymentSummary_BookingAmount_Type").val(data.PaymentSummary_BookingDiscount_Type_Id || 1).trigger("change");
-                    $("#paymentSummary_BookingAmount_Amount").val(data.PaymentSummary_BookingDiscount_Type_Amount || 0).trigger("input");
+                    $("#paymentSummary_BookingDiscount_Type").val(data.PaymentSummary_BookingDiscount_Type_Id || 1).trigger("change");
+                    $("#paymentSummary_BookingDiscount_Amount").val(data.PaymentSummary_BookingDiscount_Type_Amount || 0).trigger("input");
                     // Booking Amount Calculated
                     $("#paymentSummary_BookingAmount").text(formatAmount(data.PaymentSummary_BookingDiscount_Total));
                     // Payable Amount
@@ -5591,8 +5591,8 @@ function saveBooking() {
         PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text() || 0),
         PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text() || 0),
         PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text() || 0),
-        PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingAmount_Type").val() || 0),
-        PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingAmount_Amount").val() || 0),
+        PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingDiscount_Type").val() || 0),
+        PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingDiscount_Amount").val() || 0),
         PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text() || 0),
         PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text() || 0),
 
@@ -5851,10 +5851,11 @@ function recalculatePaymentSummary() {
 
     applyBookingDiscount(total);
 }
+
 function applyBookingDiscount(totalAmount) {
 
-    let type = $("#paymentSummary_BookingAmount_Type").val();
-    let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
+    let type = $("#paymentSummary_BookingDiscount_Type").val();
+    let enteredValue = parseFloat($("#paymentSummary_BookingDiscount_Amount").val()) || 0;
 
     let bookingDiscount = 0;
 

@@ -1,27 +1,29 @@
-﻿/* ═══════════════════════════════════════════════════
-   COLUMN DEFINITIONS
-═══════════════════════════════════════════════════ */
+﻿/* ═══ COLUMN DEFINITIONS ══════ */
 const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No" },
-    { key: "EventDate", label: "Date" },
+    { key: "EventDate", label: "Event Date" },
     { key: "GuestName", label: "Guest Name" },
     { key: "EventType", label: "Event Type" },
     { key: "EventSubType", label: "Event Sub Type" },
-    { key: "EstimatedAmount", label: "Estimated Amount" }
+    { key: "LeadSource", label: "Lead Source" },
+    { key: "EnquiryDateTime", label: "Enquiry DateTime" },
+    { key: "LossAmount", label: "Loss Amount" }
 ];
 
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "revenueLossPrintWithHeader";
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
+/* ══ INIT ═════ */
 document.addEventListener("DOMContentLoaded", function () {
 
     setCurrentMonthDates();
     loadRevenueLossGrid();
     loadColumnCheckboxes();
+
+    loadEventTypeDropdown();
+    loadEventSubTypeDropdown();
+    loadLeadSourceList();
 
     /* ── Quick range ── */
     $("#quickRange").on("change", function () {
@@ -79,6 +81,16 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#filterPanel").removeClass("active");
     });
 
+    $("#ddlEventType").on("change", function () {
+        const id = $(this).val();
+        loadEventSubTypeDropdown(id);
+        loadRevenueLossGrid();
+    });
+
+    $("#ddlEventSubType, #ddlLeadSource").on("change", function () {
+        loadRevenueLossGrid();
+    });
+
     $("#btnToggleFilter").on("click", function () { $("#filterPanel").toggleClass("active"); });
     $("#btnCloseFilter").on("click", function () { $("#filterPanel").removeClass("active"); });
 
@@ -90,6 +102,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#btnResetFilter").on("click", function () {
         $("#quickRange").val("thismonth");
         selectedMonthDuration = "thismonth";
+        $("#ddlEventType, #ddlEventSubType, #ddlLeadSource").val("0");
+
         setCurrentMonthDates();
         loadRevenueLossGrid();
     });
@@ -128,15 +142,100 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-/* ═══════════════════════════════════════════════════
-   LOAD GRID
-═══════════════════════════════════════════════════ */
+function loadEventTypeDropdown() {
+    $.ajax({
+        url: "/api/EventType/GetEventTypeListForDropdown",
+        type: "GET",
+        success: function (response) {
+
+            let dropdown = $("#ddlEventType");
+            dropdown.empty();
+
+            dropdown.append(`<option value="0">-- Event Type --</option>`);
+
+            if (response.status === "Success" && response.data.length > 0) {
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}">
+                            ${item.Name}
+                        </option>`
+                    );
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Event Type");
+        }
+    });
+}
+function loadEventSubTypeDropdown(eventTypeId=0) {
+
+    let dropdown = $("#ddlEventSubType");
+
+    dropdown.prop("disabled", true);
+    dropdown.empty();
+    dropdown.append(`<option value="0">--Select Sub-Event Type--</option>`);
+
+    //if (!eventTypeId) return;
+
+    $.ajax({
+        url: "/api/EventSubType/GetEventSubTypeListForDropdown",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            EventTypeId: eventTypeId
+        }),
+        success: function (response) {
+            if (response.status === "Success" && response.data.length > 0) {
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}">${item.Name}</option>`
+                    );
+                });
+                dropdown.prop("disabled", false);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Event Sub Type");
+        }
+    });
+}
+
+function loadLeadSourceList() {
+    $.ajax({
+        url: "/api/LeadSource/GetLeadSourceList",
+        type: "GET",
+        success: function (response) {
+            //console.log("leadSource response:", response);
+            if (response.status && response.status.toLowerCase() === "success") {
+                let options = `<option value = "0"> --Select Lead Source--</option> `; // default option
+                $.each(response.data, function (index, item) {
+                    options += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                });
+
+                $("#ddlLeadSource").html(options);
+            }
+            else {
+                $("#ddlLeadSource").html(`<option value = "0">No Lead Source Found</option> `);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching lead source list.");
+        }
+    });
+}
+
+
+/* ═══ LOAD GRID═════ */
 function loadRevenueLossGrid() {
 
     const payload = {
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration
+        FilterDuration: selectedMonthDuration,
+        EventTypeId: $("#ddlEventType").val() || 0,
+        EventSubTypeId: $("#ddlEventSubType").val() || 0,
+        LeadSourceId: $("#ddlLeadSource").val() || 0
     };
 
     $("#tableMain").html(`
@@ -157,8 +256,15 @@ function loadRevenueLossGrid() {
                 <table id="tblRevenueLoss" class="table table-striped table-bordered w-100">
                     <tfoot>
                         <tr>
-                            <th></th><th></th><th></th>
-                            <th></th><th></th><th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -168,11 +274,10 @@ function loadRevenueLossGrid() {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
-
-            renderRevenueLossTable(res.data);
+            renderRevenueLossTable(res.data.Rows, res.data.Totals);
         },
         error: function (xhr, status, error) {
-            console.error("Fetch Revenue Loss Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Fetch Revenue Loss Failed");
             $("#tableMain").html(`
                 <div class="alert alert-danger">
                     Failed to load data. Please try again.
@@ -182,21 +287,23 @@ function loadRevenueLossGrid() {
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER TABLE
-═══════════════════════════════════════════════════ */
-function renderRevenueLossTable(data) {
+/* ══ RENDER TABLE ═════*/
+function renderRevenueLossTable(rows, totals) {
 
     if ($.fn.DataTable.isDataTable("#tblRevenueLoss")) {
         $("#tblRevenueLoss").DataTable().clear().destroy();
     }
 
     $("#tblRevenueLoss").DataTable({
-        data: data,
+        data: rows,
         responsive: true,
         pageLength: 25,
         scrollX: true,
         order: [[1, "asc"]],
+
+        paging: false,
+        scrollY: "60vh",
+        scrollCollapse: true,
 
         columns: [
             {
@@ -215,49 +322,62 @@ function renderRevenueLossTable(data) {
                 title: "Guest Name"
             },
             {
-                data: "EventDisplay",
+                data: "EventType",
                 title: "Event"
             },
             {
-                data: "EstimatedAmount",
-                title: "Estimated Amount",
+                data: "EventSubType",
+                title: "Sub-Event"
+            },
+            {
+                data: "LeadSource",
+                title: "Lead Source"
+            },
+            {
+                data: "EnquiryDateTime",
+                title: "Enquiry DateTime"
+            },
+            {
+                data: "LossAmount",
+                title: "Loss Amount",
                 className: "text-end fw-semibold text-danger",
                 render: d => formatINR2(d)
-            },
-            // hidden
-            { data: "EnquiryDealId", visible: false },
-            { data: "EventType", visible: false },
-            { data: "EventSubType", visible: false }
+            }
         ],
 
-        /* ── Footer totals ── */
-        footerCallback: function (tfoot, data, start, end, display) {
-
-            const api = this.api();
-            const sumCol = idx =>
-                api.column(idx, { page: "all" })
-                    .data()
-                    .reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+        /* ── Footer totals from API ── */
+        footerCallback: function (tfoot) {
 
             const $cells = $(tfoot).find("th");
 
-            $cells.eq(0).html("<strong>TOTAL</strong>");
+            $cells.eq(0).html("");
             $cells.eq(1).html("");
             $cells.eq(2).html("");
             $cells.eq(3).html("");
-            $cells.eq(4).html(`<strong class="text-danger">${formatINR2(sumCol(4))}</strong>`);
-            $cells.eq(5).html("");
+
+            $cells.eq(4).html("");
+
+            $cells.eq(5).html("<strong>TOTAL</strong>");
+
+            $cells.eq(6).html(`
+                <strong class="text-danger fs-8">
+                    ${totals.TotalLeadLost}
+                </strong>
+            `);
+            $cells.eq(7).html(`
+                <strong class="text-danger fs-8">
+                    ${formatINR2(totals.TotalLossAmount)}
+                </strong>
+            `);
         },
 
         language: {
             emptyTable: "No revenue loss records found for the selected period."
         }
-    });
+    });    
 }
 
-/* ═══════════════════════════════════════════════════
-   DOWNLOAD PDF / EXCEL
-═══════════════════════════════════════════════════ */
+/* ═══ DOWNLOAD PDF / EXCEL ═══════ */
 function ViewRevenueLossReport(actionName) {
 
     const withHeader = $("#toggleWithHeader").is(":checked");
@@ -267,6 +387,9 @@ function ViewRevenueLossReport(actionName) {
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration,
+        EventTypeId: $("#ddlEventType").val() || 0,
+        EventSubTypeId: $("#ddlEventSubType").val() || 0,
+        LeadSourceId: $("#ddlLeadSource").val() || 0,
         WithHeader: withHeader,
         Columns: selectedColumns,
         ActionBy: userId
@@ -303,15 +426,13 @@ function ViewRevenueLossReport(actionName) {
         },
         error: function (xhr, status, error) {
             Swal.close();
-            console.error("Download Revenue Loss Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Download Revenue Loss Failed");
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         }
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════ */
+/* ══ HELPERS ══════ */
 function setCurrentMonthDates() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);

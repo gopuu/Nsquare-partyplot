@@ -400,6 +400,7 @@ $(function () {
                     getNextInvoiceNumbers();
                     //resetForm();
                     $('#btnSaveInvoice').prop('disabled', true);
+                    invoiceModal.hide();
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -974,19 +975,31 @@ function recalcRow(row) {
 
     // Step 4: GST Calculation
     let gstAmount = 0;
-
     //if (isGstIncluded) {
     //const gross = taxable;
     //taxable = gross / gstFactor;
     //gstAmount = gross - taxable;
     //}
     //else {
-        gstAmount = taxable * gstRate / 100;
+    gstAmount = taxable * gstRate / 100;
     //}
 
-    const cgst = gstAmount / 2;
-    const sgst = gstAmount / 2;
-    const igst = 0;
+    const gstin = ($('#gstin').val() || '').trim();
+    const stateCode = gstin.substring(0, 2);
+
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    if (gstin && stateCode !== "24") {
+        // Inter-state → IGST
+        igst = gstAmount;
+    }
+    else {
+        // Intra-state → CGST + SGST
+        cgst = gstAmount / 2;
+        sgst = gstAmount / 2;
+    }
     const total = taxable + gstAmount;
 
     row.find('.cgst').val(cgst.toFixed(2));
@@ -1548,9 +1561,15 @@ function renderTable(data) {
         data: data,
         responsive: true,
         pageLength: 20,
+        paging: false,
         searching: true,
         ordering: true,
         lengthChange: false,
+
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         rowCallback: function (row, data) {
             if (Number(data.OutstandingAmount) > 0) {
                 $(row).addClass('row-outstanding');

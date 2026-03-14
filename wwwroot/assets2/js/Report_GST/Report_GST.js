@@ -233,6 +233,11 @@ function renderGSTSalesTable(data, totals) {
         scrollX: true,
         order: [[0, "desc"]],
 
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         columns: [
             {
                 data: "InvoiceNo",

@@ -427,16 +427,16 @@
                                     <td>Total</td>
                                     <td class="text-end" id="paymentSummary_Total">0.00</td>
                                 </tr>
-                                <tr id="paymentSummary_BookingAmount_Row">
+                                <tr id="paymentSummary_BookingDiscount_Row">
                                     <td>
                                         <div class="d-flex gap-2">
-                                            Booking Amount
-                                            <select class="form-select form-select-sm" id="paymentSummary_BookingAmount_Type" style="width: 100px;">
+                                            Booking Discount
+                                            <select class="form-select form-select-sm" id="paymentSummary_BookingDiscount_Type" style="width: 100px;">
                                                 <option value="1">Flat</option>
                                                 <option value="2">Percent (%)</option>
                                             </select>
 
-                                            <input type="number" class="form-control form-control-sm" value="0" id="paymentSummary_BookingAmount_Amount" style="width:100px;">
+                                            <input type="number" class="form-control form-control-sm" value="0" id="paymentSummary_BookingDiscount_Amount" style="width:100px;">
                                         </div>
                                     </td>
                                     <td class="text-end" id="paymentSummary_BookingAmount">0</td>
@@ -2150,7 +2150,9 @@
 <script src="/assets2/js/quill.js"></script>
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+@*
 <script src="/assets2/js/bootstrap.bundle.min.js"></script>
+*@
 
 @section Scripts {
     <script src="~/assets2/js/bookingcalender/BookingCalendar.js" asp-append-version="true"></script>

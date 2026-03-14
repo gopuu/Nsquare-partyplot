@@ -132,7 +132,6 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchUserAccessData(userid);
 
     //loadStaffAccountsRights(staffIds);
-
     document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
         const subItems = dropdown.querySelectorAll('.dropdown-menu .dropdown-item');
 

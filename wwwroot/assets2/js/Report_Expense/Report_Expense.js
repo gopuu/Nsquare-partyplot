@@ -3,7 +3,8 @@
 ═══════════════════════════════════════════════════ */
 const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No" },
-    { key: "TransactionDate", label: "Date" },
+    { key: "VoucherNo", label: "Voucher No" },
+    { key: "TransactionDate", label: "Txn Date" },
     { key: "AccountName", label: "Account" },
     { key: "CategoryName", label: "Category" },
     { key: "SubCategoryName", label: "Sub Category" },
@@ -36,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /* ── Other filter dropdowns ── */
-    $("#ddlAccount, #ddlSubCategory, #ddlPaymentMode").on("change", function () {
+    $("#ddlAccount, #ddlSubCategory, #ddlPaymentMode, #voucherNo").on("input change", function () {
         loadExpenseGrid();
     });
 
@@ -107,6 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#btnResetFilter").on("click", function () {
         $("#quickRange").val("thismonth");
         selectedMonthDuration = "thismonth";
+        $("#voucherNo").val("");
         $("#ddlAccount").val("0");
         $("#ddlCategory").val("0");
         $("#ddlPaymentMode").val("0");
@@ -249,7 +251,8 @@ function loadExpenseGrid() {
         PaymentModeId: parseInt($("#ddlPaymentMode").val()) || 0,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration
+        FilterDuration: selectedMonthDuration,
+        VoucherNo: $("#voucherNo").val() || null
     };
 
     $("#tableMain").html(`
@@ -258,6 +261,8 @@ function loadExpenseGrid() {
             Loading Expense data...
         </div>
     `);
+
+    console.log("payload:", payload);
 
     $.ajax({
         url: "/api/Report_Expense/GetExpenseReportGrid",
@@ -270,8 +275,17 @@ function loadExpenseGrid() {
                 <table id="tblExpense" class="table table-striped table-bordered w-100">
                     <tfoot>
                         <tr>
-                            <th></th><th></th><th></th><th></th>
-                            <th></th><th></th><th></th><th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -282,10 +296,10 @@ function loadExpenseGrid() {
                 return;
             }
 
-            renderExpenseTable(res.data);
+            renderExpenseTable(res.data.Rows, res.data.Totals);
         },
         error: function (xhr, status, error) {
-            console.error("Fetch Expense Data Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Fetch Expense Data Failed");
             $("#tableMain").html(`<div class="alert alert-danger">Failed to load data. Please try again.</div>`);
         }
     });
@@ -294,87 +308,63 @@ function loadExpenseGrid() {
 /* ═══════════════════════════════════════════════════
    RENDER TABLE
 ═══════════════════════════════════════════════════ */
-function renderExpenseTable(data) {
+function renderExpenseTable(rows, totals) {
 
     if ($.fn.DataTable.isDataTable("#tblExpense")) {
         $("#tblExpense").DataTable().clear().destroy();
     }
 
     $("#tblExpense").DataTable({
-        data: data,
+        data: rows,
         responsive: true,
         pageLength: 25,
         scrollX: true,
         order: [[1, "asc"]],
 
+        paging: false,
+        scrollY: "60vh",
+        scrollCollapse: true,
+
         columns: [
+            { data: "SrNo", title: "#", width: "50px", className: "text-center" },
+            { data: "TransactionDate", title: "Date", width: "110px" },
+            { data: "VoucherNo", title: "Voucher No" },
+            { data: "AccountName", title: "Account" },
+            { data: "CategoryName", title: "Event Category" },
+            { data: "SubCategoryName", title: "Event Sub-Category" },
             {
-                data: "SrNo",
-                title: "#",
-                width: "50px",
-                className: "text-center"
+                data: "Notes",
+                title: "Notes",
+                render: function (data) {
+                    if (!data || data === "-")
+                        return `<span class="text-muted">-</span>`;
+
+                    return `<span title="${data}">
+                        ${data.length > 40 ? data.substring(0, 40) + "…" : data}
+                    </span>`;
+                }
             },
-            {
-                data: "TransactionDate",
-                title: "Date",
-                width: "110px"
-            },
-            {
-                data: "AccountName",
-                title: "Account"
-            },
-            {
-                data: "CategoryName",
-                title: "Category"
-            },
-            {
-                data: "SubCategoryName",
-                title: "Sub Category"
-            },
-            {
-                data: "PaymentModeName",
-                title: "Payment Mode",
-                className: "text-center"
-            },
+            { data: "PaymentModeName", title: "Payment Mode", className: "text-center" },
             {
                 data: "Amount",
                 title: "Amount",
                 className: "text-end fw-semibold text-danger",
                 render: d => formatINR2(d)
-            },
-            {
-                data: "Notes",
-                title: "Notes",
-                render: function (data) {
-                    if (!data || data === "-") return `<span class="text-muted">-</span>`;
-                    return `<span title="${data}">${data.length > 40 ? data.substring(0, 40) + "…" : data}</span>`;
-                }
-            },
-            // hidden
-            { data: "TransactionId", visible: false },
-            { data: "CategoryId", visible: false },
-            { data: "SubCategoryId", visible: false }
+            }
         ],
 
-        /* ── Footer totals ── */
-        footerCallback: function (tfoot, data, start, end, display) {
-
-            const api = this.api();
-            const sumCol = idx =>
-                api.column(idx, { page: "all" })
-                    .data()
-                    .reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+        /* Footer totals from API */
+        footerCallback: function (tfoot) {
 
             const $cells = $(tfoot).find("th");
 
-            $cells.eq(0).html("<strong>TOTAL</strong>");
-            $cells.eq(1).html("");
-            $cells.eq(2).html("");
-            $cells.eq(3).html("");
-            $cells.eq(4).html("");
-            $cells.eq(5).html("");
-            $cells.eq(6).html(`<strong class="text-danger">${formatINR2(sumCol(6))}</strong>`);
-            $cells.eq(7).html("");
+            $cells.eq(7).html("<strong>TOTAL EXPENSE</strong>");
+
+            $cells.eq(8).html(`
+                <strong class="text-danger">
+                    ${formatINR2(totals.TotalAmount)}
+                </strong>
+            `);
         },
 
         language: {
@@ -399,6 +389,7 @@ function ViewExpenseReport(actionName) {
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration,
+        VoucherNo: $("#voucherNo").val().trim() || null,
         WithHeader: withHeader,
         Columns: selectedColumns,
         ActionBy: userId
@@ -406,7 +397,7 @@ function ViewExpenseReport(actionName) {
 
     const url = actionName === "downloadExcel"
         ? "/api/Report_Expense/DownloadExpenseReport_Excel"
-        : "/api/Report_Expense/DownloadExpenseReport";
+        : "/api/Report_Expense/DownloadExpenseReport_Pdf";
 
     showTempLoader("Generating Report...");
 
@@ -435,7 +426,7 @@ function ViewExpenseReport(actionName) {
         },
         error: function (xhr, status, error) {
             Swal.close();
-            console.error("Download Expense Report Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Download Expense Report Failed");
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         }
     });

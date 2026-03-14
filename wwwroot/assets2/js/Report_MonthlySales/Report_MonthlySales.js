@@ -39,7 +39,7 @@ let selectedMonthId = null;
 document.addEventListener("DOMContentLoaded", function () {
 
     populateYearDropdown();
-    loadMonthlySalesGrid();
+    //loadMonthlySalesGrid();
     loadColumnCheckboxes();
 
     /* ── Quick Year Range ── */
@@ -49,6 +49,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fetchMonthData(selectedYearId);
     });
+
+    $("#quickRange_MonthFrom, #quickRange_MonthTo").on("change", function () {
+        loadMonthlySalesGrid();
+    });
+
 
     /* ── Filter panel ── */
     $("#filterPanel").on("click", function (e) { e.stopPropagation(); });
@@ -63,11 +68,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("#btnApplyFilter").on("click", function () {
-
-        selectedYearId = $("#quickRange").val();
-        selectedMonthFrom = $("#quickRange_MonthFrom").val();
-        selectedMonthTo = $("#quickRange_MonthTo").val();
-
         $("#filterPanel").removeClass("active");
 
         loadMonthlySalesGrid();
@@ -154,6 +154,12 @@ document.addEventListener("DOMContentLoaded", function () {
     $('#monthlySalesDetailsModal').on('shown.bs.modal', function () {
         $('#tblMonthlySalesDetails').DataTable().columns.adjust();
     });
+
+    $(document).on("keydown", function (e) {
+        if (e.key === "Escape") {
+            $('.modal').modal('hide');
+        }
+    });
 });
 
 /* =========================
@@ -179,22 +185,15 @@ function populateYearDropdown() {
                     option.attr("data-year", y.YearName);
 
                     if (parseInt(y.YearName) === selectedYear) {
-
                         option.prop("selected", true);
                         selectedYearId = y.Id;
                         option.text(y.YearName + " (This Year)");
-
                     }
                     else {
-
                         option.text(y.YearName);
-
                     }
-
                     dropdown.append(option);
-
                 });
-
                 // Fetch months for current year
                 fetchMonthData(selectedYearId);
             }
@@ -220,6 +219,7 @@ function fetchMonthData(yearId) {
         success: function (res) {
             if (res.status === "Success") {
                 const months = res.data || [];
+                console.log("months:", months);
                 let fromDropdown = $("#quickRange_MonthFrom");
                 let toDropdown = $("#quickRange_MonthTo");
 
@@ -232,11 +232,11 @@ function fetchMonthData(yearId) {
                 months.forEach(m => {
 
                     let option1 = $("<option>");
-                    option1.val(m.Id);
+                    option1.val(m.MonthId);
                     option1.text(m.MonthName);
 
                     let option2 = $("<option>");
-                    option2.val(m.Id);
+                    option2.val(m.MonthId);
                     option2.text(m.MonthName);
 
                     fromDropdown.append(option1);
@@ -255,6 +255,9 @@ function fetchMonthData(yearId) {
 }
 
 function loadMonthlySalesGrid() {
+    selectedYearId = Number($("#quickRange").val() || 0);
+    selectedMonthFrom = Number($("#quickRange_MonthFrom").val() || 0);
+    selectedMonthTo = Number($("#quickRange_MonthTo").val() || 0);
 
     const payload = {
         YearId: selectedYearId,
@@ -262,7 +265,7 @@ function loadMonthlySalesGrid() {
         MonthId_From: selectedMonthFrom,
         MonthId_To: selectedMonthTo
     };
-
+    console.log("grid payload:", payload);
     $.ajax({
         url: "/api/Report_MonthlySales/GetMonthlySalesGrid",
         type: "POST",
@@ -294,6 +297,11 @@ function renderMonthlySalesTable(data, totals) {
         pageLength: 25,
         scrollX: true,
         order: [[1, "asc"]],
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
 
         columns: [
 
@@ -404,7 +412,13 @@ function loadMonthlySalesMonthDetails(monthId) {
                 return;
             }
 
-            renderMonthlySalesDetailsTable(res.data.Rows, res.data.Totals);
+            //renderMonthlySalesDetailsTable(res.data.Rows, res.data.Totals);
+
+            showLoader();
+            setTimeout(() => {
+                renderMonthlySalesDetailsTable(res.data.Rows, res.data.Totals);
+                hideLoader();
+            }, 100);
 
         },
         error: function (xhr, status, error) {

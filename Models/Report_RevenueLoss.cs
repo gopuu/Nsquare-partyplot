@@ -5,16 +5,22 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
+        public long? EventTypeId { get; set; }
+        public long? EventSubTypeId { get; set; }
+        public long? LeadSourceId { get; set; }
     }
 
-    public class RevenueLossReportRequest
+    public class RevenueLossReportRequest : BaseClass
     {
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
+        public long? EventTypeId { get; set; }
+        public long? EventSubTypeId { get; set; }
+        public long? LeadSourceId { get; set; }
+
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }
-        public long ActionBy { get; set; }
     }
 
     public class RevenueLossGridModel
@@ -26,6 +32,8 @@
         public string? EventType { get; set; }
         public string? EventSubType { get; set; }
         public string? EventDisplay { get; set; }
-        public decimal EstimatedAmount { get; set; }
+        public string? LeadSource { get; set; }
+        public string? EnquiryDateTime { get; set; }
+        public decimal LossAmount { get; set; }
     }
 }

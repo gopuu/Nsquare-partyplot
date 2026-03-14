@@ -243,6 +243,11 @@ function renderDailySalesTable(data, totals) {
         scrollX: true,
         order: [[1, "asc"]],
 
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         columns: [
             { data: "SrNo", title: "#" },
 

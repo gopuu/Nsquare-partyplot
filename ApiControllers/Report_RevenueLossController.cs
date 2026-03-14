@@ -29,8 +29,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - REVENUE LOSS
-
         [HttpPost]
         [Route("GetRevenueLossGrid")]
         public IActionResult GetRevenueLossGrid([FromBody] RevenueLossGridRequest request)
@@ -43,43 +41,65 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                DataTable dt = new DataTable();
+                DataSet ds = new DataSet();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@LeadSourceId", request.LeadSourceId ?? 0);
 
                     con.Open();
 
                     using SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    da.Fill(dt);
+                    da.Fill(ds);
                 }
 
-                foreach (DataRow row in dt.Rows)
+                if (ds.Tables.Count > 0)
                 {
-                    rows.Add(new RevenueLossGridModel
+                    foreach (DataRow row in ds.Tables[0].Rows)
                     {
-                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        EnquiryDealId = row["EnquiryDealId"] != DBNull.Value ? Convert.ToInt64(row["EnquiryDealId"]) : 0,
-                        EventDate = row["EventDate"] != DBNull.Value ? Convert.ToString(row["EventDate"]) : "-",
-                        GuestName = row["GuestName"] != DBNull.Value ? Convert.ToString(row["GuestName"]) : "-",
-                        EventType = row["EventType"] != DBNull.Value ? Convert.ToString(row["EventType"]) : "-",
-                        EventSubType = row["EventSubType"] != DBNull.Value ? Convert.ToString(row["EventSubType"]) : "-",
-                        EventDisplay = row["EventDisplay"] != DBNull.Value ? Convert.ToString(row["EventDisplay"]) : "-",
-                        EstimatedAmount = row["EstimatedAmount"] != DBNull.Value ? Convert.ToDecimal(row["EstimatedAmount"]) : 0
-                    });
+                        rows.Add(new RevenueLossGridModel
+                        {
+                            SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
+                            EnquiryDealId = row["EnquiryDealId"] != DBNull.Value ? Convert.ToInt64(row["EnquiryDealId"]) : 0,
+                            EventDate = row["EventDate"] != DBNull.Value ? Convert.ToString(row["EventDate"]) : "-",
+                            GuestName = row["GuestName"] != DBNull.Value ? Convert.ToString(row["GuestName"]) : "-",
+                            EventType = row["EventType"] != DBNull.Value ? Convert.ToString(row["EventType"]) : "-",
+                            EventSubType = row["EventSubType"] != DBNull.Value ? Convert.ToString(row["EventSubType"]) : "-",
+                            LeadSource = row["LeadSource"] != DBNull.Value ? Convert.ToString(row["LeadSource"]) : "-",
+                            EventDisplay = row["EventDisplay"] != DBNull.Value ? Convert.ToString(row["EventDisplay"]) : "-",
+                            EnquiryDateTime = row["EnquiryDateTime"] != DBNull.Value ? Convert.ToString(row["EnquiryDateTime"]) : "-",
+                            LossAmount = row["LossAmount"] != DBNull.Value ? Convert.ToDecimal(row["LossAmount"]) : 0
+                        });
+                    }
+                }
+
+                object totals = null;
+                if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
+                {
+                    DataRow t = ds.Tables[1].Rows[0];
+                    totals = new
+                    {
+                        TotalLeadLost = t["TotalLeadLost"] != DBNull.Value ? Convert.ToInt64(t["TotalLeadLost"]) : 0,
+                        TotalLossAmount = t["TotalLossAmount"] != DBNull.Value ? Convert.ToDecimal(t["TotalLossAmount"]) : 0
+                    };
                 }
 
                 apiResponse.message = "Revenue loss report fetched successfully!";
-                apiResponse.data = rows;
+                apiResponse.message = "Revenue loss report fetched successfully!";
+                apiResponse.data = new
+                {
+                    Rows = rows,
+                    Totals = totals
+                };
+                apiResponse.status = "Success";
                 apiResponse.status = "Success";
                 return Ok(apiResponse);
             }
@@ -124,21 +144,20 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report
-                    cmd = new SqlCommand("Report_GetRevenueLoss", con);
+                    cmd = new SqlCommand("Report_GetRevenueLoss_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@LeadSourceId", request.LeadSourceId ?? 0);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -233,9 +252,26 @@ namespace ERPAdmin.ApiControllers
 
                 table.HeaderRows = 1;
 
-                foreach (DataRow row in dataTableDB.Rows)
-                    foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                foreach (DataRow row in dataTableDB.Rows) {
+                    foreach (DataColumn col in dataTableDB.Columns) {
+                        ///table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+
+                        string colName = col.ColumnName.Trim().ToLower();
+                        int align = colName switch
+                        {
+                            "sr. no." => Element.ALIGN_CENTER,
+                            "date" => Element.ALIGN_CENTER,
+                            "guest name" => Element.ALIGN_LEFT,
+                            "event" => Element.ALIGN_LEFT,
+                            "sub-event" => Element.ALIGN_LEFT,
+                            "lead source" => Element.ALIGN_LEFT,
+                            "enquiry datetime" => Element.ALIGN_LEFT,
+                            _ => Element.ALIGN_RIGHT
+                        };
+
+                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                    }
+                }
 
                 // ── Totals row ──
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
@@ -247,7 +283,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         string value = col.ColumnName switch
                         {
-                            "Estimated Amount" => $"{totalRow["TotalEstimatedAmount"]}",
+                            "Loss Amount" => $"{totalRow["TotalLossAmount"]}",
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
 
@@ -255,7 +291,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
                         });
                     }
                 }
@@ -305,21 +343,20 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetRevenueLoss_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@EventTypeId", request.EventTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@EventSubTypeId", request.EventSubTypeId ?? 0);
+                    cmd.Parameters.AddWithValue("@LeadSourceId", request.LeadSourceId ?? 0);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -365,7 +402,7 @@ namespace ERPAdmin.ApiControllers
 
                         string value = columnName switch
                         {
-                            "Estimated Amount" => totalRow["TotalEstimatedAmount"].ToString(),
+                            "Loss Amount" => totalRow["TotalLossAmount"].ToString(),
                             _ => i == 0 ? "TOTAL" : ""
                         };
 
@@ -399,7 +436,5 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
-        #endregion
     }
 }

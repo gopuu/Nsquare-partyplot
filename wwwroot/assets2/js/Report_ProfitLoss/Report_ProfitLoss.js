@@ -167,6 +167,10 @@ function renderProfitLossTable(data) {
         scrollX: true,
         order: [],
 
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         columns: [
             {
                 data: "SrNo",

@@ -766,6 +766,12 @@ function renderExpenseTransactionTable(data) {
         ],
         pageLength: 10,
         ordering: true,
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         searching: true,
         lengthChange: false,
         pagingType: "full_numbers"
@@ -1006,6 +1012,12 @@ function renderIncomeTransactionTable(data) {
         ordering: true,
         searching: true,
         lengthChange: false,
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         pagingType: "full_numbers"
     });
 }

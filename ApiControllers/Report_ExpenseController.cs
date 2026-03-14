@@ -29,8 +29,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - EXPENSE REPORT
-
         [HttpPost]
         [Route("GetExpenseReportGrid")]
         public IActionResult GetExpenseReportGrid([FromBody] ExpenseReportGridRequest request)
@@ -43,51 +41,84 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                DataTable dt = new DataTable();
+                DataSet ds = new DataSet();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
+                    cmd.Parameters.AddWithValue("@VoucherNo",
+                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
+
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
                     cmd.Parameters.AddWithValue("@SubCategoryId", request.SubCategoryId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+
                     cmd.Parameters.AddWithValue("@FromDate",
                         string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
                     cmd.Parameters.AddWithValue("@ToDate",
                         string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     con.Open();
 
                     using SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    da.Fill(dt);
+                    da.Fill(ds);
                 }
 
-                foreach (DataRow row in dt.Rows)
+
+                /* ───────── GRID DATA ───────── */
+                if (ds.Tables.Count > 0)
                 {
-                    rows.Add(new ExpenseReportGridModel
+                    foreach (DataRow row in ds.Tables[0].Rows)
                     {
-                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        TransactionId = row["TransactionId"] != DBNull.Value ? Convert.ToInt64(row["TransactionId"]) : 0,
-                        TransactionDate = row["TransactionDate"] != DBNull.Value ? Convert.ToString(row["TransactionDate"]) : "-",
-                        AccountName = row["AccountName"] != DBNull.Value ? Convert.ToString(row["AccountName"]) : "-",
-                        CategoryName = row["CategoryName"] != DBNull.Value ? Convert.ToString(row["CategoryName"]) : "-",
-                        CategoryId = row["CategoryId"] != DBNull.Value ? Convert.ToInt64(row["CategoryId"]) : 0,
-                        SubCategoryName = row["SubCategoryName"] != DBNull.Value ? Convert.ToString(row["SubCategoryName"]) : "-",
-                        SubCategoryId = row["SubCategoryId"] != DBNull.Value ? Convert.ToInt64(row["SubCategoryId"]) : 0,
-                        PaymentModeName = row["PaymentModeName"] != DBNull.Value ? Convert.ToString(row["PaymentModeName"]) : "-",
-                        Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0,
-                        Notes = row["Notes"] != DBNull.Value ? Convert.ToString(row["Notes"]) : "-"
-                    });
+                        rows.Add(new ExpenseReportGridModel
+                        {
+                            SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
+                            TransactionId = row["TransactionId"] != DBNull.Value ? Convert.ToInt64(row["TransactionId"]) : 0,
+                            VoucherNo = row["VoucherNo"] != DBNull.Value ? Convert.ToString(row["VoucherNo"]) : "",
+                            TransactionDate = row["TransactionDate"] != DBNull.Value ? Convert.ToString(row["TransactionDate"]) : "-",
+                            AccountName = row["Account"] != DBNull.Value ? Convert.ToString(row["Account"]) : "-",
+                            CategoryName = row["Category"] != DBNull.Value ? Convert.ToString(row["Category"]) : "-",
+                            CategoryId = row["CategoryId"] != DBNull.Value ? Convert.ToInt64(row["CategoryId"]) : 0,
+                            SubCategoryName = row["SubCategoryName"] != DBNull.Value ? Convert.ToString(row["SubCategoryName"]) : "-",
+                            SubCategoryId = row["SubCategoryId"] != DBNull.Value ? Convert.ToInt64(row["SubCategoryId"]) : 0,
+                            PaymentModeName = row["PaymentModeName"] != DBNull.Value ? Convert.ToString(row["PaymentModeName"]) : "-",
+                            Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0,
+                            Notes = row["Notes"] != DBNull.Value ? Convert.ToString(row["Notes"]) : "-"
+                        });
+                    }
                 }
+
+
+                /* ───────── TOTALS ───────── */
+                object totals = null;
+
+                if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
+                {
+                    DataRow t = ds.Tables[1].Rows[0];
+
+                    totals = new
+                    {
+                        TotalTransactions = t["TotalTransactions"] != DBNull.Value ? Convert.ToInt64(t["TotalTransactions"]) : 0,
+                        TotalAmount = t["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(t["TotalAmount"]) : 0
+                    };
+                }
+
 
                 apiResponse.message = "Expense report fetched successfully!";
-                apiResponse.data = rows;
+                apiResponse.data = new
+                {
+                    Rows = rows,
+                    Totals = totals
+                };
                 apiResponse.status = "Success";
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -100,8 +131,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadExpenseReport")]
-        public IActionResult DownloadExpenseReport([FromBody] ExpenseReportRequest request)
+        [Route("DownloadExpenseReport_Pdf")]
+        public IActionResult DownloadExpenseReport_Pdf([FromBody] ExpenseReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -131,7 +162,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report
-                    cmd = new SqlCommand("Report_GetExpenseDetail", con);
+                    cmd = new SqlCommand("Report_GetExpenseDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
@@ -149,6 +180,8 @@ namespace ERPAdmin.ApiControllers
                         string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@VoucherNo",
+                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -243,9 +276,27 @@ namespace ERPAdmin.ApiControllers
 
                 table.HeaderRows = 1;
 
-                foreach (DataRow row in dataTableDB.Rows)
-                    foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                foreach (DataRow row in dataTableDB.Rows) {
+                    foreach (DataColumn col in dataTableDB.Columns) {
+                        //table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                        string colName = col.ColumnName.Trim().ToLower();
+                        int align = colName switch
+                        {
+                            "sr. no." => Element.ALIGN_CENTER,
+                            "voucher no" => Element.ALIGN_CENTER,
+                            "date" => Element.ALIGN_CENTER,
+                            "account" => Element.ALIGN_CENTER,
+                            "category" => Element.ALIGN_CENTER,
+                            "sub-category" => Element.ALIGN_CENTER,
+                            "payment mode" => Element.ALIGN_CENTER,
+                            "notes" => Element.ALIGN_LEFT,
+                            _ => Element.ALIGN_RIGHT
+                        };
+
+                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+
+                    }
+                }
 
                 // ── Totals row ──
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
@@ -265,7 +316,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
                         });
                     }
                 }
@@ -315,7 +368,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetExpenseDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
@@ -413,6 +466,5 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        #endregion
     }
 }

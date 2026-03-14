@@ -8,6 +8,8 @@
 
     { key: "Client_Email", label: "Email", visible: true },
 
+    { key: "InvoiceNo", label: "Invoice No", visible: true },
+
     { key: "EventDate", label: "Event Date", visible: true },
 
     { key: "EventTypeName", label: "Event Type", visible: true },
@@ -24,13 +26,14 @@
 
     { key: "DealAmount", label: "Deal Amount", visible: true },
 
+    { key: "TotalAmount", label: "Total Amount", visible: true },
+
     { key: "Discount", label: "Discount", visible: true },
 
     { key: "Tax", label: "Tax", visible: true },
 
-    { key: "InvoiceAmount", label: "Invoice Amount", visible: true },
+    { key: "InvoiceAmount", label: "Invoice Amount", visible: true }
 
-    { key: "InvoiceNo", label: "Invoice No", visible: true }
 
 ];
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
@@ -238,69 +241,20 @@ function renderBookingTable(data) {
         pageLength: 25,
         scrollX: true,
         order: [[1, "desc"]],
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         columns: [
-
-            { data: "SrNo", title: "#", visible: true },
-
-            { data: "Client_Name", title: "Client Name" },
-
-            {
-                data: "Client_Contact",
-                title: "Contact",
-                className: "text-center"
-            },
-
-            { data: "Client_Email", title: "Email" },
-
-
-            { data: "EventDate", title: "Event Date" },
-
-            //{ data: "EventTypeName", title: "Event Type" },
-
-            //{ data: "EventSubTypeName", title: "Event Sub Type" },
-
-            { data: "EventDisplay", title: "Event" },
-
-            { data: "HallName", title: "Hall Name" },
-
-            {
-                data: "Pax",
-                title: "Pax",
-                className: "text-center"
-            },
-
-            { data: "Package", title: "Package" },
-
-            {
-                data: "InvoiceAmount",
-                title: "Invoice Amount",
-                className: "text-end",
-                render: d => formatINR2(d)
-            },
-
-            {
-                data: "DealAmount",
-                title: "Deal Amount",
-                className: "text-end",
-                render: d => formatINR2(d)
-            },
-
-            {
-                data: "Discount",
-                title: "Discount",
-                className: "text-end",
-                render: d => formatINR2(d)
-            },
-
-            {
-                data: "Tax",
-                title: "Tax",
-                className: "text-end",
-                render: d => formatINR2(d)
-            },
+            { data: "BookingId", name: "BookingId", title: "#BRN" },
+            { data: "Client_Name", name: "Client_Name", title: "Client Name" },
+            { data: "Client_Contact", name: "Client_Contact", title: "Contact", className: "text-center" },
 
             {
                 data: "InvoiceNo",
+                name: "InvoiceNo",
                 title: "Invoice No",
                 className: "text-center",
                 render: function (data) {
@@ -308,10 +262,50 @@ function renderBookingTable(data) {
                 }
             },
 
-            // Hidden columns (for actions / references)
-            { data: "BookingId", visible: false }
+            { data: "EventDate", name: "EventDate", title: "Event Date" },
+            { data: "EventDisplay", name: "EventDisplay", title: "Event" },
+            { data: "HallName", name: "HallName", title: "Hall Name" },
 
-        ]        
+            { data: "Pax", name: "Pax", title: "Pax", className: "text-center" },
+
+            { data: "Package", name: "Package", title: "Package" },
+
+            { data: "InvoiceAmount", name: "InvoiceAmount", title: "Invoice Amount", className: "text-end", render: d => formatINR2(d) },
+
+            { data: "DealAmount", name: "DealAmount", title: "Deal Amount", className: "text-end", render: d => formatINR2(d) },
+
+            { data: "Discount", name: "Discount", title: "Discount", className: "text-end", render: d => formatINR2(d) },
+
+            { data: "Tax", name: "Tax", title: "Tax", className: "text-end", render: d => formatINR2(d) },
+
+            { data: "TotalAmount", name: "TotalAmount", title: "Total", className: "text-end", render: d => formatINR2(d) },
+        ],
+
+        footerCallback: function (row, data, start, end, display) {
+
+            const api = this.api();
+
+            function sumByField(field) {
+                return api
+                    .column(`${field}:name`)
+                    .data()
+                    .reduce((a, b) => (parseFloat(a) || 0) + (parseFloat(b) || 0), 0);
+            }
+
+            const pax = sumByField('Pax');
+            const invoice = sumByField('InvoiceAmount');
+            const deal = sumByField('DealAmount');
+            const discount = sumByField('Discount');
+            const tax = sumByField('Tax');
+            const total = sumByField('TotalAmount');
+
+            $(api.column('Pax:name').footer()).html(pax);
+            $(api.column('InvoiceAmount:name').footer()).html(formatINR2(invoice));
+            $(api.column('DealAmount:name').footer()).html(formatINR2(deal));
+            $(api.column('Discount:name').footer()).html(formatINR2(discount));
+            $(api.column('Tax:name').footer()).html(formatINR2(tax));
+            $(api.column('TotalAmount:name').footer()).html(formatINR2(total));
+        }
     });
 }
 

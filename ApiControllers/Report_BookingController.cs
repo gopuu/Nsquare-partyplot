@@ -82,6 +82,7 @@ namespace ERPAdmin.ApiControllers
                         DealAmount = Convert.ToDecimal(row["DealAmount"]),
                         Discount = Convert.ToDecimal(row["Discount"]),
                         Tax = Convert.ToDecimal(row["Tax"]),
+                        TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
 
                         BookingId = Convert.ToInt64(row["BookingId"]),
                         Client_Name = Convert.ToString(row["Client_Name"]),
@@ -109,7 +110,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        #region REPORT 1 - Booking REPORT
         [HttpPost]
         [Route("DownloadBookingReport")]
         public IActionResult DownloadBookingReport([FromBody] BookingReportRequest request)
@@ -544,7 +544,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-        #endregion
 
     }
 }
