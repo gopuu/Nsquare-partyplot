@@ -1,67 +1,27 @@
-﻿let selectedMonthDuration = "thismonth";
+﻿//let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "profitLossPrintWithHeader";
+
+let selectedYearId = null;
+let selectedYear = new Date().getFullYear();
+let selectedMonthFrom = null;
+let selectedMonthTo = null;
+
+let selectedMonthId = null;
 
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", function () {
 
-    setCurrentMonthDates();
-    loadProfitLossGrid();
+    populateYearDropdown();
 
-    /* ── Quick range ── */
+    /* ── Quick Year Range ── */
     $("#quickRange").on("change", function () {
-
-        const newFilter = $(this).val();
-        if (selectedMonthDuration === newFilter) return;
-        selectedMonthDuration = newFilter;
-
-        if (selectedMonthDuration === "customrange") return;
-
-        const today = new Date();
-        let fromDate, toDate;
-
-        switch (selectedMonthDuration) {
-            case "thismonth":
-                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                break;
-            case "lastmonth":
-                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
-                break;
-            case "thisyear":
-                fromDate = new Date(today.getFullYear(), 0, 1);
-                toDate = new Date(today.getFullYear(), 11, 31);
-                break;
-            case "lastyear":
-                fromDate = new Date(today.getFullYear() - 1, 0, 1);
-                toDate = new Date(today.getFullYear() - 1, 11, 31);
-                break;
-            case "days":
-                fromDate = new Date(today);
-                fromDate.setDate(today.getDate() - 6);
-                toDate = today;
-                break;
-            case "lastdays":
-                fromDate = new Date(today);
-                fromDate.setDate(today.getDate() - 29);
-                toDate = today;
-                break;
-            case "yesterday":
-                fromDate = new Date(today);
-                fromDate.setDate(today.getDate() - 1);
-                toDate = new Date(fromDate);
-                break;
-            case "12months":
-                fromDate = new Date(today);
-                fromDate.setMonth(today.getMonth() - 12);
-                toDate = today;
-                break;
-        }
-
-        $("#fromDate").val(formatDate2(fromDate));
-        $("#toDate").val(formatDate2(toDate));
+        selectedYearId = $(this).val();
+        selectedYear = $("#quickRange option:selected").data("year");
+        fetchMonthData(selectedYearId);
+    });
+    $("#quickRange_MonthFrom, #quickRange_MonthTo").on("change", function () {
         loadProfitLossGrid();
     });
 
@@ -83,8 +43,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $("#btnResetFilter").on("click", function () {
         $("#quickRange").val("thismonth");
-        selectedMonthDuration = "thismonth";
-        setCurrentMonthDates();
+        $("#quickRange_MonthFrom").val("0");
+        $("#quickRange_MonthTo").val("0");
+
+        selectedMonthFrom = null;
+        selectedMonthTo = null;
         loadProfitLossGrid();
     });
 
@@ -98,16 +61,114 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+/* =========================
+   LOAD YEAR DROPDOWN
+========================= */
+function populateYearDropdown() {
+    $.ajax({
+        url: "/api/YearMaster/GetYearList",
+        type: "GET",
+        contentType: "application/json",
+        success: function (res) {
+            if (res.status === "Success") {
+                const years = res.data || [];
+                let dropdown = $("#quickRange");
+
+                dropdown.empty();
+                console.log("years:", years);
+
+                years.forEach(y => {
+                    let option = $("<option>");
+
+                    option.val(y.Id);
+                    option.attr("data-year", y.YearName);
+
+                    if (parseInt(y.YearName) === selectedYear) {
+                        option.prop("selected", true);
+                        selectedYearId = y.Id;
+                        option.text(y.YearName + " (This Year)");
+                    }
+                    else {
+                        option.text(y.YearName);
+                    }
+                    dropdown.append(option);
+                });
+                // Fetch months for current year
+                fetchMonthData(selectedYearId);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching years");
+        }
+    });
+}
+
+/* =========================
+   LOAD MONTHS
+========================= */
+function fetchMonthData(yearId) {
+    var payload = { YearId: parseInt(yearId), MonthId: 0 };
+    console.log("month list payload:", payload);
+
+    $.ajax({
+        url: "/api/MonthMaster/GetMonthList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            if (res.status === "Success") {
+                const months = res.data || [];
+                console.log("months:", months);
+                let fromDropdown = $("#quickRange_MonthFrom");
+                let toDropdown = $("#quickRange_MonthTo");
+
+                fromDropdown.empty();
+                toDropdown.empty();
+
+                fromDropdown.append(`<option value="0">Select</option>`);
+                toDropdown.append(`<option value="0">Select</option>`);
+
+                months.forEach(m => {
+
+                    let option1 = $("<option>");
+                    option1.val(m.MonthId);
+                    option1.text(m.MonthName);
+
+                    let option2 = $("<option>");
+                    option2.val(m.MonthId);
+                    option2.text(m.MonthName);
+
+                    fromDropdown.append(option1);
+                    toDropdown.append(option2);
+
+                });
+
+                // Load grid with current year
+                loadProfitLossGrid();
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching months");
+        }
+    });
+}
+
 /* ═══════════════════════════════════════════════════
    LOAD GRID
 ═══════════════════════════════════════════════════ */
 function loadProfitLossGrid() {
+    selectedYearId = Number($("#quickRange").val() || 0);
+    selectedMonthFrom = Number($("#quickRange_MonthFrom").val() || 0);
+    selectedMonthTo = Number($("#quickRange_MonthTo").val() || 0);
 
     const payload = {
-        FromDate: $("#fromDate").val() || null,
-        ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration
+        YearId: selectedYearId,
+        Year: selectedYear,
+        MonthId_From: selectedMonthFrom,
+        MonthId_To: selectedMonthTo
     };
+
+    console.log("payload:", payload);
 
     $("#tableMain").html(`
         <div class="text-center py-5 text-muted">
@@ -143,7 +204,7 @@ function loadProfitLossGrid() {
             renderSummaryCards(res.data.Summary);
         },
         error: function (xhr, status, error) {
-            console.error("Fetch P&L Data Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Fetch P&L Data Failed");
             $("#tableMain").html(`<div class="alert alert-danger">Failed to load data. Please try again.</div>`);
         }
     });
@@ -263,87 +324,6 @@ function renderProfitLossTable(data) {
 /* ═══════════════════════════════════════════════════
    RENDER SUMMARY CARDS
 ═══════════════════════════════════════════════════ */
-function renderSummaryCards2(summary) {
-
-    if (!summary) return;
-
-    const netProfit = parseFloat(summary.NetProfit) || 0;
-    const grossProfit = parseFloat(summary.GrossProfit) || 0;
-
-    const cards = [
-        {
-            label: "Total Sales",
-            value: summary.TotalSales,
-            icon: "fa-file-invoice-dollar",
-            color: "success",
-            light: "success"
-        },
-        {
-            label: "Other Income",
-            value: summary.TotalOtherIncome,
-            icon: "fa-circle-plus",
-            color: "info",
-            light: "info"
-        },
-        {
-            label: "Total Purchase",
-            value: summary.TotalPurchase,
-            icon: "fa-cart-shopping",
-            color: "danger",
-            light: "danger"
-        },
-        {
-            label: "Total Expense",
-            value: summary.TotalExpense,
-            icon: "fa-money-bill-wave",
-            color: "warning",
-            light: "warning"
-        },
-        {
-            label: "Gross Profit",
-            value: summary.GrossProfit,
-            icon: "fa-chart-line",
-            color: grossProfit >= 0 ? "success" : "danger",
-            light: grossProfit >= 0 ? "success" : "danger"
-        }
-    ];
-
-    let cardsHtml = "";
-    cards.forEach(c => {
-        const formatted = formatINR2(parseFloat(c.value) || 0);
-        cardsHtml += `
-        <div class="col-md-4 col-lg">
-            <div class="card border-${c.light} h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-${c.light} bg-opacity-10 p-3 flex-shrink-0">
-                        <i class="fa ${c.icon} text-${c.color} fa-lg"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">${c.label}</div>
-                        <div class="fw-bold fs-6 text-${c.color}">${formatted}</div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    });
-
-    $("#plSummaryCards").html(cardsHtml);
-
-    // Net Profit banner
-    const bannerCls = netProfit >= 0 ? "bg-success" : "bg-danger";
-    const bannerIcon = netProfit >= 0 ? "fa-trophy" : "fa-triangle-exclamation";
-    const bannerText = netProfit >= 0 ? "Net Profit" : "Net Loss";
-
-    $("#netProfitBanner").html(`
-        <span class="badge ${bannerCls} fs-5 px-4 py-3 rounded-3">
-            <i class="fa ${bannerIcon} me-2"></i>
-            ${bannerText}: ${formatINR2(Math.abs(netProfit))}
-        </span>
-    `).show();
-
-    $("#plSummarySection").show();
-}
-
 function renderSummaryCards(summary) {
     if (!summary) return;
 
@@ -471,16 +451,17 @@ function ViewProfitLossReport(actionName) {
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
     const payload = {
-        FromDate: $("#fromDate").val() || null,
-        ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration,
+        YearId: selectedYearId,
+        Year: selectedYear,
+        MonthId_From: selectedMonthFrom,
+        MonthId_To: selectedMonthTo,
         WithHeader: withHeader,
         ActionBy: userId
     };
 
     const url = actionName === "downloadExcel"
         ? "/api/Report_ProfitLoss/DownloadProfitLossReport_Excel"
-        : "/api/Report_ProfitLoss/DownloadProfitLossReport";
+        : "/api/Report_ProfitLoss/DownloadProfitLossReport_Pdf";
 
     showTempLoader("Generating P&L Report...");
 
@@ -509,19 +490,10 @@ function ViewProfitLossReport(actionName) {
         },
         error: function (xhr, status, error) {
             Swal.close();
-            console.error("Download P&L Report Failed", xhr, status, error);
+            handleApiError(xhr, status, error, "Download P&L Report Failed");
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         }
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════ */
-function setCurrentMonthDates() {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    $("#fromDate").val(formatDate2(firstDay));
-    $("#toDate").val(formatDate2(lastDay));
-}
+

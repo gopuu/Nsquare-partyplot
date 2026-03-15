@@ -884,8 +884,8 @@ function loadAccountDropdown(selectedId = "") {
                 response.data.forEach(item => {
                     dropdown.append(
                         `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
-                                ${item.AccountName} (${item.AccountType})
-                            </option>`
+                                ${item.AccountName}
+                        </option>`
                     );
                 });
             }

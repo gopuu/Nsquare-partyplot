@@ -52,7 +52,7 @@ namespace ERPAdmin.ApiControllers
                         Status = Convert.ToString(row["Status"]),
                         Remarks = Convert.ToString(row["Remarks"]),
                         ActionBy = Convert.ToInt64(row["ActionBy"]),
-                        ActionDate = Convert.ToDateTime(row["ActionDate"])
+                        ActionDate = Convert.ToString(row["ActionDate"])
                     });
                 }
 

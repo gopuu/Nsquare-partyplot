@@ -29,11 +29,9 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - PROFIT & LOSS
-
         [HttpPost]
         [Route("GetProfitLossGrid")]
-        public IActionResult GetProfitLossGrid([FromBody] ProfitLossReportRequest request)
+        public IActionResult GetProfitLossGrid([FromBody] ProfitLossGridRequest request)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -49,12 +47,17 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@YearId",
+                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
+
+                    cmd.Parameters.AddWithValue("@Year",
+                        request.Year == 0 ? (object)DBNull.Value : request.Year);
+
+                    cmd.Parameters.AddWithValue("@MonthId_From",
+                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
+
+                    cmd.Parameters.AddWithValue("@MonthId_To",
+                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
@@ -67,6 +70,7 @@ namespace ERPAdmin.ApiControllers
                 DataTable dtSummary = ds.Tables[1];
 
                 var lineItems = new List<ProfitLossLineItem>();
+
                 foreach (DataRow row in dtLines.Rows)
                 {
                     lineItems.Add(new ProfitLossLineItem
@@ -80,9 +84,11 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 var summary = new ProfitLossSummary();
+
                 if (dtSummary.Rows.Count > 0)
                 {
                     DataRow s = dtSummary.Rows[0];
+
                     summary.TotalSales = s["TotalSales"] != DBNull.Value ? Convert.ToDecimal(s["TotalSales"]) : 0;
                     summary.TotalPurchase = s["TotalPurchase"] != DBNull.Value ? Convert.ToDecimal(s["TotalPurchase"]) : 0;
                     summary.TotalOtherIncome = s["TotalOtherIncome"] != DBNull.Value ? Convert.ToDecimal(s["TotalOtherIncome"]) : 0;
@@ -92,8 +98,13 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 apiResponse.message = "P&L report fetched successfully!";
-                apiResponse.data = new ProfitLossGridResponse { LineItems = lineItems, Summary = summary };
+                apiResponse.data = new ProfitLossGridResponse
+                {
+                    LineItems = lineItems,
+                    Summary = summary
+                };
                 apiResponse.status = "Success";
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -106,8 +117,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadProfitLossReport")]
-        public IActionResult DownloadProfitLossReport([FromBody] ProfitLossReportRequest request)
+        [Route("DownloadProfitLossReport_Pdf")]
+        public IActionResult DownloadProfitLossReport_Pdf([FromBody] ProfitLossReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -119,7 +130,7 @@ namespace ERPAdmin.ApiControllers
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
 
                 using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);  // Portrait for P&L
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
 
@@ -130,31 +141,45 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
+                    /* ── Company Header ── */
+
                     SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                    cmd = new SqlCommand("Report_GetProfitLossDetail", con);
+
+                    /* ── P&L REPORT ── */
+
+                    cmd = new SqlCommand("Report_GetProfitLossDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    cmd.Parameters.AddWithValue("@YearId",
+                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
+
+                    cmd.Parameters.AddWithValue("@Year",
+                        request.Year == 0 ? (object)DBNull.Value : request.Year);
+
+                    cmd.Parameters.AddWithValue("@MonthId_From",
+                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
+
+                    cmd.Parameters.AddWithValue("@MonthId_To",
+                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
-                // ── Company info ──
-                string companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
+
+                /* ── Company info ── */
+
+                string companyName = "", companyAddress = "",
+                       companyphoneNo = "", logoFile = "", userName = "";
+
                 Image logo = null;
 
                 if (request.WithHeader ?? false)
                 {
-                    if (dtCompany != null && dtCompany.Rows.Count > 0)
+                    if (dtCompany.Rows.Count > 0)
                     {
                         companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
@@ -175,18 +200,23 @@ namespace ERPAdmin.ApiControllers
                     }
                 }
 
+
                 if (dsReport.Tables.Count < 3)
                     throw new Exception("Report data is incomplete.");
+
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
                 DataTable summaryTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
+
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                // ── Page header ──
+
+                /* ── Page header ── */
+
                 if (request.WithHeader ?? false)
                 {
                     PdfPTable headerTable = new PdfPTable(2);
@@ -195,6 +225,7 @@ namespace ERPAdmin.ApiControllers
 
                     PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
                     if (logo != null) logo.ScaleToFit(70f, 70f);
+
                     logoCell.Border = Rectangle.BOTTOM_BORDER;
                     logoCell.Padding = 10;
                     headerTable.AddCell(logoCell);
@@ -205,30 +236,37 @@ namespace ERPAdmin.ApiControllers
                         Padding = 10,
                         HorizontalAlignment = Element.ALIGN_CENTER
                     };
+
                     detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
                     detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
                     detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
                     headerTable.AddCell(detailCell);
                     document.Add(headerTable);
                 }
 
-                // ── Report title ──
+
+                /* ── Report Title ── */
+
                 document.Add(new Paragraph(reportName.ToUpper(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK))
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
                 {
                     Alignment = Element.ALIGN_CENTER,
                     SpacingAfter = 18f
                 });
 
-                // ── Line items table ──
+
+                /* ── Data Table ── */
+
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
-                Font boldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+
                 BaseColor thColor = new BaseColor(0, 121, 182);
-                BaseColor creditBg = new BaseColor(232, 245, 233);   // light green
-                BaseColor debitBg = new BaseColor(255, 235, 238);   // light red
+                BaseColor creditBg = new BaseColor(232, 245, 233);
+                BaseColor debitBg = new BaseColor(255, 235, 238);
 
                 int columnCount = dataTableDB.Columns.Count;
+
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
                 table.SetWidths(new float[] { 8f, 18f, 38f, 22f, 14f });
@@ -255,94 +293,58 @@ namespace ERPAdmin.ApiControllers
                                 ? Element.ALIGN_RIGHT
                                 : Element.ALIGN_LEFT
                         };
+
                         table.AddCell(cell);
                     }
                 }
 
                 document.Add(table);
 
-                // ── P&L Summary box ──
+
+                /* ── SUMMARY ── */
+
                 if (summaryTableDB != null && summaryTableDB.Rows.Count > 0)
                 {
                     DataRow s = summaryTableDB.Rows[0];
 
-                    decimal totalSales = s["TotalSales"] != DBNull.Value ? Convert.ToDecimal(s["TotalSales"]) : 0;
-                    decimal totalPurchase = s["TotalPurchase"] != DBNull.Value ? Convert.ToDecimal(s["TotalPurchase"]) : 0;
-                    decimal totalOtherIncome = s["TotalOtherIncome"] != DBNull.Value ? Convert.ToDecimal(s["TotalOtherIncome"]) : 0;
-                    decimal totalExpense = s["TotalExpense"] != DBNull.Value ? Convert.ToDecimal(s["TotalExpense"]) : 0;
-                    decimal grossProfit = s["GrossProfit"] != DBNull.Value ? Convert.ToDecimal(s["GrossProfit"]) : 0;
-                    decimal netProfit = s["NetProfit"] != DBNull.Value ? Convert.ToDecimal(s["NetProfit"]) : 0;
+                    decimal totalSales = Convert.ToDecimal(s["TotalSales"]);
+                    decimal totalPurchase = Convert.ToDecimal(s["TotalPurchase"]);
+                    decimal totalOtherIncome = Convert.ToDecimal(s["TotalOtherIncome"]);
+                    decimal totalExpense = Convert.ToDecimal(s["TotalExpense"]);
+                    decimal grossProfit = Convert.ToDecimal(s["GrossProfit"]);
+                    decimal netProfit = Convert.ToDecimal(s["NetProfit"]);
 
                     document.Add(new Paragraph(" ") { SpacingAfter = 10f });
 
                     PdfPTable summaryTable = new PdfPTable(2);
                     summaryTable.WidthPercentage = 55;
                     summaryTable.HorizontalAlignment = Element.ALIGN_RIGHT;
-                    summaryTable.SetWidths(new float[] { 60f, 40f });
 
-                    BaseColor summaryHeaderBg = new BaseColor(33, 37, 41);
-                    Font summaryHeaderFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                    Font summaryLabelFont = new Font(Font.FontFamily.HELVETICA, 9);
-                    Font summaryValueFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD);
-
-                    // Helper to add a summary row
-                    void AddSummaryRow(string label, decimal value, BaseColor? bg = null, bool isTotal = false)
+                    void AddSummary(string label, decimal value)
                     {
-                        Font lf = isTotal ? boldFont : summaryLabelFont;
-                        Font vf = isTotal ? new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD,
-                                      value >= 0 ? new BaseColor(27, 94, 32) : new BaseColor(183, 28, 28))
-                                          : summaryValueFont;
-
-                        PdfPCell lCell = new PdfPCell(new Phrase(label, lf))
+                        summaryTable.AddCell(new PdfPCell(new Phrase(label)) { Padding = 6 });
+                        summaryTable.AddCell(new PdfPCell(new Phrase(value.ToString("N2")))
                         {
-                            BackgroundColor = bg ?? BaseColor.WHITE,
-                            Padding = 6,
-                            HorizontalAlignment = Element.ALIGN_LEFT
-                        };
-                        PdfPCell vCell = new PdfPCell(new Phrase(value.ToString("N2"), vf))
-                        {
-                            BackgroundColor = bg ?? BaseColor.WHITE,
                             Padding = 6,
                             HorizontalAlignment = Element.ALIGN_RIGHT
-                        };
-                        summaryTable.AddCell(lCell);
-                        summaryTable.AddCell(vCell);
+                        });
                     }
 
-                    // Header row
-                    PdfPCell hCell = new PdfPCell(new Phrase("P & L SUMMARY", summaryHeaderFont))
-                    {
-                        Colspan = 2,
-                        BackgroundColor = summaryHeaderBg,
-                        Padding = 8,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
-                    summaryTable.AddCell(hCell);
-
-                    AddSummaryRow("Total Sales", totalSales, new BaseColor(232, 245, 233));
-                    AddSummaryRow("Total Other Income", totalOtherIncome, new BaseColor(232, 245, 233));
-                    AddSummaryRow("Total Purchase", totalPurchase, new BaseColor(255, 235, 238));
-                    AddSummaryRow("Total Expense", totalExpense, new BaseColor(255, 235, 238));
-
-                    // Divider
-                    PdfPCell divider = new PdfPCell(new Phrase(" "))
-                    {
-                        Colspan = 2,
-                        BackgroundColor = new BaseColor(200, 200, 200),
-                        FixedHeight = 1f,
-                        Border = Rectangle.NO_BORDER
-                    };
-                    summaryTable.AddCell(divider);
-
-                    AddSummaryRow("Gross Profit", grossProfit, new BaseColor(240, 240, 240), isTotal: true);
-                    AddSummaryRow("Net Profit", netProfit, new BaseColor(240, 240, 240), isTotal: true);
+                    AddSummary("Total Sales", totalSales);
+                    AddSummary("Total Other Income", totalOtherIncome);
+                    AddSummary("Total Purchase", totalPurchase);
+                    AddSummary("Total Expense", totalExpense);
+                    AddSummary("Gross Profit", grossProfit);
+                    AddSummary("Net Profit", netProfit);
 
                     document.Add(summaryTable);
                 }
 
                 document.Close();
 
-                // ── Save ──
+
+                /* ── Save file ── */
+
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
@@ -354,9 +356,11 @@ namespace ERPAdmin.ApiControllers
                 using (FileStream fs = new FileStream(filePath, FileMode.Create))
                     stream.WriteTo(fs);
 
+
                 response.status = "Success";
                 response.message = "Report Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -384,14 +388,25 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    /* ── P&L REPORT ── */
+
+                    cmd = new SqlCommand("Report_GetProfitLossDetail_PdfExcel", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@YearId",
+                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
+
+                    cmd.Parameters.AddWithValue("@Year",
+                        request.Year == 0 ? (object)DBNull.Value : request.Year);
+
+                    cmd.Parameters.AddWithValue("@MonthId_From",
+                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
+
+                    cmd.Parameters.AddWithValue("@MonthId_To",
+                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -516,6 +531,5 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        #endregion
     }
 }

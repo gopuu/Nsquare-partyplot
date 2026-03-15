@@ -7,7 +7,7 @@
         public string? Status { get; set; }
         public string? Remarks { get; set; }
         public long ActionBy { get; set; }
-        public DateTime ActionDate
+        public string? ActionDate
         {
             get; set;
         }

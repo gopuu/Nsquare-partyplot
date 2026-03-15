@@ -121,7 +121,7 @@
         public long StepId { get; set; }
         public long? OptionId { get; set; }
         public string TextResponse { get; set; }
-        public DateTime Created_At { get; set; }
+        public string? Created_At { get; set; }
     }
 
 

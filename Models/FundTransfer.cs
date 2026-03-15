@@ -9,7 +9,8 @@
         public string? ToAccountName { get; set; }
 
         public decimal Amount { get; set; }
-        public DateOnly TransferDate { get; set; }
+        public string? TransferDate { get; set; }
+        public string? TransferDate_Format { get; set; }
         public string? ReferenceNo { get; set; }
         public string? Notes { get; set; }
     }
@@ -18,8 +19,23 @@
         public long Id { get; set; } = 0;
         public long FromAccountId { get; set; } = 0;
         public long ToAccountId { get; set; } = 0;
-        public DateTime? FromDate { get; set; }
-        public DateTime? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public decimal? Amount { get; set; }
+    }
+
+    public class FundTransferReportRequest : BaseClass
+    {
+        public long Id { get; set; } = 0;
+        public long FromAccountId { get; set; } = 0;
+        public long ToAccountId { get; set; } = 0;
+        public string? FilterDuration { get; set; }
+        public List<string>? Columns { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public bool? WithHeader { get; set; }
+        public decimal? Amount { get; set; }
     }
 
     public class SaveFundTransferRequest : BaseClass

@@ -9,7 +9,7 @@
         public string? FilePath { get; set; }
         public string? TicketDisplay { get; set; }
         public long ActionBy { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public string? CreatedDate { get; set; }
     }
 
     public class GetSupportTicketAttachmentRequest

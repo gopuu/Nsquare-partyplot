@@ -6183,23 +6183,23 @@ function loadAccountDropdown() {
             //console.log("GetAccount res:", res);
 
             const ddl = $("#PaymentModal_AccountId, #PaymentDetails_AccountId, #invoicePayment_Account");
-            ddl.empty().append('<option value="0">--Select--</option>');
+            ddl.empty().append('<option value="0">-- Select Account --</option>');
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
 
                     const accountName = (acc.AccountName || "").trim();
-                    const holderName = (acc.AccountHolderName || "").trim();
+                    //const holderName = (acc.AccountHolderName || "").trim();
 
-                    let holderDisplay = "";
+                    //let holderDisplay = "";
 
-                    if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
-                        holderDisplay = ` (${holderName})`;
-                    }
+                    //if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
+                    //    holderDisplay = ` (${holderName})`;
+                    //}
 
                     ddl.append(`
                         <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
-                            ${accountName}${holderDisplay}
+                            ${accountName} //${holderDisplay}
                         </option>
                     `);
                 });

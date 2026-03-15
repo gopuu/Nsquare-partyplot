@@ -59,7 +59,7 @@ namespace ERPAdmin.ApiControllers
                         AssignedByName = row["AssignedByName"].ToString(),
                         AssignedTo = Convert.ToInt64(row["AssignedTo"]),
                         AssignedBy = Convert.ToInt64(row["AssignedBy"]),
-                        AssignedOn = Convert.ToDateTime(row["AssignedOn"]),
+                        AssignedOn = Convert.ToString(row["AssignedOn"]),
                         IsActive = Convert.ToBoolean(row["IsActive"])
                     });
                 }

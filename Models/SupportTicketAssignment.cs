@@ -6,7 +6,7 @@
         public long TicketId { get; set; }
         public long AssignedTo { get; set; }
         public long AssignedBy { get; set; }
-        public DateTime AssignedOn { get; set; }
+        public string? AssignedOn { get; set; }
         public bool IsActive { get; set; }
     }
     public class GetSupportTicketAssignmentRequest
@@ -41,7 +41,7 @@
         public string? AssignedToName { get; set; }
         public string? AssignedByName { get; set; }
         public string? TicketNumber { get; set; }
-        public DateTime AssignedOn { get; set; }
+        public string? AssignedOn { get; set; }
         public bool IsActive { get; set; }
     }
 

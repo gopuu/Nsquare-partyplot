@@ -96,28 +96,25 @@
 
     <div class="filter-body">
 
+        <!-- YEAR -->
         <div class="mb-3">
-            <label class="form-label">Duration</label>
-            <select id="quickRange" class="form-select form-select-sm">
-                <option value="thismonth">This Month</option>
-                <option value="lastmonth">Last Month</option>
-                <option value="days">Last 7 Days</option>
-                <option value="lastdays">Last 30 Days</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="12months">Last 12 Months</option>
-                <option value="customrange">Custom Range</option>
-            </select>
+            <label class="form-label">Year</label>
+            <select id="quickRange" class="form-select form-select-sm"></select>
         </div>
 
+        <!-- MONTH RANGE -->
         <div class="row g-2">
+
             <div class="col-md-6 mb-3">
-                <label class="form-label">From Date</label>
-                <input type="date" id="fromDate" class="form-control form-control-sm">
+                <label class="form-label">Month From</label>
+                <select id="quickRange_MonthFrom" class="form-select form-select-sm"></select>
             </div>
+
             <div class="col-md-6 mb-3">
-                <label class="form-label">To Date</label>
-                <input type="date" id="toDate" class="form-control form-control-sm">
+                <label class="form-label">Month To</label>
+                <select id="quickRange_MonthTo" class="form-select form-select-sm"></select>
             </div>
+
         </div>
 
     </div>
