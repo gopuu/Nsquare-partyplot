@@ -28,7 +28,6 @@ namespace ERPAdmin.ApiControllers
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
-        #region REPORT - PURCHASE REPORT
 
         [HttpPost]
         [Route("GetPurchaseReportGrid")]
@@ -126,7 +125,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report
-                    cmd = new SqlCommand("Report_GetPurchaseDetail", con);
+                    cmd = new SqlCommand("Report_GetPurchaseDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
@@ -311,23 +310,16 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetPurchaseDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
+                    string? columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@SupplierId",
-                        request.SupplierId == 0 ? 0 : request.SupplierId);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId == 0 ? 0 : request.SupplierId);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -410,6 +402,489 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        #endregion
+        //Purchase Invoice - Reports
+        [HttpPost]
+        [Route("Report_GetPurchaseInvoice_GRID")]
+        public IActionResult Report_GetPurchaseInvoice_GRID([FromBody] GetPurchaseRequestGRID request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            GetPurchaseListModelGRID model = new GetPurchaseListModelGRID();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                DataSet ds = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Report_GetPurchaseInvoice_GRID", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@PurchaseId",
+                        request.PurchaseId > 0 ? request.PurchaseId : (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo)
+                            ? (object)DBNull.Value
+                            : request.InvoiceNo);
+
+                    con.Open();
+                    new SqlDataAdapter(cmd).Fill(ds);
+                }
+
+                if (ds.Tables.Count < 3)
+                    throw new Exception("Invoice data incomplete.");
+
+                DataTable headerTable = ds.Tables[0];
+                DataTable itemsTable = ds.Tables[1];
+                DataTable totalsTable = ds.Tables[2];
+
+                if (headerTable.Rows.Count == 0)
+                    throw new Exception("Invoice not found.");
+
+                DataRow h = headerTable.Rows[0];
+
+                // ───────── HEADER ─────────
+                model.Id = Convert.ToInt64(h["Id"]);
+                model.PurchaseFrom = h["PurchaseFrom"] == DBNull.Value ? 0 : Convert.ToInt64(h["PurchaseFrom"]);
+                model.PurchaseFromName = Convert.ToString(h["PurchaseFromName"]);
+
+                model.SupplierId = h["SupplierId"] == DBNull.Value ? 0 : Convert.ToInt64(h["SupplierId"]);
+                model.SupplierName = Convert.ToString(h["SupplierName"]);
+                model.SupplierCompany = Convert.ToString(h["SupplierCompany"]);
+                model.SupplierPhone = Convert.ToString(h["SupplierPhone"]);
+
+                model.InvoiceDate = Convert.ToString(h["InvoiceDate"]);
+                model.InvoiceDate_Format = Convert.ToString(h["InvoiceDate_Format"]);
+                model.InvoiceNo = Convert.ToString(h["InvoiceNo"]);
+                model.PONo = Convert.ToString(h["PONo"]);
+
+
+                // ───────── ITEMS ─────────
+                List<GetPurchaseItemsGRID> items = new();
+
+                foreach (DataRow row in itemsTable.Rows)
+                {
+                    items.Add(new GetPurchaseItemsGRID
+                    {
+                        RawMaterial = Convert.ToString(row["RawMaterial"]),
+                        Qty = row["Qty"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Qty"]),
+                        UnitName = Convert.ToString(row["UnitName"]),
+                        Price = row["Price"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Price"]),
+                        BaseAmount = row["BaseAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["BaseAmount"]),
+                        CGST = row["CGST"] == DBNull.Value ? 0 : Convert.ToDecimal(row["CGST"]),
+                        SGST = row["SGST"] == DBNull.Value ? 0 : Convert.ToDecimal(row["SGST"]),
+                        IGST = row["IGST"] == DBNull.Value ? 0 : Convert.ToDecimal(row["IGST"]),
+                        CGST_Amount = row["CGST_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["CGST_Amount"]),
+                        SGST_Amount = row["SGST_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["SGST_Amount"]),
+                        IGST_Amount = row["IGST_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["IGST_Amount"]),
+                        TotalGST = row["TotalGST"] == DBNull.Value ? 0 : Convert.ToDecimal(row["TotalGST"]),
+                        TotalAmount = row["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["TotalAmount"])
+                    });
+                }
+
+                model.JSON_PurchaseItems = items;
+
+                // ───────── TOTALS ─────────
+                if (totalsTable.Rows.Count > 0)
+                {
+                    DataRow t = totalsTable.Rows[0];
+
+                    model.SubTotal_TotalDiscount_Amount = t["SubTotal"] == DBNull.Value ? 0 : Convert.ToDecimal(t["SubTotal"]);
+                    model.SubTotal_OtherCharges_Amount = t["OtherCharges"] == DBNull.Value ? 0 : Convert.ToDecimal(t["OtherCharges"]);
+                    model.SubTotal_OtherTaxes_Amount = t["OtherTaxes"] == DBNull.Value ? 0 : Convert.ToDecimal(t["OtherTaxes"]);
+                    model.TotalDiscountInInvoice = t["Discount"] == DBNull.Value ? 0 : Convert.ToDecimal(t["Discount"]);
+                    model.GrandTotal_Amount = t["GrandTotal"] == DBNull.Value ? 0 : Convert.ToDecimal(t["GrandTotal"]);
+                }
+
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Purchase invoice fetched successfully!";
+                apiResponse.data = model;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DownloadPurchaseInvoiceReport_Pdf")]
+        public IActionResult DownloadPurchaseInvoiceReport_Pdf([FromBody] PurchaseInvoiceReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
+
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // Company Header
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // Purchase Invoice Report
+                    cmd = new SqlCommand("Report_GetPurchaseInvoice_PdfExcel", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@PurchaseId", request.PurchaseId > 0 ? request.PurchaseId : (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 4)
+                    throw new Exception("Invoice data is incomplete.");
+
+                // ── Company info ──
+                string companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
+                {
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+
+                    if (isCompanyAvailable)
+                    {
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                            if (System.IO.File.Exists(logoPath))
+                                logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                    else
+                    {
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                    }
+                }
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+                DataTable totalTableDB = dsReport.Tables[3];
+
+                DataRow inv = totalTableDB.Rows[0];
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
+
+                // ── Page header ──
+                if (request.WithHeader ?? false)
+                {
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
+                    if (logo != null) logo.ScaleToFit(70f, 70f);
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    headerTable.AddCell(detailCell);
+
+                    document.Add(headerTable);
+                }
+
+                // ── Report title ──
+                document.Add(new Paragraph(reportName.ToUpper(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 18f
+                });
+
+                // ── Supplier / Invoice info ──
+                PdfPTable infoTable = new PdfPTable(2);
+                infoTable.WidthPercentage = 100;
+                infoTable.SetWidths(new float[] { 50f, 50f });
+
+                infoTable.AddCell(Utils.CreateInfoCell("Invoice No", inv["InvoiceNo"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Invoice Date", inv["InvoiceDate_Format"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Supplier", inv["SupplierName"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Company", inv["SupplierCompany"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Phone", inv["SupplierPhone"]));
+                infoTable.AddCell(Utils.CreateInfoCell("PO No", inv["PONo"]));
+
+                document.Add(infoTable);
+                document.Add(new Paragraph("\n"));
+
+                // ── Items table ──
+                int columnCount = dataTableDB.Columns.Count;
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 6, 30, 10, 10, 10, 10, 10, 10, 10 });
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
+                BaseColor thColor = new BaseColor(0, 121, 182);
+
+                for (int i = 0; i < headerTableDB.Rows.Count; i++)
+                    table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
+
+                table.HeaderRows = 1;
+
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        string colName = col.ColumnName.ToLower();
+
+                        int align = colName switch
+                        {
+                            "sr. no." => Element.ALIGN_CENTER,
+                            "raw material" => Element.ALIGN_LEFT,
+                            "qty" => Element.ALIGN_CENTER,
+                            "unit" => Element.ALIGN_CENTER,
+                            _ => Element.ALIGN_RIGHT
+                        };
+
+                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                    }
+                }
+
+                document.Add(table);
+
+                // ── Totals ──
+                document.Add(new Paragraph("\n"));
+
+                PdfPTable totalTable = new PdfPTable(2);
+                totalTable.WidthPercentage = 40;
+                totalTable.HorizontalAlignment = Element.ALIGN_RIGHT;
+                totalTable.SetWidths(new float[] { 60f, 40f });
+
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Sub Total"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["SubTotal"]));
+
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Other Charges"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["OtherCharges"]));
+
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Other Taxes"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["OtherTaxes"]));
+
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Discount"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["Discount"]));
+
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Grand Total", true));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["GrandTotal"], true));
+
+                document.Add(totalTable);
+
+                document.Close();
+
+                // ── Save ──
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "PurchaseInvoice_*.pdf");
+
+                string identifier = request.InvoiceNo ?? request.PurchaseId.ToString();
+                string fileName = $"PurchaseInvoice_{identifier}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                    stream.WriteTo(fs);
+
+                response.status = "Success";
+                response.message = "Purchase Invoice Generated";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("DownloadPurchaseInvoiceReport_Excel")]
+        public IActionResult DownloadPurchaseInvoiceReport_Excel([FromBody] PurchaseInvoiceReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    SqlCommand cmd = new SqlCommand("Report_GetPurchaseInvoice_PdfExcel", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@PurchaseId",
+                        request.PurchaseId > 0 ? request.PurchaseId : (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 4)
+                    throw new Exception("Purchase invoice data not found");
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+                DataTable totalTableDB = dsReport.Tables[3];
+
+                DataRow inv = totalTableDB.Rows[0];
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Purchase Invoice");
+
+                int row = 1;
+
+                // ── Invoice Info ──
+                worksheet.Cell(row, 1).Value = "Invoice No";
+                worksheet.Cell(row, 2).Value = inv["InvoiceNo"].ToString();
+
+                worksheet.Cell(row, 4).Value = "Invoice Date";
+                worksheet.Cell(row, 5).Value = inv["InvoiceDate_Format"].ToString();
+                row++;
+
+                worksheet.Cell(row, 1).Value = "Supplier";
+                worksheet.Cell(row, 2).Value = inv["SupplierName"].ToString();
+
+                worksheet.Cell(row, 4).Value = "Company";
+                worksheet.Cell(row, 5).Value = inv["SupplierCompany"].ToString();
+                row++;
+
+                worksheet.Cell(row, 1).Value = "Phone";
+                worksheet.Cell(row, 2).Value = inv["SupplierPhone"].ToString();
+
+                worksheet.Cell(row, 4).Value = "PO No";
+                worksheet.Cell(row, 5).Value = inv["PONo"].ToString();
+
+                row += 2;
+
+                // ── Headers ──
+                int col = 1;
+                foreach (DataRow hRow in headerTableDB.Rows)
+                {
+                    worksheet.Cell(row, col).Value = hRow["HeaderName"].ToString();
+                    worksheet.Cell(row, col).Style.Font.Bold = true;
+                    worksheet.Cell(row, col).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    worksheet.Cell(row, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    col++;
+                }
+
+                row++;
+
+                // ── Data ──
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                // ── Totals ──
+                row++;
+
+                worksheet.Cell(row, 4).Value = "Sub Total";
+                worksheet.Cell(row, 5).Value = inv["SubTotal"].ToString();
+                row++;
+
+                worksheet.Cell(row, 4).Value = "Other Charges";
+                worksheet.Cell(row, 5).Value = inv["OtherCharges"].ToString();
+                row++;
+
+                worksheet.Cell(row, 4).Value = "Other Taxes";
+                worksheet.Cell(row, 5).Value = inv["OtherTaxes"].ToString();
+                row++;
+
+                worksheet.Cell(row, 4).Value = "Discount";
+                worksheet.Cell(row, 5).Value = inv["Discount"].ToString();
+                row++;
+
+                worksheet.Cell(row, 4).Value = "Grand Total";
+                worksheet.Cell(row, 5).Value = inv["GrandTotal"].ToString();
+
+                worksheet.Range(row, 4, row, 5).Style.Font.Bold = true;
+
+                worksheet.Columns().AdjustToContents();
+
+                // ── Save ──
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "PurchaseInvoice_*.xlsx");
+
+                string? identifier = request.InvoiceNo ?? request.PurchaseId.ToString();
+                string fileName = $"PurchaseInvoice_{identifier}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+                string filePath = Path.Combine(folder, fileName);
+                workbook.SaveAs(filePath);
+
+                response.status = "Success";
+                response.message = "Purchase Invoice Excel generated successfully.";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+        //Purchase Invoice - Reports
     }
 }

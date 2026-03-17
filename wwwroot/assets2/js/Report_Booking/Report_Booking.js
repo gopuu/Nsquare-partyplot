@@ -223,8 +223,8 @@ function loadBookingGrid() {
             }
             renderBookingTable(res.data);
         },
-        error: function (xhr, status, error) {
-            console.log(xhr, status, error, "Fetch Booking Data Failed");
+        error: function (xhr, error, status) {
+            handleApiError(xhr, error, status, "Failed to generate booking report.");
         }
     });
 }
@@ -245,7 +245,6 @@ function renderBookingTable(data) {
         paging: false,
         scrollY: "60vh",          // table body scroll height
         scrollCollapse: true,     // shrink if less rows
-        scrollX: true,            // horizontal scroll if needed
 
         columns: [
             { data: "BookingId", name: "BookingId", title: "#BRN" },
@@ -457,7 +456,9 @@ function ViewBookingReport(actionName) {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, error, status, "Failed to download report.");
         }
     });
 }

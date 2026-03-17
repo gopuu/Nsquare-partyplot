@@ -11,7 +11,7 @@ $(document).ready(function () {
     loadBookingSubEventTypeFamilyFunction();
 
     loadLeadSourceChart("thismonth");
-
+    loadLeadLostChart("thismonth");
     loadYearDropdown(); //loadOverallBookingsStatistics();
 
     //8 Top Revenue Events -------------- START ------------------------
@@ -1211,27 +1211,32 @@ function loadLeadSourceChart(monthDuration, fromDate = null, toDate = null) {
         }
     });
 }
+
 function renderLeadSourceChart(apiData) {
 
     const labels = [];
     const values = [];
+    const percents = [];
 
     if (apiData.length === 0) {
         labels.push("No Data");
         values.push(1);
+        percents.push("0%");
     } else {
         apiData.forEach(item => {
             labels.push(item.LeadSourceName);
             values.push(item.LeadSourceCount);
+            percents.push(item.LeadSourcePercent);
         });
     }
 
     const ctx = document.getElementById("leadSourceChart").getContext("2d");
 
-    // Destroy previous chart instance
     if (leadSourceChart !== null) {
         leadSourceChart.destroy();
     }
+
+    let chartColors = []; // ✅ store colors
 
     leadSourceChart = new Chart(ctx, {
         type: "doughnut",
@@ -1243,9 +1248,14 @@ function renderLeadSourceChart(apiData) {
                     const chart = context.chart;
                     const { ctx, chartArea } = chart;
 
-                    if (!chartArea) return null; // initial render fix
+                    if (!chartArea) return null;
 
-                    return generateGradientColors(ctx, chartArea, labels.length);
+                    // ✅ generate once and store
+                    if (chartColors.length === 0) {
+                        chartColors = generateGradientColors(ctx, chartArea, labels.length);
+                    }
+
+                    return chartColors;
                 },
                 borderWidth: 2,
                 borderColor: "#ffffff"
@@ -1257,13 +1267,31 @@ function renderLeadSourceChart(apiData) {
             cutout: "65%",
             plugins: {
                 legend: {
-                    position: "bottom"
+                    position: "bottom",
+                    labels: {
+                        generateLabels: function () {
+                            return labels.map((label, i) => ({
+                                text: `${label} (${values[i]} | ${percents[i]})`,
+                                fillStyle: chartColors[i], // ✅ correct color
+                                strokeStyle: "#fff",
+                                index: i
+                            }));
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            return `${labels[i]}: ${values[i]} (${percents[i]})`;
+                        }
+                    }
                 }
             }
         }
     });
-    
 }
+
 function generateGradientColors(ctx, chartArea, count) {
 
     const gradientPairs = [
@@ -1343,6 +1371,146 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
 }
 
 //8 Revenue Chart - END -------------------------------------------
+
+//9 Lead Lost Chart - START -------------------------------------------
+let leadLostChart = null;
+
+/* ─────────────────────────────────────────────
+   Dropdown filter click (Lead Lost)
+───────────────────────────────────────────── */
+$("#leadLostFilterBtn").closest(".pie-chart-filter").find(".dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    const container = $(this).closest(".pie-chart-filter");
+
+    container.find(".dropdown-item").removeClass("active");
+    $(this).addClass("active");
+
+    const filterValue = $(this).data("value");
+
+    $("#leadLostFilterBtn").text($(this).text());
+
+    loadLeadLostChart(filterValue);
+});
+
+/* ─────────────────────────────────────────────
+   API Loader
+───────────────────────────────────────────── */
+function loadLeadLostChart(monthDuration, fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardLeadLostCount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+
+            if (response.status === "Success" && response.data.length > 0) {
+                renderLeadLostChart(response.data);
+            } else {
+                renderLeadLostChart([]);
+            }
+        },
+        error: function (xhr, status, err) {
+            handleApiError(xhr, status, err, "Error loading Lead Lost data");
+        }
+    });
+}
+
+
+/* ─────────────────────────────────────────────
+   Chart Renderer
+───────────────────────────────────────────── */
+function renderLeadLostChart(apiData) {
+
+    const labels = [];
+    const values = [];
+    const percents = [];
+
+    if (apiData.length === 0) {
+        labels.push("No Data");
+        values.push(1);
+        percents.push("0%");
+    } else {
+        apiData.forEach(item => {
+            labels.push(item.EventTypeName);
+            values.push(item.LeadLostCount);
+            percents.push(item.LeadLostPercent);
+        });
+    }
+
+    const ctx = document.getElementById("leadLostChart").getContext("2d");
+
+    if (leadLostChart !== null) {
+        leadLostChart.destroy();
+    }
+
+    let chartColors = [];
+
+    leadLostChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: function (context) {
+
+                    const chart = context.chart;
+                    const { ctx, chartArea } = chart;
+
+                    if (!chartArea) return null;
+
+                    if (chartColors.length === 0) {
+                        chartColors = generateGradientColors(ctx, chartArea, labels.length);
+                    }
+
+                    return chartColors;
+                },
+                borderWidth: 2,
+                borderColor: "#ffffff"
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "65%",
+            plugins: {
+
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        generateLabels: function () {
+                            return labels.map((label, i) => ({
+                                text: `${label} (${values[i]} | ${percents[i]})`,
+                                fillStyle: chartColors[i],
+                                strokeStyle: "#fff",
+                                index: i
+                            }));
+                        }
+                    }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            return `${labels[i]}: ${values[i]} (${percents[i]})`;
+                        }
+                    }
+                }
+
+            }
+        }
+    });
+}
+//9 Lead Lost Chart - END -------------------------------------------
+
+
 
 
 //COUNT WIDGETS - tooltip --- START --------------

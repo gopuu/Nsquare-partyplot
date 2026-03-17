@@ -26,21 +26,6 @@
     border-radius: 6px;
 }
 /*HISTORY __ END */
-
-#fixedSaveBar {
-    position: fixed;
-    right: 20px;
-    bottom: 14px;
-    z-index: 1100;
-    display: flex;
-    gap: .75rem;
-    align-items: center;
-}
-
-    #fixedSaveBar .btn {
-        min-width: 120px;
-    }
-
 .unit-badge {
     display: inline-block;
     border-radius: 20px;

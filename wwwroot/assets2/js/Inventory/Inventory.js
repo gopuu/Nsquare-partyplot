@@ -182,7 +182,7 @@ function renderTable(data) {
                     <td>${escapeHtml(r.RawMaterialName || '')}</td>
                     <td class="align-middle">${escapeHtml(closingText)}</td>
 
-                    <td>
+                    <td class="bg-warning-gradient">
                         <div class="input-group input-group-sm" style="width: 200px;">
                             <input type="number" min="0" step="0.01"
                                    class="form-control stock-outward-qty"
@@ -215,13 +215,17 @@ function renderTable(data) {
 
     // Initialize DataTable (let it handle empty state)
     stockTable = $('#inventoryTable').DataTable({
-        paging: true,
+        paging: false,
         pageLength: 10,
         lengthChange: false,
         ordering: false,
         info: true,
         searching: true,
         autoWidth: false,
+
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+
         language: {
             emptyTable: "No records found"
         }

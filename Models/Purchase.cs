@@ -77,8 +77,9 @@ namespace ERPAdmin.Models
 
     public class GetPurchaseRequest
     {
-        public long Id { get; set; }
-        public long SupplierId { get; set; }
+        public long? Id { get; set; }
+        public long? SupplierId { get; set; }
+        public string? InvoiceNo { get; set; }
     }
 
     //SAVE

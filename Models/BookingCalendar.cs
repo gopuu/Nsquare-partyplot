@@ -181,6 +181,7 @@
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public string? ShiftCode { get; set; }
+        public string? ShiftFullName { get; set; }
         public long? SlotId { get; set; }
         public bool GSTAccepted { get; set; }
         public long? BanquetId { get; set; }

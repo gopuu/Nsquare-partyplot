@@ -555,17 +555,9 @@ namespace ERPAdmin.ApiControllers
                     SqlCommand cmd = new SqlCommand("Dashboard_LeadSourcecount", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue(
-                        "@MonthDuration",
-                        (object)request.MonthDuration ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue(
-                        "@FromDate",
-                        (object)request.FromDate ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue(
-                        "@ToDate",
-                        (object)request.ToDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@MonthDuration",(object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate",(object)request.ToDate ?? DBNull.Value);
 
                     con.Open();
                     SqlDataReader dr = cmd.ExecuteReader();
@@ -575,8 +567,8 @@ namespace ERPAdmin.ApiControllers
                         result.Add(new LeadSourcePieChart
                         {
                             LeadSourceName = dr["LeadSourceName"].ToString(),
-                            LeadSourceCount = Convert.ToInt32(
-                                dr["LeadSourceCount"])
+                            LeadSourceCount = Convert.ToInt32(dr["LeadSourceCount"]),
+                            LeadSourcePercent = Convert.ToString(dr["LeadSourcePercent"])
                         });
                     }
 
@@ -584,17 +576,76 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 apiResponse.status = "Success";
-                apiResponse.message =
-                    "Lead source pie chart data fetched successfully.";
+                apiResponse.message = "Lead source pie chart data fetched successfully.";
                 apiResponse.data = result;
 
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(
-                    ex, ControllerContext, Request, null);
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
 
+                return StatusCode(200, apiResponse);
+            }
+        }
+        
+        //8 Lead Lost Widget
+        [HttpPost]
+        [Route("GetDashboardLeadLostCount")]
+        public IActionResult GetDashboardLeadLostCount([FromBody] DashboardWidget_LeadLostRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<LeadLostPieChart> result = new List<LeadLostPieChart>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_LeadLostAnalysisWidget", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration",(object)request.MonthDuration ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", (object)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate",(object)request.ToDate ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    while (dr.Read())
+                    {
+                        result.Add(new LeadLostPieChart
+                        {
+                            EventTypeName = dr["EventTypeName"].ToString(),
+                            LeadLostCount = Convert.ToInt32(dr["LeadLostCount"]),
+                            LeadLostPercent = Convert.ToString(dr["LeadLostPercent"])
+                        });
+                    }
+
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Lead source pie chart data fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;

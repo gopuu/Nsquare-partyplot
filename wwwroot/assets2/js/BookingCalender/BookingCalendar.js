@@ -347,17 +347,38 @@ function loadStateList() {
 //State - dropdown -- END ------------------------
 
 //Event - dropdown -- START ----------------------
-function loadSubEventList() {
-    //showLoader();
+function loadEventTypeList() {
+    $.ajax({
+        url: "/api/EventType/GetEventTypeList",
+        type: "GET",
+        success: function (response) {
+            //console.log("eventType response:", response);
+            if (response.status === "Success") {
+                let options = `<option value = "0">-- Select Event --</option> `; // default option
+                $.each(response.data, function (index, item) {
+                    options += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                });
+                $("#booking_eventDropdown").html(options);
+                //loadSubEventList(eventTypeId);
+            } else {
+                $("#eventTypeDropdown").html(`<option value = "0"> No Event Type Found</option> `);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load EventType List");
+        }
+    });
+}
+function loadSubEventList(eventTypeId=0) {
     $.ajax({
         url: "/api/EventSubType/GetEventSubTypeList", // API endpoint
         type: "POST", // POST request
         contentType: "application/json", // Send data as JSON
-        data: JSON.stringify({ EventTypeId: 0 }), // Request body
+        data: JSON.stringify({ EventTypeId: eventTypeId }), // Request body
         success: function (response) {
             //console.log("event subtype list response:", response);
             if (response.status === "Success") {
-                let options = `<option value="0">-- Select Event --</option>`; // default option
+                let options = `<option value="0">-- Select SubEvent --</option>`; // default option
                 $.each(response.data, function (index, item) {
                     options += `<option value="${item.Id}">${item.Name}</option>`;
                 });
@@ -367,7 +388,7 @@ function loadSubEventList() {
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'Failed to load event list');
+            handleApiError(xhr, status, error, 'Failed to load sub-event list');
         }
     });
 }
@@ -1980,7 +2001,7 @@ async function renderBoard(bookingData = null) {
 
         // 🔴 Normal single booking tooltip
         //const bookingid = badge.dataset.bookingid;
-        console.log("isBlocked:", isBlocked, ", bookingid: ",bookingid);
+        //console.log("isBlocked:", isBlocked, ", bookingid: ",bookingid);
         if (bookingid > 0) {
 
             const booking = bookingsForDay.find(b => b.BookingId == bookingid);
@@ -2401,7 +2422,7 @@ function attachShiftClickListeners() {
             const hallname = badge.dataset.hallname;
             const hallid = badge.dataset.hallid;
 
-            console.log("color cell:", color);
+            //console.log("color cell:", color);
             //Present Day & Future Days
             //if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
             if (color !== legendColors.blocked &&
@@ -2415,7 +2436,7 @@ function attachShiftClickListeners() {
 
                 resetBooking();
                 //console.log(`Edit Booking → Shift: ${shift} (${shiftname}) | Date: ${date} (format: ${dateformat}, iso: ${dateiso}) | Hall: ${hallname} (${hallid}) | BookingId: ${bookingid}`);
-                console.log("event dateiso:", dateiso);
+                //console.log("event dateiso:", dateiso);
                 $("#BookingId").val(bookingid);
                 // 🟢 Update label content & attributes - using jQuery
                 $("#label_date_shift")
@@ -2533,6 +2554,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadLeadSourceList();
     loadEnquiryList();
     loadStateList();
+    loadEventTypeList();
     loadSubEventList();
     loadFoodPackageList();
 
@@ -4025,6 +4047,13 @@ Your feedback helps us improve our service.`;
 
     });
     //Check Slot Availability ------- END ------------------------------------
+
+    // Event Type dropdown change event
+    $(document).on("change", "#booking_eventDropdown", function () {
+        let selectedEventTypeId = $(this).val();
+        loadSubEventList(selectedEventTypeId); // Pass selected EventTypeId
+    });
+
 });
 
 // Invoice GENEARTE -- START --------------------------------
@@ -5093,7 +5122,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "singleData") {
                     resetBooking();
                     data = data[0];
-                    //console.log("singleData - Booking API Response:", data);
+                    console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
                     $("#bookingReport_clientName").text(data.Client_Name || "—");
@@ -5128,9 +5157,15 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     }
                     $("#bookingReport_EventDate").text(data.FromDate_Full || "—");
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
-                    $("#bookingReport_Slot").text(`${data.ShiftCode} (${fullShiftName(data.ShiftCode)})` || "—");
+
+                    const start = data.StartTime_Full ?? "-";
+                    const end = data.EndTime_Full ?? "-";
+                    $("#bookingReport_EventTime").text(`${start} - ${end}`);
+
+                    $("#bookingReport_Slot").text(`${data.ShiftCode} (${data.ShiftFullName})` || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
-                    $("#bookingReport_EventName").text(data.Booking_TypeName + "(" + data.Booking_SubEventName + ")" || "—");
+                    $("#bookingReport_EventName").text(data.Booking_TypeName || "—");
+                    $("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
                     $("#bookingReport_Hall").text(data.BanquetName || "—");
                     $("#bookingReport_Pax").text(data.Booking_PAX || "—");
@@ -6199,7 +6234,7 @@ function loadAccountDropdown() {
 
                     ddl.append(`
                         <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
-                            ${accountName} //${holderDisplay}
+                            ${accountName}
                         </option>
                     `);
                 });

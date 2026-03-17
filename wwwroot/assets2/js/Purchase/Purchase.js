@@ -646,8 +646,13 @@ $(document).ready(function () {
         $("#VendorChartFilter").text($(this).text());
         loadVendorPayables(selectedVendorDuration);
     });
-    //Vendor Widget -------------- END ------------------------    
+    //Vendor Widget -------------- END ------------------------
 
+    $(document).on("click", ".btn-download-invoice", function () {
+        const purchaseId = $(this).data("id");
+        const invoiceNo = $(this).data("invoice");
+        downloadPurchaseInvoice(purchaseId, invoiceNo);
+    });
 });
 
 //Widgets  -- START ------------------------------------------------------------
@@ -1186,14 +1191,36 @@ function renderTable(data) {
                 title: "Action",
                 render: function (data, type, row) {
                     return `
-                            <div class="d-flex gap-1">
-                                <button class="btn btn-outline-warning btn-sm btn-action-xss btn-edit" data-id="${row.Id}">
-                                    <i class="fa fa-edit"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm btn-action-xss btn-delete" data-id="${row.Id}">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle btn-action-xss"
+                                type="button" data-bs-toggle="dropdown">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+
+                            <ul class="dropdown-menu">
+
+                                <li>
+                                    <a class="dropdown-item btn-download-invoice cursor-pointer" 
+                                       data-id="${row.Id}"
+                                       data-invoice="${row.InvoiceNo}">
+                                        <i class="fa fa-download text-primary me-2"></i> Invoice
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-edit cursor-pointer" data-id="${row.Id}">
+                                        <i class="fa fa-edit text-warning me-2"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item btn-delete cursor-pointer" data-id="${row.Id}">
+                                        <i class="fa fa-trash text-danger me-2"></i> Delete
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
                         `;
                 }
             }
@@ -1209,7 +1236,12 @@ function renderTable(data) {
 //get data from API
 function fetchData() {
 
-    var payload = { Id: 0, SupplierId: 0 };
+    var payload = {
+        Id: 0,
+        SupplierId: 0,
+        InvoiceNo: ""
+    };
+
     $.ajax({
         url: "/api/Purchase/GetPurchaseList",
         method: "POST",

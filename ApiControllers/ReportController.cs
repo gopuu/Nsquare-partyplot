@@ -29,140 +29,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region Useful Methods
-        private PdfPCell Cell(string text, Font font, int align = Element.ALIGN_LEFT, int colspan = 1, float height = 25)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
-            cell.Colspan = colspan;
-            cell.FixedHeight = height;
-            cell.HorizontalAlignment = align;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Padding = 6;
-            cell.Border = Rectangle.BOX;
-            return cell;
-        }
-        PdfPCell CreateTitleWithSpaceCell(string title, Font titleFont, float height)
-        {
-            PdfPTable inner = new PdfPTable(1);
-            inner.WidthPercentage = 100;
-
-            // 🔸 Title (TOP)
-            PdfPCell titleCell = new PdfPCell(new Phrase(title, titleFont))
-            {
-                Border = Rectangle.BOTTOM_BORDER,
-                Padding = 4,
-                HorizontalAlignment = Element.ALIGN_CENTER
-            };
-            inner.AddCell(titleCell);
-
-            // 🔸 Empty Space for VALUE
-            PdfPCell valueCell = new PdfPCell(new Phrase(" "))
-            {
-                MinimumHeight = height,
-                Border = Rectangle.NO_BORDER
-            };
-            inner.AddCell(valueCell);
-
-            return new PdfPCell(inner)
-            {
-                Padding = 0
-            };
-        }
-        PdfPCell CreateTitleWithValueCell(string title, string value, Font titleFont, Font valueFont,float minHeight)
-        {
-            PdfPTable inner = new PdfPTable(1);
-            inner.WidthPercentage = 100;
-
-            // 🔹 Title
-            PdfPCell titleCell = new PdfPCell(new Phrase(title, titleFont))
-            {
-                Border = Rectangle.BOTTOM_BORDER,
-                Padding = 4,
-                HorizontalAlignment = Element.ALIGN_CENTER
-            };
-            inner.AddCell(titleCell);
-
-            // 🔹 Value (directly below title)
-            PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont))
-            {
-                MinimumHeight = minHeight,
-                Padding = 6,
-                HorizontalAlignment = Element.ALIGN_CENTER,
-                VerticalAlignment = Element.ALIGN_MIDDLE,
-                Border = Rectangle.NO_BORDER
-            };
-            inner.AddCell(valueCell);
-
-            return new PdfPCell(inner)
-            {
-                Padding = 0
-            };
-        }
-
-        private PdfPCell CreateCell(string text, Font font, int align = Element.ALIGN_LEFT, int colspan = 1, BaseColor bg = null)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text ?? " ", font));
-            cell.Colspan = colspan;
-            cell.HorizontalAlignment = align;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Padding = 4;
-            cell.Border = Rectangle.BOX;
-
-            if (bg != null)
-                cell.BackgroundColor = bg;
-
-            return cell;
-        }
-        public static PdfPCell CreateCell2(string text, Font font, int hAlign = Element.ALIGN_LEFT, int colspan = 1, float fixedHeight = 0, int border = Rectangle.BOX)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text, font));
-            cell.HorizontalAlignment = hAlign;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Colspan = colspan;
-            cell.Padding = 5;
-            cell.Border = border;
-
-            if (fixedHeight > 0)
-                cell.FixedHeight = fixedHeight;
-
-            return cell;
-        }
-        private PdfPCell CreateInfoCell(string label, object? value, bool bold = false)
-        {
-            Font font = FontFactory.GetFont(FontFactory.HELVETICA, bold ? 10 : 9, bold ? Font.BOLD : Font.NORMAL);
-            return new PdfPCell(new Phrase($"{label} : {value}", font))
-            {
-                Border = Rectangle.NO_BORDER,
-                Padding = 4
-            };
-        }
-        private PdfPCell CreateTotalLabelCell(string text, bool isBold = false)
-        {
-            return new PdfPCell(new Phrase(
-                text,
-                FontFactory.GetFont(FontFactory.HELVETICA, 9, isBold ? Font.BOLD : Font.NORMAL)
-            ))
-            {
-                Border = Rectangle.NO_BORDER,
-                HorizontalAlignment = Element.ALIGN_LEFT,
-                Padding = 4
-            };
-        }
-        private PdfPCell CreateTotalValueCell(object value, bool isBold = false)
-        {
-            return new PdfPCell(new Phrase(
-                Convert.ToDecimal(value).ToString("N2"),
-                FontFactory.GetFont(FontFactory.HELVETICA, 9, isBold ? Font.BOLD : Font.NORMAL)
-            ))
-            {
-                Border = Rectangle.NO_BORDER,
-                HorizontalAlignment = Element.ALIGN_RIGHT,
-                Padding = 4
-            };
-        }
-
-        #endregion
-
         #region Booking Calendar - reports
         [HttpPost]
         [Route("DownloadCustomerInvoiceReport")]
@@ -327,12 +193,12 @@ namespace ERPAdmin.ApiControllers
                         ? inv["ProformaInvoiceNo"].ToString()
                         : inv["InvoiceNo"]?.ToString();
 
-                infoTable.AddCell(CreateInfoCell("Invoice No", invoiceNoToShow));
-                infoTable.AddCell(CreateInfoCell("Invoice Date", inv["InvoiceDate_Format"]));
-                infoTable.AddCell(CreateInfoCell("Customer Name", inv["CustomerName"]));
-                infoTable.AddCell(CreateInfoCell("GSTIN", inv["GSTIN"]));
-                infoTable.AddCell(CreateInfoCell("Email", inv["EmailId"]));
-                infoTable.AddCell(CreateInfoCell("Address", inv["Address"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Invoice No", invoiceNoToShow));
+                infoTable.AddCell(Utils.CreateInfoCell("Invoice Date", inv["InvoiceDate_Format"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Customer Name", inv["CustomerName"]));
+                infoTable.AddCell(Utils.CreateInfoCell("GSTIN", inv["GSTIN"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Email", inv["EmailId"]));
+                infoTable.AddCell(Utils.CreateInfoCell("Address", inv["Address"]));
 
                 document.Add(infoTable);
                 document.Add(new Paragraph("\n"));
@@ -389,26 +255,26 @@ namespace ERPAdmin.ApiControllers
                 totalTable.HorizontalAlignment = Element.ALIGN_RIGHT;
                 totalTable.SetWidths(new float[] { 60f, 40f });
 
-                totalTable.AddCell(CreateTotalLabelCell("Sub Total"));
-                totalTable.AddCell(CreateTotalValueCell(inv["SubTotal"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Sub Total"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["SubTotal"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Booking Discount"));
-                totalTable.AddCell(CreateTotalValueCell(inv["BookingDiscount"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Booking Discount"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["BookingDiscount"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Total Taxable"));
-                totalTable.AddCell(CreateTotalValueCell(inv["TotalTaxableAmount"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Total Taxable"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalTaxableAmount"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Total GST"));
-                totalTable.AddCell(CreateTotalValueCell(inv["TotalGST"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Total GST"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalGST"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Round Off"));
-                totalTable.AddCell(CreateTotalValueCell(inv["RoundOff"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Round Off"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["RoundOff"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Advance Paid"));
-                totalTable.AddCell(CreateTotalValueCell(inv["TotalAdvancePaid"]));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Advance Paid"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalAdvancePaid"]));
 
-                totalTable.AddCell(CreateTotalLabelCell("Grand Total", true));
-                totalTable.AddCell(CreateTotalValueCell(inv["GrandTotal"], true));
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Grand Total", true));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["GrandTotal"], true));
 
                 document.Add(totalTable);
 
@@ -578,14 +444,14 @@ namespace ERPAdmin.ApiControllers
                 titleTable.WidthPercentage = 100;
                 titleTable.SetWidths(new float[] { 70, 30 });
 
-                PdfPCell titleCell = CreateCell(
+                PdfPCell titleCell = Utils.CreateCell(
                     dtFormTitle.Rows[0]["FormTitle"].ToString(),
                     titleFont,
                     Element.ALIGN_CENTER);
                 titleCell.BackgroundColor = new BaseColor(230, 230, 230); // light gray
                 titleTable.AddCell(titleCell);
 
-                PdfPCell dateCell = CreateCell(dtFormTitle.Rows[0]["DateTitle"].ToString(),titleFont);
+                PdfPCell dateCell = Utils.CreateCell(dtFormTitle.Rows[0]["DateTitle"].ToString(),titleFont);
                 dateCell.BackgroundColor = new BaseColor(230, 230, 230);
                 titleTable.AddCell(dateCell);
 
@@ -597,11 +463,11 @@ namespace ERPAdmin.ApiControllers
                 guestTable.WidthPercentage = 100;
                 guestTable.SetWidths(new float[] { 30, 70 });
 
-                guestTable.AddCell(CreateCell(dtBasic.Rows[0]["GuestNameTitle"].ToString(), boldFont));
-                guestTable.AddCell(CreateCell(dtBasic.Rows[0]["GuestName"].ToString(), normalFont));
+                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["GuestNameTitle"].ToString(), boldFont));
+                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["GuestName"].ToString(), normalFont));
 
-                guestTable.AddCell(CreateCell(dtBasic.Rows[0]["EventDetailsTitle"].ToString(), boldFont));
-                guestTable.AddCell(CreateCell(dtBasic.Rows[0]["EventDetails"].ToString(), normalFont));
+                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["EventDetailsTitle"].ToString(), boldFont));
+                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["EventDetails"].ToString(), normalFont));
 
                 document.Add(guestTable);
 
@@ -610,17 +476,17 @@ namespace ERPAdmin.ApiControllers
                 plateTable.WidthPercentage = 100;
                 plateTable.SetWidths(new float[] { 30, 20, 25, 25 });
 
-                plateTable.AddCell(CreateCell("", boldFont));
-                plateTable.AddCell(CreateCell(dtHeaders.Rows[0]["Col_NoOfPlates"].ToString(), boldFont, Element.ALIGN_CENTER));
-                plateTable.AddCell(CreateCell(dtHeaders.Rows[0]["Col_AuthorisedSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
-                plateTable.AddCell(CreateCell(dtHeaders.Rows[0]["Col_GuestSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
+                plateTable.AddCell(Utils.CreateCell("", boldFont));
+                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_NoOfPlates"].ToString(), boldFont, Element.ALIGN_CENTER));
+                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_AuthorisedSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
+                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_GuestSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
 
                 foreach (DataRow r in dtPlateRows.Rows)
                 {
-                    plateTable.AddCell(CreateCell(r["RowTitle"].ToString(), normalFont));
-                    plateTable.AddCell(CreateCell(r["NoOfPlates"].ToString(), normalFont));
-                    plateTable.AddCell(CreateCell(r["AuthSign"].ToString(), normalFont));
-                    plateTable.AddCell(CreateCell(r["GuestSignature"].ToString(), normalFont));
+                    plateTable.AddCell(Utils.CreateCell(r["RowTitle"].ToString(), normalFont));
+                    plateTable.AddCell(Utils.CreateCell(r["NoOfPlates"].ToString(), normalFont));
+                    plateTable.AddCell(Utils.CreateCell(r["AuthSign"].ToString(), normalFont));
+                    plateTable.AddCell(Utils.CreateCell(r["GuestSignature"].ToString(), normalFont));
                 }
 
                 document.Add(plateTable);
@@ -629,7 +495,7 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable summaryTable = new PdfPTable(4);
                 summaryTable.WidthPercentage = 100;
 
-                summaryTable.AddCell(CreateCell(
+                summaryTable.AddCell(Utils.CreateCell(
                     dtSummary.Rows[0]["SummaryTitle"].ToString(),
                     boldFont,
                     Element.ALIGN_CENTER,
@@ -644,10 +510,10 @@ namespace ERPAdmin.ApiControllers
                 paymentTable.SetWidths(new float[] { 35, 30, 35 });
 
                 /* ---------- Row 1 ---------- */
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["RatePerPlateTitle"].ToString(), boldFont));
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["RatePerPlate"].ToString(), normalFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["RatePerPlateTitle"].ToString(), boldFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["RatePerPlate"].ToString(), normalFont));
 
-                paymentTable.AddCell(CreateTitleWithValueCell(
+                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
                     dtPayment.Rows[0]["ExtraAmountTitle"].ToString(),
                     dtPayment.Rows[0]["ExtraAmount"].ToString(),   // 👈 VALUE HERE
                     boldFont,
@@ -655,16 +521,16 @@ namespace ERPAdmin.ApiControllers
                     55f
                 ));
                 /* ---------- Row 2 ---------- */
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["TotalPayableTitle"].ToString(), boldFont));
-                PdfPCell totalPayableCell = CreateCell(dtPayment.Rows[0]["TotalPayable"].ToString(), normalFont);
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["TotalPayableTitle"].ToString(), boldFont));
+                PdfPCell totalPayableCell = Utils.CreateCell(dtPayment.Rows[0]["TotalPayable"].ToString(), normalFont);
                 totalPayableCell.Colspan = 2;
                 paymentTable.AddCell(totalPayableCell);
 
                 /* ---------- Row 3 ---------- */
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["AdvanceAmountTitle"].ToString(), boldFont));
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["AdvanceAmount"].ToString(), normalFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["AdvanceAmountTitle"].ToString(), boldFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["AdvanceAmount"].ToString(), normalFont));
 
-                paymentTable.AddCell(CreateTitleWithValueCell(
+                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
                     dtPayment.Rows[0]["AdvancePaymentModeTitle"].ToString(),
                     dtPayment.Rows[0]["AdvancePaymentMode"].ToString(),   // 👈 VALUE HERE
                     boldFont,
@@ -673,10 +539,10 @@ namespace ERPAdmin.ApiControllers
                 ));
 
                 /* ---------- Row 4 ---------- */
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["FinalRemainingPaymentTitle"].ToString(), boldFont));
-                paymentTable.AddCell(CreateCell(dtPayment.Rows[0]["FinalRemainingPayment"].ToString(), normalFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["FinalRemainingPaymentTitle"].ToString(), boldFont));
+                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["FinalRemainingPayment"].ToString(), normalFont));
 
-                paymentTable.AddCell(CreateTitleWithValueCell(
+                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
                     dtPayment.Rows[0]["FinalPaymentModeTitle"].ToString(),
                     dtPayment.Rows[0]["FinalPaymentMode"].ToString(),   // 👈 VALUE HERE
                     boldFont,
@@ -690,7 +556,7 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable footer = new PdfPTable(1);
                 footer.WidthPercentage = 100;
 
-                footer.AddCell(CreateCell(
+                footer.AddCell(Utils.CreateCell(
                     dtFooter.Rows[0]["FeedbackTitle"].ToString(),
                     titleFont,
                     Element.ALIGN_CENTER,
@@ -765,7 +631,7 @@ namespace ERPAdmin.ApiControllers
 
                 PdfPTable titleTbl = new PdfPTable(1);
                 titleTbl.WidthPercentage = 100;
-                titleTbl.AddCell(CreateCell2(dtStaffTitle.Rows[0]["StaffUseOnlyTitle"].ToString(), titleFont, Element.ALIGN_CENTER, 1, 30));
+                titleTbl.AddCell(Utils.CreateCell2(dtStaffTitle.Rows[0]["StaffUseOnlyTitle"].ToString(), titleFont, Element.ALIGN_CENTER, 1, 30));
                 document.Add(titleTbl);
                 document.Add(new Paragraph("\n")); // Space
 
@@ -795,27 +661,27 @@ namespace ERPAdmin.ApiControllers
                 rightBox.SetWidths(new float[] { 50f, 50f });
 
                 // Row 1
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     dtFoodTitles.Rows[0]["LocationTimeTitle"].ToString(),
                     boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
 
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
 
                 // Row 2
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     dtFoodTitles.Rows[0]["WeightDoneByTitle"].ToString(),
                     boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
 
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
 
                 // Row 3
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     dtFoodTitles.Rows[0]["WeightCrossCheckByTitle"].ToString(),
                     boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
 
-                rightBox.AddCell(CreateCell2(
+                rightBox.AddCell(Utils.CreateCell2(
                     "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
 
 
@@ -839,19 +705,19 @@ namespace ERPAdmin.ApiControllers
                 itemTable.SetWidths(new float[] { 60f, 40f });
 
                 // Header
-                itemTable.AddCell(CreateCell2(
+                itemTable.AddCell(Utils.CreateCell2(
                     dtFoodTitles.Rows[0]["ItemNameTitle"].ToString(),
                     boldFont, Element.ALIGN_CENTER, 1, 25));
 
-                itemTable.AddCell(CreateCell2(
+                itemTable.AddCell(Utils.CreateCell2(
                     dtFoodTitles.Rows[0]["WeightKgTitle"].ToString(),
                     boldFont, Element.ALIGN_CENTER, 1, 25));
 
                 // 7 blank rows
                 for (int i = 0; i < 7; i++)
                 {
-                    itemTable.AddCell(CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 25));
-                    itemTable.AddCell(CreateCell2("", normalFont, Element.ALIGN_CENTER, 1, 25));
+                    itemTable.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 25));
+                    itemTable.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_CENTER, 1, 25));
                 }
 
                 // Add LEFT table to main table
@@ -868,23 +734,23 @@ namespace ERPAdmin.ApiControllers
                 staffTbl.SetWidths(new float[] { 45f, 45f });
 
                 // Staff Header
-                staffTbl.AddCell(CreateCell2(
+                staffTbl.AddCell(Utils.CreateCell2(
                     dtStaffDuty.Rows[0]["StaffDutyTitle"].ToString(),
                     boldFont, Element.ALIGN_CENTER, 2, 25));
 
                 // --- PRESENT STAFF 
-                staffTbl.AddCell(CreateCell2(
+                staffTbl.AddCell(Utils.CreateCell2(
                     dtStaffDuty.Rows[0]["StaffPresentTitle"].ToString(),
                     boldFont, Element.ALIGN_LEFT, 1, 50)); // Label height: 50
 
-                staffTbl.AddCell(CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 80)); 
+                staffTbl.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 80)); 
 
                 // --- ABSENT STAFF 
-                staffTbl.AddCell(CreateCell2(
+                staffTbl.AddCell(Utils.CreateCell2(
                     dtStaffDuty.Rows[0]["StaffAbsentTitle"].ToString(),
                     boldFont, Element.ALIGN_LEFT, 1, 30)); // Label height: 30
 
-                staffTbl.AddCell(CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 30)); 
+                staffTbl.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 30)); 
 
                 // Add RIGHT table to main table
                 PdfPCell rightCell = new PdfPCell(staffTbl);
@@ -901,7 +767,7 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable chkTbl = new PdfPTable(2);
                 chkTbl.WidthPercentage = 100;
 
-                chkTbl.AddCell(Cell(
+                chkTbl.AddCell(Utils.Cell(
                     dtChkTitle.Rows[0]["ChecklistTitle"].ToString(),
                     boldFont,
                     Element.ALIGN_CENTER,
@@ -911,8 +777,8 @@ namespace ERPAdmin.ApiControllers
 
                 foreach (DataRow r in dtChkItems.Rows)
                 {
-                    chkTbl.AddCell(Cell(r["ChecklistItem"].ToString(), normalFont));
-                    chkTbl.AddCell(Cell("", normalFont));
+                    chkTbl.AddCell(Utils.Cell(r["ChecklistItem"].ToString(), normalFont));
+                    chkTbl.AddCell(Utils.Cell("", normalFont));
                 }
 
                 document.Add(chkTbl);
@@ -920,7 +786,7 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable notesTbl = new PdfPTable(1);
                 notesTbl.WidthPercentage = 100;
 
-                notesTbl.AddCell(Cell(
+                notesTbl.AddCell(Utils.Cell(
                     dtNotes.Rows[0]["EventNotesTitle"].ToString(),
                     boldFont,
                     Element.ALIGN_CENTER,
@@ -928,7 +794,7 @@ namespace ERPAdmin.ApiControllers
                     30
                 ));
 
-                notesTbl.AddCell(Cell("", normalFont, Element.ALIGN_LEFT, 1, 120));
+                notesTbl.AddCell(Utils.Cell("", normalFont, Element.ALIGN_LEFT, 1, 120));
                 document.Add(notesTbl);
 
                 document.Close();

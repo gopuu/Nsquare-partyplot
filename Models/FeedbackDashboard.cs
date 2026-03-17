@@ -65,6 +65,33 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
     }
+    public class DashboardPaymentDetailsRequest
+    {
+        public string? Type { get; set; } = string.Empty; // PAID / PENDING
+        public string? MonthDuration { get; set; }= string.Empty;
+        public string? FromDate { get; set; }= string.Empty;
+        public string? ToDate { get; set; } = string.Empty;
+    }
+    public class DashboardPaymentCollectionDetails
+    {
+        public long BookingId { get; set; }
+        public string? BookingRefNo { get; set; }
+        public string? CustomerName { get; set; }
+        public string? MobileNo { get; set; }
+        public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal PendingAmount { get; set; }
+        public string? PaymentStatus { get; set; }
+    }
+    public class DashboardPaymentCollectionTotals
+    {
+        public decimal TotalAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal PendingAmount { get; set; }
+        public int TotalBookings { get; set; }
+    }
 
     public class DashboardFeedbackCounts
     {

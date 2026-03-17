@@ -56,6 +56,14 @@
         public string? ToDate { get; set; }
 
     }
+
+    public class DashboardWidget_LeadLostRequest
+    {
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+
+    }
     #region Upcoming events count and amount
     public class DashboardUpcomingEventsRequest
     {
@@ -80,6 +88,13 @@
     {
         public string? LeadSourceName { get; set; }
         public int LeadSourceCount { get; set; }
+        public string? LeadSourcePercent { get; set; }
+    }
+    public class LeadLostPieChart
+    {
+        public string? EventTypeName { get; set; }
+        public int LeadLostCount { get; set; }
+        public string? LeadLostPercent { get; set; }
     }
 
     public class DashboardEventSummaryResponse

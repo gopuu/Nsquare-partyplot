@@ -153,6 +153,109 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("GetDashboardPaymentCollectionDetails")]
+        public IActionResult GetDashboardPaymentCollectionDetails([FromBody] DashboardPaymentDetailsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            List<DashboardPaymentCollectionDetails> details = new List<DashboardPaymentCollectionDetails>();
+            DashboardPaymentCollectionTotals totals = new DashboardPaymentCollectionTotals();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid domain or connection.";
+                    apiResponse.data = null;
+                    return Ok(apiResponse);
+                }
+
+                DataSet ds = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_Finance_PaymentCollection_Details", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("@Type", SqlDbType.NVarChar, 20).Value = (object?)request.Type ?? DBNull.Value;
+                    cmd.Parameters.Add("@MonthDuration", SqlDbType.NVarChar, 50).Value = (object?)request.MonthDuration ?? DBNull.Value;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.NVarChar, 20).Value = (object?)request.FromDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.NVarChar, 20).Value = (object?)request.ToDate ?? DBNull.Value;
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(ds);
+                }
+
+                /* =========================
+                   TABLE 1 → DETAILS
+                ========================= */
+                if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                {
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+                        details.Add(new DashboardPaymentCollectionDetails
+                        {
+                            BookingId = Convert.ToInt64(row["BookingId"]),
+                            BookingRefNo = Convert.ToString(row["BookingRefNo"]),
+                            CustomerName = Convert.ToString(row["Client_Name"]),
+                            MobileNo = Convert.ToString(row["Client_Contact"]),
+                            EventDate = Convert.ToString(row["EventDate"]),
+                            EventDate_Format = Convert.ToString(row["EventDate_Format"]),
+
+                            TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
+                            PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
+                            PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
+
+                            PaymentStatus = Convert.ToString(row["PaymentStatus"])
+                        });
+                    }
+                }
+
+                /* =========================
+                   TABLE 2 → TOTALS
+                ========================= */
+                if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
+                {
+                    DataRow row = ds.Tables[1].Rows[0];
+
+                    totals = new DashboardPaymentCollectionTotals
+                    {
+                        TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
+                        PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
+                        PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
+                        TotalBookings = Convert.ToInt32(row["TotalBookings"])
+                    };
+                }
+
+                /* =========================
+                   FINAL RESPONSE
+                ========================= */
+                apiResponse.status = "Success";
+                apiResponse.message = "Payment collection details fetched successfully.";
+                apiResponse.data = new
+                {
+                    Rows = details,
+                    Totals = totals
+                };
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("GetDashboardUpcomingPayments")]
         public IActionResult GetDashboardUpcomingPayments(DashboardFeedbackRequest request)
         {

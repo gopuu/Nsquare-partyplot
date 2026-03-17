@@ -649,6 +649,12 @@ function renderTable(data) {
         pageLength: 10,           // Items per page
         ordering: true,          // Enable sorting
         searching: true,         // Enable searching
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+        scrollX: true,            // horizontal scroll if needed
+
         lengthChange: false,     // Hide page length change
         pagingType: "full_numbers" // Show Prev, Next, and Page Numbers
     });
@@ -665,15 +671,17 @@ function initializeSorting() {
 }
 
 //get data from API
-function fetchData() {
-    $('#btn-loader').show();
-    $('.search').val('');
+function fetchData(categoryid=0) {
+    var payload = {
+        Id: 0,
+        ItemCategoryId: categoryid
+    };
 
     $.ajax({
         url: "/api/RawMaterialsMaster/GetRawMaterialList",
         method: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: 0, ItemCategoryId: 0 }),
+        data: JSON.stringify(payload),
         success: function (response) {
             //data = response; // Store the fetched data
             console.log("response fetchData:", response);
@@ -682,9 +690,6 @@ function fetchData() {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Get DayFrequency Error")
-        },
-        complete: function () {
-            $('#btn-loader').hide(); // Ensure loader is hidden in any case
         }
     });
 }
@@ -769,14 +774,10 @@ function fetchCategorySummaryData() {
         }
     });
 }
-
 function renderCategorySummary(list) {
-
     let container = $("#categorySummaryContainer");
     container.empty();
-
     list.forEach((c, index) => {
-
         let box = `
                 <div class="cat-box ${index === 0 ? "active" : ""}"
                      data-id="${c.CategoryId}">
@@ -784,22 +785,16 @@ function renderCategorySummary(list) {
                     <div class="cat-count">${c.RawMaterialsCount} Ingredients</div>
                 </div>
             `;
-
         container.append(box);
     });
-
     attachCategorySummaryEvents();
 }
 
 function attachCategorySummaryEvents() {
-
     $(".cat-box").off("click").on("click", function () {
-
         $(".cat-box").removeClass("active");
         $(this).addClass("active");
-
         let catId = $(this).data("id");
-
         fetchData(catId); // <--- your existing fetch list function
     });
 }

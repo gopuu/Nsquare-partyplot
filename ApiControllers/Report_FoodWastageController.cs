@@ -29,25 +29,106 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - Food Wastage REPORT
+        #region Summary Reports
 
         [HttpPost]
-        [Route("GetFoodWastageGrid")]
-        public IActionResult GetFoodWastageGrid([FromBody] FoodWastageGridRequest request)
+        [Route("Report_GetFoodWastage_GRID")]
+        public IActionResult Report_GetFoodWastage_GRID([FromBody] Report_FoodWastageGridRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-            List<FoodWastageGridModel> rows = new List<FoodWastageGridModel>();
+            List<Report_FoodWastageGridModel> rows = new();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
                     return errorResult!;
 
-                DataTable dt = new DataTable();
+                DataTable dt = new();
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail_GRID", con))
+                using (SqlCommand cmd = new SqlCommand("Report_GetFoodWastage_GRID", con))
                 {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@FromDate",
+                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
+                    cmd.Parameters.AddWithValue("@ToDate",
+                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
+                    cmd.Parameters.AddWithValue("@FilterDuration",
+                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    con.Open();
+                    new SqlDataAdapter(cmd).Fill(dt);
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    rows.Add(new Report_FoodWastageGridModel
+                    {
+                        SrNo = Convert.ToInt64(row["SrNo"]),
+                        BookingId = Convert.ToInt64(row["BookingId"]),
+                        EventDate = Convert.ToString(row["EventDate"]),
+                        ShiftCode = Convert.ToString(row["ShiftCode"]),
+                        ClientName = Convert.ToString(row["ClientName"]),
+                        WastageKg = Convert.ToDecimal(row["WastageKg"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Food wastage summary fetched successfully";
+                apiResponse.data = rows;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DownloadFoodWastageReport_Pdf")]
+        public IActionResult DownloadFoodWastageReport_Pdf([FromBody] Report_FoodWastageGridRequest_PdfExcel request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
+
+                using var stream = new MemoryStream();
+                Document document = new Document(PageSize.A4.Rotate(), 36, 36, topMargin, 50);
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // Company
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // Report
+                    cmd = new SqlCommand("Report_GetFoodWastage_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@FromDate",
@@ -57,50 +138,362 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
-                    con.Open();
-
-                    using SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    da.Fill(dt);
+                    new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
-                foreach (DataRow row in dt.Rows)
+                // ── Company info ──
+                string companyName = "", companyAddress = "", companyPhone = "", logoFile = "", userName = "";
+                Image logo = null;
+
+                if (request.WithHeader ?? false)
                 {
-                    rows.Add(new FoodWastageGridModel
+                    if (dtCompany != null && dtCompany.Rows.Count > 0)
                     {
-                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        BookingId = row["BookingId"] != DBNull.Value ? Convert.ToInt64(row["BookingId"]) : 0,
-                        EventDate = row["EventDate"] != DBNull.Value ? Convert.ToString(row["EventDate"]) : "-",
-                        ClientName = row["ClientName"] != DBNull.Value ? Convert.ToString(row["ClientName"]) : "-",
-                        MenuItemName = row["MenuItemName"] != DBNull.Value ? Convert.ToString(row["MenuItemName"]) : "-",
-                        MenuItemId = row["MenuItemId"] != DBNull.Value ? Convert.ToInt64(row["MenuItemId"]) : 0,
-                        WastageKg = row["WastageKg"] != DBNull.Value ? Convert.ToDecimal(row["WastageKg"]) : 0,
-                        HasWastage = row["HasWastage"] != DBNull.Value ? Convert.ToInt32(row["HasWastage"]) : 0
-                    });
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyPhone = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                            if (System.IO.File.Exists(logoPath))
+                                logo = Image.GetInstance(logoPath);
+                        }
+                    }
+                    else
+                        companyName = "[PAGE HEADER] Company Data Not Found";
                 }
 
-                apiResponse.message = "Food wastage report fetched successfully!";
-                apiResponse.data = rows;
-                apiResponse.status = "Success";
-                return Ok(apiResponse);
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete.");
+
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+                DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
+
+                // ── Header ──
+                if (request.WithHeader ?? false)
+                {
+                    PdfPTable headerTable = new PdfPTable(2);
+                    headerTable.WidthPercentage = 100;
+                    headerTable.SetWidths(new float[] { 20f, 80f });
+
+                    PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
+                    if (logo != null) logo.ScaleToFit(70f, 70f);
+
+                    logoCell.Border = Rectangle.BOTTOM_BORDER;
+                    logoCell.Padding = 10;
+                    headerTable.AddCell(logoCell);
+
+                    PdfPCell detailCell = new PdfPCell
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        Padding = 10,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+
+                    detailCell.AddElement(new Paragraph(companyName,
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+
+                    detailCell.AddElement(new Paragraph(companyAddress,
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+
+                    detailCell.AddElement(new Paragraph(companyPhone,
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    headerTable.AddCell(detailCell);
+
+                    document.Add(headerTable);
+                }
+
+                // ── Report title ──
+                document.Add(new Paragraph(reportName.ToUpper(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 18f
+                });
+
+                // ── Table ──
+                int columnCount = dataTableDB.Columns.Count;
+
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+                table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
+
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                BaseColor thColor = new BaseColor(0, 121, 182);
+
+                foreach (DataRow hRow in headerTableDB.Rows)
+                    table.AddCell(Utils.CreateHeaderCell(hRow["HeaderName"].ToString(), thFont, thColor));
+
+                table.HeaderRows = 1;
+
+                foreach (DataRow row in dataTableDB.Rows)
+                    foreach (DataColumn col in dataTableDB.Columns)
+                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+
+                // ── Totals ──
+                if (totalTableDB != null && totalTableDB.Rows.Count > 0)
+                {
+                    DataRow totalRow = totalTableDB.Rows[0];
+                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        string value = col.ColumnName switch
+                        {
+                            "Wastage (Kg)" => $"{totalRow["TotalWastageKg"]} Kg",
+                            _ => col.Ordinal == 0 ? "TOTAL" : ""
+                        };
+
+                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            BackgroundColor = new BaseColor(240, 240, 240),
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
+                        });
+                    }
+                }
+
+                document.Add(table);
+                document.Close();
+
+                // ── Save ──
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "FoodWastage_Report_*.pdf");
+
+                string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                    stream.WriteTo(fileStream);
+
+                response.status = "Success";
+                response.message = "Food Wastage Report Generated";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null ?? "");
-                apiResponse.message = ex.Message;
-                apiResponse.status = "Error";
-                return StatusCode(500, apiResponse);
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
             }
         }
 
         [HttpPost]
-        [Route("DownloadFoodWastageReport")]
-        public IActionResult DownloadFoodWastageReport([FromBody] FoodWastageReportRequest request)
+        [Route("DownloadFoodWastageReport_Excel")]
+        public IActionResult DownloadFoodWastageReport_Excel([FromBody] Report_FoodWastageGridRequest_PdfExcel request)
         {
             apiResponse response = new apiResponse();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    SqlCommand cmd = new SqlCommand("Report_GetFoodWastage_PdfExcel", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@FromDate",
+                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate",
+                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration",
+                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+                DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Food Wastage Report");
+
+                int col = 1;
+
+                // Headers
+                foreach (DataRow hRow in headerTableDB.Rows)
+                {
+                    worksheet.Cell(1, col).Value = hRow["HeaderName"].ToString();
+                    worksheet.Cell(1, col).Style.Font.Bold = true;
+                    worksheet.Cell(1, col).Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    worksheet.Cell(1, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    col++;
+                }
+
+                int row = 2;
+
+                // Data
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+
+                    row++;
+                }
+
+                // Totals
+                if (totalTableDB != null && totalTableDB.Rows.Count > 0)
+                {
+                    DataRow totalRow = totalTableDB.Rows[0];
+
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                    {
+                        string columnName = dataTableDB.Columns[i].ColumnName;
+
+                        string value = columnName switch
+                        {
+                            "Wastage (Kg)" => totalRow["TotalWastageKg"].ToString(),
+                            _ => i == 0 ? "TOTAL" : ""
+                        };
+
+                        var cell = worksheet.Cell(row, i + 1);
+                        cell.Value = value;
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    }
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "FoodWastage_Report_*.xlsx");
+
+                string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                workbook.SaveAs(filePath);
+
+                response.status = "Success";
+                response.message = "Food Wastage Excel generated successfully";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        #endregion
+
+        #region Detail Reports
+
+        [HttpPost]
+        [Route("Report_GetFoodWastageDetail_GRID")]
+        public IActionResult Report_GetFoodWastageDetail_GRID([FromBody] Report_FoodWastageDetailsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataSet ds = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail_GRID", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+
+                    con.Open();
+                    new SqlDataAdapter(cmd).Fill(ds);
+                }
+
+                if (ds.Tables.Count < 2)
+                    throw new Exception("Food wastage detail not found.");
+
+                DataTable headerTable = ds.Tables[0];
+                DataTable itemsTable = ds.Tables[1];
+
+                if (headerTable.Rows.Count == 0)
+                    throw new Exception("Booking details not found.");
+
+                DataRow h = headerTable.Rows[0];
+
+                Report_FoodWastageDetailsModel model = new Report_FoodWastageDetailsModel
+                {
+                    BookingId = h["BookingId"] != DBNull.Value ? Convert.ToInt64(h["BookingId"]) : 0,
+                    EventDate = h["EventDate"]?.ToString(),
+                    ShiftCode = h["ShiftCode"]?.ToString(),
+                    ClientName = h["ClientName"]?.ToString(),
+                    Items = new List<Report_FoodWastageDetailsModel_Items>()
+                };
+
+                foreach (DataRow row in itemsTable.Rows)
+                {
+                    model.Items.Add(new Report_FoodWastageDetailsModel_Items
+                    {
+                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
+                        MenuItemName = row["MenuItemName"]?.ToString(),
+                        MenuItemId = row["MenuItemId"] != DBNull.Value ? Convert.ToInt64(row["MenuItemId"]) : null,
+                        WastageKg = row["WastageKg"] != DBNull.Value ? Convert.ToDecimal(row["WastageKg"]) : 0
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Food wastage details fetched successfully!";
+                apiResponse.data = model;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DownloadFoodWastageDetailReport_Pdf")]
+        public IActionResult DownloadFoodWastageDetailReport_Pdf([FromBody] Report_FoodWastageDetailsRequest_PdfExcel request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
                 float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
@@ -124,39 +517,25 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report
-                    cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
+                    cmd = new SqlCommand("Report_GetFoodWastageDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
-
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
                 // ── Company info ──
-                string companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, logoFile = string.Empty, userName = string.Empty;
+                string companyName = "", companyAddress = "", companyPhone = "", logoFile = "", userName = "";
                 Image logo = null;
 
                 if (request.WithHeader ?? false)
                 {
-                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
-
-                    if (isCompanyAvailable)
+                    if (dtCompany != null && dtCompany.Rows.Count > 0)
                     {
                         companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
-                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        companyPhone = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
                         logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
                         userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
 
@@ -168,23 +547,23 @@ namespace ERPAdmin.ApiControllers
                         }
                     }
                     else
-                    {
                         companyName = "[PAGE HEADER] Company Data Not Found";
-                    }
                 }
 
-                if (dsReport.Tables.Count < 3)
-                    throw new Exception("Report data is incomplete. Required tables are missing.");
+                if (dsReport.Tables.Count < 4)
+                    throw new Exception("Report data incomplete.");
 
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
-                DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+                DataTable totalTableDB = dsReport.Tables[3];
+                DataTable basicInfoTable = dsReport.Tables[4];
 
                 writer.PageEvent = new PdfPageEvents(userName);
                 document.Open();
 
-                // ── Page header ──
+                // ── Page Header ──
                 if (request.WithHeader ?? false)
                 {
                     PdfPTable headerTable = new PdfPTable(2);
@@ -193,6 +572,7 @@ namespace ERPAdmin.ApiControllers
 
                     PdfPCell logoCell = logo != null ? new PdfPCell(logo) : new PdfPCell(new Phrase(""));
                     if (logo != null) logo.ScaleToFit(70f, 70f);
+
                     logoCell.Border = Rectangle.BOTTOM_BORDER;
                     logoCell.Padding = 10;
                     headerTable.AddCell(logoCell);
@@ -203,23 +583,50 @@ namespace ERPAdmin.ApiControllers
                         Padding = 10,
                         HorizontalAlignment = Element.ALIGN_CENTER
                     };
-                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                    detailCell.AddElement(new Paragraph(companyName,
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+
+                    detailCell.AddElement(new Paragraph(companyAddress,
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+
+                    detailCell.AddElement(new Paragraph(companyPhone,
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
                     headerTable.AddCell(detailCell);
+
                     document.Add(headerTable);
                 }
 
                 // ── Report title ──
                 document.Add(new Paragraph(reportName.ToUpper(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK))
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
                 {
                     Alignment = Element.ALIGN_CENTER,
-                    SpacingAfter = 18f
+                    SpacingAfter = 15f
                 });
+
+                // ── Booking basic info ──
+                if (basicInfoTable.Rows.Count > 0)
+                {
+                    DataRow r = basicInfoTable.Rows[0];
+
+                    PdfPTable infoTable = new PdfPTable(2);
+                    infoTable.WidthPercentage = 100;
+
+                    infoTable.AddCell(Utils.CreateInfoCell("Booking ID", r["BookingId"]));
+                    infoTable.AddCell(Utils.CreateInfoCell("Event Date", r["EventDate"]));
+
+                    infoTable.AddCell(Utils.CreateInfoCell("Shift", r["ShiftCode"]));
+                    infoTable.AddCell(Utils.CreateInfoCell("Client", r["ClientName"]));
+
+                    document.Add(infoTable);
+                    document.Add(new Paragraph("\n"));
+                }
 
                 // ── Data table ──
                 int columnCount = dataTableDB.Columns.Count;
+
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
                 table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
@@ -228,8 +635,8 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(0, 121, 182);
 
-                for (int i = 0; i < headerTableDB.Rows.Count; i++)
-                    table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
+                foreach (DataRow h in headerTableDB.Rows)
+                    table.AddCell(Utils.CreateHeaderCell(h["HeaderName"].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
@@ -237,8 +644,8 @@ namespace ERPAdmin.ApiControllers
                     foreach (DataColumn col in dataTableDB.Columns)
                         table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
 
-                // ── Totals row ──
-                if (totalTableDB != null && totalTableDB.Rows.Count > 0)
+                // ── Totals ──
+                if (totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
                     Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
@@ -255,7 +662,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderWidth = 0.5f
                         });
                     }
                 }
@@ -267,17 +676,18 @@ namespace ERPAdmin.ApiControllers
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                Utils.deleteOldFiles(folder, "FoodWastage_Report_*.pdf");
+                Utils.deleteOldFiles(folder, "FoodWastageDetail_Report_*.pdf");
 
-                string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string fileName = $"FoodWastageDetail_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
 
                 using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
                     stream.WriteTo(fileStream);
 
                 response.status = "Success";
-                response.message = "Report Generated";
+                response.message = "Food Wastage Detail Report Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -289,14 +699,15 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadFoodWastageReport_Excel")]
-        public IActionResult DownloadFoodWastageReport_Excel([FromBody] FoodWastageReportRequest request)
+        [Route("DownloadFoodWastageDetailReport_Excel")]
+        public IActionResult DownloadFoodWastageDetailReport_Excel([FromBody] Report_FoodWastageDetailsRequest_PdfExcel request)
         {
             apiResponse response = new apiResponse();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
                 DataSet dsReport = new DataSet();
@@ -305,37 +716,27 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetFoodWastageDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
-
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
-                if (dsReport.Tables.Count < 3)
+                if (dsReport.Tables.Count < 4)
                     throw new Exception("Report data not found");
 
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
-                DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+                DataTable totalTableDB = dsReport.Tables[3];
 
                 using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Food Wastage");
+                var worksheet = workbook.Worksheets.Add("Food Wastage Detail");
 
-                // ── Headers ──
                 int col = 1;
+
+                // Headers
                 foreach (DataRow hRow in headerTableDB.Rows)
                 {
                     worksheet.Cell(1, col).Value = hRow["HeaderName"].ToString();
@@ -345,17 +746,19 @@ namespace ERPAdmin.ApiControllers
                     col++;
                 }
 
-                // ── Data ──
                 int row = 2;
+
+                // Data
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
                         worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+
                     row++;
                 }
 
-                // ── Totals row ──
-                if (totalTableDB != null && totalTableDB.Rows.Count > 0)
+                // Totals
+                if (totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
 
@@ -365,7 +768,7 @@ namespace ERPAdmin.ApiControllers
 
                         string value = columnName switch
                         {
-                            "Wastage (Kg)" => totalRow["TotalWastageKg"].ToString() + " Kg",
+                            "Wastage (Kg)" => totalRow["TotalWastageKg"].ToString(),
                             _ => i == 0 ? "TOTAL" : ""
                         };
 
@@ -381,15 +784,17 @@ namespace ERPAdmin.ApiControllers
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                Utils.deleteOldFiles(folder, "FoodWastage_Report_*.xlsx");
+                Utils.deleteOldFiles(folder, "FoodWastageDetail_Report_*.xlsx");
 
-                string fileName = $"FoodWastage_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string fileName = $"FoodWastageDetail_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
+
                 workbook.SaveAs(filePath);
 
                 response.status = "Success";
-                response.message = "Food Wastage Report Excel generated successfully.";
+                response.message = "Food Wastage Detail Excel generated successfully";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -399,7 +804,7 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
         #endregion
+
     }
 }

@@ -1,1 +1,8 @@
-﻿
+﻿.wastage-click {
+    transition: 0.2s;
+}
+
+.wastage-click:hover {
+    text-decoration: underline;
+    transform: scale(1.05);
+}

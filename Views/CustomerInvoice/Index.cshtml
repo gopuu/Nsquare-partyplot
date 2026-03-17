@@ -1072,6 +1072,74 @@
 </div>
 <!-- outstanding paymentModal -- END -->
 
+<!-- payment collection Details Modal --- START -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning-gradient py-2">
+                <h5 class="modal-title" id="paymentModalTitle">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <!--TOTALS-->
+                <div class="row g-2 mb-2">
+
+                    <div class="col-md-3">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <div class="small text-muted fw-bold">Bookings</div>
+                            <div class="fw-bold" id="totalBookings">0</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <div class="small text-muted fw-bold">Total Amount</div>
+                            <div class="fw-bold text-primary" id="totalAmount">₹ 0</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <div class="small text-muted fw-bold">Paid</div>
+                            <div class="fw-bold text-success" id="paidAmount">₹ 0</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <div class="small text-muted fw-bold">Pending</div>
+                            <div class="fw-bold text-danger" id="pendingAmount">₹ 0</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- TABLE -->
+                <table id="paymentDetailsTable" class="table table-striped table-bordered w-100">
+                    <thead>
+                        <tr>
+                            <th>Ref#</th>
+                            <th>Customer</th>
+                            <th>Mobile</th>
+                            <th>Event Date</th>
+                            <th>Total</th>
+                            <th>Paid</th>
+                            <th>Pending</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- payment collection Details Modal --- END -->
+
 @section Scripts {
     <script src="~/assets2/js/customerinvoice/CustomerInvoice.js" asp-append-version="true"></script>
     <script src="~/assets2/js/Shared/Utility.js" asp-append-version="true"></script>

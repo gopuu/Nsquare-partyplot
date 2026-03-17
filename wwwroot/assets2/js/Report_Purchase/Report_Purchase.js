@@ -134,7 +134,109 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#chk-select-all").on("change", function () {
         $(".column-checkbox").prop("checked", this.checked);
     });
+
+    $(document).on("click", ".btn-view-invoice", function () {
+        const purchaseId = $(this).data("id");
+        const invoiceNo = $(this).data("invoice");
+        loadPurchaseInvoice(purchaseId, invoiceNo);
+    });
+
+    $("#btnDownloadInvoice").on("click", function () {
+        const purchaseId = $(this).data("purchaseid");
+        const invoiceNo = $(this).data("invoiceno");
+
+        console.log("PurchaseId:", purchaseId);
+        console.log("InvoiceNo:", invoiceNo);
+        downloadPurchaseInvoice(purchaseId, invoiceNo);
+    });
+
+    $("#btnDownloadInvoice_Excel").on("click", function () {
+        const purchaseId = $(this).data("purchaseid");
+        const invoiceNo = $(this).data("invoiceno");
+
+        console.log("PurchaseId:", purchaseId);
+        console.log("InvoiceNo:", invoiceNo);
+        downloadPurchaseInvoice(purchaseId, invoiceNo, "excel");
+    });
 });
+
+function loadPurchaseInvoice(purchaseId, invoiceNo) {
+
+    const payload = {
+        PurchaseId: purchaseId,
+        InvoiceNo: invoiceNo.toString()
+    };
+
+    $.ajax({
+        url: "/api/Report_Purchase/Report_GetPurchaseInvoice_GRID",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            const inv = res.data;
+
+            // HEADER
+            $("#inv_no").text(inv.InvoiceNo || "-");
+            $("#inv_date").text(inv.InvoiceDate_Format || "-");
+            $("#inv_supplier").text(inv.SupplierName || "-");
+            $("#inv_company").text(inv.SupplierCompany || "-");
+            $("#inv_phone").text(inv.SupplierPhone || "-");
+            $("#inv_po").text(inv.PONo || "-");
+
+            // store values for download button
+            $("#btnDownloadInvoice")
+                .data("purchaseid", inv.Id)
+                .data("invoiceno", inv.InvoiceNo);
+
+            $("#btnDownloadInvoice_Excel")
+                .data("purchaseid", inv.Id)
+                .data("invoiceno", inv.InvoiceNo);
+
+            renderInvoiceItems(inv.JSON_PurchaseItems || []);
+
+            // totals
+            $("#t_subtotal").text(formatINR2(inv.SubTotal_TotalDiscount_Amount));
+            $("#t_charges").text(formatINR2(inv.SubTotal_OtherCharges_Amount));
+            $("#t_taxes").text(formatINR2(inv.SubTotal_OtherTaxes_Amount));
+            $("#t_discount").text(formatINR2(inv.TotalDiscountInInvoice));
+            $("#t_total").text(formatINR2(inv.GrandTotal_Amount));
+
+            $("#purchaseInvoiceModal").modal("show");
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load invoice.");
+        }
+    });
+}
+function renderInvoiceItems(items) {
+    let html = "";
+    items.forEach((x, i) => {
+        html += `
+        <tr>
+            <td class="text-center">${i + 1}</td>
+            <td>${x.RawMaterial}</td>
+            <td class="text-center">${x.Qty}</td>
+            <td class="text-center">${x.UnitName}</td>
+            <td class="text-end">${formatINR2(x.Price)}</td>
+            <td class="text-end">${formatINR2(x.BaseAmount)}</td>
+            <td class="text-end">${x.CGST_Amount} (${x.CGST}%)</td>
+            <td class="text-end">${x.SGST_Amount} (${x.SGST}%)</td>
+            <td class="text-end">${x.IGST_Amount} (${x.IGST}%)</td>
+            <td class="text-end">${formatINR2(x.TotalGST)}</td>
+            <td class="text-end fw-semibold">${formatINR2(x.TotalAmount)}</td>
+        </tr>
+        `;
+    });
+
+    $("#invoiceItemsTable tbody").html(html);
+}
+
 
 /* ═══════════════════════════════════════════════════
    LOAD SUPPLIER DROPDOWN
@@ -240,24 +342,30 @@ function renderPurchaseTable(data) {
         paging: false,
         scrollY: "60vh",          // table body scroll height
         scrollCollapse: true,     // shrink if less rows
-        scrollX: true,            // horizontal scroll if needed
 
         columns: [
             {
-                data: "SrNo",
-                title: "#",
-                width: "50px",
-                className: "text-center"
+                data: "InvoiceNo",
+                title: "Invoice No",
+                className: "text-center",
+                render: function (data, type, row) {
+
+                    if (!data) return "-";
+
+                    return `
+                        <a href="javascript:void(0)" 
+                           class="link-primary fw-semibold btn-view-invoice"
+                           data-id="${row.PurchaseId}"
+                           data-invoice="${data}">
+                           #${data}
+                        </a>
+                    `;
+                }
             },
             {
                 data: "InvoiceDate",
                 title: "Date",
                 width: "110px"
-            },
-            {
-                data: "InvoiceNo",
-                title: "Invoice No",
-                className: "text-center"
             },
             {
                 data: "SupplierName",

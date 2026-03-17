@@ -1,4 +1,9 @@
-﻿#tableMain table.dataTable tbody tr {
+﻿#txtPaidAmount, #barPaid,
+#txtPendingAmount, #barPending {
+    cursor: pointer;
+}
+
+#tableMain table.dataTable tbody tr {
     border-bottom: 1px solid #9ca3af;
 }
  

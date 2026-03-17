@@ -731,14 +731,13 @@ $(function () {
 
     //tooltip -widget---------- START -----------------------
     const tooltipContent = {
-
         // ================= PAYMENT COLLECTION =================
         paymentCollectionTitle: `Total of collected Booking Amounts & Invoice Amounts, within the selected period`,
 
         // ================= UPCOMING PAYMENT =================
         upcomingPaymentTitle: `Total of pending Booking & Invoice payments due within the selected period.`
-
     };
+
     Object.keys(tooltipContent).forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -806,7 +805,125 @@ $(function () {
     });
     //Delete Invoice ---------- END --------------
 
+    $(document).on("click", "#txtPaidAmount, #barPaid", function () {
+        openPaymentModal("PAID");
+    });
+
+    $(document).on("click", "#txtPendingAmount, #barPending", function () {
+        openPaymentModal("PENDING");
+    });
 });
+
+let paymentTable = null;
+function openPaymentModal(type) {
+    $("#paymentModalTitle").text(type === "PAID" ? "Payment Received Details" : "Payment Pending Details");
+    $("#paymentDetailsTable tbody").html("<tr><td colspan='8'>Loading...</td></tr>");
+    $("#paymentDetailsModal").modal("show");
+    loadPaymentDetails(type);
+}
+function loadPaymentDetails(type) {
+    var payload = {
+        Type: type,
+        MonthDuration: selectedPaymentDuration,
+        FromDate: null,
+        ToDate: null
+    };
+    console.log("payload:", payload);
+    $.ajax({
+        url: "/api/FinanceDashboard/GetDashboardPaymentCollectionDetails",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("res:", res);
+
+            if (res.status !== "Success") {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Notice",
+                    text: res.message
+                });
+                return;
+            }
+
+            const data = res.data?.Rows ?? [];
+            const totals = res.data?.Totals ?? {};
+
+            /* =========================
+               🔹 SAFE TOTALS
+            ========================= */
+            $("#totalBookings").text(totals.TotalBookings ?? 0);
+            $("#totalAmount").text(formatINR2(totals.TotalAmount ?? 0));
+            $("#paidAmount").text(formatINR2(totals.PaidAmount ?? 0));
+            $("#pendingAmount").text(formatINR2(totals.PendingAmount ?? 0));
+
+            /* =========================
+               🔹 DESTROY OLD TABLE
+            ========================= */
+            if ($.fn.DataTable.isDataTable('#paymentDetailsTable')) {
+                $('#paymentDetailsTable').DataTable().clear().destroy();
+            }
+
+            /* =========================
+               🔹 INIT DATATABLE
+            ========================= */
+            paymentTable = $("#paymentDetailsTable").DataTable({
+                data: data,
+                pageLength: 10,
+                paging: false,
+                scrollCollapse: true,
+                ordering: false,
+                autoWidth: false,
+                language: {
+                    emptyTable: "No payment records found"
+                },
+                columns: [
+                    { data: "BookingRefNo", defaultContent: "-" },
+                    { data: "CustomerName", defaultContent: "-" },
+                    { data: "MobileNo", defaultContent: "-" },
+                    { data: "EventDate_Format", defaultContent: "-" },
+                    {
+                        data: "TotalAmount",
+                        className: "text-primary fw-bold",
+                        render: formatINR2
+                    },
+                    {
+                        data: "PaidAmount",
+                        className: "text-success fw-bold",
+                        render: formatINR2
+                    },
+                    {
+                        data: "PendingAmount",
+                        className: "text-danger fw-bold",
+                        render: formatINR2
+                    },
+                    {
+                        data: "PaymentStatus",
+                        render: function (d) {
+                            if (d === "Paid")
+                                return `<span class="badge bg-success">Paid</span>`;
+                            else if (d === "Partial")
+                                return `<span class="badge bg-warning text-dark">Partial</span>`;
+                            else
+                                return `<span class="badge bg-danger">Unpaid</span>`;
+                        }
+                    }
+                ]
+            });
+
+            /* =========================
+               🔹 OPTIONAL: INLINE EMPTY MESSAGE
+            ========================= */
+            if (data.length === 0) {
+                $("#paymentDetailsTable tbody")
+                    .html(`<tr><td colspan="8" class="text-center text-muted">No records available</td></tr>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading payment details.");
+        }
+    });
+}
 
 function ShowHide_DeleteButton() {
     //Delete button HIDE/SHOW

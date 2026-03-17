@@ -55,6 +55,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Id", request.Id > 0 ? request.Id : 0);
                     cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId > 0 ? request.SupplierId : 0);
+                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo ??  "");
 
                     con.Open();
                     using SqlDataReader dr = cmd.ExecuteReader();

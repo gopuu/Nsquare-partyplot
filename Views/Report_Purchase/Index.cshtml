@@ -40,13 +40,13 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                        <a class="dropdown-item" href="javascript:void(0)"
+                        <a class="dropdown-item cursor-pointer" href="javascript:void(0)"
                            onclick="ViewPurchaseReport('downloadPDF')">
                             <i class="fas fa-file-pdf text-danger me-2"></i> PDF
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="javascript:void(0)"
+                        <a class="dropdown-item cursor-pointer" href="javascript:void(0)"
                            onclick="ViewPurchaseReport('downloadExcel')">
                             <i class="fas fa-file-excel text-success me-2"></i> Excel
                         </a>
@@ -159,8 +159,125 @@
     </div>
 </div>
 
+<!--Purchase Invoice Modal-->
+<div class="modal fade" id="purchaseInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning py-2">
+                <h5 class="modal-title text-white">Purchase Invoice</h5>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item cursor-pointer" id="btnDownloadInvoice">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item cursor-pointer" id="btnDownloadInvoice_Excel">
+                                    <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Invoice Info -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <b>Invoice No</b>
+                        <div id="inv_no"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Date</b>
+                        <div id="inv_date"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Supplier</b>
+                        <div id="inv_supplier"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Phone</b>
+                        <div id="inv_phone"></div>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <table class="table table-bordered table-sm" id="invoiceItemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Raw Material</th>
+                            <th>Qty</th>
+                            <th>Unit</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Cost</th>
+                            <th class="text-end">CGST</th>
+                            <th class="text-end">SGST</th>
+                            <th class="text-end">IGST</th>
+                            <th class="text-end">GST</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <!-- Totals -->
+                <div class="row justify-content-end">
+                    <div class="col-md-4">
+
+                        <table class="table table-sm table-bordered">
+                            <tr>
+                                <td>Sub Total</td>
+                                <td class="text-end" id="t_subtotal"></td>
+                            </tr>
+
+                            <tr>
+                                <td>Other Charges</td>
+                                <td class="text-end" id="t_charges"></td>
+                            </tr>
+
+                            <tr>
+                                <td>Other Taxes</td>
+                                <td class="text-end" id="t_taxes"></td>
+                            </tr>
+
+                            <tr>
+                                <td>Discount</td>
+                                <td class="text-end" id="t_discount"></td>
+                            </tr>
+
+                            <tr class="fw-bold">
+                                <td>Grand Total</td>
+                                <td class="text-end" id="t_total"></td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/assets2/js/report_purchase/report_purchase.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/Shared/utility.js" asp-append-version="true"></script>
 }
 
 @section Styles {

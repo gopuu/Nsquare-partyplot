@@ -19,43 +19,49 @@
     <div class="pb-1">
         <div class="row g-2">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <!-- Header Row -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <!-- LEFT : Title -->
                     <h4 class="mb-0 text-warning">Inventory</h4>
 
-                    <!-- Files button that opens uploaded file (tooling will transform path into URL) -->
-                    <div>
-                        <button id="btnFiles" class="btn btn-outline-secondary btn-sm d-none">
-                            <i class="fa fa-file"></i> Files
-                        </button>
-                    </div>
-                </div>
+                    <!-- RIGHT : Filters + Buttons -->
+                    <div class="d-flex align-items-end gap-3">
 
-                <!-- Filters row (optional - adapt as needed) -->
-                <div class="row mb-3 g-2">
+                        <!-- Category -->
+                        <div>
+                            <label class="form-label mb-1">Category</label>
+                            <select id="filterItemCategory" class="form-select form-select-sm"></select>
+                        </div>
 
-                    <!-- Category -->
-                    <div class="col-md-2">
-                        <label class="form-label mb-1">Category</label>
-                        <select id="filterItemCategory" class="form-select form-select-sm"></select>
-                    </div>
+                        <!-- Raw Material -->
+                        <div>
+                            <label class="form-label mb-1">Raw Material</label>
+                            <select id="filterRawMaterial" class="form-select form-select-sm"></select>
+                        </div>
 
-                    <!-- Raw Material -->
-                    <div class="col-md-2">
-                        <label class="form-label mb-1">Raw Material</label>
-                        <select id="filterRawMaterial" class="form-select form-select-sm"></select>
-                    </div>
+                        <!-- Unit -->
+                        <div>
+                            <label class="form-label mb-1">Unit</label>
+                            <select id="filterUnit" class="form-select form-select-sm"></select>
+                        </div>
 
-                    <!-- Unit -->
-                    <div class="col-md-2">
-                        <label class="form-label mb-1">Unit</label>
-                        <select id="filterUnit" class="form-select form-select-sm"></select>
-                    </div>
+                        <!-- Clear -->
+                        <div>
+                            <label class="form-label invisible">btn</label>
+                            <button id="btnClearFilters" class="btn btn-outline-secondary btn-sm">
+                                Clear
+                            </button>
+                        </div>
 
-                    <!-- Clear Button -->
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button id="btnClearFilters" class="btn btn-outline-secondary btn-sm">
-                            Clear
-                        </button>
+                        <!-- Save -->
+                        <div>
+                            <label class="form-label invisible">btn</label>
+                            <button id="btnSaveStockOut" class="btn btn-warning btn-sm">
+                                Save
+                            </button>
+                        </div>
+
                     </div>
 
                 </div>
@@ -68,7 +74,7 @@
                                 <th>Category</th>
                                 <th>Raw Material</th>
                                 <th>Stock Available</th>
-                                <th>Stock Outward</th>
+                                <th class="bg-warning-gradient">Stock Outward</th>
                                 <th>Remarks</th>
                                 <th>History</th>
                             </tr>
@@ -80,11 +86,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<!--SAVE BUTTON-->
-<div id="fixedSaveBar">
-    <button id="btnSaveStockOut" class="btn btn-warning">Save</button>
 </div>
 
 <!-- History -->
