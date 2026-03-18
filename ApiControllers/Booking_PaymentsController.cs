@@ -1,4 +1,6 @@
-﻿using ERPAdmin.Helper;
+﻿using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Presentation;
+using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.Services;
 using iTextSharp.text;
@@ -206,24 +208,21 @@ namespace ERPAdmin.ApiControllers
 
                 DataTable dtCompany = new DataTable();
                 DataTable dtReceipt = new DataTable();
+                DataTable dtPayments = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
 
-                    // -------- COMPANY --------
+                    // COMPANY
                     using (SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
-
-                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
-                        {
-                            da.Fill(dtCompany);
-                        }
+                        new SqlDataAdapter(cmd).Fill(dtCompany);
                     }
 
-                    // -------- RECEIPTS (UNION ALL) --------
+                    // RECEIPTS
                     using (SqlCommand cmd = new SqlCommand("Report_PaymentReceipt", con))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -231,150 +230,124 @@ namespace ERPAdmin.ApiControllers
                         cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
                         new SqlDataAdapter(cmd).Fill(dtReceipt);
                     }
+
+                    // FOR PAYMENTS HISTORY
+                    using (SqlCommand cmd = new SqlCommand("GetBooking_Payments", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@PaymentId", 0);
+                        cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+                        new SqlDataAdapter(cmd).Fill(dtPayments);
+                    }
                 }
 
-                // ================= VALIDATION =================
+                if (dtReceipt.Rows.Count == 0)
+                    throw new Exception("Receipt data not found.");
 
-                // 🔹 Validate receipt data first
-                if (dtReceipt == null || dtReceipt.Rows.Count == 0)
-                {
-                    throw new Exception("Receipt data not found. Unable to generate receipt.");
-                }
-
-                // 🔹 Company Safe Handling
-                string companyName = string.Empty;
-                string companyAddress = string.Empty;
-                string companyPhone = string.Empty;
-                string logoFile = string.Empty;
-                string userName = string.Empty;
+                // ================= COMPANY =================
+                string companyName = "";
+                string companyAddress = "";
+                string companyPhone = "";
+                string logoFile = "";
+                string userName = "";
                 Image logo = null;
 
-                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
-
-                if (isCompanyAvailable)
+                if (dtCompany.Rows.Count > 0)
                 {
-                    DataRow companyRow = dtCompany.Rows[0];
+                    var row = dtCompany.Rows[0];
 
-                    companyName = companyRow["CompanyName"]?.ToString() ?? string.Empty;
-                    companyAddress = companyRow["CompanyAddress"]?.ToString() ?? string.Empty;
-                    companyPhone = companyRow["CompanyMobile"]?.ToString() ?? string.Empty;
-                    logoFile = companyRow["CompanyLogo"]?.ToString() ?? string.Empty;
-                    userName = companyRow["UserName"]?.ToString() ?? string.Empty;
+                    companyName = row["CompanyName"]?.ToString() ?? "";
+                    companyAddress = row["CompanyAddress"]?.ToString() ?? "";
+                    companyPhone = row["CompanyMobile"]?.ToString() ?? "";
+                    logoFile = row["CompanyLogo"]?.ToString() ?? "";
+                    userName = row["UserName"]?.ToString() ?? "";
 
-                    // 🔹 Safe logo loading
                     if (!string.IsNullOrWhiteSpace(logoFile))
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-
-                        if (System.IO.File.Exists(logoPath))
-                        {
-                            logo = Image.GetInstance(logoPath);
-                        }
+                        string path = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        if (System.IO.File.Exists(path))
+                            logo = Image.GetInstance(path);
                     }
                 }
-                else
+
+                // ================= FONTS =================
+                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+                // ================= HEADER METHOD =================
+                PdfPTable BuildHeader()
                 {
-                    // Fallback values
-                    companyName = "[Company Information Not Available]";
-                    companyAddress = string.Empty;
-                    companyPhone = string.Empty;
-                    userName = string.Empty;
+                    PdfPTable tbl = new PdfPTable(2);
+                    tbl.WidthPercentage = 100;
+                    tbl.SetWidths(new float[] { 20f, 80f });
 
-                    // Optional logging
-                    //_logger.LogWarning("Company details not found while generating Receipt PDF.");
-                }
-
-                // ================= START PDF =================
-
-                writer.PageEvent = new PdfPageEvents(userName);
-                document.Open();
-
-                // ================= LOOP RECEIPTS =================
-
-                foreach (DataRow r in dtReceipt.Rows)
-                {
-                    // -------- HEADER --------
-                    PdfPTable headerTable = new PdfPTable(2);
-                    headerTable.WidthPercentage = 100;
-                    headerTable.SetWidths(new float[] { 20f, 80f });
-
-                    PdfPCell logoCell;
-
-                    if (logo != null)
-                    {
-                        logo.ScaleToFit(70f, 70f);
-                        logoCell = new PdfPCell(logo);
-                    }
-                    else
-                    {
-                        logoCell = new PdfPCell(new Phrase(""));
-                    }
+                    PdfPCell logoCell = logo != null
+                        ? new PdfPCell(logo)
+                        : new PdfPCell(new Phrase(""));
 
                     logoCell.Border = Rectangle.BOTTOM_BORDER;
                     logoCell.Padding = 10;
-                    headerTable.AddCell(logoCell);
 
-                    PdfPCell detailCell = new PdfPCell
+                    if (logo != null)
+                        logo.ScaleToFit(70, 70);
+
+                    tbl.AddCell(logoCell);
+
+                    PdfPCell detail = new PdfPCell
                     {
                         Border = Rectangle.BOTTOM_BORDER,
                         Padding = 10,
                         HorizontalAlignment = Element.ALIGN_CENTER
                     };
 
-                    detailCell.AddElement(new Paragraph(companyName,
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detail.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+                    detail.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detail.AddElement(new Paragraph(companyPhone, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
 
-                    detailCell.AddElement(new Paragraph(companyAddress,
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    tbl.AddCell(detail);
 
-                    detailCell.AddElement(new Paragraph(companyPhone,
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+                    return tbl;
+                }
 
-                    headerTable.AddCell(detailCell);
-                    document.Add(headerTable);
+                writer.PageEvent = new PdfPageEvents(userName);
+                document.Open();
 
-                    // -------- TITLE --------
-                    document.Add(new Paragraph("\n"));
+                // ================= RECEIPTS =================
+                for (int i = 0; i < dtReceipt.Rows.Count; i++)
+                {
+                    var r = dtReceipt.Rows[i];
 
-                    PdfPTable titleTable = new PdfPTable(1);
-                    titleTable.WidthPercentage = 100;
+                    document.Add(BuildHeader());
 
-                    PdfPCell titleCell = new PdfPCell(
-                        new Phrase("TRANSACTION RECEIPT",
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.WHITE))
-                    );
+                    // TITLE
+                    PdfPTable title = new PdfPTable(1);
+                    title.WidthPercentage = 100;
 
-                    titleCell.BackgroundColor = new BaseColor(0, 102, 204);
-                    titleCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                    titleCell.Padding = 10;
-                    titleCell.Border = Rectangle.NO_BORDER;
-
-                    titleTable.AddCell(titleCell);
-                    document.Add(titleTable);
-                    document.Add(new Paragraph("\n"));
-
-                    // -------- RECEIPT TABLE --------
-
-                    PdfPTable receiptTable = new PdfPTable(2);
-                    receiptTable.WidthPercentage = 100;
-                    receiptTable.SetWidths(new float[] { 35f, 65f });
-
-                    Font labelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
-                    Font valueFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
-                    BaseColor labelBg = new BaseColor(235, 238, 255);
-
-                    void AddRow(string label, string value)
+                    PdfPCell tCell = new PdfPCell(new Phrase("TRANSACTION RECEIPT",
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.WHITE)))
                     {
-                        receiptTable.AddCell(new PdfPCell(new Phrase(label, labelFont))
-                        {
-                            BackgroundColor = labelBg,
-                            Padding = 6
-                        });
+                        BackgroundColor = new BaseColor(0, 102, 204),
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 10,
+                        Border = Rectangle.NO_BORDER
+                    };
 
-                        receiptTable.AddCell(new PdfPCell(new Phrase(value ?? "-", valueFont))
-                        {
-                            Padding = 6
-                        });
+                    title.AddCell(tCell);
+                    document.Add(title);
+                    document.Add(new Paragraph("\n"));
+
+                    // TABLE
+                    PdfPTable tbl = new PdfPTable(2);
+                    tbl.WidthPercentage = 100;
+                    tbl.SetWidths(new float[] { 35, 65 });
+
+                    iTextSharp.text.Font labelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+                    BaseColor bg = new BaseColor(235, 238, 255);
+
+                    void AddRow(string l, string v)
+                    {
+                        tbl.AddCell(new PdfPCell(new Phrase(l, labelFont)) { BackgroundColor = bg, Padding = 6 });
+                        tbl.AddCell(new PdfPCell(new Phrase(v ?? "-", normalFont)) { Padding = 6 });
                     }
 
                     AddRow("Customer Name", r["CustomerName"]?.ToString());
@@ -383,49 +356,98 @@ namespace ERPAdmin.ApiControllers
                     AddRow("Payment Mode", r["PaymentModeName"]?.ToString());
 
                     AddRow("Total Amount", $"Rs. {Convert.ToDecimal(r["TotalAmount"] ?? 0):N2}");
-
-                    AddRow("Total Paid (Previously)", $"Rs. {Convert.ToDecimal(r["TotalPaidPreviously"] ?? 0):N2}");
-
-                    AddRow("Total Discount (Previously)", $"Rs. {Convert.ToDecimal(r["TotalDiscountPreviously"] ?? 0):N2}");
-
+                    AddRow("Paid Previously", $"Rs. {Convert.ToDecimal(r["TotalPaidPreviously"] ?? 0):N2}");
+                    AddRow("Discount Previously", $"Rs. {Convert.ToDecimal(r["TotalDiscountPreviously"] ?? 0):N2}");
                     AddRow("Paid Amount", $"Rs. {Convert.ToDecimal(r["PaidAmount"] ?? 0):N2}");
-
                     AddRow("Discount", $"Rs. {Convert.ToDecimal(r["Discount"] ?? 0):N2}");
+                    AddRow("Remaining", $"Rs. {Convert.ToDecimal(r["RemainingAmount"] ?? 0):N2}");
 
-                    AddRow("Remaining Amount", $"Rs. {Convert.ToDecimal(r["RemainingAmount"] ?? 0):N2}");
+                    document.Add(tbl);
 
-                    document.Add(receiptTable);
+                    // ================= PAYMENT TRAILS =================
+                    if (dtPayments.Rows.Count > 0)
+                    {
+                        //document.NewPage();
 
-                    document.NewPage();
+                        //document.Add(BuildHeader());
+
+                        document.Add(new Paragraph("\n"));
+                        title = new PdfPTable(1);
+                        title.WidthPercentage = 100;
+
+                        title.AddCell(new PdfPCell(new Phrase("PAYMENT HISTORY",
+                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, new BaseColor(0, 102, 204))))
+                        {
+                            BackgroundColor = BaseColor.WHITE,
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 10,
+                            Border = Rectangle.NO_BORDER
+                        });
+
+                        document.Add(title);
+                        //document.Add(new Paragraph("\n"));
+
+                        PdfPTable payTbl = new PdfPTable(5);
+                        payTbl.WidthPercentage = 100;
+                        payTbl.SetWidths(new float[] { 20, 20, 25, 15, 20 });
+                        payTbl.HeaderRows = 1;
+
+                        void H(string t)
+                        {
+                            payTbl.AddCell(new PdfPCell(new Phrase(t, boldFont))
+                            {
+                                BackgroundColor = new BaseColor(230, 230, 230),
+                                HorizontalAlignment = Element.ALIGN_CENTER
+                            });
+                        }
+
+                        H("Date"); H("Mode"); H("Reference"); H("Amount"); H("Balance");
+
+                        foreach (DataRow pr in dtPayments.Rows)
+                        {
+                            payTbl.AddCell(new Phrase(pr["PaymentDateTimeFormat"]?.ToString() ?? "-", normalFont));
+                            payTbl.AddCell(new Phrase(pr["PaymentModeName"]?.ToString() ?? "-", normalFont));
+                            payTbl.AddCell(new Phrase(pr["TxnId"]?.ToString() ?? "-", normalFont));
+
+                            payTbl.AddCell(new PdfPCell(new Phrase(Convert.ToDecimal(pr["Amount"] ?? 0).ToString("N0"), normalFont))
+                            { HorizontalAlignment = Element.ALIGN_RIGHT });
+
+                            payTbl.AddCell(new PdfPCell(new Phrase(Convert.ToDecimal(pr["DueBalance"] ?? 0).ToString("N0"), normalFont))
+                            { HorizontalAlignment = Element.ALIGN_RIGHT });
+                        }
+
+                        document.Add(payTbl);
+                    }
+
+                    //NEW PAGE
+                    if (i < dtReceipt.Rows.Count - 1)
+                        document.NewPage();
                 }
 
                 document.Close();
 
-                // -------- SAVE FILE --------
+                // ================= SAVE =================
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "PaymentReceipt_*.pdf");
 
-                string fileName;
-                if (request.PaymentId > 0)
-                {
-                    fileName = $"PaymentReceipt_PId_{request.PaymentId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                }
-                else {
-                    fileName = $"PaymentReceipt_BId_{request.BookingId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                }
-                string filePath = Path.Combine(folder, fileName);
+                string fileName = request.PaymentId > 0
+                    ? $"PaymentReceipt_PId_{request.PaymentId}_{DateTime.Now:yyyyMMddHHmmss}.pdf"
+                    : $"PaymentReceipt_BId_{request.BookingId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
-                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                string pathFile = Path.Combine(folder, fileName);
+
+                using (FileStream fs = new FileStream(pathFile, FileMode.Create))
                 {
                     stream.WriteTo(fs);
                 }
 
                 response.status = "Success";
-                response.message = "All Payment Receipts Generated";
+                response.message = "Receipt Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)

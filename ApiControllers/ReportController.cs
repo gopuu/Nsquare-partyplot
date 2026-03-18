@@ -841,9 +841,9 @@ namespace ERPAdmin.ApiControllers
 
                 using MemoryStream stream = new MemoryStream();
 
-                //Document document = new Document(PageSize.A4, 25, 25, 20, 30);
-                Rectangle customSize = new Rectangle(PageSize.A4.Width, 390); // 🔥 reduce height
-                Document document = new Document(customSize, 25, 25, 20, 30);
+                Document document = new Document(PageSize.A4, 25, 25, 20, 30);
+                //Rectangle customSize = new Rectangle(PageSize.A4.Width, 420); // 🔥 reduce height
+                //Document document = new Document(customSize, 25, 25, 20, 30);
 
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 writer.CloseStream = false;
@@ -852,6 +852,7 @@ namespace ERPAdmin.ApiControllers
 
                 DataTable dtCompany = new DataTable();
                 DataTable dt = new DataTable();
+                DataTable dtPayments = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -868,10 +869,17 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
                     new SqlDataAdapter(cmd).Fill(dt);
+
+                    // Payments
+                    cmd = new SqlCommand("GetBooking_Payments", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = request.PaymentId;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    new SqlDataAdapter(cmd).Fill(dtPayments);
                 }
 
-                if (dt.Rows.Count == 0)
-                    throw new Exception("No data found");
+                //if (dt.Rows.Count == 0)
+                //throw new Exception("No data found");
 
                 DataRow r = dt.Rows[0];
 
@@ -887,14 +895,23 @@ namespace ERPAdmin.ApiControllers
                 string shift = r["ShiftFullName"].ToString();
 
                 string paymentMode = r["PaymentMode"].ToString();
-                string amount = Convert.ToDecimal(r["PaymentAmount"]).ToString("N0");
-                string amountWords = r["PaymentAmountInWords"].ToString() + " Only";
+
+                string paidAmount = Convert.ToDecimal(r["PaidAmount"]).ToString("N0");
+                string amountWords = r["PaidAmountInWords"].ToString() + " Only";
+                string totalAmount = Convert.ToDecimal(r["TotalAmount"]).ToString("N0");
+                string outstandingAmount = Convert.ToDecimal(r["OutstandingAmount"]).ToString("N0");
+
                 string createdBy = r["Payment_CreatedBy"].ToString();
+                string notes = r["PaymentNote"].ToString();
 
                 /* ================= FONTS ================= */
                 Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13);
                 Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
                 Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                Font AmtFontNormal = new Font(bf, 10, Font.NORMAL);  //FontFactory.GetFont(FontFactory.HELVETICA, 10);
 
                 /* ================= HEADER ================= */
                 PdfPTable headerTable = new PdfPTable(2);
@@ -994,7 +1011,7 @@ namespace ERPAdmin.ApiControllers
                 tbl.WidthPercentage = 100;
                 tbl.SetWidths(new float[] { 30, 5, 65 });
 
-                void AddRow(string label, string value)
+                void AddRow(string label, string value, Font value_Font)
                 {
                     tbl.AddCell(new PdfPCell(new Phrase(label, boldFont)) { Border = Rectangle.NO_BORDER });
 
@@ -1004,24 +1021,26 @@ namespace ERPAdmin.ApiControllers
                         HorizontalAlignment = Element.ALIGN_CENTER
                     });
 
-                    tbl.AddCell(new PdfPCell(new Phrase(value, normalFont))
+                    tbl.AddCell(new PdfPCell(new Phrase(value, value_Font))
                     {
                         Border = Rectangle.BOTTOM_BORDER,
                         PaddingBottom = 5
                     });
                 }
 
-                AddRow("Received with thanks from", customerName);
+                AddRow("Received with thanks from", customerName, normalFont);
 
                 // EVENT DETAILS (multi-line like image)
-                AddRow("Event details", $"Event Date : {eventDate}        Event : {eventName}");
-                AddRow("", $"Banquet(s) : {banquet} at {startTime} ({shift})");
+                AddRow("Event details", $"Event Date : {eventDate}        Event : {eventName}", normalFont);
+                AddRow("", $"Banquet(s) : {banquet} at {startTime} ({shift})", normalFont);
 
-                AddRow("Mode of Payment", paymentMode);
-                AddRow("Reference No", "");
-                AddRow("The sum of rupees", amountWords);
-                AddRow("Receipt created by", createdBy);
-                AddRow("Note", "");
+                AddRow("Mode of Payment", paymentMode, normalFont);
+                AddRow("Reference No", "", normalFont);
+                AddRow("Total Booking Amount", $"₹ {totalAmount}", AmtFontNormal);
+                AddRow("The sum of rupees paid", amountWords, normalFont);
+                AddRow("Outstanding", $"₹ {outstandingAmount}", AmtFontNormal);
+                AddRow("Receipt created by", createdBy, normalFont);
+                AddRow("Note", notes, normalFont);
 
                 document.Add(tbl);
 
@@ -1032,10 +1051,9 @@ namespace ERPAdmin.ApiControllers
                 amtTbl.WidthPercentage = 100;
                 amtTbl.SetWidths(new float[] { 30, 70 });
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                Font AmtFont = new Font(bf, 13, Font.BOLD);
-                PdfPCell amtCell = new PdfPCell(new Phrase($"₹ {amount}", AmtFont))
+                Font AmtFontBold = new Font(bf, 13, Font.BOLD);
+
+                PdfPCell amtCell = new PdfPCell(new Phrase($"₹ {paidAmount}", AmtFontBold))
                 {
                     Border = Rectangle.BOX,
                     FixedHeight = 45,
@@ -1053,6 +1071,82 @@ namespace ERPAdmin.ApiControllers
                 });
 
                 document.Add(amtTbl);
+
+                // PAYMENTS TRAIL =================
+                if (dtPayments.Rows.Count > 0)
+                {
+                    //document.NewPage();
+                    document.Add(new Paragraph("\n"));
+
+                    //document.Add(headerTable);
+
+                    PdfPTable title2 = new PdfPTable(1);
+                    title2.WidthPercentage = 100;
+
+                    PdfPCell titleCell2 = new PdfPCell(
+                        new Phrase("PAYMENT DETAILS",
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, new BaseColor(0, 102, 204)))
+                    );
+
+                    titleCell2.BackgroundColor = BaseColor.WHITE;
+                    titleCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+                    titleCell2.Padding = 7;
+                    titleCell2.Border = Rectangle.NO_BORDER;
+
+                    title2.AddCell(titleCell2);
+                    document.Add(title2);
+
+                    PdfPTable payTbl = new PdfPTable(5);
+                    payTbl.WidthPercentage = 100;
+                    payTbl.SetWidths(new float[] { 20, 20, 25, 15, 20 });
+
+                    void AddHeader(string text)
+                    {
+                        payTbl.AddCell(new PdfPCell(new Phrase(text, boldFont))
+                        {
+                            BackgroundColor = new BaseColor(230, 230, 230),
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 5
+                        });
+                    }
+
+                    AddHeader("Paid On");
+                    AddHeader("Payment Mode");
+                    AddHeader("Reference");
+                    AddHeader("Paid Amount");
+                    AddHeader("Due Balance");
+
+                    foreach (DataRow pr in dtPayments.Rows)
+                    {
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentDateTimeFormat"].ToString(), normalFont))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentModeName"].ToString(), normalFont))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["TxnId"].ToString(), normalFont)));
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(
+                            $"₹ {Convert.ToDecimal(pr["Amount"]).ToString("N0")}", AmtFontNormal))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(
+                            $"₹ {Convert.ToDecimal(pr["DueBalance"]).ToString("N0")}", AmtFontNormal))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT
+                        });
+                    }
+
+                    document.Add(new Paragraph("\n"));
+                    document.Add(payTbl);
+                }
+
 
                 document.Close();
 

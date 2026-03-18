@@ -38,6 +38,7 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
             showTempLoader(loaderMsg);
         },
         success: function (res) {
+            Swal.close();
             console.log("downloadReport res:", res);
             if (res.status === 'Success' && res.data?.FileUrl) {
                 const link = document.createElement('a');
@@ -55,12 +56,9 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
                 });
             }
         },
-
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "report generation failed");
-        },
-        complete: function () {
             Swal.close();
+            handleApiError(xhr, status, error, "report generation failed");
         }
     });
 }

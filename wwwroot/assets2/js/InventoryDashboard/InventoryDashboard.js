@@ -51,13 +51,14 @@ $(document).ready(function () {
         $(this).addClass("active");
 
         // Get filter text → normalized value
-        const filterText = $(this).text().toLowerCase().replaceAll(" ", "");
+        const filterMonth = $(this).text().toLowerCase().replaceAll(" ", "");
 
         // Set dropdown button text
         $("#COGSChartFilter").text($(this).text());
 
+        console.log("filterMonth:", filterMonth);
         // Load COGS count
-        loadCOGSCount(filterText);
+        loadCOGSCount(filterMonth);
     });
 
 });
@@ -84,8 +85,8 @@ function loadKeyStatistics(monthDuration = "thismonth", fromDate = null, toDate 
                 $("#totalSales,#totalPurchase,#totalWastage").text("0");
             }
         },
-        error: function () {
-            console.error("Key Statistics API failed");
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Key Statistics Data Failed")
         }
     });
 }
@@ -112,8 +113,8 @@ function loadCOGSCount(monthDuration = "thismonth", fromDate = null, toDate = nu
                 $("#WorthofStockConsumed").text("0");
             }
         },
-        error: function () {
-            console.error("Key Statistics API failed");
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "COGs Data Failed")
         }
     });
 }
@@ -141,8 +142,8 @@ function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromD
                 $("#pendingpurchases","#pendingapprovals").text("0");
             }
         },
-        error: function () {
-            console.error("purchase API failed");
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Pending Purchase Data Failed")
         }
     });
 }
@@ -272,7 +273,8 @@ function loadStockOutSummary() {
                 );
             }
         },
-        error: function () {
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "StockOut Data Failed")
             $(".stockout-list").html(
                 "<div class='text-danger text-center'>Failed to load stock-out data</div>"
             );

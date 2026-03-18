@@ -20,10 +20,10 @@
 
         <!-- 🟡 Widget 1: Key Statistics -->
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 bg-warning-gradient">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0 fw-semibold">Key Statistics</h6>
+                        <h6 class="mb-0 fw-bold">Key Statistics</h6>
                         <div class="d-flex align-items-center gap-2">
                             <div class="dropdown mr-4 chart-filter-Statistics">
                                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
@@ -70,34 +70,35 @@
 
         <!-- 🔵 Widget 2: COGS -->
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 position-relative">
+            <div class="card border-0 shadow-sm h-100 position-relative bg-warning-gradient">
                 <div class="card-body d-flex flex-column justify-content-between h-100 position-relative">
 
                     <!-- 🔹 Top Bar: Title + Filter + Info -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-semibold mb-0 text-start">COGS</h6>
+                        <h6 class="fw-bold mb-0 text-start">COGS</h6>
                         <div class="d-flex align-items-center gap-2">
                             <div class="dropdown mr-4 chart-filter-COGS">
 
-                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                    type="button"
-                                    id="COGSChartFilter"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                This Month
-                            </button>
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                        type="button"
+                                        id="COGSChartFilter"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    This Month
+                                </button>
 
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="COGSChartFilter">
-                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
-                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                <li><a class="dropdown-item" href="#">Custom Range</a></li>
-                            </ul>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="COGSChartFilter">
+                                    <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="last7days" href="#">Last 7 Days</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="last30days" href="#">Last 30 Days</a></li>
+                                    <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="last12months" href="#">Last 12 Months</a></li>
+                                    <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+                                </ul>
+
+                            </div>
                         </div>
-                    </div>
                     </div>
                     <!-- 🔹 Centered Content -->
                     <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center">

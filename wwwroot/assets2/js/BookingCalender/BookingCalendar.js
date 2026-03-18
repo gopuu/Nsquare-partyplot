@@ -6418,7 +6418,7 @@ function renderPaymentTable(data) {
 // ----------------- OPTIONAL: Download button click -----------------
 $(document).on("click", ".btn-download", function () {
     let paymentId = $(this).data("id");
-    let bookingId = 0; // getBookingId();
+    let bookingId = getBookingId();
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
 
     var payload = {
@@ -6426,29 +6426,9 @@ $(document).on("click", ".btn-download", function () {
         BookingId: bookingId,
         ActionBy: actionBy
     };
-    $.ajax({
-        url: "/api/Booking_Payments/DownloadPaymentReceipt",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            if (res.status === "Success") {
 
-                let link = document.createElement("a");
-                link.href = res.data.FileUrl;
-                link.download = "";   // 👈 force download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } else {
-                Swal.fire("Error", res.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Download Receipt Failed")
-        }
-    });
+    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+    downloadReport(url, payload, "Generating Receipt...");
 });
 
 $(document).on("click", ".btn-download-all", function () {
@@ -6461,29 +6441,9 @@ $(document).on("click", ".btn-download-all", function () {
         BookingId: bookingId,
         ActionBy: actionBy
     };
-    $.ajax({
-        url: "/api/Booking_Payments/DownloadPaymentReceipt",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            if (res.status === "Success") {
 
-                let link = document.createElement("a");
-                link.href = res.data.FileUrl;
-                link.download = "";   // 👈 force download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } else {
-                Swal.fire("Error", res.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Download All-Receipt Failed")
-        }
-    });
+    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+    downloadReport(url, payload, "Generating Receipt...");
 });
 
 

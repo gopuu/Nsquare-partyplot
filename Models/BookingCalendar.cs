@@ -75,7 +75,8 @@
 
     public class DownloadBookingReceiptRequest : BaseClass
     {
-        public long BookingId { get; set; }
+        public long? PaymentId { get; set; }
+        public long? BookingId { get; set; }
     }
 
 

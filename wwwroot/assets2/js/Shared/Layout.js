@@ -10,6 +10,7 @@
         }
     });
 }
+
 function handleApiSuccess(msg = "Saved successfully!") {
     Swal.fire({
         toast: true,

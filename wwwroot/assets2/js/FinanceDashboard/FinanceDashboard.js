@@ -259,6 +259,7 @@
                     loadNextVoucherNo();
                     // Reload table or data
                     fetchExpenseTransactions();
+                    loadFinanceSummary(selectedFinanceDuration);
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
@@ -461,6 +462,7 @@
                     loadNextVoucherNo();
                     // Reload table or data
                     fetchIncomeTransactions();
+                    loadFinanceSummary(selectedFinanceDuration);
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }

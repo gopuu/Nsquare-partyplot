@@ -1136,7 +1136,7 @@ function renderTable(data) {
 
             {
                 data: null,
-                title: "Remaining",
+                title: "Pending",
                 className: "text-center",
                 render: (d) => {
                     let remain = d.Remaining_Amount ?? 0;
