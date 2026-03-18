@@ -29,26 +29,27 @@
         public string? BookedFrom { get; set; }
         public string? BookedTill { get; set; }
         public long SubEventId { get; set; } = 0;
-        public bool? IsOnlyInvoice { get; set; } = false;
+        public bool? IsInvoiceGenerated { get; set; }
         public long? PaymentStatusId { get; set; } = 0;
     }
 
     public class CustomerInvoiceResponse_GRID
     {
         public long BookingId { get; set; }
-        public long InvoiceNo { get; set; }
-        public long ProformaInvoiceNo { get; set; }
+        public long? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public bool? IsInvoiceBlocked { get; set; }
         public string? BookedOn { get; set; }
-        public string EventName { get; set; }
-        public string HallName { get; set; }
-        public string ClientName { get; set; }
-        public string ClientContactNo { get; set; }
-        public decimal TotalAmount { get; set; }
-        public decimal OutstandingAmount { get; set; }
+        public string? EventName { get; set; }
+        public string? HallName { get; set; }
+        public string? ClientName { get; set; }
+        public string? ClientContactNo { get; set; }
+        public decimal? TotalAmount { get; set; }
+        public decimal? PaidAmount { get; set; }
+        public decimal? OutstandingAmount { get; set; }
     }
     // SAVE
     public class SaveCustomerInvoiceRequest : BaseClass

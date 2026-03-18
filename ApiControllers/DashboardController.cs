@@ -269,7 +269,8 @@ namespace ERPAdmin.ApiControllers
                         result.Add(new EventTypePieChart
                         {
                             EventLabel = dr["eventLabel"].ToString(),
-                            EventCount = Convert.ToInt32(dr["eventcount"])
+                            EventCount = Convert.ToInt32(dr["eventcount"]),
+                            EventPercent = (dr["eventpercent"]).ToString()
                         });
                     }
                     con.Close();
@@ -330,7 +331,8 @@ namespace ERPAdmin.ApiControllers
                         result.Add(new EventTypePieChart
                         {
                             EventLabel = dr["EventSubTypeName"].ToString(),
-                            EventCount = Convert.ToInt32(dr["SubTypeCount"])
+                            EventCount = Convert.ToInt32(dr["SubTypeCount"]),
+                            EventPercent = Convert.ToString(dr["SubTypePercent"])
                         });
                     }
                     con.Close();
@@ -392,7 +394,8 @@ namespace ERPAdmin.ApiControllers
                         result.Add(new EventTypePieChart
                         {
                             EventLabel = dr["EventSubTypeName"].ToString(),
-                            EventCount = Convert.ToInt32(dr["SubTypeCount"])
+                            EventCount = Convert.ToInt32(dr["SubTypeCount"]),
+                            EventPercent = Convert.ToString(dr["SubTypePercent"])
                         });
                     }
                     con.Close();

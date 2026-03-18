@@ -82,6 +82,7 @@
     {
         public string? EventLabel { get; set; }
         public int EventCount { get; set; }
+        public string? EventPercent { get; set; }
     }
 
     public class LeadSourcePieChart

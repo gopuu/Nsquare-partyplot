@@ -68,7 +68,7 @@
                             <!-- CARD BODY -->
                             <div class="card-body">
 
-                                <div class="d-flex justify-content-between mb-2">
+                                <div class="d-flex justify-content-between mb-2" id="paymentReceivedTitle">
                                     <span>Payment Received</span>
                                     <span class="text-success fw-bold">₹ <span id="txtPaidAmount">0</span></span>
                                 </div>
@@ -76,7 +76,7 @@
                                     <div id="barPaid" class="progress-bar bg-success"></div>
                                 </div>
 
-                                <div class="d-flex justify-content-between mb-2">
+                                <div class="d-flex justify-content-between mb-2" id="upcomingPaymentTitle">
                                     <span>Payment Pending</span>
                                     <span class="text-danger fw-bold">₹ <span id="txtPendingAmount">0</span></span>
                                 </div>
@@ -160,6 +160,16 @@
                                         </select>
                                     </div>
 
+                                    <!-- Invoice Generated -->
+                                    <div class="col-md-2">
+                                        <label class="form-label">Invoice Generation</label>
+                                        <select id="fltIsInvoiceGenerated" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                            <option value="false">Pending</option>
+                                            <option value="true">Generated</option>
+                                        </select>
+                                    </div>
+
                                     <!-- Buttons -->
                                     <div class="col-md-4 d-flex gap-2 mt-5">
                                         <button class="btn btn-outline-primary btn-sm w-100"
@@ -181,9 +191,17 @@
 
                 <!-- TABLE -->
                 <div id="tableMain">
-                    <table class="table table-striped table-bordered w-100"></table>
+                    <table id="invoiceTable" class="table table-striped table-bordered w-100">
+                        <tfoot>
+                            <tr class="table-footer-total">
+                                <th colspan="8" class="text-end">TOTAL</th>
+                                <th id="ftTotalAmount" class="text-end"></th>
+                                <th id="ftOutstandingAmount" class="text-end"></th>
+                                <th colspan="7"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-
             </div>
         </div>
     </div>

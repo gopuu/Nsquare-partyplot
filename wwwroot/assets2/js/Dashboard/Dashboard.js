@@ -654,24 +654,24 @@ function loadBookingEventTypeCount() {
                 console.warn(res.message);
                 return;
             }
-
             let labels = [];
             let values = [];
+            let percents = [];
 
             res.data.forEach(item => {
                 labels.push(item.EventLabel);
                 values.push(item.EventCount);
+                percents.push(item.EventPercent); // 🔥 NEW
             });
-           
-            renderCorporateFamilyChart(labels, values);
+
+            renderCorporateFamilyChart(labels, values, percents);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fail to get Corporate-Family Data");
         },
     });
 }
-function renderCorporateFamilyChart(labels, values) {
-    
+function renderCorporateFamilyChart(labels, values, percents) {     
     const ctx = document.getElementById('jobPie');
 
     // 🔁 destroy old chart
@@ -702,16 +702,26 @@ function renderCorporateFamilyChart(labels, values) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                text: `${label} (${data.datasets[0].data[i]})`,
+                                text: `${label} (${percents[i]})`,
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            return `${labels[i]}: ${values[i]} (${percents[i]})`;
                         }
                     }
                 },
                 datalabels: {
                     color: '#fff',
                     font: { weight: 'bold', size: 12 },
-                    formatter: (value) => value
+                    formatter: (value, context) => {
+                        return percents[context.dataIndex];
+                    }
                 }
             }
         },
@@ -751,11 +761,12 @@ function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate 
             if (response.status === "Success" && response.data.length > 0) {
                 const labels = response.data.map(x => x.EventLabel);
                 const values = response.data.map(x => x.EventCount);
+                const percents = response.data.map(x => x.EventPercent);
 
-                renderCorporateSubTypeChart(labels, values);
+                renderCorporateSubTypeChart(labels, values, percents);
             } else {
                 // empty chart
-                renderCorporateSubTypeChart([], []);
+                renderCorporateSubTypeChart([], [], []);
             }
         },
         error: function (xhr, status, error) {
@@ -764,7 +775,7 @@ function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate 
     });
 }
 let eventPieChart; // 🔹 store chart instance globally
-function renderCorporateSubTypeChart(labels, values) {
+function renderCorporateSubTypeChart(labels, values, percents) {
     const ctx = document.getElementById('eventPie');
 
     // Destroy old chart if exists
@@ -796,16 +807,28 @@ function renderCorporateSubTypeChart(labels, values) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                text: `${label} - ${data.datasets[0].data[i]}`,
+                                //text: `${label} - ${data.datasets[0].data[i]}`,
+                                text: `${label} (${percents[i]})`,
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            return `${labels[i]}: ${values[i]} (${percents[i]})`;
                         }
                     }
                 },
                 datalabels: {
                     color: '#fff',
                     font: { weight: 'bold', size: 12 },
-                    formatter: (value) => value
+                    //formatter: (value) => value
+                    formatter: (value, context) => {
+                        return percents[context.dataIndex];
+                    }
                 }
             }
         },
@@ -851,11 +874,12 @@ function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", from
             if (response.status === "Success" && response.data.length > 0) {
                 const labels = response.data.map(x => x.EventLabel);
                 const values = response.data.map(x => x.EventCount);
+                const percents = response.data.map(x => x.EventPercent);
 
-                renderFamilySubTypeChart(labels, values);
+                renderFamilySubTypeChart(labels, values, percents);
             } else {
                 // empty chart
-                renderFamilySubTypeChart([], []);
+                renderFamilySubTypeChart([], [], []);
             }
         },
         error: function (xhr, status, err) {
@@ -864,7 +888,7 @@ function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", from
     });
 }
 let salesPieChart; // global chart instance
-function renderFamilySubTypeChart(labels, values) {
+function renderFamilySubTypeChart(labels, values, percents) {
     const ctx = document.getElementById('salesPie');
 
     if (salesPieChart) salesPieChart.destroy(); // destroy old chart
@@ -895,9 +919,18 @@ function renderFamilySubTypeChart(labels, values) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                text: `${label} (${data.datasets[0].data[i]}%)`,
+                                //text: `${label} (${data.datasets[0].data[i]}%)`,
+                                text: `${label} (${percents[i]})`,
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            return `${labels[i]}: ${values[i]} (${percents[i]})`;
                         }
                     }
                 },
@@ -1222,7 +1255,8 @@ function renderLeadSourceChart(apiData) {
         labels.push("No Data");
         values.push(1);
         percents.push("0%");
-    } else {
+    }
+    else {
         apiData.forEach(item => {
             labels.push(item.LeadSourceName);
             values.push(item.LeadSourceCount);
@@ -1271,7 +1305,8 @@ function renderLeadSourceChart(apiData) {
                     labels: {
                         generateLabels: function () {
                             return labels.map((label, i) => ({
-                                text: `${label} (${values[i]} | ${percents[i]})`,
+                                //text: `${label} (${values[i]} | ${percents[i]})`,
+                                text: `${label} (${percents[i]})`,
                                 fillStyle: chartColors[i], // ✅ correct color
                                 strokeStyle: "#fff",
                                 index: i
@@ -1486,7 +1521,8 @@ function renderLeadLostChart(apiData) {
                     labels: {
                         generateLabels: function () {
                             return labels.map((label, i) => ({
-                                text: `${label} (${values[i]} | ${percents[i]})`,
+                                //text: `${label} (${values[i]} | ${percents[i]})`,
+                                text: `${label} (${percents[i]})`,
                                 fillStyle: chartColors[i],
                                 strokeStyle: "#fff",
                                 index: i

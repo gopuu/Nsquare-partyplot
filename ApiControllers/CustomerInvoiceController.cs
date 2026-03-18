@@ -51,6 +51,7 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetCustomerInvoice_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
                     cmd.Parameters.Add("@NameEmailContact", SqlDbType.NVarChar, 100).Value = (object?)request.NameEmailContact ?? DBNull.Value;
                     cmd.Parameters.Add("@SlotId", SqlDbType.BigInt).Value = request.SlotId;
@@ -60,11 +61,14 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@BookedTill", SqlDbType.NVarChar, 20).Value = (object?)request.BookedTill ?? DBNull.Value;
                     cmd.Parameters.Add("@SubEventId", SqlDbType.BigInt).Value = request.SubEventId;
                     cmd.Parameters.Add("@PaymentStatusId", SqlDbType.BigInt).Value = request.PaymentStatusId;
-                    cmd.Parameters.Add("@IsOnlyInvoice", SqlDbType.Bit).Value = request.IsOnlyInvoice;
-
+                    cmd.Parameters.Add("@IsInvoiceGenerated", SqlDbType.Bit).Value = (object?)request.IsInvoiceGenerated ?? DBNull.Value;
                     con.Open();
+
                     using (SqlDataReader dr = cmd.ExecuteReader())
                     {
+                        /* =========================
+                           🔹 RESULT 1: ROWS
+                        ========================= */
                         while (dr.Read())
                         {
                             list.Add(new CustomerInvoiceResponse_GRID
@@ -82,15 +86,48 @@ namespace ERPAdmin.ApiControllers
                                 ClientName = dr["ClientName"].ToString(),
                                 ClientContactNo = dr["ClientContactNo"].ToString(),
                                 TotalAmount = Convert.ToDecimal(dr["TotalAmount"]),
+                                PaidAmount = Convert.ToDecimal(dr["PaidAmount"]), // NEW
                                 OutstandingAmount = Convert.ToDecimal(dr["OutstandingAmount"])
                             });
                         }
+
+                        /* =========================
+                           🔹 RESULT 2: TOTALS
+                        ========================= */
+                        decimal totalAmount = 0;
+                        decimal totalPaid = 0;
+                        decimal totalOutstanding = 0;
+                        int totalBookings = 0;
+
+                        if (dr.NextResult())
+                        {
+                            if (dr.Read())
+                            {
+                                totalBookings = Convert.ToInt32(dr["TotalBookings"]);
+                                totalAmount = dr["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(dr["TotalAmount"]) : 0;
+                                totalPaid = dr["TotalPaid"] != DBNull.Value ? Convert.ToDecimal(dr["TotalPaid"]) : 0;
+                                totalOutstanding = dr["TotalOutstanding"] != DBNull.Value ? Convert.ToDecimal(dr["TotalOutstanding"]) : 0;
+                            }
+                        }
+
+                        /* =========================
+                           🔹 FINAL RESPONSE
+                        ========================= */
+                        apiResponse.status = "Success";
+                        apiResponse.message = "Customer invoice fetched successfully.";
+                        apiResponse.data = new
+                        {
+                            Rows = list,
+                            Totals = new
+                            {
+                                TotalBookings = totalBookings,
+                                TotalAmount = totalAmount,
+                                TotalPaid = totalPaid,
+                                TotalOutstanding = totalOutstanding
+                            }
+                        };
                     }
                 }
-
-                apiResponse.status = "Success";
-                apiResponse.message = "Customer invoice fetched successfully.";
-                apiResponse.data = list;
 
                 return Ok(apiResponse);
             }

@@ -13,14 +13,14 @@ let selectedPaymentDuration = "thismonth";
 let gstList = [];
 
 $(function () {
-    const flag_ShowOnlyInvoice = sessionStorage.getItem("IsShowTotalSalesList") === "true";
-    if (flag_ShowOnlyInvoice) {
+    const flag_isGeneratedInvoice = sessionStorage.getItem("IsShowTotalSalesList") === "true";
+    if (flag_isGeneratedInvoice) {
         //console.log("Show Total Sales List is enabled");
         // clear after use
         sessionStorage.removeItem("IsShowTotalSalesList");
     }
 
-    fetchData(flag_ShowOnlyInvoice);
+    fetchData(flag_isGeneratedInvoice);
     loadSubEventList();
     loadSlotDropdown();
     getNextInvoiceNumbers();
@@ -732,10 +732,10 @@ $(function () {
     //tooltip -widget---------- START -----------------------
     const tooltipContent = {
         // ================= PAYMENT COLLECTION =================
-        paymentCollectionTitle: `Total of collected Booking Amounts & Invoice Amounts, within the selected period`,
+        paymentReceivedTitle: `Total of collected Advance + Invoice Amounts, within the selected period`,
 
         // ================= UPCOMING PAYMENT =================
-        upcomingPaymentTitle: `Total of pending Booking & Invoice payments due within the selected period.`
+        upcomingPaymentTitle: `Total of pending Invoice Payments, due within the selected period.`
     };
 
     Object.keys(tooltipContent).forEach(id => {
@@ -1634,7 +1634,26 @@ function getNextInvoiceNumbers() {
     });
 }
 
-function fetchData(isOnlyInvoice=false) {
+function fetchData(isGenerated) {
+    console.log("isGenerated:", isGenerated);
+    // 🔥 session-based override
+    let isInvoiceGenerated = null;
+
+    // session override
+    if (isGenerated === true) {
+        isInvoiceGenerated = true; // ✔ boolean
+    }
+    else {
+        const val = $('#fltIsInvoiceGenerated').val();
+
+        if (val === "") {
+            isInvoiceGenerated = null;
+        } else {
+            isInvoiceGenerated = val === "true"; // ✔ boolean
+        }
+    }
+   
+
     const payload = {
         BookingId: 0,
         NameEmailContact: $('#fltSearch').val() || null,
@@ -1645,9 +1664,10 @@ function fetchData(isOnlyInvoice=false) {
         BookedTill: $('#fltBookedTill').val() || null,
         SubEventId: $('#fltEvent').val() || 0,
         PaymentStatusId: $('#fltPaymentStatus').val() || 0,
-        IsOnlyInvoice: isOnlyInvoice
+        IsInvoiceGenerated: isInvoiceGenerated
     };
-    //console.log("payload:", payload);
+    console.log("payload:", payload);
+
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoice_GRID',
         type: 'POST',
@@ -1655,7 +1675,19 @@ function fetchData(isOnlyInvoice=false) {
         data: JSON.stringify(payload),
         success: function (res) {
             ////console.log("fetch res:", res);
-            renderTable(res.data || []);
+            if (res.status !== "Success") {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Notice",
+                    text: res.message
+                });
+                return;
+            }
+
+            const rows = res.data?.Rows || [];
+            const totals = res.data?.Totals || {};
+
+            renderTable(rows, totals);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "CustomerInvoice Fetch Failed!");
@@ -1663,7 +1695,7 @@ function fetchData(isOnlyInvoice=false) {
     });
 }
 
-function renderTable(data) {
+function renderTable(data, totals) {
     //console.log("render data:", data);
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
@@ -1693,11 +1725,12 @@ function renderTable(data) {
             }
         },
         columns: [
-            { data: 'BookingId', title: '#BRN' },
+            { data: 'BookingId', title: '#BRN', name: 'BookingId' },
             //InvoiceNo / ProformaInvoiceNo
             {
                 data: null,
                 title: 'Invoice No',
+                name: 'InvoiceNo',
                 render: function (row) {
 
                     const invoiceNo =
@@ -1726,17 +1759,18 @@ function renderTable(data) {
                 }
             },
 
-            { data: 'EventDate_Format', title: 'Event Date' },
-            { data: 'BookedOn', title: 'Booked On' },
-            { data: 'EventName', title: 'Event (PAX)' },
-            { data: 'HallName', title: 'Banquet' },
-            { data: 'ClientName', title: 'Client' },
-            { data: 'ClientContactNo', title: 'Contact' },
+            { data: 'EventDate_Format', title: 'Event Date', name:'EventDate_Format' },
+            { data: 'BookedOn', title: 'Booked On', name: 'BookedOn' },
+            { data: 'EventName', title: 'Event (PAX)', name: 'EventName' },
+            { data: 'HallName', title: 'Banquet', name: 'HallName' },
+            { data: 'ClientName', title: 'Client', name: 'ClientName' },
+            { data: 'ClientContactNo', title: 'Contact', name: 'ClientContactNo' },
             //TotalAmount
             {
                 data: 'TotalAmount',
                 title: 'Total Amt.',
                 className: 'text-end',
+                name: 'TotalAmount',
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
             },
             //OutstandingAmount
@@ -1744,6 +1778,7 @@ function renderTable(data) {
                 data: null,
                 title: 'Outstanding Amt.',
                 className: 'text-end',
+                name: 'OutstandingAmount',
                 render: function (d) {
 
                     let outstanding = d.OutstandingAmount ?? 0;
@@ -1766,6 +1801,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'Summary',
+                name: 'Summary',
                 render: row =>
                     `<button class="btn btn-primary btn-action-xs2 btn-summary"
                          data-bookingid="${row.BookingId}">
@@ -1776,6 +1812,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'Proforma Invoice',
+                name: 'ProformaInvoice',
                 render: function (row) {
 
                     if (!hasValidNo(row.ProformaInvoiceNo)) {
@@ -1813,6 +1850,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'Send Proforma',
+                name: 'SendProforma',
                 render: row =>
                     hasValidNo(row.ProformaInvoiceNo)
                         ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
@@ -1827,6 +1865,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'PDF (Proforma)',
+                name: 'PDFProforma',
                 className: 'text-center',
                 render: row =>
                     !hasValidNo(row.ProformaInvoiceNo)
@@ -1841,6 +1880,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'GST Invoice',
+                name: 'GSTInvoice',
                 render: function (row) {
 
                     if (!hasValidNo(row.InvoiceNo)) {
@@ -1887,6 +1927,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'Send Invoice',
+                name: 'SendInvoice',
                 render: row =>
                     hasValidNo(row.InvoiceNo)
                         ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
@@ -1901,6 +1942,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: 'PDF (GST)',
+                name: 'PDFGST',
                 className: 'text-center',
                 render: row =>
                     !hasValidNo(row.InvoiceNo)
@@ -1911,9 +1953,20 @@ function renderTable(data) {
                                data-invoiceno="${row.InvoiceNo}">
                            </i>`
             },
-        ]
+        ],
+
+        footerCallback: function (row, data, start, end, display) {
+            const api = this.api();
+
+            const format = val => `₹ ${Number(val || 0).toLocaleString('en-IN')}`;
+
+            $(api.column('TotalAmount:name').footer()).html(format(totals.TotalAmount));
+            $(api.column('OutstandingAmount:name').footer()).html(format(totals.TotalOutstanding));
+        }        
     }); 
 }
+
+
 
 function isPastDate(dateString) {
     if (!dateString) return false;
