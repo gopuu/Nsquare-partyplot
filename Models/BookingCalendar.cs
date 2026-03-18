@@ -14,6 +14,71 @@
         public long BookingId { get; set; }
     }
 
+    //Booking Receipt Model
+    public class BookingReceiptModel
+    {
+        // ================= RECEIPT =================
+        public long ReceiptNo { get; set; }
+        public string? PaymentDateRaw { get; set; }   // optional if you want raw date
+        public string PaymentDate { get; set; }
+        public string PaymentTime { get; set; }
+
+        // ================= BOOKING =================
+        public long BookingId { get; set; }
+        public string ClientName { get; set; }
+        public string EventDate { get; set; }
+
+        public long? BookingSubEventId { get; set; }
+        public string BookingSubEventName { get; set; }
+
+        public long? BanquetId { get; set; }
+        public string BanquetName { get; set; }
+
+        public string StartTime { get; set; }
+        public string StartTimeFull { get; set; }
+
+        public string ShiftFullName { get; set; }
+
+        // ================= PAYMENT =================
+        public int? PaymentModeId { get; set; }
+        public string PaymentMode { get; set; }
+
+        public decimal PaymentAmount { get; set; }
+        public string PaymentAmountFormatted
+            => PaymentAmount.ToString("N0");   // ₹ 5,000
+
+        public string PaymentAmountInWords { get; set; }
+
+        public string TransactionId { get; set; }
+        public string ChequeNo { get; set; }
+        public string ChequeBank { get; set; }
+        public string ChequeDate { get; set; }
+
+        // ================= CREATED =================
+        public long? BookedByEmpId { get; set; }
+        public string BookedByEmpName { get; set; }
+
+        public long? PaymentCreatedById { get; set; }
+        public string? PaymentCreatedBy { get; set; }
+
+        public string? BookedOn { get; set; }
+
+        // ================= EXTRA =================
+        public string PaymentNote { get; set; }
+
+        // ================= DERIVED (FOR PDF) =================
+        public string EventDetailsLine =>
+            $"Event Date : {EventDate}    Event : {BookingSubEventName}";
+        public string BanquetDetailsLine =>
+            $"{BanquetName} at {StartTimeFull} ({ShiftFullName})";
+    }
+
+    public class DownloadBookingReceiptRequest : BaseClass
+    {
+        public long BookingId { get; set; }
+    }
+
+
     //Reschedule
     public class SaveBookingCalendarReschedule : BaseClass
     {

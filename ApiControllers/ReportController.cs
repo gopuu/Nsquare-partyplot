@@ -32,7 +32,7 @@ namespace ERPAdmin.ApiControllers
         #region Booking Calendar - reports
         [HttpPost]
         [Route("DownloadCustomerInvoiceReport")]
-        public IActionResult DownloadCustomerInvoiceReport(CustomerInvoiceReportRequest request)
+        public IActionResult DownloadCustomerInvoiceReport([FromBody] CustomerInvoiceReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -312,7 +312,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("DownloadBookingEventReport")]
-        public IActionResult DownloadBookingEventReport(DownloadBookingEventReportRequest request)
+        public IActionResult DownloadBookingEventReport([FromBody] DownloadBookingEventReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -812,6 +812,269 @@ namespace ERPAdmin.ApiControllers
                 response.status = "Success";
                 response.message = "PDF Generated Successfully";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("DownloadBookingReceipt")]
+        public IActionResult DownloadBookingReceipt([FromBody] DownloadBookingReceiptRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using MemoryStream stream = new MemoryStream();
+
+                //Document document = new Document(PageSize.A4, 25, 25, 20, 30);
+                Rectangle customSize = new Rectangle(PageSize.A4.Width, 390); // 🔥 reduce height
+                Document document = new Document(customSize, 25, 25, 20, 30);
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+
+                document.Open();
+
+                DataTable dtCompany = new DataTable();
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // Header
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // Receipt
+                    cmd = new SqlCommand("Report_GetBookingReceipt", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    new SqlDataAdapter(cmd).Fill(dt);
+                }
+
+                if (dt.Rows.Count == 0)
+                    throw new Exception("No data found");
+
+                DataRow r = dt.Rows[0];
+
+                /* ================= VARIABLES ================= */
+                string receiptNo = r["ReceiptNo"].ToString();
+                string receiptDate = r["PaymentDate"].ToString();
+
+                string customerName = r["Client_Name"].ToString();
+                string eventDate = r["EventDate"].ToString();
+                string eventName = r["Booking_SubEventName"].ToString();
+                string banquet = r["BanquetName"].ToString();
+                string startTime = r["StartTime_Full"].ToString();
+                string shift = r["ShiftFullName"].ToString();
+
+                string paymentMode = r["PaymentMode"].ToString();
+                string amount = Convert.ToDecimal(r["PaymentAmount"]).ToString("N0");
+                string amountWords = r["PaymentAmountInWords"].ToString() + " Only";
+                string createdBy = r["Payment_CreatedBy"].ToString();
+
+                /* ================= FONTS ================= */
+                Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13);
+                Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+                Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+                /* ================= HEADER ================= */
+                PdfPTable headerTable = new PdfPTable(2);
+                headerTable.WidthPercentage = 100;
+                headerTable.SetWidths(new float[] { 20f, 80f });
+
+                // 🔹 Logo
+                Image logo = null;
+                string logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(logoFile))
+                {
+                    string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+
+                    if (System.IO.File.Exists(logoPath))
+                    {
+                        logo = Image.GetInstance(logoPath);
+                    }
+                }
+
+                PdfPCell logoCell;
+
+                if (logo != null)
+                {
+                    logo.ScaleToFit(70f, 70f);
+                    logoCell = new PdfPCell(logo);
+                }
+                else
+                {
+                    logoCell = new PdfPCell(new Phrase(""));
+                }
+
+                logoCell.Border = Rectangle.BOTTOM_BORDER;
+                logoCell.Padding = 10;
+                headerTable.AddCell(logoCell);
+
+                // 🔹 Company Details
+                PdfPCell detailCell = new PdfPCell
+                {
+                    Border = Rectangle.BOTTOM_BORDER,
+                    Padding = 10,
+                    HorizontalAlignment = Element.ALIGN_CENTER
+                };
+
+                detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyName"].ToString(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
+
+                detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyAddress"].ToString(),
+                    FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+
+                detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyMobile"].ToString(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
+
+                headerTable.AddCell(detailCell);
+
+                document.Add(headerTable);
+
+                //document.Add(new Paragraph("\n"));
+
+                /* ================= TOP ROW ================= */
+                PdfPTable titleTable = new PdfPTable(1);
+                titleTable.WidthPercentage = 100;
+
+                PdfPCell titleCell = new PdfPCell(
+                    new Phrase("BOOKING RECEIPT",
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.WHITE))
+                );
+
+                titleCell.BackgroundColor = new BaseColor(0, 102, 204);
+                titleCell.HorizontalAlignment = Element.ALIGN_CENTER;
+                titleCell.Padding = 10;
+                titleCell.Border = Rectangle.NO_BORDER;
+
+                titleTable.AddCell(titleCell);
+                document.Add(titleTable);
+
+                //document.Add(new Paragraph("\n"));
+
+                PdfPTable top = new PdfPTable(2);
+                top.WidthPercentage = 100;
+                top.SetWidths(new float[] { 70, 30 });
+
+                top.AddCell(new PdfPCell(new Phrase($"RECEIPT NO: {receiptNo}", boldFont))
+                { Border = Rectangle.NO_BORDER });
+
+                top.AddCell(new PdfPCell(new Phrase($"DATE:  {receiptDate}", boldFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    HorizontalAlignment = Element.ALIGN_RIGHT
+                });
+
+                document.Add(top);
+                //document.Add(new Paragraph("\n"));
+
+                /* ================= MAIN TABLE ================= */
+                PdfPTable tbl = new PdfPTable(3);
+                tbl.WidthPercentage = 100;
+                tbl.SetWidths(new float[] { 30, 5, 65 });
+
+                void AddRow(string label, string value)
+                {
+                    tbl.AddCell(new PdfPCell(new Phrase(label, boldFont)) { Border = Rectangle.NO_BORDER });
+
+                    tbl.AddCell(new PdfPCell(new Phrase(":", boldFont))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    });
+
+                    tbl.AddCell(new PdfPCell(new Phrase(value, normalFont))
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        PaddingBottom = 5
+                    });
+                }
+
+                AddRow("Received with thanks from", customerName);
+
+                // EVENT DETAILS (multi-line like image)
+                AddRow("Event details", $"Event Date : {eventDate}        Event : {eventName}");
+                AddRow("", $"Banquet(s) : {banquet} at {startTime} ({shift})");
+
+                AddRow("Mode of Payment", paymentMode);
+                AddRow("Reference No", "");
+                AddRow("The sum of rupees", amountWords);
+                AddRow("Receipt created by", createdBy);
+                AddRow("Note", "");
+
+                document.Add(tbl);
+
+                document.Add(new Paragraph("\n"));
+
+                /* ================= AMOUNT + SIGN ================= */
+                PdfPTable amtTbl = new PdfPTable(2);
+                amtTbl.WidthPercentage = 100;
+                amtTbl.SetWidths(new float[] { 30, 70 });
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                Font AmtFont = new Font(bf, 13, Font.BOLD);
+                PdfPCell amtCell = new PdfPCell(new Phrase($"₹ {amount}", AmtFont))
+                {
+                    Border = Rectangle.BOX,
+                    FixedHeight = 45,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    VerticalAlignment = Element.ALIGN_MIDDLE
+                };
+
+                amtTbl.AddCell(amtCell);
+
+                amtTbl.AddCell(new PdfPCell(new Phrase("Authorised Signatory", normalFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    VerticalAlignment = Element.ALIGN_BOTTOM
+                });
+
+                document.Add(amtTbl);
+
+                document.Close();
+
+                /* ================= SAVE ================= */
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "Booking_Receipt_*.pdf");
+
+                string fileName = $"Booking_Receipt_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+                string filePath = Path.Combine(folder, fileName);
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fs);
+                }
+
+                response.status = "Success";
+                response.message = "Receipt Generated Successfully";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)

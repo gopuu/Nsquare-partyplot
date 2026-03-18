@@ -294,17 +294,30 @@ $(document).ready(function () {
                 data: JSON.stringify(payload),
                 contentType: "application/json",
                 success: function (response) {
-
                     if (response.status.toLowerCase() == "success") {
+                        handleApiSuccess("Saved!");
+                        // ✅ Swal Confirmation
                         Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Purchase Saved",
-                            showConfirmButton: false,
-                            timer: 900
+                            title: 'Download Purchase Receipt?',
+                            text: 'Do you want to download the payment receipt now?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Download',
+                            cancelButtonText: 'No',
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33'
+                        }).then((result) => {
+
+                            if (result.isConfirmed) {
+                                var paymentId = response.data.PaymentId;
+                                downloadPurchaseInvoice(purchaseId, invoiceNo);
+                            }
+                            // ❌ If NO → do nothing (flow continues)
+
+                            // 🔁 Reload payment list if needed
+                            resetFormFields(); // Reset form fields when modal is shown
+                            fetchData();
                         });
-                        resetFormFields(); // Reset form fields when modal is shown
-                        fetchData();
                         //$("#addEventModal").modal("hide");
                     }
                     else {
@@ -430,11 +443,14 @@ $(document).ready(function () {
         }
     });
 
-
     // RAW MATERIAL SELECT → SHOW STOCK
     $(document).on("change", ".rawMaterialSelect", function () {
+        updateUnitsDropdown(this);
+
         let currentQty = $(this).find("option:selected").data("currentqty") ?? 0;
-        $(this).closest("td").find(".stockHint").text("Stock: " + currentQty).removeClass("d-none");
+        $(this).closest("td").find(".stockHint")
+            .text("Stock: " + currentQty)
+            .removeClass("d-none");
     });
 
     // ADD NEW ROW BUTTON
@@ -765,11 +781,11 @@ function addNewRow() {
     rawMaterial_Html_dropdown += `<option value="0" data-currentqty="0">--Select Raw Material--</option>`;
     rawMaterials.forEach(x => {
         rawMaterial_Html_dropdown += `
-                <option value="${x.Id}" data-currentqty="${x.CurrentQty ?? 0}" 
-                    data-unitid='${JSON.stringify(x.JSON_PurchaseUnits || []).replace(/"/g, "&quot;")}'>
-                    ${x.Name}
-                </option>
-            `;
+            <option value="${x.Id}" 
+                data-currentqty="${x.CurrentQty ?? 0}">
+                ${x.Name}
+            </option>
+        `;
     });
     rawMaterial_Html_dropdown += `</select>
             <div class="text-muted small stockHint d-none"></div>`;
@@ -786,6 +802,7 @@ function addNewRow() {
             `;
     });
     unit_Html_dropdown += `</select>`;
+    //console.log("unit_Html_dropdown:", unit_Html_dropdown);
 
     let newRow = $(`
             <tr data-index="${rowIndex}">
@@ -844,15 +861,19 @@ function addNewRow() {
     $("#purchaseItemsBody").append(newRow);
     updateSrNo();
 
-    attachRawMaterialEvents(newRow);
+    newRow.find(".rawMaterialSelect option").each(function (index) {
+        if (index === 0) return;
 
-    //set first real raw material & unit selected
-    // newRow.find(".rawMaterialSelect option:eq(1)").prop("selected", true);
-    // newRow.find(".unitSelect option:eq(1)").prop("selected", true);
+        let rm = rawMaterials[index - 1];
+        $(this).data("units", rm.JSON_PurchaseUnits || []);
+    });
+
+    //attachRawMaterialEvents(newRow);
 }
 
 // Attach events to RAW MATERIAL dropdown & enable fields
 function attachRawMaterialEvents(row) {
+    console.log("here2");
     let rawSelect = row.find(".rawMaterialSelect");
     rawSelect.off("change").on("change", function () {
         // Load units for selected raw material
@@ -863,45 +884,32 @@ function attachRawMaterialEvents(row) {
 function updateUnitsDropdown(rawMaterialSelect) {
     let selectedOption = $(rawMaterialSelect).find("option:selected");
 
-    // Parse JSON_PurchaseUnits
-    let unitsJsonRaw = selectedOption.attr("data-unitid");
-    // single → double quotes
-    //unitsJsonRaw = unitsJsonRaw; //.replace(/'/g, '"');
-    let unitsJson = [];
-    try {
-        unitsJson = unitsJsonRaw ? JSON.parse(unitsJsonRaw) : [];
-    }
-    catch (e) {
-        console.error("Invalid JSON in data-unitid:", unitsJsonRaw, e);
-        unitsJson = [];
-    }
+    // ✅ Get JSON safely
+    let unitsJson = selectedOption.data("units") || [];
+    console.log("unitsJson:", unitsJson);
 
-    //console.log("unitsJson 2:", unitsJson);
     let row = $(rawMaterialSelect).closest("tr");
     let unitDropdown = row.find(".unitSelect");
 
-    // Clear existing options
     unitDropdown.html(`<option value="0">--Select--</option>`);
 
-    // If JSON is empty → Leave dropdown empty
-    //if (!unitsJson || unitsJson.length === 0) {
-    //    return;
-    //}
+    // ✅ CASE 1: No units → show all
+    // ✅ Check if "ALL units" condition
+    let isAllUnits =
+        !unitsJson.length ||
+        (unitsJson.length === 1 && unitsJson[0].UnitId === 0);
 
-    //console.log("unitsJson:", unitsJson, ", unitDropdown:", unitDropdown);
-    // ✅ CASE 1: If no units assigned → show FULL unit list
-    if (!unitsJson || unitsJson.length === 0) {
+    // ✅ CASE: Show ALL units
+    if (isAllUnits) {
         unitMaster.forEach(u => {
             unitDropdown.append(
-                `<option value="${u.Id}">
-                    ${u.UnitName}
-                 </option>`
+                `<option value="${u.Id}">${u.UnitName}</option>`
             );
         });
         return;
     }
 
-    // ✅ CASE 2: Show only assigned units
+    // ✅ CASE 2: Filtered units
     let isFirst = true;
     unitsJson.forEach(u => {
         let unitObj = unitMaster.find(x => x.Id === u.UnitId);
@@ -910,7 +918,7 @@ function updateUnitsDropdown(rawMaterialSelect) {
             unitDropdown.append(
                 `<option value="${unitObj.Id}" ${isFirst ? "selected" : ""}>
                     ${unitObj.UnitName}
-                 </option>`
+                </option>`
             );
             isFirst = false;
         }

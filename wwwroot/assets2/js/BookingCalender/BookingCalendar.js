@@ -3165,6 +3165,21 @@ document.addEventListener("DOMContentLoaded", function () {
         return match ? parseInt(match[1], 10) : 0;
     }
 
+    // 🖨️ Print Booking Receipt
+    document.getElementById("btnBookingReceipt").addEventListener("click", function () {
+        const bookingId = getBookingId();
+        const userId = parseInt(sessionStorage.getItem('userId') || 0);
+        var payload = {
+            BookingId: bookingId,
+            ActionBy: userId
+        };
+        console.log("payload EventForm:", payload);
+
+        var url = "/api/Report/DownloadBookingReceipt";
+        // ✅ Call download only if YES
+        downloadReport(url, payload, "Generating Receipt...");
+    });
+
     // 🧾 Download Function Prospect
     document.getElementById("btnDownloadPDF").addEventListener("click", function () {
         showReportOptions();
@@ -5710,14 +5725,39 @@ function saveBooking() {
             $("#btnSaveBooking").prop("disabled", true).text("Saving...");
         },
         success: function (response) {
-            //console.log("save response:", response);
+            console.log("save response:", response);
             if (response.status === "Success") {
-                handleApiSuccess();
-                resetBooking();
-                loadBookingCalendar();
-                //CLOSE MODAL
-                //bookingModal.hide();
-                $("#bookingModal").modal("hide");
+                handleApiSuccess("Booking Saved.");
+
+                // ✅ Swal Confirmation
+                Swal.fire({
+                    title: 'Download Receipt?',
+                    text: 'Do you want to download the payment receipt now?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Download',
+                    cancelButtonText: 'No',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33'
+                }).then((result) => {
+                    var payload = {
+                        BookingId: response.data.BookingId,
+                        ActionBy: userId
+                    }
+                    var url = "/api/Report/DownloadBookingReceipt";
+                    if (result.isConfirmed) {
+                        // ✅ Call download only if YES
+                        downloadReport(url, payload, "Generating Receipt...");
+                    }
+                    // ❌ If NO → do nothing (flow continues)
+
+                    resetBooking();
+                    loadBookingCalendar();
+                    //CLOSE MODAL
+                    //bookingModal.hide();
+                    $("#bookingModal").modal("hide");
+                });
+                /*
                 if (bookingData.BookingId > 0) {
                     var banquetId = 0;
                     var eventDate = null;
@@ -5729,7 +5769,7 @@ function saveBooking() {
                     //    "ActionMode:", actionMode
                     //);
                     loadBookingCalendar(bookingData.BookingId, banquetId, eventDate, actionMode);
-                }
+                }*/
             }
             else {
                 Swal.fire({
@@ -5827,7 +5867,7 @@ function resetBooking() {
     else {
         $stateDropdown.val("0").trigger("change");
     }
-
+    $("#btnBook").prop("disabled", false);
 }
 function recalculatePaymentSummary() {
 
@@ -6185,13 +6225,36 @@ $("#btnSavePayment").click(function () {
         success: function (response) {
             if (response?.status === "Success") {
                 handleApiSuccess();
-                resetPaymentModal();
 
-                // 🔁 Reload payment list if needed
-                //loadBookingCalendar();
-                loadPaymentHistory(bookingId);
+                // ✅ Swal Confirmation
+                Swal.fire({
+                    title: 'Download Receipt?',
+                    text: 'Do you want to download the payment receipt now?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Download',
+                    cancelButtonText: 'No',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33'
+                }).then((result) => {
+                    var payload = {
+                        PaymentId: response.data.PaymentId,
+                        BookingId: bookingId,
+                        ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
+                    }
+                    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+                    if (result.isConfirmed) {
+                        // ✅ Call download only if YES
+                        downloadReport(url, payload, "Generating Receipt...");
+                    }
+                    // ❌ If NO → do nothing (flow continues)
 
-            } else {
+                    resetPaymentModal();
+                    loadPaymentHistory(bookingId);
+                });
+
+            }
+            else {
                 Swal.fire("Error", response?.message || "Save failed!", "error");
             }
         },

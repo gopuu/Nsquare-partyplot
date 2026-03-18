@@ -476,7 +476,7 @@ $(function () {
             Swal.fire("Validation", "Valid amount is required!", "warning");
             return;
         }
-
+        var userId = Number(sessionStorage.getItem("userId") ?? "0");
         // 🔹 Payload (matches SaveBooking_Payments procedure)
         const payload = {
             BookingId: bookingId,
@@ -491,7 +491,7 @@ $(function () {
             Amount: amount,
             DueBalance: dueBalance || 0,
             NextDueDate: nextDueDate || null,
-            ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
+            ActionBy: userId
         };
 
         ////console.log("Save Payment Payload :", payload);
@@ -506,13 +506,38 @@ $(function () {
             success: function (response) {
                 if (response?.status === "Success") {
                     handleApiSuccess();
-                    $("#outstanding_paymentForm")[0].reset();
-                    //$("#PaymentModal").modal("hide");
 
-                    // 🔁 Reload payment list if needed
-                    //loadBookingCalendar();
-                    fetchData();
-                    loadPaymentHistory(bookingId);
+                    // ✅ Swal Confirmation
+                    Swal.fire({
+                        title: 'Download Receipt?',
+                        text: 'Do you want to download the payment receipt now?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Download',
+                        cancelButtonText: 'No',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33'
+                    }).then((result) => {
+                        var payload = {
+                            PaymentId: response.data.PaymentId,
+                            BookingId: bookingId,
+                            ActionBy: userId
+                        }
+                        var url = "/api/Booking_Payment/DownloadPaymentReceipt";
+                        if (result.isConfirmed) {
+                            // ✅ Call download only if YES
+                            downloadReport(url, payload, "Generating Receipt...");
+                        }
+                        // ❌ If NO → do nothing (flow continues)
+
+                        $("#outstanding_paymentForm")[0].reset();
+                        //$("#PaymentModal").modal("hide");
+
+                        // 🔁 Reload payment list if needed
+                        //loadBookingCalendar();
+                        fetchData();
+                        loadPaymentHistory(bookingId);
+                    });
                 } else {
                     Swal.fire("Error", response?.message || "Save failed!", "error");
                 }

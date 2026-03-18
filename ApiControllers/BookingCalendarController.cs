@@ -199,7 +199,7 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                long bookingId = 0;
+                long bookingId = 0, paymentId = 0;
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveBookingCalendar", con))
                 {
@@ -276,12 +276,24 @@ namespace ERPAdmin.ApiControllers
 
                     // 🔹 Execute SP
                     con.Open();
-                    //cmd.ExecuteNonQuery();
-                    bookingId = Convert.ToInt64(cmd.ExecuteScalar());
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            bookingId = reader["BookingId"] != DBNull.Value
+                                ? Convert.ToInt64(reader["BookingId"])
+                                : 0;
+
+                            paymentId = reader["PaymentId"] != DBNull.Value
+                                ? Convert.ToInt64(reader["PaymentId"])
+                                : 0;
+                        }
+                    }
                 }
 
                 apiResponse.status = "Success";
-                apiResponse.data= new { BookingId = bookingId };
+                apiResponse.data= new { BookingId = bookingId, PaymentId = paymentId };
                 apiResponse.message = model.BookingId > 0
                     ? "Booking updated successfully!"
                     : "Booking inserted successfully!";

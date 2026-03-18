@@ -56,22 +56,38 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@ModeId", SqlDbType.BigInt).Value = model.ModeId;
                     cmd.Parameters.Add("@DateOfPayment", SqlDbType.VarChar).Value = model.DateOfPayment;
                     cmd.Parameters.Add("@PaymentTime", SqlDbType.VarChar).Value = (object)model.PaymentTime ?? DBNull.Value;
-                    cmd.Parameters.Add("@TxnId", SqlDbType.VarChar).Value = (object)model.TxnId ?? DBNull.Value;
-                    cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar).Value = (object)model.ChequeBank ?? DBNull.Value;
-                    cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar).Value = (object)model.ChequeNo ?? DBNull.Value;
+                    cmd.Parameters.Add("@TxnId", SqlDbType.VarChar, 100).Value = (object)model.TxnId ?? DBNull.Value;
+                    cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar, 100).Value = (object)model.ChequeBank ?? DBNull.Value;
+                    cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar, 100).Value = (object)model.ChequeNo ?? DBNull.Value;
                     cmd.Parameters.Add("@ChequeDate", SqlDbType.VarChar).Value = (object)model.ChequeDate ?? DBNull.Value;
-                    cmd.Parameters.Add("@Amount", SqlDbType.Decimal).Value = model.Amount;
-                    cmd.Parameters.Add("@DueBalance", SqlDbType.Decimal).Value = model.DueBalance;
-                    cmd.Parameters.Add("@NextDueDate", SqlDbType.VarChar).Value = (object)model.NextDueDate ?? DBNull.Value;
-                    cmd.Parameters.Add("@ActionBy", SqlDbType.VarChar).Value = model.ActionBy;
-                    cmd.Parameters.Add("@PaymentNotes", SqlDbType.NVarChar).Value = model.PaymentNotes;
+                    var amountParam = new SqlParameter("@Amount", SqlDbType.Decimal)
+                    {
+                        Precision = 18,
+                        Scale = 2,
+                        Value = model.Amount
+                    };
+                    cmd.Parameters.Add(amountParam);
+                    var dueParam = new SqlParameter("@DueBalance", SqlDbType.Decimal)
+                    {
+                        Precision = 18,
+                        Scale = 2,
+                        Value = model.DueBalance
+                    };
+                    cmd.Parameters.Add(dueParam);
+                    cmd.Parameters.Add("@NextDueDate", SqlDbType.VarChar, 20).Value = (object)model.NextDueDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
+                    cmd.Parameters.Add("@PaymentNotes", SqlDbType.NVarChar, 500).Value = (object)model.PaymentNotes ?? DBNull.Value;
+
+                    var outputParam = new SqlParameter("@PaymentId", SqlDbType.BigInt)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(outputParam);
 
                     conn.Open();
-                    object result = cmd.ExecuteScalar(); // 🔥 PaymentId return
-                    conn.Close();
+                    cmd.ExecuteNonQuery();
 
-                    if (result != null)
-                        paymentId = Convert.ToInt64(result);
+                    paymentId = outputParam.Value != DBNull.Value ? Convert.ToInt64(outputParam.Value) : 0;
                 }
 
                 apiResponse.status = "Success";
@@ -364,7 +380,7 @@ namespace ERPAdmin.ApiControllers
                     AddRow("Customer Name", r["CustomerName"]?.ToString());
                     AddRow("Payment Date", r["PaymentDate"]?.ToString());
                     AddRow("Account Name", r["AccountName"]?.ToString());
-                    AddRow("Account Type", r["AccountType"]?.ToString());
+                    AddRow("Payment Mode", r["PaymentModeName"]?.ToString());
 
                     AddRow("Total Amount", $"Rs. {Convert.ToDecimal(r["TotalAmount"] ?? 0):N2}");
 
@@ -387,7 +403,10 @@ namespace ERPAdmin.ApiControllers
 
                 // -------- SAVE FILE --------
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "PaymentReceipt_*.pdf");
 
                 string fileName;
                 if (request.PaymentId > 0)
@@ -406,7 +425,7 @@ namespace ERPAdmin.ApiControllers
 
                 response.status = "Success";
                 response.message = "All Payment Receipts Generated";
-                response.data = new { FileUrl = $"/reports/{fileName}" };
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
                 return Ok(response);
             }
             catch (Exception ex)

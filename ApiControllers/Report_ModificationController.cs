@@ -29,8 +29,6 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
-        #region REPORT - MODIFICATION REPORT
-
         [HttpPost]
         [Route("GetModificationGrid")]
         public IActionResult GetModificationGrid([FromBody] ModificationReportGridRequest request)
@@ -447,12 +445,12 @@ namespace ERPAdmin.ApiControllers
 
                 // Module colour map
                 var moduleColors = new Dictionary<string, XLColor>
-        {
-            { "Sales",    XLColor.FromArgb(232, 245, 233) },
-            { "Purchase", XLColor.FromArgb(255, 235, 238) },
-            { "Expense",  XLColor.FromArgb(255, 248, 225) },
-            { "Income",   XLColor.FromArgb(227, 242, 253) }
-        };
+                {
+                    { "Sales",    XLColor.FromArgb(232, 245, 233) },
+                    { "Purchase", XLColor.FromArgb(255, 235, 238) },
+                    { "Expense",  XLColor.FromArgb(255, 248, 225) },
+                    { "Income",   XLColor.FromArgb(227, 242, 253) }
+                };
 
                 // ── Headers ──
                 int col = 1;
@@ -587,7 +585,5 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
-
-        #endregion
     }
 }
