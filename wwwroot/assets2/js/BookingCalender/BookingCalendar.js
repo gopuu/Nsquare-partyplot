@@ -3318,26 +3318,6 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#paymentDueBalance").val(remaining);
     });
 
-    function setCurrentPaymentDateTime() {
-
-        const now = new Date();
-
-        // Format date → yyyy-mm-dd (required for input[type=date])
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-
-        const formattedDate = `${year}-${month}-${day}`;
-
-        // Format time → HH:mm (required for input[type=time])
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-
-        const formattedTime = `${hours}:${minutes}`;
-
-        $("#paymentDate").val(formattedDate);
-        $("#paymentTime").val(formattedTime);
-    }
     // 📢 Request Feedback
     document.getElementById("btnRequestFeedback").addEventListener("click", function () {
         const bookingId = getBookingId();
@@ -6155,6 +6135,28 @@ function resetPaymentModal() {
     if (defaultOption.length) {
         $("#PaymentModal_AccountId").val(defaultOption.val());
     }
+    $("#noteEditor .ql-editor").html("");
+    setCurrentPaymentDateTime();
+}
+function setCurrentPaymentDateTime() {
+
+    const now = new Date();
+
+    // Format date → yyyy-mm-dd (required for input[type=date])
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Format time → HH:mm (required for input[type=time])
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const formattedTime = `${hours}:${minutes}`;
+
+    $("#paymentDate").val(formattedDate);
+    $("#paymentTime").val(formattedTime);
 }
 
 
@@ -6173,7 +6175,7 @@ $("#btnSavePayment").click(function () {
     let amount = Number($("#paymentAmount").val() || 0);
     let dueBalance = Number($("#paymentDueBalance").val() || 0);
     let nextDueDate = $("#NextDueDate").val();
-    let paymentNotes = $("#btnwritrnote").val();
+    let paymentNotes = $("#noteEditor .ql-editor").text();
 
     // 🔹 Basic Validation
     if (!bookingId) {
@@ -6218,7 +6220,7 @@ $("#btnSavePayment").click(function () {
     //console.log("Save Payment Payload :", payload);
 
     $("#btnSavePayment").prop("disabled", true);
-
+    console.log("save pay payload:", payload);
     $.ajax({
         url: "/api/Booking_Payments/SaveBookingPayment", // 🔁 API URL
         type: "POST",

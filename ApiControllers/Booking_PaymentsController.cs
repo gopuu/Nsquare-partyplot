@@ -654,31 +654,58 @@ namespace ERPAdmin.ApiControllers
                     /* ================= DETAILS ================= */
                     PdfPTable tbl = new PdfPTable(3);
                     tbl.WidthPercentage = 100;
-                    tbl.SetWidths(new float[] { 25, 3, 72 });
+                    tbl.SetWidths(new float[] { 19.5f, 3, 77 });
 
                     void AddRow(string label, string value)
                     {
-                        tbl.AddCell(new PdfPCell(new Phrase(label, boldFont)) { Border = Rectangle.NO_BORDER });
+                        tbl.AddCell(new PdfPCell(new Phrase(label, normalFont)) { Border = Rectangle.NO_BORDER });
 
-                        tbl.AddCell(new PdfPCell(new Phrase(":", boldFont))
+                        tbl.AddCell(new PdfPCell(new Phrase(":", normalFont))
                         {
                             Border = Rectangle.NO_BORDER,
                             HorizontalAlignment = Element.ALIGN_CENTER
                         });
 
-                        tbl.AddCell(new PdfPCell(new Phrase(value ?? "-", normalFont))
+                        //tbl.AddCell(new PdfPCell(new Phrase(value ?? "-", boldFont))
+                        //{
+                        //    Border = Rectangle.BOTTOM_BORDER,
+                        //    PaddingBottom = 5
+                        //});
+                        PdfPCell valueCell = new PdfPCell(new Phrase(value ?? "-", boldFont)) //normalFont
                         {
-                            Border = Rectangle.BOTTOM_BORDER,
+                            Border = Rectangle.NO_BORDER, // ❌ remove default solid border
                             PaddingBottom = 5
-                        });
+                        };
+
+                        // ✅ Apply dotted underline
+                        valueCell.CellEvent = new DottedBottomBorder();
+                        tbl.AddCell(valueCell);
                     }
 
-                    AddRow("Received with thanks from", customerName);
-                    AddRow("", $"Mobile: {customerMobile}");
+                    // 🔹 Title Row (full width)
+                    PdfPCell titleCell = new PdfPCell(new Phrase("Customer Details", boldFont))
+                    {
+                        Colspan = 3,
+                        Border = Rectangle.NO_BORDER,
+                        PaddingTop = 10,
+                        PaddingBottom = 5
+                    };
+                    tbl.AddCell(titleCell);
+                    AddRow("Name", customerName);
+                    AddRow("Mobile:", customerMobile);
 
-                    AddRow("Event details", $"Event : {eventName} ({subEventName})");
-                    AddRow("", $"Event Date : {eventDate}");
-                    AddRow("", $"Hall(s) : {hallName} at {startTime} ({shift})");
+                    // 🔹 Title Row (full width)
+                    titleCell = new PdfPCell(new Phrase("Event Details", boldFont))
+                    {
+                        Colspan = 3,
+                        Border = Rectangle.NO_BORDER,
+                        PaddingTop = 10,
+                        PaddingBottom = 5
+                    };
+                    tbl.AddCell(titleCell);
+                    AddRow("Event Type", $"{eventName} ({subEventName})");
+                    AddRow("Event Date ", $"{eventDate}");
+                    AddRow("Hall Name", $"{hallName} at {startTime} ({shift})");
 
                     document.Add(tbl);
 
@@ -695,11 +722,12 @@ namespace ERPAdmin.ApiControllers
                     /* ================= PAYMENT DETAILS ================= */
 
                     PdfPTable paySummary = new PdfPTable(3);
-                    paySummary.WidthPercentage = 100;
-                    paySummary.SetWidths(new float[] { 25, 3, 72 });
-
+                    paySummary.WidthPercentage = 40;   // instead of 100
+                    paySummary.HorizontalAlignment = Element.ALIGN_LEFT; // or CENTER
+                    //paySummary.SetWidths(new float[] { 25, 3, 72 });
+                    paySummary.SetWidths(new float[] { 50, 5, 45 });
                     // 🔹 Title Row (full width)
-                    PdfPCell titleCell = new PdfPCell(new Phrase("Payment Details", boldFont))
+                    titleCell = new PdfPCell(new Phrase("Payment Details", boldFont))
                     {
                         Colspan = 3,
                         Border = Rectangle.NO_BORDER,
@@ -709,7 +737,7 @@ namespace ERPAdmin.ApiControllers
                     paySummary.AddCell(titleCell);
 
                     // 🔹 Helper (same pattern as above table)
-                    void AddPayRow(string label, string value)
+                    void AddPayRow2(string label, string value)
                     {
                         paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
                         {
@@ -729,7 +757,29 @@ namespace ERPAdmin.ApiControllers
                             HorizontalAlignment = Element.ALIGN_RIGHT   // 💡 amount right aligned
                         });
                     }
+                    void AddPayRow(string label, string value)
+                    {
+                        paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
+                        {
+                            Border = Rectangle.NO_BORDER,
+                            Padding = 2
+                        });
 
+                        paySummary.AddCell(new PdfPCell(new Phrase(":", normalFont))
+                        {
+                            Border = Rectangle.NO_BORDER,
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 2
+                        });
+
+                        paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
+                        {
+                            Border = Rectangle.BOTTOM_BORDER,
+                            PaddingBottom = 3,
+                            PaddingTop = 2,
+                            HorizontalAlignment = Element.ALIGN_RIGHT
+                        });
+                    }
                     // 🔹 Data
                     AddPayRow("Total Booking Amount", $"₹ {totalAmout:N0}");
                     AddPayRow("Paid Till Date", $"₹ {paidTillDate:N0}");
@@ -746,7 +796,7 @@ namespace ERPAdmin.ApiControllers
                     amtTbl.WidthPercentage = 100;
                     amtTbl.SetWidths(new float[] { 30, 70 });
 
-                    amtTbl.AddCell(new PdfPCell(new Phrase($"₹ {thisPayment:N0} /-", AmtFontBold13))
+                    amtTbl.AddCell(new PdfPCell(new Phrase($"₹ {thisPayment:N0}", AmtFontBold13))
                     {
                         Border = Rectangle.BOX,
                         FixedHeight = 35,
@@ -842,7 +892,8 @@ namespace ERPAdmin.ApiControllers
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(230, 230, 230),
-                            Padding = 5
+                            Padding = 2,
+                            PaddingTop = 5
                         });
 
                         // 🔹 Empty Balance column (optional)
@@ -896,5 +947,48 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+    }
+}
+
+class DottedBottomBorder : IPdfPCellEvent
+{
+    public void CellLayout(PdfPCell cell, Rectangle rect, PdfContentByte[] canvas)
+    {
+        PdfContentByte cb = canvas[PdfPTable.TEXTCANVAS]; // ✅ IMPORTANT
+
+        cb.SaveState();
+
+        cb.SetLineWidth(0.5f);
+        cb.SetGrayStroke(0f);
+
+        // 🔥 Force dotted
+        cb.SetLineDash(0.5f, 2f);
+
+        cb.MoveTo(rect.Left, rect.Bottom + 1); // slight offset
+        cb.LineTo(rect.Right, rect.Bottom + 1);
+        cb.Stroke();
+
+        cb.RestoreState();
+    }
+}
+
+
+class DottedBottomBorder2 : IPdfPCellEvent
+{
+    public void CellLayout(PdfPCell cell, Rectangle rect, PdfContentByte[] canvas)
+    {
+        PdfContentByte cb = canvas[PdfPTable.LINECANVAS];
+
+        cb.SaveState();
+
+        // 🔹 Set dotted line style
+        //cb.SetLineDash(2f, 2f); // (dash length, gap length)
+        cb.SetLineDash(1.5f, 1.5f);
+
+        cb.MoveTo(rect.Left, rect.Bottom);
+        cb.LineTo(rect.Right, rect.Bottom);
+        cb.Stroke();
+
+        cb.RestoreState();
     }
 }
