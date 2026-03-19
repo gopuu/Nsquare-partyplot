@@ -59,18 +59,18 @@ namespace ERPAdmin.ApiControllers
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         AccountName = Convert.ToString(row["AccountName"]),
-                        AccountType = Convert.ToString(row["AccountType"]),
-                        OpeningBalance = Convert.ToDecimal(row["OpeningBalance"]),
-                        CurrentBalance = Convert.ToDecimal(row["CurrentBalance"]),
+                        //AccountType = Convert.ToString(row["AccountType"]),
+                        //OpeningBalance = Convert.ToDecimal(row["OpeningBalance"]),
+                        //CurrentBalance = Convert.ToDecimal(row["CurrentBalance"]),
 
-                        BankName = Convert.ToString(row["BankName"]),
-                        BranchName = Convert.ToString(row["BranchName"]),
-                        IFSC = Convert.ToString(row["IFSC"]),
-                        AccountNumber = Convert.ToString(row["AccountNumber"]),
-                        AccountHolderName = Convert.ToString(row["AccountHolderName"]),
+                        //BankName = Convert.ToString(row["BankName"]),
+                        //BranchName = Convert.ToString(row["BranchName"]),
+                        //IFSC = Convert.ToString(row["IFSC"]),
+                        //AccountNumber = Convert.ToString(row["AccountNumber"]),
+                        //AccountHolderName = Convert.ToString(row["AccountHolderName"]),
 
-                        UPI_Id = Convert.ToString(row["UPI_Id"]),
-                        Description = Convert.ToString(row["Description"]),
+                        //UPI_Id = Convert.ToString(row["UPI_Id"]),
+                        //Description = Convert.ToString(row["Description"]),
                         IsDefaultAccount = Convert.ToBoolean(row["IsDefaultAccount"])
                     });
                 }
@@ -110,19 +110,19 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@Id", model.Id);
                     cmd.Parameters.AddWithValue("@AccountName", model.AccountName);
-                    cmd.Parameters.AddWithValue("@AccountType", model.AccountType);
-                    cmd.Parameters.AddWithValue("@OpeningBalance", model.OpeningBalance);
-                    cmd.Parameters.AddWithValue("@CurrentBalance", model.CurrentBalance);
+                    //cmd.Parameters.AddWithValue("@AccountType", model.AccountType);
+                    //cmd.Parameters.AddWithValue("@OpeningBalance", model.OpeningBalance);
+                    //cmd.Parameters.AddWithValue("@CurrentBalance", model.CurrentBalance);
 
-                    cmd.Parameters.AddWithValue("@BankName", (object)model.BankName ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@BranchName", (object)model.BranchName ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IFSC", (object)model.IFSC ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@AccountNumber", (object)model.AccountNumber ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@AccountHolderName", (object)model.AccountHolderName ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@BankName", (object)model.BankName ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@BranchName", (object)model.BranchName ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@IFSC", (object)model.IFSC ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@AccountNumber", (object)model.AccountNumber ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@AccountHolderName", (object)model.AccountHolderName ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@UPI_Id", (object)model.UPI_Id ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Description", (object)model.Description ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IsDefaultAccount", model.IsDefaultAccount);
+                    //cmd.Parameters.AddWithValue("@UPI_Id", (object)model.UPI_Id ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@Description", (object)model.Description ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@IsDefaultAccount", model.IsDefaultAccount);
 
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 

@@ -1607,7 +1607,7 @@ function fillPaymentTrailTable(paymentList = []) {
                     }
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-light btn-xs border btn-download" title="View Receipt" data-id="${item.PaymentId}">
+                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}">
                             <i class="fa-solid fa-file-invoice text-primary"></i>
                         </button>
                     </td>
@@ -2177,8 +2177,7 @@ function loadAccountDropdown() {
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
-                    const holder = acc.AccountHolderName ? ` - ${acc.AccountHolderName}` : "";
-                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}${holder}</option>`);
+                    ddl.append(`<option value="${acc.Id}">${acc.AccountName}</option>`);
                 });
             } else {
                 Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
@@ -2236,10 +2235,10 @@ function loadPaymentHistory(bookingId) {
             //console.log("Booking_Payments res:", res);
             if (res?.status === "Success") {
                 // HIDE download Alll btn
-                $(".btn-download-all").addClass("d-none");
+                $(".btn-payment-download-all").addClass("d-none");
                 if (res.data.length > 0) {
                     // SHOW download Alll btn
-                    $(".btn-download-all").removeClass("d-none");
+                    $(".btn-payment-download-all").removeClass("d-none");
                 }
                 $("#paymentModal").modal("show");
                 renderPaymentTable(res.data || []);
@@ -2281,7 +2280,7 @@ function renderPaymentTable(data) {
                 title: "Receipt",
                 className: "text-center",
                 render: function (row) {
-                    return `<button class="btn btn-sm btn-outline-primary btn-download" data-id="${row.PaymentId}">
+                    return `<button class="btn btn-sm btn-outline-primary btn-payment-download" data-id="${row.PaymentId}">
                                 <i class="fas fa-download"></i>
                             </button>`;
                 }
@@ -2294,7 +2293,7 @@ function renderPaymentTable(data) {
 }
 
 // -- Download receipt - button click --
-$(document).on("click", ".btn-download", function () {
+$(document).on("click", ".btn-payment-download", function () {
     let paymentId = $(this).data("id");
     let bookingId = 0; // getBookingId();
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
@@ -2304,32 +2303,12 @@ $(document).on("click", ".btn-download", function () {
         BookingId: bookingId,
         ActionBy: actionBy
     };
-    $.ajax({
-        url: "/api/Booking_Payments/DownloadPaymentReceipt",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            if (res.status === "Success") {
 
-                let link = document.createElement("a");
-                link.href = res.data.FileUrl;
-                link.download = "";   // 👈 force download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } else {
-                Swal.fire("Error", res.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Download Receipt Failed")
-        }
-    });
+    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+    downloadReport(url, payload, "Generating Receipt...");
 });
 
-$(document).on("click", ".btn-download-all", function () {
+$(document).on("click", ".btn-payment-download-all", function () {
     let paymentId = 0;
     let bookingId = Number($("#outstanding_paymentBookingId").val() || 0);
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
@@ -2339,29 +2318,8 @@ $(document).on("click", ".btn-download-all", function () {
         BookingId: bookingId,
         ActionBy: actionBy
     };
-    $.ajax({
-        url: "/api/Booking_Payments/DownloadPaymentReceipt",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            if (res.status === "Success") {
-
-                let link = document.createElement("a");
-                link.href = res.data.FileUrl;
-                link.download = "";   // 👈 force download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } else {
-                Swal.fire("Error", res.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Download All-Receipt Failed")
-        }
-    });
+    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+    downloadReport(url, payload, "Generating Receipt...");
 });
 
 //DUE PAYMENT -- END -----------------------

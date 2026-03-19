@@ -110,6 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //     $(".imgUserProfile").attr("src", userImage);
     // }
 
+
     let defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=random`;
 
     // Select ALL avatars

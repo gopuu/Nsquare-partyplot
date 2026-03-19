@@ -1,6 +1,6 @@
 ﻿$(document).ready(function () {
     fetchData();
-    loadAccountTypeDropdown();
+    //loadAccountTypeDropdown();
 
     $("#btn-add").click(function () {
         if (!checkPermission("CanAdd")) return;
@@ -8,7 +8,7 @@
         $("#accountModalTitle").text("Add Account");
         $("#accountModal").modal("show");
     });
-
+    /*
     function loadAccountTypeDropdown() {
         var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
 
@@ -36,7 +36,7 @@
             }
         });
     }
-
+    */
     $("#btnSaveAccount").click(function () {
         if (!validateForm()) return;
         saveAccount();
@@ -53,23 +53,23 @@
         // Fill modal fields
         $("#accountId").val(rowData.Id);
         $("#accountName").val(rowData.AccountName);
-        $("#accountType").val(rowData.AccountType).trigger("change");
-        $("#openingBalance").val(rowData.OpeningBalance);
-        $("#currentBalance").val(rowData.CurrentBalance);
+        //$("#accountType").val(rowData.AccountType).trigger("change");
+        //$("#openingBalance").val(rowData.OpeningBalance);
+        //$("#currentBalance").val(rowData.CurrentBalance);
 
         // Bank fields
-        $("#bankName").val(rowData.BankName);
-        $("#branchName").val(rowData.BranchName);
-        $("#ifsc").val(rowData.IFSC);
-        $("#accountNumber").val(rowData.AccountNumber);
-        $("#accountHolderName").val(rowData.AccountHolderName);
+        //$("#bankName").val(rowData.BankName);
+        //$("#branchName").val(rowData.BranchName);
+        //$("#ifsc").val(rowData.IFSC);
+        //$("#accountNumber").val(rowData.AccountNumber);
+        //$("#accountHolderName").val(rowData.AccountHolderName);
 
         // UPI
-        $("#upiId").val(rowData.UPI_Id);
+        //$("#upiId").val(rowData.UPI_Id);
 
         // General fields
-        $("#description").val(rowData.Description);
-        $("#isDefaultAccount").prop("checked", rowData.IsDefaultAccount);
+        //$("#description").val(rowData.Description);
+        //$("#isDefaultAccount").prop("checked", rowData.IsDefaultAccount);
 
         // Change modal title and open modal
         $("#accountModalTitle").text("Edit Account");
@@ -109,7 +109,7 @@ function fetchData() {
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Something went wrong fetching Account Data")
+            handleApiError(xhr, status, error, "fetching Account Data failed")
         },
     });
 }
@@ -126,10 +126,15 @@ function renderTable(data) {
         responsive: true,
         pageLength: 10,
         scrollX: true,
+
+        paging: false,
+        scrollY: "60vh",          // table body scroll height
+        scrollCollapse: true,     // shrink if less rows
+
         columns: [
             { data: "Id", title: "Sr. No", visible: true },
             { data: "AccountName", title: "Account Name" },
-            {
+            /*{
                 data: "OpeningBalance",
                 title: "Opening Bal",
                 render: d => d?.toLocaleString("en-IN")
@@ -151,6 +156,7 @@ function renderTable(data) {
                     ? `<span class="badge bg-success">Yes</span>`
                     : `<span class="badge bg-secondary">No</span>`
             },
+            */
             {
                 data: null,
                 title: "Action",
@@ -169,38 +175,39 @@ function renderTable(data) {
 
 // RESET FORM
 function resetForm() {
-    $("input, textarea").val("");
+    //$("input, textarea").val("");
     $("#accountId").val(0);
-    $("#accountType").val("0");
-    $("#isDefaultAccount").prop("checked", false);
+    $("#accountName").val("");
+    //$("#accountType").val("0");
+    //$("#isDefaultAccount").prop("checked", false);
 }
 // FILL FORM ON EDIT
 function fillForm(d) {
     $("#accountId").val(d.Id);
     $("#accountName").val(d.AccountName);
-    $("#accountType").val(d.AccountType).trigger("change");
-    $("#openingBalance").val(d.OpeningBalance);
-    $("#bankName").val(d.BankName);
-    $("#upiId").val(d.UPI);
-    $("#description").val(d.Description);
-    $("#isDefaultAccount").prop("checked", d.IsDefault);
+    //$("#accountType").val(d.AccountType).trigger("change");
+    //$("#openingBalance").val(d.OpeningBalance);
+    //$("#bankName").val(d.BankName);
+    //$("#upiId").val(d.UPI);
+    //$("#description").val(d.Description);
+    //$("#isDefaultAccount").prop("checked", d.IsDefault);
 }
 // SAVE
 function saveAccount() {
     let payload = {
         Id: $("#accountId").val(),
         AccountName: $("#accountName").val().trim(),
-        AccountType: $("#accountType").val(),
-        OpeningBalance: $("#openingBalance").val(),
-        CurrentBalance: $("#currentBalance").val(),
-        BankName: $("#bankName").val(),
-        BranchName: $("#branchName").val(),
-        IFSC: $("#ifsc").val(),
-        AccountNumber: $("#accountNumber").val(),
-        AccountHolderName: $("#accountHolderName").val(),
-        UPI_Id: $("#upiId").val(),
-        Description: $("#description").val(),
-        IsDefaultAccount: $("#isDefaultAccount").is(":checked"),
+        //AccountType: $("#accountType").val(),
+        //OpeningBalance: $("#openingBalance").val(),
+        //CurrentBalance: $("#currentBalance").val(),
+        //BankName: $("#bankName").val(),
+        //BranchName: $("#branchName").val(),
+        //IFSC: $("#ifsc").val(),
+        //AccountNumber: $("#accountNumber").val(),
+        //AccountHolderName: $("#accountHolderName").val(),
+        //UPI_Id: $("#upiId").val(),
+        //Description: $("#description").val(),
+        //IsDefaultAccount: $("#isDefaultAccount").is(":checked"),
         ActionBy: sessionStorage.getItem("userId") ?? 0
     };
     $.ajax({
@@ -209,7 +216,7 @@ function saveAccount() {
         data: JSON.stringify(payload),
         contentType: "application/json",
         success: function (res) {
-            handleApiSuccess();
+            handleApiSuccess("Saved.");
             $("#accountModal").modal("hide");
             fetchData();
         },
@@ -222,18 +229,20 @@ function saveAccount() {
 // DELETE
 function deleteAccount() {
     let id = $("#deleteModal").data("id");
+    let actionBy = sessionStorage.getItem("userId") ?? 0;
+
     $.ajax({
         url: "/api/AccountMaster/DeleteAccount",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Id: id }),
+        data: JSON.stringify({ Id: id, ActionBy: actionBy }),
         success: function () {
-            Swal.fire("Deleted!", "", "success");
+            handleApiSuccess("Deleted!");
             $("#deleteModal").modal("hide");
             fetchData();
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Something went wrong!")
+            handleApiError(xhr, status, error, "Delete Failed!")
         }
     });
 }

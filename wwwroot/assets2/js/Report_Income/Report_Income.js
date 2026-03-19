@@ -171,7 +171,7 @@ function loadAccountDropdown(selectedId = 0) {
                 });
             }
         },
-        error: (xhr, s, e) => console.error("Account dropdown failed", e)
+        error: (xhr, s, e) => handleApiError(xhr, s, e, "Account dropdown failed");
     });
 }
 

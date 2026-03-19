@@ -975,7 +975,6 @@ function populateAddonModal(savedItems = []) {
                 `);
 
             row.find(".rate-input, .pax-input").on("input", function () {
-                //console.log("here1");
                 recalcRow_AddOn(row);
             });
 
@@ -3171,11 +3170,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const userId = parseInt(sessionStorage.getItem('userId') || 0);
         var payload = {
             BookingId: bookingId,
+            PaymentId: 0,
             ActionBy: userId
         };
         console.log("payload EventForm:", payload);
-
-        var url = "/api/Report/DownloadBookingReceipt";
+        //here1
+        var url = "/api/Booking_Payments/DownloadPaymentReceipt";
         // ✅ Call download only if YES
         downloadReport(url, payload, "Generating Receipt...");
     });
@@ -5086,7 +5086,7 @@ function fillPaymentTrailTable(paymentList = []) {
                         }
                     </td>
                     <td>
-                        <button class="btn btn-light btn-sm border btn-download" title="View Receipt" data-id="${item.PaymentId}">
+                        <button class="btn btn-light btn-sm border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}">
                             <i class="fa-solid fa-file-invoice text-primary"></i>
                         </button>
                     </td>
@@ -5741,10 +5741,12 @@ function saveBooking() {
                     cancelButtonColor: '#d33'
                 }).then((result) => {
                     var payload = {
+                        PaymentId: response.data.PaymentId,
                         BookingId: response.data.BookingId,
                         ActionBy: userId
                     }
-                    var url = "/api/Report/DownloadBookingReceipt";
+                    //here1
+                    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
                     if (result.isConfirmed) {
                         // ✅ Call download only if YES
                         downloadReport(url, payload, "Generating Receipt...");
@@ -6286,15 +6288,8 @@ function loadAccountDropdown() {
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
 
-                    const accountName = (acc.AccountName || "").trim();
-                    //const holderName = (acc.AccountHolderName || "").trim();
-
-                    //let holderDisplay = "";
-
-                    //if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
-                    //    holderDisplay = ` (${holderName})`;
-                    //}
-
+                    const accountName = (acc.AccountName || "").trim(); 
+                    
                     ddl.append(`
                         <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
                             ${accountName}
@@ -6359,10 +6354,10 @@ function loadPaymentHistory(bookingId) {
             //console.log("Booking_Payments res:", res);
             if (res?.status === "Success") {
                 // HIDE download Alll btn
-                $(".btn-download-all").addClass("d-none");
+                $(".btn-payment-download-all").addClass("d-none");
                 if (res.data.length > 0) {
                     // SHOW download Alll btn
-                    $(".btn-download-all").removeClass("d-none");
+                    $(".btn-payment-download-all").removeClass("d-none");
                 }
                 renderPaymentTable(res.data || []);
             } else {
@@ -6389,9 +6384,9 @@ function renderPaymentTable(data) {
         data: data,
         autoWidth: false, 
         columns: [
-            { data: "srno", title: "#" },
-            { data: "TxnId", title: "Txn Id", className: "text-end" },
-            { data: "PaymentDateTimeFormat", title: "Date & Time" },
+            //{ data: "srno", title: "#", class:"text-center" },
+            { data: "PaymentId", title: "Txn Id", className: "text-center" },
+            { data: "PaymentDateTimeFormat", title: "Txn Datetime" },
             {
                 data: "Amount",
                 title: "Amount (₹)",
@@ -6403,7 +6398,7 @@ function renderPaymentTable(data) {
                 title: "Action",
                 className: "text-center",
                 render: function (row) {
-                    return `<button class="btn btn-sm btn-outline-primary btn-download" data-id="${row.PaymentId}">
+                    return `<button class="btn btn-sm btn-outline-primary btn-payment-download" data-id="${row.PaymentId}">
                                 <i class="fas fa-download"></i>
                             </button>`;
                 }
@@ -6416,7 +6411,7 @@ function renderPaymentTable(data) {
 }
 
 // ----------------- OPTIONAL: Download button click -----------------
-$(document).on("click", ".btn-download", function () {
+$(document).on("click", ".btn-payment-download", function () {
     let paymentId = $(this).data("id");
     let bookingId = getBookingId();
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
@@ -6431,7 +6426,7 @@ $(document).on("click", ".btn-download", function () {
     downloadReport(url, payload, "Generating Receipt...");
 });
 
-$(document).on("click", ".btn-download-all", function () {
+$(document).on("click", ".btn-payment-download-all", function () {
     let paymentId = 0;
     let bookingId = getBookingId();
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");

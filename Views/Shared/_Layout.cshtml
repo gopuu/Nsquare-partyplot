@@ -616,8 +616,8 @@
                             </li>
 
                             <!--Master-->
-                            <li class="dropdown dropdown-submenu dropstart modules-parent master_link">
-                                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <li class="dropdown dropdown-submenu modules-parent master_link">
+                                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="false">
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span><span class="uil fs-8 me-2 uil-database"></span>Masters</span>
@@ -840,6 +840,7 @@
                                     </div>
                                 </ul>
                             </li>
+
                             <li>
                                 <a class="dropdown-item @(currentController == "Settings" ? "active" : "")" href="/Settings">
                                     <div class="dropdown-item-wrapper">
@@ -1587,6 +1588,7 @@
 
     <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
     <script>
+        /*
         document.querySelectorAll('.modules-parent').forEach(item => {
 
             let timeout;
@@ -1603,6 +1605,7 @@
             });
 
         });
+        */
     </script>
 
 </body>

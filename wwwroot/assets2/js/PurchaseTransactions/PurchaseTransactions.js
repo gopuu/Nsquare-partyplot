@@ -215,10 +215,8 @@ function loadAccountDropdown() {
             if (!res.data || res.data.length === 0) {
                 $ddlAccount.prop("disabled", true).html(`<option value="0">No Accounts Found</option>`);
             }
-
             // Clear & add default
             $ddlAccount.html(`<option value="0">-- Select Account --</option>`);
-
             res.data.forEach(a => {
                 $ddlAccount.append(`<option value="${a.Id}">${a.AccountName}</option>`);
             });

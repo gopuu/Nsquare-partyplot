@@ -4323,17 +4323,16 @@ function loadAccountDropdown() {
                 res.data.forEach(acc => {
 
                     const accountName = (acc.AccountName || "").trim();
-                    const holderName = (acc.AccountHolderName || "").trim();
+                    //const holderName = ""; //  (acc.AccountHolderName || "").trim();
+                    //let holderDisplay = "";
 
-                    let holderDisplay = "";
-
-                    if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
-                        holderDisplay = ` (${holderName})`;
-                    }
+                    //if (holderName && accountName.toLowerCase() !== holderName.toLowerCase()) {
+                    //    holderDisplay = ` (${holderName})`;
+                    //}
 
                     ddl.append(`
                         <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
-                            ${accountName}${holderDisplay}
+                            ${accountName}
                         </option>
                     `);
                 });

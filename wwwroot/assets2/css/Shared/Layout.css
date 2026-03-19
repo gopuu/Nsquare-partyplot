@@ -35,13 +35,13 @@
 
 .master_link .dropdown-link span {
     width: 200px;
-    height: 16px;
+    height: 20px;
     transition: transform 0.2s ease, color 0.2s ease;
 }
 .master_link .dropdown-link span[data-feather] {
     min-width: 16px;
     width: 16px;
-    height: 16px;
+    height: 10px;
     flex-shrink: 0;
 }
 
@@ -69,6 +69,7 @@
 .master_link .dropdown-link:hover span {
     transform: translateX(2px);
 }
+
 .master_link .dropdown-link {
     position: relative;
     display: flex;
@@ -76,21 +77,29 @@
     gap: 8px;
     white-space: nowrap;
 }
-    .master_link .dropdown-link svg {
+
+.master_link .dropdown-link svg {
         width: 18px;
         height: 18px;
         vertical-align: middle;
     }
+
 .master_link .menu-text {
     display: inline-block;
-    width: 180px; /* 🔧 fixed label width */
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    width: 250px;
+    white-space: normal; /* ✅ allow wrapping */
+    word-break: break-word; /* ✅ break long words if needed */
+    line-height: 1.2;
+}
+
+.master_link .dropdown-link {
+    padding-left: 10px !important; /* reduce default bootstrap spacing */
+    position: relative;
 }
 
 .master_link .dropdown-link::before {
     content: "";
+    display: none;  /* ❌ remove old behavior */
     position: absolute;
     left: 0;
     top: 50%;
@@ -100,6 +109,11 @@
     transition: height 0.2s ease;
     transform: translateY(-50%);
 }
+
+/*.master_link .dropdown-link:hover {
+    box-shadow: inset 3px 0 0 currentColor;*/ /* ✅ clean left bar */
+/*}*/
+
 
 .master_link .dropdown-link:hover::before {
     height: 60%;
@@ -141,6 +155,11 @@
     height: 60%;
     background-color: #6c757d;
     border-radius: 2px;
+}
+
+.master_link > .dropdown-toggle::before,
+.master_link > .dropdown-toggle::after {
+    display: none !important;
 }
 
 /*MASTER color - end*/
@@ -201,11 +220,6 @@
 
 /*All-In-One Link*/
 
-.master_link > .dropdown-toggle::before,
-.master_link > .dropdown-toggle::after {
-    display: none !important;
-}
-
 .btn-action-xs {
     padding: 7px !important; /* smaller padding */
     font-size: 12px !important; /* reduce font size */
@@ -240,14 +254,14 @@
     line-height: 1.1 !important;
 }
 
-/*  .dropdown-submenu {
-            position: relative;
-        }
-        .dropdown-submenu {
-            top: 0;
-            left: 100%;
-            margin-left: .1rem;
-        } */
+/*.dropdown-submenu {
+    position: relative;
+}
+.dropdown-submenu {
+    top: 0;
+    left: 100%;
+    margin-left: .1rem;
+}*/
 
 .infinitylogo_img {
     height: 70px;
@@ -271,9 +285,9 @@
 }
 
 /* keep menu open while hovering inside */
-.modules-parent .modules-parent:hover > .dropdown-menu {
+/*.modules-parent .modules-parent:hover > .dropdown-menu {
     display: block;
-}
+}*/
 
 /* style */
 .modules-parent .dropdown-item-group {

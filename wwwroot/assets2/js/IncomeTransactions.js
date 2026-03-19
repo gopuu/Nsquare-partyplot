@@ -285,14 +285,14 @@ function loadAccountDropdown(selectedId = "") {
                 response.data.forEach(item => {
                     dropdown.append(
                         `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
-                                ${item.AccountName} (${item.AccountType})
-                            </option>`
+                                ${item.AccountName}
+                        </option>`
                     );
                 });
             }
         },
         error: function (xhr, status, error) {
-            console.error("Failed to load dropdown data", error);
+            handleApiError(xhr, status, error, "Failed to load dropdown data");
         }
     });
 }
