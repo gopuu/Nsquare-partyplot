@@ -14,7 +14,7 @@ $(document).ready(function () {
     });
 
     loadCOGSCount("thismonth");
-    loadPending_Purchases_ApprovalsCount("thismonth");
+    //loadPending_Purchases_ApprovalsCount("thismonth");
 
     // initial load
     GetCategoryMasterData();
@@ -69,7 +69,7 @@ function loadKeyStatistics(monthDuration = "thismonth", fromDate = null, toDate 
         FromDate: fromDate,
         ToDate: toDate
     };
-    //console.log("key stats payload:", payload);
+    console.log("key stats payload:", payload);
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardKeyStatisticsCount",
         type: "POST",
@@ -97,7 +97,7 @@ function loadCOGSCount(monthDuration = "thismonth", fromDate = null, toDate = nu
         FromDate: fromDate,
         ToDate: toDate
     };
-    console.log("COGs payload:", payload);
+    //console.log("COGs payload:", payload);
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardGetCOGSCount",
@@ -105,7 +105,7 @@ function loadCOGSCount(monthDuration = "thismonth", fromDate = null, toDate = nu
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("res Worth of Stock:", res);
+            //console.log("res Worth of Stock:", res);
             if (res.status === "Success") {
                 $("#WorthofStockConsumed").text(res.data.WorthofStockConsumed);
               
@@ -125,7 +125,7 @@ function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromD
         FromDate: fromDate,
         ToDate: toDate
     };
-    console.log("COGs payload:", payload);
+    console.log("pending purchase payload:", payload);
 
     $.ajax({
         url: "/api/InventoryDashboard/GetInventoryDashboardGetPending_Purchases_ApprovalsCount",
@@ -133,7 +133,7 @@ function loadPending_Purchases_ApprovalsCount(monthDuration = "thismonth", fromD
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("res Pending_Purchases_Approvals:", res);
+            //console.log("res Pending_Purchases_Approvals:", res);
             if (res.status === "Success") {
                 $("#pendingpurchases").text(res.data.PendingPurchases);
                 $("#pendingapprovals").text(res.data.PendingApprovals);
@@ -189,7 +189,7 @@ function loadStockLevel(itemCategoryId = 0) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("Stock level response:", res);
+            //console.log("Stock level response:", res);
 
             if (res.status === "Success" && Array.isArray(res.data)) {
                 renderStockList(res.data);

@@ -308,7 +308,7 @@ function saveCompanyProfileDataToApi(panCardImage) {
         QuotationsWithTax: $("#CompanyProfile_QuotationsWithTax").is(":checked"),
         MultipleFoodGST: $("#CompanyProfile_MultipleFoodGST").is(":checked"),
         PrintCustomerDetails: $("#CompanyProfile_PrintCustomerDetails").is(":checked"),
-        ActionBy: userId // current user ID
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
     console.log("company profile payload:", payload);
 
@@ -354,7 +354,7 @@ function saveCompanyPropertyDataToApi() {
         PropertyEmail: $("#PropertyDetails_Email").val(),
         PropertyAddress: $("#PropertyDetails_Address").val(),
         ManagerMobile: $("#PropertyDetails_ManagerMobile").val(),
-        MonopolyPreference: $("#PropertyDetails_MonopolyPreference").val(),
+        MonopolyPreference: $("#PropertyDetails_MonopolyPreference").val() || 0,
         HallRatesNegotiable: $("#PropertyDetails_HallRatesNegotiable").is(":checked"),
         FoodPreference: $("#PropertyDetails_FoodPreference").is(":checked"),
         Facilities: getFacilitiesArray(),
@@ -362,7 +362,7 @@ function saveCompanyPropertyDataToApi() {
         SearchLocation: $("#PropertyDetails_searchLocation").val(),
         BookingSteps: getBookingStepsArray(),
         AboutUsAndTnC: $("#PropertyDetails_tnc").val(),
-        ActionBy: userId // current user ID
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
     console.log("company property payload:", payload);
     $.ajax({
@@ -372,13 +372,7 @@ function saveCompanyPropertyDataToApi() {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved!");
                 if (companyId === 0 && res.data?.Id) {
                     companyId = res.data.Id; // Update company ID if it was a new record
                 }
@@ -420,7 +414,7 @@ $("#btnSaveSlots").click(function () {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                handleApiSuccess();
+                handleApiSuccess("Saved");
                 loadSlots();
             }
             else {
@@ -648,13 +642,7 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify({ id: id, name: name }),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 clearBanquetTypeForm();
                 loadBanquetTypes();
             },
@@ -723,7 +711,6 @@ $(document).ready(function () {
         let id = $("#stateId").val();
         let name = $("#stateName").val().trim();
         let code = $("#stateCode").val().trim();
-        let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
 
         if (!name) {
             Swal.fire({
@@ -738,7 +725,7 @@ $(document).ready(function () {
             id: id,
             name: name,
             code: code,
-            actionby: userId
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
 
         //showLoader();
@@ -748,13 +735,7 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 clearStateForm();
                 loadStates();
                 //$('#stateModal').modal('hide');
@@ -804,16 +785,10 @@ $(document).ready(function () {
                     contentType: "application/json",
                     data: JSON.stringify({
                         Id: id,
-                        ActionBy: userId   // or logged-in user id
+                        ActionBy: Number(sessionStorage.getItem('userId') || 0)
                     }),
                     success: function (res) {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Deleted!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handlepApiSuccess("Deleted");
                         loadStates();
                     },
                     error: function (xhr, status, error) {
@@ -834,7 +809,6 @@ $(document).ready(function () {
         let name = $("#cityName").val().trim();
         let pincode = $("#cityPincode").val().trim();
         let stateId = $("#cityState").val();
-        let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
 
         if (!name) {
             Swal.fire({
@@ -859,7 +833,7 @@ $(document).ready(function () {
             Name: name,
             StateId: stateId,
             Pincode: pincode,
-            ActionBy: userId
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
         //showLoader();
         $.ajax({
@@ -868,13 +842,7 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 const stateId = $("#cityState").val() || 0;
                 loadCities(stateId);
                 clearCityForm(stateId);
@@ -978,16 +946,10 @@ $(document).ready(function () {
                 Id: id,
                 Name: name,
                 CityId: cityId,
-                ActionBy: 1 // You may need to get this from session
+                ActionBy: Number(sessionStorage.getItem('userId') || 0)
             }),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 const cityId = $("#localityCity").val() || 0;
                 loadLocalities(cityId);
                 clearLocalityForm(cityId);
@@ -1080,16 +1042,10 @@ $(document).ready(function () {
             data: JSON.stringify({
                 Id: id,
                 Name: name,
-                ActionBy: 1 // You may need to get this from session
+                ActionBy: Number(sessionStorage.getItem('userId') || 0)
             }),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 clearPropertyTypeForm();
                 loadPropertyTypes();
                 //$('#propertyTypeModal').modal('hide');
@@ -1176,16 +1132,10 @@ $(document).ready(function () {
             data: JSON.stringify({
                 Id: id,
                 Name: name,
-                ActionBy: 1 // You may need to get this from session
+                ActionBy: Number(sessionStorage.getItem('userId') || 0)
             }),
             success: function (res) {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 clearMonopolyPreferenceForm();
                 loadMonopolyPreferences();
                 //$('#monopolyPreferenceModal').modal('hide');
@@ -1649,7 +1599,7 @@ function loadMonopolyPreferences() {
                 // Fill dropdown
                 let monopolyPreferenceDropdown = $("#PropertyDetails_MonopolyPreference");
                 monopolyPreferenceDropdown.empty();
-                monopolyPreferenceDropdown.append(`<option value="">Select Monopoly Preference</option>`);
+                monopolyPreferenceDropdown.append(`<option value="0">Select Monopoly Preference</option>`);
 
                 if (res && res.length > 0) {
                     res.forEach((item, index) => {
@@ -1658,11 +1608,11 @@ function loadMonopolyPreferences() {
                                     <td class="text-center">${index + 1}</td>
                                     <td>${item.Name}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-warning edit-monopoly-preference"
+                                        <button class="btn btn-xs btn-outline-warning edit-monopoly-preference"
                                             data-id="${item.Id}" data-name="${item.Name}">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger delete-monopoly-preference"
+                                        <button class="btn btn-xs btn-outline-danger delete-monopoly-preference"
                                             data-id="${item.Id}">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -1929,9 +1879,8 @@ document.addEventListener('DOMContentLoaded', function () {
             Amenity_WallClock: getCheckboxValue("Amenities_WallClock"),
             Amenity_ShoeRack: getCheckboxValue("Amenities_ShoeRack"),
             Amenity_RedCarpet: getCheckboxValue("Amenities_RedCarpet"),
-
             Is_Blocked: false,
-            Action_By: userId || 1 // Example user id
+            Action_By: userId // Example user id
         };
         console.log("hall requestData:", requestData);
         //showLoader();
@@ -1944,13 +1893,7 @@ document.addEventListener('DOMContentLoaded', function () {
             contentType: "application/json",
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Saved!");
                     resetHallRentForm();
                     fetchHallDetails();
                 } else {
@@ -2070,10 +2013,10 @@ function populateHallTable(halls) {
                 <td><small class="me-1">🌙</small>${has360Video}</td>
                 <td><small class="me-1">🖼️</small>${imagesCount}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-warning edit-hall-btn" data-hall='${JSON.stringify(hall)}'>
+                    <button class="btn btn-xs btn-outline-warning edit-hall-btn" data-hall='${JSON.stringify(hall)}'>
                         <i class="bi bi-pen"></i> Edit
                     </button>
-                    <button class="btn btn-sm btn-outline-danger delete-hall-btn" data-hall='${JSON.stringify(hall)}'>
+                    <button class="btn btn-xs btn-outline-danger delete-hall-btn" data-hall='${JSON.stringify(hall)}'>
                         <i class="bi bi-trash"></i> Delete
                     </button>
                 </td>
@@ -2195,20 +2138,68 @@ function populateHallTable(halls) {
         }).then((result) => {
             if (result.isConfirmed) {
                 //showLoader();
+                var payload = {
+                    Id: hallId,
+                    ActionBy: Number(sessionStorage.getItem('userId') || 0)
+                };
                 $.ajax({
-                    url: `/api/Company_HallDetails/DeleteCompanyHallDetails/${hallId}`,
-                    type: "DELETE",
+                    url: `/api/Company_HallDetails/DeleteCompanyHallDetails`,
+                    type: "post",
                     contentType: "application/json",
-                    data: JSON.stringify(hallId),  // passing ID in body
+                    data: JSON.stringify(payload),  // passing ID in body
                     success: function (response) {
-                        Swal.fire("Deleted!", response.message, "success");
-                        // Reload table or remove row
+                        handleApiSuccess("Deleted");
                         $(`#block${hallId}`).closest("tr").remove();
                     },
                     error: function (xhr, status, error) {
                         handleApiError(xhr, status, error, 'Error while deleting Company Hall');
                     }
                 });
+            }
+        });
+    });
+
+    $(document).on("change", ".block-switch", function () {
+        const checkbox = $(this);
+
+        const requestData = {
+            Id: checkbox.data("hall-id"),
+            Is_Blocked: checkbox.is(":checked"),
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
+        };
+
+        // Optional: disable switch during API call
+        checkbox.prop("disabled", true);
+
+        $.ajax({
+            url: "/api/Company_HallDetails/SaveCompanyHallDetails_IsBlocked",
+            type: "POST",
+            data: JSON.stringify(requestData),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.status === "Success") {
+                    handleApiSuccess("Hall status updated");
+                }
+                else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to update hall status'
+                    });
+
+                    // ❗ revert toggle if failed
+                    checkbox.prop("checked", !checkbox.is(":checked"));
+                }
+            },
+
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, 'Error while updating hall status');
+
+                // ❗ revert toggle on error
+                checkbox.prop("checked", !checkbox.is(":checked"));
+            },
+            complete: function () {
+                checkbox.prop("disabled", false);
             }
         });
     });
@@ -2441,7 +2432,7 @@ function saveInvoiceSetupToApi(companyLogo) {
         UpiId: $("#UPIId").val(),
 
         CompanyLogo: companyLogo,  // make sure backend model has this property
-        ActionBy: userId
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
 
     console.log("invoice setup payload:", payload);
@@ -2453,13 +2444,7 @@ function saveInvoiceSetupToApi(companyLogo) {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 1200
-                });
+                handleApiSuccess("Saved");
                 loadInvoiceSetupData();
             } else {
                 Swal.fire("Error", res.message || "Failed to save data", "error");
@@ -2562,7 +2547,7 @@ function saveFoodItems() {
         cuisines[$(this).val()] = $(this).is(":checked");
     });
 
-    userId = userId === null ? sessionStorage.getItem('userId') : userId;
+    userId = Number(sessionStorage.getItem('userId') || 0);
     let foodItems = [];
 
     // 🔧 Loop through headers first
@@ -2597,7 +2582,7 @@ function saveFoodItems() {
 
     let requestData = {
         FoodItems: foodItems,
-        ActionBy: userId,
+        ActionBy: Number(sessionStorage.getItem('userId') || 0),
         Cuisines: cuisines
     };
 
@@ -3068,7 +3053,7 @@ async function saveAllPackages() {
             packageName: nameInput?.value?.trim() || "",
             ratePerPerson: parseFloat(rateInput?.value || 0),
             menuImagePath: null,
-            actionBy: userId,
+            ActionBy: Number(sessionStorage.getItem('userId') || 0),
 
             inclusionList: (() => {
                 const hiddenInputs = document.querySelectorAll(".inclusion-data");
@@ -3080,8 +3065,8 @@ async function saveAllPackages() {
                     if (Array.isArray(arr)) {
                         return arr.map(item => ({
                             FoodItem_Id: item.FoodItem_Id,
-                            isIncluded: Boolean(item.IsIncluded),
-                            count_size: item.Count_Size || 0
+                            IsIncluded: Boolean(item.IsIncluded),
+                            Count_Size: item.Count_Size || 0
                         }));
                     }
                     return [];
@@ -3111,13 +3096,7 @@ async function saveAllPackages() {
         data: JSON.stringify(payload), // ✅ send array
         success: function (response) {
             console.log("SaveCompanyFoodPackage response:", response);
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Saved!",
-                showConfirmButton: false,
-                timer: 900
-            });
+            handleApiSuccess("Saved");
             staticPackages = [];
             loadFoodPackageData();
             rowCount = 0;
@@ -3140,11 +3119,9 @@ function deleteCompanyFoodPackage(id) {
         cancelButtonColor: "#3085d6"
     }).then((result) => {
         if (result.isConfirmed) {
-            userId = userId === null ? sessionStorage.getItem('userId') : userId;
-
             const requestData = {
                 Id: id,
-                ActionBy: userId
+                ActionBy: Number(sessionStorage.getItem('userId') || 0)
             };
             console.log("requestData delete package:", requestData);
             //showLoader();  
@@ -3155,13 +3132,7 @@ function deleteCompanyFoodPackage(id) {
                 data: JSON.stringify(requestData),
                 success: function (response) {
                     if (response.status === "Success") {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Package Deleted!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handleApiSuccess("Deleted");
                         //$(`#row-${id}`).remove(); // remove row visually
                         loadFoodPackageData();
                     } else {
@@ -3289,7 +3260,7 @@ function saveAddonCharges() {
 
     const requestData = {
         AddonCharges: addonCharges,
-        ActionBy: userId
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
 
     console.log("Saving AddonCharges:", requestData);
@@ -3303,13 +3274,7 @@ function saveAddonCharges() {
         success: function (res) {
             console.log("SaveCompanyFoodRateAddonCharge res:", res);
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
 
                 loadAddonCharges();
             } else {
@@ -3705,13 +3670,7 @@ function saveCharges() {
         success: (res) => {
             console.log("SaveCompanyFoodRateOtherCharge res:", res);
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 loadCharges(); // Auto-load on save
             } else {
                 Swal.fire({ icon: 'error', title: 'Failed', text: res.message || "Something went wrong." });
@@ -3769,13 +3728,7 @@ function saveLabelSetup() {
         success: function (res) {
             console.log("SaveCompanyFoodRateLabelPrinting res:", res);
             if (res.status === "Success") {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Saved!',
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 loadLabelSetup();
             } else {
                 Swal.fire({
@@ -3947,7 +3900,7 @@ function saveTermsAndConditions() {
         PrintInProspectus: $('#printProspectus').is(':checked'),
         PrintInInvoice: $('#printInvoice').is(':checked'),
         TermsContent: $('#termsEditor').html(),
-        ActionBy: userId // Assuming you have userId defined
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
     //console.log("tnc data:", data);
     // Show loading indicator
@@ -3963,13 +3916,7 @@ function saveTermsAndConditions() {
         success: function (response) {
             console.log("SaveCompanyTermsAndConditions res:", response);
             if (response.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
             } else {
                 Swal.fire({
                     icon: 'error',

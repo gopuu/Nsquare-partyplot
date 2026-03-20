@@ -412,7 +412,7 @@ function loadFoodPackageList() {
                 populateFoodPackageDropdown($("#foodPackage_PackageDropdown"));
             }
             else {
-                $(".foodPackageDropdown").html(`<option value="0">No Package Found</option>`);
+                $("#foodPackageDropdown").html(`<option value="0">No Package Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -483,7 +483,7 @@ $(document).on("click", ".loadMenuBtn", function () {
     //$row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
 
     //updatePackageCost($row);  // Pass row if needed
-
+    //here2
     $.ajax({
         url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
         type: "POST",
@@ -516,7 +516,7 @@ $(document).on("click", ".loadMenuBtn", function () {
         }
     });
 });
-function restoreSavedMenuSelection(savedItems) {
+function restoreSavedMenuSelection2(savedItems) {
     if (!savedItems || savedItems.length === 0) return;
     savedItems.forEach(item => {
         const section = $(`#menuModal .menu-section[data-menu-id='${item.FoodMenu_Id}']`);
@@ -545,7 +545,85 @@ function restoreSavedMenuSelection(savedItems) {
     });
     updateSelectAllState();
 }
+function restoreSavedMenuSelection3(savedItems) {
+    if (!savedItems || savedItems.length === 0) return;
 
+    savedItems.forEach(item => {
+        // ✅ Target exact menu using SrNo (index)
+        const section = $("#menuModal .menu-section").eq(item.SrNo - 1);
+
+        if (!section.length) return;
+
+        // 🔹 EXISTING ITEM
+        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
+            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`)
+                .prop("checked", true);
+        }
+
+        // 🔹 NEW CUSTOM ITEM
+        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
+            const newItemHtml = `
+                <div class="form-check me-3 mb-2">
+                    <input class="form-check-input item-checkbox new-item"
+                           type="checkbox"
+                           value="0"
+                           data-menu-id="${item.FoodMenu_Id}"
+                           data-item-name="${item.FoodItem_Name_NewAdded}"
+                           checked>
+                    <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
+                </div>
+            `;
+            section.find(".item-container").append(newItemHtml);
+        }
+    });
+
+    updateSelectAllState();
+}
+function restoreSavedMenuSelection(savedItems) {
+    if (!savedItems || savedItems.length === 0) return;
+
+    savedItems.forEach(item => {
+
+        // ✅ Target exact menu using Instance_Id (NOT index)
+        const section = $(`#menuModal .menu-section[data-instance-id='${item.Instance_Id}']`);
+
+        if (!section.length) return;
+
+        // 🔹 EXISTING ITEM
+        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
+            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`)
+                .prop("checked", true);
+        }
+
+        // 🔹 NEW CUSTOM ITEM
+        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
+
+            // ❗ Prevent duplicate append
+            const alreadyExists = section.find(`.item-checkbox.new-item[data-item-name="${item.FoodItem_Name_NewAdded}"]`).length > 0;
+
+            if (!alreadyExists) {
+                const newItemHtml = `
+                    <div class="form-check me-3 mb-2">
+                        <input class="form-check-input item-checkbox new-item"
+                               type="checkbox"
+                               value="0"
+                               data-menu-id="${item.FoodMenu_Id}"
+                               data-item-name="${item.FoodItem_Name_NewAdded}"
+                               checked>
+                        <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
+                    </div>
+                `;
+                section.find(".item-container").append(newItemHtml);
+            } else {
+                // just check if already exists
+                section.find(`.item-checkbox.new-item[data-item-name="${item.FoodItem_Name_NewAdded}"]`)
+                    .prop("checked", true);
+            }
+        }
+    });
+
+    updateSelectAllState();
+}
 function updateSelectAllState() {
     $(".menu-section").each(function () {
         const allItems = $(this).find(".item-checkbox");
@@ -681,7 +759,7 @@ function renderMenuItems(menuData) {
             : `<p class="text-muted">No items found.</p>`;
 
         html += `
-            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}">
+            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}" data-instance-id="${menu.Instance_Id}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name} (${totalCount})</h6>
                     <div>
@@ -733,9 +811,13 @@ $(document).on("click", ".btn-addNewItem", function () {
 
 // ✅ STEP 5: Modal “Select All” and “Save” buttons
 $(document).on("change", ".select-all", function () {
-    const menuId = $(this).attr("id").split("_")[1];
+
+    const section = $(this).closest(".menu-section"); // ✅ current block only
+    const instanceId = section.data("instance-id");   // ✅ unique instance
     const checked = $(this).is(":checked");
-    $(`.item-checkbox[data-menu-id='${menuId}']`).prop("checked", checked);
+
+    // ✅ apply only inside this section
+    section.find(".item-checkbox").prop("checked", checked);
 });
 
 //StEP 6: Save MENU
@@ -744,9 +826,12 @@ $(document).on("click", ".btn-saveMenu", function () {
 
     $(".menu-section").each(function () {
         const menuId = $(this).data("menu-id");
+        const instanceId = $(this).data("instance-id"); // ✅ IMPORTANT
+
         $(this).find(".item-checkbox:checked").each(function () {
             let isNew = $(this).hasClass("new-item");
             selectedMenuData.push({
+                Instance_Id: instanceId,
                 FoodMenu_Id: parseInt(menuId),
                 FoodItem_Id: parseInt($(this).val()),
                 FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
@@ -762,7 +847,7 @@ $(document).on("click", ".btn-saveMenu", function () {
         $activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
     }
 
-    //console.log("Saved Menu Selection:", selectedMenuData);
+    console.log("Saved Menu Selection:", selectedMenuData);
     $("#menuModal").modal("hide");
 });
 
@@ -1375,7 +1460,7 @@ function generateShiftDataPerDay(dateObj) {
 
 //main booking board
 async function renderBoard(bookingData = null) {
-    //console.log("renderBoard bookingData:", bookingData);
+    console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
@@ -1914,22 +1999,33 @@ async function renderBoard(bookingData = null) {
             return currentDate >= fromDate && currentDate <= tillDate;
         });
 
+
         // ✅ If badge shows COUNT (numeric)
         if (!isNaN(badgeText) && badgeText !== "") {
             if (bookingsForDay.length === 0) return;
 
             // ✅ Sort bookings
-            const shiftOrder = {
-                FD: 1,
-                MO: 2,
-                AF: 3,
-                EV: 4,
-                ON: 5
-            };
-
             bookingsForDay.sort((a, b) => {
-                return (shiftOrder[a.ShiftCode] || 99) - (shiftOrder[b.ShiftCode] || 99);
-            });
+
+                const shiftOrder = {
+                    FD: 1,
+                    MO: 2,
+                    AF: 3,
+                    EV: 4,
+                    ON: 5
+                };
+
+                const shiftDiff = (shiftOrder[a.ShiftCode] || 99) - (shiftOrder[b.ShiftCode] || 99);
+
+                if (shiftDiff !== 0)
+                    return shiftDiff;
+
+                // ✅ SAME SHIFT → sort by START TIME
+                const aStart = timeToMinutes(a.StartTime_Full);
+                const bStart = timeToMinutes(b.StartTime_Full);
+
+                return aStart - bStart;
+            });            
 
             let html = "";
             bookingsForDay.forEach((b, index) => {
@@ -3174,7 +3270,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ActionBy: userId
         };
         console.log("payload EventForm:", payload);
-        //here1
+        
         var url = "/api/Booking_Payments/DownloadPaymentReceipt";
         // ✅ Call download only if YES
         downloadReport(url, payload, "Generating Receipt...");
@@ -3194,37 +3290,8 @@ document.addEventListener("DOMContentLoaded", function () {
             ActionBy: userId
         };
         console.log("payload EventForm:", payload);
-        $.ajax({
-            url: '/api/Report/DownloadBookingEventReport',
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: JSON.stringify(payload),
-            success: function (res) {
-
-                if (res.status === "Success" && res.data && res.data.FileUrl) {
-
-                    const link = document.createElement("a");
-                    link.href = res.data.FileUrl;
-                    link.download = "";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                }
-                else {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Failed',
-                        text: 'PDF not generated',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            },
-            error: function (xhr, status, error) {
-                handleApiError(xhr, status, error, "Error while downloading PDF");
-            }
-        });
+        var url = "/api/Report/DownloadBookingEventReport";
+        downloadReport(url, payload, "Generating Report...");
     });
 
     // Open foodwestage modal safely
@@ -4980,44 +5047,14 @@ function showReportOptions() {
 }
 
 function generateReport(isWithPrice) {
-
     let bookingId = getBookingId();
-
-    Swal.fire({
-        title: "Generating PDF...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
-
-    $.ajax({
-        url: "/api/BookingCalendar/GeneratePackageReport",
-        method: "POST",
-        data: JSON.stringify({ BookingId: bookingId, IsWithPrice: isWithPrice }),
-        contentType: "application/json",
-        success: function (response) {
-
-            Swal.close();
-
-            if (response.status === "Success" && response.data?.FilePath) {
-                //window.open(response.data.FilePath, "_blank");
-                let fileUrl = response.data.FilePath;
-
-                const link = document.createElement('a');
-                link.href = fileUrl;
-                link.download = fileUrl.split('/').pop(); // extract filename
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            }
-            else {
-                Swal.fire("Error", response.message, "error");
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Error");
-        }
-    });
+    var payload = {
+        BookingId: bookingId,
+        IsWithPrice: isWithPrice
+    };
+    console.log("payload PackageForm:", payload);
+    var url = "/api/Report/Report_FunctionProspectuseReport";
+    downloadReport(url, payload, "Generating Report...");
 }
 
 // 🧠 Helper to get the modal booking ID
@@ -5709,36 +5746,46 @@ function saveBooking() {
             if (response.status === "Success") {
                 handleApiSuccess("Booking Saved.");
 
-                // ✅ Swal Confirmation
-                Swal.fire({
-                    title: 'Download Receipt?',
-                    text: 'Do you want to download the payment receipt now?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Download',
-                    cancelButtonText: 'No',
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33'
-                }).then((result) => {
-                    var payload = {
-                        PaymentId: response.data.PaymentId,
-                        BookingId: response.data.BookingId,
-                        ActionBy: userId
-                    }
-                    //here1
-                    var url = "/api/Booking_Payments/DownloadPaymentReceipt";
-                    if (result.isConfirmed) {
-                        // ✅ Call download only if YES
-                        downloadReport(url, payload, "Generating Receipt...");
-                    }
-                    // ❌ If NO → do nothing (flow continues)
+                var paymentId = response.data.PaymentId;
+                if (paymentId > 0) {
+                    // ✅ Swal Confirmation
+                    Swal.fire({
+                        title: 'Download Receipt?',
+                        text: 'Do you want to download the payment receipt now?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Download',
+                        cancelButtonText: 'No',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33'
+                    }).then((result) => {
+                        var payload = {
+                            PaymentId: paymentId,
+                            BookingId: response.data.BookingId,
+                            ActionBy: userId
+                        }
+                        var url = "/api/Booking_Payments/DownloadPaymentReceipt";
+                        if (result.isConfirmed) {
+                            // ✅ Call download only if YES
+                            downloadReport(url, payload, "Generating Receipt...");
+                        }
+                        // ❌ If NO → do nothing (flow continues)
 
+                        resetBooking();
+                        loadBookingCalendar();
+                        //CLOSE MODAL
+                        //bookingModal.hide();
+                        $("#bookingModal").modal("hide");
+                    });
+                }
+                else {
                     resetBooking();
                     loadBookingCalendar();
                     //CLOSE MODAL
                     //bookingModal.hide();
                     $("#bookingModal").modal("hide");
-                });
+                }
+
                 /*
                 if (bookingData.BookingId > 0) {
                     var banquetId = 0;
@@ -5755,8 +5802,8 @@ function saveBooking() {
             }
             else {
                 Swal.fire({
-                    title: "Booking Save Failed",
-                    text: response.message,
+                    title: "Failed",
+                    text: response.message || "Booking Save",
                     icon: "error"
                 });
             }

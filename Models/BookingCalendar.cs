@@ -225,9 +225,11 @@
     }
     public class FoodPackage_MenuIems
     {
+        public long? Instance_Id { get; set; } = null;
         public long? FoodMenu_Id { get; set; } = null;
         public long? FoodItem_Id { get; set; } = null;
         public bool? IsChecked { get; set; } = null;
+        public string? FoodItem_Name_NewAdded { get; set; }
     }
     public class FoodPackage_AddOns
     {
@@ -396,6 +398,9 @@
     public class FoodMenuModel
     {
         public long? FoodMenu_Id { get; set; }
+        public long? InclusionCount_Id { get; set; }
+        public long? Inclusion_Id { get; set; }
+        public long? Instance_Id { get; set; }
         public string? FoodMenu_Name { get; set; }
         public List<FoodItemModel>? FoodItemsList { get; set; }
     }

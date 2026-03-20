@@ -239,7 +239,8 @@ $(function () {
             BookingId: bookingId,
             InvoiceNo: null,
             ProformaInvoiceNo: proformaNo,
-            WithHeader: true
+            WithHeader: true,
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
         generateInvoicePdf(request);
     });
@@ -255,8 +256,8 @@ $(function () {
             BookingId: bookingId,
             InvoiceNo: invoiceNo,
             ProformaInvoiceNo: null,
-            GSTInvoiceNo: null,   // GST invoice
-            WithHeader: true
+            WithHeader: true,
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
         generateInvoicePdf(request);
     });

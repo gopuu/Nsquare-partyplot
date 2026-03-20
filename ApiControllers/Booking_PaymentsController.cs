@@ -772,13 +772,26 @@ namespace ERPAdmin.ApiControllers
                             Padding = 2
                         });
 
-                        paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
+                        //paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
+                        //{
+                        //    Border = Rectangle.BOTTOM_BORDER,
+                        //    PaddingBottom = 3,
+                        //    PaddingTop = 2,
+                        //    HorizontalAlignment = Element.ALIGN_RIGHT
+                        //});
+
+                        PdfPCell valueCell = new PdfPCell(new Phrase(value, AmtFontNormal)) //normalFont
                         {
-                            Border = Rectangle.BOTTOM_BORDER,
+                            Border = Rectangle.NO_BORDER, // ❌ remove default solid border
                             PaddingBottom = 3,
                             PaddingTop = 2,
                             HorizontalAlignment = Element.ALIGN_RIGHT
-                        });
+                        };
+
+                        // ✅ Apply dotted underline
+                        valueCell.CellEvent = new DottedBottomBorder();
+                        paySummary.AddCell(valueCell);
+
                     }
                     // 🔹 Data
                     AddPayRow("Total Booking Amount", $"₹ {totalAmout:N0}");

@@ -1,5 +1,10 @@
 ﻿namespace ERPAdmin.Models
 {
+    public class CompanyHallDeleteRequest : BaseClass
+    {
+        public Int64 Id { get; set; }
+    }
+
     //public class CompanyImage
     //{
     //    public long ImageId { get; set; }

@@ -41,7 +41,7 @@
         let payload = {
             StaffIds: staffIds,
             AccountRights: rights,
-            ActionBy: 0
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
 
         $.ajax({

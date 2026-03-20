@@ -36,9 +36,9 @@ namespace ERPAdmin.ApiControllers
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
      
-        [HttpDelete]
-        [Route("DeleteCompanyHallDetails/{id}")]
-        public IActionResult DeleteCompanyHallDetails([FromBody] long id)
+        [HttpPost]
+        [Route("DeleteCompanyHallDetails")]
+        public IActionResult DeleteCompanyHallDetails([FromBody] CompanyHallDeleteRequest request)
         {
             var apiResponse = new apiResponse();
 
@@ -52,7 +52,8 @@ namespace ERPAdmin.ApiControllers
                     SqlCommand cmd = new SqlCommand("DeleteCompanyHallDetails", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = id;
+                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
 
                     con.Open();
                     cmd.ExecuteNonQuery();
@@ -322,6 +323,45 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("SaveCompanyHallDetails_IsBlocked")]
+        public IActionResult SaveCompanyHallDetails_IsBlocked([FromBody] GetCompanyHallDetailsRequest_IsBlocked model)
+        {
+            var apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("SaveCompanyHallDetails_IsBlocked", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
+                    cmd.Parameters.Add("@Is_Blocked", SqlDbType.Bit).Value = model.Is_Blocked;
+                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                }
+                apiResponse.status = "Success";
+                apiResponse.message = "Hall Status updated";
+                apiResponse.data = null;
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("GetCompanyHallDetailsList_Dropdown")]
         public IActionResult GetCompanyHallDetailsList_Dropdown([FromBody] GetCompanyHallDetailsRequest request)
         {
@@ -378,6 +418,12 @@ namespace ERPAdmin.ApiControllers
 public class GetCompanyHallDetailsRequest
 {
     public long? Id { get; set; }
+}
+public class GetCompanyHallDetailsRequest_IsBlocked : BaseClass
+{
+    public long? Id { get; set; }
+    public bool Is_Blocked { get; set; }
+
 }
 public class SaveCompanyHallDetailsRequest
 {

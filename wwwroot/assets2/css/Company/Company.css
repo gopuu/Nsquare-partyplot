@@ -1,4 +1,9 @@
-﻿.sticky-tabs {
+﻿#hallDetailsTableBody td,
+#hallDetailsTableBody th {
+    padding: 0.2rem 0.5rem !important;
+}
+
+.sticky-tabs {
     position: sticky;
     top: 75px; /* match navbar height */
     z-index: 1000;
