@@ -87,14 +87,7 @@
                 var obj = response;
                 //console.log("submit obj:", obj);
                 if (obj.status.toLowerCase() == "success") {
-                    //$('#btn-loader').hide();
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Payment Mode Saved");
                     fetchData();
                     resetFormFields();  // Reset the form fields
                     $('#addEventModal').modal('hide');  // Close the modal
@@ -159,15 +152,8 @@
                     response = JSON.parse(response);
                 }
 
-                //debugger
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Payment Mode Deleted");
                 }
                 else {
                     Swal.fire({

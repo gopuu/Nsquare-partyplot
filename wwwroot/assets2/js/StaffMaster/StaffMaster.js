@@ -78,15 +78,7 @@ $(document).ready(function () {
 
                             row.remove();
                             staffDocuments = staffDocuments.filter(d => d.index !== index);
-
-                            Swal.fire({
-                                icon: "success",
-                                title: "Deleted!",
-                                text: res.message || "Document deleted successfully.",
-                                timer: 900,
-                                showConfirmButton: false
-                            });
-
+                            handleApiSuccess("Document deleted successfully.");
                         }
                         else {
                             Swal.fire({
@@ -210,20 +202,16 @@ $(document).ready(function () {
                 data: JSON.stringify(payload),
                 success: function (res) {
                     if (res?.status === "Success") {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Saved!",
-                            timer: 1200,
-                            showConfirmButton: false,
-                            position: "top-end"
-                        });
+                        handleApiSuccess("Saved successfully.");
                         $("#staffModal").modal("hide");
                         fetchStaffData();
                     } else {
                         Swal.fire("Error", res?.message || "Save failed", "error");
                     }
                 },
-                error: () => Swal.fire("API Error", "Something went wrong", "error"),
+                error: function (xhr, error, status) {
+                    handleApiError(xhr, status, error, "Failed to Save Staff");
+                },
                 complete: () => $("#btnSaveStaff").prop("disabled", false)
             });
         };
@@ -353,20 +341,16 @@ $(document).ready(function () {
             }),
             success: function (res) {
                 if (res?.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Staff Deleted!",
-                        timer: 1000,
-                        showConfirmButton: false,
-                        position: "top-end"
-                    });
+                    handleApiSuccess("Record deleted successfully.");
                     fetchStaffData();
                 } else {
                     Swal.fire("Delete Failed", res?.message || "Error", "error");
                 }
                 $("#deleteRecordModal").modal("hide");
             },
-            error: () => Swal.fire("Error", "Delete failed", "error")
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete Staff");
+            }
         });
     });
 

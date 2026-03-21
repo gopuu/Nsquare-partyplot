@@ -51,12 +51,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                 toDate = new Date(today.getFullYear(), today.getMonth(), 0);
                 break;
-            case "days":
+            case "last7days":
                 fromDate = new Date(today);
                 fromDate.setDate(today.getDate() - 6);
                 toDate = today;
                 break;
-            case "lastdays":
+            case "last30days":
                 fromDate = new Date(today);
                 fromDate.setDate(today.getDate() - 29);
                 toDate = today;
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 fromDate.setDate(today.getDate() - 1);
                 toDate = new Date(fromDate);
                 break;
-            case "12months":
+            case "last12months":
                 fromDate = new Date(today);
                 fromDate.setMonth(today.getMonth() - 12);
                 toDate = today;

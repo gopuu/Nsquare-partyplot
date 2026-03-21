@@ -172,14 +172,7 @@
                 data: JSON.stringify(payload),
                 success: function (res) {
                     if (res && (res.status === 'Success' || (res.status && res.status.toLowerCase() === 'success'))) {
-
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Deleted !!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handleApiSuccess("Saved");
 
                         $('#accountTypeModal').modal('hide');
                         fetchData();
@@ -224,7 +217,7 @@
                 data: JSON.stringify(payload),
                 success: function (res) {
                     if (res && res.status === 'Success') {
-                        Swal.fire({ icon: 'success', title: 'Deleted', showConfirmButton: false, timer: 900 });
+                        handleApiSuccess("Deleted");
                         fetchData();
                         $('#deleteRecordModal').modal('hide');
                     } else {

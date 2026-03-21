@@ -55,20 +55,16 @@
             UserRights: userRights
         };
         console.log("Saving Payload:", payload);
-        $('#btn-loader').show();
         $.ajax({
             url: "/api/UserRights/SaveUserRights",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.fire("Success", res.message || "User rights saved", "success");
+                handleApiSuccess("User rights saved.");
             },
-            error: function () {
-                Swal.fire("Error", "Failed to save rights", "error");
-            },
-            complete: function () {
-                $('#btn-loader').hide();
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Rights");
             }
         });
     });
@@ -105,18 +101,12 @@ function fetchUserRights(staffId = 0) {
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-
         success: function (response) {
             const result = response.data || [];
             renderUserRightsTabs(result);   // 🔵 MAIN FUNCTION
         },
-
-        error: function (xhr, status, error) {
-            console.error("Error fetching user rights:", error);
-        },
-
-        complete: function () {
-            $('#btn-loader').hide();
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Rights");
         }
     });
 }

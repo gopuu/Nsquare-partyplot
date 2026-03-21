@@ -10,72 +10,6 @@ $("#btn-add").click(function () {
     $("#AttachmentModal").modal("show");
 });
 
-//$(document).on("click", "#btnSaveAttachment", function () {
-
-//    // ---- Validation ----
-//    const ticketId = $("#ddlTicket").val();
-//    let fileInput = $("#AttachmentFile").get(0);
-//    let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
-
-//    if (!ticketId) {
-//        Swal.fire("Validation", "Ticket is required", "warning");
-//        return;
-//    }
-//    // ---- Convert to base64 WITHOUT metadata ----
-//    function getBase64WithoutMeta(file, callback) {
-//        let reader = new FileReader();
-//        reader.onload = function (e) {
-//            let base64 = e.target.result.split(',')[1]; // 🔥 remove data:image/...;base64,
-//            callback(base64);
-//        };
-//        reader.readAsDataURL(file);
-//    }
-
-//    // ---- Save Attachment API Call ----
-//    function saveAttachment(base64File) {
-
-//        const payload = {
-//            Id: Number($("#AttachmentId").val() || 0),
-//            TicketId: Number($("#ddlTicket").val()),
-//            FileName: $("#AttachmentFile")[0]?.files[0]?.name || "",
-//            FilePath: base64File,   // null allowed for edit
-//            ActionBy: sessionStorage.getItem("userId") ?? 0
-//        };
-
-//        $.ajax({
-//            url: "/api/SupportTicketAttachment/SaveSupportTicketAttachment",
-//            type: "POST",
-//            contentType: "application/json",
-//            data: JSON.stringify(payload),
-//            success: function (res) {
-//                if (res.status === "Success") {
-//                    Swal.fire({
-//                        icon: "success",
-//                        title: "Saved!",
-//                        timer: 1200,
-//                        showConfirmButton: false,
-//                        position: "top-end"
-//                    });
-//                    $("#AttachmentModal").modal("hide");
-//                    loadAttachmentData();
-//                } else {
-//                    Swal.fire("Error", res?.message || "Save failed", "error");
-//                }
-//            },
-//            error: function (xhr, status, error) {
-//                console.log("Error:", xhr);
-//                Swal.fire("API Error", "Something went wrong.", "error");
-//            },
-
-//        });
-//    }
-
-
-//// ---- File exists → convert → save ----
-//getBase64WithoutMeta(file, function (base64File) {
-//    saveAttachment(base64File);
-//});
-//});
 
 $(document).on("click", "#btnSaveAttachment", function () {
 
@@ -127,18 +61,15 @@ function saveAttachment(base64File) {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    icon: "success",
-                    title: "Saved!",
-                    timer: 1200,
-                    showConfirmButton: false,
-                    position: "top-end"
-                });
+                handleApiSuccess("Attachment saved successfully.");
                 $("#AttachmentModal").modal("hide");
                 loadAttachmentData();
             } else {
                 Swal.fire("Error", res.message, "error");
             }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Save ticket attachements");
         }
     });
 }

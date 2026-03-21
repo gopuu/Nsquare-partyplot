@@ -348,13 +348,7 @@
 
                 //debugger
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted!");
                 }
                 else {
                     Swal.fire({
@@ -423,21 +417,14 @@
             success: function (response) {
 
                 if (response.status === "Success") {
-                    Swal.fire({
-                        toast: true,
-                        position: "top-end",
-                        icon: "success",
-                        title: "Favourite updated",
-                        showConfirmButton: false,
-                        timer: 1200
-                    });
+                    handleApiSuccess("Favourite updated");
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
 
             },
-            error: function (xhr, status, error) {
-                Swal.fire("Error", "Failed to update favourite", "error");
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Favorite Materials");
             }
         });
 
@@ -464,21 +451,14 @@
             success: function (response) {
 
                 if (response.status === "Success") {
-                    Swal.fire({
-                        toast: true,
-                        position: "top-end",
-                        icon: "success",
-                        title: "Active status updated",
-                        showConfirmButton: false,
-                        timer: 1200
-                    });
+                    handleApiSuccess("Active status updated");
                 } else {
                     Swal.fire("Error", response.message, "error");
                 }
 
             },
-            error: function (xhr, status, error) {
-                Swal.fire("Error", "Failed to update Active status", "error");
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Active Status");
             }
         });
 

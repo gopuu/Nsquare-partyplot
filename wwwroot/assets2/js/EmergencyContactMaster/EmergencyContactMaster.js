@@ -79,13 +79,7 @@ $(document).ready(function () {
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res?.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Emergency Contact saved successfully.");
                     $('#ContactModal').modal('hide');
                     fetchData();
                 }
@@ -168,19 +162,16 @@ $(document).ready(function () {
             }),
             success: function (res) {
                 if (res?.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Emergency Contact deleted successfully.");
                 } else {
                     Swal.fire("Delete Failed", res?.message || "Unable to delete", "error");
                 }
 
                 $("#deleteRecordModal").modal("hide");
                 fetchData();
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete Contact");
             }
         });
     });

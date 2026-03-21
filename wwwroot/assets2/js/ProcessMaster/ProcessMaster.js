@@ -40,13 +40,7 @@ $("#btnprocess").click(function (e) {
         data: JSON.stringify(inputData),
         success: function (response) {
             if (response.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Process saved successfully!");
 
                 resetProcessForm();
                 loadProcessList();
@@ -55,8 +49,8 @@ $("#btnprocess").click(function (e) {
                 Swal.fire("Error", response.message, "error");
             }
         },
-        error: function () {
-            Swal.fire("Error", "Error saving process.", "error");
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Save Process");
         }
     });
 });
@@ -110,20 +104,18 @@ $("#delete-record").on("click", function () {
         }),
         success: function (res) {
             if (res?.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Deleted Successfully!",
-                    showConfirmButton: false,
-                    timer: 1000
-                });
+                handleApiSuccess("Deleted Successfully!");
 
                 $("#deleteRecordModal").modal("hide");
                 loadProcessList(); // ✅ correct reload
             } else {
                 Swal.fire("Delete Failed", res?.message || "Unable to delete", "error");
             }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Delete Process");
         }
+
     });
 });
 

@@ -67,17 +67,14 @@
             success: (res) => {
                 if (res.status === "Success") {
                     $('#staffLeaveModal').modal('hide');
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 1200
-                    });
+                    handleApiSuccess("Staff Leave saved successfully.");
                     fetchStaffLeave();
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Staff Leave");
             }
         });
     });
@@ -115,14 +112,7 @@
                     response = JSON.parse(response);
                 }
                 if (response.status === "Success") {
-
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Leave Type Deleted!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Leave Type Deleted Successfully.");
 
                 } else {
                     Swal.fire("Delete Failed", response.message, "error");

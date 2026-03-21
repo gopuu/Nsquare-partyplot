@@ -33,19 +33,17 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved!",
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Saved!");
                     loadComments();
                     $("#TaskCommentModal").modal("hide");
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Comments");
             }
+
         });
     });
 
@@ -113,13 +111,7 @@
             success: function (res) {
 
                 if (res?.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted Successfully!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Deleted!");
                 } else {
                     Swal.fire("Delete Failed", res?.message || "Unable to delete", "error");
                 }
@@ -129,8 +121,8 @@
                 // Reload Comments
                 loadComments();
             },
-            error: function (xhr, status, error) {
-                Swal.fire("Error", "Unable to delete record", "error");
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete");
             }
         });
     });

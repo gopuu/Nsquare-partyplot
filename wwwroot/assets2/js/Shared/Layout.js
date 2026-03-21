@@ -473,13 +473,13 @@ function applyQuickRange() {
             to = new Date(today.getFullYear(), today.getMonth(), 0);
             break;
 
-        case "days": // Last 7 Days
+        case "last7days": // Last 7 days
             to = new Date();
             from = new Date();
             from.setDate(to.getDate() - 6);
             break;
 
-        case "lastdays": // Last 30 Days
+        case "last30days": // Last 30 days
             to = new Date();
             from = new Date();
             from.setDate(to.getDate() - 29);
@@ -491,7 +491,7 @@ function applyQuickRange() {
             to = new Date(from);
             break;
 
-        case "12months": // ✅ Last 12 Months
+        case "last12months": // ✅ Last 12 Months
             to = new Date();
             from = new Date();
             from.setMonth(to.getMonth() - 11);

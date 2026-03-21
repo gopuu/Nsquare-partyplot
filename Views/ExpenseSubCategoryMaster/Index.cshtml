@@ -162,13 +162,7 @@ $.ajax({
     data: JSON.stringify(payload),
     success: function (response) {
         if (response.status === "Success") {
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Saved!",
-                showConfirmButton: false,
-                timer: 1000
-            });
+            handleApiSuccess("Saved");
             fetchData();  // reload table
             resetFormFields();  // reset
             $('#addEventModal').modal('hide');  // close modal
@@ -273,15 +267,8 @@ $.ajax({
             response = JSON.parse(response);
         }
 
-        //debugger
         if (response.status === "Success") {
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Deleted !!",
-                showConfirmButton: false,
-                timer: 900
-            });
+            handleApiSuccess("Deleted");
         }
         else {
             Swal.fire({
@@ -295,7 +282,7 @@ $.ajax({
         $('#deleteRecordModal').modal('hide');
     },
     error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Something went wrong!")
+        handleApiError(xhr, status, error, "Something went wrong!")
     },
     complete: function () {
         $('#btn-loader').hide(); // Ensure loader is hidden in any case

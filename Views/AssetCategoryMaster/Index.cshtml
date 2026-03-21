@@ -121,13 +121,7 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function () {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Saved");
                 $("#assetCategoryModal").modal("hide");
                 fetchAssetCategoryData();
             },

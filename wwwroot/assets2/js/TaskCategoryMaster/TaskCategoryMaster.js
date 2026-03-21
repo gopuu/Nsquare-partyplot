@@ -35,13 +35,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Task Category saved successfully.");
                     $("#TaskCategoryModal").modal("hide");
                     loadTaskCategoryData();
                 } else {
@@ -101,13 +95,7 @@
             success: function (res) {
 
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted Successfully!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Task Category deleted successfully.");
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
@@ -141,7 +129,9 @@ function loadTaskCategoryData() {
         success: function (res) {
             renderTaskCategoryTable(res.data);
         },
-        error: handleApiError
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Task Category");
+        }
     });
 }
 

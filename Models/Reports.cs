@@ -31,7 +31,8 @@
 
     public class InvoiceHeader
     {
-        public string? InvoiceNo { get; set; }
+        public long? ProformaInvoiceNo { get; set; }
+        public long? InvoiceNo { get; set; }
         public string? Date { get; set; }
         public string? BookingRef { get; set; }
         public string? EventDate { get; set; }
@@ -54,15 +55,17 @@
         public string? HSN { get; set; } = "";
         public string? Description { get; set; }
         public decimal Rate { get; set; }
-        public int Qty { get; set; }
+        public decimal Qty { get; set; }
         public decimal SubTotal { get; set; }
         public decimal TaxableValue { get; set; }
-        public decimal CgstPct { get; set; }
-        public decimal CgstAmt { get; set; }
-        public decimal SgstPct { get; set; }
-        public decimal SgstAmt { get; set; }
-        public decimal IgstPct { get; set; } = 0;
-        public decimal IgstAmt { get; set; } = 0;
+        public decimal CGST_Percent { get; set; }
+        public decimal CGST_Amount { get; set; }
+        public decimal SGST_Percent { get; set; }
+        public decimal SGST_Amount { get; set; }
+        public decimal IGST_Percent { get; set; }
+        public decimal IGST_Amount { get; set; }
+
+        public decimal Total { get; set; }
     }
 
     public class InvoiceTotals
@@ -72,6 +75,7 @@
         public decimal TotalDiscount { get; set; }
         public decimal TotalCGST { get; set; }
         public decimal TotalSGST { get; set; }
+        public decimal TotalIGST { get; set; }
         public decimal InvoiceTotal { get; set; }
         public decimal RoundOff { get; set; }
         public decimal TotalAdvance { get; set; }

@@ -280,7 +280,8 @@
         public long? Booking_LeadReferenceId { get; set; }
         public long? Booking_MenuType_Id { get; set; }
         public long? Booking_TypeId { get; set; }
-        public string? Booking_TypeName { get; set; }
+        public long? Booking_EventId { get; set; }
+        public string? Booking_EventName { get; set; }
         public bool Booking_IsAgent { get; set; }
 
         public long? Payment_ModeId { get; set; }

@@ -43,69 +43,117 @@ namespace ERPAdmin.ApiControllers
         {
             try
             {
-                // ══════════════════════════════════════════
-                //  STATIC DATA  (replace with SP calls later)
-                // ══════════════════════════════════════════
-                var company = new CompanyInfo
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult? errorResult))
                 {
-                    Name = "Shreenidhi Enterprise",
-                    Address = "1st Floor, Crosswaymall, Above Croma, Near Ramchowk, Ghoddod Road, Surat",
-                    Phone = "Tel: 8799546155",
-                    Email = "ramayanarestroandbanquet@gmail.com",
-                    GST = "24AEPFS5945D1ZR",
-                    PAN = "AEPFS5945D",
-                    State = "Gujarat",
-                    StateCode = "24",
-                    BankName = "SHREENIDHI ENTERPRISE",
-                    AccountNo = "777705007497",
-                    Branch = "GHODDOD ROAD",
-                    IFSC = "ICIC0001388",
-                    UPI = "8799546155@okbizaxis",
-                    Logo = "banquatlogo.png"
-                };
+                    return errorResult!;
+                }
+  
+                DataTable dtCompany = new DataTable();
+                DataTable dtInvoice = new DataTable();
 
-                var header = new InvoiceHeader
+                using (SqlConnection con = new SqlConnection(connString))
                 {
-                    InvoiceNo = "459",
-                    Date = "12-Jul-2025",
-                    BookingRef = "83894",
-                    EventDate = "12-Jul-2025",
-                    EventType = "Meeting",
-                    Hall = "Laxman"
-                };
+                    con.Open();
 
-                var billTo = new BillToInfo
+                    // 🔹 Company Header
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // 🔹 Invoice Report
+                    cmd = new SqlCommand("Report_CustomerInvoiceById", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
+                    new SqlDataAdapter(cmd).Fill(dtInvoice);
+                }
+                string createdBy = "";
+
+                CompanyInfo company = new CompanyInfo();
+                if (dtCompany != null && dtCompany.Rows.Count > 0)
                 {
-                    Name = "GURUKUL TRAINING CONSULTANCY SERVICES PVT LTD",
-                    Website = "www.gurukultraining.in",
-                    Address = "OFFICE NO 1018 3RD FLOOR WEST FIELD SHOWROOM NEAR TANISHQ\nSHOWROOM GHOD DOD ROAD SURAT GUJRAT INDIA",
-                    Phone = "Phone: 7383797600",
-                    GSTIN = "GSTIN: 24AAKCG4738L1Z8",
-                    PAN = "PAN: AAKCG4738L"
-                };
+                    DataRow row = dtCompany.Rows[0];
+                    company = new CompanyInfo
+                    {
+                        Name = row["CompanyName"]?.ToString() ?? "",
+                        Address = row["CompanyAddress"]?.ToString() ?? "",
+                        Phone = row["CompanyMobile"]?.ToString() ?? "",
+                        Email = row["CompanyEmail"]?.ToString() ?? "",
+                        GST = row["CompanyGST"]?.ToString() ?? "",
+                        PAN = row["CompanyPAN"]?.ToString() ?? "",
+                        State = row["StateName"]?.ToString() ?? "",
+                        StateCode = row["StateCode"]?.ToString() ?? "",
+                        BankName = row["BankName"]?.ToString() ?? "",
+                        AccountNo = row["AccountNo"]?.ToString() ?? "",
+                        Branch = row["BranchName"]?.ToString() ?? "",
+                        IFSC = row["IFSCCode"]?.ToString() ?? "",
+                        UPI = row["UPI"]?.ToString() ?? "",
+                        Logo = row["CompanyLogo"]?.ToString() ?? "",
+                    };
+                    createdBy = row["UserName"]?.ToString() ?? "";
+                }
 
-                var items = new List<InvoiceItem>
+                var header = new InvoiceHeader();
+                var billTo = new BillToInfo();
+                var totals = new InvoiceTotals();
+                var items = new List<InvoiceItem>();
+
+                if (dtInvoice != null && dtInvoice.Rows.Count > 0)
                 {
-                    new InvoiceItem { HSN="1", Description = "Banquet Rent",        Rate = 1800,  Qty = 4,  SubTotal = 7200,  TaxableValue = 7200,  CgstPct = 9,   CgstAmt = 648,   SgstPct = 9,   SgstAmt = 648, IgstPct = 0,   IgstAmt = 0   },
-                    new InvoiceItem { HSN="2", Description = "Customised Package",  Rate = 55,    Qty = 30, SubTotal = 1650,  TaxableValue = 1650,  CgstPct = 2.5m, CgstAmt = 41.25m, SgstPct = 2.5m, SgstAmt = 41.25m, IgstPct = 0,   IgstAmt = 0 },
-                    new InvoiceItem { HSN="", Description = "Sound System",        Rate = 2000,  Qty = 1,  SubTotal = 2000,  TaxableValue = 2000,  CgstPct = 9,   CgstAmt = 180,   SgstPct = 9,   SgstAmt = 180, IgstPct = 0,   IgstAmt = 0   },
-                };
+                    DataRow row = dtInvoice.Rows[0];
 
-                var totals = new InvoiceTotals
-                {
-                    SubTotal = 10850,
-                    Taxable = 10850,
-                    TotalDiscount = 0,
-                    TotalCGST = 869.25m,
-                    TotalSGST = 869.25m,
-                    InvoiceTotal = 12588.50m,
-                    RoundOff = 12589,
-                    TotalAdvance = 0,
-                    Balance = 12589,
-                    AmountInWords = "Rupees Twelve Thousand Five Hundred Eighty Nine Only"
-                };
+                    // 🔹 Header
+                    header = new InvoiceHeader
+                    {
+                        ProformaInvoiceNo = Convert.ToInt64(row["ProformaInvoiceNo"]),
+                        InvoiceNo = Convert.ToInt64(row["InvoiceNo"]),
+                        Date = row["InvoiceDate_Format"].ToString() ?? "",
+                        BookingRef = row["BookingRef"].ToString() ?? "",
+                        EventDate = row["EventDate_Format"].ToString() ?? "",
+                        EventType = row["EventType"].ToString() ?? "",
+                        Hall = row["Hall"].ToString() ?? ""
+                    };
 
-                string createdBy = "Mr.Jitendra Saudiyal";
+                    // 🔹 Bill To
+                    billTo = new BillToInfo
+                    {
+                        Name = row["CustomerName"].ToString() ?? "",
+                        Website = row["Website"]?.ToString() ?? "",
+                        Address = row["Address"].ToString() ?? "",
+                        Phone = row["Phone"].ToString() ?? "",
+                        GSTIN = row["GSTIN"].ToString() ?? "",
+                        PAN = row["PAN"]?.ToString() ?? ""
+                    };
+
+                    // 🔹 Totals
+                    totals = new InvoiceTotals
+                    {
+                        SubTotal = Convert.ToDecimal(row["SubTotal"]),
+                        Taxable = Convert.ToDecimal(row["Taxable"]),
+                        TotalDiscount = Convert.ToDecimal(row["TotalDiscount"]),
+                        TotalCGST = Convert.ToDecimal(row["TotalCGST"]),
+                        TotalSGST = Convert.ToDecimal(row["TotalSGST"]),
+                        TotalIGST = Convert.ToDecimal(row["TotalIGST"]),
+                        InvoiceTotal = Convert.ToDecimal(row["InvoiceTotal"]),
+                        RoundOff = Convert.ToDecimal(row["RoundOff"]),
+                        TotalAdvance = Convert.ToDecimal(row["TotalAdvance"]),
+                        Balance = Convert.ToDecimal(row["Balance"]),
+                        AmountInWords = row["AmountInWords"].ToString() ?? ""
+                    };
+
+                    string? json = dtInvoice.Rows[0]["JSON_Items"]?.ToString();
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        items = JsonConvert.DeserializeObject<List<InvoiceItem>>(json);
+                    }
+                }
 
                 // ══════════════════════════════════════════
                 //  BUILD PDF
@@ -161,7 +209,8 @@ namespace ERPAdmin.ApiControllers
                 leftTable.WidthPercentage = 100;
 
                 // Title
-                leftTable.AddCell(new PdfPCell(new Phrase("Tax Invoice", fTitle))
+                var titleText = header.ProformaInvoiceNo > 0 ? "Proforma Invoice" : "Tax Invoice";
+                leftTable.AddCell(new PdfPCell(new Phrase(titleText, fTitle))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingBottom = 6
@@ -187,7 +236,7 @@ namespace ERPAdmin.ApiControllers
                     });
                 }
 
-                AddMeta("Tax Invoice", header.InvoiceNo);
+                AddMeta(titleText, header.InvoiceNo.ToString() ?? "-");
                 AddMeta("Date", header.Date);
                 AddMeta("Booking Ref#", header.BookingRef);
                 AddMeta("Event Date", header.EventDate);
@@ -211,10 +260,10 @@ namespace ERPAdmin.ApiControllers
                 });
 
                 // ── RIGHT SIDE (LOGO) ──
-                string logoFile = company.Logo; 
+                string? logoFile = company.Logo ?? String.Empty; 
                 PdfPCell logoCell;
 
-                string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                string logoPath = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
 
                 if (System.IO.File.Exists(logoPath))
                 {
@@ -342,7 +391,7 @@ namespace ERPAdmin.ApiControllers
                     itemTable.AddCell(TD(item.HSN, Element.ALIGN_CENTER, rowBg));
                     itemTable.AddCell(TD(item.Description, Element.ALIGN_LEFT, rowBg));
                     itemTable.AddCell(TD(item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
-                    itemTable.AddCell(TD(item.Qty.ToString(), Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(item.Qty.ToString("0.##"), Element.ALIGN_CENTER, rowBg));
                     itemTable.AddCell(TD(item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
                     itemTable.AddCell(TD(item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
 
@@ -350,17 +399,17 @@ namespace ERPAdmin.ApiControllers
                     bool isGujaratGST = !string.IsNullOrEmpty(gst) && gst.StartsWith("24");
 
                     // CGST %
-                    var cgstPercent = isGujaratGST ? $"{item.CgstPct}%" : "-";
+                    var cgstPercent = isGujaratGST ? $"{item.CGST_Percent.ToString("0.##")}%" : "-";
                     // CGST Amount
-                    var cgstAmt = isGujaratGST ? (item.CgstAmt == 0 ? "-" : item.CgstAmt.ToString("#,##0.##")) : "-";
+                    var cgstAmt = isGujaratGST ? (item.CGST_Amount == 0 ? "-" : item.CGST_Amount.ToString("#,##0.##")) : "-";
                     // SGST %
-                    var sgstPercent = isGujaratGST ? $"{item.SgstPct}%" : "-";
+                    var sgstPercent = isGujaratGST ? $"{item.SGST_Percent.ToString("0.##")}%" : "-";
                     // SGST Amount
-                    var sgstAmt = isGujaratGST ? (item.SgstAmt == 0 ? "-" : item.SgstAmt.ToString("#,##0.##")) : "-";
+                    var sgstAmt = isGujaratGST ? (item.SGST_Amount == 0 ? "-" : item.SGST_Amount.ToString("#,##0.##")) : "-";
                     // IGST %
-                    var igstPercent = isGujaratGST ? "-" : $"{item.IgstPct}%";
+                    var igstPercent = isGujaratGST ? "-" : $"{item.IGST_Percent.ToString("0.##")}%";
                     // IGST Amount
-                    var igstAmt = isGujaratGST ? "-" : (item.IgstAmt == 0 ? "-" : item.IgstAmt.ToString("#,##0.##"));
+                    var igstAmt = isGujaratGST ? "-" : (item.IGST_Amount == 0 ? "-" : item.IGST_Amount.ToString("#,##0.##"));
 
                     // Add to table
                     itemTable.AddCell(TD(cgstPercent, Element.ALIGN_CENTER, rowBg));
@@ -428,6 +477,7 @@ namespace ERPAdmin.ApiControllers
                 AddTotal("Total Discount Across All Services", "₹ " + totals.TotalDiscount.ToString("N0"), false, fBoldRupee7, fBoldRupee);
                 AddTotal("Total CGST in Rs.", "₹ " + totals.TotalCGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Total SGST in Rs.", "₹ " + totals.TotalSGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
+                AddTotal("Total IGST in Rs.", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Invoice Total", "₹ " + totals.InvoiceTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N0"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Total Adavance Paid", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
@@ -603,9 +653,21 @@ namespace ERPAdmin.ApiControllers
                 //  SAVE & RETURN URL
                 // ══════════════════════════════════════════
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
-                string fileName = $"Invoice_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string fileName = string.Empty; // $"Invoice_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+                if (header.ProformaInvoiceNo > 0)
+                {
+                    Utils.deleteOldFiles(folder, $"ProformaInvoice*.pdf");
+                    fileName = $"ProformaInvoice_{header.ProformaInvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                }
+                else {
+                    Utils.deleteOldFiles(folder, $"Invoice_*.pdf");
+                    fileName = $"Invoice_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                }
+
                 string filePath = Path.Combine(folder, fileName);
 
                 stream.Position = 0;

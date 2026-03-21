@@ -391,15 +391,8 @@ $(document).ready(function () {
                     response = JSON.parse(response);
                 }
 
-                //debugger
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted!");
                 }
                 else {
                     Swal.fire({

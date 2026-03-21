@@ -38,20 +38,16 @@
             contentType: "application/json",
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Duty Role saved successfully.");
                     $("#DutyRoleModal").modal("hide");
                     loadDutyRoleData();
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
             },
-            error: handleApiError,
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Duty Role");
+            },
             complete: () => $("#btnSaveDutyRole").prop("disabled", false)
         });
     });
@@ -102,7 +98,7 @@
             success: function (res) {
 
                 if (res.status === "Success") {
-                    Swal.fire("Success", "Deleted!", "success");
+                    handleApiSuccess("Duty Role deleted successfully.");
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
@@ -110,7 +106,9 @@
                 $("#deleteDutyRoleModal").modal("hide");
                 loadDutyRoleData();
             },
-            error: handleApiError
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete Duty Role");
+            }
         });
     });
 
@@ -134,7 +132,9 @@ function loadDutyRoleData() {
         success: function (res) {
             renderDutyRoleTable(res.data);
         },
-        error: handleApiError
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Duty Role");
+        }
     });
 }
 

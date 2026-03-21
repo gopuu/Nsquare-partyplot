@@ -140,19 +140,14 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                    if (res?.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                if (res?.status === "Success") {
+                    handleApiSuccess("Status saved successfully!");
 
                     $('#statusModal').modal('hide');
                     fetchStatusData();
-                    } else {
+                } else {
                     Swal.fire("Error", res?.message || "Save failed", "error");
-                    }
+                }
             },
             complete: function () {
                   $('#btnSaveStatus').prop("disabled", false);
@@ -213,15 +208,7 @@ $(document).ready(function () {
                     response = JSON.parse(response);
                 }
                 if (response.status === "Success") {
-
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Leave Type Deleted!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
-
+                    handleApiSuccess("Leave Type Deleted!");
                 } else {
                     Swal.fire("Delete Failed", response.message, "error");
                 }

@@ -49,14 +49,8 @@ $(document).ready(function () {
     contentType: "application/json",
     data: JSON.stringify(payload),
     success: function (res) {
-                if (res?.status === "Success") {
-        Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "Saved",
-            showConfirmButton: false,
-            timer: 1000
-        });
+        if (res?.status === "Success") {
+            handleApiSuccess("Saved");
     $('#SubCategoryModal').modal('hide');
     loadSubCategoryData();
                 } else {
@@ -128,14 +122,8 @@ $(document).ready(function () {
     data: JSON.stringify(payload),
     success: function (res) {
 
-                if (res?.status === "Success") {
-        Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: res.message || "Deleted",
-            showConfirmButton: false,
-            timer: 1000
-        });
+        if (res?.status === "Success") {
+            handleApiSuccess("Deleted");
                 } else {
         Swal.fire("Delete Failed", res?.message || "Unable to delete", "error");
                 }

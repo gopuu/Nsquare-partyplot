@@ -33,12 +33,12 @@
             fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
             toDate = new Date(today.getFullYear(), today.getMonth(), 0);
         }
-        else if (selectedFinanceDuration === "days") { // 7 days
+        else if (selectedFinanceDuration === "last7days") { // 7 days
             fromDate = new Date(today);
             fromDate.setDate(today.getDate() - 6);
             toDate = today;
         }
-        else if (selectedFinanceDuration === "lastdays") { // 30 days
+        else if (selectedFinanceDuration === "last30days") { // 30 days
             fromDate = new Date(today);
             fromDate.setDate(today.getDate() - 29);
             toDate = today;
@@ -48,7 +48,7 @@
             fromDate.setDate(today.getDate() - 1);
             toDate = fromDate;
         }
-        else if (selectedFinanceDuration === "12months") {
+        else if (selectedFinanceDuration === "last12months") {
             fromDate = new Date(today);
             fromDate.setMonth(today.getMonth() - 12);
             toDate = today;
@@ -64,8 +64,8 @@
             $("#fromDate, #toDate").hide();
         }
 
-        $("#fromDate").val(formatDate(fromDate));
-        $("#toDate").val(formatDate(toDate));
+        $("#fromDate").val(formatDate2(fromDate));
+        $("#toDate").val(formatDate2(toDate));
 
         loadFinanceSummary(selectedFinanceDuration);
     });

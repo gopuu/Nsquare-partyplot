@@ -44,7 +44,7 @@
             DutyStartTime: $("#DutyStartTime").val() || null,
             DutyEndTime: $("#DutyEndTime").val() || null,
             Remarks: $("#Remarks").val() || null,
-            ActionBy: localStorage.getItem("UserId") || 0
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
         $("#btnSaveDuty").prop("disabled", true).text("Saving...");
         $.ajax({
@@ -55,13 +55,7 @@
             success: function (response) {
                 console.log("save response:", response);
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Duty assignment saved successfully.");
                     $("#DutyModal").modal("hide");
                     fetchEventDutyAssignments();
                 }
@@ -152,14 +146,7 @@
                     response = JSON.parse(response);
                 }
                 if (response.status === "Success") {
-
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Leave Type Deleted!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Duty assignment deleted successfully.");
 
                 } else {
                     Swal.fire("Delete Failed", response.message, "error");

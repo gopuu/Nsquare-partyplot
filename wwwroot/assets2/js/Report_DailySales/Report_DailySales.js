@@ -60,12 +60,12 @@ document.addEventListener("DOMContentLoaded", function () {
             fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
             toDate = new Date(today.getFullYear(), today.getMonth(), 0);
         }
-        else if (selectedMonthDuration === "days") {
+        else if (selectedMonthDuration === "last7days") {
             fromDate = new Date(today);
             fromDate.setDate(today.getDate() - 6);
             toDate = today;
         }
-        else if (selectedMonthDuration === "lastdays") {
+        else if (selectedMonthDuration === "last30days") {
             fromDate = new Date(today);
             fromDate.setDate(today.getDate() - 29);
             toDate = today;
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fromDate.setDate(today.getDate() - 1);
             toDate = fromDate;
         }
-        else if (selectedMonthDuration === "12months") {
+        else if (selectedMonthDuration === "last12months") {
             fromDate = new Date(today);
             fromDate.setMonth(today.getMonth() - 12);
             toDate = today;

@@ -325,48 +325,41 @@ $("#stockOutFromDate, #stockOutToDate").on("change", function () {
         loadStockOutSummary();
     }
 });
-
-function formatDate(date) {
-    const d = new Date(date);
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${month}-${day}`;
-}
 function setStockOutDatesByDuration() {
 
     const duration = $("#stockOutDuration").val();
     const today = new Date();
 
     let fromDate = null;
-    let toDate = formatDate(today);
+    let toDate = formatDate2(today);
 
     switch (duration) {
 
         case "yesterday":
-            fromDate = formatDate(new Date(today.setDate(today.getDate() - 1)));
+            fromDate = formatDate2(new Date(today.setDate(today.getDate() - 1)));
             toDate = fromDate;
             break;
 
-        case "days": // Last 7 days
-            fromDate = formatDate(new Date(today.setDate(today.getDate() - 6)));
+        case "last7days": // Last 7 days
+            fromDate = formatDate2(new Date(today.setDate(today.getDate() - 6)));
             break;
 
-        case "lastdays": // Last 30 days
-            fromDate = formatDate(new Date(today.setDate(today.getDate() - 29)));
+        case "last30days": // Last 30 days
+            fromDate = formatDate2(new Date(today.setDate(today.getDate() - 29)));
             break;
 
         case "thismonth":
-            fromDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
-            toDate = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+            fromDate = formatDate2(new Date(today.getFullYear(), today.getMonth(), 1));
+            toDate = formatDate2(new Date(today.getFullYear(), today.getMonth() + 1, 0));
             break;
 
         case "lastmonth":
-            fromDate = formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1));
-            toDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 0));
+            fromDate = formatDate2(new Date(today.getFullYear(), today.getMonth() - 1, 1));
+            toDate = formatDate2(new Date(today.getFullYear(), today.getMonth(), 0));
             break;
 
-        case "12months":
-            fromDate = formatDate(new Date(today.getFullYear() - 1, today.getMonth(), 1));
+        case "last12months":
+            fromDate = formatDate2(new Date(today.getFullYear() - 1, today.getMonth(), 1));
             break;
 
         case "customrange":

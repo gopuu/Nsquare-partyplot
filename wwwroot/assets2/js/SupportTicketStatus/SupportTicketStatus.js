@@ -32,13 +32,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Saved successfully.");
                     $("#TicketStatusModal").modal("hide");
                     loadTicketStatusData();
                 } else {
@@ -93,13 +87,7 @@
             }),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted successfully.");
                 }
                 else {
                     Swal.fire({

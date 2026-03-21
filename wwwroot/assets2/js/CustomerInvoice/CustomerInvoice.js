@@ -52,6 +52,8 @@ $(function () {
         const bookingId = $(this).data('bookingid');
         //console.log('Create Proforma BookingId:', bookingId);
         $('#bookingId').val(bookingId);
+        $('#invoiceNo').val(0);
+        $('#proformaInvoiceNo').val(proformaInvoiceNo);
 
         invoiceType = "proforma";
         $('#invoiceModalTitle').text('Create Proforma Invoice #' + proformaInvoiceNo);
@@ -69,6 +71,8 @@ $(function () {
         const bookingId = $(this).data('bookingid');
         //console.log('Create Invoice BookingId:', bookingId);
         $('#bookingId').val(bookingId);
+        $('#invoiceNo').val(invoiceNo);
+        $('#proformaInvoiceNo').val(0);
 
         invoiceType = "invoice";
         $('#invoiceModalTitle').text('Create Invoice #' + invoiceNo);
@@ -85,17 +89,19 @@ $(function () {
         resetForm();
 
         const bookingId = $(this).data('bookingid');
-        const invoiceNo = $(this).data('invoiceno');
+        const edit_invoiceNo = $(this).data('invoiceno');
         $('#bookingId').val(bookingId);
+        $('#invoiceNo').val(edit_invoiceNo);
+        $('#proformaInvoiceNo').val(0);
 
         invoiceType = "invoice";
 
-        $('#invoiceModalTitle').text('Edit Invoice #' + invoiceNo);
+        $('#invoiceModalTitle').text('Edit Invoice #' + edit_invoiceNo);
         invoiceModal.show();
 
         fetchInvoiceById({
             BookingId: bookingId,
-            InvoiceNo: invoiceNo,
+            InvoiceNo: edit_invoiceNo,
             ProformaInvoiceNo: null
         });
     });
@@ -104,22 +110,24 @@ $(function () {
     //EDIT PROFORMA INVOICE -- START
     $(document).on('click', '.btn-edit-proforma', function () {
         ShowHide_DeleteButton();
-
         resetForm();
 
         const bookingId = $(this).data('bookingid');
-        const proformaNo = $(this).data('proformano');
+        const edit_proformaNo = $(this).data('proformano');
+
         $('#bookingId').val(bookingId);
+        $('#invoiceNo').val(0);
+        $('#proformaInvoiceNo').val(edit_proformaNo);
 
         invoiceType = "proforma";
 
-        $('#invoiceModalTitle').text('Edit Proforma #' + proformaNo);
+        $('#invoiceModalTitle').text('Edit Proforma #' + edit_proformaNo);
         invoiceModal.show();
 
         fetchInvoiceById({
             BookingId: bookingId,
             InvoiceNo: null,
-            ProformaInvoiceNo: proformaNo
+            ProformaInvoiceNo: edit_proformaNo
         });
     });
     //EDIT PROFORMA INVOICE -- END
@@ -150,7 +158,6 @@ $(function () {
         $("#chkWhatsapp").prop("checked", true);
         sendInvoiceModal.show();
     });
-
 
 
     $("#sendEmail").on("input", function () {
@@ -274,6 +281,16 @@ $(function () {
         recalcAll();
     });
 
+    $(document).on('input change', '#gstin', function () {
+        console.log("here1");
+        // GSTIN or global change → recalc all rows
+        $('#invoiceItemsBody tr').each(function () {
+            recalcRow($(this));
+            console.log("here2");
+        });
+        recalcAll();
+    });
+
     // On Advance input change
     $(document).on('input', '#advancePaid, #bookingDiscount', function () {
         recalcAll();
@@ -349,8 +366,8 @@ $(function () {
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
             BookingId: parseInt($('#bookingId').val()) || 0,
-            InvoiceNo: invoiceType === "invoice" ? invoiceNo : null,
-            ProformaInvoiceNo: invoiceType === "proforma" ? proformaInvoiceNo : null,
+            InvoiceNo: invoiceType === "invoice" ? Number($('#invoiceNo').val()) : null,
+            ProformaInvoiceNo: invoiceType === "proforma" ? Number($('#proformaInvoiceNo').val()) : null,
             GSTInvoiceNo: (invoiceType === "invoice" && totalGst==0) ? gstInvoiceNo : null,
 
             CustomerName: $('#customerName').val(),
@@ -386,7 +403,7 @@ $(function () {
             JSON_Items: items,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
-        //console.log("save payload:", request);
+        console.log("save payload:", request);
 
         $.ajax({
             url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -1199,7 +1216,7 @@ function recalcAll() {
     // Round to nearest integer
     let roundedTotal = Math.round(actualTotal);
     // Calculate roundoff difference
-    let roundOff = roundedTotal - actualTotal;
+    let roundOff = roundedTotal;// - actualTotal;
 
     // Set values
     $('#grandTotal').val(roundedTotal.toFixed(2));
@@ -1227,11 +1244,11 @@ function fetchInvoiceById(params) {
                 return;
             }
             const data = res.data;
-            ////console.log("GetCustomerInvoiceById data:", data);
+            console.log("GetCustomerInvoiceById data:", data);
 
             /* ---------- MASTER ---------- */
             $('#invoiceId').val(data.Id);
-            $('#bookingId').val(data.BookingId);
+            $('#bookingId').val(params.BookingId);
             $('#customerName').val(data.CustomerName);
             $('#invoiceDate').val(data.InvoiceDate);
             $('#gstin').val(data.GSTIN);

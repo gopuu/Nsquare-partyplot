@@ -173,7 +173,7 @@ namespace ERPAdmin.ApiControllers
                             new Claim(ClaimTypes.Name, "username"),
                             // Add additional claims as needed
                         }),
-                        Expires = DateTime.UtcNow.AddDays(7),
+                        Expires = DateTime.UtcNow.Adddays(7),
                         Audience = "ERP-Mobile",
                         Issuer = "ERP-API",
                         SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -263,7 +263,7 @@ namespace ERPAdmin.ApiControllers
                             new Claim(ClaimTypes.Name, "username"),
                             // Add additional claims as needed
                         }),
-                        Expires = DateTime.UtcNow.AddDays(7),
+                        Expires = DateTime.UtcNow.Adddays(7),
                         Audience = "ERP-Mobile",
                         Issuer = "ERP-API",
                         SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

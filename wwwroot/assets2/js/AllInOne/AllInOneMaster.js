@@ -65,13 +65,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("All In One saved successfully.");
                     $("#allInOneModal").modal("hide");
                     fetchAllInOne();
                 } else {

@@ -1283,7 +1283,7 @@ let selectedYear = new Date().getFullYear();
 let selectedMonth = new Date().getMonth();
 let selectedYearId = 0;
 let selectedMonthId = 0;
-let cachedDays = [];
+let cacheddays = [];
 let cachedShiftData = {};
 
 //Fetch Year
@@ -1316,8 +1316,8 @@ function populateYearDropdown() {
                 fetchMonthData(yearSelect.value);
             }
         },
-        error: function (err) {
-            console.error("Error fetching years:", err);
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Year");
         }
     });
 }
@@ -1381,8 +1381,8 @@ function populateMonthButtons(months) {
     loadBookingCalendar();
 }
 
-//Generate Days for Selected Month
-function generateDays(year, month) {
+//Generate days for Selected Month
+function generatedays(year, month) {
     return new Promise((resolve) => {
         const req = {
             Year: year,
@@ -1414,23 +1414,22 @@ function generateDays(year, month) {
                         return;
                     }
                 } catch (err) {
-                    console.error("generateDays.parseError:", err);
+                    console.error("generatedays.parseError:", err);
                 }
 
                 // fallback: return empty days (no enquiries)
-                resolve(generateEmptyDays(year, month));
+                resolve(generateEmptydays(year, month));
             },
-            error: function (err) {
-                console.error("Calendar API Error:", err);
-                // fallback: return empty days (no enquiries)
-                resolve(generateEmptyDays(year, month));
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Load Calendar Days");
+                resolve(generateEmptydays(year, month));
             }
         });
     });
 }
 
 // small helper used as fallback when API fails
-function generateEmptyDays(year, month) {
+function generateEmptydays(year, month) {
     const days = [];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
@@ -1447,7 +1446,7 @@ function generateEmptyDays(year, month) {
     return days;
 }
 
-//Generate Shifts Colors for Days of Month
+//Generate Shifts Colors for days of Month
 function generateShiftDataPerDay(dateObj) {
     return shiftNames.map(() => {
         const today = new Date();
@@ -1458,21 +1457,23 @@ function generateShiftDataPerDay(dateObj) {
     });
 }
 
+var global_bookingData = null;
 //main booking board
 async function renderBoard(bookingData = null) {
+    global_bookingData = bookingData;
     console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
-    cachedDays = await generateDays(selectedYear, selectedMonth);
-    //console.log("renderBoard cachedDays:", cachedDays);
+    cacheddays = await generatedays(selectedYear, selectedMonth);
+    //console.log("renderBoard cacheddays:", cacheddays);
     //console.log("renderBoard bookingData:", bookingData);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
     banquetHallsList.forEach(hall => {
-        cachedShiftData[hall.Id] = cachedDays.map(d => generateShiftDataPerDay(d.dateObj));
+        cachedShiftData[hall.Id] = cacheddays.map(d => generateShiftDataPerDay(d.dateObj));
     });
     //console.log("renderBoard cachedShiftData:", cachedShiftData);
 
@@ -1486,7 +1487,7 @@ async function renderBoard(bookingData = null) {
     dateRow.appendChild(headerLabel);
 
     //Column Header -> Date - Day - Enquiry Count
-    cachedDays.forEach(d => {
+    cacheddays.forEach(d => {
         const cell = document.createElement("div");
         cell.className = "text-center small fw-bold border rounded p-1 bg-light day-cell";
 
@@ -1532,7 +1533,7 @@ async function renderBoard(bookingData = null) {
             // }
 
             // ✅ Compare with today's date
-            const cellDate = cachedDays[dayIndex].dateObj; // assuming dateObj is a real Date object
+            const cellDate = cacheddays[dayIndex].dateObj; // assuming dateObj is a real Date object
             const today = new Date();
             today.setHours(0, 0, 0, 0); // normalize to midnight
 
@@ -1565,7 +1566,7 @@ async function renderBoard(bookingData = null) {
                 var textColor = finalColor === "light" ? "text-black" : "text-white";
                 const yyyy = selectedYear;
                 const mm = String(selectedMonth + 1).padStart(2, "0"); // ensure 2 digits
-                const dd = String(cachedDays[dayIndex].date).padStart(2, "0");
+                const dd = String(cacheddays[dayIndex].date).padStart(2, "0");
 
                 const dateStr = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;       // for display
                 const dateStr_Format = `${dd}-${mm}-${yyyy}`;                       // your current dd-mm-yyyy
@@ -1635,7 +1636,7 @@ async function renderBoard(bookingData = null) {
                             //bookingCount++;
 
                             bookingId = booking.BookingId;
-                            eventName = booking.Booking_TypeName;
+                            eventName = booking.Booking_EventName;
                             clientName = booking.Client_Name;
                             clientContact = booking.Client_Contact;
                             eventDateRange =
@@ -1700,7 +1701,7 @@ async function renderBoard(bookingData = null) {
 
             const yyyy = selectedYear;
             const mm = String(selectedMonth + 1).padStart(2, "0");
-            const dd = String(cachedDays[dayIndex].date).padStart(2, "0");
+            const dd = String(cacheddays[dayIndex].date).padStart(2, "0");
 
             const dateStr = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;
             const dateStr_Format = `${dd}-${mm}-${yyyy}`;
@@ -1820,7 +1821,7 @@ async function renderBoard(bookingData = null) {
                             }
 
                             bookingId = booking.BookingId;
-                            eventName = booking.Booking_TypeName;
+                            eventName = booking.Booking_SubEventName;
                             clientName = booking.Client_Name;
                             clientContact = booking.Client_Contact;
 
@@ -1932,7 +1933,7 @@ async function renderBoard(bookingData = null) {
                     // //console.log("Date:", badge.dataset.date);
                     // //console.log("Date_Format:", badge.dataset.date_format);
                     // //console.log("Date_ISO:", badge.dataset.date_iso);
-                    //console.log("Date:", `${cachedDays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`);
+                    //console.log("Date:", `${cacheddays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`);
                 });
             });
 
@@ -2034,7 +2035,7 @@ async function renderBoard(bookingData = null) {
                     <div style="padding-bottom:8px;">
                         <strong>
                             <i class="fa-solid fa-calendar-alt"></i> 
-                            ${b.Booking_TypeName} (${b.ShiftCode})
+                            ${b.Booking_SubEventName} (${b.ShiftCode})
                         </strong><br>
                         <i class="fa-solid fa-user"></i> ${b.Client_Name}<br>
                         <i class="fa-solid fa-phone"></i> ${b.Client_Contact}<br>
@@ -2074,22 +2075,45 @@ async function renderBoard(bookingData = null) {
             //If badge is in right 50 % of screen → show tooltip on left
             const rect = badge.getBoundingClientRect();
             const screenMid = window.innerWidth / 2;
-            const tooltipWidth = tooltip.offsetWidth || 280; // fallback width
-            const gap = 30;
+
+            const tooltipWidth = tooltip.offsetWidth || 280;
+            const tooltipHeight = tooltip.offsetHeight || 120;
+
+            const gap = 12;
 
             let left;
+            let top;
 
-            // If badge is on right half → show tooltip on LEFT
-            if (rect.left > screenMid) {
+            // ✅ Use center instead of left edge
+            const elementCenter = rect.left + rect.width / 2;
+
+            // 👉 Decide LEFT / RIGHT
+            if (elementCenter > screenMid) {
                 left = rect.left - tooltipWidth - gap;
-            }
-            // If badge is on left half → show tooltip on RIGHT
-            else {
+            } else {
                 left = rect.right + gap;
             }
 
-            tooltip.style.left = left + "px";
-            tooltip.style.top = rect.top + "px";
+            // 👉 Vertical alignment
+            top = rect.top;
+
+            // ✅ Boundary checks
+            if (left + tooltipWidth > window.innerWidth) {
+                left = window.innerWidth - tooltipWidth - 10;
+            }
+            if (left < 0) {
+                left = 10;
+            }
+            if (top + tooltipHeight > window.innerHeight) {
+                top = window.innerHeight - tooltipHeight - 10;
+            }
+            if (top < 0) {
+                top = 10;
+            }
+
+            // ✅ Apply final position (important for scroll)
+            tooltip.style.left = `${left + window.scrollX}px`;
+            tooltip.style.top = `${top + window.scrollY}px`;
 
             return;
         }
@@ -2104,7 +2128,7 @@ async function renderBoard(bookingData = null) {
 
             tooltip.innerHTML = `
                 <div>
-                    <strong><i class="fa-solid fa-calendar-alt"></i> ${booking.Booking_TypeName} (${booking.ShiftCode})</strong>
+                    <strong><i class="fa-solid fa-calendar-alt"></i> ${booking.Booking_SubEventName} (${booking.ShiftCode})</strong>
                 </div>
                 <div>
                     <i class="fa-solid fa-user"></i> ${booking.Client_Name}
@@ -2202,7 +2226,7 @@ async function renderBoard(bookingData = null) {
     //on cell hover - tooltip ---- END --------------------
 
     renderListViewTable();
-    adjustFontSizeForDays(cachedDays.length);
+    adjustFontSizeFordays(cacheddays.length);
     attachColumnHoverListeners();
     enableEnquiryTooltips();
     attachShiftClickListeners();
@@ -2320,7 +2344,7 @@ function enableEnquiryTooltips() {
 }
 //enquiry count - tooltip
 
-function adjustFontSizeForDays(daysCount) {
+function adjustFontSizeFordays(daysCount) {
     const scale = daysCount > 30 ? 0.65 : daysCount > 29 ? 0.7 : 0.75;
     document.querySelectorAll("#booking-board .day-cell").forEach(cell => {
         cell.style.fontSize = `${scale}rem`;
@@ -2331,7 +2355,7 @@ function renderListViewTable(bookingData = null) {
 
     listTableBody.innerHTML = "";
 
-    cachedDays.forEach((d, dayIndex) => {
+    cacheddays.forEach((d, dayIndex) => {
 
         const yyyy = selectedYear;
         const mm = String(selectedMonth + 1).padStart(2, "0");
@@ -2369,7 +2393,7 @@ function renderListViewTable(bookingData = null) {
                             if (currentDate >= fromDate && currentDate <= tillDate) {
                                 finalColor = "danger";
                                 bookingId = booking.BookingId;
-                                eventName = booking.Booking_TypeName;
+                                eventName = booking.Booking_SubEventName;
                                 clientName = booking.Client_Name;
                                 clientContact = booking.Client_Contact;
                                 eventDateRange =
@@ -2468,7 +2492,12 @@ const bookingReportModalEl = document.getElementById("bookingReportModal");
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
 
 function closeBookingReportModal() {
+    console.log("booking info modal closed");
     bookingReportModal.hide();
+    //    if (isBookingInfoModal_OpenFromBookingList) {
+//        isBookingInfoModal_OpenFromBookingList = false;
+//        $("#bookingListModal").modal("show");
+//    }
 }
 function openBookingReportModal() {
     const bookingReportModal_local = document.getElementById('bookingReportModal');
@@ -2486,6 +2515,7 @@ document.getElementById("bookmapBtn").addEventListener("click", () => {
     //bookingModal.show();
 });
 
+var isBookingInfoModal_OpenFromBookingList = false;
 //shift/cell click event
 function attachShiftClickListeners() {
     document.querySelectorAll("#booking-board .badge, #listTable .badge").forEach(badge => {
@@ -2498,10 +2528,11 @@ function attachShiftClickListeners() {
 
         const badgeText = badge.textContent.trim();
         // If badge text is numeric and greater than 1 → disable click
-        if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
-            badge.style.cursor = "default";
-            return; // do not attach click
-        }
+        //if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
+        //    badge.style.cursor = "pointer";
+        //    console.log("booking data:", global_bookingData);
+        //    return; // do not attach click
+        //}
 
         badge.style.cursor = "pointer";
         badge.addEventListener("click", () => {
@@ -2517,8 +2548,75 @@ function attachShiftClickListeners() {
             const hallname = badge.dataset.hallname;
             const hallid = badge.dataset.hallid;
 
+            if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
+                badge.style.cursor = "pointer";
+                //console.log("booking data:", global_bookingData, " hallid:", hallid, ", dateiso:", dateiso); //global_bookingData.BanquetId, global_bookingData.EventDate
+                
+                const matchedBookings = global_bookingData.filter(item =>
+                    Number(item.BanquetId) === Number(hallid) && item.EventDate.toString() === dateiso.toString()
+                );
+                console.log("Matched Bookings:", matchedBookings);
+                //BookingId, Booking_SubEventName, ShiftCode, Client_Name, Client_Contact, FromDate_Short, TillDate_Short, StartTime_Full, EndTime_Full, BanquetName (in Modal Title)
+                if (matchedBookings.length > 0) {
+                    // ✅ Set modal title (Banquet Name)
+                    //const banquetName = matchedBookings[0].BanquetName || "Bookings";
+                    //$("#bookingListModalTitle").text(banquetName);
+
+                    let html = `
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light bg-danger">
+                                <tr>
+                                    <th class="text-danger">#</th>
+                                    <th class="text-danger">Event</th>
+                                    <th class="text-danger">Shift</th>
+                                    <th class="text-danger">Client</th>
+                                    <th class="text-danger">Contact</th>
+                                    <th class="text-danger">Date</th>
+                                    <th class="text-danger">Time</th>
+                                    <th class="text-danger">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    matchedBookings.forEach((b, index) => {
+
+                        html += `
+                            <tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td>${b.Booking_SubEventName || ""}</td>
+                                <td>${b.ShiftCode}</td>
+                                <td>${b.Client_Name}</td>
+                                <td>${b.Client_Contact}</td>
+                                <td>
+                                    ${b.FromDate_Short === b.TillDate_Short
+                                        ? b.FromDate_Short
+                                        : `${b.FromDate_Short} - ${b.TillDate_Short}`}
+                                </td>
+                                <td>${b.StartTime_Full} - ${b.EndTime_Full}</td>
+                                <td>
+                                    <button 
+                                        class="btn btn-sm btn-danger view-booking-btn"
+                                        data-hallname="${hallname}"
+                                        data-bookingid="${b.BookingId}">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `</tbody></table>`;
+
+                    $("#bookingListModalBody").html(html);
+                    // ✅ Show modal
+                    $("#bookingListModal").modal("show");
+                }
+                return; // do not attach click
+            }
+
             //console.log("color cell:", color);
-            //Present Day & Future Days
+            //Present Day & Future days
             //if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
             if (color !== legendColors.blocked &&
                 (
@@ -2551,7 +2649,7 @@ function attachShiftClickListeners() {
                     var eventDate = null;
                     var actionMode = "singleData";
                     loadBookingCalendar(bookingid, banquetId, eventDate, actionMode);
-                    $("#title_bookingModal").text("Edit Booking Details");
+                    $("#title_bookingModal").text("Edit Booking Details"); 
                 }
                 else {
                     //Open MODAL
@@ -2562,7 +2660,7 @@ function attachShiftClickListeners() {
                     $("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
                 }
             }
-            //For Past Days
+            //For Past days
         });
     });
 }
@@ -2756,6 +2854,24 @@ document.addEventListener("DOMContentLoaded", function () {
         if (backdrop) backdrop.style.display = "block";
     });
     //hide/show FoodWastage MODAL ----- END --------------------------
+
+    //hide BOOKING REPORT MODAL ----- START --------------------------
+    bookingReportModal.addEventListener('hidden.bs.modal', function () {
+        console.log("bookingReportModal HIDE");
+        // Show booking modal visually again (no reset, same position)
+        //bookingReportModal.classList.add("show");
+        //bookingReportModal.style.display = "block";
+
+        if (isBookingInfoModal_OpenFromBookingList) {
+            isBookingInfoModal_OpenFromBookingList = false;
+            $("#bookingListModal").modal("show");
+        }
+
+        // Show backdrop again
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "block";
+    });
+    //hide BOOKING REPORT MODAL ----- END --------------------------
 
     //hide/show vendorWorkOrder MODAL ----- START --------------------------
     vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
@@ -3341,6 +3457,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
                 $("#txtTotalWastage").val(total.toFixed(2));
                 $("#foodWastageModal").modal("show");
+            },
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Load Food Wastage");
             }
         });
 
@@ -3544,12 +3663,7 @@ Your feedback helps us improve our service.`;
                 //console.log("✔ API Success:", response);
 
                 if (response.status === "Success") {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Booking Cancelled",
-                        text: response.message,
-                        //timer: 2000
-                    });
+                    handleApiSuccess("Booking Cancelled");
 
                     // Close modal
                     $("#cancelBookingModal").modal("hide");
@@ -3962,21 +4076,13 @@ Your feedback helps us improve our service.`;
                 contentType: "application/json",
                 data: JSON.stringify({
                     Id: id,
-                    ActionBy: 1
+                    ActionBy: Number(sessionStorage.getItem('userId') || 0)
                 }),
 
                 success: function (res) {
 
                     if (res.status === "Success") {
-
-                        Swal.fire({
-                            icon: "success",
-                            title: "Deleted",
-                            text: res.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
+                        handleApiSuccess("Hall Block Deleted");
                         loadHallBlocks();
                     }
                     else {
@@ -4116,6 +4222,20 @@ Your feedback helps us improve our service.`;
         loadSubEventList(selectedEventTypeId); // Pass selected EventTypeId
     });
 
+    //Booking List MODAL -- START
+    $(document).on("click", ".view-booking-btn", function () {
+        const bookingid = $(this).data("bookingid");
+        const hallname = $(this).data("hallname");
+        var banquetId = 0;
+        var eventDate = null;
+        var actionMode = "singleData";
+        loadBookingCalendar(bookingid, banquetId, eventDate, actionMode);
+        $("#bookingListModalTitle").text("Bookings (" + hallname + ")"); 
+
+        isBookingInfoModal_OpenFromBookingList = true;
+        $("#bookingListModal").modal("hide");
+    });
+    //Booking List MODAL -- END
 });
 
 // Invoice GENEARTE -- START --------------------------------
@@ -4580,7 +4700,6 @@ $('#btnSaveInvoice_InvoiceModal').on('click', function () {
         contentType: 'application/json',
         data: JSON.stringify(request),
         success: function (res) {
-            handleApiSuccess();
 
             if (res.status === 'Success') {
                 handleApiSuccess();
@@ -5196,7 +5315,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#bookingReport_Slot").text(`${data.ShiftCode} (${data.ShiftFullName})` || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
-                    $("#bookingReport_EventName").text(data.Booking_TypeName || "—");
+                    $("#bookingReport_EventName").text(data.Booking_EventName || "—");
                     $("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
                     $("#bookingReport_Hall").text(data.BanquetName || "—");
@@ -5249,7 +5368,6 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //Open REPORT MODAL
                     //console.log("bookingReportModal show");
                     bookingReportModal.show();
-
                 }
                 else if (actionMode === "editData") {
                     resetBooking();
@@ -5401,8 +5519,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "getBooking fetch fail")
-
+            handleApiError(xhr, status, error, "Booking fetch fail")
         }
     });
 }

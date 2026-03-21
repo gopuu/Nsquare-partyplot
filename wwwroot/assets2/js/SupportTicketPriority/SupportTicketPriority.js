@@ -33,13 +33,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Saved Successfully");
                     $("#PriorityModal").modal("hide");
                     loadPriorityData();
                 } else {
@@ -87,13 +81,7 @@
             }),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted Successfully");
                 }
                 else {
                     Swal.fire({

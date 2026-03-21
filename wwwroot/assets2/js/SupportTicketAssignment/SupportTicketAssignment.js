@@ -33,22 +33,17 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Saved!");
                     $("#AssignmentModal").modal("hide");
                     loadAssignmentData();
                 } else {
                     Swal.fire("Info", res.message, "info");
                 }
             },
-            error: function (xhr, status, error) {
-                console.error("Save Assignment Error:", error);
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Assignment Error");
             }
+
         });
     });
 
@@ -82,25 +77,20 @@
             url: "/api/SupportTicketAssignment/DeleteSupportTicketAssignment",
             type: "POST",
             contentType: "application/json",
-            data: JSON.stringify({ Id: id, ActionBy: 1 }),
+            data: JSON.stringify({ Id: id, ActionBy: Number(sessionStorage.getItem('userId') || 0) }),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted successfully.");
                     $("#deleteAssignmentModal").modal("hide");
                     loadAssignmentData();
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
             },
-            error: function (xhr, status, error) {
-                console.error("Delete Assignment Error:", error);
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete Assignment");
             }
+
         });
     });
 });

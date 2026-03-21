@@ -136,26 +136,19 @@ $(document).ready(function () {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-        var obj = response;
-        if (obj.status.toLowerCase() == "success") {
-        Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Saved!",
-                showConfirmButton: false,
-                timer: 900
-            });
-            fetchData();
-        resetFormFields();
-        $("#expenseModal").modal("hide");
-        } else {
-            $('#message').removeAttr('hidden');
-            $('#message').text(obj.message).css('color', 'red').fadeIn(300).delay(5000).fadeOut(300);
-        }
-                       
+            var obj = response;
+            if (obj.status.toLowerCase() == "success") {
+                handleApiSuccess("Saved");
+                fetchData();
+                resetFormFields();
+                $("#expenseModal").modal("hide");
+            } else {
+                $('#message').removeAttr('hidden');
+                $('#message').text(obj.message).css('color', 'red').fadeIn(300).delay(5000).fadeOut(300);
+            }                       
         },
         error: function (xhr, status, error) {
-                 handleApiError(xhr, status, error, "Save Expense Category Error")
+            handleApiError(xhr, status, error, "Save Expense Category Error")
         }
     });
 
@@ -204,13 +197,7 @@ $(document).ready(function () {
                 }
 
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted Successfully!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Deleted");
                 } else {
                     Swal.fire({
                         title: "Delete Failed",

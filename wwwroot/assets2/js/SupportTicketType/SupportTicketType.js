@@ -30,13 +30,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Save Support Ticket Type Success");
                     $("#TicketTypeModal").modal("hide");
                     loadTicketTypeData();
                 } else {
@@ -86,13 +80,7 @@
             }),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("Delete Support Ticket Type Success");
                 }
                 else {
                     Swal.fire({

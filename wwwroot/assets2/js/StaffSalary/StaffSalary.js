@@ -101,14 +101,7 @@ $(document).ready(function () {
             data: JSON.stringify(payload),
             success: function (response) {
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
-
+                    handleApiSuccess("Staff Salary saved successfully.");
                     resetStaffSalaryFields();
                     $("#staffSalaryModal").modal("hide");
 

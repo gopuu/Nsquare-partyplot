@@ -685,13 +685,7 @@ $(document).ready(function () {
                     url: "/api/banquettype/DeleteBanquetType/" + id, // API endpoint for delete
                     method: "DELETE",
                     success: function (res) {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Deleted!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handleApiSuccess("Deleted");
                         loadBanquetTypes();
                     },
                     error: function (xhr, status, error) {
@@ -892,13 +886,7 @@ $(document).ready(function () {
                     url: "/api/city/DeleteCity/" + id,
                     method: "DELETE",
                     success: function (res) {
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "Deleted!",
-                            showConfirmButton: false,
-                            timer: 900
-                        });
+                        handleApiSuccess("Deleted");
                         const stateId = $("#cityState").val() || 0;
                         loadCities(stateId);
                     },

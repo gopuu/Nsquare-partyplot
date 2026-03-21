@@ -117,7 +117,10 @@ namespace ERPAdmin.ApiControllers
                         booking.Booking_LeadReferenceId = dr["Booking_LeadReferenceId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_LeadReferenceId"]);
                         booking.Booking_MenuType_Id = dr["Booking_MenuType_Id"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_MenuType_Id"]);
                         booking.Booking_TypeId = dr["Booking_TypeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_TypeId"]);
-                        booking.Booking_TypeName = dr["Booking_TypeName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_TypeName"]);
+
+                        booking.Booking_EventId = dr["Booking_EventId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_EventId"]);
+                        booking.Booking_EventName = dr["Booking_EventName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_EventName"]);
+
                         booking.Booking_IsAgent = dr["Booking_IsAgent"] != DBNull.Value && Convert.ToBoolean(dr["Booking_IsAgent"]);
 
                         booking.Payment_ModeId = dr["Payment_ModeId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Payment_ModeId"]);

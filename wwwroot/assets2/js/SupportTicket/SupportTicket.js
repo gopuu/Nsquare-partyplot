@@ -73,18 +73,15 @@ $("#btnSave").click(async function () {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved",
-                    showConfirmButton: false,
-                    timer: 1000
-                });
+                handleApiSuccess("Saved !!");
                 $("#SupportTicketModal").modal("hide");
                 fetchData();
             } else {
                 Swal.fire("Info", res.message, "info");
             }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Save Suport Ticket");
         }
     });
 });
@@ -110,13 +107,7 @@ $("#delete-record").click(function () {
         }),
         success: function (res) {
             if (res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Deleted !!",
-                    showConfirmButton: false,
-                    timer: 900
-                });
+                handleApiSuccess("Deleted !!");
             }
             else {
                 Swal.fire({

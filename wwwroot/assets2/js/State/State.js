@@ -90,14 +90,7 @@
                 var obj = response;
                 //console.log("submit obj:", obj);
                 if (obj.status.toLowerCase() == "success") {
-                    //$('#btn-loader').hide();
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    handleApiSuccess("State saved successfully.");
                     fetchData();
                     resetFormFields();  // Reset the form fields
                     $('#addEventModal').modal('hide');  // Close the modal
@@ -106,14 +99,8 @@
                     $('#message').text(obj.message).css('color', 'red').fadeIn(300).delay(5000).fadeOut(300);
                 }
             },
-            error: function (xhr, status, error) {
-                // Handle error response
-                //$('#btn-loader').hide();
-                Swal.fire({
-                    title: "Save State Error",
-                    text: xhr.responseText,
-                    icon: "error"
-                });
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save State");
             },
             complete: function () {
                 $('#btn-loader').hide(); // Ensure loader is hidden in any case
@@ -172,13 +159,7 @@
 
                 //debugger
                 if (response.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted !!",
-                        showConfirmButton: false,
-                        timer: 900
-                    });
+                    hadleApiSuccess("State deleted successfully.");
                 }
                 else {
                     Swal.fire({

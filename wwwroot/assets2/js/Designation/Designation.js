@@ -36,14 +36,7 @@
             data: JSON.stringify(payload),
             success: function (response) {
                 if (response?.status === "Success") {
-
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved!",
-                        timer: 1200,
-                        showConfirmButton: false,
-                        position: "top-end"
-                    });
+                    handleApiSuccess("Saved Successfully!");
 
                     $('#DesignationModal').modal('hide');
                     loadDesignationData();
@@ -107,13 +100,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res?.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Deleted Successfully!",
-                        showConfirmButton: false,
-                        timer: 1000
-                    });
+                    handleApiSuccess("Deleted Successfully!");
                 } else {
                     Swal.fire("Delete Failed", res?.message || "Unable to delete", "error");
                 }

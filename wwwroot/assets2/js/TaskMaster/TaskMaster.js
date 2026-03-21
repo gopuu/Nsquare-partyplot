@@ -45,13 +45,7 @@
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Saved!",
-                        showConfirmButton: false,
-                        timer: 1200
-                    });
+                    handleApiSuccess();
                     // Modal hide & reload after small delay
                     setTimeout(() => {
                         $("#TaskModal").modal("hide");
@@ -61,7 +55,9 @@
                     Swal.fire("Error", res.message, "error");
                 }
             },
-            error: handleApiError
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Save Task");
+            }
         });
     });
 
@@ -130,14 +126,15 @@
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.fire("Success", "Task deleted!", "success");
+                handleApiSuccess("Task deleted successfully.");
                 $("#deleteRecordModal").modal("hide");
                 loadTaskData();
             },
-            error: handleApiError
+            error: function (xhr, error, status) {
+                handleApiError(xhr, status, error, "Failed to Delete Task");
+            }
         });
     });
-
 });
 
 // RESET FORM
@@ -169,7 +166,9 @@ function loadTaskData() {
         success: function (res) {
             renderTaskTable(res.data);
         },
-        error: handleApiError
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Task");
+        }
     });
 }
 
@@ -247,7 +246,11 @@ function loadCategoryDropdown() {
             res.data.forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.CategoryName}</option>`);
             });
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to load Task category");
         }
+
     });
 }
 
@@ -263,7 +266,11 @@ function loadStatusDropdown() {
             res.data.forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.StatusName}</option>`);
             });
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Status");
         }
+
     });
 }
 
@@ -285,7 +292,11 @@ function loadStaffDropdown() {
             // Same options in both dropdowns
             $('#TaskAssignedTo').html(options);
             $('#TaskAssignedBy').html(options);
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Staff");
         }
+
     });
 }
 
@@ -301,7 +312,11 @@ function loadPriorityLevelDropdown() {
             res.data.forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.PriorityName}</option>`);
             });
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, status, error, "Failed to Load Priority Levels");
         }
+
     });
 }
 

@@ -311,14 +311,7 @@ function saveStockOut() {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res && res.status === "Success") {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Saved!",
-                    showConfirmButton: false,
-                    timer: 1200
-                });
-                // Refresh table
+                handleApiSuccess("Stock out saved successfully.");
                 fetchData();
             } else {
                 Swal.fire("Error", res?.message || "Unable to save stock out", "error");

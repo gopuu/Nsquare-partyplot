@@ -60,8 +60,8 @@ function setCurrentMonthDates() {
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    $("#fromDate").val(formatDate(firstDay));
-    $("#toDate").val(formatDate(lastDay));
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
 }
 
 let selectedMonthDuration = "thismonth"; // ✅ default
@@ -94,12 +94,12 @@ $(".sort-option").on("click", function (e) {
         fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         toDate = new Date(today.getFullYear(), today.getMonth(), 0);
     }
-    else if (selectedMonthDuration === "days") { // Last 7 Days
+    else if (selectedMonthDuration === "last7days") { // Last 7 days
         fromDate = new Date(today);
         fromDate.setDate(today.getDate() - 6);
         toDate = today;
     }
-    else if (selectedMonthDuration === "lastdays") { // Last 30 Days
+    else if (selectedMonthDuration === "last30days") { // Last 30 days
         fromDate = new Date(today);
         fromDate.setDate(today.getDate() - 29);
         toDate = today;
@@ -109,7 +109,7 @@ $(".sort-option").on("click", function (e) {
         fromDate.setDate(today.getDate() - 1);
         toDate = fromDate;
     }
-    else if (selectedMonthDuration === "12months") {
+    else if (selectedMonthDuration === "last12months") {
         fromDate = new Date(today);
         fromDate.setMonth(today.getMonth() - 12);
         toDate = today;
@@ -122,8 +122,8 @@ $(".sort-option").on("click", function (e) {
     // Store selected filter in session
     sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
 
-    $("#fromDate").val(formatDate(fromDate));
-    $("#toDate").val(formatDate(toDate));
+    $("#fromDate").val(formatDate2(fromDate));
+    $("#toDate").val(formatDate2(toDate));
 
     // 🔥 Load data
     loadDashboardWidgetCounts();
