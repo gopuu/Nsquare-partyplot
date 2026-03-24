@@ -154,12 +154,32 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();
-                    var result = cmd.ExecuteScalar();
-                    long newId = result != null ? Convert.ToInt64(result) : 0;
+                    long newId = 0;
+                    string shiftFullname = "";
+                    string shiftCode = "";
+                    long shiftId = 0;
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            newId = reader["UpdatedId"] != DBNull.Value ? Convert.ToInt64(reader["UpdatedId"]) : 0;
+                            shiftFullname = reader["ShiftFullname"]?.ToString();
+                            shiftCode = reader["ShiftCode"]?.ToString();
+                            shiftId = reader["ShiftId"] != DBNull.Value ? Convert.ToInt64(reader["ShiftId"]) : 0;
+                        }
+                    }
                     con.Close();
 
                     apiResponse.message = model.Id > 0 ? "EnquiryDeal updated successfully!" : "EnquiryDeal inserted successfully!";
                     apiResponse.status = "Success";
+                    apiResponse.data = new
+                    {
+                        EnquiryDealId = newId,
+                        ShiftFullname = shiftFullname,
+                        ShiftCode = shiftCode,
+                        ShiftId = shiftId
+                    };
                     return Ok(apiResponse);
                 }
             }

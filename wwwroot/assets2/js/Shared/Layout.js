@@ -415,6 +415,7 @@ function formatDate2(date = new Date()) {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`; // local date
 }
+
 function formatDate(date) {
 
     if (!date) return "";
@@ -434,6 +435,17 @@ function formatDate(date) {
     const day = String(date.getDate()).padStart(2, "0");
 
     return `${day}/${month}/${year}`;
+}
+function convertToYMD(dateStr) {
+    if (!dateStr) return "";
+
+    const parts = dateStr.split("/"); // dd/mm/yyyy
+
+    if (parts.length !== 3) return "";
+
+    const [day, month, year] = parts;
+
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 function formatTime24(date = new Date()) {

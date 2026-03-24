@@ -446,7 +446,7 @@ function loadEnquiryDeals(processId = 0) {
         success: function (response) {
             console.log("EnquiryDeal response:", response);
             if (response.status === "Success") {
-                processes = response.data;
+                processes = response.data; //GetProcessList
                 renderBoard();
             } else {
                 console.warn("No data received or API returned error:", response.message);
@@ -553,7 +553,7 @@ function renderBoard() {
                 </div>
     `;
 
-        processSelect.innerHTML += `<option value = "${process.ProcessId}"> ${process.ProcessName}</option> `;
+        processSelect.innerHTML += `<option value="${process.ProcessId}" data-isconfirmed="${process.IsConfirmed}" data-islost="${process.IsLost}"> ${process.ProcessName}</option> `;
     });
 
     enableDragDrop();
@@ -1608,7 +1608,9 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Deal Save - Validation failed");
             return;
         }
-        //////showLoader()()();
+        const $selectedOption = $("#dealProcess option:selected");
+        const isConfirmed = $selectedOption.data("isconfirmed") === true || $selectedOption.data("isconfirmed") === "true";
+        //const isLost = $selectedOption.data("islost") === true || $selectedOption.data("islost") === "true";
 
         const enquiryData = {
             Id: $("#dealId").val() || 0, // ensure number
@@ -1621,7 +1623,7 @@ document.addEventListener("DOMContentLoaded", function () {
             EventTypeId: parseInt($("#eventTypeDropdown").val()) || 0,
             EventSubTypeId: parseInt($("#eventSubTypeDropdown").val()) || 0,
             BanquetHallId: parseInt($("#banquetHallDropdown").val()) || 0,
-            EventDate: $("#eventDate").val(),
+            //EventDate: $("#eventDate").val(),
 
             EventDate: $("#eventDate").val(), // if required separately
             EventStartTime: $("#eventStart").val(),
@@ -1644,11 +1646,52 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(enquiryData),
             success: function (response) {
                 if (response.status === "Success") {
+                    loadEnquiryList();
                     handleApiSuccess('Saved!');
                     loadEnquiryDeals();
                     resetDealForm();
                     bootstrap.Modal.getInstance(document.getElementById("dealModal")).hide();
 
+                    if (isConfirmed) {
+                        resetBooking();
+                        //OPEN BOOKING MODAL
+                        const dateStr = enquiryData.EventDate;       // for display
+                        //const dateStr_Format = enquiryData.EventDate_Format1;
+                        const dateStr_ISO = convertToYMD(enquiryData.EventDate);
+
+                        const shift = response.data.ShiftCode;
+                        const shiftname = response.data.ShiftFullname;
+                        const date = dateStr;
+                        const dateiso = dateStr_ISO;
+                        const hallid = enquiryData.BanquetHallId;
+                        const bookingId = 0;
+
+                        $("#BookingId").val(bookingId);
+                        // 🟢 Update label content & attributes - using jQuery
+                        $("#label_date_shift")
+                            .text(`${date}, ${shiftname} Slot`)        // visible text
+                            .attr("data-eventdate", dateiso)           // yyyy-mm-dd
+                            .attr("data-shiftid", shift);              // FD, MO, etc.
+                        $("#banquetDropdown").val(hallid);
+
+                        //set after 5sec
+                        setTimeout(function () {
+                            $("#clientEnquiryDropdown")
+                                .val(response.data.EnquiryDealId)
+                                .trigger("change");
+                        }, 5000);
+
+                        $("#booking_pax").val(enquiryData.Pax);
+
+                        setShiftTime(shift);
+                        $("#PaymentDetails_DueDate").val('');
+                        console.log("ib-dateiso:", dateiso);
+                        $("#fromDate").val(dateiso); //.prop("disabled", true);
+                        $("#toDate").val(dateiso);
+
+                        $("#title_bookingModal").text("Add Booking Details");
+                        $("#bookingModal").modal("show");
+                    }
                     // TODO: refresh deal list if you have one
                     // loadDealList();
                 } else {
@@ -1680,7 +1723,6 @@ document.addEventListener("DOMContentLoaded", function () {
             cancelButtonText: "Cancel"
         }).then((result) => {
             if (result.isConfirmed) {
-                //////showLoader()()();
 
                 var inputData = {
                     Id: dealId,

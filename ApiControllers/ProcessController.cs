@@ -226,7 +226,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpGet]
         [Route("GetProcessListForDropdown")]
-        public IActionResult GetProcessListForDropdown()
+        private IActionResult GetProcessListForDropdown()
         {
             apiResponse apiResponse = new apiResponse();
             try

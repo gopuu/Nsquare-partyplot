@@ -412,10 +412,10 @@ function renderPurchaseTable(data) {
             $cells.eq(0).html("<strong>TOTAL</strong>");
             $cells.eq(1).html("");
             $cells.eq(2).html("");
-            $cells.eq(3).html("");
-            $cells.eq(4).html(`<strong>${formatINR2(sumCol(4))}</strong>`);
-            $cells.eq(5).html(`<strong class="text-success">${formatINR2(sumCol(5))}</strong>`);
-            $cells.eq(6).html(`<strong class="text-danger">${formatINR2(sumCol(6))}</strong>`);
+            //$cells.eq(3).html("");
+            $cells.eq(3).html(`<strong>${formatINR2(sumCol(4))}</strong>`);
+            $cells.eq(4).html(`<strong class="text-success">${formatINR2(sumCol(5))}</strong>`);
+            $cells.eq(5).html(`<strong class="text-danger">${formatINR2(sumCol(6))}</strong>`);
         },
 
         /* ── Highlight outstanding rows ── */
