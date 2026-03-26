@@ -1,12 +1,10 @@
 ﻿.table-footer-total {
     background: #f8f9fa;
-    font-weight: 600;
     border-top: 2px solid #dee2e6;
 }
-
 .table-footer-total th {
     padding: 10px !important;
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .row-outstanding {

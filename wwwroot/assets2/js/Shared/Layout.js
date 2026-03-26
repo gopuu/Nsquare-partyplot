@@ -436,7 +436,7 @@ function formatDate(date) {
 
     return `${day}/${month}/${year}`;
 }
-function convertToYMD(dateStr) {
+function formatDate_DMYToYMD(dateStr) {
     if (!dateStr) return "";
 
     const parts = dateStr.split("/"); // dd/mm/yyyy

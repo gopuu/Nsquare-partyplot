@@ -1657,7 +1657,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         //OPEN BOOKING MODAL
                         const dateStr = enquiryData.EventDate;       // for display
                         //const dateStr_Format = enquiryData.EventDate_Format1;
-                        const dateStr_ISO = convertToYMD(enquiryData.EventDate);
+                        const dateStr_ISO = formatDate_DMYToYMD(enquiryData.EventDate);
 
                         const shift = response.data.ShiftCode;
                         const shiftname = response.data.ShiftFullname;

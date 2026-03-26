@@ -488,7 +488,7 @@ namespace ERPAdmin.ApiControllers
                                 ? 0L
                                 : Convert.ToInt64(dr["NextProformaInvoiceNo"]);
 
-                            data.NextGSTInvoiceNo = Convert.ToString(dr["NextGSTInvoiceNo"]);
+                            data.NextGSTInvoiceNo = dr["NextGSTInvoiceNo"]?.ToString();
 
                         }
                     }
