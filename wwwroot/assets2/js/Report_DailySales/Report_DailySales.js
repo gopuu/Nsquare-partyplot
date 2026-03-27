@@ -565,9 +565,9 @@ function renderDailySalesDetailsTable(rows, totals) {
                 render: function (data, type, row) {
                     if (!data) return "";
 
-                    if (data.length > 10) {
+                    if (data.length > 15) {
                         return `<span data-bs-toggle="tooltip" title="${data}">
-                        ${data.substring(0, 10)}...
+                        ${data.substring(0, 15)}...
                     </span>`;
                     }
                     return data;

@@ -702,7 +702,7 @@ function renderCorporateFamilyChart(labels, values, percents) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                text: `${label} (${percents[i]})`,
+                                text: wrapText(`${label} (${percents[i]})`, 20), // wrap at 20 chars
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
                         }
@@ -807,8 +807,7 @@ function renderCorporateSubTypeChart(labels, values, percents) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                //text: `${label} - ${data.datasets[0].data[i]}`,
-                                text: `${label} (${percents[i]})`,
+                                text: wrapText(`${label} (${percents[i]})`, 20), // wrap at 20 chars
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
                         }
@@ -858,6 +857,23 @@ $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
     loadBookingSubEventTypeCorporate(selectedValue);
 });
 //4. Corporate & Sub type of Event -- END ------------------------
+
+function wrapText(text, maxLength) {
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = '';
+
+    words.forEach(word => {
+        if ((currentLine + word).length > maxLength) {
+            lines.push(currentLine.trim());
+            currentLine = '';
+        }
+        currentLine += word + ' ';
+    });
+
+    lines.push(currentLine.trim());
+    return lines;
+}
 
 //5. Family & Sub type of Event -- START ------------------------
 function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", fromDate = null, toDate = null) {
@@ -919,8 +935,7 @@ function renderFamilySubTypeChart(labels, values, percents) {
                         generateLabels(chart) {
                             const data = chart.data;
                             return data.labels.map((label, i) => ({
-                                //text: `${label} (${data.datasets[0].data[i]}%)`,
-                                text: `${label} (${percents[i]})`,
+                                text: wrapText(`${label} (${percents[i]})`, 20), // wrap at 20 chars
                                 fillStyle: data.datasets[0].backgroundColor[i]
                             }));
                         }
@@ -1469,11 +1484,11 @@ function renderLeadLostChart(apiData) {
 
     if (apiData.length === 0) {
         labels.push("No Data");
-        values.push(1);
+        values.push(0);
         percents.push("0%");
     } else {
         apiData.forEach(item => {
-            labels.push(item.EventTypeName);
+            labels.push(item.LeadLostCategoryName);
             values.push(item.LeadLostCount);
             percents.push(item.LeadLostPercent);
         });

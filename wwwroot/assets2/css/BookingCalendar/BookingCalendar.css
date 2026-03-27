@@ -1,4 +1,62 @@
-﻿.cursor-pointer {
+﻿/*SHIFT ABBREVIATIONS -- START */
+.shift-badge {
+    display: inline-flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    min-width: 140px;
+    line-height: 1.2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+}
+
+.shift-badge:hover {
+    transform: translateY(-2px);
+}
+
+.shift-code {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.shift-time {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Color Themes */
+.shift-FD {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+.shift-MO {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.shift-AF {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.shift-EV {
+    background: #ede7f6;
+    color: #4527a0;
+}
+
+.shift-ON {
+    background: #eceff1;
+    color: #263238;
+}
+
+.row-divider {
+    border-right: 1px solid #eee;
+}
+/*SHIFT ABBREVIATIONS -- END */
+
+.cursor-pointer {
     cursor: pointer;
 }
 

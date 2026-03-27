@@ -157,16 +157,33 @@ namespace ERPAdmin.ApiControllers
                     long newId = 0;
                     string shiftFullname = "";
                     string shiftCode = "";
-                    long shiftId = 0;
+                    long shiftId = 0, bookingId=0;
+
+                    int startHH = 0, startMM = 0;
+                    string startAMPM = "";
+
+                    int endHH = 0, endMM = 0;
+                    string endAMPM = "";
 
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            newId = reader["UpdatedId"] != DBNull.Value ? Convert.ToInt64(reader["UpdatedId"]) : 0;
+                            newId = reader["EnquiryDealId"] != DBNull.Value ? Convert.ToInt64(reader["EnquiryDealId"]) : 0;
                             shiftFullname = reader["ShiftFullname"]?.ToString();
                             shiftCode = reader["ShiftCode"]?.ToString();
                             shiftId = reader["ShiftId"] != DBNull.Value ? Convert.ToInt64(reader["ShiftId"]) : 0;
+                            bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
+
+                            // ✅ Start Time
+                            startHH = reader["StartHH"] != DBNull.Value ? Convert.ToInt32(reader["StartHH"]) : 0;
+                            startMM = reader["StartMM"] != DBNull.Value ? Convert.ToInt32(reader["StartMM"]) : 0;
+                            startAMPM = reader["StartAMPM"]?.ToString();
+
+                            // ✅ End Time
+                            endHH = reader["EndHH"] != DBNull.Value ? Convert.ToInt32(reader["EndHH"]) : 0;
+                            endMM = reader["EndMM"] != DBNull.Value ? Convert.ToInt32(reader["EndMM"]) : 0;
+                            endAMPM = reader["EndAMPM"]?.ToString();
                         }
                     }
                     con.Close();
@@ -178,7 +195,15 @@ namespace ERPAdmin.ApiControllers
                         EnquiryDealId = newId,
                         ShiftFullname = shiftFullname,
                         ShiftCode = shiftCode,
-                        ShiftId = shiftId
+                        ShiftId = shiftId,
+                        BookingId = bookingId,
+
+                        StartHH = startHH,
+                        StartMM = startMM,
+                        StartAMPM = startAMPM,
+                        EndHH = endHH,
+                        EndMM = endMM,
+                        EndAMPM = endAMPM
                     };
                     return Ok(apiResponse);
                 }

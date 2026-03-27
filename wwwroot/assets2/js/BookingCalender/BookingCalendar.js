@@ -483,14 +483,18 @@ $(document).on("click", ".loadMenuBtn", function () {
     //$row.find(".perPlate, #foodPackage_RatePerPlate").val(ratePerPerson);
 
     //updatePackageCost($row);  // Pass row if needed
-    //here2
+    var payload = { Package_Id: Number(selectedPackageId) };
+    console.log("payload GetPackage_MenuAndFoodItemsList:", payload);
+
     $.ajax({
         url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ Package_Id: selectedPackageId }),
+        data: JSON.stringify(payload),
         success: function (response) {
-            if (response.status === "Success" && response.data.length > 0) {
+            console.log("response GetPackage_MenuAndFoodItemsList:", response);
+            if (response.status === "Success" && response.data && response.data.length > 0)
+            {
                 renderMenuItems(response.data);
                 $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
                 $("#menuModal").modal("show");
@@ -498,8 +502,8 @@ $(document).on("click", ".loadMenuBtn", function () {
                 $("#menuModal").data("activeDropdown", $dropdown);
 
                 // 🔥 RESTORE SELECTION
-                const savedItems = $dropdown.data("selectedItems");
-                //console.log("savedItems:", savedItems);
+                const savedItems = $dropdown.data("selected-items");
+                console.log("savedItems:", savedItems);
                 restoreSavedMenuSelection(savedItems);
             }
             else {
@@ -516,8 +520,11 @@ $(document).on("click", ".loadMenuBtn", function () {
         }
     });
 });
+
 function restoreSavedMenuSelection2(savedItems) {
+
     if (!savedItems || savedItems.length === 0) return;
+
     savedItems.forEach(item => {
         const section = $(`#menuModal .menu-section[data-menu-id='${item.FoodMenu_Id}']`);
         if (!section.length) return;
@@ -545,80 +552,38 @@ function restoreSavedMenuSelection2(savedItems) {
     });
     updateSelectAllState();
 }
-function restoreSavedMenuSelection3(savedItems) {
+
+function restoreSavedMenuSelection(savedItems) {
+
     if (!savedItems || savedItems.length === 0) return;
 
     savedItems.forEach(item => {
-        // ✅ Target exact menu using SrNo (index)
-        const section = $("#menuModal .menu-section").eq(item.SrNo - 1);
 
+        const section = $(`#menuModal .menu-section[data-menu-id='${item.MenuHeader_Id}']`);
         if (!section.length) return;
 
         // 🔹 EXISTING ITEM
-        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
-            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`)
+        if (item.MenuItem_Id && item.MenuItem_Id !== 0) {
+            section.find(`.item-checkbox[value='${item.MenuItem_Id}']`)
                 .prop("checked", true);
         }
 
         // 🔹 NEW CUSTOM ITEM
-        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
+        else if (item.MenuItem_Id === 0 && item.MenuItem_Name_NewAdded) {
+
             const newItemHtml = `
                 <div class="form-check me-3 mb-2">
                     <input class="form-check-input item-checkbox new-item"
                            type="checkbox"
                            value="0"
-                           data-menu-id="${item.FoodMenu_Id}"
-                           data-item-name="${item.FoodItem_Name_NewAdded}"
+                           data-menu-id="${item.MenuHeader_Id}"
+                           data-item-name="${item.MenuItem_Name_NewAdded}"
                            checked>
-                    <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
+                    <label class="form-check-label">${item.MenuItem_Name_NewAdded}</label>
                 </div>
             `;
+
             section.find(".item-container").append(newItemHtml);
-        }
-    });
-
-    updateSelectAllState();
-}
-function restoreSavedMenuSelection(savedItems) {
-    if (!savedItems || savedItems.length === 0) return;
-
-    savedItems.forEach(item => {
-
-        // ✅ Target exact menu using Instance_Id (NOT index)
-        const section = $(`#menuModal .menu-section[data-instance-id='${item.Instance_Id}']`);
-
-        if (!section.length) return;
-
-        // 🔹 EXISTING ITEM
-        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
-            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`)
-                .prop("checked", true);
-        }
-
-        // 🔹 NEW CUSTOM ITEM
-        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
-
-            // ❗ Prevent duplicate append
-            const alreadyExists = section.find(`.item-checkbox.new-item[data-item-name="${item.FoodItem_Name_NewAdded}"]`).length > 0;
-
-            if (!alreadyExists) {
-                const newItemHtml = `
-                    <div class="form-check me-3 mb-2">
-                        <input class="form-check-input item-checkbox new-item"
-                               type="checkbox"
-                               value="0"
-                               data-menu-id="${item.FoodMenu_Id}"
-                               data-item-name="${item.FoodItem_Name_NewAdded}"
-                               checked>
-                        <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
-                    </div>
-                `;
-                section.find(".item-container").append(newItemHtml);
-            } else {
-                // just check if already exists
-                section.find(`.item-checkbox.new-item[data-item-name="${item.FoodItem_Name_NewAdded}"]`)
-                    .prop("checked", true);
-            }
         }
     });
 
@@ -748,7 +713,6 @@ $(document).on("input", ".pax, .perPlate, .addonsCost", function () {
 function renderMenuItems(menuData) {
     let html = "";
     menuData.forEach(menu => {
-        const totalCount = menu.FoodItemsList?.length || 0;
         const foodItems = menu.FoodItemsList?.length
             ? menu.FoodItemsList.map(item => `
                 <div class="form-check me-3 mb-2">
@@ -759,9 +723,9 @@ function renderMenuItems(menuData) {
             : `<p class="text-muted">No items found.</p>`;
 
         html += `
-            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}" data-instance-id="${menu.Instance_Id}">
+            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}" data-inclusion-id="${menu.Inclusion_Id}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name} (${totalCount})</h6>
+                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name} (${menu.Count_Size})</h6>
                     <div>
                         <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
                         <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
@@ -813,7 +777,6 @@ $(document).on("click", ".btn-addNewItem", function () {
 $(document).on("change", ".select-all", function () {
 
     const section = $(this).closest(".menu-section"); // ✅ current block only
-    const instanceId = section.data("instance-id");   // ✅ unique instance
     const checked = $(this).is(":checked");
 
     // ✅ apply only inside this section
@@ -826,25 +789,35 @@ $(document).on("click", ".btn-saveMenu", function () {
 
     $(".menu-section").each(function () {
         const menuId = $(this).data("menu-id");
-        const instanceId = $(this).data("instance-id"); // ✅ IMPORTANT
+        const inclusionId = $(this).data("inclusion-id") || 0;
 
         $(this).find(".item-checkbox:checked").each(function () {
             let isNew = $(this).hasClass("new-item");
+            let itemId = parseInt($(this).val()) || 0;
+
             selectedMenuData.push({
-                Instance_Id: instanceId,
-                FoodMenu_Id: parseInt(menuId),
-                FoodItem_Id: parseInt($(this).val()),
-                FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
-                IsChecked: $(this).is(":checked")
+                Inclusion_Id: inclusionId,
+                MenuHeader_Id: parseInt(menuId),   // ✅ FIX
+                MenuItem_Id: itemId, //parseInt($(this).val()), // ✅ FIX
+                MenuItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
+                IsChecked: true
             });
+
+            //selectedMenuData.push({
+            //    Inclusion_Id: inclusionId,
+            //    FoodMenu_Id: parseInt(menuId),
+            //    FoodItem_Id: parseInt($(this).val()),
+            //    FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
+            //    IsChecked: $(this).is(":checked")
+            //});
         });
     });
 
     // attach selected items to the dropdown that opened modal
     const $activeDropdown = $("#menuModal").data("activeDropdown");
     if ($activeDropdown) {
-        $activeDropdown.data("selectedItems", selectedMenuData);
-        $activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
+        $activeDropdown.data("selected-items", selectedMenuData);
+        //$activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
     }
 
     console.log("Saved Menu Selection:", selectedMenuData);
@@ -2331,9 +2304,33 @@ function enableEnquiryTooltips() {
         tooltip.innerHTML = html;
         tooltip.style.display = "block";
 
+        //tooltip positions - START
         const rect = badge.getBoundingClientRect();
-        tooltip.style.left = (rect.right + 10 + window.scrollX) + "px";
+        const screenWidth = window.innerWidth;
+        const tooltipWidth = tooltip.offsetWidth || 250; // fallback width
+
+        const badgeCenter = rect.left + (rect.width / 2);
+
+        // 👉 70% threshold
+        const isRightZone = badgeCenter > (screenWidth * 0.7);
+
+        let left;
+
+        if (isRightZone) {
+            // ✅ Show on LEFT side
+            left = rect.left - tooltipWidth - 10;
+        }
+        else {
+            // ✅ Show on RIGHT side
+            left = rect.right + 10;
+        }
+
+        // Prevent overflow (extra safety)
+        left = Math.max(10, Math.min(left, screenWidth - tooltipWidth - 10));
+
+        tooltip.style.left = (left + window.scrollX) + "px";
         tooltip.style.top = (rect.top + window.scrollY) + "px";
+        //tooltip positions - END
     });
 
     document.addEventListener("mouseout", function (e) {
@@ -5394,8 +5391,11 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#clientEmail").val(data.Client_Email);
                     $("#clientContact").val(data.Client_Contact);
                     $("#clientGSTIN").val(data.Client_GSTIN);
-                    $("#clientStateDropdown").val(data.Client_StateId);
+                    if (data.Client_StateId > 0) {
+                        $("#clientStateDropdown").val(data.Client_StateId);
+                    }
 
+                    $("#booking_eventDropdown_div").hide();
                     $("#booking_subEventDropdown").val(data.Booking_SubEventId);
                     $("#booking_pax").val(data.Booking_PAX);
                     $("#booking_hallRent").val(data.Booking_HallRent);
@@ -5427,9 +5427,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                         const addOnsList = Array.isArray(foodpackage.AddOnsList)
                             ? foodpackage.AddOnsList
                             : [];
-
                         $("#foodPackage_AddOnItems").data("selected-AddOnItems", addOnsList);
-
                         if (addOnsList.length > 0) {
                             $("#foodPackage_AddOnItems")
                                 .html(`<i class="fa fa-check text-success"></i> Addons (${addOnsList.length})`);
@@ -5437,6 +5435,13 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                             $("#foodPackage_AddOnItems")
                                 .html(`<i class="fa fa-check"></i> Addons`);
                         }
+
+                        // Menu Items List
+                        const menuItemsList = Array.isArray(foodpackage.MenuItemsList)
+                            ? foodpackage.MenuItemsList
+                            : [];
+                        console.log("edit menuItemsList:", menuItemsList);
+                        $("#foodPackage_PackageDropdown").data("selected-items", menuItemsList);
 
                         $("#foodPackage_TotalValue").text(foodpackage.TotalCharges ?? 0);
                         $("#AgentCheck").prop("checked", !!foodpackage.TotalCharges);
@@ -5447,11 +5452,13 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //othercharges
                     $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
                     $("#OtherCharges_Decoration_GST").val(data.OtherCharges_Decoration_GST);
+
                     $("#OtherCharges_RoomCharges_Amount").val(data.OtherCharges_RoomCharges_Amount);
                     $("#OtherCharges_RoomCharges_GST").val(data.OtherCharges_RoomCharges_GST);
 
                     $("#OtherCharges_SoundSystem_Amount").val(data.OtherCharges_SoundSystem_Amount);
                     $("#OtherCharges_SoundSystem_GST").val(data.OtherCharges_SoundSystem_GST);
+
                     $("#OtherCharges_ProjectorScreen_Amount").val(data.OtherCharges_ProjectorScreen_Amount);
                     $("#OtherCharges_ProjectorScreen_GST").val(data.OtherCharges_ProjectorScreen_GST);
 
@@ -5477,10 +5484,23 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#paymentSummary_BookingAmount").text(formatAmount(data.PaymentSummary_BookingDiscount_Total));
                     // Payable Amount
                     $("#paymentSummary_payableAmount").text(formatAmount(data.PaymentSummary_PayableAmount));
+                    
+                    $("#PaymentDetails_Mode").val(data.Payment_ModeId).trigger("change");
+                    $("#PaymentDetails_AccountId").val(data.PaymentDetails_AccountId);
+                    if (data.Payment_PaidTime !== "" && data.Payment_PaidTime !== null) {
+                        $("#PaymentDetails_PaidTime").val(data.Payment_PaidTime);
+                    }
+                    $("#PaymentDetails_Amount").val(data.Payment_Amount);
+                    $("#PaymentDetails_TransactionId").val(data.PaymentDetails_TransactionId);
+                    $("#PaymentDetails_ChequeBank").val(data.PaymentDetails_ChequeBank);
+                    $("#PaymentDetails_ChequeNo").val(data.PaymentDetails_ChequeNo);
+                    $("#PaymentDetails_ChequeDate").val(data.PaymentDetails_ChequeDate);
+                    $("#PaymentDetails_DueDate").val(data.Payment_DueDate);
+                    $("#PaymentDetails_PaymentNote").val(data.Payment_Note);
 
                     //$("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
 
-                    $("#Section_PaymentDetails").hide();
+                    //$("#Section_PaymentDetails").hide();
                 }
                 else if (actionMode === "rescheduleData") {
                     //resetBooking();
@@ -5568,7 +5588,7 @@ function setInvoiceButtons(data) {
     }
 
     // ================= Disable Buttons Logic =================
-    const shouldDisable = hasInvoice || hasProforma;
+    const shouldDisable = hasInvoice; // || hasProforma;
 
     const buttonsToDisable = [
         "#btnFoodLabels",
@@ -5794,7 +5814,7 @@ function saveBooking() {
 
         // Get common elements
         const $dropdown = $row.find(".foodPackageDropdown, #foodPackage_PackageDropdown");
-        const selectedMenuItems = $dropdown.data("selectedItems") || [];
+        const selectedMenuItems = $dropdown.data("selected-items") || [];
 
         const $dropdown_AddOns = $row.find(".foodPackage_AddOnItems");
         const selectedAddOnCharges = $dropdown_AddOns.data("selected-AddOnItems") || [];
@@ -5887,9 +5907,16 @@ function saveBooking() {
                             downloadReport(url, payload, "Generating Receipt...");
                         }
                         // ❌ If NO → do nothing (flow continues)
-
-                        resetBooking();
-                        loadBookingCalendar();
+                        
+                        
+                        if (bookingData.BookingId > 0) {
+                            //console.log("singleData");
+                            loadBookingCalendar(bookingData.BookingId, 0, null, "singleData");
+                        }
+                        else {
+                            resetBooking();
+                            loadBookingCalendar();
+                        }
                         //CLOSE MODAL
                         //bookingModal.hide();
                         $("#bookingModal").modal("hide");
@@ -5969,8 +5996,14 @@ function resetBooking() {
     $("#addonItemsContainer").empty();
     $("#headerSummaryContainer").empty();
 
+    $("#booking_eventDropdown_div").show();
+
     // ✅ Store FULL package array in button as JSON
     $("#btnFoodLabels").data("foodpackage", "");
+
+    $('#foodPackage_PackageDropdown')
+        .removeAttr('data-selected-items')
+        .removeData('selected-items');
 
     const now = new Date();
     const paidTime =
@@ -6453,9 +6486,7 @@ function loadAccountDropdown() {
 
             if (res?.status === "Success" && Array.isArray(res.data)) {
                 res.data.forEach(acc => {
-
                     const accountName = (acc.AccountName || "").trim(); 
-                    
                     ddl.append(`
                         <option value="${acc.Id}" data-isdefault="${acc.IsDefaultAccount}">
                             ${accountName}
@@ -6779,15 +6810,18 @@ function loadSlotDropdown() {
 
                 // 2️⃣ Abbreviation text
                 const timeRange = `${s.StartTime2}-${s.EndTime2}`;
-
+                const code = s.Code;
+                // fallback class if new code comes
+                const cssClass = `shift-${code}`;
                 $abbrContainer.append(`
-                    <span class="me-3">
-                        <b>${s.Code}</b> (${s.Name} ${timeRange})
-                    </span>
+                    <div class="shift-badge ${cssClass}">
+                        <div class="shift-code">${code} - ${s.Name}</div>
+                        <div class="shift-time">${timeRange}</div>
+                    </div>
                 `);
 
                 // SLOT ABBREVIATIONS
-                const code = s.Code;
+                //const code = s.Code;
                 // collect dynamic shift codes
                 shiftNames.push(s.Code);
 

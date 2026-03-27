@@ -38,6 +38,7 @@ namespace ERPAdmin.ApiControllers
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
+        
         /*
         [HttpGet]
         [Route("GetDomainByOrganizationCode")]

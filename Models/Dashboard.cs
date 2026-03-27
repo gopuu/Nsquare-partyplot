@@ -93,7 +93,7 @@
     }
     public class LeadLostPieChart
     {
-        public string? EventTypeName { get; set; }
+        public string? LeadLostCategoryName { get; set; }
         public int LeadLostCount { get; set; }
         public string? LeadLostPercent { get; set; }
     }

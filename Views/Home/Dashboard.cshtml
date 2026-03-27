@@ -186,48 +186,6 @@
                             </div>
                             <!---------- Widgets - end---------->
 
-                            <!---------- Comparative Insights - START ---------->
-                            <div class="row g-2 py-2">
-                                <div class="position-relative">
-                                    <!-- small dropdown -->
-                                    <div class="col-md-12">
-                                        <div class="card shadow-sm border-0">
-
-                                            <!-- Card Header -->
-                                            <div class="card-header bg-rating border-0 py-2">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <h4 class="mb-0">Comparative Insights</h4>
-
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                                                type="button"
-                                                                id="pnlFilterBtn"
-                                                                data-bs-toggle="dropdown">
-                                                            Last 3 Months
-                                                        </button>
-
-                                                        <ul class="dropdown-menu dropdown-menu-end">
-                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last3months')">Last 3 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last4months')">Last 4 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last5months')">Last 5 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last6months')">Last 6 Months</a></li>
-                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last12months')">Last 12 Months</a></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Card Body -->
-                                            <div class="card-body">
-                                                <canvas id="pnlCategoryChart" height="90"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <!---------- Comparative Insights - END ---------->
-
                             <!---------- Corporate Event vs Family Events / Corporate & Sub type of Event / Family & Subtype of Event - END ---------->
                             <div class="row g-3 py-2">
                                 <!---------- Corporate Event vs Family Events ----------->
@@ -494,6 +452,49 @@
                                 <!-- Lead Lost Analysis -- END -->
                             </div>
                             <!--Top Revenue Events --- END -->
+
+                            <!---------- Comparative Insights - START ---------->
+                            <div class="row g-2 py-2">
+                                <div class="position-relative">
+                                    <!-- small dropdown -->
+                                    <div class="col-md-12">
+                                        <div class="card shadow-sm border-0">
+
+                                            <!-- Card Header -->
+                                            <div class="card-header bg-rating border-0 py-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h4 class="mb-0">Comparative Insights</h4>
+
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                                type="button"
+                                                                id="pnlFilterBtn"
+                                                                data-bs-toggle="dropdown">
+                                                            Last 3 Months
+                                                        </button>
+
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last3months')">Last 3 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last4months')">Last 4 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last5months')">Last 5 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last6months')">Last 6 Months</a></li>
+                                                            <li><a class="dropdown-item" onclick="loadComparativeInsightsChart('last12months')">Last 12 Months</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card Body -->
+                                            <div class="card-body">
+                                                <canvas id="pnlCategoryChart" height="90"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!---------- Comparative Insights - END ---------->
+
                         </div>
                     </div>
                 </div>

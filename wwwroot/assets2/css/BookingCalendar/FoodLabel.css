@@ -1,0 +1,35 @@
+﻿/* Package Card */
+.package-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 16px;
+    background-color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Animated content wrapper */
+.package-content {
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+    max-height: 3000px; /* enough for content */
+    opacity: 1;
+}
+
+    /* Collapsed state */
+    .package-content.collapsed {
+        max-height: 0;
+        opacity: 0;
+    }
+
+/* Header row */
+.package-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.food-label-preview {
+    word-break: break-word;
+    text-align: center;
+}

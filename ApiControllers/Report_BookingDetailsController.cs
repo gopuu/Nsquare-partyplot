@@ -6,7 +6,6 @@ using System.Data;
 using System.Data.SqlClient;
 using ERPAdmin.Models;
 
-
 namespace ERPAdmin.ApiControllers
 {
     [Route("api/[controller]")]
@@ -26,8 +25,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("Report/GetBookingDetails")]
-        public IActionResult GetBookingDetailsReport([FromBody] BookingReportRequest request)
+        [Route("GetBookingDetailsReport")]
+        private IActionResult GetBookingDetailsReport([FromBody] BookingReportRequest request)
         {
             apiResponse response = new apiResponse();
 

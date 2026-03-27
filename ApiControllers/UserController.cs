@@ -131,9 +131,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             Subject = new ClaimsIdentity(new[]
                             {
-                        new Claim(ClaimTypes.NameIdentifier, userDetail.userid.ToString()),
-                        new Claim(ClaimTypes.Name, userDetail.username)
-                    }),
+                                new Claim(ClaimTypes.NameIdentifier, userDetail.userid.ToString()),
+                                new Claim(ClaimTypes.Name, userDetail.username)
+                            }),
                             Expires = DateTime.UtcNow.AddDays(7),
                             Issuer = "ERP-API",
                             Audience = "ERP-Mobile",
@@ -164,8 +164,6 @@ namespace ERPAdmin.ApiControllers
                 return Ok(apiResponse);
             }
         }
-
-
 
         /*
         // POST: api/<UserRightsController>

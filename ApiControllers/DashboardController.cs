@@ -631,7 +631,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         result.Add(new LeadLostPieChart
                         {
-                            EventTypeName = dr["EventTypeName"].ToString(),
+                            LeadLostCategoryName = dr["LeadLostCategoryName"].ToString(),
                             LeadLostCount = Convert.ToInt32(dr["LeadLostCount"]),
                             LeadLostPercent = Convert.ToString(dr["LeadLostPercent"])
                         });

@@ -57,21 +57,35 @@
                         </table>
                     </div>
 
-                    <!-- Legend -->
-                    <div class="d-flex flex-wrap mt-1 gap-3 justify-content-center">
-                        <span class="badge bg-success p-2">Available</span>
-                        <span class="badge bg-secondary p-2">Past Dates</span>
-                        <span class="badge bg-danger p-2">Confirmed Booking</span>
-                        <span class="badge bg-primary p-2 d-none">Online Booking</span>
-                        <span class="badge bg-light text-dark p-2 border">Tentative Booking</span>
-                        <span class="badge bg-dark p-2">Blocked</span>
-                        <span class="badge bg-pink p-2 d-none">Mahurats</span>
-                    </div>
+                    <div class="row m-2">
 
-                    <!-- Shift Abbreviations -->
-                    <div class="alert alert-secondary p-2 m-2 ml-5" id="slotAbbreviationsBox">
-                        <b>Shift Abbreviations:</b>
-                        <div id="slotAbbreviations" class="mt-1"></div>
+                        <!-- LEFT: Legend -->
+                        <div class="col-md-5 mb-2 row-divider">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <h6 class="fw-bold mb-2 text-secondary">Legend</h6>
+
+                                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                        <span class="badge bg-success p-2">Available</span>
+                                        <span class="badge bg-secondary p-2">Past Dates</span>
+                                        <span class="badge bg-danger p-2">Confirmed Booking</span>
+                                        <span class="badge bg-light text-dark border p-2">Tentative Booking</span>
+                                        <span class="badge bg-dark p-2">Blocked</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: Shift Abbreviations -->
+                        <div class="col-md-7 mb-2 row-divider">
+                            <div class="card shadow-sm h-100" id="slotAbbreviationsBox">
+                                <div class="card-body p-3">
+                                    <h6 class="fw-bold mb-2 text-secondary">Shift Abbreviations</h6>
+                                    <div id="slotAbbreviations" class="d-flex flex-wrap gap-2"></div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -211,7 +225,7 @@
                             <h6 class="text-primary">Booking Details</h6>
                             <div class="row g-2 align-items-end">
                                 <!-- Event (Dropdown, width 3) WORK -->
-                                <div class="col-md-2">
+                                <div class="col-md-2" id="booking_eventDropdown_div">
                                     <label class="form-label">Event Type</label>
                                     <select class="form-select form-select-sm" id="booking_eventDropdown"></select>
                                     <div class="text-danger small mt-1 error-msg d-none">Please select event</div>

@@ -489,6 +489,7 @@ function renderBoard() {
 
                                     <span class="fw-bold text-white small flex-shrink-0"
                                           title="Enquiry Date">
+                                        <i class="fa fa-user-plus me-1"></i>
                                         ${deal.EnquiryDate_Format1}
                                     </span>
                                 </div>
@@ -502,6 +503,7 @@ function renderBoard() {
                                         </span>
 
                                         <span class="text-muted flex-shrink-0" title="Event Date">
+                                            <i class="fa fa-calendar-check me-1"></i>
                                             ${deal.EventDate_Format1}
                                         </span>
                                     </div>
@@ -513,7 +515,7 @@ function renderBoard() {
                                         </span>
 
                                         <span class="text-muted">
-                                            ${deal.EventStartTime} - ${deal.EventEndTime}
+                                            <i class="fa fa-clock"></i> ${deal.EventStartTime} - ${deal.EventEndTime}
                                         </span>
                                     </div>
                                 </div>
@@ -800,9 +802,24 @@ board.addEventListener("mouseover", function (e) {
     //console.log("deal:", deal);
 
     tooltip.innerHTML = `
-        <div class="title">
-            📌 ${deal.EnquiryDealTitle}
-            ${deal.BookingId > 0 ? ` - BK#${deal.BookingId}` : ""}
+        <div class="title d-flex justify-content-between align-items-center">
+
+            <!-- LEFT SIDE -->
+            <div>
+                📌 ${deal.EnquiryDealTitle}
+                ${deal.BookingId > 0 ? ` - BK #${deal.BookingId}` : ""}
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div>
+                <strong class="me-1">Status:</strong>
+                ${deal.Is_LeadBooked
+                    ? `<span class="badge bg-success">Booked</span>`
+                    : deal.Is_LeadLost
+                        ? `<span class="badge bg-danger">Lost</span>`
+                        : `<span class="badge bg-warning text-dark">Open</span>`
+                }
+            </div>
         </div>
 
         <div class="row-item"><strong>Name:</strong> ${deal.EnquiryDealName || "-"}</div>
@@ -835,17 +852,6 @@ board.addEventListener("mouseover", function (e) {
 
         <div class="row-item"><strong>Enquiry Date:</strong> ${deal.EnquiryDate_Format1 || "-"}</div>
         <div class="row-item d-none"><strong>FollowUps:</strong> ${deal.FollowUpCount || 0}</div>
-
-        <div class="row-item">
-            <strong>Status:</strong>
-            ${
-                deal.Is_LeadBooked
-                    ? `<span class="badge bg-success">Booked</span>`
-                    : deal.Is_LeadLost
-                        ? `<span class="badge bg-danger">Lost</span>`
-                        : `<span class="badge bg-warning">Open</span>`
-            }
-        </div>
 
         ${deal.Remarks ? `
             <hr style="margin:6px 0; opacity:0.3;">
@@ -988,6 +994,7 @@ function enableDragDrop() {
                     const date = dateStr;
                     const dateiso = dateStr_ISO;
                     const hallid = dealData.HallId;
+                    const booking_subEventDropdown = dealData.EventSubTypeId;
 
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
@@ -1000,11 +1007,13 @@ function enableDragDrop() {
 
                     $("#booking_pax").val(dealData.Pax);
 
-                    setShiftTime(shift);
+                    setShiftTime(null, dealData);
                     $("#PaymentDetails_DueDate").val('');
 
                     $("#fromDate").val(dateiso); //.prop("disabled", true);
                     $("#toDate").val(dateiso);
+
+                    $("#booking_subEventDropdown").val(booking_subEventDropdown);
 
                     $("#title_bookingModal").text("Add Booking Details");
                     $("#bookingModal").modal("show");
@@ -1646,6 +1655,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: JSON.stringify(enquiryData),
             success: function (response) {
                 if (response.status === "Success") {
+                    console.log("response data:", response.data);
                     loadEnquiryList();
                     handleApiSuccess('Saved!');
                     loadEnquiryDeals();
@@ -1664,7 +1674,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const date = dateStr;
                         const dateiso = dateStr_ISO;
                         const hallid = enquiryData.BanquetHallId;
-                        const bookingId = 0;
+                        const bookingId = response.data.BookingId;
 
                         $("#BookingId").val(bookingId);
                         // 🟢 Update label content & attributes - using jQuery
@@ -1683,11 +1693,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         $("#booking_pax").val(enquiryData.Pax);
 
-                        setShiftTime(shift);
+                        setShiftTime(null, response.data);
                         $("#PaymentDetails_DueDate").val('');
                         console.log("ib-dateiso:", dateiso);
                         $("#fromDate").val(dateiso); //.prop("disabled", true);
                         $("#toDate").val(dateiso);
+                        $("#booking_subEventDropdown").val(enquiryData.EventSubTypeId);
 
                         $("#title_bookingModal").text("Add Booking Details");
                         $("#bookingModal").modal("show");
@@ -3310,21 +3321,34 @@ function setGSTSwitch(isGSTAccepted) {
         gstText.classList.add("text-danger");
     }
 }
-function setShiftTime(shiftAbbr) {
-    const times = shiftTimes[shiftAbbr];
-    if (!times) return; // invalid shift — do nothing
 
-    // Parse start time
-    const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-    $("#startHour").val(startH);
-    $("#startMinute").val(startM);
-    $("#startAMPM").val(startAMPM);
+function setShiftTime(shiftAbbr = null, dealData = null) {
+    if (exactTime == null) {
+        const times = shiftTimes[shiftAbbr];
+        if (!times) return; // invalid shift — do nothing
 
-    // Parse end time
-    const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-    $("#endHour").val(endH);
-    $("#endMinute").val(endM);
-    $("#endAMPM").val(endAMPM);
+        // Parse start time
+        const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+        $("#startHour").val(startH);
+        $("#startMinute").val(startM);
+        $("#startAMPM").val(startAMPM);
+
+        // Parse end time
+        const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+        $("#endHour").val(endH);
+        $("#endMinute").val(endM);
+        $("#endAMPM").val(endAMPM);
+    }
+    else {
+        $("#startHour").val(dealData.StartHH);
+        $("#startMinute").val(dealData.StartMM);
+        $("#startAMPM").val(dealData.StartAMPM);
+
+        $("#endHour").val(dealData.EndHH);
+        $("#endMinute").val(dealData.EndMM);
+        $("#endAMPM").val(dealData.EndAMPM);
+    }
+
 }
 
 //Enquiry Client - dropdown -- START ----------------------

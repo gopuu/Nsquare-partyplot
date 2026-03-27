@@ -181,7 +181,7 @@
                                             </div>
                                         </div>
                                         <div class="col-12 text-end">
-                                            <button type="button" class="btn btn-warning btn-sm px-2" onclick="saveCompanyProfileData()">Save</button>
+                                            <button type="button" class="btn btn-warning btn-sm px-2" onclick="saveCompanyProfileData()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
 
@@ -676,7 +676,7 @@
                                             <input type="text" class="form-control mb-2" placeholder="Enter step">
                                         </div>
                                         <button type="button" class="btn btn-outline-primary btn-sm d-none" onclick="addBookingStep()">+ Add More</button>
-                                        <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()">Save Property Details</button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()"><i class="fa fa-save me-1"></i> Save Property Details</button>
                                     </div>
                                 </div>
                             </div>
@@ -701,43 +701,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="hallDetailsTableBody">
-                                    <!-- Sample static rows, replace or populate dynamically -->
-                                    <tr class="d-none">
-                                        <th scope="row">1</th>
-                                        <td>Laxman</td>
-                                        <td>50</td>
-                                        <td>1000</td>
-                                        <td><small class="me-1">🎥</small>3</td>
-                                        <td><small class="me-1">🌙</small>1</td>
-                                        <td><small class="me-1">🖼️</small>12</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning"><i class="bi bi-pen"></i> Edit</button>
-                                        </td>
-                                        <td>
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="block1" />
-                                                <label class="form-check-label" for="block1"></label>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr class="d-none">
-                                        <th scope="row">2</th>
-                                        <td>RAMA</td>
-                                        <td>300</td>
-                                        <td>2500</td>
-                                        <td><small class="me-1">🎥</small>5</td>
-                                        <td><small class="me-1">🌞</small>2</td>
-                                        <td><small class="me-1">🖼️</small>20</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning"><i class="bi bi-pen"></i> Edit</button>
-                                        </td>
-                                        <td>
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="block2" checked />
-                                                <label class="form-check-label" for="block2"></label>
-                                            </div>
-                                        </td>
-                                    </tr>
                                 </tbody>
                             </table>
 
@@ -1098,7 +1061,7 @@
 
                                 </div>
 
-                                <button type="submit" class="btn btn-warning">Save</button>
+                                <button type="submit" class="btn btn-warning"><i class="fa fa-save me-1"></i> Save</button>
                             </form>
                         </div>
 
@@ -1245,7 +1208,7 @@
 
                                         <!-- Save Button -->
                                         <div class="col-12 mt-4">
-                                            <button class="btn btn-warning" onclick="saveInvoiceSetupData()">Save Invoice Design</button>
+                                            <button class="btn btn-warning" onclick="saveInvoiceSetupData()"><i class="fa fa-save me-1"></i> Save Invoice Design</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1299,14 +1262,18 @@
                                         </div>
 
                                         <div class="col-12 mt-4">
-                                            <button class="btn btn-warning" onclick="saveFoodItems()">Save</button>
+                                            <button class="btn btn-warning" onclick="saveFoodItems()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- 5.2 Setup/Update Food Packages -->
                                 <div class="tab-pane fade" id="subtab-food-packages" role="tabpanel">
-                                    <h5 class="text-primary mb-3">Setup Food Package</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="text-primary mb-0">Setup Food Package</h5>
+                                        <button class="btn btn-warning" onclick="saveAllPackages()"><i class="fa fa-save me-1"></i> Save</button>
+                                    </div>
+
                                     <div class="table-responsive">
                                         <table class="table align-middle" id="packageTable">
                                             <thead>
@@ -1323,11 +1290,12 @@
                                         </table>
                                     </div>
 
-                                    <div class="mt-2">
-                                        <a href="javascript:void(0);" onclick="addNewPackageRow()" class="text-success">+ Add more package</a>
-                                    </div>
-                                    <div class="mt-3">
-                                        <button class="btn btn-warning" onclick="saveAllPackages()">Save</button>
+                                    <div class="mt-2 d-flex justify-content-end">
+                                        <a href="javascript:void(0);"
+                                           onclick="addNewPackageRow()"
+                                           class="btn btn-outline-warning">
+                                            + Add more package
+                                        </a>
                                     </div>
                                 </div>
 
@@ -1343,7 +1311,7 @@
                                                 <div class="row row-cols-2 row-cols-md-4 g-2" id="inclusionListContainer"></div>
                                             </div>
                                             <div class="modal-footer">
-                                                <button class="btn btn-warning btn-sm" onclick="saveInclusions()">Save</button>
+                                                <button class="btn btn-warning btn-sm" onclick="saveInclusions()"><i class="fa fa-save me-1"></i> Save</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1357,7 +1325,7 @@
                                             <div id="foodHeaderContainer_charges"></div>
                                             <button class="btn btn-outline-success mt-2" onclick="addNewHeader_charges()">+ Add Header</button>
                                             <div class="mt-3 d-flex">
-                                                <button class="btn btn-warning" onclick="saveAddonCharges()">Save</button>
+                                                <button class="btn btn-warning" onclick="saveAddonCharges()"><i class="fa fa-save me-1"></i> Save</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1413,7 +1381,7 @@
 
                                         <!-- Save Button -->
                                         <div class="mt-3 text-end">
-                                            <button class="btn btn-warning" onclick="saveCharges()">Save</button>
+                                            <button class="btn btn-warning" onclick="saveCharges()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1484,7 +1452,7 @@
                                                     </select>
                                                 </div>
 
-                                                <button class="btn btn-warning mt-3" onclick="saveLabelSetup()">Save</button>
+                                                <button class="btn btn-warning mt-3" onclick="saveLabelSetup()"><i class="fa fa-save me-1"></i> Save</button>
                                             </div>
 
                                             <!-- Buy Plaque Card -->
@@ -1589,7 +1557,7 @@
 
                                 <!-- Save Button -->
                                 <div class="col-12">
-                                    <button class="btn btn-warning" onclick="saveTermsAndConditions()">Save</button>
+                                    <button class="btn btn-warning" onclick="saveTermsAndConditions()"><i class="fa fa-save me-1"></i> Save</button>
                                 </div>
                             </div>
                         </div>

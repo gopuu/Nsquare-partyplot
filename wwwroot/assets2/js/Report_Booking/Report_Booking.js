@@ -1,41 +1,26 @@
 ﻿const REPORT_COLUMNS = [
 
-    { key: "SrNo", label: "Sr No", visible: true },
-
+    { key: "SrNo", label: "SrNo.", visible: true },
     { key: "Client_Name", label: "Client Name", visible: true },
-
     { key: "Client_Contact", label: "Contact", visible: true },
-
     { key: "Client_Email", label: "Email", visible: true },
 
-    { key: "InvoiceNo", label: "Invoice No", visible: true },
-
     { key: "EventDate", label: "Event Date", visible: true },
-
-    { key: "EventTypeName", label: "Event Type", visible: true },
-
-    { key: "EventSubTypeName", label: "Event Sub Type", visible: true },
-
-    { key: "EventDisplay", label: "Event", visible: true },
-
+    { key: "EventTypeName", label: "Event", visible: true },
+    { key: "EventSubTypeName", label: "Sub-Event", visible: true },
     { key: "HallName", label: "Hall Name", visible: true },
 
     { key: "Pax", label: "Pax", visible: true },
-
     { key: "Package", label: "Package", visible: true },
-
     { key: "DealAmount", label: "Deal Amount", visible: true },
 
     { key: "TotalAmount", label: "Total Amount", visible: true },
-
     { key: "Discount", label: "Discount", visible: true },
-
     { key: "Tax", label: "Tax", visible: true },
-
-    { key: "InvoiceAmount", label: "Invoice Amount", visible: true }
-
-
+    { key: "InvoiceAmount", label: "Invoice Amount", visible: true },
+    { key: "InvoiceNo", label: "Invoice No", visible: true }
 ];
+
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "printWithHeader";

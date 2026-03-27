@@ -3,14 +3,15 @@ using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ERPAdmin.PDF;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
-using Newtonsoft.Json;
 
 namespace ERPAdmin.ApiControllers
 {
@@ -127,13 +128,6 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
-                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
-
-                using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4.Rotate(), 36, 36, topMargin, 50);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-
                 DataTable dtCompany = new DataTable();
                 DataSet dsReport = new DataSet();
 
@@ -141,14 +135,12 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    // 🔹 Company
                     SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                    // 🔹 Report
-                    cmd = new SqlCommand("Report_GetBookingDetails", con);
+                    cmd = new SqlCommand("Report_GetBookingDetails_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
@@ -166,34 +158,44 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
-                // ================= VALIDATION =================
-
-                string companyName = string.Empty;
-                string companyAddress = string.Empty;
-                string companyphoneNo = string.Empty;
-                string logoFile = string.Empty;
-                string userName = string.Empty;
-
-                Image logo = null;
+                // ================= ASSIGN & VALIDATION =================
+                #region ASSIGN & VALIDATIONS
+                string companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companypan = "",
+                       logoFile = string.Empty, userName = string.Empty,
+                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate="";
+                
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+                if (isCompanyAvailable)
+                {
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                }
 
                 if (request.WithHeader ?? false)
                 {
-                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
-
                     if (isCompanyAvailable)
                     {
                         companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
                         companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
                         logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
-                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                        companypan = dtCompany.Rows[0]["CompanyPAN"]?.ToString();
+                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
 
+                        // ── Resolve logo path (same logic as before, just storing the path string) ──
                         if (!string.IsNullOrWhiteSpace(logoFile))
                         {
-                            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-
-                            if (System.IO.File.Exists(logoPath))
-                                logo = Image.GetInstance(logoPath);
+                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                            if (System.IO.File.Exists(p1))
+                                logoFullPath = p1;
+                            else
+                            {
+                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                if (System.IO.File.Exists(p2))
+                                    logoFullPath = p2;
+                            }
                         }
                     }
                     else
@@ -206,68 +208,97 @@ namespace ERPAdmin.ApiControllers
                     throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-
                 string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
 
-                writer.PageEvent = new PdfPageEvents(userName);
+                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
+
+                using var stream = new MemoryStream();
+
+                bool isA4size = true; // default to A4
+                Document document = null;
+                if (dsReport.Tables[2].Columns.Count > 7) {
+                    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                    isA4size = false;
+                }
+                else
+                {
+                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    isA4size = true;
+                }
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+                #endregion
+
+                // ── Attach StandardReport header-footer ──
+                #region HEADER_FOOTER
+                if (request.WithHeader ?? false)
+                {
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companypan,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companypan,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                else
+                {
+                    // no company header, but still want page number / generated-by footer
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4 (
+                            "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate (
+                            "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                #endregion
+
                 document.Open();
 
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
                 DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
-                // ================= HEADER =================
-
-                if (request.WithHeader ?? false)
-                {
-                    PdfPTable headerTable = new PdfPTable(2);
-                    headerTable.WidthPercentage = 100;
-                    headerTable.SetWidths(new float[] { 20f, 80f });
-
-                    PdfPCell logoCell;
-
-                    if (logo != null)
-                    {
-                        logo.ScaleToFit(70f, 70f);
-                        logoCell = new PdfPCell(logo);
-                    }
-                    else
-                    {
-                        logoCell = new PdfPCell(new Phrase(""));
-                    }
-
-                    logoCell.Border = Rectangle.BOTTOM_BORDER;
-                    logoCell.Padding = 10;
-                    headerTable.AddCell(logoCell);
-
-                    PdfPCell detailCell = new PdfPCell
-                    {
-                        Border = Rectangle.BOTTOM_BORDER,
-                        Padding = 10,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
-
-                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
-
-                    headerTable.AddCell(detailCell);
-
-                    document.Add(headerTable);
-                }
-
                 // ================= REPORT TITLE =================
-
-                Font reportTitleFont = FontFactory.GetFont(
-                    FontFactory.HELVETICA_BOLD,
-                    14,
-                    BaseColor.BLACK
-                );
-
+                Font reportTitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY);
                 Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
                 {
                     Alignment = Element.ALIGN_CENTER,
-                    SpacingAfter = 18f
+                    SpacingAfter = 10f
                 };
 
                 document.Add(reportTitle);
@@ -282,9 +313,9 @@ namespace ERPAdmin.ApiControllers
                 float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
                 table.SetWidths(widths);
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
-                BaseColor thColor = new BaseColor(0, 121, 182);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
+                BaseColor thColor = new BaseColor(240, 240, 240);
 
                 for (int i = 0; i < headerTableDB.Rows.Count; i++)
                 {
@@ -293,66 +324,63 @@ namespace ERPAdmin.ApiControllers
 
                 table.HeaderRows = 1;
 
+                int GetAlignment(string columnName)
+                {
+                    columnName = columnName.ToLower();
+
+                    if (columnName.Contains("amount") ||
+                        columnName.Contains("pax") ||
+                        columnName.Contains("tax") ||
+                        columnName.Contains("discount"))
+                        return Element.ALIGN_RIGHT;
+
+                    if (columnName.Contains("date") ||
+                        columnName.Contains("srno"))
+                        return Element.ALIGN_CENTER;
+
+                    return Element.ALIGN_LEFT;
+                }
+
                 foreach (DataRow row in dataTableDB.Rows)
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
+                        string value = row[col]?.ToString() ?? "-";
+                        int align = GetAlignment(col.ColumnName);
                         table.AddCell(Utils.CreateBodyCell(
-                            row[col]?.ToString() ?? "-",
-                            tdFont
+                            value,
+                            tdFont,
+                            align // 👈 pass alignment
                         ));
                     }
                 }
 
-                //SUMMARY TOTALS
+                // SUMMARY TOTALS
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
-
+                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
                         string value = "";
-
                         switch (col.ColumnName)
                         {
-                            case "Pax":
-                                value = $"{totalRow["TotalPax"]}";
-                                break;
-
-                            case "Deal Amount":
-                                value = $"{totalRow["TotalDealAmount"]}";
-                                break;
-
-                            case "Discount":
-                                value = $"{totalRow["TotalDiscount"]}";
-                                break;
-
-                            case "Tax":
-                                value = $"{totalRow["TotalTax"]}";
-                                break;
-
-                            case "Invoice Amount":
-                                value = $"{totalRow["TotalInvoiceAmount"]}";
-                                break;
-
+                            case "Pax": value = $"{totalRow["TotalPax"]}"; break;
+                            case "Deal Amount": value = $"{totalRow["TotalDealAmount"]}"; break;
+                            case "Discount": value = $"{totalRow["TotalDiscount"]}"; break;
+                            case "Tax": value = $"{totalRow["TotalTax"]}"; break;
+                            case "Invoice Amount": value = $"{totalRow["TotalInvoiceAmount"]}"; break;
                             default:
-                                value = "";
-                                if (col.Ordinal == 0)
-                                {
-                                    value = "TOTAL";
-                                }
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
                                 break;
                         }
-
                         PdfPCell cell = new PdfPCell(new Phrase(value, totalFont))
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6
+                            Padding = 6,
+                            BorderColor = BaseColor.LIGHT_GRAY
                         };
-
                         table.AddCell(cell);
                     }
                 }
@@ -416,7 +444,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetBookingDetails", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetBookingDetails_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     // SAME LOGIC AS PDF
@@ -547,3 +575,4 @@ namespace ERPAdmin.ApiControllers
 
     }
 }
+

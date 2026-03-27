@@ -420,7 +420,7 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetPackage_MenuAndFoodItemsList", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@package_id", request.Package_Id ?? (object)DBNull.Value);
+                    cmd.Parameters.Add("@package_id", SqlDbType.BigInt).Value = request.Package_Id ?? (object)DBNull.Value;
 
                     con.Open();
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -435,16 +435,22 @@ namespace ERPAdmin.ApiControllers
                             FoodMenu_Id = Convert.ToInt64(dr["FoodMenu_Id"]),
                             FoodMenu_Name = Convert.ToString(dr["FoodMenu_Name"]),
                             Inclusion_Id = Convert.ToInt64(dr["Inclusion_Id"]),
-                            Instance_Id = Convert.ToInt64(dr["Instance_Id"]),
-                            InclusionCount_Id = Convert.ToInt64(dr["InclusionCount_Id"]),
+                            Count_Size = dr["Count_Size"] == DBNull.Value ? 0 : Convert.ToInt32(dr["Count_Size"]),
                             FoodItemsList = new List<FoodItemModel>()
                         };
 
                         // Parse JSON from SQL
                         string jsonFoodItems = Convert.ToString(dr["FoodItemsList"]);
-                        if (!string.IsNullOrEmpty(jsonFoodItems))
+                        if (!string.IsNullOrWhiteSpace(jsonFoodItems))
                         {
-                            menu.FoodItemsList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<FoodItemModel>>(jsonFoodItems);
+                            try
+                            {
+                                menu.FoodItemsList = JsonConvert.DeserializeObject<List<FoodItemModel>>(jsonFoodItems);
+                            }
+                            catch
+                            {
+                                menu.FoodItemsList = new List<FoodItemModel>();
+                            }
                         }
                         menuList.Add(menu);
                     }
