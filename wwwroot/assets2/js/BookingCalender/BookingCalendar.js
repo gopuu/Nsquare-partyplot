@@ -5166,10 +5166,12 @@ function generateReport(isWithPrice) {
     let bookingId = getBookingId();
     var payload = {
         BookingId: bookingId,
-        IsWithPrice: isWithPrice
+        IsWithPrice: isWithPrice,
+        WithHeader : true,
+        ActionBy: Number(sessionStorage.getItem("userId") || 0)
     };
     console.log("payload PackageForm:", payload);
-    var url = "/api/Report/Report_FunctionProspectuseReport";
+    var url = "/api/Report/Report_FunctionProspectusReport";
     downloadReport(url, payload, "Generating Report...");
 }
 

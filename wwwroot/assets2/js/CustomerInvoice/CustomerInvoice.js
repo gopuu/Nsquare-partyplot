@@ -34,7 +34,7 @@ $(function () {
 
     AppSignalR.subscribe(() => {
         window.location.reload();
-        fetchData();
+        fetchData(flag_isGeneratedInvoice);
     });
 
     //SUMMARY -- START 
@@ -97,6 +97,7 @@ $(function () {
         const edit_invoiceNo = $(this).data('invoiceno');
         $('#bookingId').val(bookingId);
         $('#invoiceNo').val(edit_invoiceNo);
+        $('#gstInvoiceNo').val(0);
         $('#proformaInvoiceNo').val(0);
 
         invoiceType = "invoice";
@@ -107,10 +108,37 @@ $(function () {
         fetchInvoiceById({
             BookingId: bookingId,
             InvoiceNo: edit_invoiceNo,
+            GSTInvoiceNo: null,
             ProformaInvoiceNo: null
         });
     });
     //EDIT INVOICE -- END
+
+    //EDIT GST-INVOICE -- START
+    $(document).on('click', '.btn-edit-gstinvoice', function () {
+        ShowHide_DeleteButton();
+        resetForm();
+
+        const bookingId = $(this).data('bookingid');
+        const edit_gstinvoiceNo = $(this).data('gstinvoiceno');
+        $('#bookingId').val(bookingId);
+        $('#invoiceNo').val(0);
+        $('#gstInvoiceNo').val(edit_gstinvoiceNo);
+        $('#proformaInvoiceNo').val(0);
+
+        invoiceType = "invoice";
+
+        $('#invoiceModalTitle').text('Edit Invoice #' + edit_gstinvoiceNo);
+        invoiceModal.show();
+
+        fetchInvoiceById({
+            BookingId: bookingId,
+            InvoiceNo: null,
+            GSTInvoiceNo: edit_gstinvoiceNo,
+            ProformaInvoiceNo: null
+        });
+    });
+    //EDIT GST-INVOICE -- END
 
     //EDIT PROFORMA INVOICE -- START
     $(document).on('click', '.btn-edit-proforma', function () {
@@ -122,6 +150,7 @@ $(function () {
 
         $('#bookingId').val(bookingId);
         $('#invoiceNo').val(0);
+        $('#gstInvoiceNo').val(0);
         $('#proformaInvoiceNo').val(edit_proformaNo);
 
         invoiceType = "proforma";
@@ -132,6 +161,7 @@ $(function () {
         fetchInvoiceById({
             BookingId: bookingId,
             InvoiceNo: null,
+            GSTInvoiceNo: null,
             ProformaInvoiceNo: edit_proformaNo
         });
     });
@@ -372,6 +402,9 @@ $(function () {
         const invoiceNoVal = $('#invoiceNo').val();
         const proformaNoVal = $('#proformaInvoiceNo').val();
 
+        const isExclusiveOfGST = $('#isExclusiveOfGST').val() === 'true' || $('#isExclusiveOfGST').val() === '1';
+        const isInclusiveOfGST = $('#isInclusiveOfGST').val() === 'true' || $('#isInclusiveOfGST').val() === '1';
+
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
             BookingId: parseInt($('#bookingId').val()) || 0,
@@ -392,6 +425,9 @@ $(function () {
                 && gstInvoiceNoVal !== '')
                 ? gstInvoiceNoVal
                 : null,
+
+            IsExclusiveOfGST : isExclusiveOfGST,
+            IsInclusiveOfGST : isInclusiveOfGST,
 
             CustomerName: $('#customerName').val(),
             InvoiceDate: $('#invoiceDate').val(),
@@ -426,7 +462,7 @@ $(function () {
             JSON_Items: items,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
-        console.log("save payload:", request);
+        //console.log("save payload:", request);
 
         $.ajax({
             url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -883,6 +919,7 @@ $(function () {
 
 function updateInvoiceTitle(totalGST) {
     const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+    console.log("isInclusiveGST:", isInclusiveGST);
     const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
 
     if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
@@ -1382,6 +1419,10 @@ function fetchInvoiceById(params) {
             $('#address').val(data.Address);
             $('#customerState').val(data.CustomerStateId);
 
+            $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
+            $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
+            $('#invoiceNo').data('isinclusivegst', data.IsInclusiveOfGST);
+
             /* ---------- TOTALS (DIRECT SET) ---------- */
             $('#subTotal').val(data.SubTotal);
             $('#bookingDiscount').val(data.BookingDiscount);
@@ -1487,6 +1528,8 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
             $('#emailId').val(data.Email);
             $('#address').val(data.Address);
             $('#customerState').val(data.ClientStateId);
+            $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
+            $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
 
             //$('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
 
@@ -1792,8 +1835,8 @@ function getNextInvoiceNumbers() {
                 proformaInvoiceNo = res.data.NextProformaInvoiceNo;
                 gstInvoiceNo = res.data.NextGSTInvoiceNo;
 
-                console.log('Invoice No:', invoiceNo);
-                console.log('Proforma Invoice No:', proformaInvoiceNo);
+                //console.log('Invoice No:', invoiceNo);
+                //console.log('Proforma Invoice No:', proformaInvoiceNo);
                 console.log('GST Invoice No:', gstInvoiceNo);
 
                 // OPTIONAL: Assign to inputs
@@ -1809,7 +1852,7 @@ function getNextInvoiceNumbers() {
 }
 
 function fetchData(isGenerated) {
-    console.log("isGenerated:", isGenerated);
+    //console.log("isGenerated:", isGenerated);
     // 🔥 session-based override
     let isInvoiceGenerated = null;
 
@@ -1827,6 +1870,8 @@ function fetchData(isGenerated) {
         }
     }
    
+    const isExclusiveOfGST = null; // $('#isExclusiveOfGST').val() === 'true' || $('#isExclusiveOfGST').val() === '1';
+    const isInclusiveOfGST = null; // $('#isInclusiveOfGST').val() === 'true' || $('#isInclusiveOfGST').val() === '1';
 
     const payload = {
         BookingId: 0,
@@ -1838,7 +1883,9 @@ function fetchData(isGenerated) {
         BookedTill: $('#fltBookedTill').val() || null,
         SubEventId: $('#fltEvent').val() || 0,
         PaymentStatusId: $('#fltPaymentStatus').val() || 0,
-        IsInvoiceGenerated: isInvoiceGenerated
+        IsInvoiceGenerated: isInvoiceGenerated,
+        IsExclusiveOfGST: isExclusiveOfGST,
+        IsInclusiveOfGST: isInclusiveOfGST
     };
     console.log("payload:", payload);
 
@@ -1870,7 +1917,7 @@ function fetchData(isGenerated) {
 }
 
 function renderTable(data, totals) {
-    //console.log("render data:", data);
+    console.log("render data:", data);
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
     }
@@ -1899,8 +1946,9 @@ function renderTable(data, totals) {
             }
         },
         columns: [
+            { data: 'srno', visible: false },
             { data: 'BookingId', title: '#BRN', name: 'BookingId' },
-            //InvoiceNo / ProformaInvoiceNo
+            //InvoiceNo / ProformaInvoiceNo / GST No
             {
                 data: null,
                 title: 'Invoice No',
@@ -1912,19 +1960,22 @@ function renderTable(data, totals) {
                             ? row.InvoiceNo
                             : null;
 
+                    const gstInvoiceNo =
+                        row.GSTInvoiceNo !== null && row.GSTInvoiceNo !== undefined && row.GSTInvoiceNo !== ''
+                            ? row.GSTInvoiceNo
+                            : null;
+
                     //const proformaNo =
                     //    row.ProformaInvoiceNo !== null && row.ProformaInvoiceNo !== undefined && row.ProformaInvoiceNo > 0
                     //        ? row.ProformaInvoiceNo
                     //        : null;
 
-                    //if (invoiceNo && proformaNo) {
-                    //    return `<strong>${invoiceNo} / ${proformaNo}</strong>`;
-                    //}
-
                     if (invoiceNo) {
-                        return `<strong>#${invoiceNo}</strong>`;
+                        return `<strong>${invoiceNo}</strong>`;
                     }
-
+                    if (gstInvoiceNo) {
+                        return `<strong>${gstInvoiceNo}</strong>`;
+                    }
                     //if (proformaNo) {
                     //    return `<strong>${proformaNo}</strong>`;
                     //}
@@ -2057,7 +2108,37 @@ function renderTable(data, totals) {
                 name: 'GSTInvoice',
                 render: function (row) {
 
-                    if (!hasValidNo(row.InvoiceNo)) {
+                    const invoiceNo =
+                        row.InvoiceNo !== null && row.InvoiceNo !== undefined && row.InvoiceNo > 0
+                            ? row.InvoiceNo
+                            : null;
+
+                    const gstInvoiceNo =
+                        row.GSTInvoiceNo !== null && row.GSTInvoiceNo !== undefined && row.GSTInvoiceNo !== ''
+                            ? row.GSTInvoiceNo
+                            : null;
+
+                    if (invoiceNo) {
+                        return `
+                            <button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
+                                    data-bookingid="${row.BookingId}"
+                                    data-invoiceno="${row.InvoiceNo}">
+                                <i class="fa fa-pen me-1"></i>Edit
+                            </button>
+                        `;
+                    }
+
+                    if (gstInvoiceNo) {
+                        return `
+                            <button class="btn btn-outline-warning btn-action-xs2 btn-edit-gstinvoice"
+                                    data-bookingid="${row.BookingId}"
+                                    data-gstinvoiceno="${row.GSTInvoiceNo}">
+                                <i class="fa fa-pen me-1"></i>Edit
+                            </button>
+                        `;
+                    }
+
+                    if (!hasValidNo(row.InvoiceNo) && !gstInvoiceNo) {
 
                         if (row.IsInvoiceBlocked) {
                             return `
@@ -2087,14 +2168,6 @@ function renderTable(data, totals) {
                             </button>
                         `;
                     }
-
-                    return `
-                        <button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
-                                data-bookingid="${row.BookingId}"
-                                data-invoiceno="${row.InvoiceNo}">
-                            <i class="fa fa-pen me-1"></i>Edit
-                        </button>
-                    `;
                 }
             },
             //Send GST Invoice
@@ -2158,7 +2231,11 @@ function resetForm() {
     $('#invoiceId').val(0);
     $('#bookingId').val(0);
     $('#invoiceNo').val('').removeData('isinclusivegst');
+    $('#gstInvoiceNo').val('');
     $('#proformaInvoiceNo').val('');
+
+    $('#isExclusiveOfGST').val(false);
+    $('#isInclusiveOfGST').val(false);
 
     $('#customerName').val('');
     $('#gstin').val('');

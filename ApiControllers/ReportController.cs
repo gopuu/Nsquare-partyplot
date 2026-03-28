@@ -1,18 +1,19 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using ERPAdmin.PDF;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
-using Newtonsoft.Json;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using iTextSharpFont = iTextSharp.text.Font;
 
 namespace ERPAdmin.ApiControllers
@@ -688,286 +689,6 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadCustomerInvoiceReport2")]
-        public IActionResult DownloadCustomerInvoiceReport2([FromBody] CustomerInvoiceReportRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext,
-                        Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 30, 30, 40, 70);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-
-                DataTable dtCompany = new DataTable();
-                DataTable dtInvoice = new DataTable();
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    con.Open();
-
-                    // 🔹 Company Header
-                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
-                    new SqlDataAdapter(cmd).Fill(dtCompany);
-
-                    // 🔹 Invoice Report
-                    cmd = new SqlCommand("Report_CustomerInvoiceById", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
-                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
-                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
-                    new SqlDataAdapter(cmd).Fill(dtInvoice);
-                }
-
-                if (dtInvoice.Rows.Count == 0)
-                    throw new Exception("Invoice data not found");
-
-                // Safe Invoice Row
-                DataRow inv = null;
-                if (dtInvoice != null && dtInvoice.Rows.Count > 0)
-                {
-                    inv = dtInvoice.Rows[0];
-                }
-
-                // Safe Company Data
-                string companyName = "";
-                string companyAddress = "";
-                string companyPhone = "";
-                string logoFile = "";
-                string userName = "";
-
-                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
-
-                if (isCompanyAvailable)
-                {
-                    companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
-                    companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
-                    companyPhone = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
-                    logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
-                }
-
-                // Page Event (safe even if userName empty)
-                writer.PageEvent = new PdfPageEvents(userName);
-                document.Open();
-
-                // ================= HEADER =================
-                if (request.WithHeader == true)
-                {
-                    PdfPTable headerTable = new PdfPTable(2);
-                    headerTable.WidthPercentage = 100;
-                    headerTable.SetWidths(new float[] { 20f, 80f });
-
-                    if (isCompanyAvailable)
-                    {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-
-                        if (System.IO.File.Exists(logoPath))
-                        {
-                            Image logo = Image.GetInstance(logoPath);
-                            logo.ScaleToFit(70f, 70f);
-
-                            headerTable.AddCell(new PdfPCell(logo)
-                            {
-                                Border = Rectangle.BOTTOM_BORDER,
-                                Padding = 10
-                            });
-                        }
-                        else
-                        {
-                            headerTable.AddCell(new PdfPCell(new Phrase(""))
-                            {
-                                Border = Rectangle.BOTTOM_BORDER,
-                                Padding = 10
-                            });
-                        }
-
-                        PdfPCell infoCell = new PdfPCell
-                        {
-                            Border = Rectangle.BOTTOM_BORDER,
-                            Padding = 10,
-                            HorizontalAlignment = Element.ALIGN_CENTER
-                        };
-
-                        infoCell.AddElement(new Paragraph(companyName,
-                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-
-                        infoCell.AddElement(new Paragraph(companyAddress,
-                            FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-
-                        infoCell.AddElement(new Paragraph(companyPhone,
-                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
-
-                        headerTable.AddCell(infoCell);
-                    }
-                    else
-                    {
-                        // Same behavior as previous solution
-                        PdfPCell messageCell = new PdfPCell(
-                            new Phrase("[PAGE HEADER] Company Data Not Found",
-                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.RED)))
-                        {
-                            Border = Rectangle.BOTTOM_BORDER,
-                            Colspan = 2,
-                            HorizontalAlignment = Element.ALIGN_CENTER,
-                            Padding = 15
-                        };
-
-                        headerTable.AddCell(messageCell);
-                    }
-
-                    document.Add(headerTable);
-                }
-                // ================= TITLE =================
-                string title = "TAX INVOICE";
-                if (request.ProformaInvoiceNo > 0)
-                {
-                    title = "PROFORMA INVOICE";
-                }
-
-                document.Add(new Paragraph(title, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
-                { Alignment = Element.ALIGN_CENTER, SpacingAfter = 12f });
-
-                // ================= CUSTOMER INFO =================
-                PdfPTable infoTable = new PdfPTable(2);
-                infoTable.WidthPercentage = 100;
-                infoTable.SetWidths(new float[] { 50f, 50f });
-
-                string? invoiceNoToShow = request.ProformaInvoiceNo > 0 //Convert.ToInt64(inv["ProformaInvoiceNo"]) > 0
-                        ? inv["ProformaInvoiceNo"].ToString()
-                        : inv["InvoiceNo"]?.ToString();
-
-                infoTable.AddCell(Utils.CreateInfoCell("Invoice No", invoiceNoToShow));
-                infoTable.AddCell(Utils.CreateInfoCell("Invoice Date", inv["InvoiceDate_Format"]));
-                infoTable.AddCell(Utils.CreateInfoCell("Customer Name", inv["CustomerName"]));
-                infoTable.AddCell(Utils.CreateInfoCell("GSTIN", inv["GSTIN"]));
-                infoTable.AddCell(Utils.CreateInfoCell("Email", inv["EmailId"]));
-                infoTable.AddCell(Utils.CreateInfoCell("Address", inv["Address"]));
-
-                document.Add(infoTable);
-                document.Add(new Paragraph("\n"));
-
-                // ================= ITEMS TABLE =================
-                string jsonItems = inv["JSON_Items"]?.ToString() ?? "[]";
-                var items = JsonConvert.DeserializeObject<DataTable>(jsonItems);
-
-                PdfPTable itemTable = new PdfPTable(8);
-                itemTable.WidthPercentage = 100;
-                itemTable.SetWidths(new float[] { 5, 25, 10, 10, 10, 10, 10, 10 });
-
-                iTextSharpFont thFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 10, iTextSharpFont.BOLD, BaseColor.WHITE);
-                iTextSharpFont tdFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 9);
-                BaseColor thColor = new BaseColor(0, 121, 182);
-
-                string[] headers = { "#", "Description", "HSN", "Rate", "Qty", "Taxable", "GST", "Total" };
-
-                foreach (var h in headers)
-                    itemTable.AddCell(Utils.CreateHeaderCell(h, thFont, thColor));
-
-                itemTable.HeaderRows = 1;
-
-                if (items == null || items.Rows.Count == 0)
-                {
-                    itemTable.AddCell(new PdfPCell(new Phrase("No Items"))
-                    {
-                        Colspan = 8,
-                        HorizontalAlignment = Element.ALIGN_CENTER,
-                        Padding = 10
-                    });
-                }
-                else
-                {
-                    foreach (DataRow r in items.Rows)
-                    {
-                        itemTable.AddCell(Utils.CreateBodyCell(r["SrNo"].ToString(), tdFont, Element.ALIGN_CENTER));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["Description"].ToString(), tdFont));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["HSN"].ToString(), tdFont, Element.ALIGN_CENTER));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["Rate"].ToString(), tdFont, Element.ALIGN_RIGHT));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["Qty"].ToString(), tdFont, Element.ALIGN_CENTER));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["TaxableAmount"].ToString(), tdFont, Element.ALIGN_RIGHT));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["GSTRate"].ToString(), tdFont, Element.ALIGN_CENTER));
-                        itemTable.AddCell(Utils.CreateBodyCell(r["Total"].ToString(), tdFont, Element.ALIGN_RIGHT));
-                    }
-                }
-
-                document.Add(itemTable);
-
-                // ================= TOTALS =================
-                document.Add(new Paragraph("\n"));
-                PdfPTable totalTable = new PdfPTable(2);
-                totalTable.WidthPercentage = 40;
-                totalTable.HorizontalAlignment = Element.ALIGN_RIGHT;
-                totalTable.SetWidths(new float[] { 60f, 40f });
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Sub Total"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["SubTotal"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Booking Discount"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["BookingDiscount"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Total Taxable"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalTaxableAmount"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Total GST"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalGST"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Round Off"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["RoundOff"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Advance Paid"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["TotalAdvancePaid"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Grand Total", true));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["GrandTotal"], true));
-
-                document.Add(totalTable);
-
-                document.Close();
-
-                // ================= SAVE =================
-                string folder = Path.Combine(_env.WebRootPath, "reports");
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
-                
-                string fileName = request.ProformaInvoiceNo > 0 ?
-                    $"ProformaInvoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf" :
-                    $"Invoice_{invoiceNoToShow}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-
-                string filePath = Path.Combine(folder, fileName);
-
-                Utils.deleteOldFiles(folder, "Invoice_*.pdf", 60);
-
-                using (FileStream fs = new FileStream(filePath, FileMode.Create))
-                    stream.WriteTo(fs);
-
-                response.status = "Success";
-                response.message = "Invoice Report Generated";
-                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.status = "Fail";
-                response.message = ex.Message;
-                return Ok(response);
-            }
-        }
-
-        [HttpPost]
         [Route("DownloadBookingEventReport")]
         public IActionResult DownloadBookingEventReport([FromBody] DownloadBookingEventReportRequest request)
         {
@@ -1480,334 +1201,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("Report_FunctionProspectuseReport")]
-        public IActionResult Report_FunctionProspectuseReport([FromBody] PackageReportRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
-            {
-                if (request == null || request.BookingId <= 0)
-                    return BadRequest(new { status = "Error", message = "Invalid Request" });
-
-                if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string conn, out string domain, out IActionResult error))
-                    return error;
-
-                // Fetch booking data
-                BookingReportModel report = GetBookingReport(request.BookingId, conn);
-
-                // Generate PDF
-                string pdfPath = GeneratePDF(report, domain, request.IsWithPrice);
-
-                return Ok(new
-                {
-                    status = "Success",
-                    data = new { FileUrl = pdfPath }
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { status = "Error", message = ex.Message });
-            }
-        }
-
-        // --------------------- Fetch Booking Data ---------------------
-        private BookingReportModel GetBookingReport(long bookingId, string connString)
-        {
-            BookingReportModel report = new BookingReportModel();
-            report.PackageItems = new List<PackageItem>();
-
-            using (SqlConnection conn = new SqlConnection(connString))
-            using (SqlCommand cmd = new SqlCommand("Report_GetBookingReportById", conn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@BookingId", bookingId);
-
-                conn.Open();
-                using (SqlDataReader dr = cmd.ExecuteReader())
-                {
-                    // --- First Result Set: Booking Header ---
-                    if (dr.Read())
-                    {
-                        report.BookingId = Convert.ToInt64(dr["BookingId"]);
-                        report.BookingRef = dr["BookingRef"].ToString();
-                        report.ClientName = dr["ClientName"].ToString();
-                        report.ContactNumber = dr["ContactNumber"].ToString();
-                        report.EventDate = dr["EventDate"].ToString();
-                        report.Property = dr["Property"].ToString();
-                        report.Pax = Convert.ToInt32(dr["Pax"]);
-                        report.Hall = dr["Hall"].ToString();
-                        report.Slot = dr["Slot"].ToString();
-                        report.Timing = dr["Timing"].ToString();
-                        report.BookedOn = dr["BookedOn"].ToString();
-                        report.EventType = dr["EventType"].ToString();
-                        report.CompanyName = dr["CompanyName"].ToString();
-                        report.CompanyAddress = dr["CompanyAddress"].ToString();
-                        report.CompanyState = dr["CompanyState"].ToString();
-                        report.CompanyLogo = dr["CompanyLogo"].ToString();
-                        report.Email = dr["Email"].ToString();
-                        report.HowReached = dr["HowReached"].ToString();
-                        report.Reference = dr["Reference"].ToString();
-                        report.UpdatedBy = dr["UpdatedBy"].ToString();
-                        report.UpdatedOn = dr["UpdatedOn"].ToString();
-                        report.Comment = dr["Comment"].ToString();
-                        report.PrimaryPackage = dr["PrimaryPackage"].ToString();
-                        report.RatePerPlate = dr["RatePerPlate"].ToString();
-
-                        report.Mukhwas = dr["Mukhwas"].ToString();
-                        report.TotalPaid = dr["TotalPaid"].ToString();
-                        report.OutstandingAmount = dr["OutstandingAmount"].ToString();
-                        report.BookingDiscount = dr["BookingDiscount"].ToString();
-                        report.PayableAmount = dr["PayableAmount"].ToString();
-                    }
-                }
-            }
-
-            return report;
-        }
-
-        // --------------------- Generate PDF ---------------------
-        private string GeneratePDF(BookingReportModel report, string domain, bool isWithPrice)
-        {
-            MemoryStream stream = new();
-            Document doc = new(PageSize.A4, 30, 30, 30, 30);
-            PdfWriter writer = PdfWriter.GetInstance(doc, stream);
-            doc.Open();
-            PdfContentByte cb = writer.DirectContent;
-
-            // ===== PAGE BORDER =====
-            cb.SetColorStroke(BaseColor.BLACK);
-            float padding = 15f;
-            float llx = doc.LeftMargin - padding;
-            float lly = doc.BottomMargin - padding;
-            float urx = doc.PageSize.Width - doc.RightMargin + padding;
-            float ury = doc.PageSize.Height - doc.TopMargin + padding;
-            cb.Rectangle(llx, lly, urx - llx, ury - lly);
-            cb.Stroke();
-
-            // ===== HEADER =====
-            PdfPTable headerTable = new PdfPTable(2) { WidthPercentage = 100 };
-            headerTable.SetWidths(new float[] { 1f, 3f });
-
-            // Logo
-            string companyLogo = report.CompanyLogo;
-            string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", companyLogo);
-            if (System.IO.File.Exists(logoPath))
-            {
-                iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(logoPath);
-                logo.ScaleAbsolute(80, 80);
-                headerTable.AddCell(new PdfPCell(logo) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_LEFT });
-            }
-            else headerTable.AddCell(new PdfPCell(new Phrase("")) { Border = Rectangle.NO_BORDER });
-
-            // Company details
-            iTextSharpFont headerFontBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-            iTextSharpFont headerFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
-            PdfPTable companyTable = new PdfPTable(1) { WidthPercentage = 100 };
-            string propertyName = report.Property;
-            string companyAddress = report.CompanyAddress;
-            string companyState = report.CompanyState;
-
-            companyTable.AddCell(new PdfPCell(new Phrase(propertyName, headerFontBold)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
-            companyTable.AddCell(new PdfPCell(new Phrase(companyAddress, headerFont)) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
-            companyTable.AddCell(new PdfPCell(new Phrase($"State: {companyState}", headerFont)) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_RIGHT });
-            PdfPCell textCell = new PdfPCell(companyTable) { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_RIGHT, VerticalAlignment = Element.ALIGN_MIDDLE };
-            headerTable.AddCell(textCell);
-            doc.Add(headerTable);
-
-            // ===== TITLE LINES =====
-            PdfPTable lineTop = new PdfPTable(1) { WidthPercentage = 100 };
-            lineTop.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.BLACK });
-            doc.Add(lineTop);
-
-            Paragraph title = new Paragraph("Function Prospectus", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14))
-            {
-                Alignment = Element.ALIGN_CENTER,
-                SpacingBefore = 3,
-                SpacingAfter = 8
-            };
-            doc.Add(title);
-
-            PdfPTable lineBottom = new PdfPTable(1) { WidthPercentage = 100 };
-            lineBottom.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.BLACK });
-            doc.Add(lineBottom);
-
-            // ===== EVENT DETAILS =====
-            iTextSharpFont labelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
-            iTextSharpFont labelFontnormal = FontFactory.GetFont(FontFactory.HELVETICA, 11);
-
-            iTextSharpFont valueFont = FontFactory.GetFont(FontFactory.HELVETICA, 11);
-            PdfPTable detailsTable = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 5f };
-            detailsTable.SetWidths(new float[] { 1f, 1f });
-
-            PdfPTable leftTable = new PdfPTable(1) { WidthPercentage = 100 };
-            void AddLeftRow(string label, string value)
-            {
-                Phrase p = new Phrase();
-                p.Add(new Chunk(label + " : ", labelFont));
-                p.Add(new Chunk(value, valueFont));
-                leftTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
-            }
-
-            AddLeftRow("Booking Ref.", '#' + report.BookingRef);
-            AddLeftRow("Client Name", report.ClientName);
-            AddLeftRow("Contact Number", report.ContactNumber);
-            AddLeftRow("Event Date", report.EventDate);
-            AddLeftRow("Property", report.Property);
-            AddLeftRow("Pax", report.Pax.ToString());
-            AddLeftRow("Hall", report.Hall);
-            AddLeftRow("Slot", report.Slot);
-            AddLeftRow("Timing", report.Timing);
-
-            PdfPTable rightTable = new PdfPTable(1) { WidthPercentage = 100 };
-            void AddRightRow(string label, string value)
-            {
-                Phrase p = new Phrase();
-                p.Add(new Chunk(label + " : ", valueFont));
-                p.Add(new Chunk(value, valueFont));
-                rightTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
-            }
-
-            AddRightRow("Booked on", report.BookedOn);
-            AddRightRow("Event", report.EventType);
-            AddRightRow("Company Name", report.CompanyName);
-            AddRightRow("Company Address", report.CompanyAddress);
-            AddRightRow("Email", report.Email);
-
-            detailsTable.AddCell(new PdfPCell(leftTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10 });
-            detailsTable.AddCell(new PdfPCell(rightTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10, HorizontalAlignment = Element.ALIGN_RIGHT });
-            doc.Add(detailsTable);
-            doc.Add(new Paragraph("\n"));
-
-            // ===== PRIMARY FOOD PACKAGE =====
-            iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 11);
-            iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
-            PdfPTable packageTable = new PdfPTable(1) { WidthPercentage = 100 };
-            packageTable.AddCell(new PdfPCell(new Phrase($"PRIMARY FOOD PACKAGE : {report.PrimaryPackage}@ Rs.{report.RatePerPlate:N0} /Per Plate", boldFont))
-            {
-                Border = Rectangle.NO_BORDER,
-                PaddingTop = 6,
-                PaddingBottom = 6,
-                HorizontalAlignment = Element.ALIGN_LEFT
-            });
-            doc.Add(packageTable);
-
-            // ===== SUMMARY SECTION =====
-            // ===== LEFT + RIGHT SECTION (Details + Summary) =====
-
-            iTextSharpFont labelFontLeft = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
-            iTextSharpFont labelFontBoldLeft = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
-
-            iTextSharpFont summaryLabelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
-            iTextSharpFont summaryValueFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE);
-
-            BaseColor summaryBg = new BaseColor(82, 86, 88);
-
-            // Outer table (2 columns)
-            PdfPTable mainTable = new PdfPTable(2) { WidthPercentage = 100 };
-            mainTable.SetWidths(new float[] { 0.6f, 0.4f });
-
-
-            // ================= LEFT SIDE =================
-            leftTable = new PdfPTable(1) { WidthPercentage = 100 };
-
-            leftTable.AddCell(new PdfPCell(new Phrase($"Updated By : {report.UpdatedBy}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-            leftTable.AddCell(new PdfPCell(new Phrase($"Updated On : {report.UpdatedOn}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-            leftTable.AddCell(new PdfPCell(new Phrase($"Comment : {report.Comment}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-            leftTable.AddCell(new PdfPCell(new Phrase($"How did you reach us? : {report.ReachUs}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-            leftTable.AddCell(new PdfPCell(new Phrase($"Reference : {report.Reference}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-
-            leftTable.AddCell(new PdfPCell(new Phrase("TERMS & CONDITIONS", labelFontBoldLeft))
-            {
-                Border = Rectangle.NO_BORDER,
-                PaddingTop = 6,
-                PaddingBottom = 6
-            });
-
-            mainTable.AddCell(new PdfPCell(leftTable)
-            {
-                Border = Rectangle.NO_BORDER,
-                VerticalAlignment = Element.ALIGN_TOP
-            });
-
-
-            // ================= RIGHT SIDE (AMOUNTS) =================
-            rightTable = new PdfPTable(2) { WidthPercentage = 100 };
-            rightTable.SetWidths(new float[] { 0.6f, 0.4f });
-
-            void AddAmountRow(string label, string value)
-            {
-                rightTable.AddCell(new PdfPCell(new Phrase(label, summaryLabelFont))
-                {
-                    Border = Rectangle.NO_BORDER,
-                    //BackgroundColor = summaryBg,
-                    HorizontalAlignment = Element.ALIGN_LEFT,
-                    Padding = 6
-                });
-
-                rightTable.AddCell(new PdfPCell(new Phrase($"₹ {value:N0}", summaryValueFont))
-                {
-                    Border = Rectangle.NO_BORDER,
-                    //BackgroundColor = summaryBg,
-                    HorizontalAlignment = Element.ALIGN_RIGHT,
-                    Padding = 6
-                });
-            }
-
-            AddAmountRow("Deal Amount", report.PayableAmount);
-            AddAmountRow("Booking Discount", report.BookingDiscount);
-            AddAmountRow("Payable Amount", report.PayableAmount);
-            AddAmountRow("Total Paid", report.TotalPaid);
-            AddAmountRow("Outstanding Amount", report.OutstandingAmount);
-
-            mainTable.AddCell(new PdfPCell(rightTable)
-            {
-                Border = Rectangle.NO_BORDER,
-                VerticalAlignment = Element.ALIGN_TOP
-            });
-
-            doc.Add(mainTable);
-            doc.Add(new Paragraph("\n"));
-
-            // ===== SIGNATURES =====
-            PdfPTable signTable = new PdfPTable(3) { WidthPercentage = 100 };
-            signTable.SetWidths(new float[] { 0.33f, 0.33f, 0.33f });
-            foreach (var sign in new[] { "Sales Manager's Sign.", "Banquet Manager's Sign.", "Guest's Sign" })
-            {
-                PdfPCell cell = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_CENTER };
-                cell.AddElement(new Phrase("__________________________", labelFont));
-                cell.AddElement(new Phrase(sign, labelFont));
-                signTable.AddCell(cell);
-            }
-            doc.Add(signTable);
-            doc.Close();
-            writer.Close();
-
-            // ===== SAVE PDF =====
-            string reportsDirPath = Path.Combine(_env.WebRootPath, "reports");
-            if (!Directory.Exists(reportsDirPath))
-                Directory.CreateDirectory(reportsDirPath);
-
-            string fileName = $"FR_BK_{report.BookingId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            string filePath = Path.Combine(reportsDirPath, fileName);
-
-            Utils.deleteOldFiles(reportsDirPath, "FR_BK_*.pdf", 60);
-
-            System.IO.File.WriteAllBytes(filePath, stream.ToArray());
-
-            return $"{domainUrl}/reports/{fileName}";
-
-            //return $"{Request.Scheme}://{Request.Host}/uploads/org/{domain}/PackageReports/{fileName}";
-        }
-
-        #endregion
-
-        #region REPORT 12 - Emergency Contact REPORT
-
-        [HttpPost]
-        [Route("Report_EmergencyContact")]
-        public IActionResult Report_EmergencyContact([FromBody] EmergencyContactReportRequest request)
+        [Route("Report_FunctionProspectusReport")]
+        public IActionResult Report_FunctionProspectusReport([FromBody] PackageReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -1816,300 +1211,388 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                // Ensure JSON columns
-                if (string.IsNullOrWhiteSpace(request.Columns))
-                {
-                    request.Columns = "[\"CategoryName\",\"SubCategoryName\",\"ContactType\",\"ContactName\",\"MobileNo\",\"MobileNo2\",\"Location\",\"Remarks\",\"IsActive\"]";
-                }
-
-                float topMargin = (!request.WithHeader ?? false) ? 125f : 36f;
-
-                using var stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 36, 36, topMargin, 50);
-
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-
                 DataTable dtCompany = new DataTable();
-                DataSet dsReport = new DataSet();
+                //DataSet dsReport = new DataSet();
+
+                BookingReportModel report = new BookingReportModel();
+                report.PackageItems = new List<PackageItem>();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
 
                     // Company Header
-                    using (SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
 
-                        new SqlDataAdapter(cmd).Fill(dtCompany);
-                    }
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report Data
-                    using (SqlCommand cmd = new SqlCommand("Report_GetEmergencyContact", con))
+                    cmd = new SqlCommand("Report_GetBookingReportById", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.Int).Value = (object?)request.BookingId ?? DBNull.Value;
+                    //new SqlDataAdapter(cmd).Fill(dsReport);
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
+                        // --- First Result Set: Booking Header ---
+                        if (dr.Read())
+                        {
+                            report.BookingId = Convert.ToInt64(dr["BookingId"]);
+                            report.BookingRef = dr["BookingRef"].ToString();
+                            report.ClientName = dr["ClientName"].ToString();
+                            report.ContactNumber = dr["ContactNumber"].ToString();
+                            report.EventDate = dr["EventDate"].ToString();
+                            report.Property = dr["Property"].ToString();
+                            report.Pax = Convert.ToInt32(dr["Pax"]);
+                            report.Hall = dr["Hall"].ToString();
+                            report.Slot = dr["Slot"].ToString();
+                            report.Timing = dr["Timing"].ToString();
+                            report.BookedOn = dr["BookedOn"].ToString();
+                            report.EventType = dr["EventType"].ToString();
+                            report.CompanyName = dr["CompanyName"].ToString();
+                            report.CompanyAddress = dr["CompanyAddress"].ToString();
+                            report.CompanyState = dr["CompanyState"].ToString();
+                            report.CompanyLogo = dr["CompanyLogo"].ToString();
+                            report.Email = dr["Email"].ToString();
+                            report.HowReached = dr["HowReached"].ToString();
+                            report.Reference = dr["Reference"].ToString();
+                            report.UpdatedBy = dr["UpdatedBy"].ToString();
+                            report.UpdatedOn = dr["UpdatedOn"].ToString();
+                            report.Comment = dr["Comment"].ToString();
+                            report.PrimaryPackage = dr["PrimaryPackage"].ToString();
+                            report.RatePerPlate = dr["RatePerPlate"].ToString();
 
-                        cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = request.Columns;
-                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
-                        cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
-                        cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
-                        cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value =
-                            request.IsActive == null ? DBNull.Value : request.IsActive;
-
-                        new SqlDataAdapter(cmd).Fill(dsReport);
+                            report.Mukhwas = dr["Mukhwas"].ToString();
+                            report.TotalPaid = dr["TotalPaid"].ToString();
+                            report.OutstandingAmount = dr["OutstandingAmount"].ToString();
+                            report.BookingDiscount = dr["BookingDiscount"].ToString();
+                            report.PayableAmount = dr["PayableAmount"].ToString();
+                        }
                     }
+
                 }
 
-                if (dsReport.Tables.Count < 3)
-                    throw new Exception("Report data is incomplete.");
+                // ================= ASSIGN & VALIDATION =================
+                #region ASSIGN & VALIDATIONS
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
+                       logoFile = string.Empty, userName = string.Empty,
+                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
 
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+                if (isCompanyAvailable)
+                {
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                }
 
-                writer.PageEvent = new PdfPageEvents(request.ActionBy.ToString() ?? "");
-
-                document.Open();
-
-                // ================= HEADER =================
                 if (request.WithHeader ?? false)
                 {
-                    string companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
-                    string companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
-                    string companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
-                    string logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
-
-                    Image logo = null;
-
-                    if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (isCompanyAvailable)
                     {
-                        string logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
+                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
 
-                        if (System.IO.File.Exists(logoPath))
-                            logo = Image.GetInstance(logoPath);
-                    }
-
-                    PdfPTable headerTable = new PdfPTable(2);
-                    headerTable.WidthPercentage = 100;
-                    headerTable.SetWidths(new float[] { 20f, 80f });
-
-                    PdfPCell logoCell;
-
-                    if (logo != null)
-                    {
-                        logo.ScaleToFit(70f, 70f);
-                        logoCell = new PdfPCell(logo);
+                        // ── Resolve logo path (same logic as before, just storing the path string) ──
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                            if (System.IO.File.Exists(p1))
+                                logoFullPath = p1;
+                            else
+                            {
+                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                if (System.IO.File.Exists(p2))
+                                    logoFullPath = p2;
+                            }
+                        }
                     }
                     else
                     {
-                        logoCell = new PdfPCell(new Phrase(""));
+                        companyName = "[PAGE HEADER] Company Data Not Found";
                     }
-
-                    logoCell.Border = Rectangle.BOTTOM_BORDER;
-                    logoCell.Padding = 10;
-                    headerTable.AddCell(logoCell);
-
-                    PdfPCell detailCell = new PdfPCell
-                    {
-                        Border = Rectangle.BOTTOM_BORDER,
-                        Padding = 10,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
-
-                    detailCell.AddElement(new Paragraph(companyName, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16)));
-                    detailCell.AddElement(new Paragraph(companyAddress, FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-                    detailCell.AddElement(new Paragraph(companyphoneNo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11)));
-
-                    headerTable.AddCell(detailCell);
-
-                    document.Add(headerTable);
                 }
 
-                DataTable headerTableDB = dsReport.Tables[1];
-                DataTable dataTableDB = dsReport.Tables[2];
+                //if (dsReport.Tables.Count < 3)
+                    //throw new Exception("Report data is incomplete. Required tables are missing.");
 
-                // ================= REPORT TITLE =================
+                // ================= EXTRACT DATA =================
+                //string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
 
-                iTextSharpFont reportTitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
+                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
 
-                Paragraph reportTitle = new Paragraph(reportName.ToUpper(), reportTitleFont)
+                using var stream = new MemoryStream();
+
+                bool isA4size = true; // default to A4
+                Document document = null;
+                //if (dsReport.Tables[2].Columns.Count > 7)
+                //{
+                //    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                //    isA4size = false;
+                //}
+                //else
+                //{
+                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    //isA4size = true;
+                //}
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+                #endregion
+
+                // ── Attach StandardReport header-footer ──
+                #region HEADER_FOOTER
+                if (request.WithHeader ?? false)
                 {
-                    Alignment = Element.ALIGN_CENTER,
-                    SpacingAfter = 12f
-                };
-
-                document.Add(reportTitle);
-
-                // ================= TABLE =================
-
-                int columnCount = dataTableDB.Columns.Count;
-
-                PdfPTable table = new PdfPTable(columnCount);
-                table.WidthPercentage = 100;
-
-                float[] widths = Enumerable.Repeat(1f, columnCount).ToArray();
-                table.SetWidths(widths);
-
-                iTextSharpFont thFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 10, iTextSharpFont.BOLD, BaseColor.WHITE);
-                iTextSharpFont tdFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 9);
-                BaseColor thColor = new BaseColor(0, 121, 182);
-
-                // Header
-                for (int i = 0; i < headerTableDB.Rows.Count; i++)
-                {
-                    table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
-                }
-
-                table.HeaderRows = 1;
-
-                // Data
-                if (dataTableDB.Rows.Count == 0)
-                {
-                    PdfPCell noDataCell = new PdfPCell(new Phrase("No Data Found"))
+                    if (isA4size)
                     {
-                        Colspan = columnCount,
-                        HorizontalAlignment = Element.ALIGN_CENTER,
-                        Padding = 12f
-                    };
-
-                    table.AddCell(noDataCell);
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
                 }
                 else
                 {
-                    foreach (DataRow row in dataTableDB.Rows)
+                    // no company header, but still want page number / generated-by footer
+                    if (isA4size)
                     {
-                        for (int i = 0; i < dataTableDB.Columns.Count; i++)
-                        {
-                            table.AddCell(Utils.CreateBodyCell(row[i]?.ToString() ?? "-", tdFont));
-                        }
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
                     }
                 }
+                #endregion
 
-                document.Add(table);
+                document.Open();
+
+                // ===== TITLE LINES =====
+                //PdfPTable lineTop = new PdfPTable(1) { WidthPercentage = 100 };
+                //lineTop.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.BLACK });
+                //document.Add(lineTop);
+
+                Paragraph title = new Paragraph("Function Prospectus", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.GRAY))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingBefore = 3,
+                    SpacingAfter = 8
+                };
+                document.Add(title);
+
+                PdfPTable lineBottom = new PdfPTable(1) { WidthPercentage = 100 };
+                lineBottom.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.LIGHT_GRAY });
+                document.Add(lineBottom);
+
+                // ===== EVENT DETAILS =====
+                iTextSharpFont labelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                iTextSharpFont labelFontnormal = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+
+                iTextSharpFont valueFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+                PdfPTable detailsTable = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 5f };
+                detailsTable.SetWidths(new float[] { 1f, 1f });
+
+                PdfPTable leftTable = new PdfPTable(1) { WidthPercentage = 100 };
+                void AddLeftRow(string label, string value)
+                {
+                    Phrase p = new Phrase();
+                    p.Add(new Chunk(label + " : ", labelFont));
+                    p.Add(new Chunk(value, valueFont));
+                    leftTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
+                }
+
+                AddLeftRow("Booking Ref.", '#' + report.BookingRef);
+                AddLeftRow("Client Name", report.ClientName);
+                AddLeftRow("Contact Number", report.ContactNumber);
+                AddLeftRow("Event Date", report.EventDate);
+                AddLeftRow("Property", report.Property);
+                AddLeftRow("Pax", report.Pax.ToString());
+                AddLeftRow("Hall", report.Hall);
+                AddLeftRow("Slot", report.Slot);
+                AddLeftRow("Timing", report.Timing);
+
+                PdfPTable rightTable = new PdfPTable(1) { WidthPercentage = 100 };
+                void AddRightRow(string label, string value)
+                {
+                    Phrase p = new Phrase();
+                    p.Add(new Chunk(label + " : ", labelFont));
+                    p.Add(new Chunk(value, valueFont));
+                    rightTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
+                }
+
+                AddRightRow("Booked on", report.BookedOn);
+                AddRightRow("Event", report.EventType);
+                AddRightRow("Company Name", report.CompanyName);
+                AddRightRow("Company Address", report.CompanyAddress);
+                AddRightRow("Email", report.Email);
+
+                detailsTable.AddCell(new PdfPCell(leftTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10 });
+                detailsTable.AddCell(new PdfPCell(rightTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10, HorizontalAlignment = Element.ALIGN_RIGHT });
+                document.Add(detailsTable);
+                document.Add(new Paragraph("\n"));
+
+                // ===== PRIMARY FOOD PACKAGE =====
+                iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+                iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                PdfPTable packageTable = new PdfPTable(1) { WidthPercentage = 100 };
+                packageTable.AddCell(new PdfPCell(new Phrase($"PRIMARY FOOD PACKAGE : {report.PrimaryPackage}@ Rs.{report.RatePerPlate:N0} /Per Plate", boldFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingTop = 6,
+                    PaddingBottom = 6,
+                    HorizontalAlignment = Element.ALIGN_LEFT
+                });
+                document.Add(packageTable);
+
+                // ===== SUMMARY SECTION =====
+                // ===== LEFT + RIGHT SECTION (Details + Summary) =====
+
+                iTextSharpFont labelFontLeft = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
+                iTextSharpFont labelFontBoldLeft = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+
+                iTextSharpFont summaryLabelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+                iTextSharpFont summaryValueFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+
+                BaseColor summaryBg = new BaseColor(82, 86, 88);
+
+                // Outer table (2 columns)
+                PdfPTable mainTable = new PdfPTable(2) { WidthPercentage = 100 };
+                mainTable.SetWidths(new float[] { 0.6f, 0.4f });
+
+
+                // ================= LEFT SIDE =================
+                leftTable = new PdfPTable(1) { WidthPercentage = 100 };
+
+                leftTable.AddCell(new PdfPCell(new Phrase($"Updated By : {report.UpdatedBy}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+                leftTable.AddCell(new PdfPCell(new Phrase($"Updated On : {report.UpdatedOn}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+                leftTable.AddCell(new PdfPCell(new Phrase($"Comment : {report.Comment}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+                leftTable.AddCell(new PdfPCell(new Phrase($"How did you reach us? : {report.ReachUs}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+                leftTable.AddCell(new PdfPCell(new Phrase($"Reference : {report.Reference}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+
+                leftTable.AddCell(new PdfPCell(new Phrase("TERMS & CONDITIONS", labelFontBoldLeft))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingTop = 6,
+                    PaddingBottom = 6
+                });
+
+                mainTable.AddCell(new PdfPCell(leftTable)
+                {
+                    Border = Rectangle.NO_BORDER,
+                    VerticalAlignment = Element.ALIGN_TOP
+                });
+
+
+                // ================= RIGHT SIDE (AMOUNTS) =================
+                rightTable = new PdfPTable(2) { WidthPercentage = 100 };
+                rightTable.SetWidths(new float[] { 0.6f, 0.4f });
+
+                void AddAmountRow(string label, string value)
+                {
+                    rightTable.AddCell(new PdfPCell(new Phrase(label, summaryLabelFont))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        //BackgroundColor = summaryBg,
+                        HorizontalAlignment = Element.ALIGN_LEFT,
+                        Padding = 6
+                    });
+
+                    rightTable.AddCell(new PdfPCell(new Phrase($"₹ {value:N0}", summaryValueFont))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        //BackgroundColor = summaryBg,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 6
+                    });
+                }
+
+                AddAmountRow("Deal Amount", report.PayableAmount);
+                AddAmountRow("Booking Discount", report.BookingDiscount);
+                AddAmountRow("Payable Amount", report.PayableAmount);
+                AddAmountRow("Total Paid", report.TotalPaid);
+                AddAmountRow("Outstanding Amount", report.OutstandingAmount);
+
+                mainTable.AddCell(new PdfPCell(rightTable)
+                {
+                    Border = Rectangle.NO_BORDER,
+                    VerticalAlignment = Element.ALIGN_TOP
+                });
+
+                document.Add(mainTable);
+                document.Add(new Paragraph("\n"));
+
+                // ===== SIGNATURES =====
+                PdfPTable signTable = new PdfPTable(3) { WidthPercentage = 100 };
+                signTable.SetWidths(new float[] { 0.33f, 0.33f, 0.33f });
+                foreach (var sign in new[] { "Sales Manager's Sign.", "Banquet Manager's Sign.", "Guest's Sign" })
+                {
+                    PdfPCell cell = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_CENTER };
+                    cell.AddElement(new Phrase("__________________________", labelFont));
+                    cell.AddElement(new Phrase(sign, labelFont));
+                    signTable.AddCell(cell);
+                }
+                document.Add(signTable);
                 document.Close();
 
-                // Save file
+                #region SAVE_FILE
                 string folder = Path.Combine(_env.WebRootPath, "reports");
 
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
-                Utils.deleteOldFiles(folder, "EmergencyContactReport_*.pdf");
+                Utils.deleteOldFiles(folder, "FunctionProspectus_Report_*.pdf");
 
-                string fileName = $"EmergencyContactReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-
+                string fileName = $"FunctionProspectus_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
 
                 using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                {
                     stream.WriteTo(fileStream);
-                }
-
-                string fileUrl = $"{domainUrl}/reports/{fileName}";
+                #endregion
 
                 response.status = "Success";
-                response.message = "Emergency Contact Report Generated";
-                response.data = new { FileUrl = fileUrl };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                response.status = "Fail";
-                response.message = ex.Message;
-                return Ok(response);
-            }
-        }
-
-        [HttpPost]
-        [Route("Report_EmergencyContact_Excel")]
-        public IActionResult Report_EmergencyContact_Excel([FromBody] EmergencyContactReportRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                    return errorResult!;
-
-                if (string.IsNullOrWhiteSpace(request.Columns))
-                {
-                    request.Columns = "[\"CategoryName\",\"SubCategoryName\",\"ContactType\",\"ContactName\",\"MobileNo\",\"MobileNo2\",\"Location\",\"Remarks\",\"IsActive\"]";
-                }
-
-                DataSet dsReport = new DataSet();
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    con.Open();
-
-                    using (SqlCommand cmd = new SqlCommand("Report_GetEmergencyContact", con))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.Parameters.Add("@Columns", SqlDbType.NVarChar).Value = request.Columns;
-                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
-                        cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
-                        cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
-                        cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value =
-                            request.IsActive == null ? DBNull.Value : request.IsActive;
-
-                        new SqlDataAdapter(cmd).Fill(dsReport);
-                    }
-                }
-
-                if (dsReport.Tables.Count < 3)
-                    throw new Exception("Report data not found");
-
-                DataTable headerTableDB = dsReport.Tables[1];
-                DataTable dataTableDB = dsReport.Tables[2];
-
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("EmergencyContacts");
-
-                int colCount = headerTableDB.Rows.Count;
-
-                // Headers
-                for (int i = 0; i < colCount; i++)
-                {
-                    worksheet.Cell(1, i + 1).Value = headerTableDB.Rows[i][0].ToString();
-                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
-                    worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
-                    worksheet.Cell(1, i + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                }
-
-                // Data
-                int row = 2;
-
-                foreach (DataRow dr in dataTableDB.Rows)
-                {
-                    for (int i = 0; i < colCount; i++)
-                    {
-                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
-                    }
-                    row++;
-                }
-
-                worksheet.Columns().AdjustToContents();
-
-                string reportsDir = Path.Combine(_env.WebRootPath, "reports");
-
-                if (!Directory.Exists(reportsDir))
-                    Directory.CreateDirectory(reportsDir);
-
-                Utils.deleteOldFiles(reportsDir, "EmergencyContactReport_*.xlsx");
-
-                string fileName = $"EmergencyContactReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-
-                string filePath = Path.Combine(reportsDir, fileName);
-
-                workbook.SaveAs(filePath);
-
-                string fileUrl = $"{domainUrl}/reports/{fileName}";
-
-                response.status = "Success";
-                response.message = "Emergency Contact Report Excel generated successfully.";
-                response.data = new { FileUrl = fileUrl };
+                response.message = "Function Prospectus Report Generated";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
             }

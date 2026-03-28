@@ -255,7 +255,7 @@
                     handleApiSuccess("Saved.");
                     // Reset form & hide modal
                     resetFormFields_Expense();
-                    //$("#ExpenseTransactionModal").modal("hide");
+                    $("#ExpenseTransactionModal").modal("hide");
                     loadNextVoucherNo();
                     // Reload table or data
                     fetchExpenseTransactions();
@@ -458,7 +458,7 @@
                     handleApiSuccess("Saved.");
                     // Reset form & hide modal
                     resetFormFields_Income();
-                    //$("#incomeTransactionModal").modal("hide");
+                    $("#incomeTransactionModal").modal("hide");
                     loadNextVoucherNo();
                     // Reload table or data
                     fetchIncomeTransactions();

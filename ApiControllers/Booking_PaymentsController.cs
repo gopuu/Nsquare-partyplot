@@ -301,7 +301,7 @@ namespace ERPAdmin.ApiControllers
                         : new PdfPCell(new Phrase(""));
 
                     if (logo != null)
-                        logo.ScaleToFit(90, 90);
+                        logo.ScaleToFit(92, 92);
 
                     logoCell.Border = Rectangle.BOTTOM_BORDER;
                     logoCell.Padding = 5;
@@ -314,23 +314,27 @@ namespace ERPAdmin.ApiControllers
                     {
                         Border = Rectangle.BOTTOM_BORDER,
                         Padding = 5,
+                        PaddingTop = 2,
                         HorizontalAlignment = Element.ALIGN_CENTER,
                         BorderWidth = 0.5f,
                         BorderColor = BaseColor.LIGHT_GRAY
                     };
 
+                    detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["PropertyName"]?.ToString(),
+                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12)));
+
                     detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyName"]?.ToString(),
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14)));
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
 
                     detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyAddress"]?.ToString(),
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
 
                     string contact = dtCompany.Rows[0]["CompanyMobile"]?.ToString();
+                    string email = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                     string gstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-                    string pan = dtCompany.Rows[0]["CompanyPAN"]?.ToString();
 
-                    detailCell.AddElement(new Paragraph($"Contact: {contact} | PAN: {pan} | GSTIN: {gstin}",
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
+                    detailCell.AddElement(new Paragraph($"Contact: {contact} | Email: {email} | GSTIN: {gstin}",
+                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
 
                     headerTable.AddCell(detailCell);
 

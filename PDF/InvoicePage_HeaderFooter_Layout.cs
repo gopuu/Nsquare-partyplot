@@ -74,19 +74,20 @@ namespace ERPAdmin.PDF
     //STANDARD HEADER-FOOTER FORMAT
     public class PdfHeaderFooter_StandardReport_A4_Rotate : PdfPageEventHelper
     {
-        private string companyName, companyAddress, contactNo, gstNo, panNo,
+        private string propertyName, companyName, companyAddress, contactNo, gstNo, emailId,
             stateCode, logoPath, generatedDate, username;
         private bool? withHeader;
 
         public PdfHeaderFooter_StandardReport_A4_Rotate(
-            string companyName, string companyAddress, string contactNo,
-            string gstNo, string panNo, string stateCode, string logoPath, string generatedDate, string username, bool? withHeader=true)
+            string propertyName, string companyName, string companyAddress, string contactNo,
+            string gstNo, string emailId, string stateCode, string logoPath, string generatedDate, string username, bool? withHeader=true)
         {
+            this.propertyName = propertyName;
             this.companyName = companyName;
             this.companyAddress = companyAddress;
             this.contactNo = contactNo;
             this.gstNo = gstNo;
-            this.panNo = panNo;
+            this.emailId = emailId;
             this.stateCode = stateCode;
             this.logoPath = logoPath;
             this.generatedDate = generatedDate;
@@ -128,7 +129,7 @@ namespace ERPAdmin.PDF
                 try
                 {
                     var logo = Image.GetInstance(logoPath);
-                    logo.ScaleToFit(90f, 90f);
+                    logo.ScaleToFit(92f, 92f);
                     logoCell = new PdfPCell(logo);
                 }
                 catch
@@ -144,22 +145,27 @@ namespace ERPAdmin.PDF
             logoCell.Border = Rectangle.BOTTOM_BORDER;
             logoCell.Padding = 5;
             logoCell.BorderColor = BaseColor.LIGHT_GRAY;
+            logoCell.BorderWidth = 0.5f;
             headerTable.AddCell(logoCell);
 
             // Company Info
             Font bold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-            Font normal = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+            Font normal = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY);
 
             PdfPCell infoCell = new PdfPCell
             {
                 Border = Rectangle.BOTTOM_BORDER,
-                BorderColor = BaseColor.LIGHT_GRAY,
-                Padding = 5
+                Padding = 5,
+                PaddingTop = 2,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                BorderWidth = 0.5f,
+                BorderColor = BaseColor.LIGHT_GRAY
             };
 
-            infoCell.AddElement(new Paragraph(companyName, bold));
+            infoCell.AddElement(new Paragraph(propertyName, bold));
+            infoCell.AddElement(new Paragraph(companyName, normal));
             infoCell.AddElement(new Paragraph(companyAddress, normal));
-            infoCell.AddElement(new Paragraph($"Contact: {contactNo} | PAN: {panNo} | GSTIN: {gstNo}", normal));
+            infoCell.AddElement(new Paragraph($"Contact: {contactNo} | Email: {emailId} | GSTIN: {gstNo}", normal));
 
             if (withHeader == true) {
                 headerTable.AddCell(infoCell);
@@ -210,20 +216,21 @@ namespace ERPAdmin.PDF
 
     public class PdfHeaderFooter_StandardReport_A4 : PdfPageEventHelper
     {
-        private string companyName, companyAddress, contactNo, gstNo, panNo,
+        private string propertyName, companyName, companyAddress, contactNo, gstNo, emailId,
             stateCode, logoPath, generatedDate, username;
         private bool? withHeader;
 
         public PdfHeaderFooter_StandardReport_A4(
-            string companyName, string companyAddress, string contactNo,
-            string gstNo, string panNo, string stateCode, string logoPath, 
+            string propertyName, string companyName, string companyAddress, string contactNo,
+            string gstNo, string emailId, string stateCode, string logoPath, 
             string generatedDate , string username, bool? withHeader)
         {
+            this.propertyName = propertyName;
             this.companyName = companyName;
             this.companyAddress = companyAddress;
             this.contactNo = contactNo;
             this.gstNo = gstNo;
-            this.panNo = panNo;
+            this.emailId = emailId;
             this.stateCode = stateCode;
             this.logoPath = logoPath;
             this.generatedDate = generatedDate;
@@ -232,6 +239,7 @@ namespace ERPAdmin.PDF
         }
         public override void OnEndPage(PdfWriter writer, Document document)
         {
+            #region PAGE BORDER
             // Border settings -- START
             PdfContentByte cb = writer.DirectContent;
             float borderMargin = 10f; // distance from page edge
@@ -249,7 +257,9 @@ namespace ERPAdmin.PDF
             rect.BorderColor = BaseColor.GRAY;
             cb.Rectangle(rect);
             // Border settings -- END
+            #endregion
 
+            #region PAGE HEADER
             float pageWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
 
             PdfPTable headerTable = new PdfPTable(2);
@@ -263,7 +273,7 @@ namespace ERPAdmin.PDF
                 try
                 {
                     var logo = Image.GetInstance(logoPath);
-                    logo.ScaleToFit(90f, 90f);
+                    logo.ScaleToFit(92f, 92f);
                     logoCell = new PdfPCell(logo);
                 }
                 catch
@@ -279,22 +289,27 @@ namespace ERPAdmin.PDF
             logoCell.Border = Rectangle.BOTTOM_BORDER;
             logoCell.Padding = 5;
             logoCell.BorderColor = BaseColor.LIGHT_GRAY;
+            logoCell.BorderWidth = 0.5f;
             headerTable.AddCell(logoCell);
 
             // Company Info
             Font bold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-            Font normal = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+            Font normal = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY);
 
             PdfPCell infoCell = new PdfPCell
             {
                 Border = Rectangle.BOTTOM_BORDER,
-                BorderColor = BaseColor.LIGHT_GRAY,
-                Padding = 5
+                Padding = 5,
+                PaddingTop = 2,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                BorderWidth = 0.5f,
+                BorderColor = BaseColor.LIGHT_GRAY
             };
 
-            infoCell.AddElement(new Paragraph(companyName, bold));
+            infoCell.AddElement(new Paragraph(propertyName, bold));
+            infoCell.AddElement(new Paragraph(companyName, normal));
             infoCell.AddElement(new Paragraph(companyAddress, normal));
-            infoCell.AddElement(new Paragraph($"Contact: {contactNo} | PAN: {panNo} | GSTIN: {gstNo}", normal));
+            infoCell.AddElement(new Paragraph($"Contact: {contactNo} | Email: {emailId} | GSTIN: {gstNo}", normal));
 
             if (withHeader == true) {
                 headerTable.AddCell(infoCell);
@@ -306,8 +321,10 @@ namespace ERPAdmin.PDF
                 document.PageSize.Height - 10,
                 cb
             );
+            #endregion
 
             /* ================= FOOTER ================= */
+            #region FOOTER
             PdfPTable footer = new PdfPTable(3);
             footer.TotalWidth = pageWidth;
             footer.SetWidths(new float[] { 33, 34, 33 });
@@ -340,6 +357,7 @@ namespace ERPAdmin.PDF
                 document.BottomMargin - 10,
                 cb
             );
+            #endregion
         }
     }
 

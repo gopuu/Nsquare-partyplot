@@ -158,8 +158,8 @@ namespace ERPAdmin.ApiControllers
 
                 // ================= ASSIGN & VALIDATION =================
                 #region ASSIGN & VALIDATIONS
-                string companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, companygstin = "", companypan = "",
+                string propertyName= string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
                        logoFile = string.Empty, userName = string.Empty,
                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
 
@@ -174,12 +174,12 @@ namespace ERPAdmin.ApiControllers
                 {
                     if (isCompanyAvailable)
                     {
-                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
                         companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
                         logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
                         companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-                        companypan = dtCompany.Rows[0]["CompanyPAN"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                         stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
 
                         // ── Resolve logo path (same logic as before, just storing the path string) ──
@@ -236,11 +236,11 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -251,11 +251,11 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -270,7 +270,7 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader
@@ -279,7 +279,7 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader
@@ -305,7 +305,7 @@ namespace ERPAdmin.ApiControllers
                 // ── Data table ──
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
-                Font boldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+                Font boldFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
                 // Module colour map
@@ -340,6 +340,7 @@ namespace ERPAdmin.ApiControllers
                         {
                             BackgroundColor = rowBg,
                             Padding = 6,
+                            BorderColor = BaseColor.LIGHT_GRAY,
                             HorizontalAlignment = col.ColumnName == "Amount Impact"
                                 ? Element.ALIGN_RIGHT
                                 : Element.ALIGN_LEFT
@@ -365,6 +366,7 @@ namespace ERPAdmin.ApiControllers
                         {
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(240, 240, 240),
+                            BorderColor = BaseColor.LIGHT_GRAY,
                             Padding = 6
                         });
                     }
@@ -396,21 +398,42 @@ namespace ERPAdmin.ApiControllers
                         {
                             BackgroundColor = summaryHeaderBg,
                             Padding = 7,
+                            Border = Rectangle.NO_BORDER,
                             HorizontalAlignment = Element.ALIGN_CENTER
                         });
                     }
 
                     void AddModuleRow(string module, string countKey, string amtKey, BaseColor bg)
                     {
-                        summaryTable.AddCell(new PdfPCell(new Phrase(module, summaryLabelFont))
-                        { BackgroundColor = bg, Padding = 6 });
-                        summaryTable.AddCell(new PdfPCell(new Phrase(s[countKey].ToString(), summaryValueFont))
-                        { BackgroundColor = bg, Padding = 6, HorizontalAlignment = Element.ALIGN_CENTER });
-                        summaryTable.AddCell(new PdfPCell(new Phrase(
-                                Convert.ToDecimal(s[amtKey]).ToString("N2"), summaryValueFont))
-                        { BackgroundColor = bg, Padding = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
-                    }
+                        // Handle NULL safely for count
+                        int count = s[countKey] != DBNull.Value ? Convert.ToInt32(s[countKey]) : 0;
 
+                        // Handle NULL safely for amount
+                        decimal amount = s[amtKey] != DBNull.Value ? Convert.ToDecimal(s[amtKey]) : 0;
+
+                        summaryTable.AddCell(new PdfPCell(new Phrase(module, summaryLabelFont))
+                        {
+                            BackgroundColor = bg,
+                            Border = Rectangle.NO_BORDER, 
+                            Padding = 6
+                        });
+
+                        summaryTable.AddCell(new PdfPCell(new Phrase(count.ToString(), summaryValueFont))
+                        {
+                            BackgroundColor = bg,
+                            Padding = 6,
+                            Border = Rectangle.NO_BORDER,
+                            HorizontalAlignment = Element.ALIGN_CENTER
+                        });
+
+                        summaryTable.AddCell(new PdfPCell(new Phrase(amount.ToString("N2"), summaryValueFont))
+                        {
+                            BackgroundColor = bg,
+                            Padding = 6,
+                            Border = Rectangle.NO_BORDER,
+                            HorizontalAlignment = Element.ALIGN_RIGHT
+                        });
+                    }
                     AddModuleRow("Sales", "SalesCount", "SalesAmount", new BaseColor(232, 245, 233));
                     AddModuleRow("Purchase", "PurchaseCount", "PurchaseAmount", new BaseColor(255, 235, 238));
                     AddModuleRow("Expense", "ExpenseCount", "ExpenseAmount", new BaseColor(255, 248, 225));
@@ -427,12 +450,25 @@ namespace ERPAdmin.ApiControllers
 
                     // Total row
                     summaryTable.AddCell(new PdfPCell(new Phrase("TOTAL", boldFont))
-                    { BackgroundColor = new BaseColor(240, 240, 240), Padding = 6 });
+                    { 
+                        BackgroundColor = new BaseColor(240, 240, 240), 
+                        Border = Rectangle.NO_BORDER,
+                        Padding = 6 
+                    });
                     summaryTable.AddCell(new PdfPCell(new Phrase(s["TotalModifications"].ToString(), boldFont))
-                    { BackgroundColor = new BaseColor(240, 240, 240), Padding = 6, HorizontalAlignment = Element.ALIGN_CENTER });
-                    summaryTable.AddCell(new PdfPCell(new Phrase(
-                            Convert.ToDecimal(s["TotalAmount"]).ToString("N2"), boldFont))
-                    { BackgroundColor = new BaseColor(240, 240, 240), Padding = 6, HorizontalAlignment = Element.ALIGN_RIGHT });
+                    { 
+                        BackgroundColor = new BaseColor(240, 240, 240),
+                        Border = Rectangle.NO_BORDER,
+                        Padding = 6, 
+                        HorizontalAlignment = Element.ALIGN_CENTER 
+                    });
+                    summaryTable.AddCell(new PdfPCell(new Phrase(Convert.ToDecimal(s["TotalAmount"]).ToString("N2"), boldFont))
+                    { 
+                        BackgroundColor = new BaseColor(240, 240, 240),
+                        Border = Rectangle.NO_BORDER,
+                        Padding = 6, 
+                        HorizontalAlignment = Element.ALIGN_RIGHT 
+                    });
 
                     document.Add(summaryTable);
                 }

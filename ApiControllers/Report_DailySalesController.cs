@@ -253,8 +253,8 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= ASSIGN & VALIDATION =================
-                string companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, companygstin = "", companypan = "",
+                string propertyName= string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
                        logoFile = string.Empty, userName = string.Empty,
                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
 
@@ -269,12 +269,12 @@ namespace ERPAdmin.ApiControllers
                 {
                     if (isCompanyAvailable)
                     {
-                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
                         companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
                         logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
                         companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-                        companypan = dtCompany.Rows[0]["CompanyPAN"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                         stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
 
                         // ── Resolve logo path (same logic as before, just storing the path string) ──
@@ -329,11 +329,11 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -344,11 +344,11 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -363,7 +363,7 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader
@@ -372,7 +372,7 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader
@@ -661,8 +661,8 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ================= ASSIGN & VALIDATION =================
-                string companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, companygstin = "", companypan = "",
+                string propertyName= string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
                        logoFile = string.Empty, userName = string.Empty,
                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
 
@@ -677,12 +677,12 @@ namespace ERPAdmin.ApiControllers
                 {
                     if (isCompanyAvailable)
                     {
-                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
                         companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
                         companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
                         logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
                         companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-                        companypan = dtCompany.Rows[0]["CompanyPAN"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                         stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
 
                         // ── Resolve logo path (same logic as before, just storing the path string) ──
@@ -737,11 +737,11 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -752,11 +752,11 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            companyName,
+                            propertyName, companyName,
                             companyAddress,
                             companyphoneNo,
                             companygstin,
-                            companypan,
+                            companyemail,
                             stateCode,
                             logoFullPath,
                             generatedDate,
@@ -771,7 +771,7 @@ namespace ERPAdmin.ApiControllers
                     if (isA4size)
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader
@@ -780,7 +780,7 @@ namespace ERPAdmin.ApiControllers
                     else
                     {
                         writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            "", "", "", "", "", "", "",
+                            "", "", "", "", "", "", "", "",
                             generatedDate,
                             userName,
                             request.WithHeader

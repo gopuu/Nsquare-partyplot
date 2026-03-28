@@ -62,6 +62,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@SubEventId", SqlDbType.BigInt).Value = request.SubEventId;
                     cmd.Parameters.Add("@PaymentStatusId", SqlDbType.BigInt).Value = request.PaymentStatusId;
                     cmd.Parameters.Add("@IsInvoiceGenerated", SqlDbType.Bit).Value = (object?)request.IsInvoiceGenerated ?? DBNull.Value;
+                    cmd.Parameters.Add("@IsExclusiveOfGST", SqlDbType.Bit).Value = (object?)request.IsExclusiveOfGST ?? DBNull.Value;
+                    cmd.Parameters.Add("@IsInclusiveOfGST", SqlDbType.Bit).Value = (object?)request.IsInclusiveOfGST ?? DBNull.Value;
                     con.Open();
 
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -77,6 +79,8 @@ namespace ERPAdmin.ApiControllers
                                 InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
                                 ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]),
                                 GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]),
+                                IsExclusiveOfGST = Convert.ToBoolean(dr["IsExclusiveOfGST"]),
+                                IsInclusiveOfGST = Convert.ToBoolean(dr["IsInclusiveOfGST"]),
                                 EventDate = dr["EventDate"].ToString(),
                                 EventDate_Format = dr["EventDate_Format"].ToString(),
                                 IsInvoiceBlocked = Convert.ToBoolean(dr["IsInvoiceBlocked"]),
@@ -184,9 +188,9 @@ namespace ERPAdmin.ApiControllers
                                                 ? null
                                                 : Convert.ToInt64(dr["Client_StateId"]),
                                 Address = dr["Client_Address"]?.ToString(),
-                                IsGSTIncluded = dr["IsGSTIncluded"] == DBNull.Value
-                                                ? null
-                                                : Convert.ToBoolean(dr["IsGSTIncluded"]),
+                                IsGSTIncluded = dr["IsGSTIncluded"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsGSTIncluded"]),
+                                IsExclusiveOfGST = dr["IsExclusiveOfGST"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsExclusiveOfGST"]),
+                                IsInclusiveOfGST = dr["IsInclusiveOfGST"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsInclusiveOfGST"]),
                                 PaidAmount = Convert.ToDecimal(dr["PaidAmount"]?.ToString())
                             };
 
@@ -248,6 +252,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
                     cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo;
+                    cmd.Parameters.Add("@GSTInvoiceNo", SqlDbType.NVarChar, 20).Value = request.GSTInvoiceNo;
                     cmd.Parameters.Add("@ProformaInvoiceNo", SqlDbType.BigInt).Value = request.ProformaInvoiceNo;
 
                     con.Open();
@@ -261,6 +266,9 @@ namespace ERPAdmin.ApiControllers
                                 InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]?.ToString()),
                                 ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]?.ToString()),
                                 GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]?.ToString()),
+
+                                IsExclusiveOfGST = Convert.ToBoolean(dr["IsExclusiveOfGST"]?.ToString()),
+                                IsInclusiveOfGST = Convert.ToBoolean(dr["IsInclusiveOfGST"]?.ToString()),
 
                                 CustomerName = dr["CustomerName"]?.ToString(),
                                 InvoiceDate = dr["InvoiceDate"]?.ToString(),              // yyyy-MM-dd
@@ -335,6 +343,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
                     cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
                     cmd.Parameters.AddWithValue("@GSTInvoiceNo", request.GSTInvoiceNo);
+
+                    cmd.Parameters.AddWithValue("@IsExclusiveOfGST", request.IsExclusiveOfGST);
+                    cmd.Parameters.AddWithValue("@IsInclusiveOfGST", request.IsInclusiveOfGST);
 
                     cmd.Parameters.AddWithValue("@CustomerName", request.CustomerName);
                     cmd.Parameters.AddWithValue("@InvoiceDate", request.InvoiceDate);

@@ -249,7 +249,7 @@ function loadCategoryDropdown(callback) {
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
             let ddl = $("#CategoryId, #ddlFilter_Category");
-            ddl.empty().append(`<option value="0">-Select Category-</option>`);
+            ddl.empty().append(`<option value="0">Select Category</option>`);
             (res?.data || []).forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.Name}</option>`);
             });
@@ -276,7 +276,7 @@ function loadSubCategoryDropdown(categoryId = 0, callback) {
         data: JSON.stringify({ CategoryId: categoryId }),
         success: function (res) {
             let ddl = $("#SubCategoryId,#ddlFilter_SubCategory");
-            ddl.empty().append(`<option value="0">-Select SubCategory-</option>`);
+            ddl.empty().append(`<option value="0">Select SubCategory</option>`);
             (res?.data || []).forEach(x => {
                 ddl.append(`<option value="${x.Id}">${x.SubCategoryName}</option>`);
             });
@@ -453,8 +453,8 @@ function ViewEmergencyContactReport(actionName = "downloadPDF") {
     console.log("Emergency Report payload:", payload);
 
     const url = (actionName === "downloadExcel")
-        ? "/api/Report/Report_EmergencyContact_Excel"
-        : "/api/Report/Report_EmergencyContact";
+        ? "/api/EmergencyContactMaster/Report_EmergencyContact_Excel"
+        : "/api/EmergencyContactMaster/Report_EmergencyContact";
 
     $.ajax({
         url: url,

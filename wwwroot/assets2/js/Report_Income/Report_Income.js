@@ -171,7 +171,9 @@ function loadAccountDropdown(selectedId = 0) {
                 });
             }
         },
-        error: (xhr, s, e) => handleApiError(xhr, s, e, "Account dropdown failed");
+        error: function (xhr, s, e) {
+            handleApiError(xhr, s, e, "Account dropdown failed");
+        } 
     });
 }
 
@@ -190,7 +192,9 @@ function loadCategoryDropdown(selectedId = 0) {
                 });
             }
         },
-        error: (xhr, s, e) => console.error("Category dropdown failed", e)
+        error: function (xhr, s, e) {
+            handleApiError(xhr, s, e, "Category dropdown failed");
+        } 
     });
 }
 
@@ -213,7 +217,9 @@ function loadSubCategoryDropdown(categoryId = 0, selectedId = 0) {
                 dd.prop("disabled", false);
             }
         },
-        error: (xhr, s, e) => console.error("Sub category dropdown failed", e)
+        error: function (xhr, s, e) {
+            handleApiError(xhr, s, e, "SubCategory dropdown failed");
+        } 
     });
 }
 
@@ -235,7 +241,9 @@ function loadPaymentModeDropdown(selectedId = 0) {
                 });
             }
         },
-        error: (xhr, s, e) => console.error("Payment mode dropdown failed", e)
+        error: function (xhr, s, e) {
+            handleApiError(xhr, s, e, "PaymentMode dropdown failed");
+        } 
     });
 }
 

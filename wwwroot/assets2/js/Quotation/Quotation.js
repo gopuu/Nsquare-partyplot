@@ -180,27 +180,38 @@
         console.log("Book quotation:", row.Id);
     });
 
-    //Add Service Row
+    // Add Service Row
     $("#btnAddService").click(function () {
         let row = `
-            <div class="row g-1 service-row mb-1">
-                <div class="col-md-3">
-                    <input type="text" class="form-control service-name" placeholder="Service" />
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control service-amount" placeholder="Amount" value="0" />
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control service-qty" value="0" />
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control service-total bg-light" value="0" readonly />
-                </div>
-                <div class="col-md-3">
-                    <textarea class="form-control service-desc" placeholder="Description"></textarea>
-                </div>
-            </div>`;
+        <div class="row g-1 service-row mb-1 align-items-center">
+            <div class="col-md-3">
+                <input type="text" class="form-control service-name" placeholder="Service" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control service-amount" placeholder="Amount" value="0" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control service-qty" value="0" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control service-total bg-light" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <textarea class="form-control service-desc" placeholder="Description"></textarea>
+            </div>
+            <div class="col-md-1 text-center">
+                <button type="button" class="btn btn-sm btn-danger btn-remove-service">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>`;
+
         $("#otherServicesContainer").append(row);
+    });
+
+    // Remove Service Row (IMPORTANT: use event delegation)
+    $(document).on("click", ".btn-remove-service", function () {
+        $(this).closest(".service-row").remove();
     });
 
     //Auto calc

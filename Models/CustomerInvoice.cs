@@ -30,6 +30,8 @@
         public string? BookedTill { get; set; }
         public long SubEventId { get; set; } = 0;
         public bool? IsInvoiceGenerated { get; set; }
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
         public long? PaymentStatusId { get; set; } = 0;
     }
 
@@ -39,6 +41,8 @@
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
         public bool? IsInvoiceBlocked { get; set; }
@@ -60,6 +64,8 @@
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }
@@ -158,6 +164,8 @@
         public long? ClientStateId { get; set; }
         public string? Address { get; set; }
         public bool? IsGSTIncluded { get; set; }
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
         public decimal? PaidAmount { get; set; }
         public List<CustomerInvoiceItem_BookingId>? ItemsJson { get; set; }   // JSON string from SQL
     }
@@ -192,6 +200,7 @@
     {
         public long BookingId { get; set; }
         public long? InvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
    }
     public class CustomerInvoiceItem_Id
@@ -224,6 +233,8 @@
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
 
         public string? CustomerName { get; set; }
         public string? InvoiceDate { get; set; }

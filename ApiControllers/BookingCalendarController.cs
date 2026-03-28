@@ -636,10 +636,11 @@ namespace ERPAdmin.ApiControllers
     }
 }
 // --------------------- Request / Models ---------------------
-public class PackageReportRequest
+public class PackageReportRequest : BaseClass
 {
     public long BookingId { get; set; }
     public bool IsWithPrice { get; set; }
+    public bool? WithHeader { get; set; } = true;
 }
 
 public class BookingReportModel
