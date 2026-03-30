@@ -20,6 +20,8 @@
         public string? TillDate2 { get; set; }
         public string? StartTime { get; set; }
         public string? EndTime { get; set; }
+        public string? StartTime1 { get; set; }
+        public string? EndTime1 { get; set; }
         public string? QuotationDate { get; set; }
         public string? QuotationDate2 { get; set; }
         public long? ClientId { get; set; }
@@ -131,7 +133,9 @@
     }
     public class GetQuotationByEnquiryIdResponse
     {
-        public long Id { get; set; }
+        public long SlotId { get; set; }
+        public long StateId { get; set; }
+        public long EnquiryId { get; set; }
         public long ProcessId { get; set; }
         public string ProcessName { get; set; }
 
@@ -154,6 +158,8 @@
 
         public string EventStartTime { get; set; }
         public string EventEndTime { get; set; }
+        public string EventStartTime1 { get; set; }
+        public string EventEndTime1 { get; set; }
 
         public int Pax { get; set; }
 

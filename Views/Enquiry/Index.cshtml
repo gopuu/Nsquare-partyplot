@@ -1324,13 +1324,14 @@
             <!-- BODY -->
             <div class="modal-body">
                 <input type="hidden" id="quotationId" value="0" />
+                <input type="hidden" id="quotation_action" value="" />
                 <input type="hidden" id="quotation_enquiryDealId" value="0" />
 
                 <div class="row">
                     <!-- LEFT SIDE -->
                     <div class="col-md-8">
 
-                        <div class="row g-2 mb-1">
+                        <div class="row mb-1 g-2">
 
                             <div class="col-md-3">
                                 <label class="form-label compact-label">Banquet</label>
@@ -1354,7 +1355,7 @@
                         </div>
 
                         <!-- Time Section -->
-                        <div class="row mb-1">
+                        <div class="row mb-1 g-2">
                             <div class="col-md-2">
                                 <label class="form-label compact-label">Start Time</label>
                                 <input type="time" id="quotation_startTime" class="form-control form-control-sm p-1" />
@@ -1366,7 +1367,7 @@
                         </div>
 
                         <!-- Client Section -->
-                        <div class="row mb-1">
+                        <div class="row mb-1 g-2">
                             <div class="col-md-4">
                                 <label class="form-label compact-label">Select Client</label>
                                 <select id="quotation_clientId" class="form-select form-select-sm"></select>
@@ -1377,7 +1378,7 @@
                             </div>
                         </div>
 
-                        <div class="row mb-1">
+                        <div class="row mb-1 g-2">
                             <div class="col-md-6">
                                 <label class="form-label compact-label">Address</label>
                                 <input type="text" id="quotation_clientAddress" class="form-control form-control-sm p-1" />
@@ -1388,7 +1389,7 @@
                             </div>
                         </div>
 
-                        <div class="row mb-1">
+                        <div class="row mb-1 g-2">
                             <div class="col-md-4">
                                 <label class="form-label compact-label">Contact</label>
                                 <input type="text" id="quotation_clientContact" class="form-control form-control-sm p-1" />
@@ -1405,7 +1406,7 @@
 
                         <!-- Booking Details -->
                         <h6 class="text-danger mt-3">Booking Details</h6>
-                        <div class="row mb-1 g-1">
+                        <div class="row mb-1 g-2">
                             <div class="col-md-2">
                                 <label class="form-label compact-label">Event</label>
                                 <select id="quotation_eventTypeId" class="form-control form-control-sm p-1"></select>
@@ -1522,9 +1523,21 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Quotations List</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-warning py-2 d-flex justify-content-between align-items-center">
+                <!-- LEFT -->
+                <h5 class="modal-title text-white mb-0" id="quotationsListTitle">Quotations List</h5>
+                <!-- 🔹 Hidden EnquiryId -->
+                <input type="hidden" id="quotationList_enquiryDealId" />
+
+                <!-- RIGHT -->
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <!-- + New -->
+                    <button type="button" class="btn btn-sm btn-success" id="btnAddNewQuotation" title="Create New Quotation">
+                        <i class="fa fa-plus me-1"></i>
+                    </button>
+                    <!-- Close -->
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
             </div>
 
             <div class="modal-body p-2">
@@ -1532,12 +1545,12 @@
                 <table class="table table-sm table-bordered">
                     <thead class="table-light">
                         <tr>
-                            <th>QuotationId</th>
+                            <th>QId</th>
                             <th>Slot</th>
                             <th>Date</th>
                             <th>Name</th>
                             <th>Total</th>
-                            <th>Actions</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="quotationListBody">

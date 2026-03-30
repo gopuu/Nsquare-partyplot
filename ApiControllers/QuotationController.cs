@@ -169,9 +169,12 @@ namespace ERPAdmin.ApiControllers
                         {
                             var item = new GetQuotationByEnquiryIdResponse
                             {
-                                Id = Convert.ToInt64(reader["Id"]),
+                                EnquiryId = Convert.ToInt64(reader["EnquiryId"]),
                                 ProcessId = Convert.ToInt64(reader["ProcessId"]),
                                 ProcessName = reader["ProcessName"]?.ToString(),
+
+                                SlotId = Convert.ToInt64(reader["SlotId"]),
+                                StateId = Convert.ToInt64(reader["StateId"]),
 
                                 Name = reader["Name"]?.ToString(),
                                 Contact = reader["Contact"]?.ToString(),
@@ -192,6 +195,8 @@ namespace ERPAdmin.ApiControllers
 
                                 EventStartTime = reader["EventStartTime"]?.ToString(),
                                 EventEndTime = reader["EventEndTime"]?.ToString(),
+                                EventStartTime1 = reader["EventStartTime1"]?.ToString(),
+                                EventEndTime1 = reader["EventEndTime1"]?.ToString(),
 
                                 Pax = Convert.ToInt32(reader["Pax"]),
 
@@ -210,9 +215,7 @@ namespace ERPAdmin.ApiControllers
                             };
 
                             /* ================= QUOTATION JSON ================= */
-
                             var quotationJson = reader["Quotations_JSON"]?.ToString();
-
                             if (!string.IsNullOrEmpty(quotationJson))
                             {
                                 item.Quotations = System.Text.Json.JsonSerializer

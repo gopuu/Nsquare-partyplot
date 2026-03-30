@@ -77,7 +77,7 @@
             // ===== Audit =====
             ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
         };
-        $("#btnSave").prop("disabled", true);
+        $("#btnSaveQuotation").prop("disabled", true);
         console.log("data save:", payload);
 
         $.ajax({
@@ -98,7 +98,7 @@
                 handleApiError(xhr, status, error, "Save Failed");
             },
             complete: function () {
-                $("#btnSaveDutyRole").prop("disabled", false)
+                $("#btnSaveQuotation").prop("disabled", false)
             }
         });
     });

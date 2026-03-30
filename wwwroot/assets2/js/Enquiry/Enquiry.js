@@ -78,8 +78,11 @@ function resetQuotationForm() {
 
     $("#quotation_btnSave").show();
     $("#quotationModal").removeClass("view-mode");
+    $("#quotation_action").val("");
+
+    enableQuotationForm();
 }
-function openQuotation(enquiryDealId) {
+function openQuotation(enquiryDealId, action="add") {
     resetQuotationForm();
 
     var payload = { EnquiryId: enquiryDealId, QuotationId: 0 };
@@ -89,7 +92,6 @@ function openQuotation(enquiryDealId) {
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-
         success: function (response) {
             console.log("API Response:", response);
 
@@ -101,18 +103,20 @@ function openQuotation(enquiryDealId) {
             console.log("Quotations:", quotations);
 
             /* ================= CASE 1: NO QUOTATION ================= */
-            if (quotations.length === 0) {
+            if (quotations.length === 0 || action.toLowerCase() === "add") {
 
                 console.log("Case 1: No quotation");
 
                 fillEnquiryToQuotationForm(data);
 
                 $("#quotationModal .modal-title").text("Add Quotation");
+                $("#quotation_action").val("add");
                 $("#quotationModal").modal("show");
             }
 
             /* ================= CASE 2: ONE QUOTATION ================= */
-            else if (quotations.length === 1) {
+            /*
+            else if(quotations.length === 1) {
 
                 console.log("Case 2: Single quotation");
 
@@ -122,80 +126,183 @@ function openQuotation(enquiryDealId) {
                 $("#quotationModal .modal-title").text("Edit Quotation");
                 $("#quotationModal").modal("show");
             }
+            */
 
             /* ================= CASE 3: MULTIPLE ================= */
             else {
                 console.log("Case 3: Multiple quotations");
-
+                // 🔹 store enquiryId for reuse
+                $("#quotationList_enquiryDealId").val(enquiryDealId);
                 bindQuotationList(data, quotations);
                 $("#quotationListModal").modal("show");
             }
         },
-
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Quotation Fetch Error");
         }
     });
 }
 function fillEnquiryToQuotationForm(e) {
-    $("#quotation_enquiryDealId").val(e.Id);
+    //console.log("enquiry data:", e);
+    $("#quotation_enquiryDealId").val(e.EnquiryId);
 
+    $("#quotation_banquetId").val(e.BanquetHallId);
+    $("#quotation_slotId").val(e.SlotId);
+    $("#quotation_fromDate").val(e.EventDate);
+    $("#quotation_tillDate").val(e.EventDate);
+    $("#quotation_startTime").val(e.EventStartTime1);
+    $("#quotation_endTime").val(e.EventEndTime1);
+
+    $("#quotation_clientId").val(e.EnquiryId);
     $("#quotation_clientName").val(e.Name);
     $("#quotation_clientContact").val(e.Contact);
     $("#quotation_clientEmail").val(e.Email);
     $("#quotation_clientAddress").val(e.Address);
+    //$("#quotation_clientGstIn").val("");
+    $("#quotation_clientStateId").val(e.StateId);
 
     $("#quotation_eventTypeId").val(e.EventTypeId);
     $("#quotation_subEventTypeId").val(e.EventSubTypeId);
 
+    //$("#quotation_banquetRent").val(0);
     $("#quotation_pax").val(e.Pax);
+    $("#quotation_referenceTypeId").val(e.LeadSourceId);
 }
 function fillQuotationToForm(q) {
 
     $("#quotationId").val(q.Id);
 
-    $("#quotation_banquetId").val(q.BanquetId);
-    $("#quotation_slotId").val(q.SlotId);
+    //$("#quotation_banquetId").val(q.BanquetId);
+    //$("#quotation_slotId").val(q.SlotId);
 
-    $("#quotation_fromDate").val(q.FromDate);
-    $("#quotation_tillDate").val(q.TillDate);
+    //$("#quotation_fromDate").val(q.FromDate);
+    //$("#quotation_tillDate").val(q.TillDate);
 
-    $("#quotation_startTime").val(q.StartTime);
-    $("#quotation_endTime").val(q.EndTime);
+    //$("#quotation_startTime").val(q.StartTime);
+    //$("#quotation_endTime").val(q.EndTime);
 
     $("#quotation_banquetRent").val(q.BanquetRent);
-    $("#quotation_pax").val(q.Pax);
+    //$("#quotation_pax").val(q.Pax);
 
     $("#quotation_decorationAmount").val(q.DecorationChargesAmount);
     $("#quotation_soundAmount").val(q.SoundSystemChargesAmount);
     $("#quotation_projectorAmount").val(q.ProjectorChargesAmount);
 
+    $("#quotation_isPrintExclusive").prop("checked", q.IsPrintPriceExclusive);
+    $("#quotation_isPrintFoodItems").prop("checked", q.IsPrintFoodItems);
+
+    //food package - q.Packages_JSON
+    // Reset first
+    $(".package-checkbox").prop("checked", false);
+    // Set selected
+    if (q.Packages_JSON && q.Packages_JSON.length > 0) {
+        q.Packages_JSON.forEach(p => {
+            $(`.package-checkbox[value='${p.PackageId}']`).prop("checked", true);
+        });
+    }
+
+    //other services - q.OtherServices_JSON
+    let html = "";
+    if (q.OtherServices_JSON && q.OtherServices_JSON.length > 0) {
+        q.OtherServices_JSON.forEach(s => {
+            html += `
+                <div class="row g-1 quotation-service-row mb-1">
+            
+                    <div class="col-md-3">
+                        <input type="text" class="form-control form-control-sm quotation-service-name p-1"
+                               value="${s.ServiceName || ""}" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="number" class="form-control form-control-sm quotation-service-amount p-1"
+                               value="${s.Amount || 0}" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="number" class="form-control form-control-sm quotation-service-qty p-1"
+                               value="${s.Quantity || 0}" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="number" class="form-control form-control-sm quotation-service-total bg-light p-1"
+                               value="${s.TotalAmount || 0}" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <textarea class="form-control form-control-sm quotation-service-desc p-1">${s.ServiceDescription || ""}</textarea>
+                    </div>
+
+                </div>`;
+        });
+
+    }
+    else {
+        // fallback (empty row)
+        html = `
+            <div class="row g-1 quotation-service-row mb-1">
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm quotation-service-name p-1" />
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control form-control-sm quotation-service-amount p-1" value="0" />
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control form-control-sm quotation-service-qty p-1" value="0" />
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control form-control-sm quotation-service-total bg-light p-1" value="0" readonly />
+                </div>
+                <div class="col-md-3">
+                    <textarea class="form-control form-control-sm quotation-service-desc p-1"></textarea>
+                </div>
+            </div>`;
+    }
+    $("#quotation_otherServicesContainer").html(html);
+
     $("#quotation_subTotal").val(q.SubTotal);
+    $("#quotation_taxAmount").val(q.TaxAmount || 0);
     $("#quotation_grandTotal").val(q.GrandTotal);
 }
 function bindQuotationList(enquiry, quotations) {
-
+    $("#quotationsListTitle").text(`Quotations List - ${enquiry.Name}`);
     let html = "";
-
     quotations.forEach(q => {
 
         html += `
         <tr>
             <td>${q.Id}</td>
-            <td>${q.SlotName}</td>
+            <td>${q.SlotName} (${q.StartTime1}-${q.EndTime1})</td>
             <td>${q.FromDate2}</td>
             <td>${enquiry.Name}</td>
             <td>₹ ${q.GrandTotal}</td>
             <td>
-                <button class="btn btn-sm btn-primary btn-edit-quotation" data-id="${q.Id}">Edit</button>
-                <button class="btn btn-sm btn-danger btn-delete-quotation" data-id="${q.Id}">Delete</button>
-                <button class="btn btn-sm btn-secondary btn-view-quotation" data-id="${q.Id}">View</button>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-xs btn-outline-warning btn-edit-quotation" data-id="${q.Id}" title="Edit">
+                        <i class="fa fa-edit"></i>
+                    </button>
+
+                    <button class="btn btn-xs btn-outline-danger btn-delete-quotation" data-id="${q.Id}" title="Delete">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <button class="btn btn-xs btn-outline-info btn-view-quotation" data-id="${q.Id}" title="View">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
             </td>
         </tr>`;
     });
 
     $("#quotationListBody").html(html);
 }
+
+$(document).on("click", "#btnAddNewQuotation", function () {
+    let enquiryId = $("#quotationList_enquiryDealId").val();
+    console.log("Add New Quotation for:", enquiryId);
+    $("#quotationListModal").modal("hide");
+    // 🔥 Call your function
+    openQuotation(enquiryId, "add");
+});
 
 $(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () {
 
@@ -211,14 +318,17 @@ $(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () 
         QuotationId: id // 🔥 new param (quotationId)
     };
 
+    console.log("payload:", payload);
     $.ajax({
         url: "/api/Quotation/GetQuotationByEnquiryId",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-
+            console.log("edit-view response:", response);
             if (response.status !== "Success") return;
+
+            $("#quotationListModal").modal("hide");
 
             const data = response.data[0];
             const quotations = data.Quotations || [];
@@ -237,6 +347,7 @@ $(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () 
             // 🔹 Mode Handling
             if (isEdit) {
                 console.log("Mode: EDIT");
+                $("#quotation_action").val("edit");
 
                 enableQuotationForm();
 
@@ -245,6 +356,7 @@ $(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () 
 
             if (isView) {
                 console.log("Mode: VIEW");
+                $("#quotation_action").val("view");
 
                 disableQuotationForm();
                 $("#quotation_btnSave").hide(); // or disable
@@ -277,9 +389,9 @@ function disableQuotationForm() {
 }
 
 $(document).on("click", ".btn-delete-quotation", function () {
-
-    let quotationId = $(this).data("id");
-    let enquiryId = $("#quotation_enquiryDealId").val(); // or pass from context
+    let $btn = $(this); // ✅ store reference
+    let quotationId = $btn.data("id");
+    let enquiryId = $("#quotationList_enquiryDealId").val(); // or pass from context
     let actionBy = sessionStorage.getItem("userId") ?? 0;
 
     console.log("Delete Quotation Clicked:", quotationId);
@@ -310,14 +422,16 @@ $(document).on("click", ".btn-delete-quotation", function () {
                     if (res.status === "Success") {
                         handleApiSuccess("Deleted!");
                         console.log("Quotation deleted:", quotationId);
+
                         // 🔥 Refresh list modal (IMPORTANT)
-                        openQuotation(enquiryId);
-                        //$(this).closest("tr").remove();
+                        loadEnquiryDeals();
+                        //openQuotation(enquiryId, "view");
+
+                        $btn.closest("tr").remove();
                         // Optional: close modal if needed
-                        // $("#quotationListModal").modal("hide");
+                        //$("#quotationListModal").modal("hide");
                     }
                 },
-
                 error: function (xhr, error, status) {
                     handleApiError(xhr, error, status, "Failed to delete quotation");
                 }
@@ -365,22 +479,22 @@ $("#quotation_btnAddService").click(function () {
     let row = `
         <div class="row g-1 quotation-service-row mb-1 align-items-center">
             <div class="col-md-3">
-                <input type="text" class="form-control quotation-service-name" placeholder="Service" />
+                <input type="text" class="form-control quotation-service-name p-1" placeholder="Service" />
             </div>
             <div class="col-md-2">
-                <input type="number" class="form-control quotation-service-amount" placeholder="Amount" value="0" />
+                <input type="number" class="form-control quotation-service-amount p-1" placeholder="Amount" value="0" />
             </div>
             <div class="col-md-2">
-                <input type="number" class="form-control quotation-service-qty" value="0" />
+                <input type="number" class="form-control quotation-service-qty p-1" value="0" />
             </div>
             <div class="col-md-2">
-                <input type="number" class="form-control quotation-service-total bg-light" value="0" readonly />
+                <input type="number" class="form-control quotation-service-total bg-light p-1" value="0" readonly />
             </div>
             <div class="col-md-2">
-                <textarea class="form-control quotation-service-desc" placeholder="Description"></textarea>
+                <textarea class="form-control quotation-service-desc p-1" placeholder="Description"></textarea>
             </div>
             <div class="col-md-1 text-center">
-                <button type="button" class="btn btn-sm btn-danger quotation-btn-remove-service">
+                <button type="button" class="btn btn-sm btn-danger p-2 quotation-btn-remove-service">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
@@ -392,6 +506,7 @@ $("#quotation_btnAddService").click(function () {
 // Remove Service Row (IMPORTANT: use event delegation)
 $(document).on("click", ".quotation-btn-remove-service", function () {
     $(this).closest(".quotation-service-row").remove();
+    quotation_calculateTotals();
 });
 
 //Auto calc
@@ -433,29 +548,23 @@ $(document).on("change", "#quotation_slotId", function () {
 });
 
 function getPackagesJson() {
-
     let list = [];
-
     $(".package-checkbox:checked").each(function () {
         list.push({
             PackageId: parseInt($(this).val())
         });
     });
-
     return JSON.stringify(list);
 }
 
 function getOtherServicesJson() {
-
     let list = [];
-
-    $(".service-row").each(function (index) {
-
-        let name = $(this).find(".service-name").val();
-        let amount = parseFloat($(this).find(".service-amount").val()) || 0;
-        let qty = parseInt($(this).find(".service-qty").val()) || 0;
-        let total = parseFloat($(this).find(".service-total").val()) || 0;
-        let desc = $(this).find(".service-desc").val();
+    $(".quotation-service-row").each(function (index) {
+        let name = $(this).find(".quotation-service-name").val();
+        let amount = parseFloat($(this).find(".quotation-service-amount").val()) || 0;
+        let qty = parseInt($(this).find(".quotation-service-qty").val()) || 0;
+        let total = parseFloat($(this).find(".quotation-service-total").val()) || 0;
+        let desc = $(this).find(".quotation-service-desc").val();
 
         if (name) {
             list.push({
@@ -468,9 +577,92 @@ function getOtherServicesJson() {
             });
         }
     });
-
     return JSON.stringify(list);
 }
+
+// ➤ SAVE
+$("#quotation_btnSaveQuotation").click(function () {
+
+    let payload = {
+
+        // ===== Basic =====
+        Id: parseInt($("#quotationId").val()) || 0,
+        // ===== Booking Info =====
+        EnquiryDealId: parseInt($("#quotation_enquiryDealId").val()) || 0,
+
+        BanquetId: parseInt($("#quotation_banquetId").val()) || 0,
+        SlotId: parseInt($("#quotation_slotId").val()) || 0,
+
+        FromDate: $("#quotation_fromDate").val() || "",
+        TillDate: $("#quotation_tillDate").val() || "",
+        StartTime: $("#quotation_startTime").val() || null,
+        EndTime: $("#quotation_endTime").val() || null,
+
+        // ===== Client Section =====
+        ClientId: parseInt($("#quotation_clientId").val()),
+        ClientName: $("#quotation_clientName").val()?.trim() || "",
+
+        Address: $("#quotation_clientAddress").val() || null,
+        Email: $("#quotation_clientEmail").val() || null,
+        ContactNo: $("#quotation_clientContact").val() || null,
+        GSTIN: $("#quotation_clientGstIn").val() || null,
+        StateId: parseInt($("#quotation_clientStateId").val()) || 0,
+
+        // ===== Booking Details =====
+        EventSubTypeId: $("#quotation_subEventTypeId").val() || 0,
+        BanquetRent: parseFloat($("#quotation_banquetRent").val()) || 0,
+        Pax: parseInt($("#quotation_pax").val()) || 0,
+        ReferenceTypeId: $("#quotation_referenceTypeId").val() || 0,
+
+        // ===== Charges =====
+        DecorationChargesAmount: parseFloat($("#quotation_decorationAmount").val()) || 0,
+        SoundSystemChargesAmount: parseFloat($("#quotation_soundAmount").val()) || 0,
+        ProjectorChargesAmount: parseFloat($("#quotation_projectorAmount").val()) || 0,
+
+        // ===== Print Options =====
+        IsPrintPriceExclusive: $("#quotation_isPrintExclusive").is(":checked"),
+        IsPrintFoodItems: $("#quotation_isPrintFoodItems").is(":checked"),
+
+        // ===== Totals =====
+        SubTotal: parseFloat($("#quotation_subTotal").val()) || 0,
+        TaxAmount: parseFloat($("#quotation_taxAmount").val()) || 0,
+        GrandTotal: parseFloat($("#quotation_grandTotal").val()) || 0,
+
+        // ===== Notes (if added later) =====
+        Notes: null, // Add #notes field if needed
+
+        // ===== JSON Child Data =====
+        PackagesJson: getPackagesJson(),
+        OtherServicesJson: getOtherServicesJson(),
+
+        // ===== Audit =====
+        ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
+    };
+    $("#quotation_btnSaveQuotation").prop("disabled", true);
+    console.log("Quotation Data save:", payload);
+
+    $.ajax({
+        url: "/api/Quotation/SaveQuotation",
+        type: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        success: function (res) {
+            if (res.status === "Success") {
+                handleApiSuccess();
+                $("#quotationModal").modal("hide");
+                loadEnquiryDeals();
+            } else {
+                Swal.fire("Error", res.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Save Quotation Failed");
+        },
+        complete: function () {
+            $("#quotation_btnSaveQuotation").prop("disabled", false);
+        }
+    });
+});
 
 //QUOTATION - END------------------------------------------------------------------------------------------
 
@@ -2014,15 +2206,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const enquiryDealId = $(this).data("dealid");
         console.log("quotation enquiryDealId:", enquiryDealId);
-        openQuotation(enquiryDealId);
+        openQuotation(enquiryDealId, "view");
     });
 
     // When Quotation Modal closes
     $("#quotationModal").on("hidden.bs.modal", function () {
-        //if (openedFromDeal) {
-        //    $("#dealModal").modal("show"); // reopen only if it was opened from deal
-        //    openedFromDeal = false; // reset flag
-        //}
+        let action = $("#quotation_action").val();
+
+        if (action == "view" || action == "edit") {
+            let enquiryId = $("#quotation_enquiryDealId").val();
+            console.log("View List Quotation for:", enquiryId);
+            $("#quotationListModal").modal("hide");
+            // 🔥 Call your function
+            openQuotation(enquiryId, "view");
+        }
     });
 
     //Modal Behaviour -- START ---------------------------------------------------
