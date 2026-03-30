@@ -1310,6 +1310,247 @@
 </div>
 <!--Menu Item-- MODAL -- END -->
 
+<!--Quotation Modal-->
+<div class="modal fade" id="quotationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-warning text-white py-1">
+                <h5 class="modal-title text-white">Add Quotation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+                <input type="hidden" id="quotationId" value="0" />
+                <input type="hidden" id="quotation_enquiryDealId" value="0" />
+
+                <div class="row">
+                    <!-- LEFT SIDE -->
+                    <div class="col-md-8">
+
+                        <div class="row g-2 mb-1">
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Banquet</label>
+                                <select id="quotation_banquetId" class="form-select form-select-sm p-1"></select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Slot</label>
+                                <select id="quotation_slotId" class="form-select form-select-sm p-1"></select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">From Date</label>
+                                <input type="date" id="quotation_fromDate" class="form-control form-control-sm p-1" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Till Date</label>
+                                <input type="date" id="quotation_tillDate" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <!-- Time Section -->
+                        <div class="row mb-1">
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Start Time</label>
+                                <input type="time" id="quotation_startTime" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">End Time</label>
+                                <input type="time" id="quotation_endTime" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <!-- Client Section -->
+                        <div class="row mb-1">
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">Select Client</label>
+                                <select id="quotation_clientId" class="form-select form-select-sm"></select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label compact-label">Client Name</label>
+                                <input type="text" id="quotation_clientName" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-1">
+                            <div class="col-md-6">
+                                <label class="form-label compact-label">Address</label>
+                                <input type="text" id="quotation_clientAddress" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label compact-label">Email</label>
+                                <input type="text" id="quotation_clientEmail" class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-1">
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">Contact</label>
+                                <input type="text" id="quotation_clientContact" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">GSTIN</label>
+                                <input type="text" id="quotation_clientGstIn" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label compact-label">State</label>
+                                <select id="quotation_clientStateId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                        </div>
+
+                        <!-- Booking Details -->
+                        <h6 class="text-danger mt-3">Booking Details</h6>
+                        <div class="row mb-1 g-1">
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Event</label>
+                                <select id="quotation_eventTypeId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Sub-Event</label>
+                                <select id="quotation_subEventTypeId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Banquet Rent</label>
+                                <input type="number" id="quotation_banquetRent" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label compact-label">Pax</label>
+                                <input type="number" id="quotation_pax" class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label compact-label">Reference</label>
+                                <select id="quotation_referenceTypeId" class="form-control form-control-sm p-1"></select>
+                            </div>
+                        </div>
+
+                        <!-- Other Services -->
+                        <h6 class="text-danger mt-2">Other Services</h6>
+                        <div id="quotation_otherServicesContainer"></div>
+
+                        <button type="button" class="btn btn-xs btn-primary mt-1" id="quotation_btnAddService">
+                            + Add More
+                        </button>
+
+                    </div>
+
+                    <!-- RIGHT SIDE -->
+                    <div class="col-md-4 border-start">
+                        <h6 class="text-danger">Other Charges</h6>
+
+                        <div class="row g-1 mb-2">
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Decoration</small>
+                                <input type="number" id="quotation_decorationAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Sound System</small>
+                                <input type="number" id="quotation_soundAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                            <div class="col-md-4">
+                                <small class="fw-semibold">Projector & Screen</small>
+                                <input type="number" id="quotation_projectorAmount"
+                                       class="form-control form-control-sm p-1" />
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <h6 class="d-none">Select Food Package</h6>
+
+                        <div id="quotation_packageContainer">
+                            <!-- Dynamically load packages -->
+                        </div>
+
+                        <div class="form-check mt-3">
+                            <input type="checkbox" id="quotation_isPrintExclusive" class="form-check-input" />
+                            <label class="form-check-label">
+                                Print: All prices are exclusive of taxes
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" id="quotation_isPrintFoodItems" class="form-check-input" />
+                            <label class="form-check-label">
+                                Print: Print food items
+                            </label>
+                        </div>
+
+                        <hr />
+
+                        <div class="mt-3">
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>Sub Total</strong>
+                                <input type="number" id="quotation_subTotal" class="form-control form-control-sm p-1 w-50 text-end" value="0" readonly />
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2 d-none">
+                                <strong>Tax (18%)</strong>
+                                <input type="number" id="quotation_taxAmount" class="form-control form-control-sm p-1 w-50 text-end" value="0" readonly />
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <strong>Net Total</strong>
+                                <input type="number" id="quotation_grandTotal" class="form-control form-control-sm p-1 w-50 text-end fw-bold" value="0" readonly />
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer py-2">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-warning btn-sm" id="quotation_btnSaveQuotation">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--Quotation Modal - END-->
+
+<!--Quotation Modal GRID - START-->
+<div class="modal fade" id="quotationListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Quotations List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-2">
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>QuotationId</th>
+                            <th>Slot</th>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quotationListBody">
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--Quotation Modal GRID - END-->
+
 @section Scripts {
     <script src="~/assets2/js/Enquiry/Enquiry.js" asp-append-version="true"></script>
 }

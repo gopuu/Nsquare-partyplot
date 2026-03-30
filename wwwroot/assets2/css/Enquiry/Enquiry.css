@@ -1,4 +1,25 @@
-﻿.payment-summary-table {
+﻿.view-mode input {
+    background-color: #f8f9fa;
+}
+.small-text {
+    font-size: 11px;
+    white-space: nowrap; /* 🔥 prevents wrapping */
+}
+.badge-sm {
+    font-size: 9px;
+    line-height: 1;
+}
+.action-btn {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+.action-btn:hover {
+    background-color: #f1f3f5;
+}
+
+.payment-summary-table {
     table-layout: fixed;
     width: 100%;
     font-size: 13px;

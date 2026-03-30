@@ -5,7 +5,6 @@
     {
         public long? Id { get; set; }
     }
-
     public class GetQuotationResponse
     {
         public long Id { get; set; }
@@ -122,5 +121,56 @@
     public class DeleteQuotationRequest : BaseClass
     {
         public long Id { get; set; }
+    }
+
+    // Get Quotation List By EnquiryDealId
+    public class GetQuotationByEnquiryIdRequest
+    {
+        public long EnquiryId { get; set; }
+        public long? QuotationId { get; set; } = 0;
+    }
+    public class GetQuotationByEnquiryIdResponse
+    {
+        public long Id { get; set; }
+        public long ProcessId { get; set; }
+        public string ProcessName { get; set; }
+
+        public string Name { get; set; }
+        public string Contact { get; set; }
+        public string Address { get; set; }
+        public string Email { get; set; }
+
+        public long EventTypeId { get; set; }
+        public string EventTypeName { get; set; }
+
+        public long EventSubTypeId { get; set; }
+        public string EventSubTypeName { get; set; }
+
+        public long BanquetHallId { get; set; }
+        public string BanquetHallName { get; set; }
+
+        public string EventDate { get; set; }
+        public string EventDate_Format { get; set; }
+
+        public string EventStartTime { get; set; }
+        public string EventEndTime { get; set; }
+
+        public int Pax { get; set; }
+
+        public string FollowUpDate { get; set; }
+        public string FollowUpDate_Format { get; set; }
+
+        public decimal EstimatedAmount { get; set; }
+
+        public long LeadSourceId { get; set; }
+        public string LeadSourceName { get; set; }
+
+        public string Remarks { get; set; }
+        public long PackageId { get; set; }
+
+        public long FollowUpCount { get; set; }
+
+        // 🔥 NEW
+        public List<GetQuotationResponse> Quotations { get; set; } = new();
     }
 }

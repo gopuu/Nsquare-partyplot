@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
+using SixLabors.Fonts;
 using System.Data;
 using System.Data.SqlClient;
 using iTextSharpFont = iTextSharp.text.Font;
@@ -689,507 +690,919 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadBookingEventReport")]
-        public IActionResult DownloadBookingEventReport([FromBody] DownloadBookingEventReportRequest request)
+        [Route("Report_BookingEventForm")]
+        public IActionResult Report_BookingEventForm([FromBody] DownloadBookingEventReportRequest request)
         {
             apiResponse response = new apiResponse();
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString,
-                    out string domain,
-                    out IActionResult? errorResult))
-                {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
-                }
-
-                using MemoryStream stream = new MemoryStream();
-                Document document = new Document(PageSize.A4, 25, 25, 30, 40);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-
-                document.Open();
 
                 DataTable dtCompany = new DataTable();
-                DataSet dsReport = new DataSet();
+                DataSet ds = new DataSet(); // ✅ IMPORTANT
+                DataTable dtPayments = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
 
-                    // ================= COMPANY HEADER =================
+                    // COMPANY
                     SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                    // ================= BOOKING EVENT DETAILS =================
-                    cmd = new SqlCommand("Report_GetBookingEventDetails", con);
+                    // MAIN SP (MULTIPLE RESULT SETS)
+                    cmd = new SqlCommand("Report_GetBookingEventForm", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    // 🔹 BookingId Parameter
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-                    SqlDataAdapter daReport = new SqlDataAdapter(cmd);
-                    daReport.Fill(dsReport);
+                    new SqlDataAdapter(cmd).Fill(ds);
+
+                    // PAYMENT TRAIL
+                    cmd = new SqlCommand("Report_GetBooking_Payments", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = 0;
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                    new SqlDataAdapter(cmd).Fill(dtPayments);
                 }
 
+                if (ds.Tables.Count < 10)
+                    throw new Exception("Invalid report data.");
 
-                /* ================= FONT ================= */
-                iTextSharpFont titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-                iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
-                iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
-                BaseColor gray = new BaseColor(230, 230, 230);
+                /* ================= MAP RESULT SETS ================= */
 
-                /* ================= DATASET MAPPING ================= */
-                DataTable dtFormTitle = dsReport.Tables[0];
-                DataTable dtBasic = dsReport.Tables[1];
-                DataTable dtHeaders = dsReport.Tables[2];
-                DataTable dtPlateRows = dsReport.Tables[3];
-                DataTable dtSummary = dsReport.Tables[4];
-                DataTable dtPayment = dsReport.Tables[5];
-                DataTable dtFooter = dsReport.Tables[6];
-                DataTable dtStaffTitle = dsReport.Tables[7];
-                DataTable dtFoodTitles = dsReport.Tables[8];
-                DataTable dtStaffDuty = dsReport.Tables[9];
-                DataTable dtChkTitle = dsReport.Tables[10];
-                DataTable dtChkItems = dsReport.Tables[11];
-                DataTable dtNotes = dsReport.Tables[12];
+                DataTable dtTitle = ds.Tables[0];
+                DataTable dtDetails = ds.Tables[1];
+                DataTable dtPlatesHeader = ds.Tables[2];
+                DataTable dtPlatesDetails = ds.Tables[3];
+                DataTable dtFooter = ds.Tables[4];
 
+                DataTable dtChecklistTitle = ds.Tables[5];
+                DataTable dtChecklist = ds.Tables[6];
+                DataTable dtEventNotesTitle = ds.Tables[7];
+                DataTable dtEventNotes = ds.Tables[8];
+                DataTable dtFoodWasteTitle = ds.Tables[9];
+                DataTable dtFoodWaste = ds.Tables[10];
 
-                /* ================= HEADER ================= */
-                /* ================= HEADER ================= */
-                PdfPTable header = new PdfPTable(2);
-                header.WidthPercentage = 100;
-                header.SetWidths(new float[] { 20, 80 });
+                /* ================= PDF INIT ================= */
+                // ================= ASSIGN & VALIDATION =================
+                #region ASSIGN & VALIDATIONS
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
+                       logoFile = string.Empty, userName = string.Empty,
+                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
 
-                if (dtCompany != null && dtCompany.Rows.Count > 0)
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+                if (isCompanyAvailable)
                 {
-                    string logoPath = Path.Combine(
-                        _env.WebRootPath,
-                        "assets2",
-                        "img",
-                        dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? ""
-                    );
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                }
 
-                    if (System.IO.File.Exists(logoPath))
+                if (request.WithHeader ?? false)
+                {
+                    if (isCompanyAvailable)
                     {
-                        Image logo = Image.GetInstance(logoPath);
-                        logo.ScaleToFit(60, 60);
-                        header.AddCell(new PdfPCell(logo) { Border = Rectangle.NO_BORDER });
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
+                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+
+                        // ── Resolve logo path (same logic as before, just storing the path string) ──
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                            if (System.IO.File.Exists(p1))
+                                logoFullPath = p1;
+                            else
+                            {
+                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                if (System.IO.File.Exists(p2))
+                                    logoFullPath = p2;
+                            }
+                        }
                     }
                     else
                     {
-                        header.AddCell(new PdfPCell(new Phrase("")) { Border = Rectangle.NO_BORDER });
+                        companyName = "[PAGE HEADER] Company Data Not Found";
                     }
+                }
 
-                    PdfPCell compCell = new PdfPCell
+                //if (dsReport.Tables.Count < 3)
+                //throw new Exception("Report data is incomplete. Required tables are missing.");
+
+                // ================= EXTRACT DATA =================
+                //string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+
+                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
+
+                using var stream = new MemoryStream();
+
+                bool isA4size = true; // default to A4
+                Document document = null;
+                //if (dsReport.Tables[2].Columns.Count > 7)
+                //{
+                //    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                //    isA4size = false;
+                //}
+                //else
+                //{
+                document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                //isA4size = true;
+                //}
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+                #endregion
+
+                // ── Attach StandardReport header-footer ──
+                #region HEADER_FOOTER
+                if (request.WithHeader ?? false)
+                {
+                    if (isA4size)
                     {
-                        Border = Rectangle.NO_BORDER,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
-
-                    compCell.AddElement(new Paragraph(
-                        dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "",
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14)));
-
-                    compCell.AddElement(new Paragraph(
-                        dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "",
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9)));
-
-                    header.AddCell(compCell);
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
                 }
                 else
                 {
-                    // No company data found
-                    PdfPCell messageCell = new PdfPCell(
-                        new Phrase("[PAGE HEADER] Company Data Not Found",
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.RED)))
+                    // no company header, but still want page number / generated-by footer
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                #endregion
+
+                document.Open();
+
+                #region FONT DECLARATIONS
+                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+                iTextSharp.text.Font boldFont9 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                iTextSharp.text.Font normalFont9 = FontFactory.GetFont(FontFactory.HELVETICA, 9);
+
+                iTextSharp.text.Font boldFont7 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8);
+                iTextSharp.text.Font normalFont7 = FontFactory.GetFont(FontFactory.HELVETICA, 8);
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.NORMAL);
+
+                string fontPath_ArialUnicode = Path.Combine(_env.WebRootPath, "fonts", "arialuni.ttf"); // Segoe UI Symbol
+                BaseFont bfSymbol = BaseFont.CreateFont(fontPath_ArialUnicode, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font checkboxFont = new iTextSharp.text.Font(bfSymbol, 10, iTextSharp.text.Font.NORMAL);
+
+                #endregion
+
+                #region PAGE 1
+                Paragraph titleForm = new Paragraph("Event Form", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.GRAY))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingBefore = 3,
+                    SpacingAfter = 8
+                };
+                document.Add(titleForm);
+
+                PdfPTable lineBottom = new PdfPTable(1) { WidthPercentage = 100 };
+                lineBottom.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.LIGHT_GRAY });
+                document.Add(lineBottom);
+
+                /* ================= CLIENT + EVENT DETAILS ================= */
+                #region CLIENT + EVENT DETAILS
+                PdfPTable details = new PdfPTable(2);
+                details.WidthPercentage = 100;
+                details.SetWidths(new float[] { 35, 65 }); // better proportion
+                details.SpacingBefore = 5;
+                details.SpacingAfter = 5;
+
+                foreach (DataColumn col in dtDetails.Columns)
+                {
+                    if (col.ColumnName.EndsWith("Title"))
+                    {
+                        string title = dtDetails.Rows[0][col]?.ToString() ?? "-";
+                        string value = dtDetails.Rows[0][col.ColumnName.Replace("Title", "")]?.ToString() ?? "-";
+
+                        // 🔹 TITLE CELL
+                        details.AddCell(new PdfPCell(new Phrase(title, boldFont9))
+                        {
+                            BackgroundColor = new BaseColor(245, 245, 245), // light gray
+                            HorizontalAlignment = Element.ALIGN_LEFT,
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 6,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        // 🔹 VALUE CELL
+                        details.AddCell(new PdfPCell(new Phrase(value, normalFont9))
+                        {
+                            HorizontalAlignment = Element.ALIGN_LEFT,
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 6,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+                    }
+                }
+                document.Add(details);
+                #endregion
+
+                /* ================= PAYMENT TRAIL ================= */
+                #region PAYMENTS TRIAL
+                if (dtPayments.Rows.Count > 0)
+                {
+                    document.Add(new Paragraph("\n"));
+
+                    // HISTORY TITLE
+                    PdfPTable title2 = new PdfPTable(1);
+                    title2.WidthPercentage = 100;
+
+                    PdfPCell titleCell2 = new PdfPCell(new Phrase("ALL PAYMENT HISTORY",boldFont9));
+                    titleCell2.BackgroundColor = new BaseColor(240, 240, 240);
+                    titleCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+                    titleCell2.Padding = 5;
+                    titleCell2.Border = Rectangle.BOX;
+                    titleCell2.BorderWidth = 0.2f;
+                    titleCell2.BorderColor = BaseColor.LIGHT_GRAY;
+
+                    title2.AddCell(titleCell2);
+                    document.Add(title2);
+                    // HISTORY TITLE
+
+                    PdfPTable payTbl = new PdfPTable(6);
+                    payTbl.WidthPercentage = 100;
+                    payTbl.SetWidths(new float[] { 15, 20, 15, 15, 15, 20 });
+                    payTbl.HeaderRows = 1;
+
+                    void H(string t)
+                    {
+                        payTbl.AddCell(new PdfPCell(new Phrase(t, boldFont9))
+                        {
+                            BackgroundColor = new BaseColor(240, 240, 240),
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            Padding = 4f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+                    }
+
+                    H("Receipt No"); H("Date & Time"); H("Mode"); H("Amount"); H("Balance"); H("Notes");
+
+                    decimal totalAmount = 0;
+                    foreach (DataRow pr in dtPayments.Rows)
+                    {
+                        decimal amt = pr["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["Amount"]);
+                        decimal bal = pr["DueBalance"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["DueBalance"]);
+                        totalAmount += amt;
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentId"]?.ToString() ?? "-", normalFont9))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            Padding = 4f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentDateTimeFormat"]?.ToString() ?? "-", normalFont9))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentModeName"]?.ToString() ?? "-", normalFont9))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase($"₹ {amt:N0}", AmtFontNormal))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase($"₹ {bal:N0}", AmtFontNormal))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentNotes"]?.ToString() ?? "-", normalFont9))
+                        {
+                            HorizontalAlignment = Element.ALIGN_LEFT,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+                    }
+
+                    // 🔹 Total Amount TITLE
+                    payTbl.AddCell(new PdfPCell(new Phrase($"TOTAL", AmtFontBold))
+                    {
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        BackgroundColor = new BaseColor(230, 230, 230),
+                        Padding = 5,
+                        Colspan = 3,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+
+                    // 🔹 Total Amount (Amount column)
+                    payTbl.AddCell(new PdfPCell(new Phrase($"₹ {totalAmount:N0}", AmtFontBold))
+                    {
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        BackgroundColor = new BaseColor(230, 230, 230),
+                        Padding = 2,
+                        PaddingTop = 5,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+
+                    // 🔹 Empty Balance column (optional)
+                    payTbl.AddCell(new PdfPCell(new Phrase(""))
+                    {
+                        BackgroundColor = new BaseColor(230, 230, 230),
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+
+                    // 🔹 Empty Notes column (optional)
+                    payTbl.AddCell(new PdfPCell(new Phrase(""))
+                    {
+                        BackgroundColor = new BaseColor(230, 230, 230),
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+
+                    document.Add(payTbl);
+                }
+                #endregion
+
+                /* ================= PLATES ================= */
+                #region PLATES SUMMARY
+                // 🔹 Filter only display columns (exclude signatures if needed)
+                var displayColumns = dtPlatesHeader.Columns
+                    .Cast<DataColumn>()
+                    //.Where(c => c.ColumnName != "AuthSign" && c.ColumnName != "ClientSign")
+                    .ToList();
+
+                // 🔹 TITLE
+                PdfPTable plateTitle = new PdfPTable(1);
+                plateTitle.WidthPercentage = 100;
+                plateTitle.SpacingBefore = 10f;
+
+                plateTitle.AddCell(new PdfPCell(new Phrase("PLATES SUMMARY", boldFont9))
+                {
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 5,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY
+                });
+
+                document.Add(plateTitle);
+
+                // 🔹 TABLE (dynamic column count)
+                PdfPTable plateTbl = new PdfPTable(dtPlatesHeader.Columns.Count);
+                plateTbl.WidthPercentage = 100;
+                plateTbl.SpacingBefore = 0;
+                plateTbl.HeaderRows = 1;
+
+                // 🔹 HEADER ROW (dynamic)
+                foreach (var col in displayColumns)
+                {
+                    string headerText = dtPlatesHeader.Rows[0][col.ColumnName]?.ToString() ?? col.ColumnName;
+
+                    plateTbl.AddCell(new PdfPCell(new Phrase(headerText, boldFont9))
+                    {
+                        BackgroundColor = new BaseColor(230, 230, 230),
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        Padding = 4f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+                }
+
+                // 🔹 DATA ROWS
+                foreach (DataRow r in dtPlatesDetails.Rows)
+                {
+                    string style = r["FontStyle"]?.ToString();
+                    var font = style == "bold" ? boldFont9 : normalFont9;
+
+                    foreach (var col in displayColumns)
+                    {
+                        string? value = "";
+
+                        // Mapping logic
+                        if (col.ColumnName == "Title")
+                            value = r["PlatesTitle"]?.ToString();
+
+                        else if (col.ColumnName == "TotalPlates")
+                            value = r["PlatesValue"]?.ToString();
+
+                        else if (col.ColumnName == "AuthSign")
+                            value = r["AuthSign"]?.ToString();
+
+                        else if (col.ColumnName == "ClientSign")
+                            value = r["ClientSign"]?.ToString();
+
+                        plateTbl.AddCell(new PdfPCell(new Phrase(value, font))
+                        {
+                            HorizontalAlignment = col.ColumnName == "Title"
+                                ? Element.ALIGN_LEFT
+                                : Element.ALIGN_CENTER,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            Padding = 6f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+                    }
+                }
+
+                document.Add(plateTbl);
+                #endregion
+
+                /* ================= FOOTER - sign ================= */
+                #region FOOTER - SIGN & FEEDBACK
+                /* ================= WRAPPER TABLE (50 : 50) ================= */
+
+                PdfPTable wrapperTbl = new PdfPTable(2);
+                wrapperTbl.WidthPercentage = 100;
+                wrapperTbl.SetWidths(new float[] { 50, 50 });
+                wrapperTbl.SpacingBefore = 15;
+
+                /* ================= LEFT SIDE : FOOTER ================= */
+                PdfPTable footerTbl = new PdfPTable(2);
+                footerTbl.WidthPercentage = 100;
+                footerTbl.SetWidths(new float[] { 30, 70 });
+
+                // 🔹 Helper
+                void AddFooterRow(string title, string value)
+                {
+                    footerTbl.AddCell(new PdfPCell(new Phrase(title, boldFont7))
                     {
                         Border = Rectangle.NO_BORDER,
-                        Colspan = 2,
-                        HorizontalAlignment = Element.ALIGN_CENTER
-                    };
+                        PaddingBottom = 10
+                    });
 
-                    header.AddCell(messageCell);
+                    footerTbl.AddCell(new PdfPCell(new Phrase(value, normalFont7))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingBottom = 10
+                    });
                 }
 
-                document.Add(header);
-                document.Add(new Paragraph("\n"));
+                // 🔹 DATA
+                DataRow f = dtFooter.Rows[0];
 
-                /* ================= EVENT FORM TITLE ================= */
-                PdfPTable titleTable = new PdfPTable(2);
-                titleTable.WidthPercentage = 100;
-                titleTable.SetWidths(new float[] { 70, 30 });
+                AddFooterRow(f["FeedbackTitle"]?.ToString(), "_______________________________");
+                AddFooterRow(f["Comments"]?.ToString(), "_______________________________");
+                AddFooterRow(f["GuestSignature"]?.ToString(), "_______________________________");
 
-                PdfPCell titleCell = Utils.CreateCell(
-                    dtFormTitle.Rows[0]["FormTitle"].ToString(),
-                    titleFont,
-                    Element.ALIGN_CENTER);
-                titleCell.BackgroundColor = new BaseColor(230, 230, 230); // light gray
-                titleTable.AddCell(titleCell);
-
-                PdfPCell dateCell = Utils.CreateCell(dtFormTitle.Rows[0]["DateTitle"].ToString(),titleFont);
-                dateCell.BackgroundColor = new BaseColor(230, 230, 230);
-                titleTable.AddCell(dateCell);
-
-                document.Add(titleTable);
-
-
-                /* ================= GUEST DETAILS ================= */
-                PdfPTable guestTable = new PdfPTable(2);
-                guestTable.WidthPercentage = 100;
-                guestTable.SetWidths(new float[] { 30, 70 });
-
-                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["GuestNameTitle"].ToString(), boldFont));
-                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["GuestName"].ToString(), normalFont));
-
-                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["EventDetailsTitle"].ToString(), boldFont));
-                guestTable.AddCell(Utils.CreateCell(dtBasic.Rows[0]["EventDetails"].ToString(), normalFont));
-
-                document.Add(guestTable);
-
-                /* ================= PLATE TABLE ================= */
-                PdfPTable plateTable = new PdfPTable(4);
-                plateTable.WidthPercentage = 100;
-                plateTable.SetWidths(new float[] { 30, 20, 25, 25 });
-
-                plateTable.AddCell(Utils.CreateCell("", boldFont));
-                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_NoOfPlates"].ToString(), boldFont, Element.ALIGN_CENTER));
-                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_AuthorisedSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
-                plateTable.AddCell(Utils.CreateCell(dtHeaders.Rows[0]["Col_GuestSignature"].ToString(), boldFont, Element.ALIGN_CENTER));
-
-                foreach (DataRow r in dtPlateRows.Rows)
+                // 🔹 Add to wrapper (LEFT)
+                wrapperTbl.AddCell(new PdfPCell(footerTbl)
                 {
-                    plateTable.AddCell(Utils.CreateCell(r["RowTitle"].ToString(), normalFont));
-                    plateTable.AddCell(Utils.CreateCell(r["NoOfPlates"].ToString(), normalFont));
-                    plateTable.AddCell(Utils.CreateCell(r["AuthSign"].ToString(), normalFont));
-                    plateTable.AddCell(Utils.CreateCell(r["GuestSignature"].ToString(), normalFont));
+                    Border = Rectangle.NO_BORDER,
+                    PaddingRight = 10
+                });
+
+
+                /* ================= RIGHT SIDE : FEEDBACK ================= */
+                PdfPTable feedbackTbl = new PdfPTable(1);
+                feedbackTbl.WidthPercentage = 100;
+                // 🔹 Title
+                feedbackTbl.AddCell(new PdfPCell(new Phrase("FEEDBACK:", boldFont7))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingBottom = 8
+                });
+
+                // 🔹 Helper
+                void AddStarRow(string label)
+                {
+                    // 🔹 INNER TABLE (2 columns: label | stars)
+                    PdfPTable rowTbl = new PdfPTable(2);
+                    rowTbl.WidthPercentage = 100;
+                    rowTbl.SetWidths(new float[] { 60, 40 });
+
+                    // LEFT → LABEL
+                    rowTbl.AddCell(new PdfPCell(new Phrase(label, boldFont7))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingBottom = 4
+                    });
+
+                    // RIGHT → STARS (right aligned)
+                    Phrase starPhrase = new Phrase();
+                    for (int i = 0; i < 5; i++)
+                    {
+                        starPhrase.Add(new Chunk("☆   ", checkboxFont));
+                    }
+
+                    rowTbl.AddCell(new PdfPCell(starPhrase)
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        PaddingBottom = 4
+                    });
+
+                    // 🔹 WRAP WITH BOTTOM BORDER
+                    feedbackTbl.AddCell(new PdfPCell(rowTbl)
+                    {
+                        Border = Rectangle.BOTTOM_BORDER,
+                        BorderColorBottom = BaseColor.LIGHT_GRAY,
+                        BorderWidthBottom = 0.5f,
+                        PaddingBottom = 6
+                    });
                 }
 
-                document.Add(plateTable);
+                // 🔹 Rows
+                AddStarRow("Food Quality");
+                AddStarRow("Service");
+                AddStarRow("Ambience");
+                AddStarRow("Management");
+                AddStarRow("Overall Experience");
 
-                /* ================= SUMMARY ================= */
-                PdfPTable summaryTable = new PdfPTable(4);
-                summaryTable.WidthPercentage = 100;
-
-                summaryTable.AddCell(Utils.CreateCell(
-                    dtSummary.Rows[0]["SummaryTitle"].ToString(),
-                    boldFont,
-                    Element.ALIGN_CENTER,
-                    4,
-                    gray));
-
-                document.Add(summaryTable);
-
-                /* ================= PAYMENT ================= */
-                PdfPTable paymentTable = new PdfPTable(3);
-                paymentTable.WidthPercentage = 100;
-                paymentTable.SetWidths(new float[] { 35, 30, 35 });
-
-                /* ---------- Row 1 ---------- */
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["RatePerPlateTitle"].ToString(), boldFont));
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["RatePerPlate"].ToString(), normalFont));
-
-                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
-                    dtPayment.Rows[0]["ExtraAmountTitle"].ToString(),
-                    dtPayment.Rows[0]["ExtraAmount"].ToString(),   // 👈 VALUE HERE
-                    boldFont,
-                    normalFont,
-                    55f
-                ));
-                /* ---------- Row 2 ---------- */
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["TotalPayableTitle"].ToString(), boldFont));
-                PdfPCell totalPayableCell = Utils.CreateCell(dtPayment.Rows[0]["TotalPayable"].ToString(), normalFont);
-                totalPayableCell.Colspan = 2;
-                paymentTable.AddCell(totalPayableCell);
-
-                /* ---------- Row 3 ---------- */
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["AdvanceAmountTitle"].ToString(), boldFont));
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["AdvanceAmount"].ToString(), normalFont));
-
-                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
-                    dtPayment.Rows[0]["AdvancePaymentModeTitle"].ToString(),
-                    dtPayment.Rows[0]["AdvancePaymentMode"].ToString(),   // 👈 VALUE HERE
-                    boldFont,
-                    normalFont,
-                    55f
-                ));
-
-                /* ---------- Row 4 ---------- */
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["FinalRemainingPaymentTitle"].ToString(), boldFont));
-                paymentTable.AddCell(Utils.CreateCell(dtPayment.Rows[0]["FinalRemainingPayment"].ToString(), normalFont));
-
-                paymentTable.AddCell(Utils.CreateTitleWithValueCell(
-                    dtPayment.Rows[0]["FinalPaymentModeTitle"].ToString(),
-                    dtPayment.Rows[0]["FinalPaymentMode"].ToString(),   // 👈 VALUE HERE
-                    boldFont,
-                    normalFont,
-                    55f
-                ));
-
-                document.Add(paymentTable);
-
-                /* ================= FOOTER ================= */
-                PdfPTable footer = new PdfPTable(1);
-                footer.WidthPercentage = 100;
-
-                footer.AddCell(Utils.CreateCell(
-                    dtFooter.Rows[0]["FeedbackTitle"].ToString(),
-                    titleFont,
-                    Element.ALIGN_CENTER,
-                    1,
-                    gray));
-
-                document.Add(footer);
-
-                PdfPTable mainTable = new PdfPTable(2);
-                mainTable.WidthPercentage = 100;
-                mainTable.SetWidths(new float[] { 65, 35 });
-
-                PdfPTable leftTable = new PdfPTable(1);
-                leftTable.WidthPercentage = 100;
-
-                // Feedback image (emoji + stars combined PNG)
-                string imgPath = Path.Combine(_env.WebRootPath, "assets2", "img", "feedback-stars.png");
-
-                Image feedbackImg = Image.GetInstance(imgPath);
-                feedbackImg.ScaleToFit(300f, 200f);
-                feedbackImg.Alignment = Image.ALIGN_LEFT;
-
-                PdfPCell imgCell = new PdfPCell(feedbackImg)
+                // 🔹 Add to wrapper
+                wrapperTbl.AddCell(new PdfPCell(feedbackTbl)
                 {
-                    Border = Rectangle.BOX,
-                    Padding = 8,
-                    FixedHeight = 100
-                };
+                    Border = Rectangle.NO_BORDER,
+                    PaddingLeft = 10
+                });
 
-                leftTable.AddCell(imgCell);
+                /* ================= ADD TO DOCUMENT ================= */
+                document.Add(wrapperTbl);
+                #endregion
 
+                #endregion
 
-                PdfPTable rightTable = new PdfPTable(1);
-                rightTable.WidthPercentage = 100;
-
-                /* COMMENTS */
-                PdfPCell commentTitle = new PdfPCell(new Phrase("Comments", boldFont))
-                {
-                    HorizontalAlignment = Element.ALIGN_CENTER,
-                    Padding = 4
-                };
-
-                PdfPCell commentBox = new PdfPCell(new Phrase(" "))
-                {
-                    FixedHeight = 100
-                };
-
-                rightTable.AddCell(commentTitle);
-                rightTable.AddCell(commentBox);
-
-                /* SIGNATURE */
-                PdfPCell signTitle = new PdfPCell(new Phrase("Guest Signature", boldFont))
-                {
-                    HorizontalAlignment = Element.ALIGN_CENTER,
-                    Padding = 4
-                };
-
-                PdfPCell signBox = new PdfPCell(new Phrase(" "))
-                {
-                    FixedHeight = 100
-                };
-
-                rightTable.AddCell(signTitle);
-                rightTable.AddCell(signBox);
-
-                mainTable.AddCell(new PdfPCell(leftTable));
-                mainTable.AddCell(new PdfPCell(rightTable));
-
-                document.Add(mainTable);
-
+                #region PAGE 2
                 document.NewPage();
 
-                PdfPTable titleTbl = new PdfPTable(1);
-                titleTbl.WidthPercentage = 100;
-                titleTbl.AddCell(Utils.CreateCell2(dtStaffTitle.Rows[0]["StaffUseOnlyTitle"].ToString(), titleFont, Element.ALIGN_CENTER, 1, 30));
-                document.Add(titleTbl);
-                document.Add(new Paragraph("\n")); // Space
-
-                // ------------------- FOOD WASTAGE TABLE -------------------
-                PdfPTable fwTable = new PdfPTable(2); // Left + Right
-                fwTable.WidthPercentage = 100;
-                fwTable.SetWidths(new float[] { 30f, 70f });
-
-                // Left box: FoodWastageTitle
-                PdfPTable leftBox = new PdfPTable(1);
-                leftBox.WidthPercentage = 100;
-
-                PdfPCell leftTitleCell = new PdfPCell(
-                    new Phrase(dtFoodTitles.Rows[0]["FoodWastageTitle"].ToString(), boldFont)
-                );
-                leftTitleCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                leftTitleCell.VerticalAlignment = Element.ALIGN_TOP;
-                leftTitleCell.FixedHeight = 60f;
-                leftTitleCell.Border = Rectangle.NO_BORDER;   // ✅ IMPORTANT
-
-                leftBox.AddCell(leftTitleCell);
-
-
-                // Right box: 3 rows (LocationTime, WeightDoneBy, WeightCrossCheck)
-                PdfPTable rightBox = new PdfPTable(2);
-                rightBox.WidthPercentage = 100;
-                rightBox.SetWidths(new float[] { 50f, 50f });
-
-                // Row 1
-                rightBox.AddCell(Utils.CreateCell2(
-                    dtFoodTitles.Rows[0]["LocationTimeTitle"].ToString(),
-                    boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
-
-                rightBox.AddCell(Utils.CreateCell2(
-                    "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
-
-                // Row 2
-                rightBox.AddCell(Utils.CreateCell2(
-                    dtFoodTitles.Rows[0]["WeightDoneByTitle"].ToString(),
-                    boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
-
-                rightBox.AddCell(Utils.CreateCell2(
-                    "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
-
-                // Row 3
-                rightBox.AddCell(Utils.CreateCell2(
-                    dtFoodTitles.Rows[0]["WeightCrossCheckByTitle"].ToString(),
-                    boldFont, Element.ALIGN_LEFT, 1, 0, Rectangle.BOX));
-
-                rightBox.AddCell(Utils.CreateCell2(
-                    "", normalFont, Element.ALIGN_LEFT, 1, 20, Rectangle.BOX));
-
-
-                // Add left and right boxes to main table
-                fwTable.AddCell(new PdfPCell(leftBox) { Border = Rectangle.BOX, Padding = 5 });
-                fwTable.AddCell(new PdfPCell(rightBox) { Border = Rectangle.BOX, Padding = 5 });
-
-                document.Add(fwTable);
-                document.Add(new Paragraph("\n"));
-
-                // ================= MAIN CONTAINER TABLE =================
-                PdfPTable mainTable2 = new PdfPTable(2);
-                mainTable2.WidthPercentage = 100;
-                mainTable2.SetWidths(new float[] { 60f, 40f }); // Left (Item) | Right (Staff)
-
-                // =======================================================
-                // LEFT SIDE : ITEM & WEIGHT TABLE
-                // =======================================================
-                PdfPTable itemTable = new PdfPTable(2);
-                itemTable.WidthPercentage = 100;
-                itemTable.SetWidths(new float[] { 60f, 40f });
-
-                // Header
-                itemTable.AddCell(Utils.CreateCell2(
-                    dtFoodTitles.Rows[0]["ItemNameTitle"].ToString(),
-                    boldFont, Element.ALIGN_CENTER, 1, 25));
-
-                itemTable.AddCell(Utils.CreateCell2(
-                    dtFoodTitles.Rows[0]["WeightKgTitle"].ToString(),
-                    boldFont, Element.ALIGN_CENTER, 1, 25));
-
-                // 7 blank rows
-                for (int i = 0; i < 7; i++)
+                /* ================= CHECKLIST ================= */
+                #region EVENT DAY SMART CHECKLIST 1
+                // 🔹 TABLE 1 : TITLE
+                PdfPTable checklistTitleTbl = new PdfPTable(1);
+                checklistTitleTbl.WidthPercentage = 100;
+                checklistTitleTbl.AddCell(new PdfPCell(new Phrase(dtChecklistTitle.Rows[0][0].ToString(), boldFont7))
                 {
-                    itemTable.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 25));
-                    itemTable.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_CENTER, 1, 25));
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 5,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY
+                });
+                document.Add(checklistTitleTbl);
+
+                // 🔹 GROUP DATA
+                var groupedChecklist = dtChecklist.AsEnumerable().GroupBy(r => r["Title"].ToString());
+
+                // 🔹 TABLE 2 : MAIN CHECKLIST TABLE
+                PdfPTable checklistTbl = new PdfPTable(2);
+                checklistTbl.WidthPercentage = 100;
+                checklistTbl.SetWidths(new float[] { 30, 70 });
+                checklistTbl.SpacingBefore = 0;
+
+                // 🔹 LOOP GROUPS
+                foreach (var grp in groupedChecklist)
+                {
+                    // LEFT COLUMN (KEY)
+                    checklistTbl.AddCell(new PdfPCell(new Phrase(grp.Key, boldFont7))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 2,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+
+                    // RIGHT COLUMN (MULTIPLE CHECKBOXES IN SAME CELL)
+                    PdfPCell optionsCell = new PdfPCell()
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 2,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    };
+
+                    // 🔹 Create inner flow (same line wrapping)
+                    Phrase optionsPhrase = new Phrase();
+                    foreach (var item in grp)
+                    {
+                        optionsPhrase.Add(new Chunk("☐ ", checkboxFont)); // checkbox
+                        optionsPhrase.Add(new Chunk(item["OptionText"] + "    ", normalFont7));
+                    }
+                    optionsCell.AddElement(optionsPhrase);
+                    checklistTbl.AddCell(optionsCell);
                 }
 
-                // Add LEFT table to main table
-                PdfPCell leftCell = new PdfPCell(itemTable);
-                leftCell.Border = Rectangle.NO_BORDER;
-                leftCell.Padding = 3;
-                mainTable2.AddCell(leftCell);
+                document.Add(checklistTbl);
+                #endregion
 
-               
-                // RIGHT SIDE : STAFF TABLE
-                // =======================================================
-                PdfPTable staffTbl = new PdfPTable(2);
-                staffTbl.WidthPercentage = 100;
-                staffTbl.SetWidths(new float[] { 45f, 45f });
+                /* ================= INTERNAL EVENT NOTES ================= */
+                #region INTERNAL EVENT DAY NOTES
 
-                // Staff Header
-                staffTbl.AddCell(Utils.CreateCell2(
-                    dtStaffDuty.Rows[0]["StaffDutyTitle"].ToString(),
-                    boldFont, Element.ALIGN_CENTER, 2, 25));
-
-                // --- PRESENT STAFF 
-                staffTbl.AddCell(Utils.CreateCell2(
-                    dtStaffDuty.Rows[0]["StaffPresentTitle"].ToString(),
-                    boldFont, Element.ALIGN_LEFT, 1, 50)); // Label height: 50
-
-                staffTbl.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 80)); 
-
-                // --- ABSENT STAFF 
-                staffTbl.AddCell(Utils.CreateCell2(
-                    dtStaffDuty.Rows[0]["StaffAbsentTitle"].ToString(),
-                    boldFont, Element.ALIGN_LEFT, 1, 30)); // Label height: 30
-
-                staffTbl.AddCell(Utils.CreateCell2("", normalFont, Element.ALIGN_LEFT, 1, 30)); 
-
-                // Add RIGHT table to main table
-                PdfPCell rightCell = new PdfPCell(staffTbl);
-                rightCell.Border = Rectangle.NO_BORDER;
-                rightCell.Padding = 3;
-                mainTable2.AddCell(rightCell);
-
-                // =======================================================
-                // ADD TO DOCUMENT
-                // =======================================================
-                document.Add(mainTable2);
-                document.Add(new Paragraph("\n"));
-
-                PdfPTable chkTbl = new PdfPTable(2);
-                chkTbl.WidthPercentage = 100;
-
-                chkTbl.AddCell(Utils.Cell(
-                    dtChkTitle.Rows[0]["ChecklistTitle"].ToString(),
-                    boldFont,
-                    Element.ALIGN_CENTER,
-                    2,
-                    30
-                ));
-
-                foreach (DataRow r in dtChkItems.Rows)
+                /* ================= TITLE ================= */
+                // 🔹 TITLE
+                PdfPTable internalTitleTbl = new PdfPTable(1);
+                internalTitleTbl.WidthPercentage = 100;
+                internalTitleTbl.SpacingBefore = 5f;
+                internalTitleTbl.AddCell(new PdfPCell(new Phrase(dtEventNotesTitle.Rows[0][0].ToString(), boldFont7))
                 {
-                    chkTbl.AddCell(Utils.Cell(r["ChecklistItem"].ToString(), normalFont));
-                    chkTbl.AddCell(Utils.Cell("", normalFont));
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 5,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY
+                });
+                document.Add(internalTitleTbl);
+
+                /* ================= EVENT NOTES (2 COLUMN LAYOUT) ================= */
+                // 🔹 GROUP DATA
+                var groupedNotes = dtEventNotes.AsEnumerable()
+                    .GroupBy(r => r["Section"].ToString())
+                    .ToList();
+
+                // 🔹 OUTER TABLE (2 columns)
+                PdfPTable outerTbl = new PdfPTable(2);
+                outerTbl.WidthPercentage = 100;
+                outerTbl.SetWidths(new float[] { 50, 50 });
+                outerTbl.SpacingBefore = 5;
+
+                int colIndex = 0;
+
+                foreach (var sec in groupedNotes)
+                {
+                    // 🔹 INNER CONTENT TABLE (1 column)
+                    PdfPTable inner = new PdfPTable(1);
+                    inner.WidthPercentage = 100;
+
+                    // SECTION HEADER
+                    inner.AddCell(new PdfPCell(new Phrase("* " + sec.Key, boldFont7))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingBottom = 3
+                    });
+
+                    // ITEMS
+                    foreach (var item in sec)
+                    {
+                        string text = item["Item"].ToString();
+                        if (text == "Issue")
+                        {
+                            Phrase phrase = new Phrase();
+
+                            phrase.Add(new Chunk("  ", normalFont7));          // spacing
+                            phrase.Add(new Chunk("☐ ", checkboxFont));         // ✅ checkbox font
+                            phrase.Add(new Chunk("Issue: ____________________", normalFont7)); // normal text
+
+                            inner.AddCell(new PdfPCell(phrase)
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                PaddingBottom = 5
+                            });
+                        }
+                        else
+                        {
+                            Phrase phrase = new Phrase();
+
+                            phrase.Add(new Chunk("  ", normalFont7));          // spacing
+                            phrase.Add(new Chunk("☐ ", checkboxFont));         // ✅ checkbox font
+                            phrase.Add(new Chunk(text, normalFont7));          // normal text
+
+                            inner.AddCell(new PdfPCell(phrase)
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                PaddingBottom = 2
+                            });
+                        }
+                    }
+
+                    // DIVIDER LINE
+                    inner.AddCell(new PdfPCell()
+                    {
+                        FixedHeight = 1,
+                        BackgroundColor = BaseColor.LIGHT_GRAY,
+                        Border = Rectangle.NO_BORDER,
+                        PaddingTop = 10
+                    });
+
+                    // 🔹 ADD TO OUTER TABLE
+                    outerTbl.AddCell(new PdfPCell(inner)
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        Padding = 5
+                    });
+
+                    colIndex++;
+
+                    // 🔹 HANDLE ODD COUNT (fill empty cell)
+                    if (colIndex % 2 != 0 && sec.Equals(groupedNotes.Last()))
+                    {
+                        outerTbl.AddCell(new PdfPCell(new Phrase(""))
+                        {
+                            Border = Rectangle.NO_BORDER
+                        });
+                    }
                 }
 
-                document.Add(chkTbl);
+                // 🔹 ADD TO DOCUMENT
+                document.Add(outerTbl);
+                #endregion
 
-                PdfPTable notesTbl = new PdfPTable(1);
-                notesTbl.WidthPercentage = 100;
+                /* ================= FOOD WASTE ================= */
+                #region FOOD WASTE
+                // 🔹 TITLE
+                PdfPTable foodTitleTbl = new PdfPTable(1);
+                foodTitleTbl.WidthPercentage = 100;
+                foodTitleTbl.SpacingBefore = 5f;
 
-                notesTbl.AddCell(Utils.Cell(
-                    dtNotes.Rows[0]["EventNotesTitle"].ToString(),
-                    boldFont,
-                    Element.ALIGN_CENTER,
-                    1,
-                    30
-                ));
+                foodTitleTbl.AddCell(new PdfPCell(new Phrase(dtFoodWasteTitle.Rows[0][0].ToString(), boldFont7))
+                {
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 5,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY
+                });
+                document.Add(foodTitleTbl);
 
-                notesTbl.AddCell(Utils.Cell("", normalFont, Element.ALIGN_LEFT, 1, 120));
-                document.Add(notesTbl);
+                // 🔹 MAIN TABLE (5 columns)
+                PdfPTable wasteTbl = new PdfPTable(3);
+                wasteTbl.WidthPercentage = 100;
+                wasteTbl.SetWidths(new float[] { 6, 74, 20});
+                wasteTbl.SpacingBefore = 0;
+                wasteTbl.HeaderRows = 1;
+
+                // 🔹 HEADER FUNCTION
+                void FH(string text)
+                {
+                    wasteTbl.AddCell(new PdfPCell(new Phrase(text, boldFont7))
+                    {
+                        BackgroundColor = new BaseColor(240, 240, 240),
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 5,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+                }
+
+                // 🔹 HEADER ROW
+                FH("Sr No.");
+                FH("Items");
+                FH("Weight (Kg)");
+
+                int srno = 1;
+
+                // 🔥 CHECK IF EMPTY
+                if (dtFoodWaste.Rows.Count == 0)
+                {
+                    // 🔹 Empty Row (Full Width Message)
+                    wasteTbl.AddCell(new PdfPCell(new Phrase("No food items found", normalFont7))
+                    {
+                        Colspan = 3, // 🔥 merge all columns
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        Padding = 6,
+                        Border = Rectangle.BOX,
+                        BorderWidth = 0.2f,
+                        BorderColor = BaseColor.LIGHT_GRAY
+                    });
+                }
+                else
+                {
+                    foreach (DataRow r in dtFoodWaste.Rows)
+                    {
+                        // Sr No
+                        wasteTbl.AddCell(new PdfPCell(new Phrase(srno.ToString(), normalFont7))
+                        {
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 4,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        // Item Name
+                        wasteTbl.AddCell(new PdfPCell(new Phrase(r["ItemName"]?.ToString() ?? "-", normalFont7))
+                        {
+                            HorizontalAlignment = Element.ALIGN_LEFT,
+                            Padding = 4,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        // Weight
+                        wasteTbl.AddCell(new PdfPCell(new Phrase(r["FoodWasteWeight"]?.ToString() ?? "0", normalFont7))
+                        {
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Padding = 4,
+                            Border = Rectangle.BOX,
+                            BorderWidth = 0.2f,
+                            BorderColor = BaseColor.LIGHT_GRAY
+                        });
+
+                        srno++;
+                    }
+                }
+
+                document.Add(wasteTbl);
+                #endregion
+
+                #endregion
 
                 document.Close();
 
                 /* ================= SAVE ================= */
+                #region SAVE FILE
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                string fileName = $"Booking_EventReport_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                Utils.deleteOldFiles(folder, "Booking_EventReport_*.pdf", 60);
+                string fileName = $"EventForm_BK{request.BookingId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
 
-                System.IO.File.WriteAllBytes(Path.Combine(folder, fileName), stream.ToArray());
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                {
+                    stream.WriteTo(fs);
+                }
+                #endregion
 
                 response.status = "Success";
-                response.message = "PDF Generated Successfully";
+                response.message = "Event Form Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
                 return Ok(response);
             }
             catch (Exception ex)

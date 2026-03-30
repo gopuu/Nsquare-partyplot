@@ -1,4 +1,480 @@
-﻿//SLOT MASTER
+﻿//QUOTATION - START ------------------------------------------------------------------------------------------
+function resetQuotationForm() {
+
+    // ===== Basic =====
+    $("#quotationId").val(0);
+    $("#quotation_enquiryDealId").val(0);
+
+    // ===== Banquet / Slot / Date =====
+    $("#quotation_banquetId").val("0");
+    $("#quotation_slotId").val("0");
+    $("#quotation_fromDate").val("");
+    $("#quotation_tillDate").val("");
+
+    $("#quotation_startTime").val("");
+    $("#quotation_endTime").val("");
+
+    // ===== Client Section =====
+    $("#quotation_clientId").val(null).trigger("change");
+    $("#quotation_clientName").val("");
+    $("#quotation_clientAddress").val("");
+    $("#quotation_clientEmail").val("");
+    $("#quotation_clientContact").val("");
+    $("#quotation_clientGstIn").val("");
+    $("#quotation_clientStateId").val("0");
+
+    // ===== Booking Details =====
+    $("#quotation_eventTypeId").val("0");
+    $("#quotation_subEventTypeId").val("0");
+    $("#quotation_banquetRent").val(0);
+    $("#quotation_pax").val(0);
+    $("#quotation_referenceTypeId").val("0");
+
+    // ===== Charges =====
+    $("#quotation_decorationAmount").val(0);
+    $("#quotation_soundAmount").val(0);
+    $("#quotation_projectorAmount").val(0);
+
+    // ===== Print Flags =====
+    $("#quotation_isPrintExclusive").prop("checked", false);
+    $("#quotation_isPrintFoodItems").prop("checked", false);
+
+    // ===== Totals =====
+    $("#quotation_subTotal").val(0);
+    $("#quotation_taxAmount").val(0);
+    $("#quotation_grandTotal").val(0);
+
+    // ===== Packages =====
+    $(".package-checkbox").prop("checked", false);
+
+    // ===== Other Services Reset =====
+    $("#quotation_otherServicesContainer").html(`
+        <div class="row g-1 quotation-service-row mb-1">
+            <div class="col-md-3">
+                <label class="form-label compact-label">Service</label>
+                <input type="text" class="form-control form-control-sm quotation-service-name p-1" placeholder="Service" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label compact-label">Amount</label>
+                <input type="number" class="form-control form-control-sm quotation-service-amount p-1" value="0" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label compact-label">Qty</label>
+                <input type="number" class="form-control form-control-sm quotation-service-qty p-1" value="0" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label compact-label">Total</label>
+                <input type="number" class="form-control form-control-sm quotation-service-total bg-light p-1" value="0" readonly />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label compact-label">Description</label>
+                <textarea class="form-control form-control-sm quotation-service-desc p-1" placeholder="Description"></textarea>
+            </div>
+        </div>
+    `);
+
+    // Optional: recalc to ensure totals consistent
+    quotation_calculateTotals();
+
+    $("#quotation_btnSave").show();
+    $("#quotationModal").removeClass("view-mode");
+}
+function openQuotation(enquiryDealId) {
+    resetQuotationForm();
+
+    var payload = { EnquiryId: enquiryDealId, QuotationId: 0 };
+
+    $.ajax({
+        url: "/api/Quotation/GetQuotationByEnquiryId",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+
+        success: function (response) {
+            console.log("API Response:", response);
+
+            if (response.status !== "Success") return;
+
+            const data = response.data[0]; // single enquiry
+            const quotations = data.Quotations || [];
+
+            console.log("Quotations:", quotations);
+
+            /* ================= CASE 1: NO QUOTATION ================= */
+            if (quotations.length === 0) {
+
+                console.log("Case 1: No quotation");
+
+                fillEnquiryToQuotationForm(data);
+
+                $("#quotationModal .modal-title").text("Add Quotation");
+                $("#quotationModal").modal("show");
+            }
+
+            /* ================= CASE 2: ONE QUOTATION ================= */
+            else if (quotations.length === 1) {
+
+                console.log("Case 2: Single quotation");
+
+                fillEnquiryToQuotationForm(data);
+                fillQuotationToForm(quotations[0]);
+
+                $("#quotationModal .modal-title").text("Edit Quotation");
+                $("#quotationModal").modal("show");
+            }
+
+            /* ================= CASE 3: MULTIPLE ================= */
+            else {
+                console.log("Case 3: Multiple quotations");
+
+                bindQuotationList(data, quotations);
+                $("#quotationListModal").modal("show");
+            }
+        },
+
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Quotation Fetch Error");
+        }
+    });
+}
+function fillEnquiryToQuotationForm(e) {
+    $("#quotation_enquiryDealId").val(e.Id);
+
+    $("#quotation_clientName").val(e.Name);
+    $("#quotation_clientContact").val(e.Contact);
+    $("#quotation_clientEmail").val(e.Email);
+    $("#quotation_clientAddress").val(e.Address);
+
+    $("#quotation_eventTypeId").val(e.EventTypeId);
+    $("#quotation_subEventTypeId").val(e.EventSubTypeId);
+
+    $("#quotation_pax").val(e.Pax);
+}
+function fillQuotationToForm(q) {
+
+    $("#quotationId").val(q.Id);
+
+    $("#quotation_banquetId").val(q.BanquetId);
+    $("#quotation_slotId").val(q.SlotId);
+
+    $("#quotation_fromDate").val(q.FromDate);
+    $("#quotation_tillDate").val(q.TillDate);
+
+    $("#quotation_startTime").val(q.StartTime);
+    $("#quotation_endTime").val(q.EndTime);
+
+    $("#quotation_banquetRent").val(q.BanquetRent);
+    $("#quotation_pax").val(q.Pax);
+
+    $("#quotation_decorationAmount").val(q.DecorationChargesAmount);
+    $("#quotation_soundAmount").val(q.SoundSystemChargesAmount);
+    $("#quotation_projectorAmount").val(q.ProjectorChargesAmount);
+
+    $("#quotation_subTotal").val(q.SubTotal);
+    $("#quotation_grandTotal").val(q.GrandTotal);
+}
+function bindQuotationList(enquiry, quotations) {
+
+    let html = "";
+
+    quotations.forEach(q => {
+
+        html += `
+        <tr>
+            <td>${q.Id}</td>
+            <td>${q.SlotName}</td>
+            <td>${q.FromDate2}</td>
+            <td>${enquiry.Name}</td>
+            <td>₹ ${q.GrandTotal}</td>
+            <td>
+                <button class="btn btn-sm btn-primary btn-edit-quotation" data-id="${q.Id}">Edit</button>
+                <button class="btn btn-sm btn-danger btn-delete-quotation" data-id="${q.Id}">Delete</button>
+                <button class="btn btn-sm btn-secondary btn-view-quotation" data-id="${q.Id}">View</button>
+            </td>
+        </tr>`;
+    });
+
+    $("#quotationListBody").html(html);
+}
+
+$(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () {
+
+    const id = $(this).data("id");
+    const isEdit = $(this).hasClass("btn-edit-quotation");
+    const isView = $(this).hasClass("btn-view-quotation");
+
+    console.log("Quotation Action Clicked:", id);
+
+    /* ================= EDIT / VIEW ================= */
+    var payload = {
+        EnquiryId: 0,
+        QuotationId: id // 🔥 new param (quotationId)
+    };
+
+    $.ajax({
+        url: "/api/Quotation/GetQuotationByEnquiryId",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+
+            if (response.status !== "Success") return;
+
+            const data = response.data[0];
+            const quotations = data.Quotations || [];
+
+            if (quotations.length === 0) return;
+
+            const q = quotations[0];
+
+            console.log("Loaded Quotation:", q);
+
+            // 🔹 Reset & Fill
+            resetQuotationForm();
+            fillEnquiryToQuotationForm(data);
+            fillQuotationToForm(q);
+
+            // 🔹 Mode Handling
+            if (isEdit) {
+                console.log("Mode: EDIT");
+
+                enableQuotationForm();
+
+                $("#quotationModal .modal-title").text("Edit Quotation");
+            }
+
+            if (isView) {
+                console.log("Mode: VIEW");
+
+                disableQuotationForm();
+                $("#quotation_btnSave").hide(); // or disable
+
+                $("#quotationModal").addClass("view-mode");
+                $("#quotationModal .modal-title").text("View Quotation");
+            }
+
+            $("#quotationModal").modal("show");
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Quotation Fetch Error");
+        }
+    });
+});
+function enableQuotationForm() {
+
+    $("#quotationModal")
+        .find("input, select, textarea, button")
+        .prop("disabled", false);
+}
+function disableQuotationForm() {
+
+    $("#quotationModal")
+        .find("input, select, textarea, button")
+        .prop("disabled", true);
+
+    // Keep close button enabled
+    $("#quotationModal .btn-close").prop("disabled", false);
+}
+
+$(document).on("click", ".btn-delete-quotation", function () {
+
+    let quotationId = $(this).data("id");
+    let enquiryId = $("#quotation_enquiryDealId").val(); // or pass from context
+    let actionBy = sessionStorage.getItem("userId") ?? 0;
+
+    console.log("Delete Quotation Clicked:", quotationId);
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This quotation will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            const deleteObj = {
+                Id: quotationId,
+                ActionBy: actionBy
+            };
+
+            $.ajax({
+                url: "/api/Quotation/DeleteQuotation",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(deleteObj),
+                success: function (res) {
+                    if (res.status === "Success") {
+                        handleApiSuccess("Deleted!");
+                        console.log("Quotation deleted:", quotationId);
+                        // 🔥 Refresh list modal (IMPORTANT)
+                        openQuotation(enquiryId);
+                        //$(this).closest("tr").remove();
+                        // Optional: close modal if needed
+                        // $("#quotationListModal").modal("hide");
+                    }
+                },
+
+                error: function (xhr, error, status) {
+                    handleApiError(xhr, error, status, "Failed to delete quotation");
+                }
+            });
+        }
+    });
+});
+
+function quotation_calculateTotals() {
+    let pax = parseInt($("#quotation_pax").val()) || 0;
+
+    let packageTotal = 0;
+
+    // Calculate selected packages
+    $(".package-checkbox:checked").each(function () {
+        let rate = parseFloat($(this).data("rate")) || 0;
+        packageTotal += rate * pax;
+    });
+
+    // Calculate other services
+    let serviceTotal = 0;
+    $(".quotation-service-total").each(function () {
+        serviceTotal += parseFloat($(this).val()) || 0;
+    });
+
+    // Other charges
+    let decoration = parseFloat($("#quotation_decorationAmount").val()) || 0;
+    let sound = parseFloat($("#quotation_soundAmount").val()) || 0;
+    let projector = parseFloat($("#quotation_projectorAmount").val()) || 0;
+    let banquetRent = parseFloat($("#quotation_banquetRent").val()) || 0;
+
+    let subTotal = packageTotal + serviceTotal + decoration + sound + projector + banquetRent;
+
+    let tax = 0; // subTotal * 0.18; // 18% GST
+
+    let netTotal = subTotal + tax;
+
+    $("#quotation_subTotal").val(subTotal.toFixed(2));
+    $("#quotation_taxAmount").val(tax.toFixed(2));
+    $("#quotation_grandTotal").val(netTotal.toFixed(2));
+}
+
+// Add Service Row
+$("#quotation_btnAddService").click(function () {
+    let row = `
+        <div class="row g-1 quotation-service-row mb-1 align-items-center">
+            <div class="col-md-3">
+                <input type="text" class="form-control quotation-service-name" placeholder="Service" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control quotation-service-amount" placeholder="Amount" value="0" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control quotation-service-qty" value="0" />
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control quotation-service-total bg-light" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <textarea class="form-control quotation-service-desc" placeholder="Description"></textarea>
+            </div>
+            <div class="col-md-1 text-center">
+                <button type="button" class="btn btn-sm btn-danger quotation-btn-remove-service">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>`;
+
+    $("#quotation_otherServicesContainer").append(row);
+});
+
+// Remove Service Row (IMPORTANT: use event delegation)
+$(document).on("click", ".quotation-btn-remove-service", function () {
+    $(this).closest(".quotation-service-row").remove();
+});
+
+//Auto calc
+$(document).on("input", ".quotation-service-amount, .quotation-service-qty", function () {
+    let row = $(this).closest(".quotation-service-row");
+
+    let amount = parseFloat(row.find(".quotation-service-amount").val()) || 0;
+    let qty = parseInt(row.find(".quotation-service-qty").val()) || 0;
+
+    let total = amount * qty;
+
+    row.find(".quotation-service-total").val(total.toFixed(2));
+
+    quotation_calculateTotals();
+});
+
+$(document).on("change input", "#quotation_pax, .package-checkbox", function () {
+    quotation_calculateTotals();
+});
+
+$("#quotation_decorationAmount, #quotation_soundAmount, #quotation_projectorAmount, #quotation_banquetRent").on("input", function () {
+    quotation_calculateTotals();
+});
+
+// On Slot Change
+$(document).on("change", "#quotation_slotId", function () {
+    const selectedOption = $(this).find("option:selected");
+
+    const startTime = selectedOption.data("start");
+    const endTime = selectedOption.data("end");
+
+    if ($(this).val() != "0") {
+        $("#quotation_startTime").val(startTime || "");
+        $("#quotation_endTime").val(endTime || "");
+    } else {
+        $("#quotation_startTime").val("");
+        $("#quotation_endTime").val("");
+    }
+});
+
+function getPackagesJson() {
+
+    let list = [];
+
+    $(".package-checkbox:checked").each(function () {
+        list.push({
+            PackageId: parseInt($(this).val())
+        });
+    });
+
+    return JSON.stringify(list);
+}
+
+function getOtherServicesJson() {
+
+    let list = [];
+
+    $(".service-row").each(function (index) {
+
+        let name = $(this).find(".service-name").val();
+        let amount = parseFloat($(this).find(".service-amount").val()) || 0;
+        let qty = parseInt($(this).find(".service-qty").val()) || 0;
+        let total = parseFloat($(this).find(".service-total").val()) || 0;
+        let desc = $(this).find(".service-desc").val();
+
+        if (name) {
+            list.push({
+                SrNo: index + 1,
+                ServiceName: name,
+                ServiceDescription: desc,
+                Amount: amount,
+                Quantity: qty,
+                TotalAmount: total
+            });
+        }
+    });
+
+    return JSON.stringify(list);
+}
+
+//QUOTATION - END------------------------------------------------------------------------------------------
+
+//SLOT MASTER
 loadSlotMaster();
 function loadSlotMaster() {
     var payload = { Id: 0, IsActive: true };
@@ -9,6 +485,9 @@ function loadSlotMaster() {
         data: JSON.stringify(payload),
         success: function (response) {
             //console.log("response supplier:", response);
+
+            const $slotDropdowns = $("#quotation_slotId");
+            $slotDropdowns.html(`<option value="0">--Select--</option>`);
 
             shiftMap = {};
             shiftTimes = {};
@@ -22,7 +501,7 @@ function loadSlotMaster() {
                     start: s.StartTime2 || s.StartTime,
                     end: s.EndTime2 || s.EndTime
                 };
-
+                $slotDropdowns.append(`<option value="${s.Id}" data-start="${s.StartTime}" data-end="${s.EndTime}">${s.Name} (${s.Code})</option>`);
             });
             console.log("Shift Map:", shiftMap);
             console.log("Shift Times:", shiftTimes);
@@ -524,13 +1003,27 @@ function renderBoard() {
                             <!--Follow-up Row-->
                         ${ hideFollowUp
                         ? ""
-                        : `<div class="card-footer py-1 px-2 d-flex justify-content-between align-items-center
-                                followup-row text-primary fw-bold open-followup"
-                                data-dealid="${deal.EnquiryDealId}">
-                                <span>Follow-up</span>
-                                <span class="badge bg-secondary">${deal.FollowUpCount}</span>
+                        : `
+                            <div class="card-footer py-1 px-2 d-flex align-items-center text-primary fw-semibold">
+                                <div class="d-flex align-items-center flex-nowrap w-100 justify-content-between small-text">
+
+                                    <!-- Followups -->
+                                    <div class="action-btn open-followup d-flex align-items-center" data-dealid="${deal.EnquiryDealId}">
+                                        <span class="badge bg-dark me-1 px-1 py-0 badge-sm">${deal.FollowUpCount}</span>
+                                        <span class="text-truncate">Followups</span>
+                                    </div>
+
+                                    <span class="mx-1 text-muted">|</span>
+
+                                    <!-- Quotations -->
+                                    <div class="action-btn open-quotation d-flex align-items-center" data-dealid="${deal.EnquiryDealId}">
+                                        <span class="badge bg-dark me-1 px-1 py-0 badge-sm">${deal.QuotationCount}</span>
+                                        <span class="text-truncate">Quotations</span>
+                                    </div>
+
+                                </div>
                             </div>
-                                  `
+                        `
                         }                            
                         </div>
                     `;
@@ -1514,6 +2007,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Open from Quotation Modal (+ button)
+    $(document).off("click", ".open-quotation").on("click", ".open-quotation", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const enquiryDealId = $(this).data("dealid");
+        console.log("quotation enquiryDealId:", enquiryDealId);
+        openQuotation(enquiryDealId);
+    });
+
+    // When Quotation Modal closes
+    $("#quotationModal").on("hidden.bs.modal", function () {
+        //if (openedFromDeal) {
+        //    $("#dealModal").modal("show"); // reopen only if it was opened from deal
+        //    openedFromDeal = false; // reset flag
+        //}
+    });
+
     //Modal Behaviour -- START ---------------------------------------------------
 
     const addonModal = document.getElementById('addonChargeModal');
@@ -2230,9 +2741,10 @@ function loadFoodPackageList() {
                 foodPackages = response.data;
                 // populate first dropdown
                 populateFoodPackageDropdown($("#packageDropdown, #foodPackage_PackageDropdown"));
+                renderFoodPackages(foodPackages);
             }
             else {
-                $("#packageDropdown, #foodPackage_PackageDropdown").html(`<option value="0">No Package Found</option>`);
+                $("#packageDropdown, #foodPackage_PackageDropdown, #quotation_packageContainer").html(`<option value="0">No Package Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -2249,6 +2761,56 @@ function populateFoodPackageDropdown($dropdown) {
     });
     $dropdown.html(options);
 }
+function renderFoodPackages(packages) {
+
+    if (!packages || packages.length === 0) {
+        $("#quotation_packageContainer").html(`
+            <div class="text-center text-danger small py-2">
+                No Package Found
+            </div>
+        `);
+        return;
+    }
+
+    let html = `
+        <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
+            <small class="fw-semibold">Select Food Package</small>
+            <small class="fw-semibold">Rate/PP</small>
+        </div>
+    `;
+
+    $.each(packages, function (i, pkg) {
+
+        let rate = parseFloat(pkg.RatePerPerson) || 0;
+        let name = pkg.PackageName || pkg.Name || "Package";
+
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-1 package-row">
+
+                <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input package-checkbox"
+                           value="${pkg.Id}"
+                           data-rate="${rate}" />
+
+                    <label class="form-check-label">
+                        ${name}
+                    </label>
+                </div>
+
+                <input type="text"
+                       class="form-control form-control-sm text-end bg-light p-1"
+                       value="${rate}"
+                       readonly
+                       style="width:75px;" />
+
+            </div>
+        `;
+    });
+
+    $("#quotation_packageContainer").html(html);
+}
+
 //package dropdown -- END --------------------
 
 //banquet hall details - dropdown -- START ----------------------
@@ -2266,10 +2828,10 @@ function fetchHallDetails() {
                 $.each(response.data, function (index, item) {
                     options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
                 });
-                $("#banquetDropdown").html(options);
+                $("#banquetDropdown, #quotation_banquetId").html(options);
             }
             else {
-                $("#banquetDropdown").html(`<option value="0">No Hall Found</option>`);
+                $("#banquetDropdown, #quotation_banquetId").html(`<option value="0">No Hall Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -2290,6 +2852,7 @@ function loadEventTypeList() {
                 let rows = "";
                 let srNo = 1;
                 let options = `<option value = "0"> --Select Event Type--</option> `; // default option
+                let options1 = `<option value = "0">--Select Event--</option> `; // default option
 
                 $.each(response.data, function (index, item) {
                     rows += `
@@ -2307,16 +2870,18 @@ function loadEventTypeList() {
                             </tr>
     `;
                     options += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                    options1 += `<option value = "${item.Id}"> ${item.Name}</option> `;
                 });
 
                 $("#eventTypeTable tbody").html(rows);
                 $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal").html(options);
+                $("#quotation_eventTypeId").html(options1);
                 //loadEventSubTypeList(eventTypeId);
             } else {
                 $("#eventTypeTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#eventTypeDropdown").html(`<option value = "0"> No Event Type Found</option> `);
+                $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal, #quotation_eventTypeId").html(`<option value = "0"> No Event Type Found</option> `);
             }
         },
         error: function (xhr, status, error) {
@@ -2368,8 +2933,8 @@ function loadEventSubTypeList(eventTypeId = 0) {
             if (response.status === "Success") {
                 let rows = "";
                 let srNo = 1;
-                let options = `<option value = "0"> --Select Event Sub-Type--</option> `;
-                let options1 = `<option value = "0"> --Select Event--</option> `;
+                let options = `<option value = "0"> --Select Sub-Event--</option> `;
+                let options1 = `<option value = "0">--Select SubEvent--</option> `;
 
                 $.each(response.data, function (index, item) {
                     rows += `
@@ -2392,13 +2957,13 @@ function loadEventSubTypeList(eventTypeId = 0) {
 
                 $("#eventSubTypeTable tbody").html(rows);
                 $("#eventSubTypeDropdown").html(options);
-                $("#booking_subEventDropdown").html(options1);
+                $("#booking_subEventDropdown, #quotation_subEventTypeId").html(options1);
             } else {
                 $("#eventSubTypeTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#eventSubTypeDropdown").html(`<option value = "0"> No Event Sub-Type Found</option> `);
-                $("#booking_subEventDropdown").html(`<option value = "0"> No Event Found</option> `);
+                $("#eventSubTypeDropdown, #quotation_subEventTypeId").html(`<option value = "0">No Sub-Event Found</option> `);
+                $("#booking_subEventDropdown").html(`<option value = "0">No Event Found</option> `);
             }
         },
         error: function (xhr, status, error) {
@@ -2477,7 +3042,6 @@ function loadBanquetHallList() {
 
 // Load lead source list from API
 function loadLeadSourceList() {
-    ////showLoader()();
     $.ajax({
         url: "/api/LeadSource/GetLeadSourceList",
         type: "GET",
@@ -2507,25 +3071,17 @@ function loadLeadSourceList() {
                 });
 
                 $("#leadSourceTable tbody").html(rows);
-                $("#leadSourceDropdown, #booking_leadReferenceDropdown").html(options);
+                $("#leadSourceDropdown, #booking_leadReferenceDropdown, #quotation_referenceTypeId").html(options);
             }
             else {
                 $("#leadSourceTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#leadSourceDropdown, #booking_leadReferenceDropdown").html(`<option value = "0">No Lead Source Found</option> `);
+                $("#leadSourceDropdown, #booking_leadReferenceDropdown, #quotation_referenceTypeId").html(`<option value = "0">No Lead Source Found</option> `);
             }
         },
-        error: function () {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Error fetching lead source list.",
-                confirmButtonText: "OK",
-            });
-        },
-        complete: function () {
-            //hideLoader();
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error fetching lead source list.");
         }
     });
 }
@@ -3372,9 +3928,9 @@ function loadEnquiryList() {
                                    data-contact="${item.Contact || ''}"
                                >${item.Name} (${item.Contact})</option>`;
                 });
-                $("#clientEnquiryDropdown").html(options);
+                $("#clientEnquiryDropdown, #quotation_clientId").html(options);
 
-                 $("#clientEnquiryDropdown").on("change", function () {
+                $("#clientEnquiryDropdown").on("change", function () {
                     const selected = $(this).find(":selected");
 
                     $("#clientName").val(selected.data("name") || "");
@@ -3382,8 +3938,18 @@ function loadEnquiryList() {
                     $("#clientAddress").val(selected.data("address") || "");
                     $("#clientContact").val(selected.data("contact") || "");
                 }); 
-            } else {
-                $("#clientEnquiryDropdown").html(`<option value="0">No Enquiry Client Found</option>`);
+
+                $("#quotation_clientId").on("change", function () {
+                    const selected = $(this).find(":selected");
+
+                    $("#quotation_clientName").val(selected.data("name") || "");
+                    $("#quotation_clientEmail").val(selected.data("email") || "");
+                    $("#quotation_clientAddress").val(selected.data("address") || "");
+                    $("#quotation_clientContact").val(selected.data("contact") || "");
+                }); 
+            }
+            else {
+                $("#clientEnquiryDropdown, #quotation_clientId").html(`<option value="0">No Enquiry Client Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -3414,15 +3980,15 @@ function loadStateList() {
                         gujaratId = item.Id;
                     }
                 });
-                $("#clientStateDropdown").html(options);
+                $("#clientStateDropdown, #quotation_clientStateId").html(options);
                 // Set default selection if found
                 if (gujaratId > 0) {
-                    $("#clientStateDropdown").val(gujaratId);
+                    $("#clientStateDropdown, #quotation_clientStateId").val(gujaratId);
                 }
             } else {
-                $("#clientStateDropdown").html(`<option value="0">No State Found</option>`);
+                $("#clientStateDropdown, #quotation_clientStateId").html(`<option value="0">No State Found</option>`);
             }
-        },
+        }, 
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, 'Failed to load state list');
         }

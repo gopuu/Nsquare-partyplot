@@ -3403,7 +3403,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ActionBy: userId
         };
         console.log("payload EventForm:", payload);
-        var url = "/api/Report/DownloadBookingEventReport";
+        var url = "/api/Report/Report_BookingEventForm";
         downloadReport(url, payload, "Generating Report...");
     });
 

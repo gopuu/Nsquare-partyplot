@@ -12,6 +12,7 @@
     public class DownloadBookingEventReportRequest : BaseClass
     {
         public long BookingId { get; set; }
+        public bool? WithHeader { get; set; } = true;
     }
 
     //Booking Receipt Model
@@ -225,11 +226,11 @@
     }
     public class FoodPackage_MenuIems
     {
-        public long? Inclusion_Id { get; set; } = null;
         public long? MenuHeader_Id { get; set; } = null;
+        public long? Inclusion_Id { get; set; } = null;
         public long? MenuItem_Id { get; set; } = null;
+        public string? MenuItem_Name_NewAdded { get; set; }
         public bool? IsChecked { get; set; } = null;
-        public string? FoodItem_Name_NewAdded { get; set; }
     }
     public class FoodPackage_AddOns
     {

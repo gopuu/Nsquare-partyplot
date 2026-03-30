@@ -229,7 +229,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // RECEIPTS
-                    cmd = new SqlCommand("Report_GetBookingPaymentReceipt", con);
+                    cmd = new SqlCommand("Report_GetBooking_Payments_Receipt", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
                     cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = request.PaymentId;

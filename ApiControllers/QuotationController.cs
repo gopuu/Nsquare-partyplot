@@ -140,6 +140,108 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("GetQuotationByEnquiryId")]
+        public IActionResult GetQuotationByEnquiryId([FromBody] GetQuotationByEnquiryIdRequest request)
+        {
+            apiResponse apiResponse = new();
+            List<GetQuotationByEnquiryIdResponse> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetQuotationByEnquiryId", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@EnquiryId", request?.EnquiryId ?? 0);
+                    cmd.Parameters.AddWithValue("@QuotationId", request?.QuotationId ?? 0);
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var item = new GetQuotationByEnquiryIdResponse
+                            {
+                                Id = Convert.ToInt64(reader["Id"]),
+                                ProcessId = Convert.ToInt64(reader["ProcessId"]),
+                                ProcessName = reader["ProcessName"]?.ToString(),
+
+                                Name = reader["Name"]?.ToString(),
+                                Contact = reader["Contact"]?.ToString(),
+                                Address = reader["Address"]?.ToString(),
+                                Email = reader["Email"]?.ToString(),
+
+                                EventTypeId = Convert.ToInt64(reader["EventTypeId"]),
+                                EventTypeName = reader["EventTypeName"]?.ToString(),
+
+                                EventSubTypeId = Convert.ToInt64(reader["EventSubTypeId"]),
+                                EventSubTypeName = reader["EventSubTypeName"]?.ToString(),
+
+                                BanquetHallId = Convert.ToInt64(reader["BanquetHallId"]),
+                                BanquetHallName = reader["BanquetHallName"]?.ToString(),
+
+                                EventDate = reader["EventDate"]?.ToString(),
+                                EventDate_Format = reader["EventDate_Format"]?.ToString(),
+
+                                EventStartTime = reader["EventStartTime"]?.ToString(),
+                                EventEndTime = reader["EventEndTime"]?.ToString(),
+
+                                Pax = Convert.ToInt32(reader["Pax"]),
+
+                                FollowUpDate = reader["FollowUpDate"]?.ToString(),
+                                FollowUpDate_Format = reader["FollowUpDate_Format"]?.ToString(),
+
+                                EstimatedAmount = Convert.ToDecimal(reader["EstimatedAmount"]),
+
+                                LeadSourceId = Convert.ToInt64(reader["LeadSourceId"]),
+                                LeadSourceName = reader["LeadSourceName"]?.ToString(),
+
+                                Remarks = reader["Remarks"]?.ToString(),
+                                PackageId = Convert.ToInt64(reader["PackageId"]),
+
+                                FollowUpCount = Convert.ToInt64(reader["FollowUpCount"])
+                            };
+
+                            /* ================= QUOTATION JSON ================= */
+
+                            var quotationJson = reader["Quotations_JSON"]?.ToString();
+
+                            if (!string.IsNullOrEmpty(quotationJson))
+                            {
+                                item.Quotations = System.Text.Json.JsonSerializer
+                                    .Deserialize<List<GetQuotationResponse>>(quotationJson) ?? new();
+                            }
+
+                            list.Add(item);
+                        }
+                    }
+
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Data fetched successfully!";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("SaveQuotation")]
         public IActionResult SaveQuotation([FromBody] SaveQuotationRequest model)
         {
