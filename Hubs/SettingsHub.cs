@@ -7,10 +7,10 @@ public class SettingsHub : Hub
         await Clients.All.SendAsync("OnSettingsChanged");
     }
 }
-
-//namespace ERPAdmin.Hubs
-//{
-//    public class SettingsHub
-//    {
-//    }
-//}
+public class QuotationHub : Hub
+{
+    public async Task NotifyQuotationChanged()
+    {
+        await Clients.All.SendAsync("OnQuotationChanged");
+    }
+}

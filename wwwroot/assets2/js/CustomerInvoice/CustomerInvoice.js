@@ -32,7 +32,8 @@ $(function () {
     loadAccountDropdown();
     loadPaymentModeDropdown();
 
-    AppSignalR.subscribe(() => {
+    AppSignalR.subscribeSettings((data) => {
+        //console.log("Settings Page Update", data);
         window.location.reload();
         fetchData(flag_isGeneratedInvoice);
     });
@@ -341,6 +342,8 @@ $(function () {
 
     //SAVE
     $('#btnSaveInvoice').on('click', function () {
+        if (!validateBeforeSave()) return;
+
         const items = [];
         $('#invoiceItemsBody tr').each(function (index) {
             const row = $(this);
@@ -398,7 +401,7 @@ $(function () {
 
         //const isGstIncluded = $('#isGstIncluded').is(':checked');
         var totalGst = parseFloat($('#totalGST').val()) || 0;
-        const gstInvoiceNoVal = (gstInvoiceNo || '').toString().trim();
+        const gstInvoiceNoVal = gstInvoiceNo;
         const invoiceNoVal = $('#invoiceNo').val();
         const proformaNoVal = $('#proformaInvoiceNo').val();
 
@@ -408,11 +411,8 @@ $(function () {
         const request = {
             Id: parseInt($('#invoiceId').val()) || 0,
             BookingId: parseInt($('#bookingId').val()) || 0,
-            //InvoiceNo: (invoiceType === "invoice" && totalGst > 0) ? Number($('#invoiceNo').val()) : null,
-            //ProformaInvoiceNo: (invoiceType === "proforma") ? Number($('#proformaInvoiceNo').val()) : null,
-            //GSTInvoiceNo: (invoiceType === "invoice" && totalGst == 0 && gstInvoiceNoVal !== '') ? gstInvoiceNo : null,
 
-            InvoiceNo: (invoiceType === "invoice" && totalGst > 0)
+            InvoiceNo: (invoiceType === "invoice" && (totalGst > 0 || gstInvoiceNo == null))
                 ? (invoiceNoVal ? Number(invoiceNoVal) : null)
                 : null,
 
@@ -491,6 +491,21 @@ $(function () {
             }
         });
     });
+
+    function validateBeforeSave() {
+        const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+        if (!isInclusiveGST) return true;
+        const currentSubTotal = parseFloat($('#subTotal').val()) || 0;
+        if (Math.abs(currentSubTotal - fixedSubTotal) > 0.01) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Total',
+                text: `Subtotal must be as Bill Amount ₹${fixedSubTotal.toFixed(2)}`
+            });
+            return false;
+        }
+        return true;
+    }
 
     //FILTER - PAYMENT ---- START ---------------------------
     //collections
@@ -919,7 +934,7 @@ $(function () {
 
 function updateInvoiceTitle(totalGST) {
     const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
-    console.log("isInclusiveGST:", isInclusiveGST);
+    //console.log("isInclusiveGST:", isInclusiveGST);
     const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
 
     if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
@@ -1241,148 +1256,60 @@ function recalcRow(row) {
     row.find('.igst').val(igst.toFixed(2));
     row.find('.total').val(total.toFixed(2));
 }
-function recalcAll(activeRow = null) {
+function recalcAll() {
 
     let subTotal = 0;
     let totalTaxable = 0;
     let totalGST = 0;
+    let totalDiscount = 0;
 
     const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
 
     let rows = $('#invoiceItemsBody tr');
 
-    // Step 1: Calculate current totals
+    // ✅ Step 1: Sum totals
     rows.each(function () {
         const row = $(this);
+
         let total = parseFloat(row.find('.total').val()) || 0;
-        subTotal += total;
-    });
-
-    // 🔥 Step 2: If inclusive GST → adjust other rows
-    if (isInclusiveGST && activeRow && fixedSubTotal > 0) {
-
-        let diff = fixedSubTotal - subTotal;
-
-        // Get other rows
-        let otherRows = rows.not(activeRow);
-
-        let otherTotal = 0;
-        otherRows.each(function () {
-            otherTotal += parseFloat($(this).find('.total').val()) || 0;
-        });
-
-        if (otherTotal > 0) {
-            otherRows.each(function () {
-                let row = $(this);
-
-                let rowTotal = parseFloat(row.find('.total').val()) || 0;
-
-                // Proportional adjustment
-                let ratio = otherTotal > 0 ? (rowTotal / otherTotal) : 0;
-                let adjustment = diff * ratio;
-
-                let newTotal = rowTotal + adjustment;
-                // ❌ Prevent negative totals
-                if (newTotal < 0) {
-                    newTotal = 0;
-                }
-
-                // Update rate based on new total
-                let qty = parseFloat(row.find('.qty').val()) || 1;
-                let gstRate = parseFloat(row.find('.gst').val()) || 0;
-
-                let gstFactor = 1 + (gstRate / 100);
-
-                let newTaxable = newTotal / gstFactor;
-                let newRate = newTaxable / qty;
-                // ❌ Prevent negative / NaN
-                if (!isFinite(newRate) || newRate < 0) {
-                    newRate = 0;
-                }
-
-                row.find('.rate').val(newRate.toFixed(2));
-
-                // Recalculate row again
-                recalcRow(row);
-            });
-        }
-
-        //After redistribution → force correction on last row
-        let recalculatedTotal = 0;
-
-        rows.each(function () {
-            recalculatedTotal += parseFloat($(this).find('.total').val()) || 0;
-        });
-
-        let correction = fixedSubTotal - recalculatedTotal;
-
-        // Apply correction ONLY to last row
-        let lastRow = rows.last();
-
-        let lastTotal = parseFloat(lastRow.find('.total').val()) || 0;
-        let correctedTotal = lastTotal + correction;
-
-        if (correctedTotal < 0) correctedTotal = 0;
-
-        let qty = parseFloat(lastRow.find('.qty').val()) || 1;
-        let gstRate = parseFloat(lastRow.find('.gst').val()) || 0;
-
-        let gstFactor = 1 + (gstRate / 100);
-        let taxable = correctedTotal / gstFactor;
-        let rate = taxable / qty;
-
-        lastRow.find('.rate').val(rate.toFixed(2));
-        recalcRow(lastRow);
-
-        // Recalculate totals again after adjustment
-        //return recalcAll(null);
-        if (Math.abs(diff) < 0.01) {
-            // small float difference → ignore
-            activeRow = null;
-        } else {
-            return recalcAll(null);
-        }
-    }
-
-    // Step 3: Normal totals
-    rows.each(function () {
-        const row = $(this);
-
         let taxable = parseFloat(row.find('.taxable').val()) || 0;
         let cgst = parseFloat(row.find('.cgst').val()) || 0;
         let sgst = parseFloat(row.find('.sgst').val()) || 0;
         let igst = parseFloat(row.find('.igst').val()) || 0;
+        let discountamount = parseFloat(row.find('.discountamount').val()) || 0;
 
-        let gstAmount = cgst + sgst + igst;
-
+        subTotal += total;
         totalTaxable += taxable;
-        totalGST += gstAmount;
+        totalGST += (cgst + sgst + igst);
+        totalDiscount += discountamount;
     });
 
-    const discount = parseFloat($('#bookingDiscount').val()) || 0;
-    const grandTotal = totalTaxable + totalGST - discount;
+    // ✅ Step 2: Set fixed subtotal once
+    if (isInclusiveGST && fixedSubTotal === 0) {
+        fixedSubTotal = subTotal;
+    }
 
+    // ✅ Step 3: Show totals (NO clamp, NO adjustment)
+    $('#bookingDiscount').val(totalDiscount.toFixed(2));
     $('#subTotal').val(subTotal.toFixed(2));
     $('#totalTaxable').val(totalTaxable.toFixed(2));
     $('#totalGST').val(totalGST.toFixed(2));
 
-    // Call after setting GST
     updateInvoiceTitle(totalGST);
 
-    if (isInclusiveGST) {
-        $('#subTotal').prop('readonly', true);
-    }
+    // ✅ Step 4: Grand total
+    const discount = parseFloat($('#bookingDiscount').val()) || 0;
+    const grandTotal = totalTaxable + totalGST - discount;
 
     let roundedTotal = Math.round(grandTotal);
-    let roundOff = roundedTotal;
 
     $('#grandTotal').val(roundedTotal.toFixed(2));
-    $('#roundOff').val(roundOff.toFixed(2));
+    $('#roundOff').val(roundedTotal.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val((grandTotal - advance).toFixed(2));
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount')
+        .val((grandTotal - advance).toFixed(2));
 }
-
 
 let fixedSubTotal = 0;
 function setFixedSubTotal() {
@@ -1837,7 +1764,7 @@ function getNextInvoiceNumbers() {
 
                 //console.log('Invoice No:', invoiceNo);
                 //console.log('Proforma Invoice No:', proformaInvoiceNo);
-                console.log('GST Invoice No:', gstInvoiceNo);
+                //console.log('GST Invoice No:', gstInvoiceNo);
 
                 // OPTIONAL: Assign to inputs
                 //$('#invoiceNo').val(invoiceNo);
@@ -1887,7 +1814,7 @@ function fetchData(isGenerated) {
         IsExclusiveOfGST: isExclusiveOfGST,
         IsInclusiveOfGST: isInclusiveOfGST
     };
-    console.log("payload:", payload);
+    //console.log("payload:", payload);
 
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoice_GRID',
@@ -1917,7 +1844,7 @@ function fetchData(isGenerated) {
 }
 
 function renderTable(data, totals) {
-    console.log("render data:", data);
+    //console.log("render data:", data);
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
     }
@@ -2212,7 +2139,7 @@ function renderTable(data, totals) {
         }        
     }); 
 }
-
+/*
 function isPastDate(dateString) {
     if (!dateString) return false;
 
@@ -2224,7 +2151,7 @@ function isPastDate(dateString) {
     eventDate.setHours(0, 0, 0, 0);
 
     return eventDate < today;
-}
+}*/
 
 function resetForm() {
     invoiceType = null;
@@ -2233,6 +2160,7 @@ function resetForm() {
     $('#invoiceNo').val('').removeData('isinclusivegst');
     $('#gstInvoiceNo').val('');
     $('#proformaInvoiceNo').val('');
+    fixedSubTotal = 0;
 
     $('#isExclusiveOfGST').val(false);
     $('#isInclusiveOfGST').val(false);
@@ -2404,7 +2332,8 @@ function loadAccountDropdown() {
                 res.data.forEach(acc => {
                     ddl.append(`<option value="${acc.Id}">${acc.AccountName}</option>`);
                 });
-            } else {
+            }
+            else {
                 Swal.fire("Error", res?.message || "Failed to load accounts!", "error");
             }
         },

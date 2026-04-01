@@ -655,6 +655,19 @@
                         <i class="fa-solid fa-file-invoice-dollar me-1"></i>
                         <span class="btn-text">Invoice</span>
                     </button>
+                    <div id="invoiceOptionsMenu" class="invoice-menu d-none">
+                        <button class="btn btn-success w-100 mb-1"
+                                style="font-size: 11px; padding: 4px 6px;"
+                                data-type="exclusive">
+                            Create Invoice (Rate Exclusive of GST)
+                        </button>
+
+                        <button class="btn btn-warning w-100 text-dark"
+                                style="font-size: 11px; padding: 4px 6px;"
+                                data-type="inclusive">
+                            Create Invoice (Rate Inclusive of GST)
+                        </button>
+                    </div>
 
                     <button type="button"
                             class="btn btn-outline-light btn-sm"
@@ -1117,57 +1130,73 @@
 <div class="modal fade" id="invoiceModal" tabindex="-1">
     <div class="modal-dialog modal-xxl">
         <div class="modal-content">
-            <!--Header-->
             <div class="modal-header bg-primary py-1 text-white">
-                <h6 class="modal-title text-white" id="invoiceModalTitle_InvoiceModal">Add Invoice</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+                <h6 class="modal-title text-white mb-0" id="invoiceModal_ModalTitle">
+                    Add Invoice
+                </h6>
+
+                <!-- Push buttons to extreme right -->
+                <div class="ms-auto d-flex align-items-center gap-2">
+
+                    <!-- Delete Button -->
+                    <button type="button"
+                            class="btn btn-sm btn-danger d-none"
+                            id="invoiceModal_btnDeleteInvoice">
+                        <i class="fa fa-trash me-1"></i> Delete
+                    </button>
+
+                    <!-- Close Button -->
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
             </div>
 
             <div class="modal-body invoice-modal-body">
-                <input type="hidden" id="invoiceId_InvoiceModal" value="0" />
-                <input type="hidden" id="bookingId_InvoiceModal" value="0" />
+                <input type="hidden" id="invoiceModal_invoiceId" value="0" />
+                <input type="hidden" id="invoiceModal_bookingId" value="0" />
+
+                <input type="hidden" id="invoiceModal_invoiceNo" value="0" />
+                <input type="hidden" id="invoiceModal_gstInvoiceNo" value="0" />
+                <input type="hidden" id="invoiceModal_proformaInvoiceNo" value="0" />
+
+                <input type="hidden" id="invoiceModal_isExclusiveOfGST" value="false" />
+                <input type="hidden" id="invoiceModal_isInclusiveOfGST" value="false" />
 
                 <!-- CUSTOMER / INVOICE INFO -->
-                <div class="row g-2">
+                <div class="row g-2 customerInfo">
 
                     <div class="col-md-4">
-                        <label class="form-label-sm">Customer Name</label>
-                        <input type="text" id="customerName_InvoiceModal" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-md-1">
-                        <label class="form-label-sm">Invoice Date</label>
-                        <input type="date" id="invoiceDate_InvoiceModal" class="form-control form-control-sm">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" id="invoiceModal_customerName" class="form-control">
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label-sm">GSTIN</label>
-                        <input type="text" id="gstin_InvoiceModal" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label-sm">Email</label>
-                        <input type="email" id="emailId_InvoiceModal" class="form-control form-control-sm">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" id="invoiceModal_invoiceDate" class="form-control">
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label-sm">State</label>
-                        <select id="customerState_InvoiceModal" class="form-select form-select-sm">
+                        <label class="form-label">GSTIN</label>
+                        <input type="text" id="invoiceModal_gstin" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="invoiceModal_emailId" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">State</label>
+                        <select id="invoiceModal_customerState" class="form-select">
                         </select>
                     </div>
 
                     <div class="col-md-10">
-                        <label class="form-label-sm">Address</label>
-                        <input type="text" id="address_InvoiceModal" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-md-2 mt-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="isGstIncluded_InvoiceModal" checked>
-                            <label class="form-check-label form-label-sm" for="isGstIncluded">
-                                Include GST?
-                            </label>
-                        </div>
+                        <label class="form-label">Address</label>
+                        <input type="text" id="invoiceModal_address" class="form-control">
                     </div>
 
                 </div>
@@ -1175,27 +1204,29 @@
                 <!-- ITEMS -->
                 <div class="row mt-3">
                     <div class="col-md-12">
-                        <table class="table table-bordered table-sm invoice-items-table_InvoiceModal">
-                            <thead class="table-light fw-semibold">
+
+                        <table class="table table-bordered table-sm invoice-items-table">
+                            <thead class="table-light">
                                 <tr>
-                                    <th class="col-index_InvoiceModal">#</th>
-                                    <th class="col-desc_InvoiceModal">Description</th>
-                                    <th class="col-hsn_InvoiceModal">HSN</th>
-                                    <th class="col-rate_InvoiceModal">Rate</th>
-                                    <th class="col-qty_InvoiceModal">Qty</th>
-                                    <th class="col-subtotal_InvoiceModal">SubTotal</th>
-                                    <th class="col-discount-rate_InvoiceModal">Discount Rate</th>
-                                    <th class="col-discount-type_InvoiceModal">Type</th>
-                                    <th class="col-discount-amount_InvoiceModal">Discount Amt.</th>
-                                    <th class="col-taxable_InvoiceModal">Taxable</th>
-                                    <th class="col-gst_InvoiceModal">GST%</th>
-                                    <th class="col-cgst_InvoiceModal">CGST</th>
-                                    <th class="col-sgst_InvoiceModal">SGST</th>
-                                    <th class="col-total_InvoiceModal">Total</th>
+                                    <th class="col-index">#</th>
+                                    <th class="col-desc">Description</th>
+                                    <th class="col-hsn">HSN</th>
+                                    <th class="col-rate">Rate</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-subtotal">SubTotal</th>
+                                    <th class="col-discount-rate">Discount Rate</th>
+                                    <th class="col-discount-type">Type</th>
+                                    <th class="col-discount-amount">Discount Amt.</th>
+                                    <th class="col-taxable">Taxable</th>
+                                    <th class="col-gst">GST%</th>
+                                    <th class="col-cgst">CGST</th>
+                                    <th class="col-sgst">SGST</th>
+                                    <th class="col-igst">IGST</th>
+                                    <th class="col-total">Total</th>
                                     <th style="width:5px; padding:10px"></th>
                                 </tr>
                             </thead>
-                            <tbody id="invoiceItemsBody_InvoiceModal"></tbody>
+                            <tbody id="invoiceModal_invoiceItemsBody"></tbody>
                         </table>
 
                         <!-- ACTION ROW -->
@@ -1203,7 +1234,7 @@
                             <!-- LEFT -->
                             <button type="button"
                                     class="btn btn-outline-success btn-sm"
-                                    id="btnAddItem_InvoiceModal">
+                                    id="invoiceModal_btnAddItem">
                                 + Add more
                             </button>
 
@@ -1211,7 +1242,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <label class="fw-semibold mb-0">Subtotal:</label>
                                 <input type="number"
-                                       id="subTotal_InvoiceModal"
+                                       id="invoiceModal_subTotal"
                                        class="form-control form-control-sm text-end"
                                        style="width:160px"
                                        readonly>
@@ -1226,7 +1257,7 @@
 
                     <!-- LEFT SIDE : PAYMENT DETAILS -->
                     <div class="col-md-7">
-                        <div class="border rounded p-3 bg-white" id="paymentSection">
+                        <div class="border rounded p-3 bg-white" id="invoiceModal_paymentSection">
                             <!-- 🔹 Payment Header -->
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="fw-bold text-primary mb-0">
@@ -1242,12 +1273,12 @@
                                 <!-- Mode -->
                                 <div class="col-md-3">
                                     <label class="form-label">Payment Mode</label>
-                                    <select class="form-select form-select-sm" id="invoicePayment_Mode"></select>
+                                    <select class="form-select form-select-sm" id="invoiceModal_invoicePayment_Mode"></select>
                                 </div>
 
                                 <!-- Account -->
-                                <div class="col-md-3">
-                                    <label class="form-label d-flex gap-2 mt-2">
+                                <div class="col-md-3 pt-2">
+                                    <label class="form-label d-flex gap-2">
                                         Receiver
                                         <i class="fa fa-info-circle text-primary"
                                            data-bs-toggle="tooltip"
@@ -1255,76 +1286,76 @@
                                            title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
                                         </i>
                                     </label>
-                                    <select class="form-select form-select-sm" id="invoicePayment_Account"></select>
+                                    <select class="form-select form-select-sm" id="invoiceModal_invoicePayment_Account"></select>
                                 </div>
 
-                                <!--- Payment Date -->
+                                <!-- Payment Date -->
                                 <div class="col-md-3">
                                     <label class="form-label">Payment Date</label>
-                                    <input type="date" id="invoicePayment_Date" class="form-control form-control-sm">
+                                    <input type="date" id="invoiceModal_invoicePayment_Date" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Payment Time -->
                                 <div class="col-md-3">
                                     <label class="form-label">Payment Time</label>
-                                    <input type="time" id="invoicePayment_Time" class="form-control form-control-sm">
+                                    <input type="time" id="invoiceModal_invoicePayment_Time" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Transaction Id -->
                                 <div class="col-md-3 invoicePayment_Fields d-none">
                                     <label class="form-label">Transaction Id</label>
-                                    <input type="text" id="invoicePayment_Txn" class="form-control form-control-sm">
+                                    <input type="text" id="invoiceModal_invoicePayment_Txn" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Cheque Bank -->
                                 <div class="col-md-4 invoicePayment_Fields d-none">
                                     <label class="form-label">Cheque Bank</label>
-                                    <input type="text" id="invoicePayment_ChequeBank" class="form-control form-control-sm">
+                                    <input type="text" id="invoiceModal_invoicePayment_ChequeBank" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Cheque No -->
                                 <div class="col-md-2 invoicePayment_Fields d-none">
                                     <label class="form-label">Cheque No</label>
-                                    <input type="text" id="invoicePayment_ChequeNo" class="form-control form-control-sm">
+                                    <input type="text" id="invoiceModal_invoicePayment_ChequeNo" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Cheque Date -->
                                 <div class="col-md-3 invoicePayment_Fields d-none">
                                     <label class="form-label">Cheque Date</label>
-                                    <input type="date" id="invoicePayment_ChequeDate" class="form-control form-control-sm">
+                                    <input type="date" id="invoiceModal_invoicePayment_ChequeDate" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Amount -->
                                 <div class="col-md-3">
                                     <label class="form-label">Amount</label>
-                                    <input type="number" id="invoicePayment_Amount" class="form-control form-control-sm" min="0" step="1">
+                                    <input type="number" id="invoiceModal_invoicePayment_Amount" class="form-control form-control-sm" min="0" step="1.0">
                                 </div>
 
                                 <!-- Due Balance -->
                                 <div class="col-md-3">
                                     <label class="form-label">Due Balance</label>
-                                    <input type="number" id="invoicePayment_DueBalance" class="form-control form-control-sm" min="0" step="1">
-                                    <input type="hidden" id="invoicePayment_originalDueAmount">
-                                    <small id="invoicePayment_dueMessage" class="text-danger d-none">No Due</small>
+                                    <input type="number" id="invoiceModal_invoicePayment_DueBalance" class="form-control form-control-sm" min="0" step="1">
+                                    <input type="hidden" id="invoiceModal_invoicePayment_originalDueAmount">
+                                    <small id="invoiceModal_invoicePayment_dueMessage" class="text-danger d-none">No Due</small>
                                 </div>
 
                                 <!-- Next Due Date -->
                                 <div class="col-md-3">
                                     <label class="form-label">Next Due Date</label>
-                                    <input type="date" id="invoicePayment_NextDueDate" class="form-control form-control-sm">
+                                    <input type="date" id="invoiceModal_invoicePayment_NextDueDate" class="form-control form-control-sm">
                                 </div>
 
                                 <!-- Buttons Row -->
                                 <div class="col-md-12 d-flex justify-content-between align-items-center mt-2">
                                     <!-- Left -->
                                     <div>
-                                        <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
+                                        <input type="button" id="invoiceModal_invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
                                     </div>
                                 </div>
 
                                 <!-- Note Editor -->
                                 <div class="col-md-12 invoicePayment_EditorContainer mt-2 d-none">
-                                    <div id="invoicePayment_noteEditor">
+                                    <div id="invoiceModal_invoicePayment_noteEditor">
                                         <textarea class="form-control"
                                                   rows="4"
                                                   placeholder="Write your note here..."></textarea>
@@ -1342,14 +1373,14 @@
                             <div class="total-row">
                                 <span>Booking Discount</span>
                                 <input type="number"
-                                       id="bookingDiscount_InvoiceModal"
+                                       id="invoiceModal_bookingDiscount"
                                        class="form-control form-control-sm text-end">
                             </div>
 
                             <div class="total-row">
                                 <span>Total Taxable</span>
                                 <input type="number"
-                                       id="totalTaxable_InvoiceModal"
+                                       id="invoiceModal_totalTaxable"
                                        class="form-control form-control-sm text-end"
                                        readonly>
                             </div>
@@ -1357,7 +1388,7 @@
                             <div class="total-row">
                                 <span>Total GST</span>
                                 <input type="number"
-                                       id="totalGST_InvoiceModal"
+                                       id="invoiceModal_totalGST"
                                        class="form-control form-control-sm text-end"
                                        readonly>
                             </div>
@@ -1365,7 +1396,7 @@
                             <div class="total-row fw-bold border-top pt-2">
                                 <span>Grand Total</span>
                                 <input type="number"
-                                       id="grandTotal_InvoiceModal"
+                                       id="invoiceModal_grandTotal"
                                        class="form-control form-control-sm text-end fw-bold"
                                        readonly>
                             </div>
@@ -1373,21 +1404,21 @@
                             <div class="total-row">
                                 <span>Round Off</span>
                                 <input type="number"
-                                       id="roundOff_InvoiceModal"
+                                       id="invoiceModal_roundOff"
                                        class="form-control form-control-sm text-end">
                             </div>
 
                             <div class="total-row">
                                 <span>Advance Paid</span>
                                 <input type="number"
-                                       id="advancePaid_InvoiceModal"
+                                       id="invoiceModal_advancePaid"
                                        class="form-control form-control-sm text-end">
                             </div>
 
                             <div class="total-row fw-bold">
                                 <span>Balance</span>
                                 <input type="number"
-                                       id="balanceAmount_InvoiceModal"
+                                       id="invoiceModal_balanceAmount"
                                        class="form-control form-control-sm text-end fw-bold">
                             </div>
 
@@ -1399,12 +1430,13 @@
 
             <div class="modal-footer">
                 <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-sm btn-primary" id="btnSaveInvoice_InvoiceModal">Save</button>
+                <button class="btn btn-sm btn-primary" id="invoiceModal_btnSaveInvoice">Save</button>
             </div>
 
         </div>
     </div>
 </div>
+
 <!-- INVOICE MODAL -- END -->
 
 <!-- CANCEL BOOKING MODAL -- START -->

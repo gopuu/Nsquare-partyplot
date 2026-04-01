@@ -1,7 +1,7 @@
 ﻿
 $(document).ready(function () {
     loadKeyStatistics("thismonth");
-    AppSignalR.subscribe(() => {
+    AppSignalR.subscribeSettings((data) => {
         //console.log("page refresh");
         //loadKeyStatistics("thismonth");
         const $active = $(".chart-filter-Statistics .dropdown-item.active");

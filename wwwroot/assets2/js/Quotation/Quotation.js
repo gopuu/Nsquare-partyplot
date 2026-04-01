@@ -8,6 +8,12 @@
     loadLeadSourceList();
     loadFoodPackageList();
 
+    AppSignalR.subscribeQuotation((data) => {
+        console.log("Quotation Page Update", data);
+        fetchData();
+        //$("#modal").modal("hide");
+    });
+
     // ➤ ADD BUTTON CLICK
     $("#btn-add").click(function () {
         const canAdd = (sessionStorage.getItem("CanAdd") === "true");
@@ -38,7 +44,7 @@
             EndTime: $("#endTime").val() || null,
 
             // ===== Client Section =====
-            ClientId: $("#clientId").val() ? parseInt($("#clientId").val()) : null,
+            ClientId: parseInt($("#clientId").val()) || 0,
             ClientName: $("#clientName").val()?.trim() || "",
 
             Address: $("#clientAddress").val() || null,
@@ -89,7 +95,7 @@
                 if (res.status === "Success") {
                     handleApiSuccess();
                     $("#quotationModal").modal("hide");
-                    fetchData();
+                    //fetchData();
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }
@@ -324,7 +330,7 @@ function fetchData(id=0, mode="add") {
                 $("#endTime").val(q.EndTime || "");
 
                 // ===== Client Section =====
-                $("#clientId").val(row.ClientId).trigger("change");
+                loadEnquiryList(q.ClientId);
                 $("#clientName").val(q.ClientName || "");
                 $("#clientAddress").val(q.Address || "");
                 $("#clientEmail").val(q.Email || "");
@@ -398,7 +404,7 @@ function fetchData(id=0, mode="add") {
                     });
                 }
 
-                calculateTotals();
+                //calculateTotals();
 
                 $("#quotationModal .modal-title").text("Edit Quotation");
                 $("#quotationModal").modal("show");
@@ -443,23 +449,23 @@ function renderTable(data) {
             },
             { data: 'BanquetName', title: 'Hall' },
             { data: 'SlotName', title: 'Slot' },
-            { data: 'BanquetRent', title: 'Rent' },
+            //{ data: 'BanquetRent', title: 'Rent' },
             { data: 'Pax', title: 'PAX' },
             { data: 'ReferenceTypeName', title: 'Medium' },
-            //{
-            //    data: 'GrandTotal',
-            //    title: 'Total',
-            //    className: "text-end",
-            //    render: function (data, type, row) {
-            //        if (!data) return "₹ 0.00";
+            {
+                data: 'GrandTotal',
+                title: 'Total',
+                className: "text-end",
+                render: function (data, type, row) {
+                    if (!data) return "₹ 0.00";
 
-            //        let amount = parseFloat(data).toLocaleString('en-IN', {
-            //            minimumFractionDigits: 2,
-            //            maximumFractionDigits: 2
-            //        });
-            //        return "₹ " + amount;
-            //    }
-            //},
+                    let amount = parseFloat(data).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    return "₹ " + amount;
+                }
+            },
             {
                 data: null,
                 title: 'Action',
@@ -532,7 +538,7 @@ function resetForm() {
     $("#endTime").val("");
 
     // ===== Client Section =====
-    $("#clientId").val(null).trigger("change");
+    $("#clientId").val(0).trigger("change");
     $("#clientName").val("");
     $("#clientAddress").val("");
     $("#clientEmail").val("");
@@ -682,20 +688,17 @@ function loadSlotDropdown() {
         }
     });
 }
-function loadEnquiryList() {
-    //showLoader();
+function loadEnquiryList(selectedClientId=0) {
     $.ajax({
         url: "/api/EnquiryDeal/GetEnquiryDealList",
         type: "GET",
         success: function (response) {
-
             if (response.status === "Success") {
-
                 // 🔹 Store currently selected value (if any)
-                let selectedClientId = $("#clientId").val();
+                //let selectedClientId = $("#clientId").val();
 
                 let options = `<option value="">-- Select Client --</option>`;
-                options += `<option value="add_new">+ Add New Client</option>`;
+                options += `<option value="0">+ Add New Client</option>`;
 
                 $.each(response.data, function (index, item) {
                     options += `

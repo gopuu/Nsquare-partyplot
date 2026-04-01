@@ -89,7 +89,40 @@ $(document).ready(function () {
             }
         });
     });
+
+    setWallpaper();
 });
+
+function setWallpaper() {
+    //Image Loop
+    (function () {
+        const images = [
+            "LoginImg1.png",
+            "LoginImg2.png",
+            "LoginImg3.png",
+            "LoginImg4.png",
+            "LoginImg5.png",
+            "LoginImg6.png",
+            "LoginImg7.png",
+            "LoginImg8.png",
+            "LoginImg9.png",
+            "LoginImg10.png"
+        ];
+
+        const today = new Date();
+        const dayIndex = today.getDate(); // 1–31
+
+        // Rotate based on day
+        //const imageIndex = (dayIndex % totalImages) + 1;
+        const imageIndex = dayIndex % images.length;
+
+        //const imagePath = `/assets2/img/loginImages/LoginImg1.png`;
+        const imagePath = `/assets2/img/loginImages/${images[imageIndex]}`;
+
+        document.querySelector(".light-bg-image")
+            .style.backgroundImage = `url('${imagePath}')`;
+    })();
+}
 
 function setDailyGreeting() {
     const today = new Date();

@@ -34,7 +34,8 @@ $(document).ready(function () {
     });
     //8 Top Revenue Events -------------- END ------------------------
 
-    AppSignalR.subscribe(() => {
+    AppSignalR.subscribeSettings((data) => {
+        //console.log("Settings Page Update", data);
         //console.log("page refresh");
         loadDashboardWidgetCounts();
         loadComparativeInsightsChart("last3months");
@@ -46,6 +47,7 @@ $(document).ready(function () {
         loadYearDropdown(); //loadOverallBookingsStatistics(currentYear);
         $("#yearDropdown").text(currentYear);
     });
+
 
     //Lead SOurce
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

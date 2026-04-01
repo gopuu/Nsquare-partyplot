@@ -650,7 +650,7 @@ $("#quotation_btnSaveQuotation").click(function () {
             if (res.status === "Success") {
                 handleApiSuccess();
                 $("#quotationModal").modal("hide");
-                loadEnquiryDeals();
+                //loadEnquiryDeals();
             } else {
                 Swal.fire("Error", res.message, "error");
             }
@@ -2047,6 +2047,11 @@ document.addEventListener("DOMContentLoaded", function () {
     loadEnquiryDeals();
     loadEnquiryList();
     loadStateList();
+
+    AppSignalR.subscribeQuotation((data) => {
+        console.log("Enquiry Page Update", data);
+        loadEnquiryDeals();
+    });
 
     loadEventTypeList();
     loadEventSubTypeList();

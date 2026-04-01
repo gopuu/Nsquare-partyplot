@@ -1,6 +1,9 @@
 ﻿$(document).ready(function () {
     fetchData();
-
+    AppSignalR.subscribeSettings((data) => {
+        //console.log("Settings Page Update", data);
+        fetchData();
+    });
     // Edit button click
     $(document).on('click', '.btn-edit', function (event) {
         var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';

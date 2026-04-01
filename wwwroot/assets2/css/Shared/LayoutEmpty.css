@@ -1,4 +1,23 @@
-﻿.bg-card-gradient {
+﻿.light-bg-image {
+    /*background-image: url('/assets2/img/BanquetImg1.png');*/
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+/* Optional: light overlay for readability */
+.light-bg-image::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7); /* adjust opacity */
+    z-index: 0;
+}
+.light-bg-image > div {
+    position: relative;
+    z-index: 1;
+}
+
+.bg-card-gradient {
     background: linear-gradient(180deg, #e5780b, #e5780b);
 }
 

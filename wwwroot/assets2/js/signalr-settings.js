@@ -1,41 +1,67 @@
 ﻿window.AppSignalR = (function () {
-    let connection = null;
-    let subscribers = [];
+
+    let settingsConnection = null;
+    let quotationConnection = null;
+
+    let settingsSubscribers = [];
+    let quotationSubscribers = [];
+
     function start() {
-        if (connection) return;
+        if (!settingsConnection) {
+            settingsConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/settingsHub")
+                .withAutomaticReconnect()
+                .build();
 
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl("/settingsHub")
-            .withAutomaticReconnect()
-            .build();
+            settingsConnection.on("OnSettingsChanged", function (data) {
+                console.log("🔔 Settings changed", data);
 
-        connection.on("OnSettingsChanged", () => {
-            console.log("🔔 Settings changed");
-            subscribers.forEach(fn => {
-                try { fn(); } catch (e) { console.error(e); }
-            });
-        });
-
-        //connection.start()
-        //    .then(() => console.log("✅ SignalR connected"))
-        //    .catch(err => console.error("❌ SignalR error:", err));
-
-        connection.start()
-            .catch(err => {
-                handleApiError(null, "SignalRError", err, "SignalR connection failed");
+                settingsSubscribers.forEach(fn => {
+                    try { fn(data); } catch (e) { console.error(e); }
+                });
             });
 
+            settingsConnection.start()
+                .then(() => console.log("✅ SettingsHub Connected"))
+                .catch(err => console.error("SettingsHub Error:", err));
+        }
+
+        if (!quotationConnection) {
+            quotationConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/quotationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            quotationConnection.on("OnQuotationChanged", function (data) {
+                console.log("🔔 Quotation changed", data);
+
+                quotationSubscribers.forEach(fn => {
+                    try { fn(data); } catch (e) { console.error(e); }
+                });
+            });
+
+            quotationConnection.start()
+                .then(() => console.log("✅ QuotationHub Connected"))
+                .catch(err => console.error("QuotationHub Error:", err));
+        }
     }
 
-    function subscribe(fn) {
+    function subscribeSettings(fn) {
         if (typeof fn === "function") {
-            subscribers.push(fn);
+            settingsSubscribers.push(fn);
+        }
+    }
+
+    function subscribeQuotation(fn) {
+        if (typeof fn === "function") {
+            quotationSubscribers.push(fn);
         }
     }
 
     return {
         start,
-        subscribe
+        subscribeSettings,
+        subscribeQuotation
     };
 
 })();
