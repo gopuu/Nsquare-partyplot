@@ -56,10 +56,9 @@
 
     public class DashboardFinanceSummary
     {
-        public decimal TotalRevenue { get; set; }
-        public decimal OutstandingReceivables { get; set; }
+        public decimal TotalIncomes { get; set; }
         public decimal TotalExpenses { get; set; }
-        public decimal NetProfit { get; set; }
+        public decimal GrossProfit { get; set; }
     }
 
     public class DashboardPaymentCollectionStatus
@@ -67,6 +66,12 @@
         public decimal PaidAmount { get; set; }
         public decimal PendingAmount { get; set; }
         public decimal TotalAmount { get; set; }
+    }
+    public class DashboardInvoiceStatus
+    {
+        public long InvoiceGeneratedCount { get; set; }
+        public long InvoicePendingCount { get; set; }
+        public long InvoiceTotalCount { get; set; }
     }
     public class UpcomingPaymentItem
     {

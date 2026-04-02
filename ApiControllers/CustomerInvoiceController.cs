@@ -76,8 +76,9 @@ namespace ERPAdmin.ApiControllers
                             list.Add(new CustomerInvoiceResponse_GRID
                             {
                                 BookingId = Convert.ToInt64(dr["BookingId"]),
-                                InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
                                 ProformaInvoiceNo = Convert.ToInt64(dr["ProformaInvoiceNo"]),
+                                FinalInvoiceNo = Convert.ToString(dr["FinalInvoiceNo"]),
+                                InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
                                 GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]),
                                 IsExclusiveOfGST = Convert.ToBoolean(dr["IsExclusiveOfGST"]),
                                 IsInclusiveOfGST = Convert.ToBoolean(dr["IsInclusiveOfGST"]),
@@ -581,5 +582,234 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
+
+        [HttpPost]
+        [Route("GetDashboardPaymentCollectionStatus")]
+        public IActionResult GetDashboardPaymentCollectionStatus([FromBody] DashboardFeedbackRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardPaymentCollectionStatus result = null;
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid domain or connection.";
+                    apiResponse.data = null;
+                    return Ok(apiResponse); // ✅ ALWAYS 200
+                }
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_Finance_PaymentCollection", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate ?? (object)DBNull.Value);
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dt);
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+
+                    result = new DashboardPaymentCollectionStatus
+                    {
+                        PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
+                        PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
+                        TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
+                    };
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Payment collection status fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse); // ✅ ALWAYS 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse); // ✅ STILL 200
+            }
+        }
+
+        [HttpPost]
+        [Route("GetDashboardPaymentCollectionDetails")]
+        public IActionResult GetDashboardPaymentCollectionDetails([FromBody] DashboardPaymentDetailsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            List<DashboardPaymentCollectionDetails> details = new List<DashboardPaymentCollectionDetails>();
+            DashboardPaymentCollectionTotals totals = new DashboardPaymentCollectionTotals();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid domain or connection.";
+                    apiResponse.data = null;
+                    return Ok(apiResponse);
+                }
+
+                DataSet ds = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_Finance_PaymentCollection_Details", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add("@Type", SqlDbType.NVarChar, 20).Value = (object?)request.Type ?? DBNull.Value;
+                    cmd.Parameters.Add("@MonthDuration", SqlDbType.NVarChar, 50).Value = (object?)request.MonthDuration ?? DBNull.Value;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.NVarChar, 20).Value = (object?)request.FromDate ?? DBNull.Value;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.NVarChar, 20).Value = (object?)request.ToDate ?? DBNull.Value;
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(ds);
+                }
+
+                /* =========================
+                   TABLE 1 → DETAILS
+                ========================= */
+                if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                {
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+                        details.Add(new DashboardPaymentCollectionDetails
+                        {
+                            BookingId = Convert.ToInt64(row["BookingId"]),
+                            BookingRefNo = Convert.ToString(row["BookingRefNo"]),
+                            CustomerName = Convert.ToString(row["Client_Name"]),
+                            MobileNo = Convert.ToString(row["Client_Contact"]),
+                            EventDate = Convert.ToString(row["EventDate"]),
+                            EventDate_Format = Convert.ToString(row["EventDate_Format"]),
+
+                            TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
+                            PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
+                            PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
+
+                            PaymentStatus = Convert.ToString(row["PaymentStatus"])
+                        });
+                    }
+                }
+
+                /* =========================
+                   TABLE 2 → TOTALS
+                ========================= */
+                if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
+                {
+                    DataRow row = ds.Tables[1].Rows[0];
+
+                    totals = new DashboardPaymentCollectionTotals
+                    {
+                        TotalAmount = Convert.ToDecimal(row["TotalAmount"]),
+                        PaidAmount = Convert.ToDecimal(row["PaidAmount"]),
+                        PendingAmount = Convert.ToDecimal(row["PendingAmount"]),
+                        TotalBookings = Convert.ToInt32(row["TotalBookings"])
+                    };
+                }
+
+                /* =========================
+                   FINAL RESPONSE
+                ========================= */
+                apiResponse.status = "Success";
+                apiResponse.message = "Payment collection details fetched successfully.";
+                apiResponse.data = new
+                {
+                    Rows = details,
+                    Totals = totals
+                };
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetDashboardInvoiceStatus")]
+        public IActionResult GetDashboardInvoiceStatus([FromBody] DashboardFeedbackRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardInvoiceStatus result = null;
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid domain or connection.";
+                    apiResponse.data = null;
+                    return Ok(apiResponse); // ✅ ALWAYS 200
+                }
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_Finance_InvoiceStatus", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate ?? (object)DBNull.Value);
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dt);
+                }
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+
+                    result = new DashboardInvoiceStatus
+                    {
+                        InvoiceGeneratedCount = Convert.ToInt64(row["InvoiceGeneratedCount"]),
+                        InvoicePendingCount = Convert.ToInt64(row["InvoicePendingCount"]),
+                        InvoiceTotalCount = Convert.ToInt64(row["InvoiceTotalCount"])
+                    };
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Invoice status fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse); // ✅ ALWAYS 200
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return Ok(apiResponse); // ✅ STILL 200
+            }
+        }
+
     }
 }

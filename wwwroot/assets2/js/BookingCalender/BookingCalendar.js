@@ -3357,7 +3357,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         invoiceType = "invoice";
 
-        let isInclusiveGST = (type == "inclusive") ? true: false;
+        let isInclusiveGST = (type == "inclusive") ? true : false; 
+        fixedSubTotal = isInclusiveGST ? Number($('#bookingReport_TotalAmount').text()) : 0;
         //const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
         //$('#invoiceModal_ModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
         $('#invoiceModal_invoiceNo').data('isinclusivegst', isInclusiveGST);
@@ -4430,6 +4431,39 @@ function updateRowSequence() {
         $(this).find('.col-index').text(index + 1);
     });
 }
+function adjustLastRow(diff) {
+    const rows = $('#invoiceModal_invoiceItemsBody tr');
+    if (rows.length === 0) return;
+
+    //const lastRow = rows.last();
+    const lastRow = $('#invoiceModal_invoiceItemsBody tr')
+        .filter(function () {
+            return (parseFloat($(this).find('.qty').val()) || 0) > 0;
+        })
+        .last();
+
+    let rate = parseFloat(lastRow.find('.rate').val()) || 0;
+    let qty = parseFloat(lastRow.find('.qty').val()) || 1;
+    let gstRate = parseFloat(lastRow.find('.gst').val()) || 0;
+
+    if (qty === 0) qty = 1;
+
+    const factor = 1 + (gstRate / 100);
+
+    // ✅ Correct adjustment considering GST
+    let rateAdjustment = diff / (qty * factor);
+
+    rate = rate + rateAdjustment;
+
+    if (rate < 0) rate = 0;
+
+    lastRow.find('.rate').val(rate.toFixed(2));
+
+    recalcRow(lastRow);
+}
+function round2(val) {
+    return Math.round(val * 100) / 100;
+}
 
 function recalcRow(row) {
 
@@ -4443,37 +4477,28 @@ function recalcRow(row) {
     const gstFactor = 1 + (gstRate / 100);
 
     // Step 1: Subtotal
-    let subTotal = rate * qty;
+    let subTotal = round2(rate * qty);
     row.find('.subtotal').val(subTotal.toFixed(2));
 
     // Step 2: Discount Calculation
     let discountAmount = 0;
-
     if (discountType === "1") {
         discountAmount = subTotal * discountRate / 100;
     } else {
         discountAmount = discountRate;
     }
-
+    discountAmount = round2(discountAmount);
     row.find('.discountamount').val(discountAmount.toFixed(2));
 
     // Step 3: Taxable after discount
-    let taxable = subTotal - discountAmount;
+    let taxable = round2(subTotal - discountAmount);
     if (taxable < 0) taxable = 0;
     row.find('.taxable').val(taxable.toFixed(2));
 
     // Step 4: GST Calculation
-    let gstAmount = 0;
-    //if (isGstIncluded) {
-    //const gross = taxable;
-    //taxable = gross / gstFactor;
-    //gstAmount = gross - taxable;
-    //}
-    //else {
-    gstAmount = taxable * gstRate / 100;
-    //}
+    let gstAmount = round2(taxable * gstRate / 100);
 
-    const gstin = ($('#gstin').val() || '').trim();
+    const gstin = ($('#invoiceModal_gstin').val() || '').trim();
     const stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "";
 
     let cgst = 0;
@@ -4489,7 +4514,7 @@ function recalcRow(row) {
         cgst = gstAmount / 2;
         sgst = gstAmount / 2;
     }
-    const total = taxable + gstAmount;
+    let total = round2(taxable + gstAmount);
 
     row.find('.cgst').val(cgst.toFixed(2));
     row.find('.sgst').val(sgst.toFixed(2));
@@ -4525,9 +4550,9 @@ function recalcAll() {
     });
 
     // ✅ Step 2: Set fixed subtotal once
-    if (isInclusiveGST && fixedSubTotal === 0) {
-        fixedSubTotal = subTotal;
-    }
+    //if (isInclusiveGST && fixedSubTotal === 0) {
+    //    fixedSubTotal = subTotal;
+    //}
 
     // ✅ Step 3: Show totals (NO clamp, NO adjustment)
     $('#invoiceModal_bookingDiscount').val(totalDiscount.toFixed(2));
@@ -4540,15 +4565,14 @@ function recalcAll() {
     // ✅ Step 4: Grand total
     const discount = parseFloat($('#invoiceModal_bookingDiscount').val()) || 0;
     const grandTotal = totalTaxable + totalGST - discount;
+    $('#invoiceModal_grandTotal').val(grandTotal.toFixed(2));
 
     let roundedTotal = Math.round(grandTotal);
-
-    $('#invoiceModal_grandTotal').val(roundedTotal.toFixed(2));
     $('#invoiceModal_roundOff').val(roundedTotal.toFixed(2));
 
     const advance = parseFloat($('#invoiceModal_advancePaid').val()) || 0;
     $('#invoiceModal_balanceAmount, #invoiceModal_invoicePayment_DueBalance, #invoiceModal_invoicePayment_originalDueAmount')
-        .val((grandTotal - advance).toFixed(2));
+        .val((roundedTotal - advance).toFixed(2));
 }
 
 let fixedSubTotal = 0;
@@ -4932,20 +4956,44 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
     });
 });
 
+$('#invoiceModal_btnAdjustDiff').on('click', function () {
+    const currentSubTotal = parseFloat($('#invoiceModal_subTotal').val()) || 0;
+    const diff = fixedSubTotal - currentSubTotal;
+
+    if (Math.abs(diff) <= 0.01) return;
+
+    adjustLastRow(diff);
+    recalcAll();
+});
+
+
 function validateBeforeSave() {
     const isInclusiveGST = $('#invoiceModal_invoiceNo').data('isinclusivegst') === true;
     if (!isInclusiveGST) return true;
+
     const currentSubTotal = parseFloat($('#invoiceModal_subTotal').val()) || 0;
-    if (Math.abs(currentSubTotal - fixedSubTotal) > 0.01) {
+    const diff = fixedSubTotal - currentSubTotal;
+
+    // ✅ Auto-fix small difference
+    if (Math.abs(diff) <= 0.05 && Math.abs(diff) > 0.01) {
+        adjustLastRow(diff);
+        recalcAll();
+    }
+
+    // ❌ Still mismatch → block
+    if (Math.abs(diff) > 0.05) {
+        $("#invoiceModal_btnAdjustDiff").removeClass("d-none");
+        $("#invoiceModal_diffValue").text(diff.toFixed(2));
         Swal.fire({
             icon: 'error',
             title: 'Invalid Total',
-            text: `Subtotal must be as Bill Amount ₹${fixedSubTotal.toFixed(2)}`
+            text: `Difference ₹${diff.toFixed(2)}. Please adjust items.`
         });
         return false;
     }
     return true;
 }
+
 
 function getNextInvoiceNumbers() {
 
@@ -5461,7 +5509,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         YearId: Number(selectedYearId) ?? 0,
         MonthId: Number(selectedMonthId) ?? 0
     };
-    //console.log("GetBookingCalendar requestData:", requestData);
+    console.log("GetBookingCalendar requestData:", requestData);
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -5470,7 +5518,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                //console.log("Booking List:",data);
+                console.log("Booking List:",data);
                 if (actionMode === "fullData") {
                     //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);

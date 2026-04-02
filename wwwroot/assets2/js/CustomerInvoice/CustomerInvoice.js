@@ -10,6 +10,7 @@ var gstInvoiceNo = null;
 var invoiceType = null;
 
 let selectedPaymentDuration = "thismonth";
+let selectedStatusDuration = "thismonth";
 let gstList = [];
 
 $(function () {
@@ -28,6 +29,7 @@ $(function () {
     loadGSTMaster();
 
     loadPaymentCollection(selectedPaymentDuration);
+    loadInvoiceStatus(selectedStatusDuration);
 
     loadAccountDropdown();
     loadPaymentModeDropdown();
@@ -71,6 +73,7 @@ $(function () {
 
         const bookingId = $(this).data('bookingid');
         const isInclusiveGST = $(this).data('isinclusivegst') === true;      
+        fixedSubTotal = isInclusiveGST ? $(this).data('finalamount') : 0;
 
         //console.log('Create Invoice BookingId:', bookingId);
         $('#bookingId').val(bookingId);
@@ -96,6 +99,7 @@ $(function () {
 
         const bookingId = $(this).data('bookingid');
         const edit_invoiceNo = $(this).data('invoiceno');
+        fixedSubTotal = $(this).data('finalamount');
         $('#bookingId').val(bookingId);
         $('#invoiceNo').val(edit_invoiceNo);
         $('#gstInvoiceNo').val(0);
@@ -122,6 +126,7 @@ $(function () {
 
         const bookingId = $(this).data('bookingid');
         const edit_gstinvoiceNo = $(this).data('gstinvoiceno');
+        fixedSubTotal = $(this).data('finalamount');
         $('#bookingId').val(bookingId);
         $('#invoiceNo').val(0);
         $('#gstInvoiceNo').val(edit_gstinvoiceNo);
@@ -492,15 +497,37 @@ $(function () {
         });
     });
 
+    $('#btnAdjustDiff').on('click', function () {
+        const currentSubTotal = parseFloat($('#subTotal').val()) || 0;
+        const diff = fixedSubTotal - currentSubTotal;
+
+        if (Math.abs(diff) <= 0.01) return;
+
+        adjustLastRow(diff);
+        recalcAll();
+    });
+
     function validateBeforeSave() {
         const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
         if (!isInclusiveGST) return true;
+
         const currentSubTotal = parseFloat($('#subTotal').val()) || 0;
-        if (Math.abs(currentSubTotal - fixedSubTotal) > 0.01) {
+        const diff = fixedSubTotal - currentSubTotal;
+
+        // ✅ Auto-fix small difference
+        if (Math.abs(diff) <= 0.05 && Math.abs(diff) > 0.01) {
+            adjustLastRow(diff);
+            recalcAll();
+        }
+
+        // ❌ Still mismatch → block
+        if (Math.abs(diff) > 0.05) {
+            $("#btnAdjustDiff").removeClass("d-none");
+            $("#diffValue").text(diff.toFixed(2));
             Swal.fire({
                 icon: 'error',
                 title: 'Invalid Total',
-                text: `Subtotal must be as Bill Amount ₹${fixedSubTotal.toFixed(2)}`
+                text: `Difference ₹${diff.toFixed(2)}. Please adjust items.`
             });
             return false;
         }
@@ -524,6 +551,22 @@ $(function () {
         $("#PaymentChartFilter").text($(this).text());
 
         loadPaymentCollection(selectedPaymentDuration);
+    });
+
+    //load Invoice Status
+    $(document).on("click", ".invoicestatus-option", function (e) {
+        e.preventDefault();
+        const newFilter = $(this).data("value");
+        if (selectedStatusDuration === newFilter) return;
+
+        selectedStatusDuration = newFilter;
+
+        $(".invoicestatus-option").removeClass("active");
+        $(this).addClass("active");
+
+        $("#InvoiceChartFilter").text($(this).text());
+
+        loadInvoiceStatus(selectedStatusDuration);
     });
 
     //FILTER - PAYMENT ---- END -----------------------------
@@ -806,45 +849,66 @@ $(function () {
 
     //OUTSTANDING PAYMENT -------------------- END  --------------------------
 
-    //Widgets hide/show -- START --------------
-    const widgetContainer = $("#invoiceWidgets");
-    const toggle = $("#toggleWidgets");
-    const label = $("#widgetLabel");
+    function initToggle({containerId, toggleId, labelId, storageKey, showText, hideText, messageId = null}) {
+        const container = $(containerId);
+        const toggle = $(toggleId);
+        const label = $(labelId);
+        const message = messageId ? $(messageId) : null; // ✅ FIX
 
-    // Get saved state from localStorage
-    const isHidden = localStorage.getItem("hideInvoiceWidgets");
-    function updateLabel(isVisible) {
-        label.text(isVisible ? "Hide Widgets" : "Show Widgets");
-    }
-
-    // Initial Load State
-    if (isHidden === "true") {
-        widgetContainer.hide();
-        toggle.prop("checked", false);
-        updateLabel(false);
-    }
-    else {
-        widgetContainer.show();
-        toggle.prop("checked", true);
-        updateLabel(true);
-    }
-
-    // Toggle Event
-    toggle.on("change", function () {
-
-        const isVisible = $(this).is(":checked");
-
-        if (isVisible) {
-            widgetContainer.stop(true, true).slideDown(200);
-            localStorage.setItem("hideInvoiceWidgets", "false");
-        } else {
-            widgetContainer.stop(true, true).slideUp(200);
-            localStorage.setItem("hideInvoiceWidgets", "true");
+        function updateLabel(isVisible) {
+            label.text(isVisible ? hideText : showText);
         }
 
+        const isHidden = localStorage.getItem(storageKey);
+        const isVisible = isHidden !== "true";
+
+        container.toggle(isVisible);
+
+        if (message) {
+            message.toggle(!isVisible); // ✅ safe
+        }
+
+        toggle.prop("checked", isVisible);
         updateLabel(isVisible);
+
+        toggle.off("change").on("change", function () {
+            const visible = $(this).is(":checked");
+
+            if (visible) {
+                container.stop(true, true).slideDown(200);
+                if (message) message.hide(); // ✅ safe
+            } else {
+                container.stop(true, true).slideUp(200);
+                if (message) message.show(); // ✅ safe
+            }
+
+            localStorage.setItem(storageKey, visible ? "false" : "true");
+            updateLabel(visible);
+        });
+    }    
+
+    //Widgets hide/show -- START --------------
+    initToggle({
+        containerId: "#invoiceWidgets",
+        toggleId: "#toggleWidgets",
+        labelId: "#widgetLabel",
+        storageKey: "hideInvoiceWidgets",
+        showText: "Show Widgets",
+        hideText: "Hide Widgets"
     });
     //Widgets hide/show -- END --------------
+
+    //Filter hide/show -- START --------------
+    initToggle({
+        containerId: "#invoiceWidgets_filter",
+        toggleId: "#toggleWidgets_filter",
+        labelId: "#widgetLabel_filter",
+        storageKey: "hideInvoiceWidgets_filter",
+        showText: "Show Filter",
+        hideText: "Hide Filter",
+        messageId: "#filterHiddenMessage" // 👈 added
+    });
+    //filter hide/show -- END --------------
 
     //tooltip -widget---------- START -----------------------
     const tooltipContent = {
@@ -961,7 +1025,7 @@ function loadPaymentDetails(type) {
     };
     console.log("payload:", payload);
     $.ajax({
-        url: "/api/FinanceDashboard/GetDashboardPaymentCollectionDetails",
+        url: "/api/CustomerInvoice/GetDashboardPaymentCollectionDetails",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
@@ -1191,6 +1255,39 @@ function updateRowSequence() {
     });
 }
 
+function adjustLastRow(diff) {
+    const rows = $('#invoiceItemsBody tr');
+    if (rows.length === 0) return;
+
+    //const lastRow = rows.last();
+    const lastRow = $('#invoiceItemsBody tr')
+        .filter(function () {
+            return (parseFloat($(this).find('.qty').val()) || 0) > 0;
+        })
+        .last();
+
+    let rate = parseFloat(lastRow.find('.rate').val()) || 0;
+    let qty = parseFloat(lastRow.find('.qty').val()) || 1;
+    let gstRate = parseFloat(lastRow.find('.gst').val()) || 0;
+
+    if (qty === 0) qty = 1;
+
+    const factor = 1 + (gstRate / 100);
+
+    // ✅ Correct adjustment considering GST
+    let rateAdjustment = diff / (qty * factor);
+
+    rate = rate + rateAdjustment;
+
+    if (rate < 0) rate = 0;
+
+    lastRow.find('.rate').val(rate.toFixed(2));
+
+    recalcRow(lastRow);
+}
+function round2(val) {
+    return Math.round(val * 100) / 100;
+}
 function recalcRow(row) {
 
     const rate = parseFloat(row.find('.rate').val()) || 0;
@@ -1203,35 +1300,26 @@ function recalcRow(row) {
     const gstFactor = 1 + (gstRate / 100);
 
     // Step 1: Subtotal
-    let subTotal = rate * qty;
+    let subTotal = round2(rate * qty);
     row.find('.subtotal').val(subTotal.toFixed(2));
 
     // Step 2: Discount Calculation
     let discountAmount = 0;
-
     if (discountType === "1") {
         discountAmount = subTotal * discountRate / 100;
     } else {
         discountAmount = discountRate;
     }
-
+    discountAmount = round2(discountAmount);
     row.find('.discountamount').val(discountAmount.toFixed(2));
 
     // Step 3: Taxable after discount
-    let taxable = subTotal - discountAmount;
+    let taxable = round2(subTotal - discountAmount);
     if (taxable < 0) taxable = 0;
     row.find('.taxable').val(taxable.toFixed(2));
 
     // Step 4: GST Calculation
-    let gstAmount = 0;
-    //if (isGstIncluded) {
-    //const gross = taxable;
-    //taxable = gross / gstFactor;
-    //gstAmount = gross - taxable;
-    //}
-    //else {
-    gstAmount = taxable * gstRate / 100;
-    //}
+    let gstAmount = round2(taxable * gstRate / 100);
 
     const gstin = ($('#gstin').val() || '').trim();
     const stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "";
@@ -1249,12 +1337,13 @@ function recalcRow(row) {
         cgst = gstAmount / 2;
         sgst = gstAmount / 2;
     }
-    const total = taxable + gstAmount;
+    let total = round2(taxable + gstAmount);
 
     row.find('.cgst').val(cgst.toFixed(2));
     row.find('.sgst').val(sgst.toFixed(2));
     row.find('.igst').val(igst.toFixed(2));
     row.find('.total').val(total.toFixed(2));
+    recalcAll();
 }
 function recalcAll() {
 
@@ -1285,9 +1374,9 @@ function recalcAll() {
     });
 
     // ✅ Step 2: Set fixed subtotal once
-    if (isInclusiveGST && fixedSubTotal === 0) {
-        fixedSubTotal = subTotal;
-    }
+    //if (isInclusiveGST && fixedSubTotal === 0) {
+    //    fixedSubTotal = subTotal;
+    //}
 
     // ✅ Step 3: Show totals (NO clamp, NO adjustment)
     $('#bookingDiscount').val(totalDiscount.toFixed(2));
@@ -1300,15 +1389,14 @@ function recalcAll() {
     // ✅ Step 4: Grand total
     const discount = parseFloat($('#bookingDiscount').val()) || 0;
     const grandTotal = totalTaxable + totalGST - discount;
+    $('#grandTotal').val(grandTotal.toFixed(2));
 
     let roundedTotal = Math.round(grandTotal);
-
-    $('#grandTotal').val(roundedTotal.toFixed(2));
     $('#roundOff').val(roundedTotal.toFixed(2));
 
     const advance = parseFloat($('#advancePaid').val()) || 0;
     $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount')
-        .val((grandTotal - advance).toFixed(2));
+        .val((roundedTotal - advance).toFixed(2));
 }
 
 let fixedSubTotal = 0;
@@ -1589,7 +1677,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                //console.log("Booking List:",data);
+                console.log("Booking List:",data);
                 if (actionMode === "singleData") {
                     //resetBooking();
                     data = data[0];
@@ -1619,7 +1707,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
                     $("#bookingReport_Slot").text(data.ShiftCode || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
-                    $("#bookingReport_EventName").text(data.Booking_TypeName + "(" + data.Booking_SubEventName + ")" || "—");
+                    $("#bookingReport_EventName").text(data.Booking_EventName + "(" + data.Booking_SubEventName + ")" || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
                     $("#bookingReport_Hall").text(data.BanquetName || "—");
                     $("#bookingReport_Pax").text(data.Booking_PAX || "—");
@@ -1815,7 +1903,7 @@ function fetchData(isGenerated) {
         IsExclusiveOfGST: isExclusiveOfGST,
         IsInclusiveOfGST: isInclusiveOfGST
     };
-    //console.log("payload:", payload);
+    console.log("GRID payload:", payload);
 
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoice_GRID',
@@ -1823,7 +1911,7 @@ function fetchData(isGenerated) {
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (res) {
-            ////console.log("fetch res:", res);
+            console.log("GRID res:", res);
             if (res.status !== "Success") {
                 Swal.fire({
                     icon: "warning",
@@ -1875,7 +1963,7 @@ function renderTable(data, totals) {
         },
         columns: [
             { data: 'srno', visible: false },
-            { data: 'BookingId', title: '#BRN', name: 'BookingId' },
+            { data: 'BookingId', title: 'B.No', name: 'BookingId' },
             //InvoiceNo / ProformaInvoiceNo / GST No
             {
                 data: null,
@@ -1883,37 +1971,20 @@ function renderTable(data, totals) {
                 name: 'InvoiceNo',
                 render: function (row) {
 
-                    const invoiceNo =
-                        row.InvoiceNo !== null && row.InvoiceNo !== undefined && row.InvoiceNo > 0
-                            ? row.InvoiceNo
+                    const invoiceNo = row.FinalInvoiceNo !== null && row.FinalInvoiceNo !== undefined && row.FinalInvoiceNo !== "0"
+                        ? row.FinalInvoiceNo
                             : null;
-
-                    const gstInvoiceNo =
-                        row.GSTInvoiceNo !== null && row.GSTInvoiceNo !== undefined && row.GSTInvoiceNo !== ''
-                            ? row.GSTInvoiceNo
-                            : null;
-
-                    //const proformaNo =
-                    //    row.ProformaInvoiceNo !== null && row.ProformaInvoiceNo !== undefined && row.ProformaInvoiceNo > 0
-                    //        ? row.ProformaInvoiceNo
-                    //        : null;
 
                     if (invoiceNo) {
                         return `<strong>${invoiceNo}</strong>`;
                     }
-                    if (gstInvoiceNo) {
-                        return `<strong>${gstInvoiceNo}</strong>`;
-                    }
-                    //if (proformaNo) {
-                    //    return `<strong>${proformaNo}</strong>`;
-                    //}
 
                     return '-';
                 }
             },
 
             { data: 'EventDate_Format', title: 'Event Date', name:'EventDate_Format' },
-            { data: 'BookedOn', title: 'Booked On', name: 'BookedOn' },
+            { data: 'BookedOn', title: 'Booked On', name: 'BookedOn', visible: false },
             { data: 'EventName', title: 'Event (PAX)', name: 'EventName' },
             { data: 'HallName', title: 'Banquet', name: 'HallName' },
             { data: 'ClientName', title: 'Client', name: 'ClientName' },
@@ -1924,6 +1995,7 @@ function renderTable(data, totals) {
                 title: 'Total Amt.',
                 className: 'text-end',
                 name: 'TotalAmount',
+                width: "80px",
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
             },
             //OutstandingAmount
@@ -2035,7 +2107,6 @@ function renderTable(data, totals) {
                 title: 'GST Invoice',
                 name: 'GSTInvoice',
                 render: function (row) {
-
                     const invoiceNo =
                         row.InvoiceNo !== null && row.InvoiceNo !== undefined && row.InvoiceNo > 0
                             ? row.InvoiceNo
@@ -2049,6 +2120,7 @@ function renderTable(data, totals) {
                     if (invoiceNo) {
                         return `
                             <button class="btn btn-outline-warning btn-action-xs2 btn-edit-invoice"
+                                    data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}"
                                     data-invoiceno="${row.InvoiceNo}">
                                 <i class="fa fa-pen me-1"></i>Edit
@@ -2059,6 +2131,7 @@ function renderTable(data, totals) {
                     if (gstInvoiceNo) {
                         return `
                             <button class="btn btn-outline-warning btn-action-xs2 btn-edit-gstinvoice"
+                                    data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}"
                                     data-gstinvoiceno="${row.GSTInvoiceNo}">
                                 <i class="fa fa-pen me-1"></i>Edit
@@ -2072,11 +2145,13 @@ function renderTable(data, totals) {
                             return `
                                 <span title="You can create Invoice only on or after the event date.">
                                     <button class="btn btn-success btn-action-xs2 mb-1"
+                                            data-finalamount="${row.TotalAmount}"
                                             data-bookingid="${row.BookingId}" data-isinclusivegst="false"
                                             disabled>
                                         Create Invoice (Rates Exclusive of GST)
                                     </button>
                                     <button class="btn btn-warning btn-action-xs2 mb-1"
+                                            data-finalamount="${row.TotalAmount}"
                                             data-bookingid="${row.BookingId}" data-isinclusivegst="true"
                                             disabled>
                                         Create Invoice (Rates Inclusive of GST)
@@ -2087,10 +2162,12 @@ function renderTable(data, totals) {
 
                         return `
                             <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
+                                    data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="false">
                                 Create Invoice (Rates Exclusive of GST)
                             </button>
                             <button class="btn btn-warning btn-action-xs2 mb-1 btn-create-invoice"
+                                    data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="true">
                                 Create Invoice (Rates Inclusive of GST)
                             </button>
@@ -2155,6 +2232,8 @@ function isPastDate(dateString) {
 }*/
 
 function resetForm() {
+    $("#btnAdjustDiff").addClass("d-none");
+
     invoiceType = null;
     $('#invoiceId').val(0);
     $('#bookingId').val(0);
@@ -2283,34 +2362,72 @@ function loadState() {
 //STATE DROPDOWN --- END ------------------------
 
 function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
 
     $.ajax({
-        url: "/api/FinanceDashboard/GetDashboardPaymentCollectionStatus",
+        url: "/api/CustomerInvoice/GetDashboardPaymentCollectionStatus",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify({
-            MonthDuration: monthDuration,
-            FromDate: fromDate,
-            ToDate: toDate
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
-            //console.log("res count PaymentCollection finance:", res);
-
+            console.log("res count PaymentCollection finance:", res);
             if (res.status === "Success" && res.data) {
-
+                //PAYMENT COLLECTION
                 const paid = res.data.PaidAmount;
-                // const partial = res.data.PartialAmount;
                 const pending = res.data.PendingAmount;
                 const total = res.data.TotalAmount || 1; // avoid divide by zero
 
                 $("#txtPaidAmount").text(formatINR(paid));
-                // $("#txtPartialAmount").text(formatINR(partial));
                 $("#txtPendingAmount").text(formatINR(pending));
 
                 $("#barPaid").css("width", calcPercent(paid, total) + "%");
-                //$("#barPartial").css("width", calcPercent(partial, total) + "%");
                 $("#barPending").css("width", calcPercent(pending, total) + "%");
             }
+            else {
+                Swal.fire("Error", res?.message || "Failed to load payment collections!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Collection Fetch Error");
+        }
+    });
+}
+function loadInvoiceStatus(monthDuration, fromDate = null, toDate = null) {
+    var payload = {
+        MonthDuration: monthDuration,
+        FromDate: fromDate,
+        ToDate: toDate
+    };
+    console.log("invoice status payload:", payload);
+    $.ajax({
+        url: "/api/CustomerInvoice/GetDashboardInvoiceStatus",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("res count invoice status finance:", res);
+            if (res.status === "Success" && res.data) {
+                //INVOICE
+                const invoiceGeneratedCount = res.data.InvoiceGeneratedCount;
+                const invoicePendingCount = res.data.InvoicePendingCount;
+                const invoiceTotalCount = res.data.InvoiceTotalCount || 1; // avoid divide by zero
+
+                $("#txtInvoiceGeneratedCount").text(formatINR(invoiceGeneratedCount));
+                $("#txtInvoicePending").text(formatINR(invoicePendingCount));
+
+                $("#bar_InvoiceGenerated").css("width", calcPercent(invoiceGeneratedCount, invoiceTotalCount) + "%");
+                $("#bar_InvoicePending").css("width", calcPercent(invoicePendingCount, invoiceTotalCount) + "%");
+            }
+            else {
+                Swal.fire("Error", res?.message || "Failed to load invoice status!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Invoice Status Fetch Error");
         }
     });
 }

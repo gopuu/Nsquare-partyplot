@@ -212,29 +212,9 @@
         let mode = parseInt($("#txtPaymentMode_Expense").val()) || 0;
         let account = parseInt($("#ddlAccount_Expense").val()) || 0;
         let category = $("#ddlExpenseCategory").val();
+        let subcategory = $("#ddlSubCategory_Expense").val();
         let amount = parseFloat($("#txtAmount_Expense").val());
         let transactionDate = $("#txtTransactionDate_Expense").val();
-
-        // Mode
-        if (mode <= 0) {
-            Swal.fire("Validation", "Please select Mode", "warning");
-            $("#txtPaymentMode_Expense").focus();
-            return false;
-        }
-
-        // Account
-        if (account <= 0) {
-            Swal.fire("Validation", "Please select Account", "warning");
-            $("#ddlAccount_Expense").focus();
-            return false;
-        }
-
-        // Category
-        if (!category) {
-            Swal.fire("Validation", "Please select Category", "warning");
-            $("#ddlExpenseCategory").focus();
-            return false;
-        }
 
         // Amount
         if (!amount || isNaN(amount) || amount <= 0) {
@@ -242,11 +222,34 @@
             $("#txtAmount_Expense").focus();
             return false;
         }
-
+        // Category
+        if (!category || category <= 0) {
+            Swal.fire("Validation", "Please select Category", "warning");
+            $("#ddlExpenseCategory").focus();
+            return false;
+        }
+        // SubCategory
+        if (!subcategory || subcategory <= 0) {
+            Swal.fire("Validation", "Please select SubCategory", "warning");
+            $("#ddlSubCategory_Expense").focus();
+            return false;
+        }
         // Transaction Date
-        if (!transactionDate) {
+        if (!transactionDate || transactionDate =="") {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
             $("#txtTransactionDate_Expense").focus();
+            return false;
+        }
+        // Account
+        if (account <= 0) {
+            Swal.fire("Validation", "Please select Account", "warning");
+            $("#ddlAccount_Expense").focus();
+            return false;
+        }
+        // Mode
+        if (mode <= 0) {
+            Swal.fire("Validation", "Please select Payment Mode", "warning");
+            $("#txtPaymentMode_Expense").focus();
             return false;
         }
 
@@ -419,29 +422,9 @@
         let mode = parseInt($("#txtPaymentMode_Income").val()) || 0;
         let account = parseInt($("#ddlAccount_Income").val()) || 0;
         let category = $("#ddlIncomeCategory").val();
+        let subcategory = $("#ddlSubCategory_Income").val();
         let amount = parseFloat($("#txtAmount_Income").val());
         let transactionDate = $("#txtTransactionDate_Income").val();
-
-        // Mode
-        if (mode <= 0) {
-            Swal.fire("Validation", "Please select Mode", "warning");
-            $("#txtPaymentMode_Income").focus();
-            return false;
-        }
-
-        // Account
-        if (account <= 0) {
-            Swal.fire("Validation", "Please select Account", "warning");
-            $("#ddlAccount_Income").focus();
-            return false;
-        }
-
-        // Category
-        if (!category) {
-            Swal.fire("Validation", "Please select Category", "warning");
-            $("#ddlIncomeCategory").focus();
-            return false;
-        }
 
         // Amount
         if (!amount || isNaN(amount) || amount <= 0) {
@@ -449,11 +432,34 @@
             $("#txtAmount_Income").focus();
             return false;
         }
-
+        // Category
+        if (!category || category <= 0) {
+            Swal.fire("Validation", "Please select Category", "warning");
+            $("#ddlIncomeCategory").focus();
+            return false;
+        }
+        // SubCategory
+        if (!subcategory || subcategory <= 0) {
+            Swal.fire("Validation", "Please select SubCategory", "warning");
+            $("#ddlSubCategory_Income").focus();
+            return false;
+        }
         // Transaction Date
         if (!transactionDate) {
             Swal.fire("Validation", "Please select Transaction Date", "warning");
             $("#txtTransactionDate_Income").focus();
+            return false;
+        }
+        // Account
+        if (account <= 0) {
+            Swal.fire("Validation", "Please select Account", "warning");
+            $("#ddlAccount_Income").focus();
+            return false;
+        }
+        // Mode
+        if (mode <= 0) {
+            Swal.fire("Validation", "Please select Mode", "warning");
+            $("#txtPaymentMode_Income").focus();
             return false;
         }
 
@@ -699,6 +705,7 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
         FromDate: fromDate,
         ToDate: toDate
     };
+    console.log("finance summmary payload:", payload);
     $.ajax({
         url: "/api/FinanceDashboard/GetDashboardFinanceSummary",
         type: "POST",
@@ -708,28 +715,27 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
             //console.log("res count summaery finance:",res);
             if (res.status === "Success" && res.data) {
 
-                $("#txtTotalRevenue").text(formatINR(res.data.TotalRevenue));
-                $("#txtOutstanding").text(formatINR(res.data.OutstandingReceivables));
-                $("#txtExpenses").text(formatINR(res.data.TotalExpenses));
+                $("#txtTotalIncomes").text(formatINR(res.data.TotalIncomes));
+                $("#txtTotalExpenses").text(formatINR(res.data.TotalExpenses));
+                // GROSS PROFIT -- START
+                var grossProfit = res.data.GrossProfit || 0;
+                $("#txtGrossProfit").text(formatINR(grossProfit));
 
-                //NET PROFIT 
-                let netProfit = parseFloat(res.data.NetProfit || 0);
-                $("#txtNetProfit").text(formatINR(netProfit));
-
-                const wrapper = $("#netProfitWrapper");
+                const wrapper = $("#grossProfitWrapper");
                 const title = wrapper.closest(".card-body").find("h6");
 
                 wrapper.removeClass("text-success text-danger");
                 title.removeClass("text-success text-danger");
 
-                if (netProfit < 0) {
+                if (grossProfit < 0) {
                     wrapper.addClass("text-danger");
                     title.addClass("text-danger");
-                } else {
+                }
+                else {
                     wrapper.addClass("text-success");
                     title.addClass("text-success");
                 }
-                //NET PROFIT 
+                // GROSS PROFIT -- END
             }
             else {
                 resetFinanceCards();
@@ -743,10 +749,9 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
 }
 
 function resetFinanceCards() {
-    $("#txtTotalRevenue").text("0");
-    $("#txtOutstanding").text("0");
-    $("#txtExpenses").text("0");
-    $("#txtNetProfit").text("0");
+    $("#txtTotalIncomes").text("0");
+    $("#txtTotalExpenses").text("0");
+    $("#txtGrossProfit").text("0");
 }
 
 //TRANSACTIONS GRID --START
@@ -815,24 +820,20 @@ function renderTransactions(data) {
             {
                 data: null,
                 title: "#",
+                visible: false,
                 className: "text-center",
                 render: (data, type, row, meta) => meta.row + 1
             },
             {
-                data: "TransactionType",
-                title: "Type",
-                className: "text-center", 
-                render: function (data) {
-                    if (data === "INCOME")
-                        return `<span class="badge bg-success">Income</span>`;
-                    else
-                        return `<span class="badge bg-danger">Expense</span>`;
+                data: "VoucherNo",
+                title: "Voucher No",
+                className: "text-center",
+                render: function (data, type, row) {
+                    let badgeClass = row.TransactionType === "INCOME" ? "bg-success" : "bg-danger";
+                    return `<span class="badge ${badgeClass}">${data}</span>`;
                 }
             },
-            { data: "VoucherNo", title: "Voucher No", className: "text-center" },
-            { data: "AccountName", title: "Account", className: "text-center" },
-            { data: "CategoryName", title: "Category", className: "text-center" },
-            { data: "SubCategoryName", title: "Sub Category", className: "text-center" },
+            { data: "TransactionDate2", title: "Date", className: "text-center" },
             {
                 data: "Amount",
                 title: "Amount",
@@ -844,8 +845,10 @@ function renderTransactions(data) {
                         return `<span class="text-danger">- ${data}</span>`;
                 }
             },
+            { data: "CategoryName", title: "Category", className: "text-center" },
+            { data: "SubCategoryName", title: "Sub-Category", className: "text-center" },
+            { data: "AccountName", title: "Source / Receiver", className: "text-center" },
             { data: "PaymentModeName", title: "Payment Mode", className: "text-center" },
-            { data: "TransactionDate2", title: "Date", className: "text-center" },
             {
                 data: "Notes",
                 title: "Notes",

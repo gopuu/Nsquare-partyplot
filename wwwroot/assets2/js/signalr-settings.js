@@ -14,7 +14,7 @@
                 .build();
 
             settingsConnection.on("OnSettingsChanged", function (data) {
-                console.log("🔔 Settings changed", data);
+                //console.log("🔔 Settings changed", data);
 
                 settingsSubscribers.forEach(fn => {
                     try { fn(data); } catch (e) { console.error(e); }
@@ -22,7 +22,7 @@
             });
 
             settingsConnection.start()
-                .then(() => console.log("✅ SettingsHub Connected"))
+                //.then(() => console.log("✅ SettingsHub Connected"))
                 .catch(err => console.error("SettingsHub Error:", err));
         }
 
@@ -33,7 +33,7 @@
                 .build();
 
             quotationConnection.on("OnQuotationChanged", function (data) {
-                console.log("🔔 Quotation changed", data);
+                //console.log("🔔 Quotation changed", data);
 
                 quotationSubscribers.forEach(fn => {
                     try { fn(data); } catch (e) { console.error(e); }
@@ -41,7 +41,7 @@
             });
 
             quotationConnection.start()
-                .then(() => console.log("✅ QuotationHub Connected"))
+                //.then(() => console.log("✅ QuotationHub Connected"))
                 .catch(err => console.error("QuotationHub Error:", err));
         }
     }

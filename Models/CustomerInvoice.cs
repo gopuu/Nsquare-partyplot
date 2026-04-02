@@ -40,6 +40,7 @@
         public long BookingId { get; set; }
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
+        public string? FinalInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
         public bool? IsExclusiveOfGST { get; set; }
         public bool? IsInclusiveOfGST { get; set; }

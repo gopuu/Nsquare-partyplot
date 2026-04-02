@@ -1239,13 +1239,21 @@
                             </button>
 
                             <!-- RIGHT -->
-                            <div class="d-flex align-items-center gap-2">
-                                <label class="fw-semibold mb-0">Subtotal:</label>
-                                <input type="number"
-                                       id="invoiceModal_subTotal"
-                                       class="form-control form-control-sm text-end"
-                                       style="width:160px"
-                                       readonly>
+                            <div class="d-flex align-items-center justify-content-end gap-3">
+                                <!-- Difference (LEFT of Subtotal) -->
+                                <button id="invoiceModal_btnAdjustDiff" class="btn btn-sm btn-warning d-none">
+                                    Adjust ₹<span id="invoiceModal_diffValue"></span>
+                                </button>
+                                <!-- Subtotal -->
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="fw-semibold mb-0">Subtotal:</label>
+                                    <input type="number"
+                                           id="invoiceModal_subTotal"
+                                           class="form-control form-control-sm text-end"
+                                           style="width:160px"
+                                           readonly>
+                                </div>
+
                             </div>
                         </div>
 

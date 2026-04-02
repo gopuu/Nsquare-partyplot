@@ -66,40 +66,21 @@
     <!-- ================= TOP FINANCEw KPIs ================= -->
     <div class="row g-3 mb-2">
 
-        <!-- Total Revenue -->
+        <!-- Total Income -->
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
                 <div class="card-body">
                     <h6 class="fw-semibold text-success"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Total Revenue = Total Booking/Invoices Collections + Incomes Received, for selected date range.">
-                        Total Revenue
+                        title="Total Income = Incomes Received, for selected date range.">
+                        Total Income
                     </h6>
                     <h3 class="text-success mt-2">
                         <i class="fa fa-inr me-1"></i>
-                        <span id="txtTotalRevenue">0</span>
+                        <span id="txtTotalIncomes">0</span>
                     </h3>
-                    <small class="text-muted d-none" id="lblRevenueDuration">Current Month</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Outstanding Receivables -->
-        <div class="col-md-3 d-none">
-            <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
-                <div class="card-body">
-                    <h6 class="fw-semibold text-warning"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Outstanding amount = Total amount (Invoice or Booking) - Payments received (Invoice or Booking).">
-                        Outstanding Receivables
-                    </h6>
-                    <h3 class="text-warning mt-2">
-                        <i class="fa fa-inr me-1"></i>
-                        <span id="txtOutstanding">0</span>
-                    </h3>
-                    <small class="text-muted d-none">Pending from clients</small>
+                    <small class="text-muted d-none" id="lblIncomeDuration">Current Month</small>
                 </div>
             </div>
         </div>
@@ -111,31 +92,31 @@
                     <h6 class="fw-semibold text-danger"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Total Expenses = Total Purchase Payments + Total Expenses Amount, in selected period.">
+                        title="Total Expenses = Total Expenses Amount, in selected period.">
                         Total Expenses
                     </h6>
                     <h3 class="text-danger mt-2">
                         <i class="fa fa-inr me-1"></i>
-                        <span id="txtExpenses">0</span>
+                        <span id="txtTotalExpenses">0</span>
                     </h3>
-                    <small class="text-muted d-none">Purchases + Vendors</small>
+                    <small class="text-muted d-none">Current Month</small>
                 </div>
             </div>
         </div>
 
-        <!-- Net Profit -->
+        <!-- Gross Profit -->
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
                 <div class="card-body">
                     <h6 class="fw-semibold"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Net Profit = Total Revenue - Total Expenses, for the selected period.">
-                        Net Profit
+                        title="Gross Profit = Total Income - Total Expenses, for the selected period.">
+                        Gross Profit
                     </h6>
-                    <h3 class="mt-2" id="netProfitWrapper">
+                    <h3 class="mt-2" id="grossProfitWrapper">
                         <i class="fa fa-inr me-1"></i>
-                        <span id="txtNetProfit">0</span>
+                        <span id="txtGrossProfit">0</span>
                     </h3>
                     <small class="text-muted d-none">After all expenses</small>
                 </div>
@@ -338,7 +319,7 @@
 
                 <!-- 💸 AMOUNT (PRIMARY FOCUS) -->
                 <div class="text-center mb-4">
-                    <label class="form-label text-muted">Amount Paid</label>
+                    <label class="form-label text-muted">Amount Paid <span class="text-danger">*</span></label>
                     <input type="number"
                            id="txtAmount_Expense"
                            class="form-control text-center fs-3 fw-bold border-danger"
@@ -348,12 +329,12 @@
                 <!-- 📂 CATEGORY -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Category</label>
+                        <label class="form-label">Category <span class="text-danger">*</span></label>
                         <select id="ddlExpenseCategory" class="form-select"></select>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">SubCategory</label>
+                        <label class="form-label">SubCategory <span class="text-danger">*</span></label>
                         <select id="ddlSubCategory_Expense" class="form-select"></select>
                     </div>
                 </div>
@@ -361,17 +342,17 @@
                 <!-- 💳 DATE + ACCOUNT + MODE -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label class="form-label">Transaction Date</label>
+                        <label class="form-label">Transaction Date <span class="text-danger">*</span></label>
                         <input type="date" id="txtTransactionDate_Expense" class="form-control">
                     </div>
 
                     <div class="col-md-5">
-                        <label class="form-label">Paid From</label>
+                        <label class="form-label">Paid From <span class="text-danger">*</span></label>
                         <select id="ddlAccount_Expense" class="form-select ddlAccount"></select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Payment Mode</label>
+                        <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                         <select class="form-select ddlPaymentMode" id="txtPaymentMode_Expense"></select>
                     </div>
                 </div>
@@ -410,6 +391,11 @@
                               class="form-control"
                               rows="2"
                               placeholder="Optional..."></textarea>
+                </div>
+
+                <!-- ℹ️ INFO -->
+                <div class="form-text mt-3 text-primary">
+                    Note: Selecting accurate Category, Subcategory, Source & Mode ensures better tracking and insights.
                 </div>
 
             </div>
@@ -454,7 +440,7 @@
 
                 <!-- 💰 AMOUNT (PRIMARY) -->
                 <div class="text-center mb-4">
-                    <label class="form-label text-muted">Amount</label>
+                    <label class="form-label text-muted">Amount <span class="text-danger">*</span></label>
                     <input type="number"
                            id="txtAmount_Income"
                            class="form-control text-center fs-3 fw-bold border-success"
@@ -464,11 +450,11 @@
                 <!-- 📂 CATEGORY -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Category</label>
+                        <label class="form-label">Category <span class="text-danger">*</span></label>
                         <select id="ddlIncomeCategory" class="form-select"></select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">SubCategory</label>
+                        <label class="form-label">SubCategory <span class="text-danger">*</span></label>
                         <select id="ddlSubCategory_Income" class="form-select"></select>
                     </div>
                 </div>
@@ -476,17 +462,17 @@
                 <!-- 👤 DATE + RECEIVER + MODE -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label class="form-label">Transaction Date</label>
+                        <label class="form-label">Transaction Date <span class="text-danger">*</span></label>
                         <input type="date" id="txtTransactionDate_Income" class="form-control">
                     </div>
 
                     <div class="col-md-5">
-                        <label class="form-label">Received In</label>
+                        <label class="form-label">Received In <span class="text-danger">*</span></label>
                         <select id="ddlAccount_Income" class="form-select ddlAccount"></select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Payment Mode</label>
+                        <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                         <select class="form-select ddlPaymentMode" id="txtPaymentMode_Income"></select>
                     </div>
                 </div>
@@ -517,10 +503,16 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- 📝 NOTES -->
                 <div class="mt-3">
                     <label class="form-label">Notes</label>
                     <textarea id="txtNotes_Income" class="form-control" rows="2" placeholder="Optional..."></textarea>
+                </div>
+
+                <!-- ℹ️ INFO -->
+                <div class="form-text mt-3 text-primary">
+                    Note: Selecting accurate Category, Subcategory, Receiver & Mode ensures better tracking and insights.
                 </div>
 
             </div>
