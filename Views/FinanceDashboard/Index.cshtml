@@ -146,47 +146,23 @@
 
     <div class="row g-4 mb-3">
 
-        <!-- INCOME TXN -->
-        <div class="col-lg-6">
+        <!-- TXN LIST-->
+        <div class="col-lg-12">
             <div class="card shadow-sm h-100">
                 <div class="card-body bg-white p-3">
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0 text-success fw-semibold">
-                            Income Transactions
+                        <h5 class="mb-0 text-dark fw-semibold">
+                            Transactions
                         </h5>
                         <button class="btn btn-light btn-sm border"
                                 data-bs-toggle="offcanvas"
-                                data-bs-target="#incomeFilterPanel">
+                                data-bs-target="#incomeExpenseFilterPanel">
                             <i class="fa fa-filter me-1"></i> Filters
                         </button>
                     </div>
 
-                    <div id="tableMain_Income">
-                        <table class="table table-striped table-bordered w-100"></table>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- EXPENSE TXN -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body bg-white p-3">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0 text-danger fw-semibold">
-                            Expense Transactions
-                        </h5>
-                        <button class="btn btn-light btn-sm border"
-                                data-bs-toggle="offcanvas"
-                                data-bs-target="#expenseFilterPanel">
-                            <i class="fa fa-filter me-1"></i> Filters
-                        </button>
-                    </div>
-
-                    <div id="tableMain_Expense">
+                    <div id="tableMain_Transactions">
                         <table class="table table-striped table-bordered w-100"></table>
                     </div>
 
@@ -197,328 +173,376 @@
 </div>
 
 <!--FILTERS -- START ---->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="incomeFilterPanel">
-    <div class="offcanvas-header">
-        <h5 class="text-success">Filters (Income)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="incomeExpenseFilterPanel">
+    <div class="offcanvas-header bg-warning py-2">
+        <h5 class="text-secondary text-white">Filters</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
 
     <div class="offcanvas-body">
-
+        <!--TYPE-->
         <div class="mb-3">
-            <label class="form-label">CATEGORY</label>
-            <select id="filter_income_category" class="form-select">
-                <option value="">-- Select Category --</option>
-                <option value="1">Category 1</option>
-            </select>
+            <label class="form-label">TYPE</label>
+
+            <div class="d-flex gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_all" value="ALL" checked>
+                    <label class="form-check-label" for="type_all">All</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_income" value="INCOME">
+                    <label class="form-check-label text-success" for="type_income">Income</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_expense" value="EXPENSE">
+                    <label class="form-check-label text-danger" for="type_expense">Expense</label>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">SUB CATEGORY</label>
-            <select id="filter_income_subcategory" class="form-select">
-                <option value="0">Select Category</option>
-            </select>
+        <!-- INCOME FILTERS -->
+        <div class="row g-3" id="incomeFilters">
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-success">INCOME CATEGORY</label>
+                <select id="filter_income_category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-success">INCOME SUB-CATEGORY</label>
+                <select id="filter_income_subcategory" class="form-select"></select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">ACCOUNT</label>
-            <select id="filter_income_account" class="form-select ddlAccount">
-                <option value="">All</option>
-                <option value="10">Ac 1</option>
-            </select>
+        <!-- EXPENSE FILTERS -->
+        <div class="row g-3" id="expenseFilters">
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-danger">EXPENSE CATEGORY</label>
+                <select id="filter_expense_category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label text-danger">EXPENSE SUB-CATEGORY</label>
+                <select id="filter_expense_subcategory" class="form-select"></select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">PAYMENT MODE</label>
-            <select id="filter_income_paymentmode" class="form-select ddlPaymentMode">
-                <option value="">All</option>
-                <option value="10">PM 1</option>
-            </select>
+        <!-- ACCOUNT & PAYMENT -->
+        <div class="row g-3">
+            <!-- ACCOUNT -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">ACCOUNT</label>
+                <select id="filter_transaction_account" class="form-select ddlAccount">
+                    <option value="">All</option>
+                </select>
+            </div>
+
+            <!-- PAYMENT MODE -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">PAYMENT MODE</label>
+                <select id="filter_transaction_paymentmode" class="form-select ddlPaymentMode">
+                    <option value="">All</option>
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">FROM DATE</label>
-            <input type="date" id="filter_income_fromdate" class="form-control">
+        <!-- FILTER - DATE -->
+        <div class="row g-3">
+            <!-- FROM DATE -->
+            <div class="col-md-6">
+                <label class="form-label">FROM DATE</label>
+                <input type="date" id="filter_transaction_fromdate" class="form-control">
+            </div>
+
+            <!-- TO DATE -->
+            <div class="col-md-6">
+                <label class="form-label">TO DATE</label>
+                <input type="date" id="filter_transaction_todate" class="form-control">
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">TO DATE</label>
-            <input type="date" id="filter_income_todate" class="form-control">
+        <!-- FILTER - AMOUNT -->
+        <div class="row g-3">
+
+            <!-- FROM AMOUNT -->
+            <div class="col-md-6">
+                <label class="form-label">FROM AMOUNT</label>
+                <input type="number"
+                       id="filter_transaction_fromamount"
+                       class="form-control"
+                       placeholder="₹ Min">
+            </div>
+
+            <!-- TO AMOUNT -->
+            <div class="col-md-6">
+                <label class="form-label">TO AMOUNT</label>
+                <input type="number"
+                       id="filter_transaction_toamount"
+                       class="form-control"
+                       placeholder="₹ Max">
+            </div>
+
         </div>
 
+        <!--VOUCHER NO-->
+        <div class="mb-3">
+            <label class="form-label">VOUCHER NO</label>
+            <input type="text" id="filter_voucher_no" class="form-control" placeholder="Enter Voucher No">
+        </div>
     </div>
 
     <div class="p-3 border-top d-flex justify-content-between">
         <button class="btn btn-outline-secondary"
-                id="filter_income_reset">
+                id="filter_transaction_reset">
             Reset
         </button>
 
-        <button class="btn btn-success"
-                id="filter_income_apply">
+        <button class="btn btn-warning"
+                id="filter_transaction_apply">
             Apply
         </button>
     </div>
 </div>
-
-<div class="offcanvas offcanvas-end" tabindex="-1" id="expenseFilterPanel">
-    <div class="offcanvas-header">
-        <h5 class="text-danger">Filters (Expense)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-
-    <div class="offcanvas-body">
-
-        <div class="mb-3">
-            <label class="form-label">CATEGORY</label>
-            <select id="filter_expense_category" class="form-select">
-                <option value="">-- Select Category --</option>
-                <option value="1">Category 1</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">SUB CATEGORY</label>
-            <select id="filter_expense_subcategory" class="form-select">
-                <option value="0">Select Category</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">ACCOUNT</label>
-            <select id="filter_expense_account" class="form-select ddlAccount">
-                <option value="">All</option>
-                <option value="10">Ac 1</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">PAYMENT MODE</label>
-            <select id="filter_expense_paymentmode" class="form-select ddlPaymentMode">
-                <option value="">All</option>
-                <option value="10">PM 1</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">FROM DATE</label>
-            <input type="date" id="filter_expense_fromdate" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">TO DATE</label>
-            <input type="date" id="filter_expense_todate" class="form-control">
-        </div>
-
-    </div>
-
-    <div class="p-3 border-top d-flex justify-content-between">
-        <button class="btn btn-outline-secondary"
-                id="filter_expense_reset">
-            Reset
-        </button>
-
-        <button class="btn btn-danger"
-                id="filter_expense_apply">
-            Apply
-        </button>
-    </div>
-</div>
-
 <!--FILTERS -- END ---->
 
-<!--Expense Transactions -- START -->
+<!--ADD Expense Transactions -- START -->
 <div class="modal fade" id="ExpenseTransactionModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header bg-danger text-white py-1">
-                <h5 class="modal-title text-white" id="ExpenseTransactionModalTitle">Add Expense (Debit) Transaction</h5>
+            <div class="modal-header bg-danger text-white py-2">
+                <h5 class="modal-title text-white d-flex align-items-center gap-2">
+                    <span id="expenseTitleText">Add Expense</span>
+
+                    <span id="expenseVoucherDisplay"
+                          class="badge bg-light text-dark"
+                          data-bs-toggle="tooltip"
+                          title="Voucher No (Auto Generated)">
+                    </span>
+                </h5>
+
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <!-- BODY -->
             <div class="modal-body">
-                <input type="hidden" id="ExpenseTransactionId" value="0">
 
-                <div class="row mb-3">
+                <input type="hidden" id="ExpenseTransactionId" value="0">
+                <input type="hidden" id="paymentVoucherNo_Expense" />
+
+                <!-- 💸 AMOUNT (PRIMARY FOCUS) -->
+                <div class="text-center mb-4">
+                    <label class="form-label text-muted">Amount Paid</label>
+                    <input type="number"
+                           id="txtAmount_Expense"
+                           class="form-control text-center fs-3 fw-bold border-danger"
+                           placeholder="₹ 0">
+                </div>
+
+                <!-- 📂 CATEGORY -->
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Category<span class="text-danger">*</span></label>
-                        <select id="ddlExpenseCategory" class="form-select">
-                            <option value="">-- Select Category --</option>
-                        </select>
+                        <label class="form-label">Category</label>
+                        <select id="ddlExpenseCategory" class="form-select"></select>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">SubCategory</label>
-                        <select id="ddlSubCategory_Expense" class="form-select">
-                            <option value="">-- Select SubCategory --</option>
-                        </select>
+                        <select id="ddlSubCategory_Expense" class="form-select"></select>
                     </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Amount<span class="text-danger">*</span></label>
-                        <input type="number" id="txtAmount_Expense" class="form-control" placeholder="Enter Amount">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Source<span class="text-danger">*</span></label>
-                        <select id="ddlAccount_Expense" class="form-select ddlAccount">
-                            <option value="">-- Select Source --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
+                <!-- 💳 DATE + ACCOUNT + MODE -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Transaction Date</label>
                         <input type="date" id="txtTransactionDate_Expense" class="form-control">
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-5">
+                        <label class="form-label">Paid From</label>
+                        <select id="ddlAccount_Expense" class="form-select ddlAccount"></select>
+                    </div>
+
+                    <div class="col-md-4">
                         <label class="form-label">Payment Mode</label>
                         <select class="form-select ddlPaymentMode" id="txtPaymentMode_Expense"></select>
                     </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Voucher No (Auto Generated)</label>
-                        <input type="text" id="paymentVoucherNo_Expense" class="form-control" placeholder="Enter Voucher No" readonly>
-                    </div>
+                <!-- 💳 PAYMENT DETAILS (Conditional Section) -->
+                <div class="border rounded p-3 bg-light d-none" id="expensePaymentSection">
+                    <h6 class="mb-3 text-muted">Payment Details</h6>
 
-                    <div class="col-md-6 expensePayment_Fields d-none">
-                        <label class="form-label">Transaction Id</label>
-                        <input type="text" id="txtTransactionId_Expense" class="form-control">
-                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-5 expensePayment_Fields" id="expense_txnId_wrap">
+                            <label class="form-label">Transaction ID</label>
+                            <input type="text" id="txtTransactionId_Expense" class="form-control">
+                        </div>
 
-                    <div class="col-md-12 expensePayment_Fields d-none">
-                        <label class="form-label">Cheque Bank</label>
-                        <input type="text" id="paymentChequebank_Expense" class="form-control">
-                    </div>
+                        <div class="col-md-5 expensePayment_Fields" id="expense_bank_wrap">
+                            <label class="form-label">Bank</label>
+                            <input type="text" id="paymentChequebank_Expense" class="form-control">
+                        </div>
 
-                    <div class="col-md-6 expensePayment_Fields d-none">
-                        <label class="form-label">Cheque No</label>
-                        <input type="text" id="paymentChequeNo_Expense" class="form-control">
-                    </div>
+                        <div class="col-md-4 expensePayment_Fields" id="expense_chequeNo_wrap">
+                            <label class="form-label">Cheque No</label>
+                            <input type="text" id="paymentChequeNo_Expense" class="form-control">
+                        </div>
 
-                    <div class="col-md-6 expensePayment_Fields d-none">
-                        <label class="form-label">Cheque Date</label>
-                        <input type="date" id="paymentChequeDate_Expense" class="form-control">
-                    </div>
-
-                    <!-- Notes Full Width -->
-                    <div class="col-md-12">
-                        <label class="form-label">Notes</label>
-                        <textarea id="txtNotes_Expense" class="form-control" rows="3"></textarea>
+                        <div class="col-md-3 expensePayment_Fields" id="expense_chequeDate_wrap">
+                            <label class="form-label">Cheque Date</label>
+                            <input type="date" id="paymentChequeDate_Expense" class="form-control">
+                        </div>
                     </div>
                 </div>
+
+                <!-- 📝 NOTES -->
+                <div class="mt-3">
+                    <label class="form-label">Notes</label>
+                    <textarea id="txtNotes_Expense"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Optional..."></textarea>
+                </div>
+
             </div>
+
             <!-- FOOTER -->
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-danger btn-sm" id="btnSaveExpenseTransaction">Save</button>
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger px-4" id="btnSaveExpenseTransaction">
+                    Save Expense
+                </button>
             </div>
+
         </div>
     </div>
 </div>
-<!--Expense Transactions -- END -->
+<!--ADD Expense Transactions -- END -->
 
-<!--Income Transactions -- START -->
+<!--ADD Income Transactions -- START -->
 <div class="modal fade" id="incomeTransactionModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header bg-success text-white py-1">
-                <h5 class="modal-title text-white" id="incomeTransactionModalTitle">Add Income Transaction</h5>
+            <div class="modal-header bg-success text-white py-2">
+                <h5 class="modal-title text-white d-flex align-items-center gap-2">
+                    <span id="incomeTitleText">Add Income</span>
+
+                    <span id="incomeVoucherDisplay"
+                          class="badge bg-light text-dark"
+                          data-bs-toggle="tooltip"
+                          title="Voucher No (Auto Generated)">
+                    </span>
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <!-- BODY -->
             <div class="modal-body">
-                <input type="hidden" id="incomeTransactionId" value="0">
 
-                <div class="row mb-3">
+                <input type="hidden" id="incomeTransactionId" value="0">
+                <input type="hidden" id="paymentVoucherNo_Income" />
+
+                <!-- 💰 AMOUNT (PRIMARY) -->
+                <div class="text-center mb-4">
+                    <label class="form-label text-muted">Amount</label>
+                    <input type="number"
+                           id="txtAmount_Income"
+                           class="form-control text-center fs-3 fw-bold border-success"
+                           placeholder="₹ 0">
+                </div>
+
+                <!-- 📂 CATEGORY -->
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Category<span class="text-danger">*</span></label>
-                        <select id="ddlIncomeCategory" class="form-select">
-                            <option value="">-- Select Category --</option>
-                        </select>
+                        <label class="form-label">Category</label>
+                        <select id="ddlIncomeCategory" class="form-select"></select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">SubCategory</label>
-                        <select id="ddlSubCategory_Income" class="form-select">
-                            <option value="">-- Select SubCategory --</option>
-                        </select>
+                        <select id="ddlSubCategory_Income" class="form-select"></select>
                     </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Amount<span class="text-danger">*</span></label>
-                        <input type="number" id="txtAmount_Income" class="form-control" placeholder="Enter Amount">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Receiver<span class="text-danger">*</span></label>
-                        <select id="ddlAccount_Income" class="form-select ddlAccount">
-                            <option value="">-- Select Receivable --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Transaction Date<span class="text-danger">*</span></label>
+                <!-- 👤 DATE + RECEIVER + MODE -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Transaction Date</label>
                         <input type="date" id="txtTransactionDate_Income" class="form-control">
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-5">
+                        <label class="form-label">Received In</label>
+                        <select id="ddlAccount_Income" class="form-select ddlAccount"></select>
+                    </div>
+
+                    <div class="col-md-4">
                         <label class="form-label">Payment Mode</label>
                         <select class="form-select ddlPaymentMode" id="txtPaymentMode_Income"></select>
                     </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Voucher No (Auto Generated)</label>
-                        <input type="text" id="paymentVoucherNo_Income" class="form-control" placeholder="Enter Voucher No" readonly>
-                    </div>
+                <!-- 💳 PAYMENT DETAILS (conditional) -->
+                <div class="border rounded p-3 bg-light d-none" id="incomePaymentSection">
+                    <h6 class="mb-3 text-muted">Payment Details</h6>
 
-                    <div class="col-md-6 incomePayment_Fields d-none">
-                        <label class="form-label">Transaction Id</label>
-                        <input type="text" id="txtTransactionId_Income" class="form-control">
-                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-5 incomePayment_Fields" id="income_txnId_wrap">
+                            <label class="form-label">Transaction ID</label>
+                            <input type="text" id="txtTransactionId_Income" class="form-control">
+                        </div>
 
-                    <div class="col-md-12 incomePayment_Fields d-none">
-                        <label class="form-label">Cheque Bank</label>
-                        <input type="text" id="paymentChequebank_Income" class="form-control">
-                    </div>
+                        <div class="col-md-5 incomePayment_Fields" id="income_bank_wrap">
+                            <label class="form-label">Bank</label>
+                            <input type="text" id="paymentChequebank_Income" class="form-control">
+                        </div>
 
-                    <div class="col-md-6 incomePayment_Fields d-none">
-                        <label class="form-label">Cheque No</label>
-                        <input type="text" id="paymentChequeNo_Income" class="form-control">
-                    </div>
+                        <div class="col-md-4 incomePayment_Fields" id="income_chequeNo_wrap">
+                            <label class="form-label">Cheque No</label>
+                            <input type="text" id="paymentChequeNo_Income" class="form-control">
+                        </div>
 
-                    <div class="col-md-6 incomePayment_Fields d-none">
-                        <label class="form-label">Cheque Date</label>
-                        <input type="date" id="paymentChequeDate_Income" class="form-control">
-                    </div>
-
-                    <div class="col-md-12">
-                        <label class="form-label">Notes</label>
-                        <textarea id="txtNotes_Income" class="form-control" rows="3"></textarea>
+                        <div class="col-md-3 incomePayment_Fields" id="income_chequeDate_wrap">
+                            <label class="form-label">Cheque Date</label>
+                            <input type="date" id="paymentChequeDate_Income" class="form-control">
+                        </div>
                     </div>
                 </div>
+                <!-- 📝 NOTES -->
+                <div class="mt-3">
+                    <label class="form-label">Notes</label>
+                    <textarea id="txtNotes_Income" class="form-control" rows="2" placeholder="Optional..."></textarea>
+                </div>
+
             </div>
 
             <!-- FOOTER -->
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-success btn-sm" id="btnSaveIncomeTransaction">Save</button>
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success px-4" id="btnSaveIncomeTransaction">
+                    Save Transaction
+                </button>
             </div>
+
         </div>
     </div>
 </div>
-<!--Income Transactions -- END -->
+<!--ADD Income Transactions -- END -->
 
 <!-- DELETE Income-->
 <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-warning">
+            <div class="modal-header bg-warning py-2">
                 <h5 class="modal-title text-white" id="deleteRecordModalLabel">Delete Confirmation</h5> <!-- Added Title -->
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
             </div>

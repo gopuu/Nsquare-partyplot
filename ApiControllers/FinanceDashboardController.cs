@@ -24,6 +24,104 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
+        [Route("GetIncomeExpenseTransactionList")]
+        public IActionResult GetIncomeExpenseTransactionList([FromBody] GetIncomeExpenseTransactionRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<IncomeExpenseTransactionModel> list = new List<IncomeExpenseTransactionModel>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetIncomeExpenseTransaction", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+
+                    cmd.Parameters.AddWithValue("@IncomeCategoryId", request.IncomeCategoryId);
+                    cmd.Parameters.AddWithValue("@IncomeSubCategoryId", request.IncomeSubCategoryId);
+
+                    cmd.Parameters.AddWithValue("@ExpenseCategoryId", request.ExpenseCategoryId);
+                    cmd.Parameters.AddWithValue("@ExpenseSubCategoryId", request.ExpenseSubCategoryId);
+
+                    cmd.Parameters.AddWithValue("@FromDate", (object?)request.FromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object?)request.ToDate ?? DBNull.Value);
+ 
+                    cmd.Parameters.AddWithValue("@FromAmount", (object?)request.FromAmount ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToAmount", (object?)request.ToAmount ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@TransactionType", request.TransactionType ?? "ALL");
+                    cmd.Parameters.AddWithValue("@VoucherNo", (object?)request.VoucherNo ?? DBNull.Value);
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    list.Add(new IncomeExpenseTransactionModel
+                    {
+                        Id = Convert.ToInt64(row["Id"]),
+                        TransactionType = Convert.ToString(row["TransactionType"]),
+
+                        AccountId = Convert.ToInt64(row["AccountId"]),
+                        AccountName = Convert.ToString(row["AccountName"]),
+
+                        CategoryId = Convert.ToInt64(row["CategoryId"]),
+                        CategoryName = Convert.ToString(row["CategoryName"]),
+
+                        SubCategoryId = row["SubCategoryId"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["SubCategoryId"]),
+                        SubCategoryName = Convert.ToString(row["SubCategoryName"]),
+
+                        Amount = Convert.ToDecimal(row["Amount"]),
+
+                        TransactionDate = Convert.ToString(row["TransactionDateStr"]),
+                        TransactionDate2 = Convert.ToString(row["TransactionDate2"]),
+
+                        PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
+                        PaymentModeName = Convert.ToString(row["PaymentModeName"]),
+
+                        TransactionId = Convert.ToString(row["TransactionId"]),
+                        Notes = Convert.ToString(row["Notes"]),
+
+                        VoucherNo = Convert.ToString(row["VoucherNo"]),
+
+                        ChequeBank = Convert.ToString(row["ChequeBank"]),
+                        ChequeNo = Convert.ToString(row["ChequeNo"]),
+
+                        ChequeDate = row["ChequeDate"] == DBNull.Value
+                            || string.IsNullOrWhiteSpace(row["ChequeDate"]?.ToString())
+                                ? string.Empty
+                                : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd")
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Transactions fetched successfully!";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("GetDashboardFinanceSummary")]
         public IActionResult GetDashboardFinanceSummary([FromBody] DashboardFeedbackRequest request)
         {

@@ -2335,7 +2335,7 @@ document.addEventListener("DOMContentLoaded", function () {
         //const isLost = $selectedOption.data("islost") === true || $selectedOption.data("islost") === "true";
 
         const enquiryData = {
-            Id: $("#dealId").val() || 0, // ensure number
+            Id: Number($("#dealId").val() || 0), // ensure number
             ProcessId: parseInt($("#dealProcess").val()) || 0,
             Name: $("#dealName").val().trim(),
             Contact: $("#dealContact").val().trim(),
@@ -2357,7 +2357,7 @@ document.addEventListener("DOMContentLoaded", function () {
             LeadSourceId: parseInt($("#leadSourceDropdown").val()) || 0,
             Remarks: $("#remark").val().trim(),
             PackageId: parseInt($("#packageDropdown").val()) || 0,
-            ActionBy: userId // must be >0
+            ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
         };
         console.log("Posting EnquiryDeal:", enquiryData);
 

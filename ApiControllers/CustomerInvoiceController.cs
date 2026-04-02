@@ -172,6 +172,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
                     cmd.Parameters.Add("@IsInclusiveGST", SqlDbType.Bit).Value = request.IsInclusiveGST;
+                    cmd.Parameters.Add("@IsProformaInvoice", SqlDbType.Bit).Value = request.IsProformaInvoice;
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())

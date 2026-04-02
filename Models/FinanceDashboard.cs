@@ -1,7 +1,57 @@
 ﻿namespace ERPAdmin.Models
 {
-    public class FinanceDashboard
+    //Income-Expense TXN
+    public class GetIncomeExpenseTransactionRequest
     {
+        public long? AccountId { get; set; } = 0;
+        public long? PaymentModeId { get; set; } = 0;
+
+        public long? IncomeCategoryId { get; set; } = 0;
+        public long? IncomeSubCategoryId { get; set; } = 0;
+
+        public long? ExpenseCategoryId { get; set; } = 0;
+        public long? ExpenseSubCategoryId { get; set; } = 0;
+
+        public string? FromDate { get; set; } = null;
+        public string? ToDate { get; set; } = null;
+        public decimal? FromAmount { get; set; } = null;
+        public decimal? ToAmount { get; set; } = null;
+
+        public string? TransactionType { get; set; } = "ALL"; // ALL / INCOME / EXPENSE
+
+        public string? VoucherNo { get; set; } = null;
+    }
+
+    public class IncomeExpenseTransactionModel
+    {
+        public long Id { get; set; }
+        public string TransactionType { get; set; }
+
+        public long AccountId { get; set; }
+        public string AccountName { get; set; }
+
+        public long CategoryId { get; set; }
+        public string CategoryName { get; set; }
+
+        public long? SubCategoryId { get; set; }
+        public string SubCategoryName { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string TransactionDate { get; set; }
+        public string TransactionDate2 { get; set; }
+
+        public long PaymentModeId { get; set; }
+        public string PaymentModeName { get; set; }
+
+        public string TransactionId { get; set; }
+        public string Notes { get; set; }
+
+        public string VoucherNo { get; set; }
+
+        public string ChequeBank { get; set; }
+        public string ChequeNo { get; set; }
+        public string ChequeDate { get; set; }
     }
 
     public class DashboardFinanceSummary

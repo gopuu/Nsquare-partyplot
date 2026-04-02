@@ -153,6 +153,7 @@
     {
         public long BookingId { get; set; }
         public bool? IsInclusiveGST { get; set; } = false;
+        public bool? IsProformaInvoice { get; set; } = false;
     }
 
     public class CustomerInvoiceResponse_BookingId

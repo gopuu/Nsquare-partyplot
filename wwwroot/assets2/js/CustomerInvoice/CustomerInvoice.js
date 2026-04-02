@@ -61,7 +61,7 @@ $(function () {
         invoiceModal.show();
 
         const isInclusiveGST = false;
-        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST, true);
     });
     //CREATE PROFORMA INVOICE -- END
 
@@ -85,7 +85,7 @@ $(function () {
 
         invoiceModal.show();
 
-        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST, false);
     });
     //CREATE INVOICE - END
 
@@ -1423,11 +1423,12 @@ function fetchInvoiceById(params) {
 //proforma & invoice -- fetch EDIT -- END
 
 //proforma & invoice -- fetch -- START
-function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
+function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaInvoice = false) {
     $("#paymentSection").removeClass("d-none");
     var payload = {
         BookingId: bookingId,
-        IsInclusiveGST: isInclusiveGST
+        IsInclusiveGST: isInclusiveGST,
+        IsProformaInvoice: isProformaInvoice
     };
     //console.log("payload fetchInvoiceByBookingId:", payload);
     $.ajax({

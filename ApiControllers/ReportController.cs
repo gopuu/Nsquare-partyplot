@@ -1638,11 +1638,10 @@ namespace ERPAdmin.ApiControllers
                     SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
-
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report Data
-                    cmd = new SqlCommand("Report_GetBookingReportById", con);
+                    cmd = new SqlCommand("Report_GetBooking_FunctionProspectusReport", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.Int).Value = (object?)request.BookingId ?? DBNull.Value;
                     //new SqlDataAdapter(cmd).Fill(dsReport);

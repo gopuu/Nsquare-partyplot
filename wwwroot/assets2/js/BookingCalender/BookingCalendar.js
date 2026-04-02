@@ -2487,6 +2487,9 @@ const bookingModal = new bootstrap.Modal(bookingModalEl);
 
 const bookingReportModalEl = document.getElementById("bookingReportModal");
 const bookingReportModal = new bootstrap.Modal(bookingReportModalEl);
+const bookingReportModal_inDOM = document.getElementById('bookingReportModal');
+
+const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 
 function closeBookingReportModal() {
     console.log("booking info modal closed");
@@ -2731,6 +2734,7 @@ var vendorWorkOrder_eventDate = 0;
 var vendorWorkOrder_eventTime = 0;
 var vendorWorkOrder_slotId = 0;
 let hasInvoice = false;
+let openedFromReport = false;
 // Initial Load
 document.addEventListener("DOMContentLoaded", function () {
     $("#btnBook").prop("disabled", true);
@@ -2760,9 +2764,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // When Addon Modal is about to open
     const addonModal = document.getElementById('addonChargeModal');
-    const bookingModal = document.getElementById('bookingModal');
+    const bookingModal_inDOM = document.getElementById('bookingModal');
     const menuModal = document.getElementById('menuModal');
-    const bookingReportModal = document.getElementById('bookingReportModal');
+    //const bookingReportModal_inDOM = document.getElementById('bookingReportModal');
     const paymentModal = document.getElementById('paymentModal');
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
     const foodwestageModal = document.getElementById('foodWastageModal');
@@ -2772,7 +2776,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ESC key handler
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
-            if (bookingReportModal.classList.contains("show")) {
+            if (bookingReportModal_inDOM.classList.contains("show")) {
                 closeBookingReportModal();
             }
         }
@@ -2780,12 +2784,12 @@ document.addEventListener("DOMContentLoaded", function () {
     //hide booking report modal --- END ----------------
 
     // Create booking modal instance manually
-    const bookingModalInstance = new bootstrap.Modal(bookingModal);
+    //const bookingModalInstance = new bootstrap.Modal(bookingModal);
 
     addonModal.addEventListener('show.bs.modal', function () {
         // Just hide visually (do not destroy modal state)
-        bookingModal.classList.remove("show");
-        bookingModal.style.display = "none";
+        bookingModal_inDOM.classList.remove("show");
+        bookingModal_inDOM.style.display = "none";
 
         // Also hide backdrop manually
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2794,8 +2798,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     addonModal.addEventListener('hidden.bs.modal', function () {
         // Show booking modal visually again (no reset, same position)
-        bookingModal.classList.add("show");
-        bookingModal.style.display = "block";
+        bookingModal_inDOM.classList.add("show");
+        bookingModal_inDOM.style.display = "block";
 
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2809,8 +2813,8 @@ document.addEventListener("DOMContentLoaded", function () {
     paymentModal.addEventListener('show.bs.modal', function () {
         //console.log("paymentModal SHOW");
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         // Also hide backdrop manually
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2820,8 +2824,8 @@ document.addEventListener("DOMContentLoaded", function () {
     paymentModal.addEventListener('hidden.bs.modal', function () {
         //console.log("paymentModal HIDE");
         // Show booking modal visually again (no reset, same position)
-        bookingReportModal.classList.add("show");
-        bookingReportModal.style.display = "block";
+        bookingReportModal_inDOM.classList.add("show");
+        bookingReportModal_inDOM.style.display = "block";
 
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2833,8 +2837,8 @@ document.addEventListener("DOMContentLoaded", function () {
     foodwestageModal.addEventListener('show.bs.modal', function () {
         //console.log("foodWastageModal SHOW");
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         // Also hide backdrop manually
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2844,8 +2848,8 @@ document.addEventListener("DOMContentLoaded", function () {
     foodwestageModal.addEventListener('hidden.bs.modal', function () {
         //console.log("foodWastageModal HIDE");
         // Show booking modal visually again (no reset, same position)
-        bookingReportModal.classList.add("show");
-        bookingReportModal.style.display = "block";
+        bookingReportModal_inDOM.classList.add("show");
+        bookingReportModal_inDOM.style.display = "block";
 
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2854,11 +2858,11 @@ document.addEventListener("DOMContentLoaded", function () {
     //hide/show FoodWastage MODAL ----- END --------------------------
 
     //hide BOOKING REPORT MODAL ----- START --------------------------
-    bookingReportModal.addEventListener('hidden.bs.modal', function () {
+    bookingReportModal_inDOM.addEventListener('hidden.bs.modal', function () {
         console.log("bookingReportModal HIDE");
         // Show booking modal visually again (no reset, same position)
-        //bookingReportModal.classList.add("show");
-        //bookingReportModal.style.display = "block";
+        //bookingReportModal_inDOM.classList.add("show");
+        //bookingReportModal_inDOM.style.display = "block";
 
         if (isBookingInfoModal_OpenFromBookingList) {
             isBookingInfoModal_OpenFromBookingList = false;
@@ -2875,8 +2879,8 @@ document.addEventListener("DOMContentLoaded", function () {
     vendorWorkOrderModal.addEventListener('show.bs.modal', function () {
         //console.log("vendorWorkOrderModal shown");
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         // Also hide backdrop manually
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2885,8 +2889,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     vendorWorkOrderModal.addEventListener('hidden.bs.modal', function () {
         // Show booking modal visually again (no reset, same position)
-        bookingReportModal.classList.add("show");
-        bookingReportModal.style.display = "block";
+        bookingReportModal_inDOM.classList.add("show");
+        bookingReportModal_inDOM.style.display = "block";
 
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2895,13 +2899,12 @@ document.addEventListener("DOMContentLoaded", function () {
     //hide/show PAYMENT MODAL ----- END --------------------------
 
     //hide/show bookingModal MODAL ----- START --------------------------
-    let openedFromReport = false;
     $("#bookingModal").on("hidden.bs.modal", function () {
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide/show bookingModal MODAL ----- END--------------------------
@@ -2911,8 +2914,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide bookingRescheduleModal MODAL ----- END--------------------------
@@ -2923,8 +2926,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (openedFromReport & !openedFromPrepareOrder) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide prepareOrderModal MODAL ----- END--------------------------
@@ -2946,8 +2949,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide feedback MODAL ----- END--------------------------
@@ -2958,8 +2961,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide cancelBookingModal MODAL ----- END--------------------------
@@ -2970,8 +2973,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (openedFromReport) {
             openedFromReport = false;
             //$("#bookingReportModal").modal("show");
-            bookingReportModal.classList.add("show");
-            bookingReportModal.style.display = "block";
+            bookingReportModal_inDOM.classList.add("show");
+            bookingReportModal_inDOM.style.display = "block";
         }
     });
     //hide invoice MODAL ----- END--------------------------
@@ -2979,8 +2982,8 @@ document.addEventListener("DOMContentLoaded", function () {
     //hide/show MENU MODAL ----- START --------------------------
     menuModal.addEventListener('show.bs.modal', function () {
         // Just hide visually (do not destroy modal state)
-        bookingModal.classList.remove("show");
-        bookingModal.style.display = "none";
+        bookingModal_inDOM.classList.remove("show");
+        bookingModal_inDOM.style.display = "none";
 
         // Also hide backdrop manually
         const backdrop = document.querySelector('.modal-backdrop');
@@ -2989,8 +2992,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     menuModal.addEventListener('hidden.bs.modal', function () {
         // Show booking modal visually again (no reset, same position)
-        bookingModal.classList.add("show");
-        bookingModal.style.display = "block";
+        bookingModal_inDOM.classList.add("show");
+        bookingModal_inDOM.style.display = "block";
 
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
@@ -3285,8 +3288,10 @@ document.addEventListener("DOMContentLoaded", function () {
     //SAVE BOOKING ------ END --------------------------------
 
     //BOOKING REPORT MODAL ---- START ------------------------------------------------
-    const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    //const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 
+
+    // 🧾 Invoice Generate
     const btnInvoice = document.getElementById("btnInvoiceGenerate");
     const menu = document.getElementById("invoiceOptionsMenu");
     btnInvoice.addEventListener("click", function (e) {
@@ -3342,10 +3347,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
     function openInvoiceModal(bookingId, type = null) {
-        openedFromReport = true;
+        //openedFromReport = true;
 
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        //bookingReportModal_inDOM.classList.remove("show");
+        //bookingReportModal_inDOM.style.display = "none";
 
         resetForm_InvoiceModal();
         $('#invoiceModal_bookingId').val(bookingId);
@@ -3356,48 +3361,8 @@ document.addEventListener("DOMContentLoaded", function () {
         //const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
         //$('#invoiceModal_ModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
         $('#invoiceModal_invoiceNo').data('isinclusivegst', isInclusiveGST);
-        invoiceModal.show();
-        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST, false);
     }
-
-    // 🧾 Invoice Generate
-    /*
-    document.getElementById("btnInvoiceGenerate").addEventListener("click", function () {
-         const bookingId = getBookingId();
-         //console.log("📄 Invoice Generate clicked - Booking ID:", bookingId);
-
-        const btn_invoiceNo = getInvoiceNoFromButton("btnInvoiceGenerate");
-        //console.log("Invoice No:", btn_invoiceNo);
-
-        //download invoice
-        if (btn_invoiceNo > 0) {
-            const userId = parseInt(sessionStorage.getItem('userId') || 0);
-            const request = {
-                BookingId: bookingId,
-                InvoiceNo: btn_invoiceNo,
-                ProformaInvoiceNo: null,
-                WithHeader: true,
-                ActionBy: userId
-            };
-            generateInvoicePdf(request);
-            return;
-        }
-
-        openedFromReport = true;
-        // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
-
-        resetForm_InvoiceModal();
-        $('#invoiceModal_bookingId').val(bookingId);
-
-        invoiceType = "invoice";
-        $('#invoiceModal_ModalTitle').text('Create Invoice #' + invoiceNo);
-        invoiceModal.show();
-
-        fetchInvoiceByBookingId(bookingId);
-    });
-    */
 
     // 🧾 Proforma Invoice Generate
     document.getElementById("btnProformaInvoiceGenerate").addEventListener("click", function () {
@@ -3419,10 +3384,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        openedFromReport = true;
+        //openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        //bookingReportModal_inDOM.classList.remove("show");
+        //bookingReportModal_inDOM.style.display = "none";
 
         resetForm_InvoiceModal();
         $('#invoiceModal_bookingId').val(bookingId);
@@ -3431,9 +3396,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let isInclusiveGST = false;
         $('#invoiceModal_ModalTitle').text('Create Proforma Invoice #' + proformaInvoiceNo);
-        invoiceModal.show();
-
-        fetchInvoiceByBookingId(bookingId, isInclusiveGST);
+        //invoiceModal.show();
+        fetchInvoiceByBookingId(bookingId, isInclusiveGST, true);
     });
 
     function getInvoiceNoFromButton(buttonId) {
@@ -3468,7 +3432,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // 🧾 Download Function Prospect
-    document.getElementById("btnDownloadPDF").addEventListener("click", function () {
+    document.getElementById("btnFunctionProspect").addEventListener("click", function () {
         showReportOptions();
     });
 
@@ -3586,8 +3550,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         $("#feedbackModal").modal("show");
     });
@@ -3694,8 +3658,8 @@ Your feedback helps us improve our service.`;
         }
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         $("#cancelBookingModal").modal("show");
     });
@@ -3749,7 +3713,7 @@ Your feedback helps us improve our service.`;
                     // 🔄 Refresh calendar or UI
                     loadBookingCalendar();
                     //CLOSE MODAL
-                    bookingReportModal.hide();
+                    bookingReportModal_inDOM.hide();
 
                 }
                 else {
@@ -3815,7 +3779,7 @@ Your feedback helps us improve our service.`;
                         // 🔄 Refresh calendar or UI
                         loadBookingCalendar();
                         //CLOSE MODAL
-                        //bookingReportModal.hide();
+                        //bookingReportModal_inDOM.hide();
                         closeBookingReportModal();
                     }
                     else {
@@ -3878,8 +3842,8 @@ Your feedback helps us improve our service.`;
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         // Load data
         loadBookingCalendar(bookingId, 0, null, "editData");
@@ -3893,8 +3857,8 @@ Your feedback helps us improve our service.`;
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         // Load data
         loadBookingCalendar(bookingId, 0, null, "rescheduleData");
@@ -3913,8 +3877,8 @@ Your feedback helps us improve our service.`;
         //console.log("📋 Prepare Order (PO) clicked - Booking ID:", bookingId);
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
-        bookingReportModal.classList.remove("show");
-        bookingReportModal.style.display = "none";
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
 
         //Load Data
         loadPrepareOrderByBooking(bookingId);
@@ -4331,7 +4295,6 @@ $(document).on('input change', '#invoiceModal_gstin', function () {
     // GSTIN or global change → recalc all rows
     $('#invoiceModal_invoiceItemsBody tr').each(function () {
         recalcRow($(this));
-        console.log("here2");
     });
     recalcAll();
 });
@@ -4607,13 +4570,13 @@ function updateInvoiceTitle(totalGST) {
     }
 }
 
-
 //proforma & invoice -- fetch -- START
-function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
+function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaInvoice = false) {
     $("#invoiceModal_paymentSection").removeClass("d-none");
     var payload = {
         BookingId: bookingId,
-        IsInclusiveGST: isInclusiveGST
+        IsInclusiveGST: isInclusiveGST,
+        IsProformaInvoice: isProformaInvoice
     };
     //console.log("payload fetchInvoiceByBookingId:", payload);
     $.ajax({
@@ -4633,6 +4596,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
                 });
                 return;
             }
+
             var data = res.data;
             /* ---------- MASTER FIELDS ---------- */
             $('#invoiceModal_invoiceNo').val(invoiceNo);
@@ -4753,9 +4717,19 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false) {
                 addItemRow(); // empty invoice
             }
             /* ---------- ITEMS ---------- */
+            //bookingReportModal.hide();
+            bookingReportModal_inDOM.classList.remove("show");
+            bookingReportModal_inDOM.style.display = "none";
+
+            openedFromReport = true;
+            invoiceModal.show();
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Fetch Invoice by BookingId Failed");
+            handleApiError(xhr, status, error, "Invoice Generation Failed");
+            //here2
+            //openedFromReport = false;
+            //bookingReportModal.hide();
+            //loadBookingCalendar(bookingId, 0, null, "singleData");
         }
     });
 }
@@ -4803,7 +4777,6 @@ function resetForm_InvoiceModal() {
 }
 
 //SAVE INVOICE
-const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 $('#invoiceModal_btnSaveInvoice').on('click', function () {
     if (!validateBeforeSave()) return;
 
@@ -4939,7 +4912,12 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
                 getNextInvoiceNumbers();
                 //resetForm();
                 $('#invoiceModal_btnSaveInvoice').prop('disabled', true);
+
+                openedFromReport = false;
                 invoiceModal.hide();
+                bookingReportModal.hide();
+
+                loadBookingCalendar(request.BookingId, 0, null, "singleData");
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -5822,6 +5800,26 @@ function setInvoiceButtons(data) {
             btn.classList.toggle("opacity-50", shouldDisable);
         }
     });
+
+    //DISABLE Invoice Generate button ---START
+    const eventDate = new Date(data.EventDate);
+    const today = new Date();
+    // Normalize time (important to avoid time mismatch bugs)
+    eventDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const isBeforeEvent = today < eventDate;
+
+    const $btn = $('#btnInvoiceGenerate');
+    if (isBeforeEvent) {
+        $btn.prop('disabled', true);
+        $btn.attr('title', 'You can create Invoice only on or after the event date.');
+    }
+    else {
+        $btn.prop('disabled', false);
+        $btn.removeAttr('title');
+    }
+    //DISABLE Invoice Generate button ---END
+
 }
 
 function setTimeFrom24Hr(time24, hourId, minuteId, ampmId) {
@@ -6095,7 +6093,7 @@ function saveBooking() {
                 handleApiSuccess("Booking Saved.");
 
                 var paymentId = response.data.PaymentId;
-                if (paymentId > 0) {
+                if (paymentId > 0 && bookingData.BookingId == 0) {
                     // ✅ Swal Confirmation
                     Swal.fire({
                         title: 'Download Receipt?',
@@ -6118,19 +6116,20 @@ function saveBooking() {
                             downloadReport(url, payload, "Generating Receipt...");
                         }
                         // ❌ If NO → do nothing (flow continues)
-                        
-                        
+                                                
+                        //CLOSE MODAL
+                        //bookingModal.hide();
+                        $("#bookingModal").modal("hide");
                         if (bookingData.BookingId > 0) {
                             //console.log("singleData");
+                            openedFromReport = false;
+                            bookingReportModal.hide();
                             loadBookingCalendar(bookingData.BookingId, 0, null, "singleData");
                         }
                         else {
                             resetBooking();
                             loadBookingCalendar();
                         }
-                        //CLOSE MODAL
-                        //bookingModal.hide();
-                        $("#bookingModal").modal("hide");
                     });
                 }
                 else {
@@ -6139,21 +6138,12 @@ function saveBooking() {
                     //CLOSE MODAL
                     //bookingModal.hide();
                     $("#bookingModal").modal("hide");
-                }
 
-                /*
-                if (bookingData.BookingId > 0) {
-                    var banquetId = 0;
-                    var eventDate = null;
-                    var actionMode = "singleData";
-                    //console.log(
-                    //    "BookingId:", bookingData.BookingId,
-                    //    "BanquetId:", banquetId,
-                    //    "EventDate:", eventDate,
-                    //    "ActionMode:", actionMode
-                    //);
-                    loadBookingCalendar(bookingData.BookingId, banquetId, eventDate, actionMode);
-                }*/
+                    openedFromReport = false;
+                    invoiceModal.hide();
+                    bookingReportModal.hide();
+                    loadBookingCalendar(bookingData.BookingId, 0, null, "singleData");
+                }
             }
             else {
                 Swal.fire({

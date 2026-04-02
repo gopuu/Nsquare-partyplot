@@ -2,10 +2,14 @@
     $("#fromDate, #toDate").hide();
     let selectedFinanceDuration = "thismonth"; // default
 
+    const defaultType = $("input[name='filter_transaction_type']:checked").val();
+    toggleCategoryFilters(defaultType);
+
     loadFinanceSummary(selectedFinanceDuration);
     loadNextVoucherNo();
     loadAccountDropdown();
     loadPaymentModeDropdown();
+    fetchTransactions();
 
     //FILTER --- START ---------------------------------------
 
@@ -103,52 +107,72 @@
         loadFinanceSummary(selectedFinanceDuration);
     });
 
-    //INCOME TABLE - FILTER -- START -------------------------
-    $("#filter_income_apply").on("click", function () {
-        var categoryId = Number($("#filter_income_category").val() || 0);
-        var subCategoryId = Number($("#filter_income_subcategory").val() || 0);
-        var accountId = Number($("#filter_income_account").val() || 0);
-        var paymentModeId = Number($("#filter_income_paymentmode").val() || 0);
-        var fromDate = $("#filter_income_fromdate").val();
-        var toDate = $("#filter_income_todate").val();
+    //TRANSACTIONS GRID - FILTER -- START -------------------------
+    $("#filter_transaction_apply").on("click", function () {
 
-        fetchIncomeTransactions(accountId, paymentModeId, categoryId, subCategoryId, fromDate, toDate);
+        const transactionType = $("input[name='filter_transaction_type']:checked").val();
+        const voucherNo = $("#filter_voucher_no").val()?.trim();
+
+        const payload = {
+            AccountId: Number($("#filter_transaction_account").val() || 0),
+            PaymentModeId: Number($("#filter_transaction_paymentmode").val() || 0),
+
+            IncomeCategoryId: Number($("#filter_income_category").val() || 0),
+            IncomeSubCategoryId: Number($("#filter_income_subcategory").val() || 0),
+
+            ExpenseCategoryId: Number($("#filter_expense_category").val() || 0),
+            ExpenseSubCategoryId: Number($("#filter_expense_subcategory").val() || 0),
+
+            FromDate: $("#filter_transaction_fromdate").val() || null,
+            ToDate: $("#filter_transaction_todate").val() || null,
+
+            FromAmount: $("#filter_transaction_fromamount").val() || null,
+            ToAmount: $("#filter_transaction_toamount").val() || null,
+
+            TransactionType: transactionType,
+            VoucherNo: voucherNo || null
+        };
+
+        console.log("Filter Payload:", payload);
+
+        fetchTransactions(payload);
     });
-    $("#filter_income_reset").on("click", function () {
 
+    $("#filter_transaction_reset").on("click", function () {
+
+        // 🔒 Preserve
+        const selectedType = $("input[name='filter_transaction_type']:checked").val();
+        const voucherNo = $("#filter_voucher_no").val();
+
+        // 🔄 Reset others
         $("#filter_income_category").val("0");
         $("#filter_income_subcategory").val("0");
-        $("#filter_income_fromdate").val("");
-        $("#filter_income_todate").val("");
-
-        console.log("Income filters reset");
-        fetchIncomeTransactions();
-    });
-    //INCOME TABLE - FILTER -- END -------------------------
-
-    //EXPENSE TABLE - FILTER -- START -------------------------
-    $("#filter_expense_apply").on("click", function () {
-        var categoryId = Number($("#filter_expense_category").val() || 0);
-        var subCategoryId = Number($("#filter_expense_subcategory").val() || 0);
-        var accountId = Number($("#filter_expense_account").val() || 0);
-        var paymentModeId = Number($("#filter_expense_paymentmode").val() || 0);
-        var fromDate = $("#filter_expense_fromdate").val();
-        var toDate = $("#filter_expense_todate").val();
-
-        fetchExpenseTransactions(accountId, paymentModeId, categoryId, subCategoryId, fromDate, toDate);
-    });
-    $("#filter_expense_reset").on("click", function () {
 
         $("#filter_expense_category").val("0");
         $("#filter_expense_subcategory").val("0");
-        $("#filter_expense_fromdate").val("");
-        $("#filter_expense_todate").val("");
 
-        console.log("Expense filters reset");
-        fetchExpenseTransactions();
+        $("#filter_transaction_account").val("0");
+        $("#filter_transaction_paymentmode").val("0");
+
+        $("#filter_transaction_fromdate").val("");
+        $("#filter_transaction_todate").val("");
+
+        $("#filter_transaction_fromamount").val("");
+        $("#filter_transaction_toamount").val("");
+
+        // 🔁 Restore
+        $("input[name='filter_transaction_type'][value='" + selectedType + "']").prop("checked", true);
+        $("#filter_voucher_no").val(voucherNo);
+
+        // Optional: reload with current preserved filters
+        $("#filter_transaction_apply").click();
     });
 
-    //EXPENSE TABLE - FILTER -- END -------------------------
+    $("input[name='filter_transaction_type']").on("change", function () {
+        const type = $(this).val();
+        toggleCategoryFilters(type);
+    });
+    //TRANSACTIONS GRID - FILTER -- START -------------------------
 
 
     //FILTER --- END---------------------------------------
@@ -166,15 +190,18 @@
     //EXPENSE TXN --- START -------------------------
     loadExpenseCategoryDropdown();
     loadExpenseSubCategoryDropdown();
-    fetchExpenseTransactions();
 
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('txtTransactionDate_Expense').value = today;
+
+    $('#expenseTransactionModal').on('shown.bs.modal', function () {
+        $('#txtAmount_Expense').focus();
+    });
+
     // Add button click
     $("#btn-add-debit-transactions").click(function () {
         resetFormFields_Expense();
-        $("#ExpenseTransactionModalTitle").text("Add Expense Transactions");
-        $("#txtTransactionDate_Expense").val(formatDate2());
+        $("#expenseTitleText").text("Add Expense Transactions");
         $("#ExpenseTransactionModal").modal("show");
     });
     // Save Expense Transaction
@@ -258,7 +285,7 @@
                     $("#ExpenseTransactionModal").modal("hide");
                     loadNextVoucherNo();
                     // Reload table or data
-                    fetchExpenseTransactions();
+                    fetchTransactions();
                     loadFinanceSummary(selectedFinanceDuration);
                 } else {
                     Swal.fire("Error", response.message, "error");
@@ -304,6 +331,8 @@
         $("#txtPaymentMode_Expense").val(rowData.PaymentModeId).trigger("change");
 
         $("#paymentVoucherNo_Expense").val(rowData.VoucherNo);
+        $("#expenseVoucherDisplay").text(rowData.VoucherNo || "-");
+
         $("#txtTransactionId_Expense").val(rowData.TransactionId);
         $("#paymentChequebank_Expense").val(rowData.ChequeBank);
         $("#paymentChequeNo_Expense").val(rowData.ChequeNo);
@@ -311,7 +340,7 @@
         $("#txtNotes_Expense").val(rowData.Notes);
 
         // Update modal title
-        $("#ExpenseTransactionModalTitle").text("Edit Expense Transaction");
+        $("#expenseTitleText").text("Edit Expense Transactions");
 
         // Show modal
         $('#ExpenseTransactionModal').modal('show');
@@ -332,30 +361,35 @@
         $("#deleteRecordModal").data("id", rowData.Id).data("src", "expense").modal("show");
     });
 
-    //txtPaymentMode_Income - change
-    $(document).on("change", "#txtPaymentMode_Income", function () {
-        const selectedText = $("#txtPaymentMode_Income option:selected").text().toLowerCase().trim();
-        // Hide all conditional fields
-        $(".incomePayment_Fields").addClass("d-none");
-        // Clear hidden values (recommended)
-        $(".incomePayment_Fields input").val("");
-        // CASH
-        if (selectedText.includes("cash")) {
-            // Nothing extra required
+    $(document).on("change", "#txtPaymentMode_Expense", function () {
+
+        const selectedText = $("#txtPaymentMode_Expense option:selected").text().toLowerCase().trim();
+
+        // Hide everything
+        $("#expensePaymentSection").addClass("d-none");
+        $(".expensePayment_Fields").addClass("d-none");
+
+        // Clear values
+        $(".expensePayment_Fields input").val("");
+
+        // CASH / BANK TRANSFER → nothing
+        if (selectedText.includes("cash") || selectedText.includes("bank transfer")) {
+            return;
         }
-        // BANK TRANSFER
-        else if (selectedText.includes("bank transfer")) {
-            //$("#txtTransactionId_Income").closest(".incomePayment_Fields").removeClass("d-none");
-        }
+
+        // Show section
+        $("#expensePaymentSection").removeClass("d-none");
+
         // CHEQUE
-        else if (selectedText.includes("cheque")) {
-            $("#paymentChequebank_Income").closest(".incomePayment_Fields").removeClass("d-none");
-            $("#paymentChequeNo_Income").closest(".incomePayment_Fields").removeClass("d-none");
-            $("#paymentChequeDate_Income").closest(".incomePayment_Fields").removeClass("d-none");
+        if (selectedText.includes("cheque")) {
+            $("#expense_bank_wrap").removeClass("d-none");
+            $("#expense_chequeNo_wrap").removeClass("d-none");
+            $("#expense_chequeDate_wrap").removeClass("d-none");
         }
+
         // UPI / CARD / ONLINE
         else if (selectedText.includes("upi") || selectedText.includes("card") || selectedText.includes("online")) {
-            $("#txtTransactionId_Income").closest(".incomePayment_Fields").removeClass("d-none");
+            $("#expense_txnId_wrap").removeClass("d-none");
         }
     });
     //EXPENSE TXN --- END --------------------------
@@ -363,15 +397,17 @@
     //INCOME TXN --- START -------------------------
     loadIncomeCategoryDropdown();
     loadIncomeSubCategoryDropdown();
-    fetchIncomeTransactions();
 
     document.getElementById('txtTransactionDate_Income').value = today;
+
+    $('#incomeTransactionModal').on('shown.bs.modal', function () {
+        $('#txtAmount_Income').focus();
+    });
 
     // Add button click
     $("#btn-add-credit-transactions").click(function () {
         resetFormFields_Income();
-        $("#incomeTransactionModalTitle").text("Add Income Transactions");
-        $("#txtTransactionDate_Income").val(formatDate2());
+        $("#incomeTitleText").text("Add Income Transactions");
         $("#incomeTransactionModal").modal("show");
     });
 
@@ -461,7 +497,7 @@
                     $("#incomeTransactionModal").modal("hide");
                     loadNextVoucherNo();
                     // Reload table or data
-                    fetchIncomeTransactions();
+                    fetchTransactions();
                     loadFinanceSummary(selectedFinanceDuration);
                 } else {
                     Swal.fire("Error", response.message, "error");
@@ -490,7 +526,7 @@
         resetFormFields_Income(); // Clear previous values
 
         // Get the DataTable instance
-        var table = $('#tableMain_Income table').DataTable();
+        var table = $('#tableMain_Transactions table').DataTable();
 
         // Get the row object for the clicked Edit button
         var row = $(this).closest('tr');
@@ -507,6 +543,8 @@
         $("#txtPaymentMode_Income").val(rowData.PaymentModeId).trigger("change");
 
         $("#paymentVoucherNo_Income").val(rowData.VoucherNo);
+        $("#incomeVoucherDisplay").text(rowData.VoucherNo || "-");
+
         $("#txtTransactionId_Income").val(rowData.TransactionId);
         $("#paymentChequebank_Income").val(rowData.ChequeBank);
         $("#paymentChequeNo_Income").val(rowData.ChequeNo);
@@ -514,7 +552,7 @@
         $("#txtNotes_Income").val(rowData.Notes);
 
         // Update modal title
-        $("#incomeTransactionModalTitle").text("Edit Income Transactions");
+        $("#incomeTitleText").text("Edit Income Transactions");
 
         // Show modal
         $('#incomeTransactionModal').modal('show');
@@ -523,7 +561,7 @@
     // Delete button click in table
     $(document).on("click", ".btn-delete-income", function () {
         // Get DataTable instance
-        var table = $("#tableMain_Income table").DataTable(); // make sure this matches your table id
+        var table = $("#tableMain_Transactions table").DataTable(); // make sure this matches your table id
         var rowData = table.row($(this).closest("tr")).data();
 
         if (!rowData || !rowData.Id) {
@@ -557,11 +595,12 @@
                 data: JSON.stringify(payload),
                 success: function (response) {
                     if (response.status === "Success") {
-                        Swal.fire("Deleted!", response.message, "success");
+                        handleApiSuccess("Deleted.");
                         $("#deleteRecordModal").modal("hide");
 
                         // Reload table
-                        fetchIncomeTransactions();
+                        fetchTransactions();
+                        loadNextVoucherNo();
                     } else {
                         Swal.fire("Error", response.message, "error");
                     }
@@ -580,11 +619,12 @@
                 data: JSON.stringify(payload),
                 success: function (response) {
                     if (response.status === "Success") {
-                        Swal.fire("Deleted!", response.message, "success");
+                        handleApiSuccess("Deleted.");
                         $("#deleteRecordModal").modal("hide");
 
                         // Reload table
-                        fetchExpenseTransactions();
+                        fetchTransactions();
+                        loadNextVoucherNo();
                     } else {
                         Swal.fire("Error", response.message, "error");
                     }
@@ -597,36 +637,62 @@
         }
     });
 
-    //txtPaymentMode_Expense - change
-    $(document).on("change", "#txtPaymentMode_Expense", function () {
-        const selectedText = $("#txtPaymentMode_Expense option:selected").text().toLowerCase().trim();
-        // Hide all conditional fields
-        $(".expensePayment_Fields").addClass("d-none");
-        // Clear hidden values (important to avoid stale data)
-        $(".expensePayment_Fields input").val("");
+    //txtPaymentMode_Income - change
+    $(document).on("change", "#txtPaymentMode_Income", function () {
 
-        // CASH
-        if (selectedText.includes("cash")) {
-            // Nothing extra required
+        const selectedText = $("#txtPaymentMode_Income option:selected").text().toLowerCase().trim();
+
+        // Hide everything
+        $("#incomePaymentSection").addClass("d-none");
+        $(".incomePayment_Fields").addClass("d-none");
+
+        // Clear values
+        $(".incomePayment_Fields input").val("");
+
+        // CASH / BANK TRANSFER → nothing
+        if (selectedText.includes("cash") || selectedText.includes("bank transfer")) {
+            return;
         }
-        // BANK TRANSFER
-        else if (selectedText.includes("bank transfer")) {
-            //$("#txtTransactionId_Expense").closest(".expensePayment_Fields").removeClass("d-none");
-        }
+
+        // Show section
+        $("#incomePaymentSection").removeClass("d-none");
+
         // CHEQUE
-        else if (selectedText.includes("cheque")) {
-            $("#paymentChequebank_Expense").closest(".expensePayment_Fields").removeClass("d-none");
-            $("#paymentChequeNo_Expense").closest(".expensePayment_Fields").removeClass("d-none");
-            $("#paymentChequeDate_Expense").closest(".expensePayment_Fields").removeClass("d-none");
+        if (selectedText.includes("cheque")) {
+            $("#income_bank_wrap").removeClass("d-none");
+            $("#income_chequeNo_wrap").removeClass("d-none");
+            $("#income_chequeDate_wrap").removeClass("d-none");
         }
+
         // UPI / CARD / ONLINE
         else if (selectedText.includes("upi") || selectedText.includes("card") || selectedText.includes("online")) {
-            $("#txtTransactionId_Expense").closest(".expensePayment_Fields").removeClass("d-none");
+            $("#income_txnId_wrap").removeClass("d-none");
         }
-    });
+    });    
     //INCOME TXN --- END ---------------------------
 });
 
+function toggleCategoryFilters(type) {
+
+    if (type === "INCOME") {
+        $("#incomeFilters").show();
+        $("#expenseFilters").hide();
+
+        $("#filter_expense_category").val(0);
+        $("#filter_expense_subcategory").val(0);
+    }
+    else if (type === "EXPENSE") {
+        $("#incomeFilters").hide();
+        $("#expenseFilters").show();
+
+        $("#filter_income_category").val(0);
+        $("#filter_income_subcategory").val(0);
+    }
+    else {
+        $("#incomeFilters").show();
+        $("#expenseFilters").show();
+    }
+}
 function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
     var payload = {
         MonthDuration: monthDuration,
@@ -683,103 +749,125 @@ function resetFinanceCards() {
     $("#txtNetProfit").text("0");
 }
 
-
-//EXPENSE TRANSACTIONS ----- START --------------------
-// Fetch Expense Transactions
-function fetchExpenseTransactions(accountId = 0, paymentModeId = 0, categoryId = 0, subCategoryId = 0, fromDate = "", toDate = "") {
-    const payload = {
-        Id: 0,               // 0 = all transactions, or pass a specific Id
-        AccountId: accountId,
-        PaymentModeId: paymentModeId,
-        CategoryId: categoryId,
-        SubCategoryId: subCategoryId,
-        FromDate: fromDate,  // format: 'yyyy-mm-dd'
-        ToDate: toDate       // format: 'yyyy-mm-dd'
+//TRANSACTIONS GRID --START
+function fetchTransactions(payload = {}) {
+    // Default payload (important for first load)
+    const defaultPayload = {
+        AccountId: 0,
+        PaymentModeId: 0,
+        IncomeCategoryId: 0,
+        IncomeSubCategoryId: 0,
+        ExpenseCategoryId: 0,
+        ExpenseSubCategoryId: 0,
+        FromDate: null,
+        ToDate: null,
+        FromAmount: null,
+        ToAmount: null,
+        TransactionType: "ALL",
+        VoucherNo: null
     };
 
+    const finalPayload = { ...defaultPayload, ...payload };
+
+    console.log("API Payload:", finalPayload);
+
     $.ajax({
-        url: "/api/ExpenseTransactions/GetExpenseTransactionList",
-        method: "POST",
+        url: "/api/FinanceDashboard/GetIncomeExpenseTransactionList",
+        type: "POST",
         contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-            //console.log("Expense Transactions:", response);
-            var data = response.data || [];
-            renderExpenseTransactionTable(data);
+        data: JSON.stringify(finalPayload),
+        beforeSend: function () {
+            showTempLoader("fetching Transactions...");
+            $("#tableMain_Transactions table").html("<tr><td class='text-center p-3'>Loading...</td></tr>");
         },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Fail fetching Expense Transactions.");
+        success: function (res) {
+            if (res.status === "Success") {
+                renderTransactions(res.data);
+            } else {
+                $("#tableMain_Transactions table").html(`<tr><td class='text-danger p-3'>${res.message}</td></tr>`);
+            }
+        },
+        error: function (err, xhr, status) {
+            handleApiError(err, xhr, status,"Error loading Txn data");
+            $("#tableMain_Transactions table").html("<tr><td class='text-danger p-3'>Error loading data</td></tr>");
+        },
+        complete: function () {
+            Swal.close();
         }
     });
 }
+function renderTransactions(data) {
 
-// Render DataTable
-function renderExpenseTransactionTable(data) {
-    if ($.fn.dataTable.isDataTable("#tableMain_Expense table")) {
-        $("#tableMain_Expense table").DataTable().destroy();
+    let table = $("#tableMain_Transactions table");
+
+    // Destroy if already initialized
+    if ($.fn.DataTable.isDataTable(table)) {
+        table.DataTable().destroy();
     }
 
-    // Add Sr No
-    data.forEach((x, i) => x.srno = i + 1);
+    table.empty();
 
-    $("#tableMain_Expense table").DataTable({
+    table.DataTable({
         data: data,
+        pageLength: 10,
+        responsive: true,
         columns: [
-            { data: "srno", title: "#" },
-            { data: "AccountName", title: "Account" },
-            //{ data: "CategoryName", title: "Category" },
-            { data: "SubCategoryName", title: "Subcategory" },
-            { data: "TransactionDate2", title: "Txn Date" },
-            //{ data: "PaymentModeName", title: "Payment Mode" },
-            //{ data: "TransactionId", title: "Txn Id" },
-            //{ data: "Notes", title: "Notes" },
-            { data: "Amount", title: "Amount", className: "text-end" },
             {
                 data: null,
-                title: "Actions",
-                orderable: false,
-                searchable: false,
+                title: "#",
                 className: "text-center",
+                render: (data, type, row, meta) => meta.row + 1
+            },
+            {
+                data: "TransactionType",
+                title: "Type",
+                className: "text-center", 
+                render: function (data) {
+                    if (data === "INCOME")
+                        return `<span class="badge bg-success">Income</span>`;
+                    else
+                        return `<span class="badge bg-danger">Expense</span>`;
+                }
+            },
+            { data: "VoucherNo", title: "Voucher No", className: "text-center" },
+            { data: "AccountName", title: "Account", className: "text-center" },
+            { data: "CategoryName", title: "Category", className: "text-center" },
+            { data: "SubCategoryName", title: "Sub Category", className: "text-center" },
+            {
+                data: "Amount",
+                title: "Amount",
+                className: "text-end fw-semibold",
                 render: function (data, type, row) {
-                    return `
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light border-0"
-                                    type="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item btn-edit-expense" href="#">
-                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item btn-delete-expense" href="#">
-                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    `;
+                    if (row.TransactionType === "INCOME")
+                        return `<span class="text-success">+ ${data}</span>`;
+                    else
+                        return `<span class="text-danger">- ${data}</span>`;
+                }
+            },
+            { data: "PaymentModeName", title: "Payment Mode", className: "text-center" },
+            { data: "TransactionDate2", title: "Date", className: "text-center" },
+            {
+                data: "Notes",
+                title: "Notes",
+                render: function (data) {
+
+                    if (!data) return "";
+
+                    const fullText = data;
+                    const shortText = data.length > 10 ? data.substring(0, 10) + "..." : data;
+
+                    return `<span data-bs-toggle="tooltip" title="${fullText}">
+                    ${shortText}
+                </span>`;
                 }
             }
-        ],
-        pageLength: 10,
-        ordering: true,
-
-        paging: false,
-        scrollY: "60vh",          // table body scroll height
-        scrollCollapse: true,     // shrink if less rows
-        scrollX: true,            // horizontal scroll if needed
-
-        searching: true,
-        lengthChange: false,
-        pagingType: "full_numbers"
+        ]
     });
 }
+//TRANSACTIONS GRID --END
 
+
+//EXPENSE TRANSACTIONS ----- START --------------------
 // Optional: Reset form fields
 function resetFormFields_Expense() {
     $("#ExpenseTransactionId").val(0);
@@ -789,11 +877,17 @@ function resetFormFields_Expense() {
 
     $("#ddlAccount_Expense").val("0"); //.trigger("change");
 
-    $("#txtAmount_Expense").val("0");
-    $("#txtTransactionDate_Expense").val("");
+    $("#txtAmount_Expense").val("");
+    $("#txtTransactionDate_Expense").val(formatDate2());
 
     $("#txtPaymentMode_Expense").val("0").trigger("change");
     $("#txtTransactionId_Expense").val("");
+
+    // Hide everything
+    $("#expensePaymentSection").addClass("d-none");
+    $(".expensePayment_Fields").addClass("d-none");
+    // Clear values
+    $(".expensePayment_Fields input").val("");
 
     $("#paymentChequebank_Expense").val("");
     $("#paymentChequeNo_Expense").val("");
@@ -801,8 +895,11 @@ function resetFormFields_Expense() {
 
     $("#txtNotes_Expense").val("");
 
+    //$("#paymentVoucherNo_Expense").val(nextExpenseVoucherNo);
+    // Hidden field (actual value)
     $("#paymentVoucherNo_Expense").val(nextExpenseVoucherNo);
-    //loadNextVoucherNo();
+    // Header display
+    $("#expenseVoucherDisplay").text(nextExpenseVoucherNo || "-");
 }
 
 function loadExpenseCategoryDropdown(selectedId = "") {
@@ -838,11 +935,15 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
     //    $("#ddlSubCategory_Expense").empty().append('<option value="">-- Select SubCategory --</option>');
     //    return;
     //}
+
     $.ajax({
         url: "/api/ExpenseSubCategory/GetExpenseSubCategoryList",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
+        beforeSend: function () {
+            showTempLoader("fetching Expense Sub-Category...");
+        },
         success: function (response) {
             let dropdown = $("#ddlSubCategory_Expense, #filter_expense_subcategory");
             dropdown.empty();
@@ -858,6 +959,9 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Failed to load subcategory dropdown data");
+        },
+        complete: function () {
+            Swal.close();
         }
     });
 }
@@ -867,6 +971,7 @@ $("#ddlExpenseCategory, #filter_expense_category").change(function () {
     let selectedCategoryId = $(this).val();
     loadExpenseSubCategoryDropdown(selectedCategoryId);
 });
+//EXPENSE TRANSACTIONS ----- END ----------------------
 
 // Load Account dropdown dynamically
 function loadAccountDropdown(selectedId = "") {
@@ -897,8 +1002,6 @@ function loadAccountDropdown(selectedId = "") {
         }
     });
 }
-//EXPENSE TRANSACTIONS ----- END ----------------------
-
 function loadPaymentModeDropdown() {
     const payload = {
         Id: 0
@@ -931,99 +1034,6 @@ function loadPaymentModeDropdown() {
 }
 
 //INCOME TRANSACTIONS ----- START --------------------
-// Fetch Income Transactions
-function fetchIncomeTransactions(accountId = 0, paymentModeId = 0, categoryId = 0, subCategoryId = 0, fromDate = "", toDate = "") {
-    const payload = {
-        Id: 0,               // 0 = all transactions, or pass a specific Id
-        AccountId: accountId,
-        PaymentModeId: paymentModeId,
-        CategoryId: categoryId,
-        SubCategoryId: subCategoryId,
-        FromDate: fromDate,  // format: 'yyyy-mm-dd'
-        ToDate: toDate       // format: 'yyyy-mm-dd'
-    };
-    //console.log("payload:", payload);
-    $.ajax({
-        url: "/api/IncomeTransactions/GetIncomeTransactionList",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-            //  console.log("Income Transactions:", response);
-            var data = response.data || [];
-            renderIncomeTransactionTable(data);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "fail fetching Income Transactions");
-        }
-    });
-}
-
-// Render DataTable
-function renderIncomeTransactionTable(data) {
-    if ($.fn.dataTable.isDataTable("#tableMain_Income table")) {
-        $("#tableMain_Income table").DataTable().destroy();
-    }
-
-    // Add Sr No
-    data.forEach((x, i) => x.srno = i + 1);
-    $("#tableMain_Income  table").DataTable({
-        data: data,
-        columns: [
-            { data: "srno", title: "#" },
-            { data: "AccountName", title: "Account" },
-            //{ data: "CategoryName", title: "Category" },
-            { data: "SubCategoryName", title: "Subcategory" },
-            { data: "TransactionDate2", title: "Txn Date" },
-            //{ data: "PaymentModeName", title: "Payment Mode" },
-            { data: "Amount", title: "Amount", className: "text-end" },
-            //{ data: "TransactionId", title: "Txn Id" },
-            {
-                data: null,
-                title: "Actions",
-                orderable: false,
-                searchable: false,
-                className: "text-center",
-                render: function (data, type, row) {
-                    return `
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light border-0"
-                                    type="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item btn-edit-income" href="#">
-                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item btn-delete-income" href="#">
-                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    `;
-                }
-            }
-        ],
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: false,
-
-        paging: false,
-        scrollY: "60vh",          // table body scroll height
-        scrollCollapse: true,     // shrink if less rows
-        scrollX: true,            // horizontal scroll if needed
-
-        pagingType: "full_numbers"
-    });
-}
-
 // Optional: Reset form fields
 function resetFormFields_Income() {
     $("#incomeTransactionId").val(0);
@@ -1033,11 +1043,17 @@ function resetFormFields_Income() {
 
     $("#ddlAccount_Income").val("0"); //.trigger("change");
 
-    $("#txtAmount_Income").val("0");
-    $("#txtTransactionDate_Income").val("");
+    $("#txtAmount_Income").val("");
+    $("#txtTransactionDate_Income").val(formatDate2());
 
     $("#txtPaymentMode_Income").val("0").trigger("change");
     $("#txtTransactionId_Income").val("");
+
+    // Hide everything
+    $("#incomePaymentSection").addClass("d-none");
+    $(".incomePayment_Fields").addClass("d-none");
+    // Clear values
+    $(".incomePayment_Fields input").val("");
 
     $("#paymentChequebank_Income").val("");
     $("#paymentChequeNo_Income").val("");
@@ -1045,10 +1061,10 @@ function resetFormFields_Income() {
 
     $("#txtNotes_Income").val("");
 
-    // Example: auto-fill fields
+    // Hidden field (actual value)
     $("#paymentVoucherNo_Income").val(nextIncomeVoucherNo);
-
-    //loadNextVoucherNo();
+    // Header display
+    $("#incomeVoucherDisplay").text(nextIncomeVoucherNo || "-");
 }
 function loadIncomeCategoryDropdown(selectedId = "") {
     $.ajax({
@@ -1086,6 +1102,9 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
+        beforeSend: function () {
+            showTempLoader("fetching Income Sub-Category...");
+        },
         success: function (response) {
 
             console.log("GetIncomeSubCategoryList response:", response);
@@ -1103,6 +1122,9 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fail to load Income SubCategory")
+        },
+        complete: function(){
+            Swal.close();
         }
     });
 }

@@ -1,8 +1,6 @@
 ﻿namespace ERPAdmin.Models
 {
-    public class FeedbackDashboard
-    {
-    }
+
 
     public class FeedbackInsightResponse
     {
