@@ -148,7 +148,7 @@ $("#btnSaveReschedule").on("click", function () {
         ActionBy: Number(sessionStorage.getItem("userId")) || 0
     };
 
-    console.log("Reschedule Payload:", payload);
+    //console.log("Reschedule Payload:", payload);
 
     // 🔹 Call API
     $.ajax({
@@ -484,7 +484,7 @@ $(document).on("click", ".loadMenuBtn", function () {
 
     //updatePackageCost($row);  // Pass row if needed
     var payload = { Package_Id: Number(selectedPackageId) };
-    console.log("payload GetPackage_MenuAndFoodItemsList:", payload);
+    //console.log("payload GetPackage_MenuAndFoodItemsList:", payload);
 
     $.ajax({
         url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
@@ -492,19 +492,21 @@ $(document).on("click", ".loadMenuBtn", function () {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            console.log("response GetPackage_MenuAndFoodItemsList:", response);
+            //console.log("response GetPackage_MenuAndFoodItemsList:", response);
             if (response.status === "Success" && response.data && response.data.length > 0)
             {
+                //here2
                 renderMenuItems(response.data);
-                $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
-                $("#menuModal").modal("show");
                 // Store dropdown reference safely
                 $("#menuModal").data("activeDropdown", $dropdown);
 
                 // 🔥 RESTORE SELECTION
                 const savedItems = $dropdown.data("selected-items");
-                console.log("savedItems:", savedItems);
+                //console.log("savedItems:", savedItems);
                 restoreSavedMenuSelection(savedItems);
+
+                $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
+                $("#menuModal").modal("show");
             }
             else {
                 Swal.fire({
@@ -521,42 +523,9 @@ $(document).on("click", ".loadMenuBtn", function () {
     });
 });
 
-function restoreSavedMenuSelection2(savedItems) {
-
-    if (!savedItems || savedItems.length === 0) return;
-
-    savedItems.forEach(item => {
-        const section = $(`#menuModal .menu-section[data-menu-id='${item.FoodMenu_Id}']`);
-        if (!section.length) return;
-
-        // 🔹 EXISTING ITEM
-        if (item.FoodItem_Id && item.FoodItem_Id !== 0) {
-            section.find(`.item-checkbox[value='${item.FoodItem_Id}']`).prop("checked", true);
-        }
-
-        // 🔹 NEW CUSTOM ITEM (ID = 0)
-        else if (item.FoodItem_Id === 0 && item.FoodItem_Name_NewAdded) {
-            const newItemHtml = `
-                <div class="form-check me-3 mb-2">
-                    <input class="form-check-input item-checkbox new-item"
-                           type="checkbox"
-                           value="0"
-                           data-menu-id="${item.FoodMenu_Id}"
-                           data-item-name="${item.FoodItem_Name_NewAdded}"
-                           checked>
-                    <label class="form-check-label">${item.FoodItem_Name_NewAdded}</label>
-                </div>
-            `;
-            section.find(".item-container").append(newItemHtml);
-        }
-    });
-    updateSelectAllState();
-}
-
 function restoreSavedMenuSelection(savedItems) {
 
     if (!savedItems || savedItems.length === 0) return;
-
     savedItems.forEach(item => {
 
         const section = $(`#menuModal .menu-section[data-menu-id='${item.MenuHeader_Id}']`);
@@ -569,7 +538,7 @@ function restoreSavedMenuSelection(savedItems) {
         }
 
         // 🔹 NEW CUSTOM ITEM
-        else if (item.MenuItem_Id === 0 && item.MenuItem_Name_NewAdded) {
+        else if (item.MenuItem_Id === 0 && (item.MenuItem_Name || item.MenuItem_Name_NewAdded) ) {
 
             const newItemHtml = `
                 <div class="form-check me-3 mb-2">
@@ -577,9 +546,9 @@ function restoreSavedMenuSelection(savedItems) {
                            type="checkbox"
                            value="0"
                            data-menu-id="${item.MenuHeader_Id}"
-                           data-item-name="${item.MenuItem_Name_NewAdded}"
+                           data-item-name="${item.MenuItem_Name || item.MenuItem_Name_NewAdded}"
                            checked>
-                    <label class="form-check-label">${item.MenuItem_Name_NewAdded}</label>
+                    <label class="form-check-label">${item.MenuItem_Name || item.MenuItem_Name_NewAdded}</label>
                 </div>
             `;
 
@@ -820,7 +789,7 @@ $(document).on("click", ".btn-saveMenu", function () {
         //$activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
     }
 
-    console.log("Saved Menu Selection:", selectedMenuData);
+    //console.log("Saved Menu Selection:", selectedMenuData);
     $("#menuModal").modal("hide");
 });
 
@@ -927,28 +896,27 @@ addFoodBtn.addEventListener('click', () => {
 //Food Addons ----- START ----------------------------------------------------------------
 let addon_Data = [];
 let headerTotals = {};
+loadAddonCharges();
 function loadAddonCharges() {
-    //showLoader();
     $.ajax({
         url: "/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
+            //console.log("res AddOnCharges:", res);
             if (res.status === "Success" && res.data && res.data.length > 0) {
                 addon_Data = res.data;
-                populateAddonModal();
             }
         },
         error: function (xhr, status, error) {
-            printAllErrors(xhr, status, error, 'Failed to load addon charges');
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load addon charges.' });
+            handleApiError(xhr, status, error, 'Failed to load addon charges');
         }
     });
 }
 
 function populateAddonModal(savedItems = []) {
-    //console.log("savedItems AddOns:", savedItems);
+    //console.log("populate AddOns:", savedItems);
     let container = $("#addonItemsContainer");
     let summaryContainer = $("#headerSummaryContainer");
     container.empty();
@@ -979,9 +947,9 @@ function populateAddonModal(savedItems = []) {
         let columnHeader = $(`
                 <div class="d-flex fw-bold text-secondary border-bottom pb-1 mb-2">
                     <div class="flex-grow-1">Food Item</div>
-                    <div style="width:70px;" class="text-center">Rate</div>
-                    <div style="width:70px;" class="text-center">Pax</div>
-                    <div style="width:90px;" class="text-center">Total</div>
+                    <div style="width:100px;" class="text-center">Rate</div>
+                    <div style="width:100px;" class="text-center">Pax</div>
+                    <div style="width:130px;" class="text-center">Total</div>
                 </div>
             `);
         headerCard.find(`[data-header-body="${header}"]`).append(columnHeader);
@@ -989,11 +957,14 @@ function populateAddonModal(savedItems = []) {
         // Populate items
         grouped[header].forEach(item => {
             // Find if this item was saved previously
-            let saved = savedItems.find(s => s.AddOn_Item_Id === item.Id && s.AddOn_Header_Id === item.HeaderId);
+            let saved = savedItems.find(s =>
+                ((s.AddonCharges_ItemId ?? s.AddOn_Item_Id) === item.Id) &&
+                ((s.AddonCharges_HeaderId ?? s.AddOn_Header_Id) === item.HeaderId)
+            );
             //console.log("saved AddOns:", saved);
             // If found, prefill values
             let isChecked = saved ? true : false;
-            let rate = saved ? saved.AddOn_Rate : item.Amount;
+            let rate = saved ? (saved.AddOn_Rate ?? saved.Rate) : item.Amount;
             //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
 
             let rowPax = 0;
@@ -1008,9 +979,9 @@ function populateAddonModal(savedItems = []) {
                     rowPax = parseFloat($("#booking_pax").val()) || 0;
                 }
             }
-            let pax = saved ? saved.AddOn_Pax : rowPax;
+            let pax = saved ? (saved.AddOn_Pax ?? saved.Pax) : rowPax;
 
-            let total = saved ? saved.AddOn_Total : 0;
+            let total = saved ? (saved.AddOn_Total ?? saved.Total) : 0;
 
             let row = $(`
                     <div class="d-flex align-items-center justify-content-between mb-2"
@@ -1021,14 +992,14 @@ function populateAddonModal(savedItems = []) {
                             <span>${item.ItemName}</span>
                         </div>
 
-                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1" step="1"
-                               value="${rate}" min="0" style="width:70px;">
+                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="1"
+                               value="${rate}" min="0" style="width:90px;">
 
-                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1" step="1"
-                               value="${pax}" min="0" style="width:70px;">
+                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="1"
+                               value="${pax}" min="0" style="width:90px;">
 
-                        <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light"
-                               value="${total.toFixed(2)}" readonly style="width:90px;">
+                        <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1"
+                               value="${total.toFixed(2)}" readonly style="width:120px;">
                     </div>
                 `);
 
@@ -1137,10 +1108,12 @@ function openAddonModal(booking_foodPackageId = 0, button = null) {
         currentAddonRow = $(button).closest(".food-row");
     }
 
-    let savedItems = $(button).data("selected-AddOnItems") || [];
+    let savedItems = $(button).data("selected-addonitems") || [];
+    //console.log("addon data saved:", savedItems);
+    //console.log("addon data addon_Data:", addon_Data);
 
     if (addon_Data.length === 0) {
-        loadAddonCharges();
+        populateAddonModal();
     } else {
         populateAddonModal(savedItems);
 
@@ -1201,7 +1174,7 @@ $(document).on("click", ".btn-saveAddOn", function () {
         $totalSpan.text(grandTotal.toFixed(2));
 
         // Store selected items for later retrieval
-        $btn.data("selected-AddOnItems", selectedItems);
+        $btn.data("selected-addonitems", selectedItems);
         $btn.data("total", grandTotal);
 
         // 🔹 Update button label with count
@@ -1236,7 +1209,7 @@ function updateAddonButton(selectedItems) {
     addonButton.next().find(".foodPackage_TotalValue").text(total.toFixed(2));
 
     // Store the selected items for later use
-    addonButton.data("selected-AddOnItems", selectedItems);
+    addonButton.data("selected-addonitems", selectedItems);
 }
 //Food Addons ----- /END ------------------------------------------------------------------
 
@@ -1434,7 +1407,7 @@ var global_bookingData = null;
 //main booking board
 async function renderBoard(bookingData = null) {
     global_bookingData = bookingData;
-    console.log("renderBoard bookingData:", bookingData);
+    //console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
@@ -2492,8 +2465,16 @@ const bookingReportModal_inDOM = document.getElementById('bookingReportModal');
 const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 
 function closeBookingReportModal() {
-    console.log("booking info modal closed");
+    //console.log("booking info modal closed");
     bookingReportModal.hide();
+
+    bookingReportModal_inDOM.classList.remove("show");
+    bookingReportModal_inDOM.style.display = "none";
+
+    // Show backdrop again
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) backdrop.style.display = "none";
+
     //    if (isBookingInfoModal_OpenFromBookingList) {
 //        isBookingInfoModal_OpenFromBookingList = false;
 //        $("#bookingListModal").modal("show");
@@ -2530,7 +2511,7 @@ function attachShiftClickListeners() {
         // If badge text is numeric and greater than 1 → disable click
         //if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
         //    badge.style.cursor = "pointer";
-        //    console.log("booking data:", global_bookingData);
+        //    //console.log("booking data:", global_bookingData);
         //    return; // do not attach click
         //}
 
@@ -2555,7 +2536,7 @@ function attachShiftClickListeners() {
                 const matchedBookings = global_bookingData.filter(item =>
                     Number(item.BanquetId) === Number(hallid) && item.EventDate.toString() === dateiso.toString()
                 );
-                console.log("Matched Bookings:", matchedBookings);
+                //console.log("Matched Bookings:", matchedBookings);
                 //BookingId, Booking_SubEventName, ShiftCode, Client_Name, Client_Contact, FromDate_Short, TillDate_Short, StartTime_Full, EndTime_Full, BanquetName (in Modal Title)
                 if (matchedBookings.length > 0) {
                     // ✅ Set modal title (Banquet Name)
@@ -2776,7 +2757,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // ESC key handler
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
+            //console.log("Escape Pressed");
+            //console.log("openedFromReport:", openedFromReport);
             if (bookingReportModal_inDOM.classList.contains("show")) {
+                //console.log("closeBookingReportModal");
                 closeBookingReportModal();
             }
         }
@@ -2859,7 +2843,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //hide BOOKING REPORT MODAL ----- START --------------------------
     bookingReportModal_inDOM.addEventListener('hidden.bs.modal', function () {
-        console.log("bookingReportModal HIDE");
+        //console.log("bookingReportModal HIDE");
         // Show booking modal visually again (no reset, same position)
         //bookingReportModal_inDOM.classList.add("show");
         //bookingReportModal_inDOM.style.display = "block";
@@ -2991,10 +2975,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     menuModal.addEventListener('hidden.bs.modal', function () {
-        // Show booking modal visually again (no reset, same position)
         bookingModal_inDOM.classList.add("show");
         bookingModal_inDOM.style.display = "block";
-
         // Show backdrop again
         const backdrop = document.querySelector('.modal-backdrop');
         if (backdrop) backdrop.style.display = "block";
@@ -3174,9 +3156,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $(document).on("change", "#PaymentModal_Mode", function () {
-        console.log("PaymentModal_Mode called");
+        //console.log("PaymentModal_Mode called");
         let selectedText = $("#PaymentModal_Mode option:selected").text().toLowerCase();
-        console.log("selectedText:", selectedText);
+        //console.log("selectedText:", selectedText);
 
         // Hide all first
         $(".paymentModal_Fields").addClass("d-none");
@@ -3207,13 +3189,13 @@ document.addEventListener("DOMContentLoaded", function () {
     //invoicePayment_Mode - change
     $(document).on("change", "#invoicePayment_Mode", function () {
 
-        console.log("invoicePayment_Mode called");
+        //console.log("invoicePayment_Mode called");
 
         let selectedText = $("#invoicePayment_Mode option:selected")
             .text()
             .toLowerCase();
 
-        console.log("selectedText:", selectedText);
+        //console.log("selectedText:", selectedText);
 
         // 🔹 Hide all invoice dynamic fields first
         $(".invoicePayment_Fields").addClass("d-none");
@@ -3334,7 +3316,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const type = this.getAttribute("data-type");
             const bookingId = getBookingId();
 
-            console.log("Invoice Type Selected:", type);
+            //console.log("Invoice Type Selected:", type);
 
             menu.classList.add("d-none");
             // Pass flag
@@ -3425,7 +3407,7 @@ document.addEventListener("DOMContentLoaded", function () {
             PaymentId: 0,
             ActionBy: userId
         };
-        console.log("payload EventForm:", payload);
+        //console.log("payload EventForm:", payload);
         
         var url = "/api/Booking_Payments/DownloadPaymentReceipt";
         // ✅ Call download only if YES
@@ -3445,7 +3427,7 @@ document.addEventListener("DOMContentLoaded", function () {
             BookingId: bookingId,
             ActionBy: userId
         };
-        console.log("payload EventForm:", payload);
+        //console.log("payload EventForm:", payload);
         var url = "/api/Report/Report_BookingEventForm";
         downloadReport(url, payload, "Generating Report...");
     });
@@ -3810,7 +3792,7 @@ Your feedback helps us improve our service.`;
             return;
         }
         // Store temporarily in sessionStorage
-        sessionStorage.setItem("FoodPackageData", foodPackageJson);
+        sessionStorage.setItem("bookingid", getBookingId());
         // Open label page
         window.open("/BookingCalendar/FoodLabel_Print", "_blank");
     });
@@ -4004,7 +3986,7 @@ Your feedback helps us improve our service.`;
                     return;
                 }
 
-                console.log("hallBlock data:", res.data);
+                //console.log("hallBlock data:", res.data);
                 res.data.forEach(item => {
 
                     let hallList = item.HallListJson || [];
@@ -4584,7 +4566,7 @@ function updateInvoiceTitle(totalGST) {
     //console.log("isInclusiveGST:", isInclusiveGST);
     const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
 
-    console.log("gstInvoiceNo:", gstInvoiceNo, ", totalGST:", totalGST, ", invoiceType:", invoiceType);
+    //console.log("gstInvoiceNo:", gstInvoiceNo, ", totalGST:", totalGST, ", invoiceType:", invoiceType);
 
     if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
         $('#invoiceModal_ModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
@@ -4750,7 +4732,6 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Invoice Generation Failed");
-            //here2
             //openedFromReport = false;
             //bookingReportModal.hide();
             //loadBookingCalendar(bookingId, 0, null, "singleData");
@@ -4922,7 +4903,7 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
         JSON_Items: items,
         ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
-    console.log("save payload:", request);
+    //console.log("save payload:", request);
 
     $.ajax({
         url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed
@@ -5424,7 +5405,7 @@ function generateReport(isWithPrice) {
         WithHeader : true,
         ActionBy: Number(sessionStorage.getItem("userId") || 0)
     };
-    console.log("payload PackageForm:", payload);
+    //console.log("payload PackageForm:", payload);
     var url = "/api/Report/Report_FunctionProspectusReport";
     downloadReport(url, payload, "Generating Report...");
 }
@@ -5450,7 +5431,7 @@ function fillPaymentTrailTable(paymentList = []) {
         return;
     }
 
-    console.log("paymentList:", paymentList);
+    //console.log("paymentList:", paymentList);
 
     paymentList.forEach((item, index) => {
         tbody.append(`
@@ -5509,7 +5490,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         YearId: Number(selectedYearId) ?? 0,
         MonthId: Number(selectedMonthId) ?? 0
     };
-    console.log("GetBookingCalendar requestData:", requestData);
+    //console.log("GetBookingCalendar requestData:", requestData);
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -5518,7 +5499,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                console.log("Booking List:",data);
+                //console.log("Booking List:",data);
                 if (actionMode === "fullData") {
                     //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);
@@ -5526,7 +5507,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "singleData") {
                     resetBooking();
                     data = data[0];
-                    console.log("singleData - Booking API Response:", data);
+                    //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
                     $("#bookingReport_clientName").text(data.Client_Name || "—");
@@ -5664,46 +5645,16 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change");
 
                     const foodPackages = data.JSON_FoodPackage;
-
-                    if (!Array.isArray(foodPackages) || foodPackages.length === 0) {
-                        //console.log("ℹ️ No food package found, skipping food-package binding");
-                        // just continue rest of the process
-                    }
-                    else {
-
-                        const foodpackage = foodPackages[0];
-
-                        $("#foodPackage_PackageDropdown").val(foodpackage.FoodPackageId ?? "");
-                        $("#foodPackage_RatePerPlate").val(foodpackage.PerPlate ?? 0);
-                        $("#foodPackage_PackageCost").val(foodpackage.PackageCost ?? 0);
-                        $("#foodPackage_Addons").val(foodpackage.Addons ?? 0);
-                        $("#foodPackage_GST").val(foodpackage.GST ?? 0);
-
-                        // AddOns
-                        const addOnsList = Array.isArray(foodpackage.AddOnsList)
-                            ? foodpackage.AddOnsList
-                            : [];
-                        $("#foodPackage_AddOnItems").data("selected-AddOnItems", addOnsList);
-                        if (addOnsList.length > 0) {
-                            $("#foodPackage_AddOnItems")
-                                .html(`<i class="fa fa-check text-success"></i> Addons (${addOnsList.length})`);
-                        } else {
-                            $("#foodPackage_AddOnItems")
-                                .html(`<i class="fa fa-check"></i> Addons`);
+                    if (!Array.isArray(foodPackages) || foodPackages.length === 0) return;
+                    foodPackages.forEach((pkg, index) => {
+                        if (index === 0) {
+                            bindStaticFoodRow(pkg);
                         }
-
-                        // Menu Items List
-                        const menuItemsList = Array.isArray(foodpackage.MenuItemsList)
-                            ? foodpackage.MenuItemsList
-                            : [];
-                        console.log("edit menuItemsList:", menuItemsList);
-                        $("#foodPackage_PackageDropdown").data("selected-items", menuItemsList);
-
-                        $("#foodPackage_TotalValue").text(foodpackage.TotalCharges ?? 0);
-                        $("#AgentCheck").prop("checked", !!foodpackage.TotalCharges);
-                    }
-
-                    $("#BookingType").val(data.Booking_TypeId ?? "");
+                        else {
+                            const newBlock = createFoodBlock(); // custom function (below)
+                            bindDynamicFoodRow(newBlock, pkg);
+                        }
+                    });
 
                     //othercharges
                     $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
@@ -5754,6 +5705,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#PaymentDetails_DueDate").val(data.Payment_DueDate);
                     $("#PaymentDetails_PaymentNote").val(data.Payment_Note);
 
+                    $("#BookingType").val(data.Booking_TypeId ?? "");
+                    $("#AgentCheck").prop("checked", data.Booking_IsAgent);
                     //$("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
 
                     //$("#Section_PaymentDetails").hide();
@@ -5799,6 +5752,176 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+function bindStaticFoodRow(pkg) {
+
+    $("#foodPackage_PackageDropdown").val(pkg.FoodPackageId ?? "0"); //.trigger('change');
+    $("#foodPackage_RatePerPlate").val(pkg.PerPlate ?? 0);
+    $("#foodPackage_PackageCost").val(pkg.PackageCost ?? 0);
+    $("#foodPackage_Addons").val(pkg.Addons ?? 0);
+    $("#foodPackage_GST").val(pkg.GST ?? 0);
+    $("#foodPackage_TotalValue").text(pkg.TotalCharges ?? 0);
+
+    // Addons
+    const addOnsList = pkg.AddOnsList || [];
+    //console.log("#addOnsList:", addOnsList);
+    $("#foodPackage_AddOnItems").data("selected-addonitems", addOnsList);
+    updateAddonButton($("#foodPackage_AddOnItems"), addOnsList);
+
+    // Menu
+    const menuItemsList = pkg.MenuItemsList || [];
+    //console.log("#menuItemsList:", menuItemsList);
+    $("#foodPackage_PackageDropdown").data("selected-items", menuItemsList);
+}
+function createFoodBlock() {
+    const newRow = document.createElement('div');
+    newRow.className = 'food-block border rounded p-3 mt-3';
+
+    newRow.innerHTML = `
+            <!-- Row 1 -->
+            <div class="row g-2 align-items-end p-2 mb-1">
+                <div class="col-md-4">
+                    <label class="form-label">Addon Food Package #${addonCounter}</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Pax</label>
+                    <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Time</label>
+                    <div class="d-flex gap-1">
+                        <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" style="width: 70px;">
+                        <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" style="width: 70px;">
+                        <select class="form-select form-select-sm" style="width: 90px;">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end justify-content-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-btn">&times;</button>
+                </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="row g-2 food-row align-items-end mt-1">
+                <div class="col-md-3">
+                    <label class="form-label">Food Package</label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm foodPackageDropdown"></select>
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm loadMenuBtn">
+                            Menu
+                        </button>
+                    </div>
+                    <input type="hidden" class="package_row_id" value="0" />
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Per Plate</label>
+                    <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Package Cost</label>
+                    <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Addons</label>
+                    <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">GST</label>
+                    <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-between">
+                    <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
+                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">0</span></span>
+                </div>
+            </div>
+        `;
+
+    foodContainer.appendChild(newRow);
+
+    const dropdown = newRow.querySelector(".foodPackageDropdown");
+    populateFoodPackageDropdown($(dropdown));
+
+    newRow.querySelector('.remove-btn').addEventListener('click', () => {
+        foodContainer.removeChild(newRow);
+    });
+
+    addonCounter++;
+
+    return $(newRow); // ✅ IMPORTANT
+}
+function bindDynamicFoodRow($block, pkg) {
+    const $row = $block.find(".food-row");
+
+    // Row 2 (main values)
+    //console.log("pkg.FoodPackageId:", pkg.FoodPackageId);
+    $row.find(".foodPackageDropdown").val(pkg.FoodPackageId ?? "0"); //.trigger('change');
+
+    const $dropdown = $row.find(".foodPackageDropdown");
+    populateFoodPackageDropdown($dropdown);
+    // Delay OR callback
+    setTimeout(() => {
+        $dropdown.val(pkg.FoodPackageId); //.trigger('change');
+    }, 0);
+
+    $row.find(".perPlate").val(pkg.PerPlate ?? 0);
+    $row.find(".packageCost").val(pkg.PackageCost ?? 0);
+    $row.find(".addonsCost").val(pkg.Addons ?? 0);
+    $row.find(".gstCost").val(pkg.GST ?? 0);
+    $row.find(".foodPackage_TotalValue").text(pkg.TotalCharges ?? 0);
+
+    // Addons
+    const addOnsList = pkg.AddOnsList || [];
+    //console.log(".addOnsList:", addOnsList);
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    $addonBtn.data("selected-addonitems", addOnsList);
+    updateAddonButton($addonBtn, addOnsList);
+
+    // Menu
+    const menuItemsList = pkg.MenuItemsList || [];
+    //console.log(".menuItemsList:", menuItemsList);
+    $row.find(".foodPackageDropdown").data("selected-items", menuItemsList);
+
+    // Row 1 (extra fields)
+    $block.find('input[placeholder="Addon Food Package Name"]').val(pkg.FoodPackageTitleName || '');
+    $block.find('.pax').val(pkg.Pax || 0);
+
+    if (pkg.FoodPackageDateTime) {
+        const { date, hh, mm, ampm } = parseDateTime_pkg(pkg.FoodPackageDateTime);
+
+        $block.find('input[type="date"]').val(date);
+        $block.find('input[placeholder="HH"]').val(hh);
+        $block.find('input[placeholder="MM"]').val(mm);
+        $block.find('select').val(ampm);
+    }
+}
+function updateAddonButton($btn, list) {
+    if (list.length > 0) {
+        $btn.html(`<i class="fa fa-check text-success"></i> Addons (${list.length})`);
+    } else {
+        $btn.html(`<i class="fa fa-check"></i> Addons`);
+    }
+}
+function parseDateTime_pkg(dateTimeStr) {
+    if (!dateTimeStr) return {};
+
+    const parts = dateTimeStr.split(' ');
+
+    return {
+        date: parts[0] || '',
+        hh: parts[1]?.split(':')[0] || '',
+        mm: parts[1]?.split(':')[1] || '',
+        ampm: parts[2] || ''
+    };
+}
+
+
 
 function setInvoiceButtons(data) {
     hasInvoice = (data.InvoiceNo ?? 0) > 0;
@@ -6062,69 +6185,22 @@ function saveBooking() {
 
     // 🔹 2. Build Food Packages JSON --here
     const foodPackages = [];
-
-    $(".foodPackageContainer > .food-block, #foodPackageContainer > .food-row").each(function () {
+    // 1. FIRST ROW (static)
+    $("#foodPackageContainer > .food-row").each(function () {
         const $row = $(this);
-
-        // Check if it's a dynamic block (has food-block class) or first row
-        const isDynamicBlock = $row.hasClass('food-block');
-
-        // Get common elements
-        const $dropdown = $row.find(".foodPackageDropdown, #foodPackage_PackageDropdown");
-        const selectedMenuItems = $dropdown.data("selected-items") || [];
-
-        const $dropdown_AddOns = $row.find(".foodPackage_AddOnItems");
-        const selectedAddOnCharges = $dropdown_AddOns.data("selected-AddOnItems") || [];
-
-        // Create base package object
-        const foodPackage = {
-            Id: parseInt($row.find("package_row_id").val() || 0),
-            PackageId: parseInt($dropdown.val()),
-            PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
-            PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
-            AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
-            GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
-            TotalCharges: parseFloat($row.find(".foodPackage_TotalValue, #foodPackage_TotalValue").text() || 0),
-            MenuItems: selectedMenuItems,
-            AddOns: selectedAddOnCharges
-        };
-
-        // Add additional fields for dynamic blocks
-        if (isDynamicBlock) {
-            //console.log("new row added");
-            const $packageNameInput = $row.find('input[placeholder="Addon Food Package Name"]');
-            const $paxInput = $row.find('input[placeholder="Pax"]');
-            const $dateInput = $row.find('input[type="date"]');
-            const $hourInput = $row.find('input[placeholder="HH"]');
-            const $minuteInput = $row.find('input[placeholder="MM"]');
-            const $ampmSelect = $row.find('select');
-
-            // Construct time string (HH:MM AM/PM)
-            const hour = $hourInput.val() || '12';
-            const minute = $minuteInput.val() || '00';
-            const ampm = $ampmSelect.val() || 'AM';
-            const timeString = `${hour}:${minute} ${ampm}`;
-
-            // Add additional fields
-            foodPackage.FoodPackageTitleName = $packageNameInput.val() || '';
-            foodPackage.Pax = $paxInput.val() || 0;
-            foodPackage.FoodPackageDateTime = $dateInput.val() ? `${$dateInput.val()} ${timeString}` : '';
-        }
-        else {
-            //console.log("static row only");
-            // For first row, set default values for optional fields
-            foodPackage.FoodPackageTitleName = '';
-            foodPackage.Pax = 0;
-            foodPackage.FoodPackageDateTime = '';
-        }
-
-        foodPackages.push(foodPackage);
+        foodPackages.push(buildFoodPackageObject($row, false));
     });
 
+    // 2. DYNAMIC ROWS
+    $("#foodPackageContainer > .food-block").each(function () {
+        const $block = $(this);
+        const $row = $block.find(".food-row"); // important
+        foodPackages.push(buildFoodPackageObject($row, true, $block));
+    });
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
 
-    console.log("Final Booking JSON:", bookingData);
+    //console.log("Final Booking JSON:", bookingData);
 
     // 🔹 4. AJAX POST
     $.ajax({
@@ -6136,7 +6212,7 @@ function saveBooking() {
             $("#btnSaveBooking").prop("disabled", true).text("Saving...");
         },
         success: function (response) {
-            console.log("save response:", response);
+            //console.log("save response:", response);
             if (response.status === "Success") {
                 handleApiSuccess("Booking Saved.");
 
@@ -6209,6 +6285,48 @@ function saveBooking() {
         }
     });
 }
+function buildFoodPackageObject($row, isDynamic, $block = null) {
+
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedMenuItems = $dropdown.data("selected-items") || [];
+
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
+
+    const foodPackage = {
+        Id: parseInt($row.find(".package_row_id").val() || 0),
+        PackageId: parseInt($dropdown.val() || 0),
+        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
+        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
+        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
+        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
+        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text() || 0),
+        MenuItems: selectedMenuItems,
+        AddOns: selectedAddOnCharges
+    };
+
+    if (isDynamic && $block) {
+        const name = $block.find('input[placeholder="Addon Food Package Name"]').val() || '';
+        const pax = $block.find('.pax').val() || 0;
+        const date = $block.find('input[type="date"]').val();
+
+        const hour = $block.find('input[placeholder="HH"]').val() || '12';
+        const minute = $block.find('input[placeholder="MM"]').val() || '00';
+        const ampm = $block.find('select').val() || 'AM';
+
+        foodPackage.FoodPackageTitleName = name;
+        foodPackage.Pax = pax;
+        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : '';
+    }
+    else {
+        foodPackage.FoodPackageTitleName = '';
+        foodPackage.Pax = 0;
+        foodPackage.FoodPackageDateTime = '';
+    }
+
+    return foodPackage;
+}
+
 function showFieldError($field, message) {
     $field.addClass("is-invalid");
     $field.closest(".col-md-2, .col-md-3, .col-md-5")
@@ -6253,6 +6371,7 @@ function resetBooking() {
     $('#foodPackage_PackageDropdown')
         .removeAttr('data-selected-items')
         .removeData('selected-items');
+    resetFoodPackages();
 
     const now = new Date();
     const paidTime =
@@ -6296,6 +6415,22 @@ function resetBooking() {
         $stateDropdown.val("0").trigger("change");
     }
     $("#btnBook").prop("disabled", false);
+}
+function resetFoodPackages() {
+    // Remove all dynamically added blocks
+    $("#foodPackageContainer .food-block").remove();
+
+    // Reset first (static) row inputs
+    const $firstRow = $("#foodPackageContainer > .food-row");
+
+    $firstRow.find("select").val('0'); //.trigger('change');
+    $firstRow.find("input").val(0);
+    $firstRow.find(".foodPackage_TotalValue").text("0");
+
+    // Clear stored data (important)
+    $firstRow.find(".foodPackageDropdown").removeData("selected-items");
+    $firstRow.find(".foodPackage_AddOnItems").removeData("selected-addonitems");
+    addonCounter = 1;
 }
 function recalculatePaymentSummary() {
 
@@ -6666,7 +6801,7 @@ $("#btnSavePayment").click(function () {
     //console.log("Save Payment Payload :", payload);
 
     $("#btnSavePayment").prop("disabled", true);
-    console.log("save pay payload:", payload);
+    //console.log("save pay payload:", payload);
     $.ajax({
         url: "/api/Booking_Payments/SaveBookingPayment", // 🔁 API URL
         type: "POST",

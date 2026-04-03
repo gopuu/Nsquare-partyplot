@@ -237,7 +237,7 @@
         public long? AddOn_Header_Id { get; set; } = null;
         public long? AddOn_Item_Id { get; set; } = null;
         public float? AddOn_Rate { get; set; } = null;
-        public float? AddOn_Pax { get; set; } = null;
+        public long? AddOn_Pax { get; set; } = null;
         public float? AddOn_Total { get; set; } = null;
     }
 

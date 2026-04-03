@@ -3842,6 +3842,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initial call
     updateLabelPreview();
+
+    $('#btnAmazon').on('click', function () {
+        url = "https://www.amazon.in/Shuban-Acrylic-L-Shape-Restaurants-Supermarket/dp/B0DDJJ9RPR/ref=sr_1_2_sspa?crid=1X925VM1OO9U7&dib=eyJ2IjoiMSJ9.YCawWf30GZsyfDI7eI_jtOt2mBkPja0R0SdyxBfkzE5n5bZHg4zpfL5L5pN_HV7xhd0lUC3aueC_VEfQzX1-dvsSKbzuM6Yt7GGZdn2eh8qAKD9cg9G-N626iUTMCTuXmuyHKNHJEcKoyC03o8UKyBZocawfXcJdJT419O8GAxDEGH8aPCF2_Jc4Rdh9eXrAc_s_5skGCd4HrU4uOMVt_5RHthfWXvteb9onPVmZkbbfohV2aV-MEQwnlHukrVwEJmawo5erIv1Z9AtufzJEA8s1iYiFd3pLLDwnd6Jf1j4.8p_a7XQtORrzWLSlMrNoV9Y-xIUNw77KaAaNOlS8XKU&dib_tag=se&keywords=menu%2Bholder%2Bfor%2Brestaurant&qid=1733903594&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&sprefix=menu%2Bholder%2Caps%2C264&sr=8-2-spons&th=1";
+        window.open(url, "_blank");
+    });
 });
 
 //<!-- TAB 5: Food Rate & Services > SubTab 5.5: Label Printing -- END -->

@@ -48,22 +48,41 @@ function calculateFontSize(text) {
 /*************************************************
  * PAGE LOAD
  *************************************************/
+var bookingId = 0;
 document.addEventListener("DOMContentLoaded", function () {
+    bookingId = sessionStorage.getItem("bookingid");
 
-    const json = sessionStorage.getItem("FoodPackageData");
+    var requestData = {
+        BookingId: Number(bookingId),
+        BanquetId: 0,
+        EventDate: null,
+        YearId: 0,
+        MonthId: 0
+    };
+    console.log("GetBookingCalendar requestData:", requestData);
+    $.ajax({
+        url: "/api/BookingCalendar/GetBookingCalendar",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestData),
+        success: function (response) {
+            if (response.status === "Success") {
+                var data = response.data[0].JSON_FoodPackage;
+                console.log("JSON_FoodPackage data:", data);
 
-    if (json) {
-        FOOD_PACKAGE_DATA = JSON.parse(json);
-        //sessionStorage.removeItem("FoodPackageData");
-    }
-
-    // Load label setup first
-    loadLabelSetup();
-
-    // Initial render (fallback if API slow)
-    //if (FOOD_PACKAGE_DATA.length > 0) {
-        renderFoodLabels(FOOD_PACKAGE_DATA);
-    //}
+                if (data && data.length > 0) { 
+                    FOOD_PACKAGE_DATA = data;
+                    console.log("FOOD_PACKAGE_DATA 1: ", FOOD_PACKAGE_DATA);
+                    //renderFoodLabels(FOOD_PACKAGE_DATA);
+                    // Load label setup first
+                    loadLabelSetup();
+                }
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load booking calendar data');
+        }
+    });
 });
 
 function loadLabelSetup() {
@@ -74,28 +93,21 @@ function loadLabelSetup() {
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-
+            console.log("company setup res:", res);
             if (res.status !== "Success" || !res.data) return;
 
             /*************************************************
              * FONT SETTINGS
              *************************************************/
             const apiFont = (res.data.FontName || "Dancing Script").trim();
-            LABEL_SETTINGS.fontFamily =
-                FONT_FAMILY_MAP[apiFont] || apiFont;
-
-            LABEL_SETTINGS.fontSize =
-                parseInt(res.data.FontSize) || 24;
-
+            LABEL_SETTINGS.fontFamily = FONT_FAMILY_MAP[apiFont] || apiFont;
+            LABEL_SETTINGS.fontSize = parseInt(res.data.FontSize) || 24;
             LABEL_DIMENSIONS.maxFontSize = LABEL_SETTINGS.fontSize;
 
             /*************************************************
              * LABEL DIMENSIONS (SINGLE CALCULATION)
              *************************************************/
-            const dims = calculateLabelDimensions(
-                res.data.PlaqueSizeInches
-            );
-
+            const dims = calculateLabelDimensions(res.data.PlaqueSizeInches);
             Object.assign(LABEL_DIMENSIONS, dims);
 
             /*************************************************
@@ -115,7 +127,6 @@ function loadLabelSetup() {
  * RENDER FOOD LABELS
  *************************************************/
 function renderFoodLabels(packages) {
-
     const container = document.getElementById("foodLabelContainer");
     if (!container) return;
 
@@ -132,6 +143,7 @@ function renderFoodLabels(packages) {
         return;
     }
 
+    console.log("packages:", packages);
     packages.forEach(pkg => {
 
         const packageCard = document.createElement("div");
@@ -143,7 +155,10 @@ function renderFoodLabels(packages) {
 
         const title = document.createElement("h5");
         title.className = "text-danger fw-bold mb-0";
-        title.innerText = pkg.FoodPackageName;
+        title.innerHTML = `
+            ${pkg.FoodPackageName} 
+            <span class="booking-ref">(Booking Ref #${bookingId})</span>
+        `;
 
         const toggleBtn = document.createElement("button");
         toggleBtn.className = "btn btn-sm btn-outline-secondary";
