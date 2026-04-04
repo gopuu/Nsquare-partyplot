@@ -864,7 +864,57 @@ function renderTransactions(data) {
                 </span>`;
                 }
             }
-        ]
+        ],
+        drawCallback: function () {
+
+            let api = this.api();
+
+            // Remove old total row
+            $("#tableMain_Transactions tbody tr.total-row").remove();
+
+            let total = 0;
+
+            api.rows({ page: 'current' }).every(function () {
+                let row = this.data();
+                let amount = parseFloat(row.Amount) || 0;
+
+                if (row.TransactionType === "INCOME") {
+                    total += amount;
+                } else {
+                    total -= amount;
+                }
+            });
+
+            // 🎯 Color logic
+            let colorClass = "text-dark"; // default (0)
+
+            if (total > 0) {
+                colorClass = "text-success"; // green
+            } else if (total < 0) {
+                colorClass = "text-danger"; // red
+            }
+
+            // Sign display (+ / -)
+            let sign = total > 0 ? "" : total < 0 ? "-" : "";
+
+            // Append row
+            let totalRow = `
+                <tr class="total-row fw-bold">
+                    <td></td>
+                    <td class="text-end fw-bold">TOTAL</td>
+                    <td class="text-end fw-bold ${colorClass}">
+                         ₹  ${sign}  ${Math.abs(total).toFixed(2)}
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+            $("#tableMain_Transactions tbody").append(totalRow);
+        }
+
     });
 }
 //TRANSACTIONS GRID --END

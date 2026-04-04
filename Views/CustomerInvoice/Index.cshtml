@@ -20,19 +20,58 @@
                 <!-- HEADER -->
                 <div class="mb-3 d-flex justify-content-between align-items-center">
 
+                    <!-- LEFT SIDE -->
                     <h4 class="mb-0 fw-bold text-warning">
                         Customer Invoices
                     </h4>
 
-                    <div class="form-check form-switch m-0">
-                        <input class="form-check-input" type="checkbox" id="toggleWidgets">
-                        <label class="form-check-label ms-2" id="widgetLabel" for="toggleWidgets">
-                            Hide Widgets
-                        </label>
+                    <!-- RIGHT SIDE -->
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" id="toggleWithHeader">
+                            <label class="form-check-label fw-semibold" for="toggleWithHeader">
+                                With Header
+                            </label>
+                        </div>
+
+                        <button class="btn btn-outline-info btn-sm" id="btn-select-columns">
+                            <i class="fa fa-list-check me-1"></i> Columns
+                        </button>
+
+                        <div class="dropdown">
+                            <button class="btn btn-outline-dark btn-sm dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-download"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)"
+                                       onclick="ViewCustomerInvoiceReport('downloadPDF')">
+                                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)"
+                                       onclick="ViewCustomerInvoiceReport('downloadExcel')">
+                                        <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="toggleWidgets">
+                            <label class="form-check-label ms-2" id="widgetLabel" for="toggleWidgets">
+                                Hide Widgets
+                            </label>
+                        </div>
+
                     </div>
 
                 </div>
-
                 <!-- ================= PAYMENT WIDGET ================= -->
                 <div class="row g-3 mb-4" id="invoiceWidgets">
 
@@ -287,18 +326,39 @@
                                             <option value="true">Generated</option>
                                         </select>
                                     </div>
-
+                                    
                                     <!-- 🎯 ACTION BUTTONS -->
-                                    <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                                    <div class="col-md-6 d-flex align-items-end gap-3">
+
+                                        <!-- FILTER DROPDOWN -->
+                                        <div class="dropdown mt-2">
+                                            <button class="btn btn-outline-secondary btn-sm fw-bold dropdown-toggle"
+                                                    type="button" id="sortByDropdown" data-bs-toggle="dropdown">
+                                                Filter :This Month
+                                            </button>
+
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item sort-option" data-value="yesterday" href="#">Yesterday</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="last7days" href="#">Last 7 days</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="last30days" href="#">Last 30 days</a></li>
+                                                <li><a class="dropdown-item sort-option active" data-value="thismonth" href="#">This Month</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="lastmonth" href="#">Last Month</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="last12months" href="#">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item sort-option" data-value="customrange" href="#">Custom Range</a></li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- BUTTONS -->
                                         <button class="btn btn-primary btn-sm px-3 mt-2"
                                                 onclick="fetchData()">
-                                            <i class="fa fa-check me-1"></i> Apply
+                                             Apply
                                         </button>
 
                                         <button class="btn btn-outline-danger btn-sm px-3 mt-2"
                                                 onclick="resetFilter()">
-                                            <i class="fa fa-undo me-1"></i> Reset
+                                             Reset
                                         </button>
+
                                     </div>
 
                                 </div>
@@ -336,6 +396,45 @@
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════
+     SELECT COLUMNS MODAL
+═══════════════════════════════════════ -->
+<div class="modal fade" id="modalColumns" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning py-2">
+                <h5 class="modal-title text-white">Select Columns</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="chk-select-all">
+                        <label class="form-check-label fw-bold">Select All</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" id="btn-reset-columns">
+                        <i class="fa fa-refresh"></i> Reset
+                    </button>
+                </div>
+                <hr />
+                <div id="column-list" class="row"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-warning" id="btn-save-columns">
+                    <i class="fa fa-save"></i> Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 
 <!-- ADD / EDIT INVOICE MODAL --> 
 <div class="modal fade" id="invoiceModal" tabindex="-1">

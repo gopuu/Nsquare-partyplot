@@ -26,6 +26,7 @@
         public long SlotId { get; set; } = 0;
         public string? EventFrom { get; set; }
         public string? EventTo { get; set; }
+        public string? FilterDuration { get; set; }
         public string? BookedFrom { get; set; }
         public string? BookedTill { get; set; }
         public long SubEventId { get; set; } = 0;
@@ -156,7 +157,33 @@
         public bool? IsInclusiveGST { get; set; } = false;
         public bool? IsProformaInvoice { get; set; } = false;
     }
+    public class Report_CustomerInvoiceRequest
+    {
+        public List<string>? Columns { get; set; }
 
+        public long BookingId { get; set; } = 0;
+        public string? NameEmailContact { get; set; }
+        public long SlotId { get; set; } = 0;
+
+        public string? EventFrom { get; set; }
+        public string? EventTo { get; set; }
+
+        public string? BookedFrom { get; set; }
+        public string? BookedTill { get; set; }
+
+        public long SubEventId { get; set; } = 0;
+
+        public bool? IsInvoiceGenerated { get; set; }
+        public long PaymentStatusId { get; set; } = 0;
+
+        public bool? IsExclusiveOfGST { get; set; }
+        public bool? IsInclusiveOfGST { get; set; }
+
+        public string? FilterDuration { get; set; }
+
+        public long ActionBy { get; set; }
+        public bool? WithHeader { get; set; }
+    }
     public class CustomerInvoiceResponse_BookingId
     {
         public string? ClientName { get; set; }

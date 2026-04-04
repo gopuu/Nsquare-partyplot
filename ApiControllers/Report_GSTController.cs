@@ -377,7 +377,8 @@ namespace ERPAdmin.ApiControllers
 
                 document.Add(table);
                 document.Close();
-
+                
+                //SAVE
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 

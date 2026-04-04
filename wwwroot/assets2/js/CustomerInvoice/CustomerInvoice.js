@@ -9,9 +9,229 @@ var proformaInvoiceNo = 0;
 var gstInvoiceNo = null;
 var invoiceType = null;
 
+const REPORT_COLUMNS_CUSTOMER_INVOICE = [
+    { key: "InvoiceNo", label: "Invoice No" },
+    { key: "EventDate", label: "Event Date" },
+    { key: "EventName", label: "Event Name" },
+    { key: "HallName", label: "Hall Name" },
+    { key: "ClientName", label: "Client Name" },
+    { key: "ClientContactNo", label: "Contact No" },
+    { key: "TotalAmount", label: "Total Amount" },
+    { key: "OutstandingAmount", label: "Outstanding" }
+];
+
+let selectedColumns = REPORT_COLUMNS_CUSTOMER_INVOICE.map(c => c.key);
+const HEADER_KEY = "gstCustomerInvoicePrintWithHeader";
+
 let selectedPaymentDuration = "thismonth";
 let selectedStatusDuration = "thismonth";
 let gstList = [];
+
+$(document).ready(function () {
+    setCurrentMonthDates();
+});
+
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    $("#fltEventFrom").val(formatDate2(firstDay));
+    $("#fltEventTo").val(formatDate2(lastDay));
+}
+
+let selectedMonthDuration = "thismonth"; // ✅ default
+$(".sort-option").on("click", function (e) {
+    e.preventDefault();
+    let newFilter = $(this).data("value");
+
+    // agar same filter, kuch mat karo
+    if (selectedMonthDuration === newFilter) return;
+    selectedMonthDuration = newFilter;
+
+    // dropdown active class manage
+    $(".sort-option").removeClass("active");
+    $(this).addClass("active");
+
+    $("#sortByDropdown").text("Filter : " + $(this).text());
+    $(".sub_count").text("In " + $(this).text());
+
+    // --------------------------
+    // MonthDuration ke hisab se From/To date set karna
+    // --------------------------
+    let today = new Date();
+    let fromDate, toDate;
+
+    if (selectedMonthDuration === "thismonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+    else if (selectedMonthDuration === "lastmonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+    else if (selectedMonthDuration === "last7days") { // Last 7 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 6);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "last30days") { // Last 30 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 29);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "yesterday") {
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 1);
+        toDate = fromDate;
+    }
+    else if (selectedMonthDuration === "last12months") {
+        fromDate = new Date(today);
+        fromDate.setMonth(today.getMonth() - 12);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "customrange") {
+        // custom range me datepicker pe user select karega
+       // return loadDashboardWidgetCounts();
+    }
+
+    // Store selected filter in session
+    sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
+
+    $("#fltEventFrom").val(formatDate2(fromDate));
+    $("#fltEventTo").val(formatDate2(toDate));
+
+    // 🔥 Load data
+    //loadDashboardWidgetCounts();
+});
+
+$("#fltEventFrom, #fltEventTo").on("change", function () {
+
+    let fromDate = $("#fltEventFrom").val();
+    let toDate = $("#fltEventTo").val();
+
+    if (fromDate && toDate) {
+        selectedMonthDuration = "customrange";
+
+        $("#sortByDropdown").text("Filter : Custom Range");
+        $(".sub").text("In Custom Range");
+
+        $(".sort-option").removeClass("active");
+
+       // loadDashboardWidgetCounts(); // 🔥
+    }
+});
+
+function loadColumnCheckboxes() {
+    let html = "";
+
+    REPORT_COLUMNS_CUSTOMER_INVOICE.forEach(col => {
+        const isChecked = selectedColumns.includes(col.key);
+        html += `
+        <div class="col-md-4 mb-2">
+            <div class="form-check">
+                <input class="form-check-input column-checkbox"
+                       type="checkbox"
+                       value="${col.key}"
+                       ${isChecked ? "checked" : ""}>
+                <label class="form-check-label">${col.label}</label>
+            </div>
+        </div>`;
+    });
+
+    $("#column-list").html(html);
+    updateSelectAllState();
+}
+
+function updateSelectAllState() {
+    const total = $(".column-checkbox").length;
+    const checked = $(".column-checkbox:checked").length;
+    $("#chk-select-all").prop("checked", total === checked);
+}
+
+/* ── With Header toggle ── */
+const saved = sessionStorage.getItem(HEADER_KEY);
+if (saved !== null)
+    document.getElementById("toggleWithHeader").checked = (saved === "true");
+
+document.getElementById("toggleWithHeader").addEventListener("change", function () {
+    sessionStorage.setItem(HEADER_KEY, this.checked);
+});
+
+/* ── Column selector ── */
+$("#btn-select-columns").on("click", function () {
+    loadColumnCheckboxes();
+    $("#modalColumns").modal("show");
+});
+
+$("#chk-select-all").on("change", function () {
+    $(".column-checkbox").prop("checked", this.checked);
+});
+
+
+$("#btn-reset-columns").on("click", function () {
+    $(".column-checkbox").prop("checked", true);
+    $("#chk-select-all").prop("checked", true);
+});
+
+$("#btn-save-columns").on("click", function () {
+    selectedColumns = [];
+    $(".column-checkbox:checked").each(function () {
+        selectedColumns.push($(this).val());
+    });
+    $("#modalColumns").modal("hide");
+    fetchData();
+});
+
+
+/* ═══════════════════════════════════════════════════
+   DOWNLOAD PDF / EXCEL
+═══════════════════════════════════════════════════ */
+function ViewCustomerInvoiceReport(actionName) {
+
+    const withHeader = $("#toggleWithHeader").is(":checked");
+    const userId = parseInt(sessionStorage.getItem("userId") || 0);
+
+    const payload = {
+
+        // 🔍 Filters
+        BookingId: 0,
+        NameEmailContact: $("#fltSearch").val().trim() || null,
+        SlotId: $("#fltSlot").val() || 0,
+
+        EventFrom: $("#fltEventFrom").val() || null,
+        EventTo: $("#fltEventTo").val() || null,
+
+        BookedFrom: $("#fltBookedFrom").val() || null,
+        BookedTill: $("#fltBookedTill").val() || null,
+
+        SubEventId: $("#fltEvent").val() || 0,
+
+        IsInvoiceGenerated: $("#fltIsInvoiceGenerated").val() === ""
+            ? null
+            : $("#fltIsInvoiceGenerated").val() === "true",
+
+        PaymentStatusId: $("#fltPaymentStatus").val() || 0,
+
+        IsExclusiveOfGST: null,
+        IsInclusiveOfGST: null,
+
+        FilterDuration: selectedMonthDuration || null,
+
+        // ⚙️ Common
+        WithHeader: withHeader,
+        Columns: selectedColumns,
+        ActionBy: userId
+    };
+
+    // ✅ API URL
+    const url = actionName === "downloadExcel"
+        ? "/api/CustomerInvoice/DownloadCustomerInvoiceReport_Excel"
+        : "/api/CustomerInvoice/DownloadCustomerInvoiceReport_Pdf";
+
+    downloadReport(url, payload, loaderMsg = "Generating Invoice..");
+}
+
 
 $(function () {
     const flag_isGeneratedInvoice = sessionStorage.getItem("IsShowTotalSalesList") === "true";
@@ -1901,7 +2121,8 @@ function fetchData(isGenerated) {
         PaymentStatusId: $('#fltPaymentStatus').val() || 0,
         IsInvoiceGenerated: isInvoiceGenerated,
         IsExclusiveOfGST: isExclusiveOfGST,
-        IsInclusiveOfGST: isInclusiveOfGST
+        IsInclusiveOfGST: isInclusiveOfGST,
+        FilterDuration: selectedMonthDuration || null
     };
     console.log("GRID payload:", payload);
 
