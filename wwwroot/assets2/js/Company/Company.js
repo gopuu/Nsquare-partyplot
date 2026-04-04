@@ -1682,19 +1682,14 @@ function loadSlots() {
                             <input type="text" class="form-control slot-name" value="${slot.Name}" style="max-width:180px;" />
 
                             <!-- Code -->
-                            <input type="text" class="form-control slot-code" value="${slot.Code}" style="max-width:70px;" />
+                            <input type="text" class="form-control slot-code" value="${slot.Code}" style="max-width:70px;" readonly />
 
                             <!-- Start Time -->
-                            <select class="form-select slot-start" style="max-width:130px;">
-                                ${generateTimeOptions(convertTo12HourFormat(slot.StartTime))}
-                            </select>
-
+                            <input type="text" class="form-control slot-start" value="${slot.StartTime2}" style="max-width:130px;" />
                             <span class="fw-bold">-</span>
 
                             <!-- End Time -->
-                            <select class="form-select slot-end" style="max-width:130px;">
-                                ${generateTimeOptions(convertTo12HourFormat(slot.EndTime))}
-                            </select>
+                            <input type="text" class="form-control slot-end" value="${slot.EndTime2}" style="max-width:130px;" />
 
                         </div>
                     </div>
