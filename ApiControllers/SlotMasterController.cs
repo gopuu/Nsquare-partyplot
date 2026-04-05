@@ -70,6 +70,16 @@ namespace ERPAdmin.ApiControllers
                         EndTime = Convert.ToString(row["EndTime"]),
                         StartTime2 = Convert.ToString(row["StartTime2"]),
                         EndTime2 = Convert.ToString(row["EndTime2"]),
+
+                        StartTimeHH = Convert.ToString(row["StartTimeHH"]),
+                        StartTimeMM = Convert.ToString(row["StartTimeMM"]),
+                        StartTimeAMPM = Convert.ToString(row["StartTimeAMPM"]),
+
+                        EndTimeHH = Convert.ToString(row["EndTimeHH"]),
+                        EndTimeMM = Convert.ToString(row["EndTimeMM"]),
+                        EndTimeAMPM = Convert.ToString(row["EndTimeAMPM"]),
+
+
                         IsActive = Convert.ToBoolean(row["IsActive"])
                     });
                 }

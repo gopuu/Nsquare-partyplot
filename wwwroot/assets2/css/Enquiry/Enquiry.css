@@ -154,10 +154,9 @@
 
 
 /*<!-- Clock Time Design -- Delas - > START TIME & END TIME -- START -->*/
-
 .custom-clock-picker {
     position: absolute;
-    top: 100%;
+    top: 60%;
     left: 0;
     width: 230px;
     background: #fff;
@@ -265,4 +264,5 @@
     cursor: pointer;
 }
 
+/*<!-- Clock Time Design -- Delas - > START TIME & END TIME -- END-->*/
 

@@ -212,7 +212,8 @@
         let mode = parseInt($("#txtPaymentMode_Expense").val()) || 0;
         let account = parseInt($("#ddlAccount_Expense").val()) || 0;
         let category = $("#ddlExpenseCategory").val();
-        let subcategory = $("#ddlSubCategory_Expense").val();
+        let subcategoryDropdown = $("#ddlSubCategory_Expense");
+        let subcategory = subcategoryDropdown.val();
         let amount = parseFloat($("#txtAmount_Expense").val());
         let transactionDate = $("#txtTransactionDate_Expense").val();
 
@@ -228,11 +229,13 @@
             $("#ddlExpenseCategory").focus();
             return false;
         }
-        // SubCategory
-        if (!subcategory || subcategory <= 0) {
-            Swal.fire("Validation", "Please select SubCategory", "warning");
-            $("#ddlSubCategory_Expense").focus();
-            return false;
+        // ✅ SubCategory validation ONLY if data exists
+        if (!subcategoryDropdown.prop("disabled")) {
+            if (!subcategory || subcategory <= 0) {
+                Swal.fire("Validation", "Please select SubCategory", "warning");
+                subcategoryDropdown.focus();
+                return false;
+            }
         }
         // Transaction Date
         if (!transactionDate || transactionDate =="") {
@@ -395,6 +398,34 @@
             $("#expense_txnId_wrap").removeClass("d-none");
         }
     });
+
+    // Trigger SubCategory load when Expense Category changes
+    $("#ddlExpenseCategory, #filter_expense_category").change(function () {
+        let selectedCategoryId = $(this).val();
+        loadExpenseSubCategoryDropdown(selectedCategoryId);
+    });
+    //Sub-Category change
+    $("#ddlSubCategory_Expense").on("change", function () {
+        let selectedSubCategory = $(this).find(":selected");
+        let categoryId = selectedSubCategory.data("categoryid");
+        console.log("categoryId:", categoryId);
+        // Target both category dropdowns
+        let categoryDropdown = $("#ddlExpenseCategory");
+        // If category is not selected (0), then set it
+        if (categoryId) {
+            categoryDropdown.val(categoryId); //.trigger("change");
+        }
+    });
+    $("#filter_expense_subcategory").on("change", function () {
+        let selectedSubCategory = $(this).find(":selected");
+        let categoryId = selectedSubCategory.data("categoryid");
+        // Target both category dropdowns
+        let categoryDropdown = $("#filter_expense_category");
+        // If category is not selected (0), then set it
+        if (categoryId) {
+            categoryDropdown.val(categoryId); //.trigger("change");
+        }
+    });
     //EXPENSE TXN --- END --------------------------
 
     //INCOME TXN --- START -------------------------
@@ -422,7 +453,8 @@
         let mode = parseInt($("#txtPaymentMode_Income").val()) || 0;
         let account = parseInt($("#ddlAccount_Income").val()) || 0;
         let category = $("#ddlIncomeCategory").val();
-        let subcategory = $("#ddlSubCategory_Income").val();
+        let subcategoryDropdown = $("#ddlSubCategory_Income");
+        let subcategory = subcategoryDropdown.val();
         let amount = parseFloat($("#txtAmount_Income").val());
         let transactionDate = $("#txtTransactionDate_Income").val();
 
@@ -438,11 +470,13 @@
             $("#ddlIncomeCategory").focus();
             return false;
         }
-        // SubCategory
-        if (!subcategory || subcategory <= 0) {
-            Swal.fire("Validation", "Please select SubCategory", "warning");
-            $("#ddlSubCategory_Income").focus();
-            return false;
+        // if only 1 option → means "No Subcategory Available"
+        if (!subcategoryDropdown.prop("disabled")) {
+            if (!subcategory || subcategory <= 0) {
+                Swal.fire("Validation", "Please select SubCategory", "warning");
+                subcategoryDropdown.focus();
+                return false;
+            }
         }
         // Transaction Date
         if (!transactionDate) {
@@ -675,6 +709,34 @@
             $("#income_txnId_wrap").removeClass("d-none");
         }
     });    
+
+    // Trigger SubCategory load when Income Category changes
+    $("#ddlIncomeCategory, #filter_income_category").change(function () {
+        let selectedCategoryId = $(this).val();
+        loadIncomeSubCategoryDropdown(selectedCategoryId);
+    });
+    //Sub-Category change
+    $("#ddlSubCategory_Income").on("change", function () {
+        let selectedSubCategory = $(this).find(":selected");
+        let categoryId = selectedSubCategory.data("categoryid");
+        console.log("categoryId:", categoryId);
+        // Target both category dropdowns
+        let categoryDropdown = $("#ddlIncomeCategory");
+        // If category is not selected (0), then set it
+        if (categoryId) {
+            categoryDropdown.val(categoryId); //.trigger("change");
+        }
+    });
+    $("#filter_income_subcategory").on("change", function () {
+        let selectedSubCategory = $(this).find(":selected");
+        let categoryId = selectedSubCategory.data("categoryid");
+        // Target both category dropdowns
+        let categoryDropdown = $("#filter_income_category");
+        // If category is not selected (0), then set it
+        if (categoryId) {
+            categoryDropdown.val(categoryId); //.trigger("change");
+        }
+    });
     //INCOME TXN --- END ---------------------------
 });
 
@@ -1000,15 +1062,22 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
         success: function (response) {
             let dropdown = $("#ddlSubCategory_Expense, #filter_expense_subcategory");
             dropdown.empty();
-            dropdown.append('<option value="0">-- Select Subcategory --</option>');
-
-            response.data.forEach(item => {
-                dropdown.append(
-                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+            if (response.data && response.data.length > 0) {
+                dropdown.append('<option value="0">-- Select Subcategory --</option>');
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""} data-categoryid="${item.CategoryId}">
                                 ${item.SubCategoryName}
-                            </option>`
-                );
-            });
+                        </option>`
+                    );
+                });
+            }
+            else {
+                // ❌ No data case
+                dropdown.append('<option value="0">-- No Subcategory Available --</option>');
+                // Optional: disable dropdown
+                dropdown.prop("disabled", true);
+            }
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Failed to load subcategory dropdown data");
@@ -1019,11 +1088,6 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
     });
 }
 
-// Trigger SubCategory load when Expense Category changes
-$("#ddlExpenseCategory, #filter_expense_category").change(function () {
-    let selectedCategoryId = $(this).val();
-    loadExpenseSubCategoryDropdown(selectedCategoryId);
-});
 //EXPENSE TRANSACTIONS ----- END ----------------------
 
 // Load Account dropdown dynamically
@@ -1159,19 +1223,27 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
             showTempLoader("fetching Income Sub-Category...");
         },
         success: function (response) {
-
             console.log("GetIncomeSubCategoryList response:", response);
             let dropdown = $("#ddlSubCategory_Income, #filter_income_subcategory");
             dropdown.empty();
-            dropdown.append('<option value="0">-- Select Subcategory --</option>');
 
-            response.data.forEach(item => {
-                dropdown.append(
-                    `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+            if (response.data && response.data.length > 0) {
+                dropdown.append('<option value="0">-- Select Subcategory --</option>');
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""} data-categoryid="${item.CategoryId}">
                                 ${item.SubCategoryName}
                             </option>`
-                );
-            });
+                    );
+                });
+            }
+            else {
+                // ❌ No data case
+                dropdown.append('<option value="0">-- No Subcategory Available --</option>');
+                // Optional: disable dropdown
+                dropdown.prop("disabled", true);
+            }
+
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fail to load Income SubCategory")
@@ -1181,12 +1253,6 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
         }
     });
 }
-
-// Trigger SubCategory load when Income Category changes
-$("#ddlIncomeCategory, #filter_income_category").change(function () {
-    let selectedCategoryId = $(this).val();
-    loadIncomeSubCategoryDropdown(selectedCategoryId);
-});
 //INCOME TRANSACTIONS ----- END ----------------------
 
 //NEXT VOUCHER NO --- START ----------------------

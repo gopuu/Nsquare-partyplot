@@ -398,30 +398,6 @@
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
                                 </div>
                             </div>
-
-                            <!-- Button to toggle editors -->
-                            <div class="mb-1">
-                                <button type="button" id="OtherCharges_ToggleEditorsBtn" class="btn btn-outline-success btn-sm w-100">
-                                    <i class="fa fa-pen"></i> Booking Note
-                                </button>
-                            </div>
-
-                            <!-- Container for text editors (hidden by default) -->
-                            <div id="OtherCharges_editorsContainer" style="display:none;">
-
-                                <!-- Booking Note - Customer -->
-                                <div class="mb-3">
-                                    <label class="form-label small">Booking Note - Customer <span class="small">(Printed on FP)</span></label>
-                                    <div id="OtherCharges_customerEditor" style="height: 120px;"></div>
-                                </div>
-
-                                <!-- Internal Office Note -->
-                                <div class="mb-3">
-                                    <label class="form-label small">Internal Office Note <span class="small">(Not shared with customer)</span></label>
-                                    <div id="OtherCharges_internalEditor" style="height: 120px;"></div>
-                                </div>
-
-                            </div>
                         </div>
 
                         <!-- Payment Summary -->
@@ -529,6 +505,92 @@
                                     <label>Payment Note</label>
                                     <textarea class="form-control form-control-sm" id="PaymentDetails_PaymentNote"></textarea>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-md-12" id="notes">
+                            <div class="row">
+                                <!-- Booking Note -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-primary w-100 toggle-editor" data-target="OtherCharges_customerEditor">
+                                        Booking Note - Customer
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_OtherCharges_customerEditor">
+                                    <div id="OtherCharges_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Internal -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary w-100 toggle-editor" data-target="OtherCharges_internalEditor">
+                                        Internal Office Note
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_OtherCharges_internalEditor">
+                                    <div id="OtherCharges_internalEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Food -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-success w-100 toggle-editor" data-target="Notes_FoodBeverage_customerEditor">
+                                        Food & Beverage Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_FoodBeverage_customerEditor">
+                                    <div id="Notes_FoodBeverage_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Event -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-success w-100 toggle-editor" data-target="Notes_EventTiming_customerEditor">
+                                        Event Timing Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_EventTiming_customerEditor">
+                                    <div id="Notes_EventTiming_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Decoration -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-success w-100 toggle-editor" data-target="Notes_DecorationSetup_customerEditor">
+                                        Decoration Setup Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_DecorationSetup_customerEditor">
+                                    <div id="Notes_DecorationSetup_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Technical -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-success w-100 toggle-editor" data-target="Notes_TechnicalService_customerEditor">
+                                        Technical Service Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_TechnicalService_customerEditor">
+                                    <div id="Notes_TechnicalService_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Guest -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-success w-100 toggle-editor" data-target="Notes_GuestCustom_customerEditor">
+                                        Guest Custom Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_GuestCustom_customerEditor">
+                                    <div id="Notes_GuestCustom_customerEditor" style="height:120px;"></div>
+                                </div>
+
+                                <!-- Financial -->
+                                <div class="col-md-4 mb-2">
+                                    <button type="button" class="btn btn-outline-danger w-100 toggle-editor" data-target="Notes_FinancialInternal_internalEditor">
+                                        Financial Internal Notes
+                                    </button>
+                                </div>
+                                <div class="col-md-12 mb-3 editor-box d-none" id="box_Notes_FinancialInternal_internalEditor">
+                                    <div id="Notes_FinancialInternal_internalEditor" style="height:120px;"></div>
+                                </div>
+
                             </div>
                         </div>
                     </div>

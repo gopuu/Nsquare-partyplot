@@ -6,76 +6,89 @@ var gstInvoiceNo = 0;
 let invoiceType = null;
 
 //< !--Booking Note - text Editor-- - START---->
-let editorsInitialized = false;
-document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
-    const container = document.getElementById('OtherCharges_editorsContainer');
-
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-
-        // Initialize editors only once after showing
-        if (!editorsInitialized) {
-            // Customer editor
-            // window.otherCharges_customerEditor = new Quill('#otherCharges_customerEditor', {
-            //     theme: 'snow',
-            //     modules: { toolbar: toolbarOptions }
-            // });
-
-            // // Internal editor
-            // window.otherCharges_internalEditor = new Quill('#otherCharges_internalEditor', {
-            //     theme: 'snow',
-            //     modules: { toolbar: toolbarOptions }
-            // });
-
-            editorsInitialized = true;
-        }
-
-    }
-    else {
-        container.style.display = 'none';
-    }
-});
-
-// 1️⃣ Import parchment
+// ✅ Register formats FIRST (only once)
 const Parchment = Quill.import('parchment');
 
-// 2️⃣ Define a custom style attributor for font size (instead of class-based)
 const SizeStyle = new Parchment.Attributor.Style('size', 'font-size', {
     scope: Parchment.Scope.INLINE,
     whitelist: ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px']
 });
 Quill.register(SizeStyle, true);
 
-// 3️⃣ Optional: Define custom line height too (if you still want)
 const LineHeightStyle = new Parchment.Attributor.Style('lineheight', 'line-height', {
     scope: Parchment.Scope.BLOCK,
     whitelist: ['1.0', '1.2', '1.4', '1.5', '1.6', '2.0', '3.0']
 });
 Quill.register(LineHeightStyle, true);
 
-// 4️⃣ Toolbar options
-var toolbarOptions = [
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'size': ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px'] }],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    [{ 'lineheight': ['1.0', '1.2', '1.4', '1.5', '1.6', '2.0', '3.0'] }]
+// Toolbar
+const toolbarOptions = [
+    ['bold', 'italic', 'underline'],
+    [{ size: ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px'] }],
+    [{ list: 'ordered' }, { list: 'bullet' }]
 ];
 
-// 5️⃣ Initialize editors
-var otherCharges_customerEditor = new Quill('#OtherCharges_customerEditor', {
-    theme: 'snow',
-    modules: { toolbar: toolbarOptions }
+// Store editors
+const editors = {};
+let notesData = null; // store once
+
+// Toggle logic
+
+$(document).on("click", ".toggle-editor", function () {
+    const targetId = $(this).data("target");
+    const box = $("#box_" + targetId);
+
+    if (box.hasClass("d-none")) {
+        box.removeClass("d-none");
+        // Init if not exists
+        if (!editors[targetId]) {
+            editors[targetId] = new Quill("#" + targetId, {
+                theme: "snow",
+                modules: { toolbar: toolbarOptions }
+            });
+        }
+
+        // ✅ ALWAYS SET DATA (important fix)
+        let value = "";
+
+        if (notesData) {
+            switch (targetId) {
+                case "OtherCharges_customerEditor":
+                    value = notesData.OtherCharges_BookingNoteForCustomer;
+                    break;
+                case "OtherCharges_internalEditor":
+                    value = notesData.OtherCharges_InternalOfficeNote;
+                    break;
+                case "Notes_FoodBeverage_customerEditor":
+                    value = notesData.Notes_FoodBeverage;
+                    break;
+                case "Notes_EventTiming_customerEditor":
+                    value = notesData.Notes_EventTiming;
+                    break;
+                case "Notes_DecorationSetup_customerEditor":
+                    value = notesData.Notes_DecorationSetup;
+                    break;
+                case "Notes_TechnicalService_customerEditor":
+                    value = notesData.Notes_TechnicalService;
+                    break;
+                case "Notes_GuestCustom_customerEditor":
+                    value = notesData.Notes_GuestCustom;
+                    break;
+                case "Notes_FinancialInternal_internalEditor":
+                    value = notesData.Notes_FinancialInternal;
+                    break;
+            }
+        }
+
+        editors[targetId].root.innerHTML = value || "";
+    }
+    else {
+        box.addClass("d-none");
+        // ❌ Do NOT clear here (important)
+        // otherwise edit mode loses data
+    }
 });
 
-var noteEditor = new Quill('#noteEditor', {
-    theme: 'snow',
-    modules: { toolbar: toolbarOptions }
-});
-
-var otherCharges_internalEditor = new Quill('#OtherCharges_internalEditor', {
-    theme: 'snow',
-    modules: { toolbar: toolbarOptions }
-});
 //< !--Booking Note - text Editor-- - END---->
 
 // Optional: Auto-correct minute/hour inputs
@@ -5669,14 +5682,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#OtherCharges_ProjectorScreen_Amount").val(data.OtherCharges_ProjectorScreen_Amount);
                     $("#OtherCharges_ProjectorScreen_GST").val(data.OtherCharges_ProjectorScreen_GST);
 
-                    var quillCustomer = new Quill('#OtherCharges_customerEditor', {
-                        theme: 'snow'
-                    });
-                    var quillInternal = new Quill('#OtherCharges_internalEditor', {
-                        theme: 'snow'
-                    });
-                    quillCustomer.root.innerHTML = data.OtherCharges_BookingNoteForCustomer || "";
-                    quillInternal.root.innerHTML = data.OtherCharges_InternalOfficeNote || "";
+                    notesData = data; // store once
 
                     //payment summary
                     $("#paymentSummary_TaxableAmount").text(formatAmount(data.PaymentSummary_TaxableAmount));
@@ -6089,7 +6095,17 @@ function validateBookingForm() {
 
     return isValid;
 }
+function getCleanHtml(editor) {
+    if (!editor) return "";
 
+    let html = editor.root.innerHTML
+        .replace(/\s+/g, " ")
+        .replace(/<p><br><\/p>/gi, "")
+        .replace(/<p><\/p>/gi, "")
+        .trim();
+
+    return html;
+}
 function saveBooking() {
     if (!validateBookingForm()) {
         return;
@@ -6099,16 +6115,17 @@ function saveBooking() {
 
     let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
 
-    var quillCustomer = new Quill('#OtherCharges_customerEditor', {
-        theme: 'snow'
-    });
+    // ✅ Use existing editors (DO NOT re-init)
+    var customerNote = getCleanHtml(editors["OtherCharges_customerEditor"]);
+    var internalNote = getCleanHtml(editors["OtherCharges_internalEditor"]);
 
-    var quillInternal = new Quill('#OtherCharges_internalEditor', {
-        theme: 'snow'
-    });
+    var notes_FoodBeverage = getCleanHtml(editors["Notes_FoodBeverage_customerEditor"]);
+    var notes_EventTiming = getCleanHtml(editors["Notes_EventTiming_customerEditor"]);
+    var notes_DecorationSetup = getCleanHtml(editors["Notes_DecorationSetup_customerEditor"]);
+    var notes_TechnicalService = getCleanHtml(editors["Notes_TechnicalService_customerEditor"]);
+    var notes_GuestCustom = getCleanHtml(editors["Notes_GuestCustom_customerEditor"]);
+    var notes_FinancialInternal = getCleanHtml(editors["Notes_FinancialInternal_internalEditor"]);
 
-    var customerNote = quillCustomer.root.innerHTML;
-    var internalNote = quillInternal.root.innerHTML;
 
     // 🔹 1. Collect Booking Data
     const bookingData = {
@@ -6166,8 +6183,15 @@ function saveBooking() {
         OtherCharges_SoundSystem_GST: parseFloat($("#OtherCharges_SoundSystem_GST").val() || 0),
         OtherCharges_ProjectorScreen_Amount: parseFloat($("#OtherCharges_ProjectorScreen_Amount").val() || 0),
         OtherCharges_ProjectorScreen_GST: parseFloat($("#OtherCharges_ProjectorScreen_GST").val() || 0),
+
         OtherCharges_BookingNoteForCustomer: customerNote,
         OtherCharges_InternalOfficeNote: internalNote,
+        Notes_FoodBeverage: notes_FoodBeverage,
+        Notes_EventTiming: notes_EventTiming,
+        Notes_DecorationSetup: notes_DecorationSetup,
+        Notes_TechnicalService: notes_TechnicalService,
+        Notes_GuestCustom: notes_GuestCustom,
+        Notes_FinancialInternal: notes_FinancialInternal,
 
         // ✅ Payment Summary
         PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text() || 0),
@@ -6414,8 +6438,30 @@ function resetBooking() {
     else {
         $stateDropdown.val("0").trigger("change");
     }
+
+    //Clear editors notes
+    resetAllEditors();
+
     $("#btnBook").prop("disabled", false);
 }
+
+// Reset all editors safely
+function resetAllEditors() {
+
+    // 1. Clear all initialized editors
+    Object.keys(editors).forEach(key => {
+        if (editors[key]) {
+            editors[key].setContents([]);
+        }
+    });
+
+    // 2. Hide all editor boxes
+    $(".editor-box").addClass("d-none");
+
+    // 3. (Optional) Reset stored data
+    notesData = null;
+}
+
 function resetFoodPackages() {
     // Remove all dynamically added blocks
     $("#foodPackageContainer .food-block").remove();

@@ -146,6 +146,13 @@ namespace ERPAdmin.ApiControllers
                         booking.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_BookingNoteForCustomer"]);
                         booking.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_InternalOfficeNote"]);
 
+                        booking.Notes_FoodBeverage = dr["Notes_FoodBeverage"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FoodBeverage"]);
+                        booking.Notes_EventTiming = dr["Notes_EventTiming"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_EventTiming"]);
+                        booking.Notes_DecorationSetup = dr["Notes_DecorationSetup"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_DecorationSetup"]);
+                        booking.Notes_TechnicalService = dr["Notes_TechnicalService"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_TechnicalService"]);
+                        booking.Notes_GuestCustom = dr["Notes_GuestCustom"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_GuestCustom"]);
+                        booking.Notes_FinancialInternal = dr["Notes_FinancialInternal"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FinancialInternal"]);
+
                         booking.PaymentSummary_TaxableAmount = dr["PaymentSummary_TaxableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_TaxableAmount"]);
                         booking.PaymentSummary_CGST = dr["PaymentSummary_CGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_CGST"]);
                         booking.PaymentSummary_SGST = dr["PaymentSummary_SGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_SGST"]);
@@ -260,6 +267,13 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@OtherCharges_ProjectorScreen_GST", model.OtherCharges_ProjectorScreen_GST ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_BookingNoteForCustomer", model.OtherCharges_BookingNoteForCustomer ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_InternalOfficeNote", model.OtherCharges_InternalOfficeNote ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@Notes_FoodBeverage", model.Notes_FoodBeverage ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Notes_EventTiming", model.Notes_EventTiming ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Notes_DecorationSetup", model.Notes_DecorationSetup ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Notes_TechnicalService", model.Notes_TechnicalService ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Notes_GuestCustom", model.Notes_GuestCustom ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Notes_FinancialInternal", model.Notes_FinancialInternal ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@PaymentSummary_TaxableAmount", model.PaymentSummary_TaxableAmount ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@PaymentSummary_CGST", model.PaymentSummary_CGST ?? (object)DBNull.Value);
@@ -634,61 +648,4 @@ namespace ERPAdmin.ApiControllers
         }
 
     }
-}
-// --------------------- Request / Models ---------------------
-public class PackageReportRequest : BaseClass
-{
-    public long BookingId { get; set; }
-    public bool IsWithPrice { get; set; }
-    public bool? WithHeader { get; set; } = true;
-}
-
-public class BookingReportModel
-{
-    public long BookingId { get; set; }
-    public string? BookingRef { get; set; }
-    public string? ClientName { get; set; }
-    public string? ContactNumber { get; set; }
-    public string? EventDate { get; set; }
-    public string? Property { get; set; }
-    public int Pax { get; set; }
-    public string? Hall { get; set; }
-    public string? Slot { get; set; }
-    public string? Timing { get; set; }
-    public string? BookedOn { get; set; }
-    public string? EventType { get; set; }
-    public string? CompanyName { get; set; }
-    public string? CompanyAddress { get; set; }
-    public string? CompanyState { get; set; }
-    public string? CompanyLogo { get; set; }
-    public string? Email { get; set; }
-    public string? HowReached { get; set; }
-    public string? ReachUs { get; set; }
-    public string? Reference { get; set; }
-    public string? UpdatedBy { get; set; }
-    public string? UpdatedOn { get; set; }
-    public string? Comment { get; set; }
-    public string? PrimaryPackage { get; set; }
-    public string? RatePerPlate { get; set; }
-    
-    public string? Mukhwas { get; set; }
-    public string? PackageRate { get; set; }
-    public string? PackageAmount { get; set; }
-    public string? TotalPaid { get; set; }
-    public string? OutstandingAmount { get; set; }
-    public string? BookingDiscount { get; set; }
-    public string? PayableAmount { get; set; }
-    public List<PackageItem>? PackageItems { get; set; }
-}
-
-public class PackageItem
-{
-    public string? Date { get; set; }
-    public string? Title { get; set; }
-    public string? PackageName { get; set; }
-    public decimal Rate { get; set; }
-    public decimal Pax { get; set; }
-    public decimal Amount { get; set; }
-    public string? Addon { get; set; }
-    public decimal Total { get; set; }
 }

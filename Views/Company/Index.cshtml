@@ -343,10 +343,8 @@
 
                                 <!-- Time Slot Toggles -- START -->
                                 <div class="col-6">
-
                                     <!-- Header -->
-                                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-
+                                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 bg-gradient">
                                         <!-- Left Side -->
                                         <div class="d-flex align-items-center gap-3">
                                             <h6 class="mb-0 fw-bold text-primary">
@@ -361,14 +359,13 @@
                                         </div>
 
                                         <!-- Right: Save Button -->
-                                        <button class="btn btn-warning btn-sm" id="btnSaveSlots">
+                                        <button class="btn btn-primary btn-xs" id="btnSaveSlots">
                                             <i class="fa fa-save me-1"></i> Save Slots
                                         </button>
-
                                     </div>
 
                                     <!-- Slots Container -->
-                                    <div id="slotContainer">
+                                    <div id="slotContainer" class="bg-gradient">
                                         <!-- Dynamic Slots Here -->
                                     </div>
 
@@ -669,14 +666,24 @@
                                         </div>
                                     </div>
 
-                                    <!-- Post Booking Steps (20%) -->
-                                    <div class="col-md-4">
-                                        <label class="form-label d-none">Post Booking Steps</label>
-                                        <div id="PropertyDetails_bookingStepsContainer" class="d-none">
-                                            <input type="text" class="form-control mb-2" placeholder="Enter step">
+                                    <div class="col-md-12 d-flex align-items-center justify-content-end">
+
+                                        <!-- Left: Post Booking Steps -->
+                                        <div id="PropertyDetails_bookingStepsContainerWrapper" style="max-width: 70%;" class="d-none">
+                                            <label class="form-label">Post Booking Steps</label>
+                                            <div id="PropertyDetails_bookingStepsContainer">
+                                                <input type="text" class="form-control mb-2" placeholder="Enter step">
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addBookingStep()">+ Add More</button>
                                         </div>
-                                        <button type="button" class="btn btn-outline-primary btn-sm d-none" onclick="addBookingStep()">+ Add More</button>
-                                        <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()"><i class="fa fa-save me-1"></i> Save Property Details</button>
+
+                                        <!-- Right: Save Button -->
+                                        <div>
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="saveCompanyPropertyData()">
+                                                <i class="fa fa-save me-1"></i> Save
+                                            </button>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -1061,7 +1068,10 @@
 
                                 </div>
 
-                                <button type="submit" class="btn btn-warning"><i class="fa fa-save me-1"></i> Save</button>
+                                <div class="col-md-12 d-flex align-items-center justify-content-end">
+                                    <button type="submit" class="btn btn-warning"><i class="fa fa-save me-1"></i> Save</button>
+                                </div>
+
                             </form>
                         </div>
 
@@ -1207,7 +1217,7 @@
                                         </div>
 
                                         <!-- Save Button -->
-                                        <div class="col-12 mt-4">
+                                        <div class="col-md-12 d-flex align-items-center justify-content-end">
                                             <button class="btn btn-warning" onclick="saveInvoiceSetupData()"><i class="fa fa-save me-1"></i> Save Invoice Design</button>
                                         </div>
                                     </div>
@@ -1261,7 +1271,7 @@
                                             <div class="row row-cols-1 row-cols-md-4 g-2" id="cuisineCheckboxContainer"></div>
                                         </div>
 
-                                        <div class="col-12 mt-4">
+                                        <div class="col-md-12 mt-2 d-flex align-items-center justify-content-end">
                                             <button class="btn btn-warning" onclick="saveFoodItems()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
@@ -1324,7 +1334,8 @@
                                             <h5 class="text-primary mb-3">Add Food Charges</h5>
                                             <div id="foodHeaderContainer_charges"></div>
                                             <button class="btn btn-outline-success mt-2" onclick="addNewHeader_charges()">+ Add Header</button>
-                                            <div class="mt-3 d-flex">
+
+                                            <div class="col-md-12 mt-2 d-flex align-items-center justify-content-end">
                                                 <button class="btn btn-warning" onclick="saveAddonCharges()"><i class="fa fa-save me-1"></i> Save</button>
                                             </div>
                                         </div>
@@ -1380,7 +1391,7 @@
                                         </div>
 
                                         <!-- Save Button -->
-                                        <div class="mt-3 text-end">
+                                        <div class="col-md-12 mt-2 d-flex align-items-center justify-content-end">
                                             <button class="btn btn-warning" onclick="saveCharges()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
@@ -1452,7 +1463,9 @@
                                                     </select>
                                                 </div>
 
-                                                <button class="btn btn-warning mt-3" onclick="saveLabelSetup()"><i class="fa fa-save me-1"></i> Save</button>
+                                                <div class="col-md-12 mt-2 d-flex align-items-center justify-content-end">
+                                                    <button class="btn btn-warning mt-3" onclick="saveLabelSetup()"><i class="fa fa-save me-1"></i> Save</button>
+                                                </div>
                                             </div>
 
                                             <!-- Buy Plaque Card -->
@@ -1556,7 +1569,7 @@
                                 </div>
 
                                 <!-- Save Button -->
-                                <div class="col-12">
+                                <div class="col-md-12 mt-2 d-flex align-items-center justify-content-end">
                                     <button class="btn btn-warning" onclick="saveTermsAndConditions()"><i class="fa fa-save me-1"></i> Save</button>
                                 </div>
                             </div>

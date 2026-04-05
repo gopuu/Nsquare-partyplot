@@ -11,10 +11,11 @@ using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Ocsp;
-using SixLabors.Fonts;
+//using Org.BouncyCastle.Asn1.Ocsp;
+//using SixLabors.Fonts;
 using System.Data;
 using System.Data.SqlClient;
+using iTextSharp.text.html.simpleparser;
 using iTextSharpFont = iTextSharp.text.Font;
 
 namespace ERPAdmin.ApiControllers
@@ -1663,16 +1664,21 @@ namespace ERPAdmin.ApiControllers
                             report.Timing = dr["Timing"].ToString();
                             report.BookedOn = dr["BookedOn"].ToString();
                             report.EventType = dr["EventType"].ToString();
-                            report.CompanyName = dr["CompanyName"].ToString();
-                            report.CompanyAddress = dr["CompanyAddress"].ToString();
-                            report.CompanyState = dr["CompanyState"].ToString();
-                            report.CompanyLogo = dr["CompanyLogo"].ToString();
-                            report.Email = dr["Email"].ToString();
                             report.HowReached = dr["HowReached"].ToString();
                             report.Reference = dr["Reference"].ToString();
                             report.UpdatedBy = dr["UpdatedBy"].ToString();
                             report.UpdatedOn = dr["UpdatedOn"].ToString();
                             report.Comment = dr["Comment"].ToString();
+
+                            report.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"].ToString();
+                            report.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"].ToString();
+                            report.Notes_FoodBeverage = dr["Notes_FoodBeverage"].ToString();
+                            report.Notes_EventTiming = dr["Notes_EventTiming"].ToString();
+                            report.Notes_DecorationSetup = dr["Notes_DecorationSetup"].ToString();
+                            report.Notes_TechnicalService = dr["Notes_TechnicalService"].ToString();
+                            report.Notes_GuestCustom = dr["Notes_GuestCustom"].ToString();
+                            report.Notes_FinancialInternal = dr["Notes_FinancialInternal"].ToString();
+
                             report.PrimaryPackage = dr["PrimaryPackage"].ToString();
                             report.RatePerPlate = dr["RatePerPlate"].ToString();
 
@@ -1711,6 +1717,12 @@ namespace ERPAdmin.ApiControllers
                         companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
                         companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                         stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+
+                        report.CompanyName = propertyName;
+                        report.CompanyAddress = companyAddress;
+                        report.CompanyState = dtCompany.Rows[0]["StateName"].ToString();
+                        report.CompanyLogo = logoFile;
+                        report.Email = companyemail;
 
                         // ── Resolve logo path (same logic as before, just storing the path string) ──
                         if (!string.IsNullOrWhiteSpace(logoFile))
@@ -1912,7 +1924,6 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable mainTable = new PdfPTable(2) { WidthPercentage = 100 };
                 mainTable.SetWidths(new float[] { 0.6f, 0.4f });
 
-
                 // ================= LEFT SIDE =================
                 leftTable = new PdfPTable(1) { WidthPercentage = 100 };
 
@@ -1985,6 +1996,59 @@ namespace ERPAdmin.ApiControllers
                     signTable.AddCell(cell);
                 }
                 document.Add(signTable);
+
+                // 2nd Page - NOTES
+                document.NewPage();
+
+                title = new Paragraph("Booking Notes", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.GRAY))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingBefore = 3,
+                    SpacingAfter = 8
+                };
+                document.Add(title);
+
+                lineBottom = new PdfPTable(1) { WidthPercentage = 100 };
+                lineBottom.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.LIGHT_GRAY });
+                document.Add(lineBottom);
+
+                void AddNoteHtml(Paragraph container, string title, string htmlData)
+                {
+                    // Title (bold)
+                    container.Add(new Chunk(title + "\n", labelFontBoldLeft));
+                    string clean = htmlData ?? "";
+
+                    if (!string.IsNullOrWhiteSpace(clean) &&
+                        clean != "<p><br></p>" &&
+                        clean != "<p></p>")
+                    {
+                        using (StringReader sr = new StringReader(clean))
+                        {
+                            var elements = HTMLWorker.ParseToList(sr, null);
+                            foreach (var el in elements)
+                            {
+                                container.Add(el);
+                            }
+                        }
+                    }
+
+                    container.Add(Chunk.NEWLINE);
+                }
+
+                Paragraph notesPara = new Paragraph();
+                notesPara.SpacingBefore = 10;
+
+                AddNoteHtml(notesPara, "Customer Note:", report.OtherCharges_BookingNoteForCustomer);
+                AddNoteHtml(notesPara, "Internal Office Note:", report.OtherCharges_InternalOfficeNote);
+                AddNoteHtml(notesPara, "Food & Beverage Notes:", report.Notes_FoodBeverage);
+                AddNoteHtml(notesPara, "Event Timing Notes:", report.Notes_EventTiming);
+                AddNoteHtml(notesPara, "Decoration Setup Notes:", report.Notes_DecorationSetup);
+                AddNoteHtml(notesPara, "Technical Service Notes:", report.Notes_TechnicalService);
+                AddNoteHtml(notesPara, "Guest Custom Notes:", report.Notes_GuestCustom);
+                AddNoteHtml(notesPara, "Financial Internal Notes:", report.Notes_FinancialInternal);
+
+                document.Add(notesPara);
+
                 document.Close();
 
                 #region SAVE_FILE
@@ -2015,6 +2079,8 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+
+
         #endregion
     }
 }

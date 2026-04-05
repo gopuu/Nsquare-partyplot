@@ -196,6 +196,14 @@
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
 
+        public string? Notes_FoodBeverage { get; set; }
+        public string? Notes_EventTiming { get; set; }
+        public string? Notes_DecorationSetup { get; set; }
+        public string? Notes_TechnicalService { get; set; }
+        public string? Notes_GuestCustom { get; set; }
+        public string? Notes_FinancialInternal { get; set; }
+
+
         public decimal? PaymentSummary_TaxableAmount { get; set; }
         public decimal? PaymentSummary_CGST { get; set; }
         public decimal? PaymentSummary_SGST { get; set; }
@@ -208,6 +216,7 @@
 
         //public string? JSON_FoodPackage { get; set; }
         public List<FoodPackage>? JSON_FoodPackage { get; set; }
+
     }
     public class FoodPackage
     {
@@ -305,8 +314,16 @@
         public decimal OtherCharges_SoundSystem_GST { get; set; }
         public decimal OtherCharges_ProjectorScreen_Amount { get; set; }
         public decimal OtherCharges_ProjectorScreen_GST { get; set; }
+
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
+        public string? Notes_FoodBeverage { get; set; }
+        public string? Notes_EventTiming { get; set; }
+        public string? Notes_DecorationSetup { get; set; }
+        public string? Notes_TechnicalService { get; set; }
+        public string? Notes_GuestCustom { get; set; }
+        public string? Notes_FinancialInternal { get; set; }
+
 
         public decimal PaymentSummary_TaxableAmount { get; set; }
         public decimal PaymentSummary_CGST { get; set; }
@@ -326,6 +343,7 @@
         public long? ProformaInvoiceNo { get; set; }
         public string? ReachedUs { get; set; }
         public string? Reference { get; set; }
+
         public List<PaymentTrailModel>? PaymentTrailList { get; set; }
 
     }
@@ -405,4 +423,72 @@
         public long? Count_Size { get; set; }
         public List<FoodItemModel>? FoodItemsList { get; set; }
     }
+    public class PackageReportRequest : BaseClass
+    {
+        public long BookingId { get; set; }
+        public bool IsWithPrice { get; set; }
+        public bool? WithHeader { get; set; } = true;
+    }
+
+    public class BookingReportModel
+    {
+        public long BookingId { get; set; }
+        public string? BookingRef { get; set; }
+        public string? ClientName { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? EventDate { get; set; }
+        public string? Property { get; set; }
+        public int Pax { get; set; }
+        public string? Hall { get; set; }
+        public string? Slot { get; set; }
+        public string? Timing { get; set; }
+        public string? BookedOn { get; set; }
+        public string? EventType { get; set; }
+        public string? CompanyName { get; set; }
+        public string? CompanyAddress { get; set; }
+        public string? CompanyState { get; set; }
+        public string? CompanyLogo { get; set; }
+        public string? Email { get; set; }
+        public string? HowReached { get; set; }
+        public string? ReachUs { get; set; }
+        public string? Reference { get; set; }
+        public string? UpdatedBy { get; set; }
+        public string? UpdatedOn { get; set; }
+        public string? Comment { get; set; }
+
+        public string? OtherCharges_BookingNoteForCustomer { get; set; }
+        public string? OtherCharges_InternalOfficeNote { get; set; }
+        public string? Notes_FoodBeverage { get; set; }
+        public string? Notes_EventTiming { get; set; }
+        public string? Notes_DecorationSetup { get; set; }
+        public string? Notes_TechnicalService { get; set; }
+        public string? Notes_GuestCustom { get; set; }
+        public string? Notes_FinancialInternal { get; set; }
+
+
+        public string? PrimaryPackage { get; set; }
+        public string? RatePerPlate { get; set; }
+
+        public string? Mukhwas { get; set; }
+        public string? PackageRate { get; set; }
+        public string? PackageAmount { get; set; }
+        public string? TotalPaid { get; set; }
+        public string? OutstandingAmount { get; set; }
+        public string? BookingDiscount { get; set; }
+        public string? PayableAmount { get; set; }
+        public List<PackageItem>? PackageItems { get; set; }
+    }
+
+    public class PackageItem
+    {
+        public string? Date { get; set; }
+        public string? Title { get; set; }
+        public string? PackageName { get; set; }
+        public decimal Rate { get; set; }
+        public decimal Pax { get; set; }
+        public decimal Amount { get; set; }
+        public string? Addon { get; set; }
+        public decimal Total { get; set; }
+    }
+
 }

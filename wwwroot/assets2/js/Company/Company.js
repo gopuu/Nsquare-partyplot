@@ -391,12 +391,15 @@ $("#btnSaveSlots").click(function () {
     //Save Slots
     let slots = [];
     $("#slotContainer .time-slot").each(function () {
+        let container = this; // IMPORTANT
+        let startTime = getTimeFromFields(container, 'start');
+        let endTime = getTimeFromFields(container, 'end');
         slots.push({
             Id: parseInt($(this).find(".slot-id").val()) || 0,
             Name: $(this).find(".slot-name").val().trim(),
             Code: $(this).find(".slot-code").val().trim(),
-            StartTime: $(this).find(".slot-start").val(),
-            EndTime: $(this).find(".slot-end").val(),
+            StartTime: startTime, //$(this).find(".slot-start").val(),
+            EndTime: endTime, //$(this).find(".slot-end").val(),
             IsActive: $(this).find(".slot-active").is(":checked")
         });
     });
@@ -1651,6 +1654,18 @@ $("#CompanyProfile_AcceptGST").change(function () {
         //$("#CompanyProfile_GSTIN").val(""); // optional: clear value if unchecked
     }
 });
+ 
+// KEEP TAB OPEN - START
+$('#companyTabs a').on('click', function () {
+    let tabId = $(this).attr('href'); // e.g. #tab-company-profile
+    sessionStorage.setItem('activeTab', tabId);
+});
+
+let activeTab = sessionStorage.getItem('activeTab') || '#tab-company-profile';
+let tab = new bootstrap.Tab(document.querySelector('#companyTabs a[href="' + activeTab + '"]'));
+tab.show();
+// KEEP TAB OPEN - END
+
 
 function loadSlots() {
 
@@ -1666,12 +1681,26 @@ function loadSlots() {
             let container = $("#slotContainer");
             container.empty();
 
+            // ✅ HEADER ROW
+            let header = `
+                <div class="d-flex align-items-center gap-1 border-bottom fw-semibold pb-2 mb-2 text-primary fs-9">
+                    <div style="width:40px;">#</div>
+                    <div style="width:40px;"></div> <!-- toggle space -->
+                    <div style="max-width:150px; width:150px;">Shift</div>
+                    <div style="max-width:50px; width:50px;">Code</div>
+                    <div style="width:170px;">Start Time</div>
+                    <div style="width:20px;"></div>
+                    <div style="width:170px;">End Time</div>
+                </div>
+            `;
+            container.append(header);
+
             res.data.forEach(slot => {
                 let html = `
                     <div class="time-slot border p-2 mb-3 rounded">
                         <input type="hidden" class="slot-id" value="${slot.Id}" />
 
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
 
                             <!-- Toggle -->
                             <div class="form-check form-switch m-0">
@@ -1679,17 +1708,36 @@ function loadSlots() {
                             </div>
 
                             <!-- Name -->
-                            <input type="text" class="form-control slot-name" value="${slot.Name}" style="max-width:180px;" />
+                            <input type="text" class="form-control slot-name p-1" value="${slot.Name}" style="max-width:190px;" />
 
                             <!-- Code -->
-                            <input type="text" class="form-control slot-code" value="${slot.Code}" style="max-width:70px;" readonly />
+                            <input type="text" class="form-control slot-code p-1" value="${slot.Code}" style="max-width:50px;" readonly />
 
                             <!-- Start Time -->
-                            <input type="text" class="form-control slot-start" value="${slot.StartTime2}" style="max-width:130px;" />
-                            <span class="fw-bold">-</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <input type="number" class="form-control start-hh p-1" placeholder="HH" min="1" max="12" style="width:55px;" value="${slot.StartTimeHH}">
+    
+                                <input type="number" class="form-control start-mm p-1" placeholder="MM" min="0" max="59" style="width:55px;" value="${slot.StartTimeMM}">
+    
+                                <select class="form-control start-ampm p-1" style="width:50px;">
+                                    <option value="AM" ${slot.StartTimeAMPM === 'AM' ? 'selected' : ''}>AM</option>
+                                    <option value="PM" ${slot.StartTimeAMPM === 'PM' ? 'selected' : ''}>PM</option>
+                                </select>
+                            </div>
+
+                            <span class="fw-bold mx-2">-</span>
 
                             <!-- End Time -->
-                            <input type="text" class="form-control slot-end" value="${slot.EndTime2}" style="max-width:130px;" />
+                            <div class="d-flex align-items-center gap-1">
+                                <input type="number" class="form-control end-hh p-1" placeholder="HH" min="1" max="12" style="width:55px;" value="${slot.EndTimeHH}">
+    
+                                <input type="number" class="form-control end-mm p-1" placeholder="MM" min="0" max="59" style="width:55px;" value="${slot.EndTimeMM}">
+    
+                                <select class="form-control end-ampm p-1" style="width:50px;">
+                                    <option value="AM" ${slot.EndTimeAMPM === 'AM' ? 'selected' : ''}>AM</option>
+                                    <option value="PM" ${slot.EndTimeAMPM === 'PM' ? 'selected' : ''}>PM</option>
+                                </select>
+                            </div>
 
                         </div>
                     </div>
@@ -1701,6 +1749,15 @@ function loadSlots() {
             handleApiError(xhr, status, error, "fetch Slots Failed");
         }
     });
+}
+function getTimeFromFields(container, type) {
+    let hh = container.querySelector(`.${type}-hh`).value;
+    let mm = container.querySelector(`.${type}-mm`).value;
+    let ampm = container.querySelector(`.${type}-ampm`).value;
+
+    if (!hh || !mm) return '';
+
+    return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')} ${ampm}`;
 }
 
 function generateTimeOptions(selectedValue = "") {

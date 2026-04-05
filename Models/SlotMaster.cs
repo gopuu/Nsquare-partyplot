@@ -14,6 +14,12 @@
         public string? EndTime { get; set; }
         public string? StartTime2 { get; set; }
         public string? EndTime2 { get; set; }
+        public string? StartTimeHH { get; set; }
+        public string? StartTimeMM { get; set; }
+        public string? StartTimeAMPM { get; set; }
+        public string? EndTimeHH { get; set; }
+        public string? EndTimeMM { get; set; }
+        public string? EndTimeAMPM { get; set; }
         public bool IsActive { get; set; }
     }
 
