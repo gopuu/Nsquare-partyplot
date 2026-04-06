@@ -508,18 +508,16 @@ $(document).on("click", ".loadMenuBtn", function () {
             //console.log("response GetPackage_MenuAndFoodItemsList:", response);
             if (response.status === "Success" && response.data && response.data.length > 0)
             {
-                //here2
-                renderMenuItems(response.data);
-                // Store dropdown reference safely
-                $("#menuModal").data("activeDropdown", $dropdown);
+                renderMenuItems(response.data, () => {
+                    $("#menuModal").data("activeDropdown", $dropdown);
+                    // 🔥 RESTORE SELECTION
+                    const savedItems = $dropdown.data("selected-items");
+                    //console.log("restore savedItems:", savedItems);
+                    restoreSavedMenuSelection(savedItems);
 
-                // 🔥 RESTORE SELECTION
-                const savedItems = $dropdown.data("selected-items");
-                //console.log("savedItems:", savedItems);
-                restoreSavedMenuSelection(savedItems);
-
-                $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
-                $("#menuModal").modal("show");
+                    $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
+                    $("#menuModal").modal("show");
+                });
             }
             else {
                 Swal.fire({
@@ -537,7 +535,6 @@ $(document).on("click", ".loadMenuBtn", function () {
 });
 
 function restoreSavedMenuSelection(savedItems) {
-
     if (!savedItems || savedItems.length === 0) return;
     savedItems.forEach(item => {
 
@@ -546,25 +543,22 @@ function restoreSavedMenuSelection(savedItems) {
 
         // 🔹 EXISTING ITEM
         if (item.MenuItem_Id && item.MenuItem_Id !== 0) {
-            section.find(`.item-checkbox[value='${item.MenuItem_Id}']`)
-                .prop("checked", true);
+            section.find(`.item-checkbox[value='${item.MenuItem_Id}']`).prop("checked", item.IsChecked);
         }
 
         // 🔹 NEW CUSTOM ITEM
-        else if (item.MenuItem_Id === 0 && (item.MenuItem_Name || item.MenuItem_Name_NewAdded) ) {
-
+        else if (item.MenuItem_Id === 0 && item.MenuItem_Name_NewAdded ) {
             const newItemHtml = `
                 <div class="form-check me-3 mb-2">
                     <input class="form-check-input item-checkbox new-item"
                            type="checkbox"
                            value="0"
                            data-menu-id="${item.MenuHeader_Id}"
-                           data-item-name="${item.MenuItem_Name || item.MenuItem_Name_NewAdded}"
+                           data-item-name="${item.MenuItem_Name_NewAdded}"
                            checked>
-                    <label class="form-check-label">${item.MenuItem_Name || item.MenuItem_Name_NewAdded}</label>
+                    <label class="form-check-label">${item.MenuItem_Name_NewAdded}</label>
                 </div>
             `;
-
             section.find(".item-container").append(newItemHtml);
         }
     });
@@ -692,7 +686,9 @@ $(document).on("input", ".pax, .perPlate, .addonsCost", function () {
 });
 
 // ✅ STEP 4: Build modal dynamically
-function renderMenuItems(menuData) {
+function renderMenuItems(menuData, callback) {
+
+    //console.log("render Menu:", menuData);
     let html = "";
     menuData.forEach(menu => {
         const foodItems = menu.FoodItemsList?.length
@@ -722,6 +718,8 @@ function renderMenuItems(menuData) {
     });
 
     $("#menuModalBody").html(html);
+    // ✅ render complete
+    if (callback) callback();
 }
 
 //ADD NEW ITEM
@@ -784,14 +782,6 @@ $(document).on("click", ".btn-saveMenu", function () {
                 MenuItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
                 IsChecked: true
             });
-
-            //selectedMenuData.push({
-            //    Inclusion_Id: inclusionId,
-            //    FoodMenu_Id: parseInt(menuId),
-            //    FoodItem_Id: parseInt($(this).val()),
-            //    FoodItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
-            //    IsChecked: $(this).is(":checked")
-            //});
         });
     });
 
@@ -802,7 +792,7 @@ $(document).on("click", ".btn-saveMenu", function () {
         //$activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
     }
 
-    //console.log("Saved Menu Selection:", selectedMenuData);
+    console.log("Saved Menu Selection:", selectedMenuData);
     $("#menuModal").modal("hide");
 });
 
@@ -929,7 +919,7 @@ function loadAddonCharges() {
 }
 
 function populateAddonModal(savedItems = []) {
-    //console.log("populate AddOns:", savedItems);
+    console.log("populate AddOns:", savedItems);
     let container = $("#addonItemsContainer");
     let summaryContainer = $("#headerSummaryContainer");
     container.empty();
@@ -971,13 +961,13 @@ function populateAddonModal(savedItems = []) {
         grouped[header].forEach(item => {
             // Find if this item was saved previously
             let saved = savedItems.find(s =>
-                ((s.AddonCharges_ItemId ?? s.AddOn_Item_Id) === item.Id) &&
-                ((s.AddonCharges_HeaderId ?? s.AddOn_Header_Id) === item.HeaderId)
+                (s.AddOn_Item_Id === item.Id) &&
+                (s.AddOn_Header_Id === item.HeaderId)
             );
             //console.log("saved AddOns:", saved);
             // If found, prefill values
             let isChecked = saved ? true : false;
-            let rate = saved ? (saved.AddOn_Rate ?? saved.Rate) : item.Amount;
+            let rate = saved ? saved.AddOn_Rate : item.Amount;
             //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
 
             let rowPax = 0;
@@ -992,9 +982,9 @@ function populateAddonModal(savedItems = []) {
                     rowPax = parseFloat($("#booking_pax").val()) || 0;
                 }
             }
-            let pax = saved ? (saved.AddOn_Pax ?? saved.Pax) : rowPax;
+            let pax = saved ? saved.AddOn_Pax : rowPax;
 
-            let total = saved ? (saved.AddOn_Total ?? saved.Total) : 0;
+            let total = saved ? saved.AddOn_Total : 0;
 
             let row = $(`
                     <div class="d-flex align-items-center justify-content-between mb-2"
@@ -1122,8 +1112,8 @@ function openAddonModal(booking_foodPackageId = 0, button = null) {
     }
 
     let savedItems = $(button).data("selected-addonitems") || [];
-    //console.log("addon data saved:", savedItems);
-    //console.log("addon data addon_Data:", addon_Data);
+    console.log("addon data saved:", savedItems);
+    console.log("addon data addon_Data:", addon_Data);
 
     if (addon_Data.length === 0) {
         populateAddonModal();
@@ -1135,7 +1125,6 @@ function openAddonModal(booking_foodPackageId = 0, button = null) {
             $(button).html('<i class="fa fa-check"></i> Addons');
         }
     }
-
     $("#addonChargeModal").modal("show");
 }
 
@@ -1174,7 +1163,7 @@ $(document).on("click", ".btn-saveAddOn", function () {
         return;
     }
 
-    //console.log("✅ Selected Addon Items:", selectedItems);
+    console.log("✅ Selected Addon Items:", selectedItems);
     //console.log("💰 Grand Total:", grandTotal.toFixed(2));
 
     // 🔹 Update the clicked AddOn button’s total span
@@ -1682,6 +1671,12 @@ async function renderBoard(bookingData = null) {
             }
 
             let skipNextSlots = new Set();
+
+            const hasFDBooking = bookingsToday.some(b => b.ShiftCode === "FD");
+            const uniqueIds = [...new Set(bookingsToday.map(b => b.BookingId))];
+            const bookingCount = uniqueIds.length;
+            const hasAnyBooking = bookingCount > 0;
+
             // Populate cell with shift data
             cell.innerHTML = shiftArr.map((color, i) => {
 
@@ -1738,10 +1733,8 @@ async function renderBoard(bookingData = null) {
                         displayText = "FD";
                     }
                     else if (bookingsToday.length > 0) {
-
                         // Count unique booking IDs (each booking = 1 group)
                         const uniqueBookingIds = [...new Set(bookingsToday.map(b => b.BookingId))];
-
                         displayText = uniqueBookingIds.length;
                         //console.log("uniqueBookingIds:", uniqueBookingIds);
                     }
@@ -1823,10 +1816,23 @@ async function renderBoard(bookingData = null) {
                     }
                 }
 
-                if (isBookingConfirmed) {
+                // 🚨 DAY-LEVEL OVERRIDE
+                // 🎯 CASE 1: FD booking → ONLY FD row red
+                if (hasFDBooking && shiftCode === "FD") {
                     finalColor = "danger";
                     textColor = "text-white";
                 }
+                // 🎯 CASE 2: Count (non-FD booking) → ONLY FD row red
+                else if (!hasFDBooking && hasAnyBooking && shiftCode === "FD") {
+                    finalColor = "danger";
+                    textColor = "text-white";
+                }
+                // 🎯 CASE 3: Actual booked slots → red
+                else if (isBookingConfirmed) {
+                    finalColor = "danger";
+                    textColor = "text-white";
+                }
+                // 🎯 CASE 4: Tentative / Blocked
                 else if (isBookingTentative) {
                     finalColor = "white";
                     textColor = "text-dark";
@@ -1835,6 +1841,7 @@ async function renderBoard(bookingData = null) {
                     finalColor = "dark";
                     textColor = "text-white";
                 }
+
 
                 const mergeStyle = spanCount > 1
                     ? `style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"`
@@ -1859,7 +1866,16 @@ async function renderBoard(bookingData = null) {
                 </div>`;
 
                 function getDisplayText() {
+                    if (hasFDBooking) return "FD";
 
+                    if (bookingCount > 0 && shiftCode === "FD") {
+                        return bookingCount;
+                    }
+
+                    return shiftCode;
+                }
+
+                function getDisplayText2() {
                     // If real FD booking
                     if (bookingsToday.some(b => b.ShiftCode === "FD")) {
                         return "FD";
@@ -5619,7 +5635,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "editData") {
                     resetBooking();
                     data = data[0];
-                    //console.log("editData - Booking API Response:", data);
+                    console.log("editData - Booking API Response:", data);
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
@@ -5659,6 +5675,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     const foodPackages = data.JSON_FoodPackage;
                     if (!Array.isArray(foodPackages) || foodPackages.length === 0) return;
+                    console.log("foodPackages:", foodPackages);
                     foodPackages.forEach((pkg, index) => {
                         if (index === 0) {
                             bindStaticFoodRow(pkg);
@@ -5769,7 +5786,7 @@ function bindStaticFoodRow(pkg) {
 
     // Addons
     const addOnsList = pkg.AddOnsList || [];
-    //console.log("#addOnsList:", addOnsList);
+    console.log("#addOnsList:", addOnsList);
     $("#foodPackage_AddOnItems").data("selected-addonitems", addOnsList);
     updateAddonButton($("#foodPackage_AddOnItems"), addOnsList);
 
@@ -5884,7 +5901,7 @@ function bindDynamicFoodRow($block, pkg) {
 
     // Addons
     const addOnsList = pkg.AddOnsList || [];
-    //console.log(".addOnsList:", addOnsList);
+    console.log(".addOnsList:", addOnsList);
     const $addonBtn = $row.find(".foodPackage_AddOnItems");
     $addonBtn.data("selected-addonitems", addOnsList);
     updateAddonButton($addonBtn, addOnsList);
@@ -6224,7 +6241,7 @@ function saveBooking() {
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
 
-    //console.log("Final Booking JSON:", bookingData);
+    console.log("Final Booking JSON:", bookingData);
 
     // 🔹 4. AJAX POST
     $.ajax({

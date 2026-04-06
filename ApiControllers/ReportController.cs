@@ -2,11 +2,13 @@
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Presentation;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
 using iTextSharp.text;
+using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +17,6 @@ using Newtonsoft.Json;
 //using SixLabors.Fonts;
 using System.Data;
 using System.Data.SqlClient;
-using iTextSharp.text.html.simpleparser;
 using iTextSharpFont = iTextSharp.text.Font;
 
 namespace ERPAdmin.ApiControllers
@@ -1626,10 +1627,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 DataTable dtCompany = new DataTable();
-                //DataSet dsReport = new DataSet();
-
-                BookingReportModel report = new BookingReportModel();
-                report.PackageItems = new List<PackageItem>();
+                DataTable dtBooking = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
@@ -1645,51 +1643,7 @@ namespace ERPAdmin.ApiControllers
                     cmd = new SqlCommand("Report_GetBooking_FunctionProspectusReport", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("@BookingId", SqlDbType.Int).Value = (object?)request.BookingId ?? DBNull.Value;
-                    //new SqlDataAdapter(cmd).Fill(dsReport);
-
-                    using (SqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        // --- First Result Set: Booking Header ---
-                        if (dr.Read())
-                        {
-                            report.BookingId = Convert.ToInt64(dr["BookingId"]);
-                            report.BookingRef = dr["BookingRef"].ToString();
-                            report.ClientName = dr["ClientName"].ToString();
-                            report.ContactNumber = dr["ContactNumber"].ToString();
-                            report.EventDate = dr["EventDate"].ToString();
-                            report.Property = dr["Property"].ToString();
-                            report.Pax = Convert.ToInt32(dr["Pax"]);
-                            report.Hall = dr["Hall"].ToString();
-                            report.Slot = dr["Slot"].ToString();
-                            report.Timing = dr["Timing"].ToString();
-                            report.BookedOn = dr["BookedOn"].ToString();
-                            report.EventType = dr["EventType"].ToString();
-                            report.HowReached = dr["HowReached"].ToString();
-                            report.Reference = dr["Reference"].ToString();
-                            report.UpdatedBy = dr["UpdatedBy"].ToString();
-                            report.UpdatedOn = dr["UpdatedOn"].ToString();
-                            report.Comment = dr["Comment"].ToString();
-
-                            report.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"].ToString();
-                            report.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"].ToString();
-                            report.Notes_FoodBeverage = dr["Notes_FoodBeverage"].ToString();
-                            report.Notes_EventTiming = dr["Notes_EventTiming"].ToString();
-                            report.Notes_DecorationSetup = dr["Notes_DecorationSetup"].ToString();
-                            report.Notes_TechnicalService = dr["Notes_TechnicalService"].ToString();
-                            report.Notes_GuestCustom = dr["Notes_GuestCustom"].ToString();
-                            report.Notes_FinancialInternal = dr["Notes_FinancialInternal"].ToString();
-
-                            report.PrimaryPackage = dr["PrimaryPackage"].ToString();
-                            report.RatePerPlate = dr["RatePerPlate"].ToString();
-
-                            report.Mukhwas = dr["Mukhwas"].ToString();
-                            report.TotalPaid = dr["TotalPaid"].ToString();
-                            report.OutstandingAmount = dr["OutstandingAmount"].ToString();
-                            report.BookingDiscount = dr["BookingDiscount"].ToString();
-                            report.PayableAmount = dr["PayableAmount"].ToString();
-                        }
-                    }
-
+                    new SqlDataAdapter(cmd).Fill(dtBooking);
                 }
 
                 // ================= ASSIGN & VALIDATION =================
@@ -1717,12 +1671,6 @@ namespace ERPAdmin.ApiControllers
                         companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
                         companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
                         stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
-
-                        report.CompanyName = propertyName;
-                        report.CompanyAddress = companyAddress;
-                        report.CompanyState = dtCompany.Rows[0]["StateName"].ToString();
-                        report.CompanyLogo = logoFile;
-                        report.Email = companyemail;
 
                         // ── Resolve logo path (same logic as before, just storing the path string) ──
                         if (!string.IsNullOrWhiteSpace(logoFile))
@@ -1830,7 +1778,96 @@ namespace ERPAdmin.ApiControllers
                 }
                 #endregion
 
+                if (dtBooking.Rows.Count == 0)
+                    return NotFound("No booking data found.");
+
+                DataRow row = dtBooking.Rows[0];
                 document.Open();
+
+                #region VARIABLES
+                // Helper (optional but clean)
+                string Get(string col) => row[col]?.ToString();
+
+                // CLIENT
+                string bookingId = Get("BookingId");
+                string clientName = Get("Client_Name");
+                string clientAddress = Get("Client_Address");
+                string clientEmail = Get("Client_Email");
+                string clientContact = Get("Client_Contact");
+                string clientGSTIN = Get("Client_GSTIN");
+                string clientState = Get("Client_State");
+
+                // BOOKING
+                string pax = Get("Booking_Pax");
+                string hallRent = Get("Booking_HallRent");
+                string leadReference = Get("LeadReference");
+                string menuType = Get("Booking_MenuType");
+                string bookingType = Get("Booking_Type");
+
+                // PAYMENT
+                string isGST = Get("PaymentSummary_IsGSTAccepted");
+                string decorationCharges = Get("PaymentSummary_DecorationCharges");
+                string roomCharges = Get("PaymentSummary_RoomCharges");
+                string soundSystemCharges = Get("PaymentSummary_SoundSystemCharges");
+                string projectorCharges = Get("PaymentSummary_ProjectorCharges");
+
+                string taxableAmount = Get("PaymentSummary_TaxableAmount");
+                string cgst = Get("PaymentSummary_CGST");
+                string sgst = Get("PaymentSummary_SGST");
+                string igst = Get("PaymentSummary_IGST");
+                string total = Get("PaymentSummary_Total");
+                string discount = Get("PaymentSummary_BookingDiscount_Total");
+                string payableAmount = Get("PaymentSummary_PayableAmount");
+
+                string paidAmount = Get("PaidAmount");
+                string outstandingAmount = Get("OutstandingAmount");
+
+                // EVENT
+                string eventName = Get("EventName");
+                string hallName = Get("HallName");
+                string eventDate = Get("EventDate");
+                string slot = Get("Slot");
+                string timeSlot = Get("TimeSlot");
+
+                string bookedOn = Get("BookedOn");
+                string bookedBy = Get("BookedBy");
+
+                string packageJson = Get("FoodPackageJSON");
+                List<PackageItem_FunctionProspect> packageItems = new List<PackageItem_FunctionProspect>();
+                if (!string.IsNullOrWhiteSpace(packageJson))
+                {
+                    packageItems = JsonConvert.DeserializeObject<List<PackageItem_FunctionProspect>>(packageJson);
+                }
+
+                // NOTES
+                string noteCustomer = Get("OtherCharges_BookingNoteForCustomer");
+                string noteInternal = Get("OtherCharges_InternalOfficeNote");
+                string notesFood = Get("Notes_FoodBeverage");
+                string notesTiming = Get("Notes_EventTiming");
+                string notesDecoration = Get("Notes_DecorationSetup");
+                string notesTechnical = Get("Notes_TechnicalService");
+                string notesGuest = Get("Notes_GuestCustom");
+                string notesFinancial = Get("Notes_FinancialInternal");
+                string tnc = Get("tnc");
+                #endregion
+
+                #region FONT DECLARATIONS
+                iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9); 
+                iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+
+                BaseColor summaryBg = new BaseColor(82, 86, 88);
+                iTextSharpFont whiteBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+
+                iTextSharpFont labelFontLeft = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
+                iTextSharpFont labelFontBoldLeft = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+
+                iTextSharpFont summaryLabelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+                iTextSharpFont summaryValueFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharpFont fontRupeeNormal = new iTextSharpFont(bf, 9, iTextSharpFont.NORMAL);
+                #endregion
 
                 // ===== TITLE LINES =====
                 //PdfPTable lineTop = new PdfPTable(1) { WidthPercentage = 100 };
@@ -1866,15 +1903,13 @@ namespace ERPAdmin.ApiControllers
                     leftTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
                 }
 
-                AddLeftRow("Booking Ref.", '#' + report.BookingRef);
-                AddLeftRow("Client Name", report.ClientName);
-                AddLeftRow("Contact Number", report.ContactNumber);
-                AddLeftRow("Event Date", report.EventDate);
-                AddLeftRow("Property", report.Property);
-                AddLeftRow("Pax", report.Pax.ToString());
-                AddLeftRow("Hall", report.Hall);
-                AddLeftRow("Slot", report.Slot);
-                AddLeftRow("Timing", report.Timing);
+                AddLeftRow("Booking Ref.", '#' + bookingId);
+                AddLeftRow("Client Name", clientName);
+                AddLeftRow("Contact No.", clientContact);
+                AddLeftRow("Address", clientAddress);
+                AddLeftRow("Email", clientEmail);
+                AddLeftRow("GSTIN", clientGSTIN);
+                AddLeftRow("State", clientState);
 
                 PdfPTable rightTable = new PdfPTable(1) { WidthPercentage = 100 };
                 void AddRightRow(string label, string value)
@@ -1885,108 +1920,170 @@ namespace ERPAdmin.ApiControllers
                     rightTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
                 }
 
-                AddRightRow("Booked on", report.BookedOn);
-                AddRightRow("Event", report.EventType);
-                AddRightRow("Company Name", report.CompanyName);
-                AddRightRow("Company Address", report.CompanyAddress);
-                AddRightRow("Email", report.Email);
+                AddRightRow("Pax", pax);
+                AddRightRow("Hall", hallName);
+                AddRightRow("Menu Type", menuType);
+                AddRightRow("Booking Type", bookingType);
+
+                AddRightRow("Event", eventName);
+                AddRightRow("Event Date", eventDate);
+                AddRightRow("Slot", slot);
+                AddRightRow("Timing", timeSlot);
+
+                //AddRightRow("Is GST Accepted?", isGST);
+                //AddRightRow("Hall Rent", hallRent);
+                //AddRightRow("Decoration Charges", decorationCharges);
+                //AddRightRow("Room Charges", roomCharges);
+                //AddRightRow("Sound System Charges", soundSystemCharges);
+                //AddRightRow("Projector Charges", projectorCharges);
 
                 detailsTable.AddCell(new PdfPCell(leftTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10 });
                 detailsTable.AddCell(new PdfPCell(rightTable) { Border = Rectangle.NO_BORDER, PaddingTop = 10, HorizontalAlignment = Element.ALIGN_RIGHT });
                 document.Add(detailsTable);
                 document.Add(new Paragraph("\n"));
 
-                // ===== PRIMARY FOOD PACKAGE =====
-                iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
-                iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                //FOOD PACKAGE & PAYMENT SUMMARY
+                // ===== WRAPPER TABLE (50:50) =====
+                PdfPTable wrapperTable = new PdfPTable(2) { WidthPercentage = 100 };
+                wrapperTable.SetWidths(new float[] { 1f, 1f }); // 50:50
+
+                // ================= LEFT: PACKAGE =================
                 PdfPTable packageTable = new PdfPTable(1) { WidthPercentage = 100 };
-                packageTable.AddCell(new PdfPCell(new Phrase($"PRIMARY FOOD PACKAGE : {report.PrimaryPackage}@ Rs.{report.RatePerPlate:N0} /Per Plate", boldFont))
+
+                int i = 1;
+                foreach (var pkg in packageItems)
+                {
+                    string line = packageItems.Count > 1
+                        ? $"FOOD PACKAGE {i++}: {pkg.FoodPackageName} @ Rs.{pkg.PerPlate:N0} / Per Plate"
+                        : $"FOOD PACKAGE: {pkg.FoodPackageName} @ Rs.{pkg.PerPlate:N0} / Per Plate";
+
+                    packageTable.AddCell(new PdfPCell(new Phrase(line, boldFont))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingTop = 6,
+                        PaddingBottom = 2
+                    });
+
+                    packageTable.AddCell(new PdfPCell(new Phrase(
+                        $"Pax: {pkg.Pax} | Total: Rs.{pkg.TotalCharges:N0}", normalFont))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingBottom = 6
+                    });
+                }
+
+                // Wrap LEFT into cell
+                wrapperTable.AddCell(new PdfPCell(packageTable)
                 {
                     Border = Rectangle.NO_BORDER,
-                    PaddingTop = 6,
-                    PaddingBottom = 6,
-                    HorizontalAlignment = Element.ALIGN_LEFT
+                    PaddingRight = 10, // spacing between columns
+                    VerticalAlignment = Element.ALIGN_TOP
                 });
-                document.Add(packageTable);
 
-                // ===== SUMMARY SECTION =====
-                // ===== LEFT + RIGHT SECTION (Details + Summary) =====
 
-                iTextSharpFont labelFontLeft = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
-                iTextSharpFont labelFontBoldLeft = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+                // ================= RIGHT: PAYMENT =================
+                PdfPTable paymentTable = new PdfPTable(2) { WidthPercentage = 100 };
+                paymentTable.SetWidths(new float[] { 0.65f, 0.35f });
 
-                iTextSharpFont summaryLabelFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
-                iTextSharpFont summaryValueFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
+                // Header
+                paymentTable.AddCell(new PdfPCell(new Phrase("PAYMENT SUMMARY", whiteBold))
+                {
+                    Colspan = 2,
+                    BackgroundColor = summaryBg,
+                    Border = Rectangle.BOX,
+                    BorderColor = BaseColor.LIGHT_GRAY,
+                    Padding = 6
+                });
 
-                BaseColor summaryBg = new BaseColor(82, 86, 88);
+                void AddAmountRow(string label, string value)
+                {
+                    paymentTable.AddCell(new PdfPCell(new Phrase(label, normalFont))
+                    {
+                        Border = Rectangle.BOX,
+                        BorderColor = BaseColor.LIGHT_GRAY,
+                        Padding = 4
+                    });
 
-                // Outer table (2 columns)
-                PdfPTable mainTable = new PdfPTable(2) { WidthPercentage = 100 };
-                mainTable.SetWidths(new float[] { 0.6f, 0.4f });
+                    paymentTable.AddCell(new PdfPCell(new Phrase($"₹ {Convert.ToDecimal(value):N0}", fontRupeeNormal))
+                    {
+                        Border = Rectangle.BOX,
+                        BorderColor = BaseColor.LIGHT_GRAY,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 4
+                    });
+                }
 
-                // ================= LEFT SIDE =================
-                leftTable = new PdfPTable(1) { WidthPercentage = 100 };
+                AddAmountRow("Deal Amount", taxableAmount);
+                AddAmountRow("Booking Discount", discount);
+                AddAmountRow("Payable Amount", payableAmount);
+                AddAmountRow("Total Paid", paidAmount);
+                AddAmountRow("Outstanding Amount", outstandingAmount);
 
-                leftTable.AddCell(new PdfPCell(new Phrase($"Updated By : {report.UpdatedBy}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-                leftTable.AddCell(new PdfPCell(new Phrase($"Updated On : {report.UpdatedOn}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-                leftTable.AddCell(new PdfPCell(new Phrase($"Comment : {report.Comment}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-                leftTable.AddCell(new PdfPCell(new Phrase($"How did you reach us? : {report.ReachUs}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
-                leftTable.AddCell(new PdfPCell(new Phrase($"Reference : {report.Reference}", labelFontLeft)) { Border = Rectangle.NO_BORDER, PaddingBottom = 4 });
+                if (request.IsWithPrice) {
+                    // Wrap RIGHT into cell
+                    wrapperTable.AddCell(new PdfPCell(paymentTable)
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingLeft = 10,
+                        VerticalAlignment = Element.ALIGN_TOP
+                    });
+                }
 
-                leftTable.AddCell(new PdfPCell(new Phrase("TERMS & CONDITIONS", labelFontBoldLeft))
+                // ===== FINAL ADD =====
+                document.Add(wrapperTable);
+                document.Add(new Paragraph("\n"));
+
+                // ================= BOOKING INFO =================
+                PdfPTable infoTable = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 10 };
+
+                //infoTable.AddCell(new PdfPCell(new Phrase("BOOKING DETAILS", boldFont))
+                //{
+                //    Border = Rectangle.NO_BORDER,
+                //    PaddingBottom = 6
+                //});
+
+                infoTable.AddCell(new PdfPCell(new Phrase($"Booked By : {bookedBy}", normalFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingBottom = 3
+                });
+
+                infoTable.AddCell(new PdfPCell(new Phrase($"Booked On : {bookedOn}", normalFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingBottom = 3
+                });
+
+                infoTable.AddCell(new PdfPCell(new Phrase($"Reference : {leadReference}", normalFont))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    PaddingBottom = 6
+                });
+                document.Add(infoTable);
+
+
+                // ================= TERMS & CONDITIONS =================
+                PdfPTable tncTable = new PdfPTable(1) { WidthPercentage = 100 };
+
+                tncTable.AddCell(new PdfPCell(new Phrase("TERMS & CONDITIONS", boldFont))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingTop = 6,
                     PaddingBottom = 6
                 });
 
-                mainTable.AddCell(new PdfPCell(leftTable)
+                // actual terms text
+                tncTable.AddCell(new PdfPCell(new Phrase(tnc ?? "", labelFont))
                 {
                     Border = Rectangle.NO_BORDER,
-                    VerticalAlignment = Element.ALIGN_TOP
+                    PaddingBottom = 10,
+                    MinimumHeight = 60f
                 });
 
-
-                // ================= RIGHT SIDE (AMOUNTS) =================
-                rightTable = new PdfPTable(2) { WidthPercentage = 100 };
-                rightTable.SetWidths(new float[] { 0.6f, 0.4f });
-
-                void AddAmountRow(string label, string value)
-                {
-                    rightTable.AddCell(new PdfPCell(new Phrase(label, summaryLabelFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        //BackgroundColor = summaryBg,
-                        HorizontalAlignment = Element.ALIGN_LEFT,
-                        Padding = 6
-                    });
-
-                    rightTable.AddCell(new PdfPCell(new Phrase($"₹ {value:N0}", summaryValueFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        //BackgroundColor = summaryBg,
-                        HorizontalAlignment = Element.ALIGN_RIGHT,
-                        Padding = 6
-                    });
-                }
-
-                AddAmountRow("Deal Amount", report.PayableAmount);
-                AddAmountRow("Booking Discount", report.BookingDiscount);
-                AddAmountRow("Payable Amount", report.PayableAmount);
-                AddAmountRow("Total Paid", report.TotalPaid);
-                AddAmountRow("Outstanding Amount", report.OutstandingAmount);
-
-                mainTable.AddCell(new PdfPCell(rightTable)
-                {
-                    Border = Rectangle.NO_BORDER,
-                    VerticalAlignment = Element.ALIGN_TOP
-                });
-
-                document.Add(mainTable);
-                document.Add(new Paragraph("\n"));
+                document.Add(tncTable);
 
                 // ===== SIGNATURES =====
-                PdfPTable signTable = new PdfPTable(3) { WidthPercentage = 100 };
+                PdfPTable signTable = new PdfPTable(3) { WidthPercentage = 100};
                 signTable.SetWidths(new float[] { 0.33f, 0.33f, 0.33f });
                 foreach (var sign in new[] { "Sales Manager's Sign.", "Banquet Manager's Sign.", "Guest's Sign" })
                 {
@@ -2038,14 +2135,14 @@ namespace ERPAdmin.ApiControllers
                 Paragraph notesPara = new Paragraph();
                 notesPara.SpacingBefore = 10;
 
-                AddNoteHtml(notesPara, "Customer Note:", report.OtherCharges_BookingNoteForCustomer);
-                AddNoteHtml(notesPara, "Internal Office Note:", report.OtherCharges_InternalOfficeNote);
-                AddNoteHtml(notesPara, "Food & Beverage Notes:", report.Notes_FoodBeverage);
-                AddNoteHtml(notesPara, "Event Timing Notes:", report.Notes_EventTiming);
-                AddNoteHtml(notesPara, "Decoration Setup Notes:", report.Notes_DecorationSetup);
-                AddNoteHtml(notesPara, "Technical Service Notes:", report.Notes_TechnicalService);
-                AddNoteHtml(notesPara, "Guest Custom Notes:", report.Notes_GuestCustom);
-                AddNoteHtml(notesPara, "Financial Internal Notes:", report.Notes_FinancialInternal);
+                AddNoteHtml(notesPara, "Customer Note:", noteCustomer);
+                AddNoteHtml(notesPara, "Internal Office Note:", noteInternal);
+                AddNoteHtml(notesPara, "Food & Beverage Notes:", notesFood);
+                AddNoteHtml(notesPara, "Event Timing Notes:", notesTiming);
+                AddNoteHtml(notesPara, "Decoration Setup Notes:", notesDecoration);
+                AddNoteHtml(notesPara, "Technical Service Notes:", notesTechnical);
+                AddNoteHtml(notesPara, "Guest Custom Notes:", notesGuest);
+                AddNoteHtml(notesPara, "Financial Internal Notes:", notesFinancial);
 
                 document.Add(notesPara);
 

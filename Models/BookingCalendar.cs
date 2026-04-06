@@ -248,6 +248,7 @@
         public float? AddOn_Rate { get; set; } = null;
         public long? AddOn_Pax { get; set; } = null;
         public float? AddOn_Total { get; set; } = null;
+
     }
 
 
@@ -384,21 +385,23 @@
     }
     public class GetFoodPackage_MenuIems
     {
-        public long? MenuItem_Id { get; set; } = null;
-        public string? MenuItem_Name { get; set; } = null;
         public long? MenuHeader_Id { get; set; } = null;
         public string? MenuHeader_Name { get; set; } = null;
-        public bool? MenuItem_IsAdded { get; set; } = null;
+        public long? Inclusion_Id { get; set; } = null;
+        public long? MenuItem_Id { get; set; } = null;
+        public string? MenuItem_Name { get; set; } = null;
+        public string? MenuItem_Name_NewAdded { get; set; }
+        public bool? IsChecked { get; set; } = null;
     }
     public class GetFoodPackage_AddOns
     {
-        public long? AddonCharges_HeaderId { get; set; } = null;
-        public string? AddonCharges_HeaderName { get; set; } = null;
-        public long? AddonCharges_ItemId { get; set; } = null;
-        public string? AddonCharges_ItemName { get; set; } = null;
-        public float? Rate { get; set; } = null;
-        public float? Pax { get; set; } = null;
-        public float? Total { get; set; } = null;
+        public long? AddOn_Header_Id { get; set; } = null;
+        public string? AddOn_Header_Name { get; set; } = null;
+        public long? AddOn_Item_Id { get; set; } = null;
+        public string? AddOn_Item_Name { get; set; } = null;
+        public float? AddOn_Rate { get; set; } = null;
+        public float? AddOn_Pax { get; set; } = null;
+        public float? AddOn_Total { get; set; } = null;
     }
 
 
@@ -489,6 +492,19 @@
         public decimal Amount { get; set; }
         public string? Addon { get; set; }
         public decimal Total { get; set; }
+    }
+
+    public class PackageItem_FunctionProspect
+    {
+        public string? FoodPackageName { get; set; }
+        public string? PerPlate { get; set; }
+        public string? PackageCost { get; set; }
+        public string? Addons { get; set; }
+        public string? GST { get; set; }
+        public string? TotalCharges { get; set; }
+        public string? FoodPackageTitleName { get; set; }
+        public string? Pax { get; set; }
+        public string? FoodPackageDateTime { get; set; }
     }
 
 }

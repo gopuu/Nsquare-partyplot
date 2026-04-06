@@ -1963,7 +1963,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table
-                    fillPaymentTrailTable(data.PaymentTrailList);
+                    fillPaymentTrailTable(data.PaymentTrailList, bookingId);
 
                     // Food Package and Selected Menu
                     $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
@@ -1994,7 +1994,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
     });
 }
 // Fill Payment Trail dynamically
-function fillPaymentTrailTable(paymentList = []) {
+function fillPaymentTrailTable(paymentList = [], bookingId) {
     const tbody = $("#bookingReport_PaymentTrailBody");
     tbody.empty(); // Clear old data
 
@@ -2033,7 +2033,7 @@ function fillPaymentTrailTable(paymentList = []) {
                     }
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}">
+                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}" data-bookingid="${bookingId}">
                             <i class="fa-solid fa-file-invoice text-primary"></i>
                         </button>
                     </td>
@@ -2734,7 +2734,7 @@ function loadPaymentHistory(bookingId) {
                     $(".btn-payment-download-all").removeClass("d-none");
                 }
                 $("#paymentModal").modal("show");
-                renderPaymentTable(res.data || []);
+                renderPaymentTable( (res.data || []) , bookingId);
             } else {
                 Swal.fire("Error", res?.message || "Failed to fetch payments!", "error");
             }
@@ -2746,7 +2746,7 @@ function loadPaymentHistory(bookingId) {
 }
 
 // -- RENDER TABLE ---
-function renderPaymentTable(data) {
+function renderPaymentTable(data, bookingId) {
 
     // Destroy existing DataTable if exists
     if ($.fn.dataTable && $.fn.dataTable.isDataTable("#tblPaymentHistory table")) {
@@ -2773,7 +2773,7 @@ function renderPaymentTable(data) {
                 title: "Receipt",
                 className: "text-center",
                 render: function (row) {
-                    return `<button class="btn btn-sm btn-outline-primary btn-payment-download" data-id="${row.PaymentId}">
+                    return `<button class="btn btn-sm btn-outline-primary btn-payment-download" data-id="${row.PaymentId}" data-bookingid="${bookingId}">
                                 <i class="fas fa-download"></i>
                             </button>`;
                 }
@@ -2788,7 +2788,7 @@ function renderPaymentTable(data) {
 // -- Download receipt - button click --
 $(document).on("click", ".btn-payment-download", function () {
     let paymentId = $(this).data("id");
-    let bookingId = 0; // getBookingId();
+    let bookingId = $(this).data("bookingid");  //getBookingId();
     let actionBy = Number(sessionStorage.getItem("userId") ?? "0");
 
     var payload = {
@@ -2796,7 +2796,6 @@ $(document).on("click", ".btn-payment-download", function () {
         BookingId: bookingId,
         ActionBy: actionBy
     };
-
     var url = "/api/Booking_Payments/DownloadPaymentReceipt";
     downloadReport(url, payload, "Generating Receipt...");
 });
