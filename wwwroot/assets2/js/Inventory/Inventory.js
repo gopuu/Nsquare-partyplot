@@ -184,7 +184,7 @@ function renderTable(data) {
 
                     <td class="bg-warning-gradient">
                         <div class="input-group input-group-sm" style="width: 200px;">
-                            <input type="number" min="0" step="0.01"
+                            <input type="number" min="0" step="1"
                                    class="form-control stock-outward-qty"
                                    id="${inputId}" placeholder="Stock Outward">
                             <span class="input-group-text px-2">/ ${escapeHtml(r.UnitName || '')}</span>

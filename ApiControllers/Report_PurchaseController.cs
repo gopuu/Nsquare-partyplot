@@ -679,12 +679,14 @@ namespace ERPAdmin.ApiControllers
 
                 using var stream = new MemoryStream();
 
-                bool isA4size = true; // default to A4
                 Document document = null;
+
+                document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                bool isA4size = true; // default to A4
                 if (dsReport.Tables[2].Columns.Count > 7)
                 {
-                    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
-                    isA4size = false;
+                    //document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                    //isA4size = false; //force A4 size
                 }
                 else
                 {

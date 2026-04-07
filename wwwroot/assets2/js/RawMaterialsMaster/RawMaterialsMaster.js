@@ -950,7 +950,7 @@ function renderConversionRows() {
                 <span class="input-group-text">=</span>
 
                 <input type="number"
-                       step="0.01"
+                       step="1"
                        class="form-control conversion-input"
                        value="${isSame ? 1 : ""}"
                        ${isSame ? "readonly" : ""}>

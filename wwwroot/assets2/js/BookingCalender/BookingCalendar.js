@@ -3499,7 +3499,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                        class="form-control text-end wastageInput"
                                        value="${wastage}"
                                        min="0"
-                                       step="0.01">
+                                       step="1">
                             </td>
                         </tr>
                     `;
@@ -5219,7 +5219,7 @@ function addIngredientRow(data = {}) {
                 </td>
 
                 <td>
-                    <input type="number" class="form-control ing-qty" min="0" step="0.01" value="${data.Quantity || ''}">
+                    <input type="number" class="form-control ing-qty" min="0" step="1" value="${data.Quantity || ''}">
                 </td>
 
                 <td>
@@ -7188,7 +7188,7 @@ $("#btnAddVendorParticular").on("click", function () {
                                        class="form-control form-control-sm vw-amount"
                                        value="0"
                                        min="0"
-                                       step="0.01">
+                                       step="1">
                             </td>
                             <td>
                                 <input type="number"

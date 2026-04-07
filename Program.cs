@@ -111,6 +111,7 @@ app.UseSwaggerUI(c =>
 //SignalR - ✅ Map hubs AFTER Build
 app.MapHub<SettingsHub>("/settingsHub");
 app.MapHub<QuotationHub>("/quotationHub");
+app.MapHub<PurchaseHub>("/purchaseHub");
 
 // Read custom error settings from appsettings.json
 var config = builder.Configuration;

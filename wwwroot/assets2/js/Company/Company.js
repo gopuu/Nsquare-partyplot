@@ -2900,7 +2900,7 @@ function renderPackageRow(pkg = { Id: 0, PackageName: "", RatePerPerson: "", Inc
                     <input type="text" class="form-control" value="${pkg.PackageName}" placeholder="Package Name">
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control" value="${pkg.RatePerPerson}" placeholder="Rate/PP">
+                    <input type="number" step="1" class="form-control" value="${pkg.RatePerPerson}" placeholder="Rate/PP">
                 </td>
                 <td>
                     <input type="hidden" class="inclusion-data" value='${JSON.stringify(Array.isArray(pkg.InclusionList) ? pkg.InclusionList : [])}'>
@@ -3248,7 +3248,7 @@ function generateFoodItemRow_charges() {
             <div class="input-group mb-2 addon-charge-row">
                 <input type="hidden" class="addon-charge-id" />
                 <input type="text" class="form-control addon-charge-name" placeholder="Food Item Name" />
-                <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" placeholder="Amount" />
+                <input type="number" step="1" class="form-control addon-charge-amount ms-2" placeholder="Amount" />
                 <input type="text" class="form-control addon-charge-description ms-2" placeholder="Description (optional)" />
                 <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge(this)">X</button>
             </div>
@@ -3366,7 +3366,7 @@ function loadAddonCharges() {
                                 <div class="input-group mb-2 addon-charge-row">
                                     <input type="hidden" class="addon-charge-id" value="${charge.Id || 0}" />
                                     <input type="text" class="form-control addon-charge-name" value="${charge.ItemName || ''}" placeholder="Charge Name" />
-                                    <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" value="${charge.Amount || 0}" placeholder="Amount" />
+                                    <input type="number" step="1" class="form-control addon-charge-amount ms-2" value="${charge.Amount || 0}" placeholder="Amount" />
                                     <input type="text" class="form-control addon-charge-description ms-2" value="${charge.Description || ''}" placeholder="Description" />
                                     <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge(this)">X</button>
                                 </div>

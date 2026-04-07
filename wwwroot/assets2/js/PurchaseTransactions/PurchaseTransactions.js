@@ -6,6 +6,13 @@
     loadAccountDropdown();
     loadPaymentModeDropdown();
 
+    //When Purchase Update
+    AppSignalR.subscribePurchase((data) => {
+        //console.log("SignalR: Purchase Updated");
+        fetchPurchaseTransactions();
+    });
+
+
     // ================= FILTER UI HANDLING =================
     $(document).on("change", "#ddlDuration", function () {
         let val = $(this).val();

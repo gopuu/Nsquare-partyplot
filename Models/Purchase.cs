@@ -1,8 +1,73 @@
-﻿using System.Transactions;
+﻿//using System.Transactions;
 
 namespace ERPAdmin.Models
 {
 
+    #region Purchase GRID
+    public class GetPurchaseListGridRequest
+    {
+        public string? PONo { get; set; }
+        public string? InvoiceNo { get; set; }
+        public string? FilterSearchText { get; set; }
+        public long SupplierId { get; set; }
+        public string? EventFrom { get; set; }
+        public string? EventTo { get; set; }
+        public string? FilterDuration { get; set; }
+        public int PaymentStatusId { get; set; }
+    }
+    public class GetPurchaseListGridModel
+    {
+        public long Id { get; set; }
+        public string? SupplierName { get; set; }
+        public string? InvoiceDate { get; set; }
+        public string? InvoiceNo { get; set; }
+        public string? PONo { get; set; }
+
+        public decimal SubTotalAmount { get; set; }
+        public decimal Tax { get; set; }
+        public decimal OtherCharges { get; set; }
+        public decimal Discount { get; set; }
+        public decimal TotalAmount { get; set; }
+
+        public decimal PaidAmount { get; set; }
+        public decimal OutstandingAmount { get; set; }
+
+        public string? CreatedBy { get; set; }
+        public string? CreatedOn { get; set; }
+        public string? ModifiedOn { get; set; }
+        public string? PaymentStatus { get; set; }
+    }
+    public class GetPurchaseListGridTotals
+    {
+        public int TotalRecords { get; set; }
+        public decimal TotalSubTotalAmount { get; set; }
+        public decimal TotalTax { get; set; }
+        public decimal TotalOtherCharges { get; set; }
+        public decimal TotalDiscount { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal TotalPaidAmount { get; set; }
+        public decimal TotalOutstandingAmount { get; set; }
+    }
+    #endregion
+
+    #region REPORT GRID
+    public class GetPurchaseListGridReport_Request : BaseClass
+    {
+        public string? PONo { get; set; }
+        public string? InvoiceNo { get; set; }
+        public string? FilterSearchText { get; set; }
+        public long SupplierId { get; set; }
+        public string? EventFrom { get; set; }
+        public string? EventTo { get; set; }
+        public string? FilterDuration { get; set; }
+        public int PaymentStatusId { get; set; }
+        //default
+        public List<string>? Columns { get; set; }
+        public bool? WithHeader { get; set; }
+
+    }
+
+    #endregion
     //GET
     public class GetPurchaseListModel
     {
@@ -82,7 +147,7 @@ namespace ERPAdmin.Models
         public string? InvoiceNo { get; set; }
     }
 
-    //SAVE
+    #region SAVE
     public class SavePurchaseRequest : BaseClass
     {
         public long Id { get; set; }
@@ -143,20 +208,30 @@ namespace ERPAdmin.Models
         public decimal IGST { get; set; }
         public bool IsSelected { get; set; }
     }
+    #endregion
 
+    #region DELETE
     //DELETE
     public class DeletePurchaseRequest : BaseClass
     {
         public long Id { get; set; }
     }
+    #endregion
 
-    //Widgets
-    public class PurchaseWidgetDto
+    #region WIDGET
+    public class PurchaseWidget_Response
     {
-        public string? GrandTotal_Amount { get; set; }
-        public string? Outstanding_Amount { get; set; }
-        public string? TaxPaidToSeller { get; set; }
+        public string? TotalOrders { get; set; }
+        public string? TotalAmount { get; set; }
+        public string? TotalOutstandingAmount { get; set; }
     }
+    public class PurchaseWidget_Request
+    {
+        public string? EventFrom { get; set; }
+        public string? EventTo { get; set; }
+        public string? FilterDuration { get; set; }
+    }
+    #endregion
 
 
     //All txn - Request model – Get transactions

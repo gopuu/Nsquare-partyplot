@@ -14,3 +14,10 @@ public class QuotationHub : Hub
         await Clients.All.SendAsync("OnQuotationChanged");
     }
 }
+public class PurchaseHub : Hub
+{
+    public async Task NotifyPurchaseChanged()
+    {
+        await Clients.All.SendAsync("OnPurchaseChanged");
+    }
+}

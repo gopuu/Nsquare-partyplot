@@ -54,7 +54,7 @@ $(".sort-option").on("click", function (e) {
     $(this).addClass("active");
 
     $("#sortByDropdown").text("Filter : " + $(this).text());
-    $(".sub_count").text("In " + $(this).text());
+    //$(".sub_count").text("In " + $(this).text());
 
     // --------------------------
     // MonthDuration ke hisab se From/To date set karna
@@ -96,7 +96,7 @@ $(".sort-option").on("click", function (e) {
     }
 
     // Store selected filter in session
-    sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
+    //sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
 
     $("#fltEventFrom").val(formatDate2(fromDate));
     $("#fltEventTo").val(formatDate2(toDate));
@@ -114,7 +114,7 @@ $("#fltEventFrom, #fltEventTo").on("change", function () {
         selectedMonthDuration = "customrange";
 
         $("#sortByDropdown").text("Filter : Custom Range");
-        $(".sub").text("In Custom Range");
+        //$(".sub").text("In Custom Range");
 
         $(".sort-option").removeClass("active");
 
@@ -1106,7 +1106,6 @@ $(function () {
             updateLabel(visible);
         });
     }    
-
     //Widgets hide/show -- START --------------
     initToggle({
         containerId: "#invoiceWidgets",

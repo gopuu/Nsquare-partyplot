@@ -1,15 +1,49 @@
 ﻿let rowIndex = 0;
-//var nextPONumber = 0;
-//var nextInvoiceNumber = 0;
+
+const REPORT_COLUMNS_PURCHASE_INVOICE = [
+    { key: "SrNo", label: "Sr No" },
+    { key: "Supplier", label: "Supplier" },
+    { key: "InvoiceDate", label: "Invoice Date" },
+    { key: "InvoiceNo", label: "Invoice No" },
+    { key: "PONo", label: "PO No" },
+    { key: "Subtotal", label: "SubTotal" },
+    { key: "Tax", label: "Tax" },
+    { key: "Other", label: "Other Charges" },
+    { key: "Discount", label: "Discount" },
+    { key: "Total", label: "Total" },
+    { key: "Paid", label: "Paid" },
+    { key: "Outstanding", label: "Outstanding" },
+    { key: "CreatedBy", label: "Created By" },
+    { key: "Status", label: "Status" }
+];
+
+let selectedColumns = REPORT_COLUMNS_PURCHASE_INVOICE.map(c => c.key);
+const HEADER_KEY = "gstCustomerInvoicePrintWithHeader";
+
+let selected_widgetPurchaseDuration = "thismonth";
+let selected_widgetOutstandingDuration = "thismonth";
+
 
 $(document).ready(function () {
+    setCurrentMonthDates();
+
+    //DROPDOWNS
     loadStateDropdown();
     loadSupplierDropdown();
     loadRawMaterialsDropdown();
     loadUnitDropdown();
     loadPaymentModeDropdown();
     loadAccountDropdown();
+
+    $("#purchaseFilter").data("value", "thismonth");
+    loadWidgetsData();
     fetchData();
+
+    AppSignalR.subscribePurchase((data) => {
+        //console.log("SignalR: Purchase Updated");
+        loadWidgetsData();
+        fetchData();
+    });
 
     // Add button click
     $(document).on('click', '#btn-add', function (event) {
@@ -56,108 +90,124 @@ $(document).ready(function () {
         let rowData = table.row($(this).closest("tr")).data();
 
         if (!rowData) return;
+        let purchaseId = rowData.Id;
 
-        //console.log("EDIT DATA:", rowData);
+        var payload = {
+            Id: purchaseId,
+            SupplierId: 0,
+            InvoiceNo: ""
+        };
+        $.ajax({
+            url: "/api/Purchase/GetPurchaseList",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                let data = response?.data ?? [];
+                if (!data.length) {
+                    Swal.fire("Error", "Data not found", "error");
+                    return;
+                }
+                rowData = data[0]; // single record
+                //console.log("rowData edit:", rowData);
+                // =========================================
+                // BASIC HEADER
+                // =========================================
+                $("#purchaseId").val(rowData.Id);
 
-        // =========================================
-        // BASIC HEADER
-        // =========================================
-        $("#purchaseId").val(rowData.Id);
+                $("#purchaseFromSupplier").val(rowData.PurchaseFrom);
+                $("#purchaseSupplier").val(rowData.SupplierId);
 
-        $("#purchaseFromSupplier").val(rowData.PurchaseFrom);
-        $("#purchaseSupplier").val(rowData.SupplierId);
+                $("#purchaseInvoiceDate").val(rowData.InvoiceDate ?? "");
+                $("#purchaseInvoiceNo").val(rowData.InvoiceNo);
+                $("#purchasePONo").val(rowData.PONo);
 
-        $("#purchaseInvoiceDate").val(rowData.InvoiceDate ?? "");
-        $("#purchaseInvoiceNo").val(rowData.InvoiceNo);
-        $("#purchasePONo").val(rowData.PONo);
+                // SET INVOICE URL
+                $("#invoiceFileLink").val(rowData.UploadInvoiceFile || "");
+                // If URL present → show download button
+                if (rowData.UploadInvoiceFile && rowData.UploadInvoiceFile !== "") {
+                    $("#btnDownloadInvoice").removeClass("d-none");
+                }
+                else {
+                    $("#btnDownloadInvoice").addClass("d-none");
+                }
 
-        // SET INVOICE URL
-        $("#invoiceFileLink").val(rowData.UploadInvoiceFile || "");
-        // If URL present → show download button
-        if (rowData.UploadInvoiceFile && rowData.UploadInvoiceFile !== "") {
-            $("#btnDownloadInvoice").removeClass("d-none");
-        }
-        else {
-            $("#btnDownloadInvoice").addClass("d-none");
-        }
+                // =========================================
+                // DISCOUNT SECTION
+                // =========================================
+                $("input[name='discountType'][value='" + rowData.DiscountType + "']").prop("checked", true);
+                $("#discountValue").val(rowData.TotalDiscountInInvoice);
+                $("#discountCalc").text(rowData.DiscountPercentage);
+                $("input[name='discountTaxType'][value='" + rowData.DetermineWhenTaxApplicable + "']").prop("checked", true);
 
-        // =========================================
-        // DISCOUNT SECTION
-        // =========================================
-        $("input[name='discountType'][value='" + rowData.DiscountType + "']").prop("checked", true);
-        $("#discountValue").val(rowData.TotalDiscountInInvoice);
-        $("#discountCalc").text(rowData.DiscountPercentage);
-        $("input[name='discountTaxType'][value='" + rowData.DetermineWhenTaxApplicable + "']").prop("checked", true);
+                // =========================================
+                // OTHER CHARGES
+                // =========================================
+                $("#deliveryCharge").val(rowData.DeliveryChargeIncludedInInvoice);
+                $("#deliveryCGST").val(rowData.DeliveryCharge_CGST);
+                $("#deliverySGST").val(rowData.DeliveryCharge_SGST);
 
-        // =========================================
-        // OTHER CHARGES
-        // =========================================
-        $("#deliveryCharge").val(rowData.DeliveryChargeIncludedInInvoice);
-        $("#deliveryCGST").val(rowData.DeliveryCharge_CGST);
-        $("#deliverySGST").val(rowData.DeliveryCharge_SGST);
+                // =========================================
+                // TAX SECTION
+                // =========================================
+                $("#tcsPercent").val(rowData.TCS_Percent);
+                $("#tcsCalc").text(rowData.TCS_Percent);
+                $("#tdsPercent").val(rowData.TDS_Percent);
+                $("#tdsCalc").text(rowData.TDS_Percent);
 
-        // =========================================
-        // TAX SECTION
-        // =========================================
-        $("#tcsPercent").val(rowData.TCS_Percent);
-        $("#tcsCalc").text(rowData.TCS_Percent);
-        $("#tdsPercent").val(rowData.TDS_Percent);
-        $("#tdsCalc").text(rowData.TDS_Percent);
+                // =========================================
+                // PAYMENT TYPE
+                // =========================================
+                if (rowData.PaymentType == 2) {
+                    $("#payPaid").prop("checked", true);
+                    $("#payUnpaid").prop("checked", false);
+                }
+                else {
+                    $("#payUnpaid").prop("checked", true);
+                    $("#payPaid").prop("checked", false);
+                }
 
-        // =========================================
-        // PAYMENT TYPE
-        // =========================================
-        if (rowData.PaymentType == 2) {
-            $("#payPaid").prop("checked", true);
-            $("#payUnpaid").prop("checked", false);
-        }
-        else {
-            $("#payUnpaid").prop("checked", true);
-            $("#payPaid").prop("checked", false);
-        }
+                // Set values BEFORE triggering change
+                $("#paymentDate").val(rowData.PaymentDate || "");
+                $("#paidAmount").val(rowData.PaidAmount || 0);
+                $("#paymentModeId").val(rowData.PaymentModeId || 0);
+                $("#paymentAccountId").val(rowData.PaymentAccountId || 0);
+                $("#paymentRefNo").val(rowData.PaymentRefNo || "");
+                $("#paymentRemarks").val(rowData.PaymentRemarks || "");
 
-        // Set values BEFORE triggering change
-        $("#paymentDate").val(rowData.PaymentDate || "");
-        $("#paidAmount").val(rowData.PaidAmount || 0);
-        $("#paymentModeId").val(rowData.PaymentModeId || 0);
-        $("#paymentRefNo").val(rowData.PaymentRefNo || "");
+                // NOW trigger change once everything is set
+                $("input[name='paymentType']:checked").trigger("change");
 
-        // NOW trigger change once everything is set
-        $("input[name='paymentType']:checked").trigger("change");
+                // =========================================
+                // RELOAD MATERIAL ROWS
+                // =========================================
+                $("#purchaseItemsBody").empty();
+                rowIndex = 0;
+                if (rowData.JSON_PurchaseItems && rowData.JSON_PurchaseItems.length > 0) {
+                    rowData.JSON_PurchaseItems.forEach(item => {
+                        rowIndex++;
 
+                        let newRow = buildRowForEdit(item);
+                        $("#purchaseItemsBody").append(newRow);
+                    });
+                }
+                else {
+                    addInitialRow();
+                }
 
-        // =========================================
-        // RELOAD MATERIAL ROWS
-        // =========================================
-        $("#purchaseItemsBody").empty();
-        rowIndex = 0;
+                updateSrNo();
+                calculateSubTotals();
 
-        if (rowData.JSON_PurchaseItems && rowData.JSON_PurchaseItems.length > 0) {
-
-            rowData.JSON_PurchaseItems.forEach(item => {
-                rowIndex++;
-
-                let newRow = buildRowForEdit(item);
-                $("#purchaseItemsBody").append(newRow);
-            });
-
-        } 
-        else {
-            addInitialRow();
-        }
-
-        updateSrNo();
-        calculateSubTotals();
-        calculateDiscount();
-        calculateOtherCharges();
-        calculateTaxes();
-        calculateGrandTotal();
-
-        // =========================================
-        // OPEN MODAL
-        // =========================================
-        $("#addEventModalTitle").text("Edit Purchase Invoice");
-        $("#addEventModal").modal("show");
+                // =========================================
+                // OPEN MODAL
+                // =========================================
+                $("#addEventModalTitle").text("Edit Purchase Invoice");
+                $("#addEventModal").modal("show");
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Fetch Purchase for Edit failed");
+            }
+        });
     });
 
     // SAVE - Handle form submission
@@ -309,16 +359,17 @@ $(document).ready(function () {
                         }).then((result) => {
 
                             if (result.isConfirmed) {
-                                var paymentId = response.data.PaymentId;
+                                purchaseId = response.data.PurchaseId;
                                 downloadPurchaseInvoice(purchaseId, invoiceNo);
                             }
                             // ❌ If NO → do nothing (flow continues)
 
                             // 🔁 Reload payment list if needed
                             resetFormFields(); // Reset form fields when modal is shown
-                            fetchData();
+                            //fetchData();
+                            //loadWidgetsData();
                         });
-                        //$("#addEventModal").modal("hide");
+                        $("#addEventModal").modal("hide");
                     }
                     else {
                         Swal.fire("Error", response.message, "error");
@@ -378,7 +429,6 @@ $(document).ready(function () {
             ActionBy: sessionStorage.getItem("userId") ?? 0
         };
 
-        $('#btn-loader').show();
         $.ajax({
             url: "/api/Purchase/DeletePurchase",
             type: "POST",
@@ -401,8 +451,8 @@ $(document).ready(function () {
                         icon: "error"
                     });
                 }
-                fetchData();
-                //$('#btn-loader').hide();
+                //fetchData();
+                //loadWidgetsData();
                 $('#deleteRecordModal').modal('hide');
             },
             error: function (xhr, status, error) {
@@ -442,7 +492,7 @@ $(document).ready(function () {
 
         let currentQty = $(this).find("option:selected").data("currentqty") ?? 0;
         $(this).closest("td").find(".stockHint")
-            .text("Stock: " + currentQty)
+            .text("Current Stock: " + currentQty)
             .removeClass("d-none");
     });
 
@@ -528,7 +578,21 @@ $(document).ready(function () {
     });
     //btnSaveOutstanding
     $("#btnSaveOutstanding").click(function () {
+        const remaining = Number($("#outRemainingAmount").val()) || 0;
 
+        const payload = {
+            PurchaseId: Number($("#outPurchaseId").val()),
+            PaymentDate: $("#outPaymentDate").val(),
+            PaidAmount: Number($("#outPaidAmount").val()),
+            PaymentModeId: Number($("#outPaymentModeId").val()),
+            AccountId: Number($("#outAccountId").val()),
+            ReferenceNo: $("#outReferenceNo").val(),
+            Remarks: $("#outRemarks").val(),
+            ChequeBank: $("#outChequeBank").val(),
+            ChequeNo: $("#outChequeNo").val(),
+            ChequeDate: $("#outChequeDate").val(),
+            ActionBy: Number(sessionStorage.getItem("userId") || 0)
+        };
         /* ================= BASIC REQUIRED CHECK ================= */
         if (!payload.PaymentDate) {
             Swal.fire("Warning", "Payment Date is required", "warning");
@@ -565,23 +629,6 @@ $(document).ready(function () {
             $("#outPaidAmount").focus();
             return false;
         }
-
-        const remaining = Number($("#outRemainingAmount").val()) || 0;
-
-        const payload = {
-            PurchaseId: Number($("#outPurchaseId").val()),
-            PaymentDate: $("#outPaymentDate").val(),
-            PaidAmount: Number($("#outPaidAmount").val()),
-            PaymentModeId: Number($("#outPaymentModeId").val()),
-            AccountId: Number($("#outAccountId").val()),
-            ReferenceNo: $("#outReferenceNo").val(),
-            Remarks: $("#outRemarks").val(),
-            ChequeBank: $("#outChequeBank").val(),
-            ChequeNo: $("#outChequeNo").val(),
-            ChequeDate: $("#outChequeDate").val(),
-            ActionBy: Number(sessionStorage.getItem("userId") || 0)
-        };
-
         $.ajax({
             url: "/api/Purchase/SavePurchaseOutstandingPayment",
             type: "POST",
@@ -589,7 +636,7 @@ $(document).ready(function () {
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    Swal.fire("Success", res.message, "success");
+                    handleApiSuccess(res.message)
                     $("#outstandingPaymentModal").modal("hide");
                     fetchData(); // reload grid
                 }
@@ -637,119 +684,378 @@ $(document).ready(function () {
         document.body.removeChild(tempLink);
     });
 
-    //Vendor Widget -------------- START ------------------------    
-    let selectedVendorDuration = "thismonth";
-    loadVendorPayables(selectedVendorDuration);
-
-    $(".chart-filter-Vendor .payment-option").on("click", function (e) {
-        e.preventDefault();
-
-        const newFilter = $(this).data("value");
-        if (selectedVendorDuration === newFilter) return;
-
-        selectedVendorDuration = newFilter;
-
-        $(".payment-option").removeClass("active");
-        $(this).addClass("active");
-
-        $("#VendorChartFilter").text($(this).text());
-        loadVendorPayables(selectedVendorDuration);
-    });
-    //Vendor Widget -------------- END ------------------------
-
     $(document).on("click", ".btn-download-invoice", function () {
         const purchaseId = $(this).data("id");
         const invoiceNo = $(this).data("invoice");
         downloadPurchaseInvoice(purchaseId, invoiceNo);
     });
+
+    function initToggle({ containerId, toggleId, labelId, storageKey, showText, hideText, messageId = null }) {
+        const container = $(containerId);
+        const toggle = $(toggleId);
+        const label = $(labelId);
+        const message = messageId ? $(messageId) : null; // ✅ FIX
+
+        function updateLabel(isVisible) {
+            label.text(isVisible ? hideText : showText);
+        }
+
+        const isHidden = localStorage.getItem(storageKey);
+        const isVisible = isHidden !== "true";
+
+        container.toggle(isVisible);
+
+        if (message) {
+            message.toggle(!isVisible); // ✅ safe
+        }
+
+        toggle.prop("checked", isVisible);
+        updateLabel(isVisible);
+
+        toggle.off("change").on("change", function () {
+            const visible = $(this).is(":checked");
+
+            if (visible) {
+                container.stop(true, true).slideDown(200);
+                if (message) message.hide(); // ✅ safe
+            } else {
+                container.stop(true, true).slideUp(200);
+                if (message) message.show(); // ✅ safe
+            }
+
+            localStorage.setItem(storageKey, visible ? "false" : "true");
+            updateLabel(visible);
+        });
+    }
+    //Widgets hide/show -- START --------------
+    initToggle({
+        containerId: "#purchaseWidgets",
+        toggleId: "#toggleWidgets",
+        labelId: "#widgetLabel",
+        storageKey: "hidepurchaseWidgets",
+        showText: "Show Widgets",
+        hideText: "Hide Widgets"
+    });
+    //Widgets hide/show -- END --------------
+
 });
 
-//Widgets  -- START ------------------------------------------------------------
-// Fetch widget data
-function loadWidgetsData() {
-
-    $.ajax({
-        url: "/api/Purchase/GetPurchaseList_Widgets",
-        method: "GET",
-        contentType: "application/json",
-        success: function (res) {
-            //console.log("res widgets:", res);
-            if (res.status && res.status.toLowerCase() === "success" && res.data) {
-                $("#widget_total_purchase").text(res.data.GrandTotal_Amount);
-                $("#widget_outstanding").text(res.data.Outstanding_Amount);
-                $("#widget_tax_paid").text(res.data.TaxPaidToSeller);
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Purchase Counts Fetch Error");
-        }
-    });
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fltInvoiceFrom").val(formatDate2(firstDay));
+    $("#fltInvoiceTo").val(formatDate2(lastDay));
 }
 
-function loadVendorPayables(monthDuration, fromDate = null, toDate = null) {
+let selectedMonthDuration2 = "thismonth"; // ✅ default
+$(".filter-option2").on("click", function (e) {
+    e.preventDefault();
+    let newFilter = $(this).data("value");
+
+    // agar same filter, kuch mat karo
+    if (selectedMonthDuration2 === newFilter) return;
+    selectedMonthDuration2 = newFilter;
+
+    // dropdown active class manage
+    $(".filter-option2").removeClass("active");
+    $(this).addClass("active");
+
+    $("#purchaseFilter").text("Filter : " + $(this).text());
+    //$(".sub_count").text("In " + $(this).text());
+
+    // --------------------------
+    // MonthDuration ke hisab se From/To date set karna
+    // --------------------------
+    let today = new Date();
+    let fromDate, toDate;
+    $("#customDateRange2").slideUp(150);
+
+    if (selectedMonthDuration2 === "thismonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+    else if (selectedMonthDuration2 === "lastmonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+    else if (selectedMonthDuration2 === "last7days") { // Last 7 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 6);
+        toDate = today;
+    }
+    else if (selectedMonthDuration2 === "last30days") { // Last 30 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 29);
+        toDate = today;
+    }
+    else if (selectedMonthDuration2 === "yesterday") {
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 1);
+        toDate = fromDate;
+    }
+    else if (selectedMonthDuration2 === "last12months") {
+        fromDate = new Date(today);
+        fromDate.setMonth(today.getMonth() - 12);
+        toDate = today;
+    }
+    else if (selectedMonthDuration2 === "customrange") {
+        $("#customDateRange2").slideDown(150);
+    }
+
+    $("#fltInvoiceFrom2").val(formatDate2(fromDate));
+    $("#fltInvoiceTo2").val(formatDate2(toDate));
+
+    if (selectedMonthDuration2 === "customrange") {
+    }
+    else {
+        loadWidgetsData();
+    }
+
+});
+
+let selectedMonthDuration = "thismonth"; // ✅ default
+$(".sort-option").on("click", function (e) {
+    e.preventDefault();
+    let newFilter = $(this).data("value");
+
+    // agar same filter, kuch mat karo
+    if (selectedMonthDuration === newFilter) return;
+    selectedMonthDuration = newFilter;
+
+    // dropdown active class manage
+    $(".sort-option").removeClass("active");
+    $(this).addClass("active");
+
+    $("#sortByDropdown").text("Filter : " + $(this).text());
+    //$(".sub_count").text("In " + $(this).text());
+
+    // --------------------------
+    // MonthDuration ke hisab se From/To date set karna
+    // --------------------------
+    let today = new Date();
+    let fromDate, toDate;
+
+    if (selectedMonthDuration === "thismonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+    else if (selectedMonthDuration === "lastmonth") {
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+    else if (selectedMonthDuration === "last7days") { // Last 7 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 6);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "last30days") { // Last 30 days
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 29);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "yesterday") {
+        fromDate = new Date(today);
+        fromDate.setDate(today.getDate() - 1);
+        toDate = fromDate;
+    }
+    else if (selectedMonthDuration === "last12months") {
+        fromDate = new Date(today);
+        fromDate.setMonth(today.getMonth() - 12);
+        toDate = today;
+    }
+    else if (selectedMonthDuration === "customrange") {
+        // custom range me datepicker pe user select karega
+        // return loadDashboardWidgetCounts();
+    }
+    // Store selected filter in session
+    //sessionStorage.setItem("SelectedFilter_DashboardWidget", selectedMonthDuration);    // Set the datepickers
+
+    $("#fltInvoiceFrom").val(formatDate2(fromDate));
+    $("#fltInvoiceTo").val(formatDate2(toDate));
+});
+
+$("#fltInvoiceFrom2, #fltInvoiceTo2").on("change", function () {
+
+    let fromDate = $("#fltInvoiceFrom2").val();
+    let toDate = $("#fltInvoiceTo2").val();
+
+    if (fromDate && toDate) {
+        selectedMonthDuration2 = "customrange";
+        //$("#purchaseFilter").text("Filter : Custom Range");
+        //$(".sub").text("In Custom Range");
+        $(".filter-option2").removeClass("active");
+        loadWidgetsData();
+    }
+});
+
+$("#fltInvoiceFrom, #fltInvoiceTo").on("change", function () {
+
+    let fromDate = $("#fltInvoiceFrom").val();
+    let toDate = $("#fltInvoiceTo").val();
+
+    if (fromDate && toDate) {
+        selectedMonthDuration = "customrange";
+
+        $("#sortByDropdown").text("Filter : Custom Range");
+        //$(".sub").text("In Custom Range");
+
+        $(".sort-option").removeClass("active");
+        // loadDashboardWidgetCounts(); // 🔥
+    }
+});
+
+function resetFilter() {
+    // 🔹 TEXT INPUTS
+    $("#fltInvoiceNo, #fltPONo, #fltSearch").val("");
+
+    // 🔹 DATE INPUTS
+    $("#fltInvoiceFrom").val("");
+    $("#fltInvoiceTo").val("");
+
+    // 🔹 DROPDOWNS (SELECT)
+    $("#fltSupplier").val(0).trigger("change"); // for select2 safe
+    $("#fltPaymentStatus").val("0");
+
+    // 🔹 FILTER DROPDOWN RESET
+    selectedMonthDuration = "thismonth";
+    $("#sortByDropdown").text("Filter : This Month");
+    $(".sort-option").removeClass("active");
+    $('.sort-option[data-value="thismonth"]').addClass("active");
+
+    // 🔹 CUSTOM DATE RANGE HIDE (if you add later)
+    $("#customDateRange").hide();
+
+    // 🔹 RELOAD DATA
+    fetchData();
+}
+//Widgets  -- START ------------------------------------------------------------
+function loadWidgetsData() {
     var payload = {
-        MonthDuration: monthDuration,
-        FromDate: fromDate,
-        ToDate: toDate
+        EventFrom: $("#fltInvoiceFrom2").val() || "",
+        EventTo: $("#fltInvoiceTo2").val() || "",
+        FilterDuration: selectedMonthDuration2 //$("#purchaseFilter").data("value") || "thismonth"
     };
+    //console.log("widget payload:", payload);
     $.ajax({
-        url: "/api/FinanceDashboard/GetDashboardVendorPayables",
-        type: "POST",
+        url: "/api/Purchase/GetPurchaseList_Widgets",
+        method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
+            //console.log("widget res:", res);
+            if (res?.status?.toLowerCase() === "success" && res.data) {
+                let d = res.data;
+                $("#widget_total_purchase").text(`₹ ${d.TotalAmount ?? 0}`);
+                $("#widget_outstanding").text(`₹ ${d.TotalOutstandingAmount ?? 0}`);
+                $("#widget_total_orders").text(d.TotalOrders ?? 0);
 
-            //console.log("Vendor Payables API:", res);
-
-            let html = "";
-
-            if (res.status === "Success" && Array.isArray(res.data) && res.data.length > 0) {
-                res.data.slice(0, 100).forEach(item => {
-
-                    let badgeClass =
-                        item.Status === "Overdue" ? "bg-danger" :
-                            item.Status === "Pending" ? "bg-warning text-white" :
-                                "bg-secondary";
-
-                    html += `
-                        <tr>
-                            <td>${item.VendorName}</td>
-                            <td class="text-end fw-semibold">
-                                ₹ ${formatINR(item.PendingAmount)}
-                            </td>
-                            <td class="text-center">
-                                <span class="badge ${badgeClass}">
-                                    ${item.Status}
-                                </span>
-                            </td>
-                        </tr>`;
-                });               
+                // 🔴 Highlight outstanding if > 0
+                $("#widget_outstanding")
+                    .removeClass("text-danger text-dark")
+                    .addClass((d.TotalOutstandingAmount ?? 0) > 0 ? "text-danger fw-bold" : "text-dark");
             }
-            else {
-                html = `
-                    <tr>
-                        <td colspan="3" class="text-muted text-center">
-                            No vendor payables
-                        </td>
-                    </tr>`;
-            }
-
-            $("#vendorPayablesBody").html(html);
         },
-        error: function () {
-            $("#vendorPayablesBody").html(`
-                <tr>
-                    <td colspan="3" class="text-danger text-center">
-                        Error loading data
-                    </td>
-                </tr>
-            `);
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Purchase Widgets Fetch Error");
         }
     });
 }
-
-
 //Widgets  -- END --------------------------------------------------------------
+
+function loadColumnCheckboxes() {
+    let html = "";
+
+    REPORT_COLUMNS_PURCHASE_INVOICE.forEach(col => {
+        const isChecked = selectedColumns.includes(col.key);
+        html += `
+        <div class="col-md-4 mb-2">
+            <div class="form-check">
+                <input class="form-check-input column-checkbox"
+                       type="checkbox"
+                       value="${col.key}"
+                       ${isChecked ? "checked" : ""}>
+                <label class="form-check-label">${col.label}</label>
+            </div>
+        </div>`;
+    });
+
+    $("#column-list").html(html);
+    updateSelectAllState();
+}
+
+function updateSelectAllState() {
+    const total = $(".column-checkbox").length;
+    const checked = $(".column-checkbox:checked").length;
+    $("#chk-select-all").prop("checked", total === checked);
+}
+
+/* ── With Header toggle ── */
+const saved = sessionStorage.getItem(HEADER_KEY);
+if (saved !== null)
+    document.getElementById("toggleWithHeader").checked = (saved === "true");
+
+document.getElementById("toggleWithHeader").addEventListener("change", function () {
+    sessionStorage.setItem(HEADER_KEY, this.checked);
+});
+
+/* ── Column selector ── */
+$("#btn-select-columns").on("click", function () {
+    loadColumnCheckboxes();
+    $("#modalColumns").modal("show");
+});
+
+$("#chk-select-all").on("change", function () {
+    $(".column-checkbox").prop("checked", this.checked);
+});
+
+
+$("#btn-reset-columns").on("click", function () {
+    $(".column-checkbox").prop("checked", true);
+    $("#chk-select-all").prop("checked", true);
+});
+
+$("#btn-save-columns").on("click", function () {
+    selectedColumns = [];
+    $(".column-checkbox:checked").each(function () {
+        selectedColumns.push($(this).val());
+    });
+    $("#modalColumns").modal("hide");
+    //fetchData();
+});
+
+
+/* ═══════════════════════════════════════════════════
+   DOWNLOAD PDF / EXCEL
+═══════════════════════════════════════════════════ */
+function ViewPurchaseInvoiceReport(actionName) {
+
+    const withHeader = $("#toggleWithHeader").is(":checked");
+    const userId = parseInt(sessionStorage.getItem("userId") || 0);
+
+    var payload = {
+        PONo: $("#fltPONo").val() || "",
+        InvoiceNo: $("#fltInvoiceNo").val() || "",
+        FilterSearchText: $("#fltSearch").val() || "",
+        SupplierId: parseInt($("#fltSupplier").val() || 0),
+        EventFrom: $("#fltInvoiceFrom").val() || "",
+        EventTo: $("#fltInvoiceTo").val() || "",
+        FilterDuration: selectedMonthDuration,
+        PaymentStatusId: parseInt($("#fltPaymentStatus").val() || 0),
+        // ⚙️ Common
+        WithHeader: withHeader,
+        Columns: selectedColumns,
+        ActionBy: userId
+    };
+
+    // ✅ API URL
+    const url = actionName === "downloadExcel"
+        ? "/api/Purchase/DownloadPurchaseList_GRID_Excel"
+        : "/api/Purchase/DownloadPurchaseList_GRID_Pdf";
+
+    downloadReport(url, payload, loaderMsg = "Generating Report..");
+}
+
 
 /// TABLE ITEMS GRID ----- START -------------------------------
 function formatQty(val) {
@@ -784,7 +1090,7 @@ function addNewRow() {
             <div class="text-muted small stockHint d-none"></div>`;
 
     //UNITS DROPDOWN
-    console.log("unitMaster:", unitMaster);
+    //console.log("unitMaster:", unitMaster);
     let unit_Html_dropdown = `<select class="form-select form-select-sm unitSelect">`;
     unit_Html_dropdown += `<option value="0" data-currentqty="0">--Select--</option>`;
     unitMaster.forEach(x => {
@@ -813,7 +1119,7 @@ function addNewRow() {
 
                 <!-- Qty -->
                 <td>
-                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="0.01" value="0">
+                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="1" value="0">
                 </td>
 
                 <!-- Unit -->
@@ -826,20 +1132,20 @@ function addNewRow() {
 
                 <!-- Price -->
                 <td>
-                    <input type="number" class="form-control form-control-sm priceInput" min="0" step="0.01" value="0">
+                    <input type="number" class="form-control form-control-sm priceInput" min="0" step="1" value="0">
                 </td>
 
                 <!-- Amount -->
                 <td>
-                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="0.01" value="0">
+                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="1" value="0">
                 </td>
 
                 <!-- Tax % -->
                 <td>
                     <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="0.01">
-                        <input type="number" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="0.01">
-                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" step="0.01">
+                        <input type="number" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="1">
+                        <input type="number" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="1">
+                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" step="1">
                     </div>
                 </td>
 
@@ -866,7 +1172,7 @@ function addNewRow() {
 
 // Attach events to RAW MATERIAL dropdown & enable fields
 function attachRawMaterialEvents(row) {
-    console.log("here2");
+    //console.log("here2");
     let rawSelect = row.find(".rawMaterialSelect");
     rawSelect.off("change").on("change", function () {
         // Load units for selected raw material
@@ -879,7 +1185,7 @@ function updateUnitsDropdown(rawMaterialSelect) {
 
     // ✅ Get JSON safely
     let unitsJson = selectedOption.data("units") || [];
-    console.log("unitsJson:", unitsJson);
+    //console.log("unitsJson:", unitsJson);
 
     let row = $(rawMaterialSelect).closest("tr");
     let unitDropdown = row.find(".unitSelect");
@@ -973,7 +1279,7 @@ function buildRowForEdit(item) {
                 <!-- Qty -->
                 <td>
                     <input type="number" class="form-control form-control-sm qtyInput"
-                           min="0" step="0.01" value="${qty}">
+                           min="0" step="1" value="${qty}">
                 </td>
 
                 <!-- Unit -->
@@ -987,13 +1293,13 @@ function buildRowForEdit(item) {
                 <!-- PRICE -->
                 <td>
                     <input type="number" class="form-control form-control-sm priceInput"
-                           min="0" step="0.01" value="${price}">
+                           min="0" step="1" value="${price}">
                 </td>
 
                 <!-- AMOUNT -->
                 <td>
                     <input type="number" class="form-control form-control-sm amountInput"
-                           min="0" step="0.01" value="${amount}">
+                           min="0" step="1" value="${amount}">
                 </td>
 
                 <!-- TAX -->
@@ -1045,95 +1351,153 @@ function updateSrNo() {
 }
 /// TABLE ITEMS GRID ----- END -------------------------------
 
+//--------FETCH & SHOW GRID DATA -- START --------
+function fetchData() {
+
+    var payload = {
+        PONo: $("#fltPONo").val() || "",
+        InvoiceNo: $("#fltInvoiceNo").val() || "",
+        FilterSearchText: $("#fltSearch").val() || "",
+        SupplierId: parseInt($("#fltSupplier").val() || 0),
+        EventFrom: $("#fltInvoiceFrom").val() || "",
+        EventTo: $("#fltInvoiceTo").val() || "",
+        FilterDuration: selectedMonthDuration,
+        PaymentStatusId: parseInt($("#fltPaymentStatus").val() || 0)
+    };
+    //console.log("payload:", payload);
+    $.ajax({
+        url: "/api/Purchase/GetPurchaseList_GRID",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            //console.log("fetch response:", response);
+            let list = response?.data?.List ?? [];
+            let totals = response?.data?.Totals ?? {};
+
+            renderTable(list);
+            bindTotals(totals);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Purchase List Fetch failed");
+        }
+    });
+}
 //SHOW GRID TABLE
 function renderTable(data) {
-    console.log("Purchase Data render:", data);
+    //console.log("render data:", data);
 
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
     }
 
     if (!data || data.length === 0) {
-        $('#tableMain tbody').html(`
-                <tr>
-                    <td colspan="9" class="text-center fw-bold text-danger">No Data Found !!</td>
-                </tr>
-            `);
-
         $('#tableMain table').DataTable({
             data: [],
-            columns: [
-                { title: "Sr. No." },
-                { title: "From" },
-                { title: "Invoice Date" },
-                { title: "Invoice No" },
-                { title: "PO/MRN No" },
-                { title: "Total" },
-                { title: "Payment" },
-                { title: "Created By" },
-                { title: "Status" },
-                { title: "Action" }
-            ]
+            columns: getColumns()
         });
-
         return;
     }
 
-    // Add SR No.
+    // Add SR No
     data.forEach((x, i) => x.srno = i + 1);
 
     $('#tableMain table').DataTable({
         data: data,
-        columns: [
+        columns: getColumns(),
+        paging: false,          // 🔥 disable pagination
+        ordering: true,
+        searching: true,
+        lengthChange: false,
+        info: false,            // optional: hide "Showing X entries"
+        stateSave: false,
+        rowCallback: function (row, data) {
+
+            let total = data.TotalAmount ?? 0;
+            let paid = data.PaidAmount ?? 0;
+            let remain = data.OutstandingAmount ?? 0;
+
+            // RESET first (important when redraw)
+            $(row).removeClass("row-green row-orange row-red");
+
+            if (remain === 0 && paid > 0) {
+                // ✅ FULL PAID
+                $(row).addClass("row-green");
+            }
+            else if (paid === 0) {
+                // ❌ NOT PAID
+                $(row).addClass("row-red");
+            }
+            else if (remain > 0) {
+                // ⚠️ PARTIAL
+                $(row).addClass("row-orange");
+            }
+        }
+    });
+    function getColumns() {
+        return [
             { data: "srno", title: "#" },
-            {
-                data: null,
-                title: "From",
-                render: (d) => `
-                        <b>${d.SupplierCompany ?? d.SupplierName}</b><br>
-                        <small class="text-muted">${d.PurchaseFromName ?? ""}</small>
-                    `
-            },
-            { data: "InvoiceDate_Format", title: "Invoice Date" },
+            { data: "SupplierName", title: "Supplier" },
+            { data: "InvoiceDate", title: "Invoice Date" },
+
             {
                 data: "InvoiceNo",
                 title: "Invoice No",
-                render: function (d) {
-                    if (!d) return "-";
-                    return `#${d}`;
-                }
+                render: d => d ? `#${d}` : "-"
             },
             {
                 data: "PONo",
-                title: "PO/MRN No",
-                render: function (d) {
-                    if (!d) return "-";
-                    return `#${d}`;
-                }
+                title: "PO No",
+                render: d => d ? `#${d}` : "-"
             },
 
             {
-                data: "GrandTotal_Amount",
-                title: "Total",
+                data: "SubTotalAmount",
+                title: "SubTotal",
+                className: "text-end",
                 render: x => `₹ ${x ?? 0}`
             },
 
             {
-                data: null,
-                title: "Paid",
-                render: (d) => {
-                    let paid = d.PaidAmount ?? 0;
-                    return `₹ ${paid}`;
-                }
+                data: "Tax",
+                title: "Tax",
+                className: "text-end",
+                render: x => `₹ ${x ?? 0}`
             },
 
             {
-                data: null,
-                title: "Pending",
-                className: "text-center",
-                render: (d) => {
-                    let remain = d.Remaining_Amount ?? 0;
+                data: "OtherCharges",
+                title: "Other Charges",
+                className: "text-end",
+                render: x => `₹ ${x ?? 0}`
+            },
 
+            {
+                data: "Discount",
+                title: "Discount",
+                className: "text-end",
+                render: x => `₹ ${x ?? 0}`
+            },
+
+            {
+                data: "TotalAmount",
+                title: "Total",
+                className: "text-end fw-bold",
+                render: x => `₹ ${x ?? 0}`
+            },
+
+            {
+                data: "PaidAmount",
+                title: "Paid",
+                className: "text-end text-success",
+                render: x => `₹ ${x ?? 0}`
+            },
+            {
+                data: null,
+                title: "Outstanding",
+                className: "text-end",
+                render: (d) => {
+                    let remain = d.OutstandingAmount ?? 0;
                     if (remain > 0) {
                         return `
                             <button class="btn btn-sm btn-action-xss btn-outline-danger btn-remaining"
@@ -1143,7 +1507,6 @@ function renderTable(data) {
                             </button>
                         `;
                     }
-
                     // zero / no remaining → plain text
                     return `<span class="text-muted">₹ ${remain}</span>`;
                 }
@@ -1153,40 +1516,23 @@ function renderTable(data) {
                 data: null,
                 title: "Created By",
                 render: (d) => `
-                        <small>${d.Created_By_EmpName ?? "-"}</small><br>
-                        <small class="text-muted">Created: ${d.Created_On}</small><br>
-                        <small class="text-muted">Modified: ${d.Modified_On ?? ""}</small>
+                        <small>${d.CreatedBy ?? "-"}</small><br>
+                        <small class="text-muted">Created: ${d.CreatedOn}</small><br>
+                        ${d.ModifiedOn ? `<small class="text-muted">Last Modified: ${d.ModifiedOn ?? ""}</small>` : ""}                        
                     `
             },
 
             {
-                data: "Status",
+                data: "PaymentStatus",
                 title: "Status",
-                render: function (status) {
+                render: (status) => {
+                    let cls = status === "Pending"
+                        ? "bg-warning text-white"
+                        : "bg-success";
 
-                    let badgeClass = "bg-secondary";
-
-                    if (!status) status = "Unknown";
-
-                    switch (status.toLowerCase()) {
-                        case "pending":
-                            badgeClass = "bg-warning text-dark";
-                            break;
-                        case "approved":
-                        case "saved":
-                            badgeClass = "bg-success";
-                            break;
-                        case "rejected":
-                            badgeClass = "bg-danger";
-                            break;
-                        case "paid":
-                            badgeClass = "bg-primary";
-                            break;
-                    }
-                    return `<span class="badge ${badgeClass}">${status}</span>`;
+                    return `<span class="badge ${cls}">${status}</span>`;
                 }
             },
-
             {
                 data: null,
                 title: "Action",
@@ -1225,41 +1571,28 @@ function renderTable(data) {
                         `;
                 }
             }
-        ],
-        pageLength: 10,
-        ordering: true,
-        searching: true,
-        lengthChange: false,
-        stateSave: false
-    });
+        ];
+    }
+
+}
+function bindTotals(t) {
+
+    $("#ftSubTotalAmount").html(`₹ ${t.TotalSubTotalAmount ?? 0}`);
+    $("#ftTaxAmount").html(`₹ ${t.TotalTax ?? 0}`);
+    $("#ftChargesAmount").html(`₹ ${t.TotalOtherCharges ?? 0}`);
+    $("#ftDiscountAmount").html(`₹ ${t.TotalDiscount ?? 0}`);
+    $("#ftTotalAmount").html(`₹ ${t.TotalAmount ?? 0}`);
+    $("#ftPaidAmount").html(`₹ ${t.TotalPaidAmount ?? 0}`);
+
+    const val = t.TotalOutstandingAmount ?? 0;
+    $("#ftOutstandingAmount")
+        .html(`₹ ${val}`)
+        .removeClass("text-danger text-dark")
+        .addClass(val > 0 ? "text-danger fw-bold" : "text-dark");
 }
 
-//get data from API
-function fetchData() {
+//--------FETCH & SHOW GRID DATA -- END --------
 
-    var payload = {
-        Id: 0,
-        SupplierId: 0,
-        InvoiceNo: ""
-    };
-
-    $.ajax({
-        url: "/api/Purchase/GetPurchaseList",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (response) {
-            //console.log("Purchase Fetch:", response);
-            var data = response.data ?? [];
-            renderTable(data);
-
-            loadWidgetsData();
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Purchase Fetch Error");
-        }
-    });
-}
 
 // Reset form fields
 function resetFormFields() {
@@ -1449,7 +1782,6 @@ function validatePurchaseForm() {
 }
 
 function fetchNextNumbers() {
-
     // ---- Fetch Purchase Order Number ----
     $.ajax({
         url: "/api/Purchase/GetNextPurchaseOrderNo",
@@ -1519,9 +1851,9 @@ function loadSupplierDropdown() {
         data: JSON.stringify(payload),
         success: function (response) {
             //console.log("response supplier:", response);
-            $("#purchaseSupplier").html(`<option value="0">-- Select Supplier --</option>`);
+            $("#purchaseSupplier, #fltSupplier").html(`<option value="0">-- Select Supplier --</option>`);
             response.data.forEach(s => {
-                $("#purchaseSupplier").append(
+                $("#purchaseSupplier, #fltSupplier").append(
                     `<option value="${s.Id}">${s.CompanyName && s.CompanyName.trim() !== "" ? s.CompanyName : s.Name}</option>`
                 );
             });
@@ -1747,12 +2079,11 @@ function calculateGrandTotal() {
     let otherTaxes = parseFloat($("#txtOtherTaxes").text()) || 0;
 
     let grandTotal = subTotal - discount + otherCharges + otherTaxes;
-
+    //console.log("grandTotal:", grandTotal);
     $("#txtGrandTotal").text(grandTotal.toFixed(2));
 }
 
-$("#discountValue, #deliveryCharge, #deliveryCGST, #deliverySGST, #tcsPercent, #tdsPercent")
-    .on("input", function () {
+$("#discountValue, #deliveryCharge, #deliveryCGST, #deliverySGST, #tcsPercent, #tdsPercent").on("input", function () {
         calculateDiscount();
         calculateOtherCharges();
         calculateTaxes();
@@ -1783,7 +2114,7 @@ $(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput,
     row.find(".amountInput").val((qty * price).toFixed(2));
 
     calculateRowTotal($(this).closest("tr"));
-    calculateSubTotals();
+
 });
 
 function calculateRowTotal(row) {
@@ -1804,6 +2135,7 @@ function calculateRowTotal(row) {
     let finalAmount = baseAmount + cgstAmt + sgstAmt + igstAmt;
 
     row.find(".amountInput").val(finalAmount.toFixed(2));
+    calculateSubTotals();
 }
 function calculateSubTotals() {
     let total = 0;
@@ -1814,7 +2146,11 @@ function calculateSubTotals() {
     });
 
     $("#txtSubTotal").text(total.toFixed(2));
-    $("#txtGrandTotal").text(total.toFixed(2));
+    //$("#txtGrandTotal").text(total.toFixed(2));
+    calculateDiscount();
+    calculateOtherCharges();
+    calculateTaxes();
+    calculateGrandTotal();
 }
 function generateSubTotalBreakdown() {
 

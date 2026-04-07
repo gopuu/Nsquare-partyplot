@@ -1,4 +1,21 @@
-﻿.finance-metric-card {
+﻿/*GRID COLOR -- START*/
+.row-green {
+    background-color: #e6f4ea !important;
+    border-left: 8px solid #28a745;
+}
+
+.row-orange {
+    background-color: #fff4e5 !important;
+    border-left: 8px solid #fd7e14;
+}
+
+.row-red {
+    background-color: #fdecea !important;
+    border-left: 8px solid #dc3545;
+}
+/*GRID COLOR -- END*/
+
+.finance-metric-card {
     border-radius: 12px;
     border: 1px solid #f1f1f1;
 }
