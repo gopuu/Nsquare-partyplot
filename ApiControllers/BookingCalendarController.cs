@@ -165,9 +165,13 @@ namespace ERPAdmin.ApiControllers
 
                         booking.Booked_By_EmpId = dr["Booked_By_EmpId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booked_By_EmpId"]);
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
+                        booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
                         booking.Booked_On = dr["Booked_On"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_On"]);
                         booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
                         booking.VendorWorkOrder_Count = dr["VendorWorkOrder_Count"] == DBNull.Value ? 0 : Convert.ToInt64(dr["VendorWorkOrder_Count"]);
+
+                        booking.ReachedUs = dr["ReachedUs"] == DBNull.Value ? "" : Convert.ToString(dr["ReachedUs"]);
+                        booking.Reference = dr["Reference"] == DBNull.Value ? "" : Convert.ToString(dr["Reference"]);
 
                         booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);

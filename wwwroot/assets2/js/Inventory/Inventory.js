@@ -6,6 +6,13 @@ $(document).ready(function () {
     GetRawMaterialMasterData();  // Load ALL initially
     GetUnitMasterData();
 
+    AppSignalR.subscribePurchase((data) => {
+        //console.log("SignalR: Purchase Updated");
+        fetchData(0, 0, 0);
+        GetRawMaterialMasterData();  // Load ALL initially
+    });
+
+
     var rawMaterialId = 0;
 
     // When Category changes → Fetch Raw Materials of that category

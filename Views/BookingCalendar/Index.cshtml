@@ -920,11 +920,6 @@
                                         <span id="bookingReport_Hall">—</span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span class="fw-semibold">Pax</span>
-                                        <span id="bookingReport_Pax">—</span>
-                                    </div>
-
                                 </div>
                             </div>
                         </div>
@@ -942,15 +937,34 @@
                                 <div class="card-body p-2 small">
 
                                     <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">PAX</span>
+                                        <span id="bookingReport_Pax">—</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Hall Rent</span>
                                         <span>₹<span id="bookingReport_HallRent">—</span></span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span class="fw-semibold">
-                                            Food <small>(₹<span id="bookingReport_FoodRate">-</span>/Plate)</small>
-                                        </span>
-                                        <span>₹<span id="bookingReport_FoodAmount">—</span></span>
+                                    <div class="col-12">
+                                        <div id="foodPackageContainer_summaryservices"></div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Decoraton</span>
+                                        <span>₹<span id="bookingReport_Decoraton">—</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Room Charges</span>
+                                        <span>₹<span id="bookingReport_RoomCharges">—</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Sound System</span>
+                                        <span>₹<span id="bookingReport_SoundSystem">—</span></span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Projector & Screen</span>
+                                        <span>₹<span id="bookingReport_ProjectorScreen">—</span></span>
                                     </div>
 
                                 </div>
@@ -980,7 +994,7 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <span>Disc</span>
+                                        <span>Discount</span>
                                         <span>₹<span id="bookingReport_BookingDiscount">—</span></span>
                                     </div>
 
@@ -994,8 +1008,8 @@
                                         <span>₹<span id="bookingReport_PaidTillDate">—</span></span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <span>Extra Disc</span>
+                                    <div class="d-flex justify-content-between py-1 border-bottom d-none">
+                                        <span>Extra Discount</span>
                                         <span>₹<span id="bookingReport_Discount">—</span></span>
                                     </div>
 
@@ -1123,7 +1137,7 @@
                                         <span id="bookingReport_ReachedUs">—</span>
                                     </p>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-12 d-none">
                                     <p class="mb-0">
                                         <strong>Reference:</strong>
                                         <span id="bookingReport_Reference">—</span>

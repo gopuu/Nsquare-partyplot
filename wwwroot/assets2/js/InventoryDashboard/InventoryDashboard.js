@@ -1,16 +1,26 @@
-﻿
+﻿function refreshData() {
+    const $active = $(".chart-filter-Statistics .dropdown-item.active");
+    if ($active.length) {
+        $active.trigger("click");
+    }
+    else {
+        $(".chart-filter-Statistics .dropdown-item:first").trigger("click");
+    }
+}
+
 $(document).ready(function () {
     loadKeyStatistics("thismonth");
     AppSignalR.subscribeSettings((data) => {
-        //console.log("page refresh");
-        //loadKeyStatistics("thismonth");
-        const $active = $(".chart-filter-Statistics .dropdown-item.active");
-        if ($active.length) {
-            $active.trigger("click");
-        }
-        else {
-            $(".chart-filter-Statistics .dropdown-item:first").trigger("click");
-        }
+        refreshData();
+    });
+
+    AppSignalR.subscribePurchase((data) => {
+        //console.log("SignalR: Purchase Updated");
+        refreshData();
+        loadCOGSCount("thismonth");
+        loadStockLevel();
+        setStockOutDatesByDuration();
+        loadStockOutSummary();
     });
 
     loadCOGSCount("thismonth");

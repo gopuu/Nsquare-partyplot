@@ -695,8 +695,8 @@ function loadSlotMaster() {
                 };
                 $slotDropdowns.append(`<option value="${s.Id}" data-start="${s.StartTime}" data-end="${s.EndTime}">${s.Name} (${s.Code})</option>`);
             });
-            console.log("Shift Map:", shiftMap);
-            console.log("Shift Times:", shiftTimes);
+            //console.log("Shift Map:", shiftMap);
+            //console.log("Shift Times:", shiftTimes);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Slot Fetch Error");
@@ -1107,7 +1107,7 @@ function loadEnquiryDeals(processId = 0) {
         FromDate: duration === "customrange" ? $("#fromDate_filter").val() : null,
         ToDate: duration === "customrange" ? $("#toDate_filter").val() : null
     };
-    console.log("EnquiryDeal inpuData:", inputData);
+    //console.log("EnquiryDeal inpuData:", inputData);
 
     $.ajax({
         url: "/api/EnquiryDeal/GetEnquiryDealList_forDragNDrop",
@@ -1115,7 +1115,7 @@ function loadEnquiryDeals(processId = 0) {
         contentType: "application/json",
         data: JSON.stringify(inputData),
         success: function (response) {
-            console.log("EnquiryDeal response:", response);
+            //console.log("EnquiryDeal response:", response);
             if (response.status === "Success") {
                 processes = response.data; //GetProcessList
                 renderBoard();
@@ -1249,7 +1249,7 @@ function renderBoard() {
     $(document).off("click", ".deal-open").on("click", ".deal-open", function () {
         const dealId = $(this).closest(".deal-card").data("dealid");
         const bookingId = $(this).closest(".deal-card").data("bookingid");
-        console.log("Clicked dealId:", dealId);
+        //console.log("Clicked dealId:", dealId);
 
         // later you can call your API here
         // 🔥 Reset before fetching data
@@ -1304,7 +1304,10 @@ function renderBoard() {
                     $("#eventStart").val(data.EventStartTime);
                     $("#eventEnd").val(data.EventEndTime);
                     $("#pax").val(data.Pax);
-                    $("#packageDropdown").val(data.PackageId).trigger("change");
+
+                    console.log("edit data:", data);
+                    //$("#packageDropdown").val(data.PackageId).trigger("change");
+                    loadFoodPackageList(data.PackageId);
                     $("#followUpDate").val(data.FollowUpDate_Format2);
 
                     $("#estimatedAmount").val(data.EstimatedAmount).prop("readonly", true);
@@ -2035,7 +2038,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Step 1: Get session value from Page 1
     const selectedDuration = sessionStorage.getItem("SelectedFilter_DashboardWidget");
-    console.log("selectedDuration:", selectedDuration);
+    //console.log("selectedDuration:", selectedDuration);
     if (selectedDuration) {
         // Step 2: Set dropdown value
         $("#ddlDuration").val(selectedDuration);
@@ -2049,7 +2052,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadStateList();
 
     AppSignalR.subscribeQuotation((data) => {
-        console.log("Enquiry Page Update", data);
+        //console.log("Enquiry Page Update", data);
         loadEnquiryDeals();
     });
 
@@ -2069,17 +2072,19 @@ document.addEventListener("DOMContentLoaded", function () {
     loadFoodPackageList();
 
     // Trigger on input
-    document.getElementById("pax").addEventListener("input", calculateEstimatedAmount);
-    document.getElementById("packageAmount").addEventListener("input", calculateEstimatedAmount);
-    document.getElementById("packageDropdown").addEventListener("change", function () {
-        const selectedOption = this.options[this.selectedIndex];
-        // Get rate per person from data attribute
-        const ratePerPerson = parseFloat(selectedOption.getAttribute("data-rateperperson")) || 0;
+    // 🔹 Input events
+    $("#pax").on("input", calculateEstimatedAmount);
+    $("#packageAmount").on("input", calculateEstimatedAmount);
 
-        // Set estimated package amount field
-        document.getElementById("packageAmount").value = ratePerPerson > 0 ? ratePerPerson : "";
+    // 🔹 Dropdown change
+    $("#packageDropdown").on("change", function () {
+        const $selected = $(this).find("option:selected");
+        const ratePerPerson = parseFloat($selected.data("rateperperson")) || 0;
 
-        // Recalculate total
+        console.log("packageDropdown change ratePerPerson:", ratePerPerson);
+        // Set value
+        $("#packageAmount").val(ratePerPerson);
+        // Recalculate
         calculateEstimatedAmount();
     });
 
@@ -2931,7 +2936,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 //package dropdown -- START --------------------
 let foodPackages = [];
-function loadFoodPackageList() {
+function loadFoodPackageList(selectedPackageId = null) {
     //showLoader();
     $.ajax({
         url: "/api/Company_FoodItem_Package/GetCompanyFoodPackage_Dropdown",
@@ -2944,6 +2949,14 @@ function loadFoodPackageList() {
                 // populate first dropdown
                 populateFoodPackageDropdown($("#packageDropdown, #foodPackage_PackageDropdown"));
                 renderFoodPackages(foodPackages);
+
+                console.log("package:", foodPackages);
+
+                // ✅ SET VALUE AFTER DROPDOWN IS READY
+                if (selectedPackageId) {
+                    console.log("selectedPackageId:", selectedPackageId);
+                    $("#packageDropdown").val(String(selectedPackageId)).trigger("change");
+                }
             }
             else {
                 $("#packageDropdown, #foodPackage_PackageDropdown, #quotation_packageContainer").html(`<option value="0">No Package Found</option>`);

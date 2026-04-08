@@ -1409,7 +1409,7 @@ var global_bookingData = null;
 //main booking board
 async function renderBoard(bookingData = null) {
     global_bookingData = bookingData;
-    //console.log("renderBoard bookingData:", bookingData);
+    console.log("renderBoard bookingData:", bookingData);
     //showLoader();
     //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
@@ -1500,152 +1500,6 @@ async function renderBoard(bookingData = null) {
                 // CURRENT & FUTURE DAY
                 cell.classList.add("bg-success", "text-white");
             }
-            /* OLD code
-            let skipNextSlots = new Set();
-            // Populate cell with shift data
-            cell.innerHTML = shiftArr.map((color, i) => {
-                if (skipNextSlots.has(i)) return "";
-
-                let finalColor = color;
-                if (isToday) {
-                    finalColor = "success"; // ✅ Force all shifts green for today
-                }
-
-                var textColor = finalColor === "light" ? "text-black" : "text-white";
-                const yyyy = selectedYear;
-                const mm = String(selectedMonth + 1).padStart(2, "0"); // ensure 2 digits
-                const dd = String(cacheddays[dayIndex].date).padStart(2, "0");
-
-                const dateStr = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;       // for display
-                const dateStr_Format = `${dd}-${mm}-${yyyy}`;                       // your current dd-mm-yyyy
-                const dateStr_ISO = `${yyyy}-${mm}-${dd}`;                          // ✅ proper yyyy-mm-dd
-
-                const shiftCode = shiftNames[i];
-                //console.log("i:", i, ", shiftNames:", shiftNames, ", shiftCode:", shiftCode);
-                const shiftFull = fullShiftName(shiftCode); // fallback if not found
-                var bookingId = 0;
-                var eventName = null;
-                var clientName = null;
-                var clientContact = null;
-                var eventDateRange = null;
-
-                const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
-                const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
-
-                // 🔍 Check if this cell is booked in bookingData
-                let isBookingConfirmed = false;
-                let isBookingTentative = false;
-                let isBlocked = false;
-
-                let bookingMatch = null;
-
-                //console.log("bookingData:", bookingData);
-                if (Array.isArray(bookingData)) {
-                    for (const booking of bookingData) {
-                        if (booking.BanquetId !== hall.Id)
-                            continue;
-
-                        const fromDate = new Date(booking.FromDate);
-                        const tillDate = new Date(booking.TillDate);
-                        const currentDate = new Date(dateStr_ISO);
-
-                        if (!(currentDate >= fromDate && currentDate <= tillDate))
-                            continue;
-
-                        // 🔴 FULL DAY BLOCK → Block all shifts
-                        if (booking.BookingCalendar_IsBlocked && booking.ShiftCode === "FD") {
-                            isBookingTentative = false;
-                            isBookingConfirmed = false;
-                            isBlocked = true;
-                            break;
-                        }
-
-                        // 🟢 Normal shift-based booking
-                        const bookingStart = timeToMinutes(booking.StartTime_Full);
-                        const bookingEnd = timeToMinutes(booking.EndTime_Full);
-
-                        const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
-                        const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
-
-                        if (isTimeOverlap(bookingStart, bookingEnd, slotStart, slotEnd)) {
-                        //if (booking.ShiftCode === shiftCode) {
-                            //console.log("bookingId:", booking.BookingId, ", booking.ShiftCode:", booking.ShiftCode, ", shiftCode:", shiftCode);
-
-                            //bookingCountTemp++;
-
-                            // If this shift itself is blocked
-                            if (booking.BookingCalendar_IsBlocked) {
-                                isBookingTentative = false;
-                                isBookingConfirmed = false;
-                                isBlocked = true;
-                                break;
-                            }
-
-                            //bookingCount++;
-
-                            bookingId = booking.BookingId;
-                            eventName = booking.Booking_EventName;
-                            clientName = booking.Client_Name;
-                            clientContact = booking.Client_Contact;
-                            eventDateRange =
-                                booking.FromDate_Short + ' ' +
-                                booking.StartTime_Full + ' - ' +
-                                booking.TillDate_Short + ' ' +
-                                booking.EndTime_Full;
-
-                            if (booking.Booking_TypeId == 2) {
-                                isBookingTentative = true;
-                                isBookingConfirmed = false;
-                            } else {
-                                isBookingTentative = false;
-                                isBookingConfirmed = true;
-                            }
-
-                            isBlocked = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (isBookingConfirmed) {
-                    finalColor = "danger"; // 🔴 Mark Confirmed Booked
-                    textColor = "text-white";
-                }
-                else if (isBookingTentative) {
-                    finalColor = "white"; // 🔴 Mark Tentative Booked
-                    textColor = "text-dark";
-                }
-                else if (isBlocked) {
-                    finalColor = "dark"; // 🔴 Mark Tentative Booked
-                    textColor = "text-white";
-                }
-
-                return `<div
-                            class="badge bg-${finalColor} d-block mb-1 ${textColor}"
-                            data-bookingid="${bookingId}"
-                            data-eventname="${eventName}"
-                            data-clientname="${clientName}"
-                            data-clientcontact="${clientContact}"
-                            data-eventdaterange="${eventDateRange}"
-                            data-shift="${shiftCode}"
-                            data-shiftname="${shiftFull}"
-                            data-date="${dateStr}"
-                            data-date_format="${dateStr_Format}"
-                            data-date_iso="${dateStr_ISO}"
-                            data-hallname="${hall.HallName}"
-                            data-hallid="${hall.Id}">
-                            ${shiftCode}
-                        </div>`;
-
-                return `<div
-                    class="badge bg-danger d-block mb-1 text-white"
-                    style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"
-                    data-bookingid="${bookingId}">
-                    ${shiftCode}
-                </div>`;
-
-            }).join("");
-            */
 
             const yyyy = selectedYear;
             const mm = String(selectedMonth + 1).padStart(2, "0");
@@ -2009,12 +1863,13 @@ async function renderBoard(bookingData = null) {
                 html += `
                     <div style="padding-bottom:8px;">
                         <strong>
-                            <i class="fa-solid fa-calendar-alt"></i> 
+                            <i class="fa-solid fa-calendar-alt" style="color:#e11d48;"></i>
                             ${b.Booking_SubEventName} (${b.ShiftCode})
+                            ${isTentative ? `<span style="margin-left:6px; font-size:11px; color:#be123c; background:#ffe4e6; padding:2px 6px; border-radius:6px;">Tentative</span>` : ``}
                         </strong><br>
-                        <i class="fa-solid fa-user"></i> ${b.Client_Name}<br>
-                        <i class="fa-solid fa-phone"></i> ${b.Client_Contact}<br>
-                        <i class="fa-solid fa-clock"></i> 
+                        <i class="fa-solid fa-user" style="color:#fb7185;"></i> ${b.Client_Name}<br>
+                        <i class="fa-solid fa-phone" style="color:#fb7185;"></i> ${b.Client_Contact}<br>
+                        <i class="fa-solid fa-clock" style="color:#fb7185;"></i>
                         ${b.FromDate_Short} ${b.StartTime_Full} - 
                         ${b.TillDate_Short} ${b.EndTime_Full}
                     </div>
@@ -2032,15 +1887,32 @@ async function renderBoard(bookingData = null) {
             });            
 
             tooltip.innerHTML = html;
-            tooltip.style.background = "#e11d48";
-            tooltip.style.color = "#fff";
+
+            // 🌸 Light gradient background
+            // 🎨 Default (Confirmed Booking)
+            tooltip.style.background = "linear-gradient(135deg, #fff1f2, #ffe4e6)";
+            tooltip.style.color = "#881337";
+            tooltip.style.border = "1px solid #fecdd3";
+
+            // 🔄 Tentative Style (subtle differentiation)
             if (isTentative) {
-                tooltip.style.background = "#fff";
-                tooltip.style.color = "#e11d48";
+                tooltip.style.background = "#ffffff";
+                tooltip.style.color = "#9f1239";
+                tooltip.style.border = "1px dashed #fda4af";
             }
+
+            // ✨ subtle border
+            tooltip.style.border = "1px solid #fecdd3";
+            // 🎯 better UI feel
+            tooltip.style.borderRadius = "10px";
+            tooltip.style.padding = "10px 12px";
+            // 🌫️ soft shadow
+            tooltip.style.boxShadow = "0 4px 12px rgba(225, 29, 72, 0.15)";
+            // 📏 layout control
             tooltip.style.display = "block";
             tooltip.style.maxHeight = "500px";
             tooltip.style.overflowY = "auto";
+            // 🎬 smooth appearance
             tooltip.style.transition = "opacity 0.15s ease";
 
             tooltipLocked = true;
@@ -2102,31 +1974,50 @@ async function renderBoard(bookingData = null) {
             if (!booking) return;
 
             tooltip.innerHTML = `
-                <div>
-                    <strong><i class="fa-solid fa-calendar-alt"></i> ${booking.Booking_SubEventName} (${booking.ShiftCode})</strong>
+                <div style="font-weight:600; margin-bottom:6px;">
+                    <i class="fa-solid fa-calendar-alt" style="color:#e11d48;"></i>
+                    ${booking.Booking_SubEventName} (${booking.ShiftCode})
+                    ${isTentative ? `<span style="margin-left:6px; font-size:11px; color:#be123c; background:#ffe4e6; padding:2px 6px; border-radius:6px;">Tentative</span>` : ``}
                 </div>
-                <div>
-                    <i class="fa-solid fa-user"></i> ${booking.Client_Name}
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-user" style="color:#fb7185;"></i>
+                    ${booking.Client_Name}
                 </div>
-                <div>
-                    <i class="fa-solid fa-phone"></i> ${booking.Client_Contact}
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-phone" style="color:#fb7185;"></i>
+                    ${booking.Client_Contact}
                 </div>
+
                 <div>
-                    <i class="fa-solid fa-clock"></i> 
-                    ${booking.FromDate_Short} ${booking.StartTime_Full} - 
+                    <i class="fa-solid fa-clock" style="color:#fb7185;"></i>
+                    ${booking.FromDate_Short} ${booking.StartTime_Full} -
                     ${booking.TillDate_Short} ${booking.EndTime_Full}
                 </div>
             `;
 
-            tooltip.style.background = "#e11d48";
-            tooltip.style.color = "#fff";
+            // 🎨 Default (Confirmed Booking)
+            tooltip.style.background = "linear-gradient(135deg, #fff1f2, #ffe4e6)";
+            tooltip.style.color = "#881337";
+            tooltip.style.border = "1px solid #fecdd3";
+
+            // 🔄 Tentative Style (subtle differentiation)
             if (isTentative) {
-                tooltip.style.background = "#fff";
-                tooltip.style.color = "#e11d48";
+                tooltip.style.background = "#ffffff";
+                tooltip.style.color = "#9f1239";
+                tooltip.style.border = "1px dashed #fda4af";
             }
+
+            // ✨ Common UI styling
+            tooltip.style.borderRadius = "10px";
+            tooltip.style.padding = "10px 12px";
+            tooltip.style.boxShadow = "0 4px 12px rgba(225, 29, 72, 0.15)";
             tooltip.style.display = "block";
             tooltip.style.maxHeight = "250px";
             tooltip.style.overflowY = "auto";
+            tooltip.style.transition = "opacity 0.15s ease";
+
         }
         else {
             if (badge.classList.contains("bg-secondary") || isBlocked) {
@@ -5590,19 +5481,10 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     // Services & Charges
                     $("#bookingReport_HallRent").text(data.Booking_HallRent || "0");
-                    if (data.JSON_FoodPackage && data.JSON_FoodPackage.length > 0) {
-                        $("#bookingReport_FoodAmount").text(data.JSON_FoodPackage[0].PackageCost || "0");
-                        $("#bookingReport_FoodRate").text(data.JSON_FoodPackage[0].PerPlate || "—");
-                        //here contnue for food label
-                        // ✅ Store FULL package array in button as JSON
-                        $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
-                        //$("#btnFoodLabels").prop("disabled", false);
-                    }
-                    else {
-                        $("#bookingReport_FoodAmount").text("0");
-                        $("#bookingReport_FoodRate").text("—");
-                        //$("#btnFoodLabels").prop("disabled", true);
-                    }
+                    $("#bookingReport_Decoraton").text((data.OtherCharges_Decoration_Amount + data.OtherCharges_Decoration_GST) || "0");
+                    $("#bookingReport_RoomCharges").text((data.OtherCharges_RoomCharges_Amount + data.OtherCharges_RoomCharges_GST) || "0");
+                    $("#bookingReport_SoundSystem").text((data.OtherCharges_SoundSystem_Amount + data.OtherCharges_SoundSystem_GST) || "0");
+                    $("#bookingReport_ProjectorScreen").text((data.OtherCharges_ProjectorScreen_Amount + data.OtherCharges_ProjectorScreen_GST) || "0");
 
                     // Payment Trail
                     $("#bookingReport_DealAmount").text(data.PaymentSummary_Total || "0");
@@ -5611,20 +5493,25 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_BookingDiscount").text(data.PaymentSummary_BookingDiscount_Total || "0");
                     $("#bookingReport_TotalAmount").text(data.PaymentSummary_PayableAmount || "0");
                     $("#bookingReport_PaidTillDate").text(data.Payment_Amount || "0");
-                    $("#bookingReport_Discount").text(data.PaymentSummary_BookingDiscount_Type_Amount || "0");
+                    //$("#bookingReport_Discount").text(data.PaymentSummary_BookingDiscount_Type_Amount || "0");
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table
                     fillPaymentTrailTable(data.PaymentTrailList);
 
                     // Food Package and Selected Menu
-                    $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
+                    const packages = data?.JSON_FoodPackage ?? [];
+                    //const foodPackageText = packages.length === 0
+                    //    ? "—"
+                    //    : packages.map(p => p.FoodPackageName).join(", ");
+                    //$("#bookingReport_FoodPackageName").text(foodPackageText);
+                    renderFoodPackages(packages);
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
-
-                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
-                     $("#bookingReport_Reference").text(data?.Reference || "—");
+                    console.log("summary data:", data);
+                    $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
+                    $("#bookingReport_Reference").text(data?.Reference || "—");
 
                     //data.InvoiceNo, data.ProformaInvoiceNo
                     setInvoiceButtons(data);
@@ -5635,7 +5522,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "editData") {
                     resetBooking();
                     data = data[0];
-                    console.log("editData - Booking API Response:", data);
+                    //console.log("editData - Booking API Response:", data);
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
@@ -5675,7 +5562,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     const foodPackages = data.JSON_FoodPackage;
                     if (!Array.isArray(foodPackages) || foodPackages.length === 0) return;
-                    console.log("foodPackages:", foodPackages);
+                    //console.log("foodPackages:", foodPackages);
                     foodPackages.forEach((pkg, index) => {
                         if (index === 0) {
                             bindStaticFoodRow(pkg);
@@ -5775,6 +5662,115 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+//Bookimg Summary - Package DATA -- START ------------------
+function renderFoodPackages(packages) {
+    let html_services = "";
+
+    if (!packages || packages.length === 0) {
+        $("#bookingReport_FoodPackageName").html("—");
+
+        html_services = `
+            <div class="d-flex justify-content-between py-1 border-bottom">
+                <span class="fw-semibold">Food</span>
+                <span>₹0</span>
+            </div>
+        `;
+        $("#foodPackageContainer_summaryservices").html(html_services);
+        return;
+    }
+    $("#btnFoodLabels").data("foodpackage", JSON.stringify(packages));
+
+    let html = "";
+    packages.forEach((pkg, index) => {
+
+        const perPlate = pkg.PerPlate ?? "—";
+        const pax = pkg.Pax ?? 0;
+        const addon = pkg.Addons ?? 0;
+        const total = pkg.TotalCharges ?? 0;
+        html_services += `
+            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
+                
+                <span class="fw-semibold">
+                    ${`Food Package ${index + 1}`}
+                    
+                    <small class="text-muted">
+                        (₹${perPlate}/Plate)
+                        ${pax > 0 ? `(Pax: ${pax})` : ``}
+                        ${addon > 0 ? `(AddOn: ₹${addon})` : ``}
+                    </small>
+                </span>
+
+                <span>₹${total}</span>
+            </div>
+        `;
+
+        // 🔹 Group Menu Items by Header
+        const menuGrouped = {};
+        (pkg.MenuItemsList || []).forEach(item => {
+            if (!menuGrouped[item.MenuHeader_Name]) {
+                menuGrouped[item.MenuHeader_Name] = [];
+            }
+            menuGrouped[item.MenuHeader_Name].push(item.MenuItem_Name);
+        });
+
+        // 🔹 Group AddOns by Header
+        const addonGrouped = {};
+        (pkg.AddOnsList || []).forEach(item => {
+            if (!addonGrouped[item.AddOn_Header_Name]) {
+                addonGrouped[item.AddOn_Header_Name] = [];
+            }
+            addonGrouped[item.AddOn_Header_Name].push(item.AddOn_Item_Name);
+        });
+
+        html += `
+            <div style="margin-bottom:12px; padding:10px; border:1px solid #fecdd3; border-radius:10px; background:#fff1f2;">
+                
+                <!-- 📦 Package Title -->
+                <div style="font-weight:600; color:#9f1239; margin-bottom:6px;">
+                    ${pkg.FoodPackageName} <span style="font-size:12px;">(₹${pkg.PerPlate}/Plate)</span>
+                </div>
+        `;
+
+        // 🍽️ Menu Section
+        if (Object.keys(menuGrouped).length > 0) {
+            html += `<div style="margin-bottom:6px;">`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
+
+            for (let header in menuGrouped) {
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${menuGrouped[header].join(", ")}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        }
+
+        // ➕ Addons Section
+        if (Object.keys(addonGrouped).length > 0) {
+            html += `<div>`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
+
+            for (let header in addonGrouped) {
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${addonGrouped[header].join(", ")}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    });
+    $("#foodPackageContainer_summaryservices").html(html_services);
+
+    $("#bookingReport_FoodPackageName").html(html);
+}
+//Bookimg Summary - Package DATA -- END ------------------
+
 function bindStaticFoodRow(pkg) {
 
     $("#foodPackage_PackageDropdown").val(pkg.FoodPackageId ?? "0"); //.trigger('change');
@@ -5786,7 +5782,7 @@ function bindStaticFoodRow(pkg) {
 
     // Addons
     const addOnsList = pkg.AddOnsList || [];
-    console.log("#addOnsList:", addOnsList);
+    //console.log("#addOnsList:", addOnsList);
     $("#foodPackage_AddOnItems").data("selected-addonitems", addOnsList);
     updateAddonButton($("#foodPackage_AddOnItems"), addOnsList);
 

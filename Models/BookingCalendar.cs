@@ -316,6 +316,8 @@
         public decimal OtherCharges_ProjectorScreen_Amount { get; set; }
         public decimal OtherCharges_ProjectorScreen_GST { get; set; }
 
+        public string? ReachedUs { get; set; }
+        public string? Reference { get; set; }
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
         public string? Notes_FoodBeverage { get; set; }
@@ -342,8 +344,6 @@
         public long? VendorWorkOrder_Count { get; set; }
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
-        public string? ReachedUs { get; set; }
-        public string? Reference { get; set; }
 
         public List<PaymentTrailModel>? PaymentTrailList { get; set; }
 
