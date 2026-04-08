@@ -1926,7 +1926,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
                     $("#bookingReport_Slot").text(data.ShiftCode || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
-                    $("#bookingReport_EventName").text(data.Booking_EventName + "(" + data.Booking_SubEventName + ")" || "—");
+                    $("#bookingReport_EventName").text(data.Booking_EventName || "—");
+                    $("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
                     $("#bookingReport_Hall").text(data.BanquetName || "—");
                     $("#bookingReport_Pax").text(data.Booking_PAX || "—");
@@ -1936,20 +1937,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     vendorWorkOrder_slotId = data.SlotId;
 
                     // Services & Charges
+                    // Services & Charges
                     $("#bookingReport_HallRent").text(data.Booking_HallRent || "0");
-                    if (data.JSON_FoodPackage && data.JSON_FoodPackage.length > 0) {
-                        $("#bookingReport_FoodAmount").text(data.JSON_FoodPackage[0].PackageCost || "0");
-                        $("#bookingReport_FoodRate").text(data.JSON_FoodPackage[0].PerPlate || "—");
-                        //here contnue for food label
-                        // ✅ Store FULL package array in button as JSON
-                        $("#btnFoodLabels").data("foodpackage", JSON.stringify(data.JSON_FoodPackage));
-                        //$("#btnFoodLabels").prop("readonly", false);
-                    }
-                    else {
-                        $("#bookingReport_FoodAmount").text("0");
-                        $("#bookingReport_FoodRate").text("—");
-                        //$("#btnFoodLabels").prop("readonly", true);
-                    }
+                    $("#bookingReport_Decoraton").text((data.OtherCharges_Decoration_Amount + data.OtherCharges_Decoration_GST) || "0");
+                    $("#bookingReport_RoomCharges").text((data.OtherCharges_RoomCharges_Amount + data.OtherCharges_RoomCharges_GST) || "0");
+                    $("#bookingReport_SoundSystem").text((data.OtherCharges_SoundSystem_Amount + data.OtherCharges_SoundSystem_GST) || "0");
+                    $("#bookingReport_ProjectorScreen").text((data.OtherCharges_ProjectorScreen_Amount + data.OtherCharges_ProjectorScreen_GST) || "0");
 
                     // Payment Trail
                     $("#bookingReport_DealAmount").text(data.PaymentSummary_Total || "0");
@@ -1965,13 +1958,19 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     fillPaymentTrailTable(data.PaymentTrailList, bookingId);
 
                     // Food Package and Selected Menu
-                    $("#bookingReport_FoodPackageName").text(data?.JSON_FoodPackage?.[0]?.FoodPackageName ?? "—");
+                    // Food Package and Selected Menu
+                    const packages = data?.JSON_FoodPackage ?? [];
+                    //const foodPackageText = packages.length === 0
+                    //    ? "—"
+                    //    : packages.map(p => p.FoodPackageName).join(", ");
+                    //$("#bookingReport_FoodPackageName").text(foodPackageText);
+                    renderFoodPackages(packages);
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
 
-                    // $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
-                    // $("#bookingReport_Reference").text(data?.Reference || "—");
+                    $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
+                    $("#bookingReport_Reference").text(data?.Reference || "—");
 
                     //Open REPORT MODAL
                     bookingReportModal.show();
@@ -1992,6 +1991,116 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+//Bookimg Summary - Package DATA -- START ------------------
+function renderFoodPackages(packages) {
+    let html_services = "";
+
+    if (!packages || packages.length === 0) {
+        $("#bookingReport_FoodPackageName").html("—");
+
+        html_services = `
+            <div class="d-flex justify-content-between py-1 border-bottom">
+                <span class="fw-semibold">Food</span>
+                <span>₹0</span>
+            </div>
+        `;
+        $("#foodPackageContainer_summaryservices").html(html_services);
+        return;
+    }
+    $("#btnFoodLabels").data("foodpackage", JSON.stringify(packages));
+
+    let html = "";
+    packages.forEach((pkg, index) => {
+
+        const perPlate = pkg.PerPlate ?? "—";
+        const pax = pkg.Pax ?? 0;
+        const addon = pkg.Addons ?? 0;
+        const total = pkg.TotalCharges ?? 0;
+        html_services += `
+            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
+                
+                <span class="fw-semibold">
+                    ${`Food Package ${index + 1}`}
+                    
+                    <small class="text-muted">
+                        (₹${perPlate}/Plate)
+                        ${pax > 0 ? `(Pax: ${pax})` : ``}
+                        ${addon > 0 ? `(AddOn: ₹${addon})` : ``}
+                    </small>
+                </span>
+
+                <span>₹${total}</span>
+            </div>
+        `;
+
+        // 🔹 Group Menu Items by Header
+        const menuGrouped = {};
+        (pkg.MenuItemsList || []).forEach(item => {
+            if (!menuGrouped[item.MenuHeader_Name]) {
+                menuGrouped[item.MenuHeader_Name] = [];
+            }
+            menuGrouped[item.MenuHeader_Name].push(item.MenuItem_Name);
+        });
+
+        // 🔹 Group AddOns by Header
+        const addonGrouped = {};
+        (pkg.AddOnsList || []).forEach(item => {
+            if (!addonGrouped[item.AddOn_Header_Name]) {
+                addonGrouped[item.AddOn_Header_Name] = [];
+            }
+            addonGrouped[item.AddOn_Header_Name].push(item.AddOn_Item_Name);
+        });
+
+        html += `
+            <div style="margin-bottom:12px; padding:10px; border:1px solid #fecdd3; border-radius:10px; background:#fff1f2;">
+                
+                <!-- 📦 Package Title -->
+                <div style="font-weight:600; color:#9f1239; margin-bottom:6px;">
+                    ${pkg.FoodPackageName} <span style="font-size:12px;">(₹${pkg.PerPlate}/Plate)</span>
+                </div>
+        `;
+
+        // 🍽️ Menu Section
+        if (Object.keys(menuGrouped).length > 0) {
+            html += `<div style="margin-bottom:6px;">`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
+
+            for (let header in menuGrouped) {
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${menuGrouped[header].join(", ")}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        }
+
+        // ➕ Addons Section
+        if (Object.keys(addonGrouped).length > 0) {
+            html += `<div>`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
+
+            for (let header in addonGrouped) {
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${addonGrouped[header].join(", ")}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    });
+    $("#foodPackageContainer_summaryservices").html(html_services);
+
+    $("#bookingReport_FoodPackageName").html(html);
+}
+//Bookimg Summary - Package DATA -- END ------------------
+
+
 // Fill Payment Trail dynamically
 function fillPaymentTrailTable(paymentList = [], bookingId) {
     const tbody = $("#bookingReport_PaymentTrailBody");

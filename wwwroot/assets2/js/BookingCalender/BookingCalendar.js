@@ -5509,7 +5509,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
-                    console.log("summary data:", data);
+                    //console.log("summary data:", data);
                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
                     $("#bookingReport_Reference").text(data?.Reference || "—");
 
