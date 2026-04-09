@@ -1921,9 +1921,27 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     //Booking Details
                     $("#bookingReport_BookingRef").text(bookingId || "—");
-                    $("#bookingReport_Invoice").text("#" + data.InvoiceNo);
+                    //$("#bookingReport_Invoice").text("#" + data.InvoiceNo);
+                    if (data.InvoiceNo && data.InvoiceNo !== 0) {
+                        $("#bookingReport_Invoice")
+                            .removeClass()
+                            .addClass("badge bg-success")
+                            .text("#" + data.InvoiceNo);
+                    }
+                    else {
+                        $("#bookingReport_Invoice")
+                            .removeClass()
+                            .addClass("badge bg-secondary")
+                            .text("Invoice Pending");
+                    }
+
                     $("#bookingReport_EventDate").text(data.FromDate_Full || "—");
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
+
+                    const start = data.StartTime_Full ?? "-";
+                    const end = data.EndTime_Full ?? "-";
+                    $("#bookingReport_EventTime").text(`${start} - ${end}`);
+
                     $("#bookingReport_Slot").text(data.ShiftCode || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
                     $("#bookingReport_EventName").text(data.Booking_EventName || "—");
@@ -1950,8 +1968,10 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_TaxAmount").text(taxAmount || "0");
                     $("#bookingReport_BookingDiscount").text(data.PaymentSummary_BookingDiscount_Total || "0");
                     $("#bookingReport_TotalAmount").text(data.PaymentSummary_PayableAmount || "0");
-                    $("#bookingReport_PaidTillDate").text(data.Payment_Amount || "0");
-                    $("#bookingReport_Discount").text(data.PaymentSummary_BookingDiscount_Type_Amount || "0");
+
+                    let amount = parseFloat(data.Payment_Amount) || 0;
+                    $("#bookingReport_PaidTillDate").text(amount).toggleClass("text-success", amount > 0);
+
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table

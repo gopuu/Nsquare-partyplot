@@ -82,7 +82,7 @@ function resetQuotationForm() {
 
     enableQuotationForm();
 }
-function openQuotation(enquiryDealId, action="add") {
+function openQuotation(enquiryDealId, action = "add", isleadlost=false, isleadbooked=false) {
     resetQuotationForm();
 
     var payload = { EnquiryId: enquiryDealId, QuotationId: 0 };
@@ -133,7 +133,7 @@ function openQuotation(enquiryDealId, action="add") {
                 console.log("Case 3: Multiple quotations");
                 // 🔹 store enquiryId for reuse
                 $("#quotationList_enquiryDealId").val(enquiryDealId);
-                bindQuotationList(data, quotations);
+                bindQuotationList(data, quotations, isleadlost, isleadbooked);
                 $("#quotationListModal").modal("show");
             }
         },
@@ -263,7 +263,7 @@ function fillQuotationToForm(q) {
     $("#quotation_taxAmount").val(q.TaxAmount || 0);
     $("#quotation_grandTotal").val(q.GrandTotal);
 }
-function bindQuotationList(enquiry, quotations) {
+function bindQuotationList(enquiry, quotations, isleadlost = false, isleadbooked = false) {
     $("#quotationsListTitle").text(`Quotations List - ${enquiry.Name}`);
     let html = "";
     quotations.forEach(q => {
@@ -292,6 +292,13 @@ function bindQuotationList(enquiry, quotations) {
             </td>
         </tr>`;
     });
+
+    if (isleadlost || isleadbooked) {
+        $("#btnAddNewQuotation, .btn-edit-quotation, .btn-delete-quotation").addClass("d-none");
+    }
+    else {
+        $("#btnAddNewQuotation, .btn-edit-quotation, .btn-delete-quotation").removeClass("d-none");
+    }
 
     $("#quotationListBody").html(html);
 }
@@ -958,6 +965,8 @@ function loadTimeDropdown() {
 }
 
 function resetFollowUpForm() {
+    $("#followup_form, #followup_title").removeClass("d-none");
+
     // Select first option dynamically (if exists)
     const followUpType = $("#ddlFollowUpType option:first").val();
     const status = $("#ddlStatus option:first").val();
@@ -1142,14 +1151,16 @@ function renderBoard() {
         if (process.EnquiryDealsJson.length > 0) {
             process.EnquiryDealsJson.forEach(deal => {
                 //console.log("deal render:", deal);
-                const hideFollowUp = (deal.Is_LeadBooked || deal.Is_LeadLost);
+                const hideFollowUp = (deal.Is_LeadBooked); // || deal.Is_LeadLost);
                 dealsHtml += `
                     <div class="card shadow-sm mb-2 deal-card cursor-pointer"
                         draggable = "true"
                         data-dealid="${deal.EnquiryDealId}"
                         data-bookingid="${deal.BookingId || 0}"
                         data-deal='${JSON.stringify(deal)}'
-                        data-processid="${process.ProcessId}">
+                        data-processid="${process.ProcessId}"   
+                        data-isleadlost="${deal.Is_LeadLost}" 
+                        data-isleadbooked="${deal.Is_LeadBooked}">
                             <div class="card shadow-sm border-0 deal-open">
 
                                 <!-- CARD HEADER -->
@@ -1200,7 +1211,8 @@ function renderBoard() {
                                 <div class="d-flex align-items-center flex-nowrap w-100 justify-content-between small-text">
 
                                     <!-- Followups -->
-                                    <div class="action-btn open-followup d-flex align-items-center" data-dealid="${deal.EnquiryDealId}">
+                                    <div class="action-btn open-followup d-flex align-items-center" data-dealid="${deal.EnquiryDealId}" 
+                                        data-isleadlost="${deal.Is_LeadLost}" data-isleadbooked="${deal.Is_LeadBooked}">
                                         <span class="badge bg-dark me-1 px-1 py-0 badge-sm">${deal.FollowUpCount}</span>
                                         <span class="text-truncate">Followups</span>
                                     </div>
@@ -1208,7 +1220,8 @@ function renderBoard() {
                                     <span class="mx-1 text-muted">|</span>
 
                                     <!-- Quotations -->
-                                    <div class="action-btn open-quotation d-flex align-items-center" data-dealid="${deal.EnquiryDealId}">
+                                    <div class="action-btn open-quotation d-flex align-items-center" data-dealid="${deal.EnquiryDealId}"
+                                        data-isleadlost="${deal.Is_LeadLost}" data-isleadbooked="${deal.Is_LeadBooked}">
                                         <span class="badge bg-dark me-1 px-1 py-0 badge-sm">${deal.QuotationCount}</span>
                                         <span class="text-truncate">Quotations</span>
                                     </div>
@@ -1249,6 +1262,8 @@ function renderBoard() {
     $(document).off("click", ".deal-open").on("click", ".deal-open", function () {
         const dealId = $(this).closest(".deal-card").data("dealid");
         const bookingId = $(this).closest(".deal-card").data("bookingid");
+        const isleadlost = $(this).closest(".deal-card").data("isleadlost");
+        const isleadbooked = $(this).closest(".deal-card").data("isleadbooked");
         //console.log("Clicked dealId:", dealId);
 
         // later you can call your API here
@@ -1263,7 +1278,7 @@ function renderBoard() {
                     const data = response.data;
 
                     // 🔒 Validation: Prevent edit if already booked
-                    if (bookingId > 0) {
+                    if (bookingId > 0 || isleadlost || isleadbooked) {
                         // 🔥 Change modal title for edit mode
                         $("#dealModalLabel").text("Lead Details (Enquiry)");
                         $("#deleteDealBtn").addClass("d-none").data("deal-id", "0"); // hide delete btn
@@ -1305,7 +1320,7 @@ function renderBoard() {
                     $("#eventEnd").val(data.EventEndTime);
                     $("#pax").val(data.Pax);
 
-                    console.log("edit data:", data);
+                    //console.log("edit data:", data);
                     //$("#packageDropdown").val(data.PackageId).trigger("change");
                     loadFoodPackageList(data.PackageId);
                     $("#followUpDate").val(data.FollowUpDate_Format2);
@@ -1338,8 +1353,10 @@ function renderBoard() {
         e.stopPropagation();
 
         const enquiryDealId = $(this).data("dealid");
+        const isleadlost = $(this).data("isleadlost");
+        const isleadbooked = $(this).data("isleadbooked");
 
-        openFollowUp(enquiryDealId);
+        openFollowUp(enquiryDealId, null, isleadlost, isleadbooked);
     });
 
     function validateFollowUp() {
@@ -1781,9 +1798,9 @@ function saveFollowUpAndMoveDeal() {
     });
 }
 
-function openFollowUp(enquiryDealId, moveContext = null) {
+function openFollowUp(enquiryDealId, moveContext = null, isleadlost=false, isleadbooked=false) {
     resetFollowUpForm();
-    console.log("Opening Follow-Up. EnquiryDealId =", enquiryDealId);
+    //console.log("Opening Follow-Up. EnquiryDealId =", enquiryDealId);
     $("#hfEnquiryDealId").val(enquiryDealId);
 
     // Optional: store drag-drop move info if exists
@@ -1795,7 +1812,17 @@ function openFollowUp(enquiryDealId, moveContext = null) {
 
     loadFollowUpHistoryById(enquiryDealId);
 
+    console.log("isleadlost, isleadbooked:", isleadlost, isleadbooked);
+
     $("#followup_closebutton").removeClass("d-none");
+
+    if (isleadlost || isleadbooked) {
+        $("#followup_form, #followup_title").addClass("d-none");
+    }
+    else {
+        $("#followup_form, #followup_title").removeClass("d-none");
+    }
+
     if (moveContext == "lost") {
         $(".leadLostReasonSection").show();
         $("#hfIsLeadLost").val(1);
@@ -2081,7 +2108,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const $selected = $(this).find("option:selected");
         const ratePerPerson = parseFloat($selected.data("rateperperson")) || 0;
 
-        console.log("packageDropdown change ratePerPerson:", ratePerPerson);
+        //console.log("packageDropdown change ratePerPerson:", ratePerPerson);
         // Set value
         $("#packageAmount").val(ratePerPerson);
         // Recalculate
@@ -2215,8 +2242,11 @@ document.addEventListener("DOMContentLoaded", function () {
         e.stopPropagation();
 
         const enquiryDealId = $(this).data("dealid");
+        const isleadlost = $(this).data("isleadlost");
+        const isleadbooked = $(this).data("isleadbooked");
+
         console.log("quotation enquiryDealId:", enquiryDealId);
-        openQuotation(enquiryDealId, "view");
+        openQuotation(enquiryDealId, "view", isleadlost, isleadbooked);
     });
 
     // When Quotation Modal closes
@@ -2950,11 +2980,11 @@ function loadFoodPackageList(selectedPackageId = null) {
                 populateFoodPackageDropdown($("#packageDropdown, #foodPackage_PackageDropdown"));
                 renderFoodPackages(foodPackages);
 
-                console.log("package:", foodPackages);
+                //console.log("package:", foodPackages);
 
                 // ✅ SET VALUE AFTER DROPDOWN IS READY
                 if (selectedPackageId) {
-                    console.log("selectedPackageId:", selectedPackageId);
+                    //console.log("selectedPackageId:", selectedPackageId);
                     $("#packageDropdown").val(String(selectedPackageId)).trigger("change");
                 }
             }

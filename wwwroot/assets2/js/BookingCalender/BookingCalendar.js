@@ -5492,8 +5492,10 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_TaxAmount").text(taxAmount || "0");
                     $("#bookingReport_BookingDiscount").text(data.PaymentSummary_BookingDiscount_Total || "0");
                     $("#bookingReport_TotalAmount").text(data.PaymentSummary_PayableAmount || "0");
-                    $("#bookingReport_PaidTillDate").text(data.Payment_Amount || "0");
-                    //$("#bookingReport_Discount").text(data.PaymentSummary_BookingDiscount_Type_Amount || "0");
+
+                    let amount = parseFloat(data.Payment_Amount) || 0;
+                    $("#bookingReport_PaidTillDate").text(amount).toggleClass("text-success", amount > 0);
+
                     $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
 
                     //Payment Details Table
