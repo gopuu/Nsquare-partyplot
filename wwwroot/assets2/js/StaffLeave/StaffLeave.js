@@ -247,7 +247,13 @@ function renderTable(data) {
                         <button class="btn btn-outline-warning btn-sm btn-edit btn-action-xss"><i class="fa fa-edit"></i></button>
                         <button class="btn btn-outline-danger btn-sm btn-delete btn-action-xss" data-id="${id}"><i class="fa fa-trash"></i></button>`
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

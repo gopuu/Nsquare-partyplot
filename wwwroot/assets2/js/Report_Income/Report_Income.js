@@ -377,7 +377,13 @@ function renderIncomeTable(rows, totals) {
 
         language: {
             emptyTable: "No income records found for the selected period."
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

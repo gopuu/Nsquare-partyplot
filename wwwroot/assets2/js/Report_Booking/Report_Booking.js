@@ -266,9 +266,7 @@ function renderBookingTable(data) {
         ],
 
         footerCallback: function (row, data, start, end, display) {
-
             const api = this.api();
-
             function sumByField(field) {
                 return api
                     .column(`${field}:name`)
@@ -289,7 +287,13 @@ function renderBookingTable(data) {
             $(api.column('Discount:name').footer()).html(formatINR2(discount));
             $(api.column('Tax:name').footer()).html(formatINR2(tax));
             $(api.column('TotalAmount:name').footer()).html(formatINR2(total));
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

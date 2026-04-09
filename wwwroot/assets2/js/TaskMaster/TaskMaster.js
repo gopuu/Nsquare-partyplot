@@ -230,7 +230,13 @@ function renderTaskTable(data) {
                     </button>
                 `
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

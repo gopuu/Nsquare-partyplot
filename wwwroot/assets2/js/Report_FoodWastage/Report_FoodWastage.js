@@ -230,7 +230,12 @@ function renderFoodWastageDetailGrid(items) {
             $(api.column(2).footer()).html(
                 `<strong class="text-danger">${total.toFixed(2)} kg</strong>`
             );
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
 
     });
 }
@@ -435,7 +440,13 @@ function renderFoodWastageTable(data) {
 
         language: {
             emptyTable: "No food wastage records found."
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
 
     });
 }

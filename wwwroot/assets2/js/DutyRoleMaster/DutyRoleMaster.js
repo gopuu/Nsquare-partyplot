@@ -161,6 +161,12 @@ function renderDutyRoleTable(data) {
                         <button class="btn btn-outline-danger btn-action-xs btn-delete"><i class="fa fa-trash"></i></button>
                 `
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }

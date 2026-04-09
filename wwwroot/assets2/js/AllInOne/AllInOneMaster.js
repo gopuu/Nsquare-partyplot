@@ -180,6 +180,10 @@ function renderAllInOneTable(data) {
     if ($.fn.dataTable.isDataTable("#tableAllInOne table")) {
         $("#tableAllInOne table").DataTable().destroy();
     }
+
+    /// ✅ ADD THIS
+    $("#tableAllInOne table").empty();
+
     data.forEach((x, i) => x.srno = i + 1);
     $("#tableAllInOne table").DataTable({
         data: data,
@@ -216,7 +220,13 @@ function renderAllInOneTable(data) {
                     </button>
                 `
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

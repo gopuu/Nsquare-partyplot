@@ -518,8 +518,15 @@ function renderTable(data) {
         ],
         language: {
             emptyTable: "No Data Found !!"
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
+
 }
 
 function resetForm() {

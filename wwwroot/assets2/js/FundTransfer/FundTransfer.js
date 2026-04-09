@@ -465,7 +465,12 @@ function renderFundTransferTable(data, totalAmount) {
             },
             paging: false,
             searching: false,
-            ordering: false
+            ordering: false,
+            initComplete: function () {
+                $(this.api().table().header())
+                    .find('th')
+                    .addClass('bg-warning-subtle text-dark');
+            },
         });
 
         return;
@@ -551,7 +556,13 @@ function renderFundTransferTable(data, totalAmount) {
             `;
 
             $("#tableMain table").append(footer);
-        }
+        },
+
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
     });
 }
 

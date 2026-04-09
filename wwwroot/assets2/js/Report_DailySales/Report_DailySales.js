@@ -337,7 +337,12 @@ function renderDailySalesTable(data, totals) {
             $(api.column(5).footer()).html(`<strong>${fmt(totals.NetSales)}</strong>`);
             $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalPayments)}</strong>`);
             $(api.column(8).footer()).html(`<strong>${fmt(totals.DuePayments)}</strong>`);
-        }        
+        },        
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
     });
 }
 

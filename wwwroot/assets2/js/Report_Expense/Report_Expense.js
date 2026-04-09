@@ -369,7 +369,13 @@ function renderExpenseTable(rows, totals) {
 
         language: {
             emptyTable: "No expense records found for the selected period."
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }
 

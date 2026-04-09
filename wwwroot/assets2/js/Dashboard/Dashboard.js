@@ -637,10 +637,11 @@ function renderPnLCategoryChart(labels, datasets, categoryIndexMap, apiData) {
 
 //3. Corporate Event vs Family Events -- START ------------------------
 let jobPieChart = null;
+let selectedMonthDuration_CorporateFamilyEvent = "thismonth";
 function loadBookingEventTypeCount() {
 
     let requestObj = {
-        MonthDuration: selectedMonthDuration,
+        MonthDuration: selectedMonthDuration_CorporateFamilyEvent,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null
     };
@@ -736,9 +737,10 @@ $(".chart-filter-pie .dropdown-item").on("click", function (e) {
     $(".chart-filter-pie .dropdown-item").removeClass("active");
     $(this).addClass("active");
 
-    selectedMonthDuration = $(this).text().toLowerCase().replaceAll(" ", "");
-
-    $("#jobChartFilter").text($(this).text());
+    //= $(this).text().toLowerCase().replaceAll(" ", "");
+    selectedMonthDuration_CorporateFamilyEvent = $(this).data("value");
+    var txt = $(this).text();
+    $("#jobChartFilter").text(txt);
 
     loadBookingEventTypeCount(); // 🔥 reload chart
 });
@@ -746,6 +748,7 @@ $(".chart-filter-pie .dropdown-item").on("click", function (e) {
 
 //4. Corporate & Sub type of Event -- START ------------------------
 // 🔹 Function to load data via AJAX
+let selectedMonthDuration_CorporateSubType = "thismonth";
 function loadBookingSubEventTypeCorporate(monthDuration = "thismonth", fromDate = null, toDate = null) {
     var payload = {
         MonthDuration: monthDuration,
@@ -843,20 +846,18 @@ $(".chart-filter-eventPie .dropdown-item").on("click", function (e) {
 
     // Remove active class from all
     $(".chart-filter-eventPie .dropdown-item").removeClass("active");
-
     // Add active to clicked item
     $(this).addClass("active");
+
+    selectedMonthDuration_CorporateSubType = $(this).data("value"); // e.g., "yesterday", "thismonth"
 
     // Update the button text
     const selectedText = $(this).text();
     $("#eventPieChartFilter").text(selectedText);
 
-    // Optional: store selected value for chart
-    const selectedValue = $(this).data("value"); // e.g., "yesterday", "thismonth"
-    selectedMonthDuration = selectedValue;
-    console.log("subEvent-Corporate selectedMonthDuration:", selectedValue);
+    //console.log("subEvent-Corporate selectedMonthDuration:", selectedValue);
     // Call your chart update
-    loadBookingSubEventTypeCorporate(selectedValue);
+    loadBookingSubEventTypeCorporate(selectedMonthDuration_CorporateSubType);
 });
 //4. Corporate & Sub type of Event -- END ------------------------
 
@@ -878,6 +879,8 @@ function wrapText(text, maxLength) {
 }
 
 //5. Family & Sub type of Event -- START ------------------------
+let selectedMonthDuration_FamilySubType = "thismonth";
+
 function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", fromDate = null, toDate = null) {
     $.ajax({
         url: '/api/Dashboard/GetBookingSubEventTypeFamilyFunction', // your API route
@@ -959,6 +962,27 @@ function renderFamilySubTypeChart(labels, values, percents) {
         plugins: [ChartDataLabels]
     });
 }
+// 🔹 Dropdown click event
+$(".chart-filter-salepie .dropdown-item").on("click", function (e) {
+    e.preventDefault();
+
+    // Remove active class from all
+    $(".chart-filter-salepie .dropdown-item").removeClass("active");
+    // Add active to clicked item
+    $(this).addClass("active");
+
+    selectedMonthDuration_FamilySubType = $(this).data("value"); // e.g., "yesterday", "thismonth"
+
+    // Update the button text
+    const selectedText = $(this).text();
+    $("#salepieChartFilter").text(selectedText);
+
+    //console.log("subEvent-Corporate selectedMonthDuration:", selectedValue);
+    // Call your chart update
+    loadBookingSubEventTypeFamilyFunction(selectedMonthDuration_FamilySubType);
+});
+//4. Corporate & Sub type of Event -- END ------------------------
+
 //5. Family & Sub type of Event -- END ------------------------
 
 //6. Overall Bookings Statistics  --- START ------------------------

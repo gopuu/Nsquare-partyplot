@@ -52,7 +52,13 @@ function renderFeedbackTable(data) {
                 { title: 'Booking SubEvent Name' },
                 { title: 'Text Response' },
                 { title: 'Created At' }
-            ]
+            ],
+            initComplete: function () {
+                $(this.api().table().header())
+                    .find('th')
+                    .addClass('bg-warning-subtle text-dark');
+            },
+
         });
         return;
     }
@@ -82,6 +88,12 @@ function renderFeedbackTable(data) {
                 data: 'Created_At_Format',
                 title: 'Created At'
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+
     });
 }

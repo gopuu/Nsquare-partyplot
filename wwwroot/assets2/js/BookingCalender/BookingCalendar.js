@@ -1464,7 +1464,7 @@ async function renderBoard(bookingData = null) {
 
         //Hall Name - Left Side
         const nameCell = document.createElement("div");
-        nameCell.className = "text-center rounded p-2 name-cell";
+        nameCell.className = "text-center rounded p-2 name-cell bg-warning-subtle";
         nameCell.textContent = hall.HallName;
         row.appendChild(nameCell);
         
@@ -5305,6 +5305,16 @@ function showReportOptions() {
         confirmButtonText: "With Price",
         denyButtonText: "Without Price",
         cancelButtonText: "Close",
+
+        confirmButtonColor: "#16a34a",   // green (professional success)
+        denyButtonColor: "#f59e0b",      // amber (neutral warning)
+        cancelButtonColor: "#6b7280",     // gray
+
+        customClass: {
+            confirmButton: "text-white",
+            denyButton: "text-dark",
+            cancelButton: "text-white"
+        }
     }).then((result) => {
 
         if (result.isConfirmed) {
@@ -5737,15 +5747,17 @@ function renderFoodPackages(packages) {
         if (Object.keys(menuGrouped).length > 0) {
             html += `<div style="margin-bottom:6px;">`;
             html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
-
             for (let header in menuGrouped) {
+                const items = menuGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
                 html += `
                     <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${menuGrouped[header].join(", ")}
+                        <strong>${header}:</strong> ${items}
                     </div>
                 `;
             }
-
             html += `</div>`;
         }
 
@@ -5753,15 +5765,18 @@ function renderFoodPackages(packages) {
         if (Object.keys(addonGrouped).length > 0) {
             html += `<div>`;
             html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
-
             for (let header in addonGrouped) {
+
+                const items = addonGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
                 html += `
                     <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${addonGrouped[header].join(", ")}
+                        <strong>${header}:</strong> ${items}
                     </div>
                 `;
             }
-
             html += `</div>`;
         }
 

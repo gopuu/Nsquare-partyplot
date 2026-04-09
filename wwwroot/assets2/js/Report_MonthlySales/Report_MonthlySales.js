@@ -390,8 +390,13 @@ function renderMonthlySalesTable(data, totals) {
 
             $(api.column(6).footer()).html(`<strong>${formatINR2(totals.TotalPayments)}</strong>`);
 
-        }
+        },
 
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        }
     });
 }
 

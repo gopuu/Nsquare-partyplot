@@ -417,31 +417,6 @@ function renderTable(data) {
         $('#tableMain table').DataTable().clear().destroy();
     }
 
-    if (!data || data.length === 0) {
-
-        $('#tableMain tbody').html(`
-            <tr>
-                <td colspan="7" class="text-center fw-bold text-danger">
-                    No Data Found !!
-                </td>
-            </tr>
-        `);
-
-        $('#tableMain table').DataTable({
-            data: [],
-            columns: [
-                { title: "#" },
-                { title: "Purchase Date" },
-                { title: "Vendor" },
-                { title: "Invoice No" },
-                { title: "Total Amount" },
-                { title: "Action" }
-            ]
-        });
-
-        return;
-    }
-
     // Add SR No.
     data.forEach((x, i) => x.srno = i + 1);
 
@@ -524,7 +499,12 @@ function renderTable(data) {
         ordering: true,
         searching: true,
         lengthChange: false,
-        stateSave: false
+        stateSave: false,
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
 
     });
 

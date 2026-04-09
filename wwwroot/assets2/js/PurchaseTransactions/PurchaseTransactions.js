@@ -164,7 +164,12 @@ function renderTable(data) {
                 data: "PaidOn",
                 title: "Created On"
             }
-        ]
+        ],
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        }
     });
 }
 

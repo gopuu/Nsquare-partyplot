@@ -357,7 +357,12 @@ function renderGSTSalesTable(data, totals) {
 
         language: {
             emptyTable: "No GST data found for the selected period."
-        }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
 
     });
 }

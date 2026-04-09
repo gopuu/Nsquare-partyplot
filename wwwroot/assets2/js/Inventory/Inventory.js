@@ -12,7 +12,6 @@ $(document).ready(function () {
         GetRawMaterialMasterData();  // Load ALL initially
     });
 
-
     var rawMaterialId = 0;
 
     // When Category changes → Fetch Raw Materials of that category
@@ -235,8 +234,15 @@ function renderTable(data) {
 
         language: {
             emptyTable: "No records found"
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
         }
     });
+
+
 }
 
 

@@ -2084,15 +2084,17 @@ function renderFoodPackages(packages) {
         if (Object.keys(menuGrouped).length > 0) {
             html += `<div style="margin-bottom:6px;">`;
             html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
-
             for (let header in menuGrouped) {
+                const items = menuGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
                 html += `
                     <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${menuGrouped[header].join(", ")}
+                        <strong>${header}:</strong> ${items}
                     </div>
                 `;
             }
-
             html += `</div>`;
         }
 
@@ -2100,15 +2102,18 @@ function renderFoodPackages(packages) {
         if (Object.keys(addonGrouped).length > 0) {
             html += `<div>`;
             html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
-
             for (let header in addonGrouped) {
+
+                const items = addonGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
                 html += `
                     <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${addonGrouped[header].join(", ")}
+                        <strong>${header}:</strong> ${items}
                     </div>
                 `;
             }
-
             html += `</div>`;
         }
 
@@ -2563,7 +2568,13 @@ function renderTable(data, totals) {
 
             $(api.column('TotalAmount:name').footer()).html(format(totals.TotalAmount));
             $(api.column('OutstandingAmount:name').footer()).html(format(totals.TotalOutstanding));
-        }        
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
+        
     }); 
 }
 /*

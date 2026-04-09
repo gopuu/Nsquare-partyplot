@@ -1854,6 +1854,7 @@ namespace ERPAdmin.ApiControllers
                 #region FONT DECLARATIONS
                 iTextSharpFont normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9); 
                 iTextSharpFont boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                iTextSharpFont boldFont_lightgray = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.GRAY);
 
                 BaseColor summaryBg = new BaseColor(82, 86, 88);
                 iTextSharpFont whiteBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE);
@@ -1867,6 +1868,11 @@ namespace ERPAdmin.ApiControllers
                 string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
                 BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 iTextSharpFont fontRupeeNormal = new iTextSharpFont(bf, 9, iTextSharpFont.NORMAL);
+
+                string fontPath_Bold = Path.Combine(_env.WebRootPath, "fonts", "arialbd.ttf");
+                BaseFont bf_Bold = BaseFont.CreateFont(fontPath_Bold, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharpFont fontRupeeBold = new iTextSharpFont(bf_Bold, 9, iTextSharpFont.NORMAL);
+
                 #endregion
 
                 // ===== TITLE LINES =====
@@ -1920,7 +1926,7 @@ namespace ERPAdmin.ApiControllers
                     rightTable.AddCell(new PdfPCell(p) { Border = Rectangle.NO_BORDER, PaddingBottom = 6, PaddingLeft = 4 });
                 }
 
-                AddRightRow("Pax", pax);
+                AddRightRow("PAX", pax);
                 AddRightRow("Hall", hallName);
                 AddRightRow("Menu Type", menuType);
                 AddRightRow("Booking Type", bookingType);
@@ -1942,49 +1948,150 @@ namespace ERPAdmin.ApiControllers
                 document.Add(detailsTable);
                 document.Add(new Paragraph("\n"));
 
-                //FOOD PACKAGE & PAYMENT SUMMARY
-                // ===== WRAPPER TABLE (50:50) =====
-                PdfPTable wrapperTable = new PdfPTable(2) { WidthPercentage = 100 };
-                wrapperTable.SetWidths(new float[] { 1f, 1f }); // 50:50
-
-                // ================= LEFT: PACKAGE =================
+                // ================= FOOD PACKAGE (FULL WIDTH) =================
                 PdfPTable packageTable = new PdfPTable(1) { WidthPercentage = 100 };
-
                 int i = 1;
                 foreach (var pkg in packageItems)
                 {
-                    string line = packageItems.Count > 1
-                        ? $"FOOD PACKAGE {i++}: {pkg.FoodPackageName} @ Rs.{pkg.PerPlate:N0} / Per Plate"
-                        : $"FOOD PACKAGE: {pkg.FoodPackageName} @ Rs.{pkg.PerPlate:N0} / Per Plate";
+                    // 🔹 INNER TABLE (per package)
+                    PdfPTable pkgTable = new PdfPTable(1) { WidthPercentage = 100 };
 
-                    packageTable.AddCell(new PdfPCell(new Phrase(line, boldFont))
+                    // 🔹 Title
+                    string title2 = packageItems.Count > 1
+                        ? $"FOOD PACKAGE {i}: {pkg.FoodPackageName} (₹{Convert.ToDecimal(pkg.PerPlate):N0}/Plate)"
+                        : $"FOOD PACKAGE: {pkg.FoodPackageName} (₹{Convert.ToDecimal(pkg.PerPlate):N0}/Plate)";
+
+                    pkgTable.AddCell(new PdfPCell(new Phrase(title2, fontRupeeBold))
                     {
                         Border = Rectangle.NO_BORDER,
                         PaddingTop = 6,
                         PaddingBottom = 2
                     });
 
-                    packageTable.AddCell(new PdfPCell(new Phrase(
-                        $"Pax: {pkg.Pax} | Total: Rs.{pkg.TotalCharges:N0}", normalFont))
+                    // 🔹 Pax + Total
+                    string? paxVal = i == 1 ? pax : pkg.Pax;
+
+                    var phrase = new Phrase();
+                    phrase.Add(new Chunk($"PAX: {paxVal} | Total: ", normalFont));
+                    phrase.Add(new Chunk($"₹{Convert.ToDecimal(pkg.TotalCharges):N0}", fontRupeeNormal));
+
+                    pkgTable.AddCell(new PdfPCell(phrase)
                     {
                         Border = Rectangle.NO_BORDER,
                         PaddingBottom = 6
                     });
+
+                    // 🔹 MENU HEADER
+                    pkgTable.AddCell(new PdfPCell(new Phrase("Menu", boldFont_lightgray))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        PaddingBottom = 3
+                    });
+
+                    // 🔹 MENU ITEMS
+                    var menuGrouped = pkg.MenuItemsList?
+                        .GroupBy(x => x.MenuHeader_Name)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(x => x.MenuItem_Name).ToList()
+                        );
+
+                    if (menuGrouped != null)
+                    {
+                        foreach (var header in menuGrouped)
+                        {
+                            BaseColor bgColor = new BaseColor(245, 245, 245);
+
+                            var paragraph = new Paragraph();
+                            paragraph.Add(new Phrase(header.Key + "\n", boldFont));
+
+                            var items = header.Value
+                                .Select((item, index) => $"({index + 1}) {item}")
+                                .ToList();
+
+                            paragraph.Add(new Phrase(string.Join("   ", items), normalFont));
+
+                            pkgTable.AddCell(new PdfPCell(paragraph)
+                            {
+                                Border = Rectangle.BOX,
+                                BorderColor = BaseColor.WHITE,
+                                BorderWidth = 2f,
+                                BackgroundColor = bgColor,
+                                Padding = 6
+                            });
+                        }
+                    }
+
+                    // 🔹 ADD-ONS
+                    var addonGrouped = pkg.AddOnsList?
+                        .GroupBy(x => x.AddOn_Header_Name)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(x => x.AddOn_Item_Name).ToList()
+                        );
+
+                    if (addonGrouped != null && addonGrouped.Count > 0)
+                    {
+                        pkgTable.AddCell(new PdfPCell(new Phrase("Add-ons", boldFont_lightgray))
+                        {
+                            Border = Rectangle.NO_BORDER,
+                            PaddingTop = 6,
+                            PaddingBottom = 4
+                        });
+
+                        foreach (var header in addonGrouped)
+                        {
+                            BaseColor bgColor = new BaseColor(245, 245, 245);
+
+                            var paragraph = new Paragraph();
+                            paragraph.Add(new Phrase(header.Key + "\n", boldFont));
+
+                            var items = header.Value
+                                .Select((item, index) => $"({index + 1}) {item}")
+                                .ToList();
+
+                            paragraph.Add(new Phrase(string.Join("   ", items), normalFont));
+
+                            pkgTable.AddCell(new PdfPCell(paragraph)
+                            {
+                                Border = Rectangle.BOX,
+                                BorderColor = BaseColor.WHITE,
+                                BorderWidth = 2f,
+                                BackgroundColor = bgColor,
+                                Padding = 6
+                            });
+                        }
+                    }
+
+                    // 🔹 WRAP PACKAGE WITH BORDER
+                    PdfPCell outerCell = new PdfPCell(pkgTable)
+                    {
+                        Border = Rectangle.BOX,
+                        BorderColor = BaseColor.LIGHT_GRAY, // ✅ light gray border
+                        BorderWidth = 1f,
+                        Padding = 8,
+                        PaddingBottom = 10
+                    };
+
+                    packageTable.AddCell(outerCell);
+
+                    // 🔹 SPACE BETWEEN PACKAGES
+                    packageTable.AddCell(new PdfPCell(new Phrase(" "))
+                    {
+                        Border = Rectangle.NO_BORDER,
+                        FixedHeight = 6
+                    });
+
+                    i++;
                 }
 
-                // Wrap LEFT into cell
-                wrapperTable.AddCell(new PdfPCell(packageTable)
-                {
-                    Border = Rectangle.NO_BORDER,
-                    PaddingRight = 10, // spacing between columns
-                    VerticalAlignment = Element.ALIGN_TOP
-                });
+                // ✅ ADD PACKAGE FULL WIDTH
+                document.Add(packageTable);
+                document.Add(new Paragraph("\n"));
 
-
-                // ================= RIGHT: PAYMENT =================
+                // ================= PAYMENT TABLE =================
                 PdfPTable paymentTable = new PdfPTable(2) { WidthPercentage = 100 };
                 paymentTable.SetWidths(new float[] { 0.65f, 0.35f });
-
                 // Header
                 paymentTable.AddCell(new PdfPCell(new Phrase("PAYMENT SUMMARY", whiteBold))
                 {
@@ -1994,7 +2101,6 @@ namespace ERPAdmin.ApiControllers
                     BorderColor = BaseColor.LIGHT_GRAY,
                     Padding = 6
                 });
-
                 void AddAmountRow(string label, string value)
                 {
                     paymentTable.AddCell(new PdfPCell(new Phrase(label, normalFont))
@@ -2019,59 +2125,46 @@ namespace ERPAdmin.ApiControllers
                 AddAmountRow("Total Paid", paidAmount);
                 AddAmountRow("Outstanding Amount", outstandingAmount);
 
-                if (request.IsWithPrice) {
-                    // Wrap RIGHT into cell
-                    wrapperTable.AddCell(new PdfPCell(paymentTable)
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        PaddingLeft = 10,
-                        VerticalAlignment = Element.ALIGN_TOP
-                    });
+                if (request.IsWithPrice)
+                {
+                    document.Add(paymentTable);
                 }
-
-                // ===== FINAL ADD =====
-                document.Add(wrapperTable);
                 document.Add(new Paragraph("\n"));
 
                 // ================= BOOKING INFO =================
-                PdfPTable infoTable = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 10 };
-
+                PdfPTable infoTable = new PdfPTable(1) { WidthPercentage = 100 };
                 //infoTable.AddCell(new PdfPCell(new Phrase("BOOKING DETAILS", boldFont))
                 //{
                 //    Border = Rectangle.NO_BORDER,
                 //    PaddingBottom = 6
                 //});
-
                 infoTable.AddCell(new PdfPCell(new Phrase($"Booked By : {bookedBy}", normalFont))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingBottom = 3
                 });
-
                 infoTable.AddCell(new PdfPCell(new Phrase($"Booked On : {bookedOn}", normalFont))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingBottom = 3
                 });
-
                 infoTable.AddCell(new PdfPCell(new Phrase($"Reference : {leadReference}", normalFont))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingBottom = 6
                 });
-                document.Add(infoTable);
 
+                document.Add(infoTable);
+                document.Add(new Paragraph("\n"));
 
                 // ================= TERMS & CONDITIONS =================
                 PdfPTable tncTable = new PdfPTable(1) { WidthPercentage = 100 };
-
                 tncTable.AddCell(new PdfPCell(new Phrase("TERMS & CONDITIONS", boldFont))
                 {
                     Border = Rectangle.NO_BORDER,
                     PaddingTop = 6,
                     PaddingBottom = 6
                 });
-
                 // actual terms text
                 tncTable.AddCell(new PdfPCell(new Phrase(tnc ?? "", labelFont))
                 {
@@ -2079,7 +2172,6 @@ namespace ERPAdmin.ApiControllers
                     PaddingBottom = 10,
                     MinimumHeight = 60f
                 });
-
                 document.Add(tncTable);
 
                 // ===== SIGNATURES =====
@@ -2095,7 +2187,8 @@ namespace ERPAdmin.ApiControllers
                 document.Add(signTable);
 
                 // 2nd Page - NOTES
-                document.NewPage();
+                //document.NewPage();
+                document.Add(new Paragraph("\n"));
 
                 title = new Paragraph("Booking Notes", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.GRAY))
                 {

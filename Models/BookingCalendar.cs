@@ -505,6 +505,19 @@
         public string? FoodPackageTitleName { get; set; }
         public string? Pax { get; set; }
         public string? FoodPackageDateTime { get; set; }
+        public List<PackageItem_FunctionProspect_Items>? MenuItemsList { get; set; }
+        public List<PackageItem_FunctionProspect_AddOns>? AddOnsList { get; set; }
+    }
+    public class PackageItem_FunctionProspect_Items
+    {
+        public string? MenuHeader_Name { get; set; }
+        public string? MenuItem_Name { get; set; }
+    }
+    public class PackageItem_FunctionProspect_AddOns
+    {
+        public string? AddOn_Header_Name { get; set; }
+        public string? AddOn_Item_Name { get; set; }
+        public string? AddOn_Pax { get; set; }
     }
 
 }

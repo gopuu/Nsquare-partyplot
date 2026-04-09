@@ -87,38 +87,7 @@ function fetchLedgerData() {
 function renderLedgerTable(data) {
 
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
-
         $('#tableMain table').DataTable().clear().destroy();
-
-    }
-
-    if (!data || data.length === 0) {
-
-        $('#tableMain table').html(`
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Asset</th>
-                    <th>Transaction</th>
-                    <th>Qty In</th>
-                    <th>Qty Out</th>
-                    <th>Date</th>
-                    <th>Source</th>
-                    <th>Reference</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="9" class="text-center fw-bold text-danger">
-                        No Data Found !!
-                    </td>
-                </tr>
-            </tbody>
-        `);
-
-        return;
-
     }
 
     data.forEach((x, i) => x.srno = i + 1);
@@ -194,7 +163,12 @@ function renderLedgerTable(data) {
         ordering: true,
         searching: true,
         lengthChange: false,
-        stateSave: false
+        stateSave: false,
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
+        },
     });
 }
 

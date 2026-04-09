@@ -975,9 +975,14 @@ function renderTransactions(data) {
                     <td></td>
                 </tr>`;
             $("#tableMain_Transactions tbody").append(totalRow);
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
         }
-
     });
+
 }
 //TRANSACTIONS GRID --END
 

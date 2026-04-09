@@ -1394,7 +1394,12 @@ function renderTable(data) {
     if (!data || data.length === 0) {
         $('#tableMain table').DataTable({
             data: [],
-            columns: getColumns()
+            columns: getColumns(),
+            initComplete: function () {
+                $(this.api().table().header())
+                    .find('th')
+                    .addClass('bg-warning-subtle text-dark');
+            }
         });
         return;
     }
@@ -1432,6 +1437,11 @@ function renderTable(data) {
                 // ⚠️ PARTIAL
                 $(row).addClass("row-orange");
             }
+        },
+        initComplete: function () {
+            $(this.api().table().header())
+                .find('th')
+                .addClass('bg-warning-subtle text-dark');
         }
     });
     function getColumns() {
