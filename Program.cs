@@ -112,6 +112,7 @@ app.UseSwaggerUI(c =>
 app.MapHub<SettingsHub>("/settingsHub");
 app.MapHub<QuotationHub>("/quotationHub");
 app.MapHub<PurchaseHub>("/purchaseHub");
+app.MapHub<WalletHub>("/walletHub");
 
 // Read custom error settings from appsettings.json
 var config = builder.Configuration;

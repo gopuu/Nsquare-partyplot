@@ -21,3 +21,22 @@ public class PurchaseHub : Hub
         await Clients.All.SendAsync("OnPurchaseChanged");
     }
 }
+
+public class WalletHub : Hub
+{
+    public async Task NotifyWalletChanged(object data)
+    {
+        await Clients.All.SendAsync("OnWalletChanged", data);
+    }
+
+    public async Task JoinCompanyGroup(string companyId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, companyId);
+    }
+
+    public async Task LeaveCompanyGroup(string companyId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, companyId);
+    }
+}
+

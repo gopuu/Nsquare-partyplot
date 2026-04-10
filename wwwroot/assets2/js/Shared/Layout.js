@@ -1,4 +1,28 @@
-﻿function showTempLoader(title = "Checking Availability") {
+﻿const walletToast = Swal.mixin({
+    toast: true,
+    position: "top-end", // 👉 top-right
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+    }
+});
+
+
+AppSignalR.subscribeWallet(function (data) {
+    console.log("Wallet Updated (layout):", data);
+    fetchBalance_Layout();
+
+    walletToast.fire({
+        icon: data.Type === "CREDIT" ? "success" : "warning",
+        title: `${data.Type === "CREDIT" ? "+" : "-"} ₹${data.Amount}`
+    });
+});
+
+
+function showTempLoader(title = "Checking Availability") {
     // Show loader before AJAX
     Swal.fire({
         title: title,
@@ -219,7 +243,37 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.classList.add("d-none");
     });
     //All In One Link -- END
+
+   fetchBalance_Layout();
+
 });
+function fetchBalance_Layout() {
+    let companyId = sessionStorage.getItem("companyid") || 1;
+
+    var payload = {
+        CompanyId: Number(companyId)
+    };
+    //console.log("payload wallet:", payload);
+    $.ajax({
+        type: "POST",
+        url: "/api/Wallet/GetWalletBalance",
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        dataType: "json",
+        success: function (response) {
+            //console.log("wallet response:", response);
+            let data = response.data;
+            if (data && data.length > 0) {
+                let balance = data.CurrentBalance || 0;
+                $(".walletBal2").text(`₹${balance.toFixed(2)}`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch balance failed");
+        }
+    });
+}
+
 
 let ajaxActiveCount = 0;
 

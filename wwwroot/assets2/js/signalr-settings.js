@@ -3,12 +3,14 @@
     let settingsConnection = null;
     let quotationConnection = null;
     let purchaseConnection = null;
+    let walletConnection = null;
 
     let settingsSubscribers = [];
     let quotationSubscribers = [];
     let purchaseSubscribers = [];
+    let walletSubscribers = [];
 
-    function start() {
+    function start(companyId = (sessionStorage.getItem("companyid") || 1)) {
         if (!settingsConnection) {
             settingsConnection = new signalR.HubConnectionBuilder()
                 .withUrl("/settingsHub")
@@ -65,14 +67,50 @@
                 //.then(() => console.log("✅ Purchase Connected"))
                 .catch(err => console.error("PurchaseHub Error:", err));
         }
-    }
 
+        if (!walletConnection) {
+            walletConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/walletHub")
+                .withAutomaticReconnect()
+                .build();
+
+            walletConnection.on("OnWalletChanged", function (data) {
+
+                // 🔥 Update UI subscribers
+                walletSubscribers.forEach(fn => {
+                    try { fn(data); } catch (e) { console.error(e); }
+                });
+
+                // 🔥 SweetAlert Toast
+                if (data) {
+                    let icon = data.type === "CREDIT" ? "success" : "warning";
+                    let sign = data.type === "CREDIT" ? "+" : "-";
+
+                    walletToast.fire({
+                        icon: icon,
+                        title: `${sign} ₹${data.amount} ${data.type === "CREDIT" ? "Added" : "Deducted"}`
+                    });
+
+                    // Optional: update balance UI directly
+                    if ($("#walletBalance").length) {
+                        $("#walletBalance").text(data.balance);
+                    }
+                }
+            });
+
+            walletConnection.start()
+                .then(() => {
+                    // ✅ Join company group
+                    walletConnection.invoke("JoinCompanyGroup", companyId.toString());
+                })
+                .catch(err => console.error("WalletHub Error:", err));
+        }
+    }
     function subscribeSettings(fn) {
         if (typeof fn === "function") {
             settingsSubscribers.push(fn);
         }
     }
-
     function subscribeQuotation(fn) {
         if (typeof fn === "function") {
             quotationSubscribers.push(fn);
@@ -83,12 +121,18 @@
             purchaseSubscribers.push(fn);
         }
     }
+    function subscribeWallet(fn) {
+        if (typeof fn === "function") {
+            walletSubscribers.push(fn);
+        }
+    }
 
     return {
         start,
         subscribeSettings,
         subscribeQuotation,
-        subscribePurchase
+        subscribePurchase,
+        subscribeWallet
     };
 
 })();

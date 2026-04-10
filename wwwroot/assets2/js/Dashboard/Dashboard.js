@@ -281,7 +281,7 @@ function loadUpcomingEventsWidget() {
         ToDate: $("#toDate").val() || null
     };
 
-    console.log("Upcoming Events Request:", requestObj);
+    //console.log("Upcoming Events Request:", requestObj);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardUpcomingEvents",
@@ -290,7 +290,7 @@ function loadUpcomingEventsWidget() {
         data: JSON.stringify(requestObj),
         success: function (res) {
             if (res.status === "Success") {
-                console.log("upcoming event res:", res);
+                //console.log("upcoming event res:", res);
                 const upcomingCount = Number(res.data.UpcomingEventsCount) || 0;
                 const upcomingAmount = Number(res.data.UpcomingEventsAmount) || 0;
 

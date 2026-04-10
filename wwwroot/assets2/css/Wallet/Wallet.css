@@ -1,0 +1,16 @@
+﻿.wallet-card {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe8b3 100%);
+    color: #000;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.wallet-balance {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.wallet-label {
+    font-size: 14px;
+    opacity: 0.8;
+}

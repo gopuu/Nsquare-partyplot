@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Wallet";
+    Layout = "_Layout";
+}
+
+<link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="/assets2/js/jquery.dataTables.min.js"></script>
+<script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+@section Styles {
+    <link href="/assets2/css/Wallet/Wallet.css" asp-append-version="true" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/assets2/js/Wallet/Wallet.js" asp-append-version="true"></script>
+}
+
+<div class="content">
+    <div class="row g-2">
+
+        <!-- Wallet Balance -->
+        <div class="col-12">
+            <div class="wallet-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="wallet-label text-dark">Wallet Balance</div>
+                    <div class="wallet-balance walletBal2" id="walletBalance">₹0.00</div>
+                </div>
+
+                <div>
+                    <button class="btn btn-warning" id="btnRecharge">
+                        <i class="fa fa-bolt"></i> Recharge
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger -->
+        <div class="col-12">
+            <div class="card mt-3">
+                <div class="card-header bg-warning-gradient py-2">
+                    <h5 class="mb-0">Wallet Transactions</h5>
+                </div>
+                <div class="card-body p-1">
+                    <table id="walletTable" class="table table-striped table-bordered" style="width:100%"></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
