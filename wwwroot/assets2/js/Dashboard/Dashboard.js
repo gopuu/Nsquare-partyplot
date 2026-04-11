@@ -1294,7 +1294,7 @@ function renderLeadSourceChart(apiData) {
 
     if (apiData.length === 0) {
         labels.push("No Data");
-        values.push(1);
+        values.push(0);
         percents.push("0%");
     }
     else {

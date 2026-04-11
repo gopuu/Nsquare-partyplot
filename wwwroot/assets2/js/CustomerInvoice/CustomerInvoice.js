@@ -1765,6 +1765,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
             $('#customerState').val(data.ClientStateId);
             $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
             $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
+            $('#advancePaid').val(data.PaidAmount).attr('readonly', true);
 
             //$('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
 
@@ -1867,7 +1868,6 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
 
                 updateRowSequence();
                 recalcAll();
-                $('#advancePaid').val(data.PaidAmount).attr('readonly', true);
             } else {
                 addItemRow(); // empty invoice
             }
@@ -2310,6 +2310,9 @@ function renderTable(data, totals) {
         scrollCollapse: true,     // shrink if less rows
         scrollX: true,            // horizontal scroll if needed
 
+        autoWidth: false,
+        tableLayout: "fixed", // (optional hint, actual control via CSS)
+
         rowCallback: function (row, data) {
             if (Number(data.OutstandingAmount) > 0) {
                 $(row).addClass('row-outstanding');
@@ -2460,6 +2463,8 @@ function renderTable(data, totals) {
                 data: null,
                 title: 'GST Invoice',
                 name: 'GSTInvoice',
+                width: "150px",
+                className: "text-nowrap",
                 render: function (row) {
                     const invoiceNo =
                         row.InvoiceNo !== null && row.InvoiceNo !== undefined && row.InvoiceNo > 0
@@ -2504,6 +2509,7 @@ function renderTable(data, totals) {
                                             disabled>
                                         Create Invoice (Rates Exclusive of GST)
                                     </button>
+                                    <br/>
                                     <button class="btn btn-warning btn-action-xs2 mb-1"
                                             data-finalamount="${row.TotalAmount}"
                                             data-bookingid="${row.BookingId}" data-isinclusivegst="true"
@@ -2520,6 +2526,7 @@ function renderTable(data, totals) {
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="false">
                                 Create Invoice (Rates Exclusive of GST)
                             </button>
+                            <br/>
                             <button class="btn btn-warning btn-action-xs2 mb-1 btn-create-invoice"
                                     data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="true">

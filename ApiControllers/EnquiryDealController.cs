@@ -8,9 +8,12 @@ using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
+using System.Reflection;
 using System.Text.Json;
 
 namespace ERPAdmin.ApiControllers
@@ -24,8 +27,8 @@ namespace ERPAdmin.ApiControllers
         private string connString = string.Empty;
         private readonly ImageUploadService _imageUploadService;
         private readonly string domainUrl;
-
-        public EnquiryDealController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService)
+        public EnquiryDealController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, 
+            ImageUploadService imageUploadService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
@@ -120,7 +123,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("SaveEnquiryDeal")]
-        public IActionResult SaveEnquiryDeal([FromBody] SaveEnquiryDeal model)
+        public async Task<IActionResult> SaveEnquiryDeal([FromBody] SaveEnquiryDeal model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -165,6 +168,9 @@ namespace ERPAdmin.ApiControllers
                     int endHH = 0, endMM = 0;
                     string endAMPM = "";
 
+                    string bName = "", orgName = "";
+                    int companyId = 0;
+
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -174,7 +180,6 @@ namespace ERPAdmin.ApiControllers
                             shiftCode = reader["ShiftCode"]?.ToString();
                             shiftId = reader["ShiftId"] != DBNull.Value ? Convert.ToInt64(reader["ShiftId"]) : 0;
                             bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
-
                             // ✅ Start Time
                             startHH = reader["StartHH"] != DBNull.Value ? Convert.ToInt32(reader["StartHH"]) : 0;
                             startMM = reader["StartMM"] != DBNull.Value ? Convert.ToInt32(reader["StartMM"]) : 0;
@@ -184,6 +189,10 @@ namespace ERPAdmin.ApiControllers
                             endHH = reader["EndHH"] != DBNull.Value ? Convert.ToInt32(reader["EndHH"]) : 0;
                             endMM = reader["EndMM"] != DBNull.Value ? Convert.ToInt32(reader["EndMM"]) : 0;
                             endAMPM = reader["EndAMPM"]?.ToString();
+
+                            bName = reader["BName"]?.ToString() ?? "";
+                            orgName = reader["OrgName"]?.ToString() ?? "";
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
                         }
                     }
                     con.Close();
@@ -205,6 +214,7 @@ namespace ERPAdmin.ApiControllers
                         EndMM = endMM,
                         EndAMPM = endAMPM
                     };
+
                     return Ok(apiResponse);
                 }
             }

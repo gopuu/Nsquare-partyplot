@@ -1260,11 +1260,29 @@ function renderBoard() {
 
     // 🔥 Add click event listener for all deal cards
     $(document).off("click", ".deal-open").on("click", ".deal-open", function () {
+
+        var requestData = {
+            companyId: Number(sessionStorage.getItem("companyid") ?? 0),
+            mobileNo: "8306588313", //enquiryData.Contact,
+            messageType: "TEMPLATE",
+            messageCount: 1,
+            referenceId: generateGUID(), // IMPORTANT (unique)
+            templateId: null,
+            isPromotional: false,
+            actionBy: Number(sessionStorage.getItem("userId") ?? 0),
+
+            templateName: "infinity_enquiry",
+            //message: "{Name}&{BName}&{Mobile}&{OrgName}" //Customer Name + banquet hall + banquet contact + banquet company
+            message: "Gopal&How&are&you2"
+        };
+        sendWhatsAppMessage(requestData);
+
+
         const dealId = $(this).closest(".deal-card").data("dealid");
         const bookingId = $(this).closest(".deal-card").data("bookingid");
         const isleadlost = $(this).closest(".deal-card").data("isleadlost");
         const isleadbooked = $(this).closest(".deal-card").data("isleadbooked");
-        //console.log("Clicked dealId:", dealId);
+        console.log("Clicked dealId:", dealId);
 
         // later you can call your API here
         // 🔥 Reset before fetching data
@@ -2392,7 +2410,8 @@ document.addEventListener("DOMContentLoaded", function () {
             LeadSourceId: parseInt($("#leadSourceDropdown").val()) || 0,
             Remarks: $("#remark").val().trim(),
             PackageId: parseInt($("#packageDropdown").val()) || 0,
-            ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
+            ActionBy: Number(sessionStorage.getItem("userId") ?? 0),
+            CompanyId: Number(sessionStorage.getItem("companyid") ?? 0)
         };
         console.log("Posting EnquiryDeal:", enquiryData);
 
@@ -2450,6 +2469,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         $("#title_bookingModal").text("Add Booking Details");
                         $("#bookingModal").modal("show");
+
+                        var requestData = {
+                            companyId: Number(sessionStorage.getItem("companyid") ?? 0),
+                            mobileNo: enquiryData.Contact,
+                            messageType: "TEMPLATE",
+                            messageCount: 1,
+                            referenceId: generateGUID(), // IMPORTANT (unique)
+                            templateId: null,
+                            isPromotional: false,
+                            actionBy: Number(sessionStorage.getItem("userId") ?? 0),
+
+                            templateName: "infinity_enquiry",
+                            message: "Gopal&Product A&5000"
+                        };
+                        sendWhatsAppMessage(requestData);
                     }
                     // TODO: refresh deal list if you have one
                     // loadDealList();

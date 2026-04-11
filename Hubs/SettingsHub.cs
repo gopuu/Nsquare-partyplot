@@ -21,7 +21,6 @@ public class PurchaseHub : Hub
         await Clients.All.SendAsync("OnPurchaseChanged");
     }
 }
-
 public class WalletHub : Hub
 {
     public async Task NotifyWalletChanged(object data)

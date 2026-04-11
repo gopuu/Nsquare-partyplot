@@ -537,32 +537,32 @@ function renderFundTransferTable(data, totalAmount) {
         pagingType: "full_numbers",
         responsive: true,
 
-        footerCallback: function () {
-
-            if (!data || data.length === 0) return;
-
+        initComplete: function () {
             const api = this.api();
 
-            $(api.table().footer()).remove();
-
-            const footer = `
-                <tfoot>
-                    <tr style="background:#f3f3f3;font-weight:bold">
-                        <td colspan="3" class="text-end">TOTAL</td>
-                        <td class="text-end">₹ ${Number(totalAmount).toLocaleString()}</td>
-                        <td colspan="4"></td>
-                    </tr>
-                </tfoot>
-            `;
-
-            $("#tableMain table").append(footer);
-        },
-
-        initComplete: function () {
-            $(this.api().table().header())
+            // header style
+            $(api.table().header())
                 .find('th')
                 .addClass('bg-warning-subtle text-dark');
-        },
+
+            // ✅ Add footer ONLY ONCE
+            if ($("#tableMain table tfoot").length === 0) {
+                const footer = `
+            <tfoot>
+                <tr style="background:#f3f3f3;font-weight:bold">
+                    <td colspan="3" class="text-end">TOTAL</td>
+                    <td class="text-end total-amount"></td>
+                    <td colspan="4"></td>
+                </tr>
+            </tfoot>
+        `;
+                $("#tableMain table").append(footer);
+            }
+
+            // set value
+            $("#tableMain table .total-amount")
+                .html(`₹ ${Number(totalAmount).toLocaleString()}`);
+        }
     });
 }
 

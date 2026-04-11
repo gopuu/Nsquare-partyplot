@@ -484,7 +484,7 @@ namespace ERPAdmin.ApiControllers
                 AddTotal("Total IGST in Rs.", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Invoice Total", "₹ " + totals.InvoiceTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N0"), false, fBoldRupee, fBoldRupee);
-                AddTotal("Total Adavance Paid", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
+                AddTotal("Total Advance Paid", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Balance Amount", "₹ " + totals.Balance.ToString("N0"), true, fBoldRupee, fBoldRupee);
 
                 // LEFT SIDE (Amount in Words)

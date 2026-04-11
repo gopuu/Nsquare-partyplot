@@ -80,22 +80,23 @@
                 walletSubscribers.forEach(fn => {
                     try { fn(data); } catch (e) { console.error(e); }
                 });
-
+                /*
                 // 🔥 SweetAlert Toast
                 if (data) {
-                    let icon = data.type === "CREDIT" ? "success" : "warning";
-                    let sign = data.type === "CREDIT" ? "+" : "-";
+                    let icon = data.Type === "CREDIT" ? "success" : "warning";
+                    let sign = data.Type === "CREDIT" ? "+" : "-";
 
                     walletToast.fire({
                         icon: icon,
-                        title: `${sign} ₹${data.amount} ${data.type === "CREDIT" ? "Added" : "Deducted"}`
+                        title: `${sign} ₹${data.Amount} ${data.Type === "CREDIT" ? "Added" : "Deducted"}`
                     });
 
                     // Optional: update balance UI directly
-                    if ($("#walletBalance").length) {
-                        $("#walletBalance").text(data.balance);
-                    }
+                    //if ($("#walletBalance").length) {
+                    //    $("#walletBalance").text(data.balance);
+                    //}
                 }
+                */
             });
 
             walletConnection.start()

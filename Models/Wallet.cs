@@ -20,6 +20,7 @@
         public decimal Amount { get; set; }
         public decimal BalanceAfter { get; set; }
         public string ReferenceType { get; set; }
+        public string ReferenceId { get; set; }
         public string Description { get; set; }
         public string CreatedAt { get; set; }
     }
@@ -38,6 +39,15 @@
         public decimal Amount { get; set; }
         public string? ReferenceType { get; set; } // WHATSAPP / SMS
         public long? ReferenceId { get; set; }
+    }
+
+    public class WalletResponse
+    {
+        public int Status { get; set; } // 1 for Success, 0 for Fail
+        public string Message { get; set; }
+        public decimal Balance { get; set; }
+        public decimal DeductedAmount { get; set; }
+        public decimal RefundedAmount { get; set; }
     }
     #endregion
 
@@ -58,4 +68,24 @@
         public string RazorpaySignature { get; set; }
     }
     #endregion
+
+    #region WHATSAPP
+    public class WhatsAppSendRequest
+    {
+        public long CompanyId { get; set; }
+        public string MobileNo { get; set; }
+        public string MessageType { get; set; }   // TEXT / TEMPLATE
+        public int MessageCount { get; set; } = 1;
+        public string? ReferenceId { get; set; }   // UNIQUE (GUID recommended)
+        public long? TemplateId { get; set; }
+        public bool IsPromotional { get; set; }
+        public long ActionBy { get; set; }
+
+        // Template Data
+        public string TemplateName { get; set; }
+        public string Message { get; set; } // param1&param2 format
+    }
+
+    #endregion
+
 }

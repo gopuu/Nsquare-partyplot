@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using ERPAdmin;
+using ERPAdmin.Helper;
 using ERPAdmin.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -83,7 +84,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 //domain URL
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddControllers();
 //builder.Services.AddHttpClient<EwayService>();
 
@@ -91,6 +91,10 @@ builder.Services.AddControllers();
 
 //SignalR
 builder.Services.AddSignalR();
+//Whatsapp Service
+builder.Services.AddHttpClient();
+//builder.Services.AddScoped<IDbHelper, DbHelper>();
+//builder.Services.AddScoped<IWhatsAppService, WhatsAppService>(); // recommended
 
 var app = builder.Build();
 

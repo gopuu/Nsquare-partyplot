@@ -2,7 +2,7 @@
     toast: true,
     position: "top-end", // 👉 top-right
     showConfirmButton: false,
-    timer: 2500,
+    timer: 2000,
     timerProgressBar: true,
     didOpen: (toast) => {
         toast.onmouseenter = Swal.stopTimer;
@@ -10,16 +10,72 @@
     }
 });
 
-
 AppSignalR.subscribeWallet(function (data) {
-    console.log("Wallet Updated (layout):", data);
+    //console.log("Wallet Updated (layout):", data);
     fetchBalance_Layout();
 
-    walletToast.fire({
-        icon: data.Type === "CREDIT" ? "success" : "warning",
-        title: `${data.Type === "CREDIT" ? "+" : "-"} ₹${data.Amount}`
-    });
+    // 🔥 Your Settings Page Logic Here
+    if (data) {
+        let type = (data.type || "").toLowerCase();
+        let icon = type === "credit" ? "success" : "warning";
+        //let sign = ""; // type === "credit" ? "+" : "-";
+
+        walletToast.fire({
+            icon: icon,
+            title: "Payment Success",
+            text: `₹${data.amount} ${type === "credit" ? "added" : "deducted"}`
+        });
+    }
 });
+
+//WHATSAPP -- START
+function sendWhatsAppMessage(requestData=null) {
+
+    $.ajax({
+        url: "/api/Wallet/SendWhatsApp", // 🔥 update controller name
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestData),
+        beforeSend: function () {
+            $("#btnSend").prop("disabled", true).text("Sending...");
+        },
+        success: function (res) {
+            if (res.status === "Success") {
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: res.message,
+                    confirmButtonColor: "#28a745"
+                });
+
+                console.log("Balance:", res.data.Balance);
+                console.log("Deducted:", res.data.DeductedAmount);
+
+            } else {
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Failed",
+                    text: res.message,
+                    confirmButtonColor: "#dc3545"
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "WhatsApp Message Failed");
+        }
+    });
+}
+function generateGUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0,
+            v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+//WHATSAPP -- END
 
 
 function showTempLoader(title = "Checking Availability") {
@@ -263,9 +319,14 @@ function fetchBalance_Layout() {
         success: function (response) {
             //console.log("wallet response:", response);
             let data = response.data;
-            if (data && data.length > 0) {
-                let balance = data.CurrentBalance || 0;
-                $(".walletBal2").text(`₹${balance.toFixed(2)}`);
+            if (data && data.Balance > 0) {
+
+                const balance = new Intl.NumberFormat('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(data.Balance || 0);
+                //console.log("balance:", balance);
+                $(".walletBal2").text(`₹${balance}`);
             }
         },
         error: function (xhr, status, error) {

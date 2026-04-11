@@ -23,7 +23,6 @@ const HEADER_KEY = "gstCustomerInvoicePrintWithHeader";
 let selected_widgetPurchaseDuration = "thismonth";
 let selected_widgetOutstandingDuration = "thismonth";
 
-
 $(document).ready(function () {
     setCurrentMonthDates();
 
@@ -1180,7 +1179,7 @@ function attachRawMaterialEvents(row) {
     });
 }
 
-function updateUnitsDropdown(rawMaterialSelect) {
+function updateUnitsDropdown2(rawMaterialSelect) {
     let selectedOption = $(rawMaterialSelect).find("option:selected");
 
     // ✅ Get JSON safely
@@ -1194,7 +1193,7 @@ function updateUnitsDropdown(rawMaterialSelect) {
 
     // ✅ CASE 1: No units → show all
     // ✅ Check if "ALL units" condition
-    let isAllUnits =
+    let isAllUnits = true;
         !unitsJson.length ||
         (unitsJson.length === 1 && unitsJson[0].UnitId === 0);
 
@@ -1223,6 +1222,44 @@ function updateUnitsDropdown(rawMaterialSelect) {
         }
     });
 }
+function updateUnitsDropdown(rawMaterialSelect) {
+    let selectedOption = $(rawMaterialSelect).find("option:selected");
+
+    // ✅ Get JSON safely
+    let unitsJson = selectedOption.data("units") || [];
+
+    let row = $(rawMaterialSelect).closest("tr");
+    let unitDropdown = row.find(".unitSelect");
+
+    // Reset dropdown
+    unitDropdown.html(`<option value="0">--Select--</option>`);
+
+    // ✅ Always show ALL units
+    unitMaster.forEach(u => {
+        unitDropdown.append(
+            `<option value="${u.Id}">${u.UnitName}</option>`
+        );
+    });
+
+    // ✅ Check if "ALL units" condition
+    let isAllUnits =
+        !unitsJson.length ||
+        (unitsJson.length === 1 && unitsJson[0].UnitId === 0);
+
+    // 👉 If ALL units → keep default (0 selected)
+    if (isAllUnits) {
+        unitDropdown.val("0");
+        return;
+    }
+
+    // ✅ Otherwise → select first matching unit
+    let firstMatch = unitsJson[0]?.UnitId;
+
+    if (firstMatch) {
+        unitDropdown.val(firstMatch);
+    }
+}
+
 
 function buildRowForEdit(item) {
 

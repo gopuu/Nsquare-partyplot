@@ -1,4 +1,5 @@
-﻿/* Ensure dropdown appears above all cards */
+﻿
+/* Ensure dropdown appears above all cards */
 .dropdown-menu {
     z-index: 9999 !important;
 }
@@ -23,7 +24,6 @@
     padding: 12px 14px;
 }
 /*FILTERS -- END */
-
 
 .table-footer-total {
     background: #f8f9fa;

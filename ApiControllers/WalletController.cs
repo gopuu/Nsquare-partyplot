@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
@@ -13,7 +14,12 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Razorpay.Api;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.Dynamic;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
 using System.Web.Helpers;
 
 namespace ERPAdmin.ApiControllers
@@ -22,16 +28,18 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class WalletController : MasterController
     {
+        private readonly HttpClient _httpClient;
         private readonly string domainUrl;
         private string connString = string.Empty;
         private readonly IHubContext<WalletHub> _walletHub;
         private readonly IConfiguration _configuration;
-        public WalletController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IHubContext<WalletHub> walletHub)
+        public WalletController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IHubContext<WalletHub> walletHub, HttpClient httpClient)
             : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
             _walletHub = walletHub;
+            _httpClient = httpClient;
             _configuration = configuration;
         }
 
@@ -127,72 +135,6 @@ namespace ERPAdmin.ApiControllers
 
         #region RECHARGE / CREDIT
         [HttpPost]
-        [Route("WalletCredit")]
-        private async Task<IActionResult> WalletCredit([FromBody] WalletCreditRequest request)
-        {
-            apiResponse apiResponse = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                { return errorResult!; }
-
-                var parameters = new List<SqlParameter>
-                {
-                    new SqlParameter("@CompanyId", SqlDbType.BigInt) { Value = request.CompanyId },
-                    new SqlParameter("@Amount", SqlDbType.Decimal)
-                    {
-                        Precision = 18,
-                        Scale = 2,
-                        Value = request.Amount
-                    },
-                    new SqlParameter("@ReferenceType", SqlDbType.VarChar) { Value = request.ReferenceType },
-                    new SqlParameter("@ReferenceId", SqlDbType.BigInt) { Value = (object?)request.ReferenceId ?? DBNull.Value },
-                    new SqlParameter("@CreatedBy", SqlDbType.BigInt) { Value = Convert.ToInt64(request.ActionBy) }
-                };
-
-                DataTable dt = await ExecuteSP(connString, "Wallet_Credit", parameters);
-
-                if (dt.Rows.Count == 0)
-                {
-                    return Ok(new apiResponse
-                    {
-                        status = "Error",
-                        message = "No response from server"
-                    });
-                }
-
-                var status = dt.Rows[0]["Status"].ToString();
-                var message = dt.Rows[0]["Message"].ToString();
-                var balance = dt.Rows[0]["Balance"] != DBNull.Value ? Convert.ToDecimal(dt.Rows[0]["Balance"]) : 0;
-
-                apiResponse.message = message;
-                apiResponse.status = status == "1" ? "Success" : "Error";
-                apiResponse.data = new { Balance = balance };
-
-                // 🔥 SignalR: Notify client (real-time update)
-                if (status == "1")
-                {
-                    await _walletHub.Clients.Group(request.CompanyId.ToString())
-                        .SendAsync("OnWalletChanged", new
-                        {
-                            CompanyId = request.CompanyId,
-                            Balance = balance,
-                            Amount = request.Amount,
-                            Type = "CREDIT" // or DEBIT
-                        });
-                }
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
-                return StatusCode(500, new apiResponse { message = ex.Message, status = "Error" });
-            }
-        }
-
-        [HttpPost]
         [Route("WalletCredit_CreateOrder")]
         public IActionResult WalletCredit_CreateOrder([FromBody] CreateOrderRequest request)
         {
@@ -246,7 +188,6 @@ namespace ERPAdmin.ApiControllers
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 { return errorResult!; }
-
                 var razorpaySection = _configuration.GetRequiredSection("Razorpay");
                 var secret = razorpaySection["KeySecret"];
 
@@ -277,7 +218,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlParameter("@Amount", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = request.Amount },
                     new SqlParameter("@ReferenceType", SqlDbType.VarChar) { Value = "RAZORPAY" },
                     new SqlParameter("@ReferenceId", SqlDbType.NVarChar) { Value = request.RazorpayPaymentId },
-                    new SqlParameter("@CreatedBy", SqlDbType.BigInt) { Value = Convert.ToInt64(request.ActionBy) }
+                    new SqlParameter("@ActionBy", SqlDbType.BigInt) { Value = Convert.ToInt64(request.ActionBy) }
                 };
 
                 var dt = await ExecuteSP(connString, "Wallet_Credit", parameters);
@@ -288,10 +229,10 @@ namespace ERPAdmin.ApiControllers
                 await _walletHub.Clients.Group(request.CompanyId.ToString())
                     .SendAsync("OnWalletChanged", new
                     {
-                        CompanyId = request.CompanyId,
-                        Balance = balance,
-                        Amount = request.Amount,
-                        Type = "CREDIT"
+                        companyid = request.CompanyId,
+                        balance = balance,
+                        amount = request.Amount,
+                        type = "CREDIT"
                     });
 
                 return Ok(new apiResponse
@@ -308,6 +249,7 @@ namespace ERPAdmin.ApiControllers
         }
         #endregion
 
+        #region RECHARGE / DEBIT
         [HttpPost]
         [Route("WalletDebit")]
         public async Task<IActionResult> WalletDebit([FromBody] WalletDebitRequest request)
@@ -331,7 +273,7 @@ namespace ERPAdmin.ApiControllers
 
                     new SqlParameter("@ReferenceType", SqlDbType.VarChar) { Value = request.ReferenceType },
                     new SqlParameter("@ReferenceId", SqlDbType.NVarChar) { Value = (object?)request.ReferenceId ?? DBNull.Value },
-                    new SqlParameter("@CreatedBy", SqlDbType.BigInt) { Value = Convert.ToInt64(request.ActionBy) }
+                    new SqlParameter("@ActionBy", SqlDbType.BigInt) { Value = Convert.ToInt64(request.ActionBy) }
                 };
 
                 DataTable dt = await ExecuteSP(connString, "Wallet_Debit", parameters);
@@ -359,10 +301,10 @@ namespace ERPAdmin.ApiControllers
                     await _walletHub.Clients.Group(request.CompanyId.ToString())
                         .SendAsync("OnWalletChanged", new
                         {
-                            CompanyId = request.CompanyId,
-                            Balance = balance,
-                            Amount = request.Amount,
-                            Type = "DEBIT" // or DEBIT
+                            companyid = request.CompanyId,
+                            balance = balance,
+                            amount = request.Amount,
+                            type = "DEBIT" // or DEBIT
                         });
                 }
 
@@ -374,6 +316,175 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, new apiResponse { message = ex.Message, status = "Error" });
             }
         }
+
+        [HttpPost]
+        [Route("SendWhatsApp")]
+        public async Task<IActionResult> SendWhatsApp([FromBody] WhatsAppSendRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            string connString = "";
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                // 🔥 STEP 1: WALLET DEBIT
+                var debitParams = new List<SqlParameter>
+                {
+                    new SqlParameter("@CompanyId", request.CompanyId),
+                    new SqlParameter("@MessageType", request.MessageType),
+                    new SqlParameter("@MessageCount", request.MessageCount),
+                    new SqlParameter("@ReferenceId", request.ReferenceId),
+                    new SqlParameter("@TemplateId", (object?)request.TemplateId ?? DBNull.Value),
+                    new SqlParameter("@IsPromotional", request.IsPromotional),
+                    new SqlParameter("@ActionBy", request.ActionBy)
+                };
+
+                DataTable debitDt = await ExecuteSP(connString, "Wallet_Debit_WhatsApp", debitParams);
+
+                if (debitDt.Rows.Count == 0 || debitDt.Rows[0]["Status"].ToString() != "1")
+                {
+                    return Ok(new apiResponse
+                    {
+                        status = "Error",
+                        message = debitDt.Rows[0]["Message"].ToString()
+                    });
+                }
+
+                decimal deductedAmount = Convert.ToDecimal(debitDt.Rows[0]["DeductedAmount"]);
+                decimal balance = Convert.ToDecimal(debitDt.Rows[0]["Balance"]);
+
+                // 🔥 STEP 2: SEND WHATSAPP
+                string sendStatus = await SendWhatsAppMessage(request);
+
+                if (sendStatus != "Success")
+                {
+                    // 🔥 STEP 3: REFUND IF FAILED
+                    var refundParams = new List<SqlParameter>
+                    {
+                        new SqlParameter("@CompanyId", request.CompanyId),
+                        new SqlParameter("@ReferenceId", request.ReferenceId),
+                        new SqlParameter("@RefundReferenceId", Guid.NewGuid().ToString()),
+                        new SqlParameter("@ActionBy", request.ActionBy)
+                    };
+
+                    await ExecuteSP(connString, "Wallet_Refund_WhatsApp", refundParams);
+
+                    return Ok(new apiResponse
+                    {
+                        status = "Error",
+                        message = "WhatsApp send failed. Amount refunded."
+                    });
+                }
+
+                // 🔥 STEP 4: SIGNALR UPDATE
+                await _walletHub.Clients.Group(request.CompanyId.ToString())
+                    .SendAsync("OnWalletChanged", new
+                    {
+                        companyid = request.CompanyId,
+                        balance = balance,
+                        amount = deductedAmount,
+                        type = "DEBIT"
+                    });
+
+                return Ok(new apiResponse
+                {
+                    status = "Success",
+                    message = "WhatsApp sent successfully",
+                    data = new
+                    {
+                        Balance = balance,
+                        DeductedAmount = deductedAmount
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                return StatusCode(500, new apiResponse
+                {
+                    status = "Error",
+                    message = ex.Message
+                });
+            }
+        }
+
+        private async Task<string> SendWhatsAppMessage(WhatsAppSendRequest request)
+        {
+            try
+            {
+                if (request.MobileNo.Length != 10)
+                    return "Fail";
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                string apiUrl = "https://crm.officialwa.com/api/meta/v19.0/967450513117306/messages";
+
+                string[] msgParts = request.Message.Split('&');
+
+                var parametersList = msgParts.Select(x => new
+                {
+                    type = "text",
+                    text = x
+                }).ToArray();
+
+                var payload = new
+                {
+                    to = request.MobileNo,
+                    recipient_type = "individual",
+                    type = "template",
+                    template = new
+                    {
+                        language = new
+                        {
+                            policy = "deterministic",
+                            code = "en"
+                        },
+                        name = request.TemplateName,
+                        components = new object[]
+                        {
+                    new
+                    {
+                        type = "body",
+                        parameters = parametersList
+                    }
+                        }
+                    }
+                };
+
+                string jsonPayload = JsonConvert.SerializeObject(payload);
+
+                using (HttpClient client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Clear();
+
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", "lcWjpW63LuhJjmTHvGjmQIF6NFYwNqIdnxzcXsRWmNw1yVT1AchnxUikZTxyUEFQU4XAlQhe4YRqEapuRYQHff38jkQvZe7oelrsRKKmlS7oPyNPEIHREFTSA0uIO7lpuDyVU5ERVJTQ09SRQFELw0cfA1xE5tHKIN2tH7WcwwrPybRY5AZcZNAiz72VU5ERVJTQ09SRQGb5oMq1LF5p9qlJ2F5b0EdjBwREFTSAREFTSAwhVwSStOSCg");
+
+                    //var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                    var content = new StringContent(jsonPayload);
+                    content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+                    HttpResponseMessage response = await client.PostAsync(apiUrl, content);
+                    string responseString = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                        return "Fail";
+
+                    return "Success";
+                }
+            }
+            catch
+            {
+                return "Fail";
+            }
+        }
+
+
+
+        #endregion
 
         [HttpPost]
         [Route("GetWalletLedger")]
@@ -408,6 +519,7 @@ namespace ERPAdmin.ApiControllers
                         Amount = reader["Amount"] != DBNull.Value ? Convert.ToDecimal(reader["Amount"]) : 0,
                         BalanceAfter = reader["BalanceAfter"] != DBNull.Value ? Convert.ToDecimal(reader["BalanceAfter"]) : 0,
                         ReferenceType = reader["ReferenceType"]?.ToString(),
+                        ReferenceId = reader["ReferenceId"]?.ToString(),
                         Description = reader["Description"]?.ToString(),
                         CreatedAt = reader["CreatedAt"]?.ToString()
                     });
@@ -444,5 +556,7 @@ namespace ERPAdmin.ApiControllers
 
             return dt;
         }
+
     }
 }
+
