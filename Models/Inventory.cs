@@ -1,16 +1,17 @@
 ﻿namespace ERPAdmin.Models
 {
     //SAVE
-    public class SaveStockOutRequest : BaseClass
+    public class SaveStockInOutRequest : BaseClass
     {
-        public List<SaveStockOutModel>? StockOutList { get; set; }
+        public List<SaveStockInOutModel>? StockInOutList { get; set; }
     }
 
     // Per Row Model
-    public class SaveStockOutModel
+    public class SaveStockInOutModel
     {
         public long RawMaterialId { get; set; }
-        public decimal Qty { get; set; }
+        public decimal Qty_In { get; set; }
+        public decimal Qty_Out { get; set; }
         public long UnitId { get; set; }
         public string? Remarks { get; set; }
     }

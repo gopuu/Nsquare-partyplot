@@ -96,8 +96,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("SaveStockOut")]
-        public IActionResult SaveStockOut([FromBody] SaveStockOutRequest model)
+        [Route("SaveStockInOut")]
+        public IActionResult SaveStockInOut([FromBody] SaveStockInOutRequest model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -106,15 +106,15 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 { return errorResult!; }
 
-                // Convert StockOutList to JSON
-                string jsonStockOutList = JsonConvert.SerializeObject(model.StockOutList);
+                // Convert StockInOutList to JSON
+                string jsonStockInOutList = JsonConvert.SerializeObject(model.StockInOutList);
 
                 using (SqlConnection conn = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveStockOut", conn))
+                using (SqlCommand cmd = new SqlCommand("SaveStockInOut", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@JSON_StockOutList", SqlDbType.NVarChar).Value =
-                        (object)jsonStockOutList ?? DBNull.Value;
+                    cmd.Parameters.Add("@JSON_StockInOutList", SqlDbType.NVarChar).Value =
+                        (object)jsonStockInOutList ?? DBNull.Value;
                     cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
 
                     conn.Open();
@@ -191,7 +191,8 @@ namespace ERPAdmin.ApiControllers
                     obj.UnitId = row["UnitId"] == DBNull.Value ? 0 : Convert.ToInt64(row["UnitId"]);
                     obj.UnitName = row["UnitName"]?.ToString() ?? "";
 
-                    obj.Quantity = row["Quantity"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Quantity"]);
+                    obj.Quantity_Out = row["Quantity_Out"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Quantity_Out"]);
+                    obj.Quantity_In = row["Quantity_In"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Quantity_In"]);
                     obj.Remarks = row["Remarks"]?.ToString() ?? "";
 
                     obj.ModifiedOn = Convert.ToString(row["ModifiedOn"]);

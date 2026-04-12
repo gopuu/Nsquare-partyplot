@@ -160,8 +160,14 @@ namespace ERPAdmin.ApiControllers
                     DataRow row = dt.Rows[0];
                     result = new DashboardFinanceSummary
                     {
+                        InvoiceIncomes = Convert.ToDecimal(row["InvoiceIncomes"]),
+                        CategorisedIncome = Convert.ToDecimal(row["CategorisedIncome"]),
                         TotalIncomes = Convert.ToDecimal(row["TotalIncomes"]),
+
+                        PurchaseExpenses = Convert.ToDecimal(row["PurchaseExpenses"]),
+                        CategorisedExpense = Convert.ToDecimal(row["CategorisedExpense"]),
                         TotalExpenses = Convert.ToDecimal(row["TotalExpenses"]),
+
                         GrossProfit = Convert.ToDecimal(row["GrossProfit"])
                     };
                 }

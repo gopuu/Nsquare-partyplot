@@ -87,6 +87,15 @@ document.addEventListener("DOMContentLoaded", function () {
         loadDailySalesGrid();
     });
 
+    $("#fromDate, #toDate").on("change", function () {
+        // If user manually edits date → switch dropdown to custom
+        if ($("#quickRange").val() !== "customrange") {
+            $("#quickRange").val("customrange");
+            // Optional: update variable also
+            selectedMonthDuration = "customrange";
+        }
+    });
+
     /* ── Filter panel ── */
     $("#filterPanel").on("click", function (e) { e.stopPropagation(); });
 

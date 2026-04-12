@@ -70,17 +70,38 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
                 <div class="card-body">
-                    <h6 class="fw-semibold text-success"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Total Income = Incomes Received, for selected date range.">
-                        Total Income
-                    </h6>
-                    <h3 class="text-success mt-2">
-                        <i class="fa fa-inr me-1"></i>
-                        <span id="txtTotalIncomes">0</span>
-                    </h3>
-                    <small class="text-muted d-none" id="lblIncomeDuration">Current Month</small>
+
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-success">Income</h6>
+                        <h5 class="text-success mb-0">
+                            ₹ <span id="txtTotalIncomes" class="fs-7">0</span>
+                        </h5>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="small">
+
+                        <!-- Invoice Income -->
+                        <div class="d-flex justify-content-between">
+                            <span>Invoice Income</span>
+                            <span id="txtInvoiceIncome">0</span>
+                        </div>
+                        <div class="progress mb-2" style="height:6px;">
+                            <div id="barInvoiceIncome" class="progress-bar bg-success"></div>
+                        </div>
+
+                        <!-- Categorised Income -->
+                        <div class="d-flex justify-content-between">
+                            <span>Categorised Income</span>
+                            <span id="txtCategorisedIncome">0</span>
+                        </div>
+                        <div class="progress" style="height:6px;">
+                            <div id="barCategorisedIncome" class="progress-bar bg-info"></div>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -89,17 +110,36 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
                 <div class="card-body">
-                    <h6 class="fw-semibold text-danger"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Total Expenses = Total Expenses Amount, in selected period.">
-                        Total Expenses
-                    </h6>
-                    <h3 class="text-danger mt-2">
-                        <i class="fa fa-inr me-1"></i>
-                        <span id="txtTotalExpenses">0</span>
-                    </h3>
-                    <small class="text-muted d-none">Current Month</small>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-danger">Expense</h6>
+                        <h5 class="text-danger mb-0">
+                            ₹ <span id="txtTotalExpenses" class="fs-7">0</span>
+                        </h5>
+                    </div>
+
+                    <div class="small">
+
+                        <!-- Purchase Expense -->
+                        <div class="d-flex justify-content-between">
+                            <span>Purchase Expense</span>
+                            <span id="txtPurchaseExpense">0</span>
+                        </div>
+                        <div class="progress mb-2" style="height:6px;">
+                            <div id="barPurchaseExpense" class="progress-bar bg-danger"></div>
+                        </div>
+
+                        <!-- Categorised Expense -->
+                        <div class="d-flex justify-content-between">
+                            <span>Categorised Expense</span>
+                            <span id="txtCategorisedExpense">0</span>
+                        </div>
+                        <div class="progress" style="height:6px;">
+                            <div id="barCategorisedExpense" class="progress-bar bg-warning"></div>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -108,17 +148,12 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 bg-warning-gradient">
                 <div class="card-body">
-                    <h6 class="fw-semibold"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Gross Profit = Total Income - Total Expenses, for the selected period.">
-                        Gross Profit
-                    </h6>
-                    <h3 class="mt-2" id="grossProfitWrapper">
-                        <i class="fa fa-inr me-1"></i>
-                        <span id="txtGrossProfit">0</span>
-                    </h3>
-                    <small class="text-muted d-none">After all expenses</small>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0">Gross Profit</h6>
+                        <h5 id="txtGrossProfit" class="mb-0 fs-7">₹ 0</h5>
+                    </div>
+
                 </div>
             </div>
         </div>

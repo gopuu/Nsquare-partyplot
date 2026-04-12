@@ -57,7 +57,13 @@
     public class DashboardFinanceSummary
     {
         public decimal TotalIncomes { get; set; }
+        public decimal CategorisedIncome { get; set; }
+        public decimal InvoiceIncomes { get; set; }
+
         public decimal TotalExpenses { get; set; }
+        public decimal CategorisedExpense { get; set; }
+        public decimal PurchaseExpenses { get; set; }
+
         public decimal GrossProfit { get; set; }
     }
 

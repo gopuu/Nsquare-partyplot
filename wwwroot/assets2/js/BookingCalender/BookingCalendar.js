@@ -859,11 +859,11 @@ addFoodBtn.addEventListener('click', () => {
                     <label class="form-label">Package Cost</label>
                     <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-3">
                     <label class="form-label">Addons</label>
                     <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1 d-none">
                     <label class="form-label">GST</label>
                     <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
                 </div>
@@ -1701,7 +1701,7 @@ async function renderBoard(bookingData = null) {
                     // ===============================
                     // Loop through ALL bookings (⚠️ not just bookingsToday)
                     // ===============================
-                    for (const booking of bookingData) {
+                    for (const booking of bookingsToday) {
 
                         // Skip other halls
                         if (booking.BanquetId !== hall.Id)
@@ -1941,6 +1941,7 @@ async function renderBoard(bookingData = null) {
     // 🪄 Attach hover listeners to badges
     document.addEventListener("mouseover", function (e) {
         const badge = e.target.closest(".badge[data-shift]");
+        console.log("cell badge:", badge);
         if (!badge) return;
 
         //const isBlocked = badge.dataset.isblocked;

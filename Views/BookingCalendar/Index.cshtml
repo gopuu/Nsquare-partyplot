@@ -114,7 +114,7 @@
                         </div>
 
                         <!-- GST Toggle (Right) -->
-                        <div class="col-md-6 d-flex justify-content-end align-items-center">
+                        <div class="col-md-6 d-flex justify-content-end align-items-center d-none">
                             <label class="form-label me-2 mb-0 fs-6 text-primary">Accept GST:</label>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="gstSwitch">
@@ -239,7 +239,7 @@
                                 </div>
 
                                 <!-- Pax (Input, width 2) -->
-                                <div class="col-md-1">
+                                <div class="col-md-2">
                                     <label class="form-label">Pax <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control form-control-sm" value="0" id="booking_pax">
                                     <div class="text-danger small mt-1 error-msg d-none">Please enter PAX</div>
@@ -252,7 +252,7 @@
                                 </div>
 
                                 <!-- GST (Input, width 2) -->
-                                <div class="col-md-1">
+                                <div class="col-md-1 d-none">
                                     <label class="form-label">GST</label>
                                     <input type="number" class="form-control form-control-sm" value="0" id="booking_gst">
                                 </div>
@@ -315,13 +315,13 @@
                                     </div>
 
                                     <!-- Addons -->
-                                    <div class="col-md-1">
+                                    <div class="col-md-3">
                                         <label class="form-label">Addons</label>
                                         <input type="number" class="form-control form-control-sm foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
                                     </div>
 
                                     <!-- GST -->
-                                    <div class="col-md-2">
+                                    <div class="col-md-2 d-none">
                                         <label class="form-label">GST (5%)</label>
                                         <input type="number" class="form-control form-control-sm" placeholder="GST" value="0" id="foodPackage_GST" readonly>
                                     </div>
@@ -353,11 +353,11 @@
 
                             <!-- Row 2 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-6">
+                                <div class="col-10">
                                     <label class="small">Decoraton</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_Amount" value="0">
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_GST" value="0" disabled>
                                 </div>
@@ -365,11 +365,11 @@
 
                             <!-- Row 3 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-6">
+                                <div class="col-10">
                                     <label class="small">Room Charges</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_Amount" value="0">
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_GST" value="0" disabled>
                                 </div>
@@ -377,11 +377,11 @@
 
                             <!-- Row 4 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-6">
+                                <div class="col-10">
                                     <label class="small">Sound System</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_Amount" value="0">
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_GST" value="0" disabled>
                                 </div>
@@ -389,11 +389,11 @@
 
                             <!-- Row 5 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-6">
+                                <div class="col-10">
                                     <label class="small">Projector & Screen</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_Amount" value="0">
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
                                     <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
                                 </div>
@@ -408,15 +408,15 @@
                                     <td>Taxable Amount</td>
                                     <td class="text-end" id="paymentSummary_TaxableAmount">0</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>CGST</td>
                                     <td class="text-end" id="paymentSummary_CGST">0.00</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>SGST</td>
                                     <td class="text-end" id="paymentSummary_SGST">0.00</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>IGST</td>
                                     <td class="text-end" id="paymentSummary_IGST">0.00</td>
                                 </tr>

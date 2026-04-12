@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadBookingGrid();
     loadColumnCheckboxes();
 
+
     $("#ddlEventType").on("change", function () {
         let eventTypeId = $(this).val();
         loadEventSubTypeDropdown(eventTypeId);
@@ -91,6 +92,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         loadBookingGrid();
     });    
+
+    $("#fromDate, #toDate").on("change", function () {
+        // If user manually edits date → switch dropdown to custom
+        if ($("#quickRange").val() !== "customrange") {
+            $("#quickRange").val("customrange");
+            // Optional: update variable also
+            selectedMonthDuration = "customrange";
+        }
+    });
 
     // Prevent inside click from bubbling
     $("#filterPanel").on("click", function (e) {
@@ -452,6 +462,8 @@ function ViewBookingReport(actionName) {
     });
 }
 function setCurrentMonthDates() {
+    $("#quickRange").val(selectedMonthDuration);
+
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);

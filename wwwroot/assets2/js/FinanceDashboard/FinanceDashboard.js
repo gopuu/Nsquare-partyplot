@@ -1,11 +1,12 @@
 ﻿$(document).ready(function () {
-    $("#fromDate, #toDate").hide();
+    //$("#fromDate, #toDate").hide();
     let selectedFinanceDuration = "thismonth"; // default
 
     const defaultType = $("input[name='filter_transaction_type']:checked").val();
     toggleCategoryFilters(defaultType);
 
     loadFinanceSummary(selectedFinanceDuration);
+    setCurrentMonthDates();
     loadNextVoucherNo();
     loadAccountDropdown();
     loadPaymentModeDropdown();
@@ -75,19 +76,14 @@
     });
 
     $("#fromDate, #toDate").on("change", function () {
-
         let fromDate = $("#fromDate").val();
         let toDate = $("#toDate").val();
-
         if (fromDate && toDate) {
 
             selectedFinanceDuration = "customrange";
-
             $("#jobChartFilter").text("Filter : Custom Range");
-
             $(".chart-filter-finance .dropdown-item").removeClass("active");
-
-            loadFinanceSummary(selectedFinanceDuration);
+            loadFinanceSummary(selectedFinanceDuration, fromDate, toDate);
         }
     });
 
@@ -740,6 +736,13 @@
     //INCOME TXN --- END ---------------------------
 });
 
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
+}
 function toggleCategoryFilters(type) {
 
     if (type === "INCOME") {
@@ -777,27 +780,57 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
             //console.log("res count summaery finance:",res);
             if (res.status === "Success" && res.data) {
 
-                $("#txtTotalIncomes").text(formatINR(res.data.TotalIncomes));
-                $("#txtTotalExpenses").text(formatINR(res.data.TotalExpenses));
-                // GROSS PROFIT -- START
-                var grossProfit = res.data.GrossProfit || 0;
-                $("#txtGrossProfit").text(formatINR(grossProfit));
+                const d = res.data;
 
-                const wrapper = $("#grossProfitWrapper");
-                const title = wrapper.closest(".card-body").find("h6");
+                // =========================
+                // TOTALS
+                // =========================
+                $("#txtTotalIncomes").text(formatINR(d.TotalIncomes));
+                $("#txtTotalExpenses").text(formatINR(d.TotalExpenses));
 
-                wrapper.removeClass("text-success text-danger");
-                title.removeClass("text-success text-danger");
+                // =========================
+                // INCOME BREAKDOWN
+                // =========================
+                $("#txtInvoiceIncome").text(formatINR(d.InvoiceIncomes));
+                $("#txtCategorisedIncome").text(formatINR(d.CategorisedIncome));
+
+                const incomeTotal = d.TotalIncomes || 1;
+
+                const invoicePct = (d.InvoiceIncomes / incomeTotal) * 100;
+                const categorisedPct = (d.CategorisedIncome / incomeTotal) * 100;
+
+                $("#barInvoiceIncome").css("width", invoicePct + "%");
+                $("#barCategorisedIncome").css("width", categorisedPct + "%");
+
+                // =========================
+                // EXPENSE BREAKDOWN
+                // =========================
+                $("#txtPurchaseExpense").text(formatINR(d.PurchaseExpenses));
+                $("#txtCategorisedExpense").text(formatINR(d.CategorisedExpense));
+
+                const expenseTotal = d.TotalExpenses || 1;
+
+                const purchasePct = (d.PurchaseExpenses / expenseTotal) * 100;
+                const expenseCatPct = (d.CategorisedExpense / expenseTotal) * 100;
+
+                $("#barPurchaseExpense").css("width", purchasePct + "%");
+                $("#barCategorisedExpense").css("width", expenseCatPct + "%");
+
+                // =========================
+                // GROSS PROFIT
+                // =========================
+                const grossProfit = d.GrossProfit || 0;
+
+                const gpEl = $("#txtGrossProfit");
+                gpEl.text("₹ " + formatINR(grossProfit));
+
+                gpEl.removeClass("text-success text-danger");
 
                 if (grossProfit < 0) {
-                    wrapper.addClass("text-danger");
-                    title.addClass("text-danger");
+                    gpEl.addClass("text-danger");
+                } else {
+                    gpEl.addClass("text-success");
                 }
-                else {
-                    wrapper.addClass("text-success");
-                    title.addClass("text-success");
-                }
-                // GROSS PROFIT -- END
             }
             else {
                 resetFinanceCards();
@@ -811,9 +844,41 @@ function loadFinanceSummary(monthDuration, fromDate = null, toDate = null) {
 }
 
 function resetFinanceCards() {
+
+    // =========================
+    // TOTALS
+    // =========================
     $("#txtTotalIncomes").text("0");
     $("#txtTotalExpenses").text("0");
-    $("#txtGrossProfit").text("0");
+
+    // =========================
+    // INCOME BREAKDOWN
+    // =========================
+    $("#txtInvoiceIncome").text("0");
+    $("#txtCategorisedIncome").text("0");
+
+    $("#barInvoiceIncome").css("width", "0%");
+    $("#barCategorisedIncome").css("width", "0%");
+
+    // =========================
+    // EXPENSE BREAKDOWN
+    // =========================
+    $("#txtPurchaseExpense").text("0");
+    $("#txtCategorisedExpense").text("0");
+
+    $("#barPurchaseExpense").css("width", "0%");
+    $("#barCategorisedExpense").css("width", "0%");
+
+    // =========================
+    // GROSS PROFIT
+    // =========================
+    const gpEl = $("#txtGrossProfit");
+
+    gpEl.text("₹ 0");
+    gpEl.removeClass("text-success text-danger");
+
+    // Default neutral state (optional)
+    gpEl.addClass("text-muted");
 }
 
 //TRANSACTIONS GRID --START

@@ -127,7 +127,7 @@ function loadHistory(id) {
                     <div class="timeline-content">
 
                         <div class="fw-bold">
-                            ${x.Quantity} ${x.UnitName}
+                            ${x.Quantity_In} ${x.UnitName} (In) / ${x.Quantity_Out} ${x.UnitName} (Out)
                         </div>
 
                         <div class="text-muted small">
@@ -187,6 +187,15 @@ function renderTable(data) {
                     <td>${escapeHtml(r.ItemCategoryName || '')}</td>
                     <td>${escapeHtml(r.RawMaterialName || '')}</td>
                     <td class="align-middle">${escapeHtml(closingText)}</td>
+
+                    <td class="bg-ai">
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <input type="number" min="0" step="1"
+                                   class="form-control stock-inward-qty"
+                                   id="${inputId}" placeholder="Stock Inward">
+                            <span class="input-group-text px-2">/ ${escapeHtml(r.UnitName || '')}</span>
+                        </div>
+                    </td>
 
                     <td class="bg-warning-gradient">
                         <div class="input-group input-group-sm" style="width: 200px;">
@@ -279,12 +288,12 @@ function fetchData(itemCategoryId = 0, rawMaterialId = 0, unitId = 0) {
 
 //SAVE 
 $(document).on("click", "#btnSaveStockOut", function () {
-    saveStockOut();
+    saveStockInOut();
 });
 
-function saveStockOut() {
+function saveStockInOut() {
 
-    const stockOutList = [];
+    const stockInOutList = [];
 
     $('#inventoryTable tbody tr').each(function () {
         const row = $(this);
@@ -292,33 +301,35 @@ function saveStockOut() {
         const rawId = Number(row.data('rawid') || 0);
         const unitId = Number(row.data('unitid') || 0);
 
-        const qty = parseFloat(row.find(".stock-outward-qty").val() || 0);
+        const qty_in = parseFloat(row.find(".stock-inward-qty").val() || 0);
+        const qty_out = parseFloat(row.find(".stock-outward-qty").val() || 0);
         const remarks = row.find("input[type='text']").val() || "";
 
-        if (qty > 0) {
-            stockOutList.push({
+        if (qty_in > 0 || qty_out > 0) {
+            stockInOutList.push({
                 RawMaterialId: rawId,
-                Qty: qty,
+                Qty_In: qty_in,
+                Qty_Out: qty_out,
                 UnitId: unitId,
                 Remarks: remarks
             });
         }
     });
 
-    if (stockOutList.length === 0) {
-        Swal.fire("Nothing to Save", "Enter stock outward for at least one item.", "info");
+    if (stockInOutList.length === 0) {
+        Swal.fire("Nothing to Save", "Enter stock inward or outward for at least one item.", "info");
         return;
     }
 
     const payload = {
-        StockOutList: stockOutList,
+        StockInOutList: stockInOutList,
         ActionBy: Number(sessionStorage.getItem("userId") || 0)
     };
 
     $("#btnSaveStockOut").prop("disabled", true).text("Saving...");
 
     $.ajax({
-        url: "/api/Inventory/SaveStockOut",
+        url: "/api/Inventory/SaveStockInOut",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),

@@ -190,7 +190,8 @@
         public long UnitId { get; set; }
         public string? UnitName { get; set; }
 
-        public decimal Quantity { get; set; }
+        public decimal Quantity_In { get; set; }
+        public decimal Quantity_Out { get; set; }
         public string? Remarks { get; set; }
 
         public string? ModifiedOn { get; set; }
