@@ -1409,14 +1409,11 @@ var global_bookingData = null;
 //main booking board
 async function renderBoard(bookingData = null) {
     global_bookingData = bookingData;
-    console.log("renderBoard bookingData:", bookingData);
-    //showLoader();
-    //console.log("renderBoard banquetHallsList:", banquetHallsList);
     board.innerHTML = "";
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
     cacheddays = await generatedays(selectedYear, selectedMonth);
-    //console.log("renderBoard cacheddays:", cacheddays);
-    //console.log("renderBoard bookingData:", bookingData);
+
+    console.log("renderBoard bookingData:", bookingData);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -1458,92 +1455,186 @@ async function renderBoard(bookingData = null) {
 
     //console.log("shiftTimes:", shiftTimes);
     // Resource Rows
+    // Loop through each banquet hall object in the list
     banquetHallsList.forEach(hall => {
+        // Create a wrapper <div> that will represent one row (one hall + its days/shifts)
         const row = document.createElement("div");
+        // Assign CSS classes:
+        // - row-wrapper → custom layout styling
+        // - align-items-center → vertically center content (Bootstrap utility)
         row.className = "row-wrapper align-items-center";
 
-        //Hall Name - Left Side
+        // =========================
+        // Hall Name Section (Left)
+        // =========================
+
+        // Create a <div> to display the hall name
         const nameCell = document.createElement("div");
+        // Apply styling classes:
+        // - text-center → center text horizontally
+        // - rounded → rounded corners
+        // - p-2 → padding
+        // - name-cell → custom styling hook
+        // - bg-warning-subtle → light background color (Bootstrap)
         nameCell.className = "text-center rounded p-2 name-cell bg-warning-subtle";
+        // Set the visible text as the hall's name
         nameCell.textContent = hall.HallName;
+        // Append the name cell to the row (leftmost column)
         row.appendChild(nameCell);
         
+        // =======================================
+        // Loop through shift data for this hall
+        // =======================================
+
+        // Access cached shift data using hall.Id as key
+        // shiftArr = data for a specific day
+        // dayIndex = index of the day (e.g., 0 = Sunday, 1 = Monday, etc.)
         cachedShiftData[hall.Id].forEach((shiftArr, dayIndex) => {
+            // Create a <div> for each day cell
             const cell = document.createElement("div");
+            // Apply styling:
+            // - border → adds border
+            // - rounded → rounded corners
+            // - p-1 → small padding
+            // - text-center → center content
+            // - day-cell → custom class for targeting
+            // Default state assumed "available" (green as per your comment)
             cell.className = "border rounded p-1 text-center day-cell"; // ✅ green default
 
-            // ✅ Detect if this is a past day (all shifts will be past)
-            // const isPastDay = shiftArr.every(color => color === legendColors.past);
-            // if (isPastDay) {
-            //     cell.classList.add("bg-secondary"); // gray background
-            // } else {
-            //     cell.classList.add("bg-success");   // green background for today/future
-            // }
+            // ===============================
+            // ✅ Optimized Date Comparison
+            // ===============================
 
-            // ✅ Compare with today's date
-            const cellDate = cacheddays[dayIndex].dateObj; // assuming dateObj is a real Date object
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // normalize to midnight
-
+            // Normalize today's date to midnight once
+            const todayTime = new Date().setHours(0, 0, 0, 0);
+            // Normalize current cell date to midnight
+            const cellTime = new Date(cacheddays[dayIndex].dateObj).setHours(0, 0, 0, 0);
+            // Flag to track if current cell is today
             let isToday = false;
-            if (cellDate < today) {
-                // PAST DAY (yesterday & earlier)
+            // Remove any previous state classes (important for re-render cases)
+            cell.classList.remove("bg-secondary", "bg-success", "text-white");
+
+            // ===============================
+            // Case 1: Past Date
+            // ===============================
+            if (cellTime < todayTime) {
                 cell.classList.add("bg-secondary", "text-white");
             }
-            else if (cellDate.toDateString() === today.toDateString()) {
-                cell.classList.remove("bg-success");
-                //cell.classList.add("bg-warning", "text-dark"); // Highlight today with yellow
+
+            // ===============================
+            // Case 2: Today
+            // ===============================
+            else if (cellTime === todayTime) {
                 cell.classList.add("bg-success", "text-white");
-                isToday = true; // ✅ mark this column as today
+                isToday = true;
             }
+
+            // ===============================
+            // Case 3: Future Date
+            // ===============================
             else {
-                // CURRENT & FUTURE DAY
                 cell.classList.add("bg-success", "text-white");
             }
 
+            // Extract selected year (e.g., 2026)
             const yyyy = selectedYear;
+
+            // Convert month index (0–11) → (01–12) with leading zero
             const mm = String(selectedMonth + 1).padStart(2, "0");
+
+            // Get day from cached days and ensure 2-digit format (01–31)
             const dd = String(cacheddays[dayIndex].date).padStart(2, "0");
 
+            // Format 1: Human readable (e.g., 12-Apr-2026)
             const dateStr = `${dd}-${monthNames[selectedMonth]}-${yyyy}`;
+
+            // Format 2: Numeric (e.g., 12-04-2026)
             const dateStr_Format = `${dd}-${mm}-${yyyy}`;
+
+            // Format 3: ISO format (e.g., 2026-04-12) → best for APIs / DB
             const dateStr_ISO = `${yyyy}-${mm}-${dd}`;
 
+            // Initialize empty array to store bookings applicable for this hall + day
             let bookingsToday = [];
+
+            // Ensure bookingData is a valid array before processing
             if (Array.isArray(bookingData)) {
+
+                // Filter bookings for:
+                // 1. Current hall
+                // 2. Current date falling between FromDate and TillDate
                 bookingsToday = bookingData.filter(b => {
 
+                    // Skip booking if it belongs to a different hall
                     if (b.BanquetId !== hall.Id)
                         return false;
 
-                    const fromDate = new Date(b.FromDate);
-                    const tillDate = new Date(b.TillDate);
-                    const currentDate = new Date(dateStr_ISO);
-
+                    const normalize = (d) => new Date(d).setHours(0, 0, 0, 0);
+                    const fromDate = normalize(b.FromDate);
+                    const tillDate = normalize(b.TillDate);
+                    const currentDate = normalize(dateStr_ISO);
+                    // Keep booking if current date lies within booking range (inclusive)
                     return currentDate >= fromDate && currentDate <= tillDate;
                 });
             }
 
+            // Set to track slots that should be skipped (used later for FD merge logic)
             let skipNextSlots = new Set();
 
+            // Check if ANY booking for today is Full Day (FD)
             const hasFDBooking = bookingsToday.some(b => b.ShiftCode === "FD");
+
+            // Get unique Booking IDs (avoid duplicate counting if same booking spans multiple entries)
             const uniqueIds = [...new Set(bookingsToday.map(b => b.BookingId))];
+
+            // Count total unique bookings for the day
             const bookingCount = uniqueIds.length;
+
+            // Flag to indicate if ANY booking exists for that day
             const hasAnyBooking = bookingCount > 0;
 
+            // ===============================
+            // Group bookings by ShiftCode
+            // ===============================
+            const shiftBookingMap = {};
+            bookingsToday.forEach(b => {
+                const shift = (b.ShiftCode || "").trim().toUpperCase();
+                if (!shiftBookingMap[shift]) {
+                    shiftBookingMap[shift] = [];
+                }
+                shiftBookingMap[shift].push(b);
+            });
+
+            // ===============================
             // Populate cell with shift data
+            // ===============================
+
+            // Generate inner HTML for each shift (FD, MO, AF, EV, ON)
+            // shiftArr → array representing visual state placeholders for each shift
             cell.innerHTML = shiftArr.map((color, i) => {
 
+                // If this slot index is marked to be skipped (e.g., FD merged view),
+                // return empty string → no rendering for this slot
                 if (skipNextSlots.has(i)) return "";
 
+                // Default color coming from shiftArr (predefined state)
                 let finalColor = color;
+
+                // If this column is TODAY, override color to "success" (green)
+                // ⚠️ This is a GLOBAL override → can suppress booking colors later
                 if (isToday) {
                     finalColor = "success";
                 }
 
+                // Decide text color based on background:
+                // - light bg → black text
+                // - others → white text
                 var textColor = finalColor === "light" ? "text-black" : "text-white";
 
+                // Get shift code based on index (e.g., 0=FD, 1=MO, 2=AF, 3=EV, 4=ON)
                 const shiftCode = shiftNames[i];
+
+                // Get full readable name (e.g., "Evening" for EV)
                 const shiftFull = fullShiftName(shiftCode);
 
                 var bookingId = 0;
@@ -1552,72 +1643,79 @@ async function renderBoard(bookingData = null) {
                 var clientContact = null;
                 var eventDateRange = null;
 
-                //console.log("shiftTimes:", shiftTimes, ", shiftCode:", shiftCode);
-                //console.log("shiftTimes[shiftCode].start:", shiftTimes[shiftCode].start);
-                //console.log("shiftTimes[shiftCode].end:", shiftTimes[shiftCode].end);
                 const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
                 const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
-                //console.log("slotStart:", slotStart);
-                //console.log("slotEnd:", slotEnd);
 
                 let isBookingConfirmed = false;
                 let isBookingTentative = false;
                 let isBlocked = false;
 
+                // Will hold the matched booking for this specific slot (FD/MO/AF/EV/ON)
                 let bookingMatch = null;
-                // Determine display text
+
+                // Default display text is the shift code (e.g., FD, MO, EV...)
                 let displayText = shiftCode;
+
+                // Ensure bookingData is valid before processing
                 if (Array.isArray(bookingData)) {
-                    // Filter bookings for this hall & date
+
+                    // ===============================
+                    // Filter bookings for current hall + current date
+                    // ===============================
                     const bookingsToday = bookingData.filter(b => {
 
+                        // Skip if booking belongs to another hall
                         if (b.BanquetId !== hall.Id)
                             return false;
 
+                        // Convert booking date range
                         const fromDate = new Date(b.FromDate);
                         const tillDate = new Date(b.TillDate);
+
+                        // Current cell date
                         const currentDate = new Date(dateStr_ISO);
 
+                        // Keep only bookings active on this date
                         return currentDate >= fromDate && currentDate <= tillDate;
                     });
 
-                    // If FD booking exists → show FD
+                    // ===============================
+                    // Determine display text for cell
+                    // ===============================
+
+                    // If FULL DAY booking exists → override display text
                     const fdBooking = bookingsToday.find(b => b.ShiftCode === "FD");
+
                     if (fdBooking) {
-                        displayText = "FD";
+                        displayText = "FD"; // show FD
                     }
                     else if (bookingsToday.length > 0) {
-                        // Count unique booking IDs (each booking = 1 group)
+
+                        // Count unique bookings for that day
                         const uniqueBookingIds = [...new Set(bookingsToday.map(b => b.BookingId))];
+
+                        // Show count (e.g., "1", "2", etc.)
                         displayText = uniqueBookingIds.length;
-                        //console.log("uniqueBookingIds:", uniqueBookingIds);
                     }
 
+                    // ===============================
+                    // Loop through ALL bookings (⚠️ not just bookingsToday)
+                    // ===============================
                     for (const booking of bookingData) {
-                        //console.log("bookingData:", bookingData);
 
+                        // Skip other halls
                         if (booking.BanquetId !== hall.Id)
                             continue;
 
+                        // Date filtering again (duplicate logic)
                         const fromDate = new Date(booking.FromDate);
                         const tillDate = new Date(booking.TillDate);
                         const currentDate = new Date(dateStr_ISO);
 
-                        if (!(currentDate >= fromDate && currentDate <= tillDate))
-                            continue;
-
-                        // FULL DAY BLOCK
-                        if (booking.BookingCalendar_IsBlocked && booking.ShiftCode === "FD") {
-                            isBlocked = true;
-                            bookingMatch = booking;
-                            break;
-                        }
-
-                        //console.log("bookingData 2:", bookingData);
-                        const bookingStart = timeToMinutes(booking.StartTime_Full);
-                        const bookingEnd = timeToMinutes(booking.EndTime_Full);
-                        //console.log("bookingStart:", bookingStart, ", bookingEnd:", bookingEnd, ", slotStart:", slotStart, "slotEnd:", slotEnd);
-                        if (isTimeOverlap(bookingStart, bookingEnd, slotStart, slotEnd)) {
+                        // ===============================
+                        // DIRECT SHIFT MATCH (CRITICAL FIX)
+                        // ===============================
+                        if (booking.ShiftCode === shiftCode) {
 
                             bookingMatch = booking;
 
@@ -1645,127 +1743,183 @@ async function renderBoard(bookingData = null) {
 
                             break;
                         }
-                    }
-                }
 
-                // 🎯 MULTI-SLOT MERGE LOGIC
-                let spanCount = 1;
-                if (bookingMatch && !isBlocked) {
 
-                    const bookingStart = timeToMinutes(bookingMatch.StartTime_Full);
-                    const bookingEnd = timeToMinutes(bookingMatch.EndTime_Full);
+                        if (!(currentDate >= fromDate && currentDate <= tillDate))
+                            continue;
 
-                    for (let j = i + 1; j < shiftNames.length; j++) {
+                        // ===============================
+                        // FULL DAY BLOCK handling
+                        // ===============================
+                        if (booking.BookingCalendar_IsBlocked && booking.ShiftCode === "FD") {
+                            isBlocked = true;
+                            bookingMatch = booking;
+                            break;
+                        }
 
-                        const nextShift = shiftNames[j];
-                        const nextStart = timeToMinutes(shiftTimes[nextShift].start);
-                        const nextEnd = timeToMinutes(shiftTimes[nextShift].end);
+                        // ===============================
+                        // Time-based matching
+                        // ===============================
 
-                        if (isTimeOverlap(bookingStart, bookingEnd, nextStart, nextEnd)) {
-                            spanCount++;
-                            skipNextSlots.add(j);
-                        } else {
+                        // Convert booking start/end time to minutes
+                        const bookingStart = timeToMinutes(booking.StartTime_Full);
+                        const bookingEnd = timeToMinutes(booking.EndTime_Full);
+
+                        // Check if booking overlaps with current slot
+                        if (isTimeOverlap(bookingStart, bookingEnd, slotStart, slotEnd)) {
+
+                            // Found matching booking for this slot
+                            bookingMatch = booking;
+
+                            // If blocked → mark and stop
+                            if (booking.BookingCalendar_IsBlocked) {
+                                isBlocked = true;
+                                break;
+                            }
+
+                            // Assign booking details for UI / tooltip
+                            bookingId = booking.BookingId;
+                            eventName = booking.Booking_SubEventName;
+                            clientName = booking.Client_Name;
+                            clientContact = booking.Client_Contact;
+
+                            // Build display date-time range string
+                            eventDateRange =
+                                booking.FromDate_Short + ' ' +
+                                booking.StartTime_Full + ' - ' +
+                                booking.TillDate_Short + ' ' +
+                                booking.EndTime_Full;
+
+                            // Booking type handling
+                            if (booking.Booking_TypeId == 2) {
+                                isBookingTentative = true;   // Tentative booking
+                            } else {
+                                isBookingConfirmed = true;   // Confirmed booking
+                            }
+
+                            // Stop after first match
                             break;
                         }
                     }
                 }
 
-                // 🚨 DAY-LEVEL OVERRIDE
-                // 🎯 CASE 1: FD booking → ONLY FD row red
-                if (hasFDBooking && shiftCode === "FD") {
-                    finalColor = "danger";
-                    textColor = "text-white";
+                // ===============================
+                // 🎯 MULTI-SLOT MERGE LOGIC (Improved)
+                // ===============================
+                let spanCount = 1;
+                // Guard: only proceed if valid booking exists and not blocked
+                if (bookingMatch && !isBlocked) {
+
+                    const bookingShift = (bookingMatch.ShiftCode || "").trim().toUpperCase();
+
+                    // ===============================
+                    // ✅ Case 1: FULL DAY booking → merge ALL remaining slots
+                    // ===============================
+                    if (bookingShift === "FD") {
+
+                        for (let j = i + 1; j < shiftNames.length; j++) {
+                            spanCount++;
+                            skipNextSlots.add(j); // hide all next slots
+                        }
+                    }
+
+                    // ===============================
+                    // ✅ Case 2: Non-FD → DO NOT MERGE (important fix)
+                    // ===============================
+                    else {
+                        // No merging for EV / MO / AF / ON
+                        // Each slot should render independently
+                        spanCount = 1;
+                    }
                 }
-                // 🎯 CASE 2: Count (non-FD booking) → ONLY FD row red
+
+                // ===============================
+                // 🚨 DAY-LEVEL OVERRIDE (Final Color Decision)
+                // ===============================
+
+                // 🎯 CASE 1: Full Day booking exists → only FD slot should be red
+                if (hasFDBooking && shiftCode === "FD") {
+                    finalColor = "danger";       // red background
+                    textColor = "text-white";    // white text
+                }
+
+                // 🎯 CASE 2: Non-FD bookings exist → show count in FD slot (red)
                 else if (!hasFDBooking && hasAnyBooking && shiftCode === "FD") {
                     finalColor = "danger";
                     textColor = "text-white";
                 }
-                // 🎯 CASE 3: Actual booked slots → red
-                else if (isBookingConfirmed) {
+
+                // 🎯 CASE 3: Actual booked slot (EV / MO / AF / ON)
+                else if (shiftBookingMap[shiftCode]?.length > 0) { //isBookingConfirmed) {
                     finalColor = "danger";
                     textColor = "text-white";
                 }
-                // 🎯 CASE 4: Tentative / Blocked
+
+                // 🎯 CASE 4: Tentative booking (soft hold)
                 else if (isBookingTentative) {
                     finalColor = "white";
                     textColor = "text-dark";
                 }
+
+                // 🎯 CASE 5: Blocked slot (admin/manual block)
                 else if (isBlocked) {
                     finalColor = "dark";
                     textColor = "text-white";
                 }
 
+                // ===============================
+                // Dynamic height for merged slots
+                // ===============================
 
+                // If multiple slots are merged (FD case),
+                // increase height proportionally (28px per slot)
                 const mergeStyle = spanCount > 1
                     ? `style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"`
                     : "";
 
+                // ===============================
+                // Render slot badge (UI element)
+                // ===============================
                 return `<div
-                    class="badge bg-${finalColor} d-block mb-1 ${textColor}"
-                    ${mergeStyle}
-                    data-bookingid="${bookingId}"
-                    data-eventname="${eventName}"
-                    data-clientname="${clientName}"
-                    data-clientcontact="${clientContact}"
+                    class="badge bg-${finalColor} d-block mb-1 ${textColor}" 
+                    ${mergeStyle}                                              
+                    data-bookingid="${bookingId}"          
+                    data-eventname="${eventName}"          
+                    data-clientname="${clientName}"        
+                    data-clientcontact="${clientContact}"  
                     data-eventdaterange="${eventDateRange}"
-                    data-shift="${shiftCode}"
-                    data-shiftname="${shiftFull}"
-                    data-date="${dateStr}"
-                    data-date_format="${dateStr_Format}"
-                    data-date_iso="${dateStr_ISO}"
-                    data-hallname="${hall.HallName}"
-                    data-hallid="${hall.Id}">
-                    ${getDisplayText()}
+
+                    data-shift="${shiftCode}"              
+                    data-shiftname="${shiftFull}"          
+
+                    data-date="${dateStr}"                 
+                    data-date_format="${dateStr_Format}"   
+                    data-date_iso="${dateStr_ISO}"         
+
+                    data-hallname="${hall.HallName}"       
+                    data-hallid="${hall.Id}">              
+
+                    ${getDisplayText()}                   
                 </div>`;
 
+                // ===============================
+                // Function: Decide what text to show inside cell
+                // ===============================
                 function getDisplayText() {
+
+                    // Case 1: If FD booking exists → always show FD
                     if (hasFDBooking) return "FD";
 
+                    // Case 2: If bookings exist → show count ONLY in FD slot
                     if (bookingCount > 0 && shiftCode === "FD") {
                         return bookingCount;
                     }
 
+                    // Case 3: Default → show shift code (MO, AF, EV, etc.)
                     return shiftCode;
                 }
-
-                function getDisplayText2() {
-                    // If real FD booking
-                    if (bookingsToday.some(b => b.ShiftCode === "FD")) {
-                        return "FD";
-                    }
-
-                    // Count unique booking IDs
-                    const uniqueIds = [...new Set(bookingsToday.map(b => b.BookingId))];
-
-                    if (uniqueIds.length === 0)
-                        return shiftCode;
-
-                    // Only show count in first shift (FD row)
-                    if (shiftCode === "FD")
-                        return uniqueIds.length;
-
-                    return shiftCode;
-                }
-
 
             }).join("");
-
-            // ✅ Handle click on individual badge inside this cell
-            cell.querySelectorAll(".badge").forEach(badge => {
-                badge.addEventListener("click", (e) => {
-                    e.stopPropagation(); // prevent triggering cell click
-                    // //console.log("Banquet ID:", hall.Id);
-                    // //console.log("Banquet Name:", hall.HallName);
-                    // //console.log("shift short:", badge.dataset.shift); // ✅ only that one badge
-                    // //console.log("shift full:", badge.dataset.shiftname); // ✅ only that one badge
-                    // //console.log("Date:", badge.dataset.date);
-                    // //console.log("Date_Format:", badge.dataset.date_format);
-                    // //console.log("Date_ISO:", badge.dataset.date_iso);
-                    //console.log("Date:", `${cacheddays[dayIndex].date}-${monthNames[selectedMonth]}-${selectedYear}`);
-                });
-            });
-
 
             row.appendChild(cell);
         });
@@ -2449,39 +2603,68 @@ function attachShiftClickListeners() {
             const hallname = badge.dataset.hallname;
             const hallid = badge.dataset.hallid;
 
-            if (!isNaN(badgeText) && parseInt(badgeText) > 1) {
-                badge.style.cursor = "pointer";
-                //console.log("booking data:", global_bookingData, " hallid:", hallid, ", dateiso:", dateiso); //global_bookingData.BanquetId, global_bookingData.EventDate
-                
+            // ===============================
+            // 🎯 HANDLE FD COUNT CLICK
+            // ===============================
+            if (!isNaN(badgeText) && badgeText !== "") {
+
+                const count = parseInt(badgeText);
+
+                const normalize = d => new Date(d).setHours(0, 0, 0, 0);
                 const matchedBookings = global_bookingData.filter(item =>
-                    Number(item.BanquetId) === Number(hallid) && item.EventDate.toString() === dateiso.toString()
+                    Number(item.BanquetId) === Number(hallid) &&
+                    normalize(item.EventDate) === normalize(dateiso)
                 );
-                //console.log("Matched Bookings:", matchedBookings);
-                //BookingId, Booking_SubEventName, ShiftCode, Client_Name, Client_Contact, FromDate_Short, TillDate_Short, StartTime_Full, EndTime_Full, BanquetName (in Modal Title)
-                if (matchedBookings.length > 0) {
-                    // ✅ Set modal title (Banquet Name)
-                    //const banquetName = matchedBookings[0].BanquetName || "Bookings";
-                    //$("#bookingListModalTitle").text(banquetName);
+
+                // ✅ CASE 1: Only ONE booking → open directly
+                if (count === 1 && matchedBookings.length === 1) {
+
+                    const b = matchedBookings[0];
+
+                    resetBooking();
+
+                    $("#BookingId").val(b.BookingId);
+
+                    $("#label_date_shift")
+                        .text(`${date}, ${fullShiftName(b.ShiftCode)} Slot`)
+                        .data("eventdate", dateiso)
+                        .data("shiftid", b.ShiftCode);
+
+                    $("#banquetDropdown").val(hallid);
+
+                    setShiftTime(b.ShiftCode);
+
+                    $("#fromDate").val(dateiso).prop("disabled", true);
+                    $("#toDate").val(dateiso);
+
+                    loadBookingCalendar(b.BookingId, 0, null, "singleData");
+
+                    $("#title_bookingModal").text("Edit Booking Details");
+
+                    return;
+                }
+
+                // ✅ CASE 2: Multiple bookings → show list modal
+                if (count > 1 && matchedBookings.length > 0) {
 
                     let html = `
                         <table class="table table-bordered table-hover">
                             <thead class="table-light bg-danger">
                                 <tr>
-                                    <th class="text-danger">#</th>
-                                    <th class="text-danger">Event</th>
-                                    <th class="text-danger">Shift</th>
-                                    <th class="text-danger">Client</th>
-                                    <th class="text-danger">Contact</th>
-                                    <th class="text-danger">Date</th>
-                                    <th class="text-danger">Time</th>
-                                    <th class="text-danger">Action</th>
+                                    <th>#</th>
+                                    <th>Event</th>
+                                    <th>Shift</th>
+                                    <th>Client</th>
+                                    <th>Contact</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
 
                     matchedBookings.forEach((b, index) => {
-
                         html += `
                             <tr>
                                 <td class="text-center">${index + 1}</td>
@@ -2491,14 +2674,13 @@ function attachShiftClickListeners() {
                                 <td>${b.Client_Contact}</td>
                                 <td>
                                     ${b.FromDate_Short === b.TillDate_Short
-                                        ? b.FromDate_Short
-                                        : `${b.FromDate_Short} - ${b.TillDate_Short}`}
+                                            ? b.FromDate_Short
+                                            : `${b.FromDate_Short} - ${b.TillDate_Short}`}
                                 </td>
                                 <td>${b.StartTime_Full} - ${b.EndTime_Full}</td>
                                 <td>
                                     <button 
                                         class="btn btn-sm btn-danger view-booking-btn"
-                                        data-hallname="${hallname}"
                                         data-bookingid="${b.BookingId}">
                                         View
                                     </button>
@@ -2510,10 +2692,10 @@ function attachShiftClickListeners() {
                     html += `</tbody></table>`;
 
                     $("#bookingListModalBody").html(html);
-                    // ✅ Show modal
                     $("#bookingListModal").modal("show");
+
+                    return;
                 }
-                return; // do not attach click
             }
 
             //console.log("color cell:", color);
@@ -2585,6 +2767,7 @@ function setShiftTime(shiftAbbr) {
 }
 
 // Call this function after rendering board or table
+/* here1
 renderBoard = (() => {
     const originalRenderBoard = renderBoard;
     return function (...args) {
@@ -2592,7 +2775,7 @@ renderBoard = (() => {
         //attachShiftClickListeners();
     }
 })();
-
+*/
 //<!-- Booking Modal -- /END ------------------------------------------------>
 
 // Global variables
@@ -2644,7 +2827,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     populateYearDropdown();
     //populateMonthButtons();
-    //fetchHallDetails();
     //loadBookingCalendar();
     //loadPaymentHistory(bookingId);
     loadLeadSourceList();
@@ -2658,9 +2840,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     AppSignalR.subscribeSettings((data) => {
         //console.log("Settings Page Update", data);
-        window.location.reload();
+        //window.location.reload();
         //console.log("page refresh");
-        loadBookingCalendar();
+        //loadBookingCalendar();
+        populateYearDropdown();
     });
 
     // When Addon Modal is about to open

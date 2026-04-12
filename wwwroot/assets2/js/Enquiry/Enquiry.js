@@ -1260,24 +1260,6 @@ function renderBoard() {
 
     // 🔥 Add click event listener for all deal cards
     $(document).off("click", ".deal-open").on("click", ".deal-open", function () {
-
-        var requestData = {
-            companyId: Number(sessionStorage.getItem("companyid") ?? 0),
-            mobileNo: "8306588313", //enquiryData.Contact,
-            messageType: "TEMPLATE",
-            messageCount: 1,
-            referenceId: generateGUID(), // IMPORTANT (unique)
-            templateId: null,
-            isPromotional: false,
-            actionBy: Number(sessionStorage.getItem("userId") ?? 0),
-
-            templateName: "infinity_enquiry",
-            //message: "{Name}&{BName}&{Mobile}&{OrgName}" //Customer Name + banquet hall + banquet contact + banquet company
-            message: "Gopal&How&are&you2"
-        };
-        sendWhatsAppMessage(requestData);
-
-
         const dealId = $(this).closest(".deal-card").data("dealid");
         const bookingId = $(this).closest(".deal-card").data("bookingid");
         const isleadlost = $(this).closest(".deal-card").data("isleadlost");
@@ -1792,6 +1774,24 @@ function saveFollowUpAndMoveDeal() {
         success: function (res) {
             if (res.status === "Success") {
                 handleApiSuccess('Saved!');
+                /*
+                var requestData = {
+                    companyId: Number(sessionStorage.getItem("companyid") ?? 0),
+                    mobileNo: "8306588313", //enquiryData.Contact,
+                    messageType: "TEMPLATE",
+                    messageCount: 1,
+                    referenceId: generateGUID(), // IMPORTANT (unique)
+                    templateId: null,
+                    isPromotional: false,
+                    actionBy: Number(sessionStorage.getItem("userId") ?? 0),
+
+                    templateName: "infinity_enquiry",
+                    //message: "{Name}&{BName}&{Mobile}&{OrgName}" //Customer Name + banquet hall + banquet contact + banquet company
+                    message: "Gopal&How&are&you2"
+                };
+                sendWhatsAppMessage(requestData);
+                */
+
                 // Close modal
                 $("#followupModal").modal("hide");
 
