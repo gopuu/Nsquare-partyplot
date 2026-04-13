@@ -145,8 +145,7 @@ namespace ERPAdmin.ApiControllers
 
                 cmd.CommandType = CommandType.StoredProcedure;
 
-                cmd.Parameters.Add("@InvoiceDate", SqlDbType.Date)
-                    .Value = request.InvoiceDate ?? (object)DBNull.Value;
+                cmd.Parameters.Add("@InvoiceDate", SqlDbType.NVarChar, 20).Value = request.InvoiceDate ?? (object)DBNull.Value;
 
                 con.Open();
 

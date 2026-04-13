@@ -1,1 +1,182 @@
-﻿
+﻿/*Form Fields -- START */
+/* Overall modal font */
+.invoice-modal-body {
+    font-size: 11px;
+}
+
+/* Labels */
+.form-label-sm {
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #374151;
+}
+
+.invoice-modal-body .form-label-sm {
+    font-size: 12px;
+}
+
+/* Inputs & selects */
+.invoice-modal-body .form-control-sm,
+.invoice-modal-body .form-select-sm {
+    font-size: 11px;
+    height: 30px;
+    padding: 0.5px;
+}
+
+/* Table */
+/* ================= INVOICE ITEMS TABLE ================= */
+
+.invoice-items-table {
+    table-layout: fixed; /* 🔑 prevents column jumping */
+    width: 100%;
+    font-size: 12px;
+}
+
+    .invoice-items-table th,
+    .invoice-items-table td {
+        /*padding: 4px 6px;*/
+        vertical-align: middle;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* Header */
+    .invoice-items-table thead th {
+        text-align: center;
+        font-weight: 600;
+        background: #f8f9fa;
+    }
+
+    /* Inputs inside table */
+    .invoice-items-table input {
+        padding: 2px 4px;
+        height: 16px;
+        font-size: 9px;
+    }
+
+/* ================= COLUMN WIDTHS ================= */
+
+/* Index */
+.col-index {
+    font-size: 9px;
+    width: 6px;
+    text-align: center;
+}
+
+/* Description */
+.col-desc {
+    width: 260px;
+}
+
+/* HSN */
+.col-hsn {
+    width: 90px;
+}
+
+/* Rate / Qty / SubTotal */
+.col-rate {
+    width: 90px;
+}
+
+.col-qty {
+    width: 60px;
+}
+
+.col-subtotal {
+    width: 100px;
+}
+
+/* Discount */
+.col-discount-rate {
+    width: 80px;
+}
+
+.col-discount-type {
+    width: 70px;
+}
+
+.col-discount-amount {
+    width: 100px;
+}
+
+/* Taxable */
+.col-taxable {
+    width: 100px;
+}
+
+/* GST % */
+.col-gst {
+    width: 65px;
+}
+
+/* CGST / SGST */
+.col-tax {
+    width: 90px;
+}
+
+/* Total */
+.col-total {
+    width: 110px;
+}
+
+/* Action */
+.col-action {
+    width: 5px;
+    text-align: center;
+    padding: 10px;
+}
+
+/* ================= ALIGNMENT ================= */
+
+.text-end input {
+    text-align: right;
+}
+
+/* Delete icon */
+.btn-delete-row {
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ================= RESPONSIVE SCROLL ================= */
+
+.invoice-modal-body {
+    overflow-x: auto;
+}
+
+.invoice-items-table {
+    min-width: 1350px; /* 🔑 ensures full layout without squeezing */
+}
+
+
+/* Compact inputs */
+.form-control-sm {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+/* Readonly look */
+input[readonly] {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+    .total-row span {
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    .total-row input {
+        width: 160px;
+    }
+
+/*Form Fields -- END */

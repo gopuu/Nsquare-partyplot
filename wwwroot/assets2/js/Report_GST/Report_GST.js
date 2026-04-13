@@ -316,7 +316,7 @@ function renderGSTSalesTable(data, totals) {
                     if (!data) return "";
 
                     return `
-                        <button class="btn btn-xs btn-view-invoice btn-outline-dark" data-invoice="${data.InvoiceNo}">
+                        <button class="btn btn-xs btn-view-invoice btn-warning" data-invoice="${data.InvoiceNo}">
                             View Invoice
                         </button>
                     `;
@@ -350,18 +350,18 @@ function renderGSTSalesTable(data, totals) {
             const fmt = v => formatINR2(v || 0);
             const api = this.api();
 
-            $(api.column(0).footer()).html("<strong>TOTAL</strong>");
+            $(api.column(0).footer()).html("<strong class='fs-9'>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(`<strong>${fmt(totals.TotalSubTotal)}</strong>`);
-            $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalCGST)}</strong>`);
-            $(api.column(7).footer()).html(`<strong>${fmt(totals.TotalSGST)}</strong>`);
-            $(api.column(8).footer()).html(`<strong>${fmt(totals.TotalIGST)}</strong>`);
+            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSubTotal)}</strong>`);
+            $(api.column(6).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalCGST)}</strong>`);
+            $(api.column(7).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSGST)}</strong>`);
+            $(api.column(8).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalIGST)}</strong>`);
 
-            $(api.column(9).footer()).html(`<strong>${fmt(totals.TotalTax)}</strong>`);
-            $(api.column(10).footer()).html(`<strong>${fmt(totals.TotalInvoiceAmount)}</strong>`);
+            $(api.column(9).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalTax)}</strong>`);
+            $(api.column(10).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalInvoiceAmount)}</strong>`);
 
-            $(api.column(12).footer()).html(`<strong>${fmt(totals.TotalPaidAmount)}</strong>`);
-            $(api.column(13).footer()).html(`<strong>${fmt(totals.TotalDueAmount)}</strong>`);
+            $(api.column(13).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalPaidAmount)}</strong>`);
+            $(api.column(14).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDueAmount)}</strong>`);
         },
 
         language: {
@@ -497,24 +497,30 @@ function fetchInvoiceById(params) {
                 return;
             }
             const data = res.data;
-            //console.log("GetCustomerInvoiceById data:", data);
+            console.log("GetCustomerInvoiceById data:", data);
 
             /* ---------- MASTER ---------- */
             $('#invoiceId').val(data.Id);
-            $('#bookingId').val(data.BookingId);
+            $('#bookingId').val(params.BookingId);
             $('#customerName').val(data.CustomerName);
             $('#invoiceDate').val(data.InvoiceDate);
             $('#gstin').val(data.GSTIN);
             $('#emailId').val(data.EmailId);
             $('#address').val(data.Address);
             $('#customerState').val(data.CustomerStateId);
-            $("#isGstIncluded").prop("disabled", true);
+
+            $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
+            $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
+            $('#invoiceNo').data('isinclusivegst', data.IsInclusiveOfGST);
 
             /* ---------- TOTALS (DIRECT SET) ---------- */
             $('#subTotal').val(data.SubTotal);
             $('#bookingDiscount').val(data.BookingDiscount);
             $('#totalTaxable').val(data.TotalTaxableAmount);
             $('#totalGST').val(data.TotalGST);
+            // Call after setting GST
+            updateInvoiceTitle(data.TotalGST);
+
             $('#grandTotal').val(data.GrandTotal);
             $('#roundOff').val(data.RoundOff);
             $('#advancePaid').val(data.TotalAdvancePaid).attr('readonly', true);
@@ -525,7 +531,7 @@ function fetchInvoiceById(params) {
             if (data.Items && data.Items.length > 0) {
 
                 data.Items.forEach(item => {
-
+                    const gstOptions = buildGSTDropdown(item.GSTRate);
                     const row = `
                         <tr>
                             <td class="text-center col-index"></td>
@@ -547,14 +553,20 @@ function fetchInvoiceById(params) {
                             <td><input class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount}"></td>
 
                             <td><input class="form-control form-control-sm text-end taxable p-1 calc" value="${item.TaxableAmount}"></td>
-                            <td><input class="form-control form-control-sm text-end gst p-1 calc" value="${item.GSTRate}"></td>
+
+                            <td class="col-gst p-1">
+                                <select class="form-select form-select-sm gst calc p-1">
+                                    ${gstOptions}
+                                </select>
+                            </td>
 
                             <td><input class="form-control form-control-sm text-end cgst p-1" value="${item.CGST}" readonly></td>
                             <td><input class="form-control form-control-sm text-end sgst p-1" value="${item.SGST}" readonly></td>
+                            <td><input class="form-control form-control-sm text-end igst p-1" value="${item.IGST}" readonly></td>
                             <td><input class="form-control form-control-sm text-end fw-bold total p-1" value="${item.Total}" readonly></td>
 
                             <td class="text-center">
-                                <i class="fa fa-times text-danger btn-delete-row"></i>
+                                <i class="fa fa-times text-danger btn-delete-row d-none"></i>
                             </td>
                         </tr>
                     `;
@@ -582,6 +594,51 @@ function updateRowSequence() {
         $(this).find('.col-index').text(index + 1);
     });
 }
+var invoiceNo = 0;
+var proformaInvoiceNo = 0;
+var gstInvoiceNo = null;
+var invoiceType = null;
+
+function updateInvoiceTitle(totalGST) {
+    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+    //console.log("isInclusiveGST:", isInclusiveGST);
+    const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
+
+    if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
+        $('#invoiceModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
+    }
+    else if (invoiceType == "invoice") {
+        $('#invoiceModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
+    }
+}
+
+let gstList = [];
+loadGSTMaster();
+function loadGSTMaster() {
+    $.ajax({
+        url: "/api/GSTMaster/GetGSTMaster",
+        type: "GET",
+        success: function (res) {
+            if (res.status === "Success") {
+                gstList = res.data;
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load GST master.");
+        }
+    });
+}
+function buildGSTDropdown(selectedGST = 0) {
+    let options = '';
+    gstList.forEach(g => {
+        const selected = parseFloat(g.GSTValue) === parseFloat(selectedGST)
+            ? 'selected'
+            : '';
+        options += `<option value="${g.GSTValue}" ${selected}>${g.GSTText}</option>`;
+    });
+    return options;
+}
+
 
 function resetInvoiceForm() {
 

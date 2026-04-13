@@ -1526,6 +1526,7 @@ function addItemRow() {
     $('#invoiceItemsBody').append(row);
     updateRowSequence();
 }
+
 function updateRowSequence() {
     $('#invoiceItemsBody tr').each(function (index) {
         $(this).find('.col-index').text(index + 1);

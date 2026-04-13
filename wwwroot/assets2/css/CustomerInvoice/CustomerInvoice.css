@@ -1,5 +1,4 @@
-﻿
-/* Ensure dropdown appears above all cards */
+﻿/* Ensure dropdown appears above all cards */
 .dropdown-menu {
     z-index: 9999 !important;
 }

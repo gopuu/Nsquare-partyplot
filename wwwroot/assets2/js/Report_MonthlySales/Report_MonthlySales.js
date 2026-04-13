@@ -545,11 +545,11 @@ function renderMonthlySalesDetailsTable(rows, totals) {
 
             $(api.column(0).footer()).html("TOTAL");
 
-            $(api.column(4).footer()).html(formatINR2(totals.GrossAmount));
-            $(api.column(5).footer()).html(formatINR2(totals.Taxes));
-            $(api.column(6).footer()).html(formatINR2(totals.NetAmount));
-            $(api.column(7).footer()).html(formatINR2(totals.PaidAmount));
-            $(api.column(8).footer()).html(formatINR2(totals.DueAmount));
+            $(api.column(5).footer()).html(formatINR2(totals.GrossAmount));
+            $(api.column(6).footer()).html(formatINR2(totals.Taxes));
+            $(api.column(7).footer()).html(formatINR2(totals.NetAmount));
+            $(api.column(8).footer()).html(formatINR2(totals.PaidAmount));
+            $(api.column(9).footer()).html(formatINR2(totals.DueAmount));
         }
 
     });

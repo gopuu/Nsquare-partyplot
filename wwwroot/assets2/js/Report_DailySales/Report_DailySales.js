@@ -339,13 +339,13 @@ function renderDailySalesTable(data, totals) {
             const fmt = v => formatINR2(v);
             const api = this.api();
 
-            $(api.column(0).footer()).html("<strong class='fs-9'>TOTAL</strong>");
-            $(api.column(2).footer()).html(`<strong class='fs-9'>${totals.TotalInvoices ?? ""}</strong>`);
-            $(api.column(3).footer()).html(`<strong class='fs-9'>${fmt(totals.GrossSales)}</strong>`);
-            $(api.column(4).footer()).html(`<strong class='fs-9'>${fmt(totals.Taxes)}</strong>`);
-            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.NetSales)}</strong>`);
-            $(api.column(6).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalPayments)}</strong>`);
-            $(api.column(8).footer()).html(`<strong class='fs-9'>${fmt(totals.DuePayments)}</strong>`);
+            $(api.column(0).footer()).html("<strong>TOTAL</strong>");
+            $(api.column(2).footer()).html(`<strong>${totals.TotalInvoices ?? ""}</strong>`);
+            $(api.column(3).footer()).html(`<strong>${fmt(totals.GrossSales)}</strong>`);
+            $(api.column(4).footer()).html(`<strong>${fmt(totals.Taxes)}</strong>`);
+            $(api.column(5).footer()).html(`<strong>${fmt(totals.NetSales)}</strong>`);
+            $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalPayments)}</strong>`);
+            $(api.column(8).footer()).html(`<strong>${fmt(totals.DuePayments)}</strong>`);
         },        
         initComplete: function () {
             $(this.api().table().header())

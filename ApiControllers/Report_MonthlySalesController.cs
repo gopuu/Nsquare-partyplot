@@ -316,8 +316,9 @@ namespace ERPAdmin.ApiControllers
                 Document document = null;
                 if (dsReport.Tables[2].Columns.Count > 7)
                 {
-                    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
-                    isA4size = false;
+                    //document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    isA4size = true; // false;
                 }
                 else
                 {
