@@ -298,70 +298,6 @@
         });
     });
 
-    // Edit button click for Expense Transactions
-    $(document).on('click', '.btn-edit-expense', function (event) {
-        var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
-        if (!canEdit) {
-            Swal.fire({
-                icon: "error",
-                title: "Access Denied",
-                text: "You don't have permission to Edit. Please contact admin.",
-                confirmButtonText: "OK"
-            });
-            event.preventDefault();
-            return;
-        }
-
-        resetFormFields_Expense(); // Clear previous values
-
-        // Get the DataTable instance
-        var table = $('#tableMain_Expense table').DataTable();
-
-        // Get the row object for the clicked Edit button
-        var row = $(this).closest('tr');
-        var rowData = table.row(row).data(); // Get the data object for this row
-
-        console.log("edit rawdata:", rowData);
-        // Fill modal fields with selected row data
-        $("#ExpenseTransactionId").val(rowData.Id);
-        $("#ddlAccount_Expense").val(rowData.AccountId);
-        $("#ddlExpenseCategory").val(rowData.CategoryId);
-        $("#ddlSubCategory_Expense").val(rowData.SubCategoryId);
-        $("#txtAmount_Expense").val(rowData.Amount);
-        $("#txtTransactionDate_Expense").val(rowData.TransactionDate);
-        $("#txtPaymentMode_Expense").val(rowData.PaymentModeId).trigger("change");
-
-        $("#paymentVoucherNo_Expense").val(rowData.VoucherNo);
-        $("#expenseVoucherDisplay").text(rowData.VoucherNo || "-");
-
-        $("#txtTransactionId_Expense").val(rowData.TransactionId);
-        $("#paymentChequebank_Expense").val(rowData.ChequeBank);
-        $("#paymentChequeNo_Expense").val(rowData.ChequeNo);
-        $("#paymentChequeDate_Expense").val(rowData.ChequeDate);
-        $("#txtNotes_Expense").val(rowData.Notes);
-
-        // Update modal title
-        $("#expenseTitleText").text("Edit Expense Transactions");
-
-        // Show modal
-        $('#ExpenseTransactionModal').modal('show');
-    });
-
-    // Delete button click in table
-    $(document).on("click", ".btn-delete-expense", function () {
-        // Get DataTable instance
-        var table = $("#tableMain_Expense table").DataTable(); // make sure this matches your table id
-        var rowData = table.row($(this).closest("tr")).data();
-
-        if (!rowData || !rowData.Id) {
-            Swal.fire("Error", "Unable to get selected row data.", "error");
-            return;
-        }
-
-        // Store Id in modal using jQuery data
-        $("#deleteRecordModal").data("id", rowData.Id).data("src", "expense").modal("show");
-    });
-
     $(document).on("change", "#txtPaymentMode_Expense", function () {
 
         const selectedText = $("#txtPaymentMode_Expense option:selected").text().toLowerCase().trim();
@@ -544,67 +480,91 @@
         });
     });
 
-    // Edit button click for Income Transactions
-    $(document).on('click', '.btn-edit-income', function (event) {
+    //EDIT
+    $(document).on('click', '.btn-edit', function (event) {
+
         var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
         if (!canEdit) {
             Swal.fire({
                 icon: "error",
                 title: "Access Denied",
-                text: "You don't have permission to Edit. Please contact admin.",
-                confirmButtonText: "OK"
+                text: "You don't have permission to Edit. Please contact admin."
             });
-            event.preventDefault();
             return;
         }
 
-        resetFormFields_Income(); // Clear previous values
-
-        // Get the DataTable instance
         var table = $('#tableMain_Transactions table').DataTable();
+        var rowData = table.row($(this).closest('tr')).data();
 
-        // Get the row object for the clicked Edit button
-        var row = $(this).closest('tr');
-        var rowData = table.row(row).data(); // Get the data object for this row
+        if (!rowData) return;
 
-        console.log("rowData income:", rowData);
-        // Fill modal fields with selected row data
-        $("#incomeTransactionId").val(rowData.Id);
-        $("#ddlAccount_Income").val(rowData.AccountId);
-        $("#ddlIncomeCategory").val(rowData.CategoryId);
-        $("#ddlSubCategory_Income").val(rowData.SubCategoryId);
-        $("#txtAmount_Income").val(rowData.Amount);
-        $("#txtTransactionDate_Income").val(rowData.TransactionDate);
-        $("#txtPaymentMode_Income").val(rowData.PaymentModeId).trigger("change");
+        if (rowData.TransactionType === "INCOME") {
 
-        $("#paymentVoucherNo_Income").val(rowData.VoucherNo);
-        $("#incomeVoucherDisplay").text(rowData.VoucherNo || "-");
+            resetFormFields_Income();
 
-        $("#txtTransactionId_Income").val(rowData.TransactionId);
-        $("#paymentChequebank_Income").val(rowData.ChequeBank);
-        $("#paymentChequeNo_Income").val(rowData.ChequeNo);
-        $("#paymentChequeDate_Income").val(rowData.ChequeDate);
-        $("#txtNotes_Income").val(rowData.Notes);
+            $("#incomeTransactionId").val(rowData.Id);
+            $("#ddlAccount_Income").val(rowData.AccountId);
+            $("#ddlIncomeCategory").val(rowData.CategoryId);
+            $("#ddlSubCategory_Income").val(rowData.SubCategoryId);
+            $("#txtAmount_Income").val(rowData.Amount);
+            $("#txtTransactionDate_Income").val(rowData.TransactionDate);
+            $("#txtPaymentMode_Income").val(rowData.PaymentModeId).trigger("change");
 
-        // Update modal title
-        $("#incomeTitleText").text("Edit Income Transactions");
+            $("#paymentVoucherNo_Income").val(rowData.VoucherNo);
+            $("#incomeVoucherDisplay").text(rowData.VoucherNo || "-");
 
-        // Show modal
-        $('#incomeTransactionModal').modal('show');
+            $("#txtTransactionId_Income").val(rowData.TransactionId);
+            $("#paymentChequebank_Income").val(rowData.ChequeBank);
+            $("#paymentChequeNo_Income").val(rowData.ChequeNo);
+            $("#paymentChequeDate_Income").val(rowData.ChequeDate);
+            $("#txtNotes_Income").val(rowData.Notes);
+
+            $("#incomeTitleText").text("Edit Income Transactions");
+            $('#incomeTransactionModal').modal('show');
+
+        } else {
+
+            resetFormFields_Expense();
+
+            $("#ExpenseTransactionId").val(rowData.Id);
+            $("#ddlAccount_Expense").val(rowData.AccountId);
+            $("#ddlExpenseCategory").val(rowData.CategoryId);
+            $("#ddlSubCategory_Expense").val(rowData.SubCategoryId);
+            $("#txtAmount_Expense").val(rowData.Amount);
+            $("#txtTransactionDate_Expense").val(rowData.TransactionDate);
+            $("#txtPaymentMode_Expense").val(rowData.PaymentModeId).trigger("change");
+
+            $("#paymentVoucherNo_Expense").val(rowData.VoucherNo);
+            $("#expenseVoucherDisplay").text(rowData.VoucherNo || "-");
+
+            $("#txtTransactionId_Expense").val(rowData.TransactionId);
+            $("#paymentChequebank_Expense").val(rowData.ChequeBank);
+            $("#paymentChequeNo_Expense").val(rowData.ChequeNo);
+            $("#paymentChequeDate_Expense").val(rowData.ChequeDate);
+            $("#txtNotes_Expense").val(rowData.Notes);
+
+            $("#expenseTitleText").text("Edit Expense Transactions");
+            $('#ExpenseTransactionModal').modal('show');
+        }
     });
 
     // Delete button click in table
-    $(document).on("click", ".btn-delete-income", function () {
-        // Get DataTable instance
-        var table = $("#tableMain_Transactions table").DataTable(); // make sure this matches your table id
+    $(document).on("click", ".btn-delete", function () {
+
+        var table = $("#tableMain_Transactions table").DataTable();
         var rowData = table.row($(this).closest("tr")).data();
 
         if (!rowData || !rowData.Id) {
             Swal.fire("Error", "Unable to get selected row data.", "error");
             return;
         }
-        // Store Id in modal using jQuery data
-        $("#deleteRecordModal").data("id", rowData.Id).data("src", "income").modal("show");
+
+        let src = rowData.TransactionType === "INCOME" ? "income" : "expense";
+
+        $("#deleteRecordModal")
+            .data("id", rowData.Id)
+            .data("src", src)
+            .modal("show");
     });
 
     // Confirm delete
@@ -931,7 +891,7 @@ function fetchTransactions(payload = {}) {
     });
 }
 function renderTransactions(data) {
-
+    console.log("render data:", data);
     let table = $("#tableMain_Transactions table");
 
     // Destroy if already initialized
@@ -992,7 +952,38 @@ function renderTransactions(data) {
                     ${shortText}
                 </span>`;
                 }
+            },
+            {
+                data: null,
+                title: 'Actions',
+                render: function (data, type, row) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light btn-action-xss dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item btn-edit"
+                                            data-type="${row.TransactionType}">
+                                        <i class="fa fa-edit me-2 text-warning"></i> Edit
+                                    </button>
+                                </li>
+
+                                <li>
+                                    <button class="dropdown-item btn-delete"
+                                            data-type="${row.TransactionType}">
+                                        <i class="fa fa-trash me-2 text-danger"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                }
             }
+
         ],
         drawCallback: function () {
 
