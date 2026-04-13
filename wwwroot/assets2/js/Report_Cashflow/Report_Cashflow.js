@@ -210,8 +210,8 @@ function renderCashflowTable(data) {
                 title: "Amount",
                 className: "text-end fw-semibold",
                 render: function (data, type, row) {
-                    const cls = row.flowType === "Inflow" ? "text-success" : "text-danger";
-                    const sign = row.flowType === "Inflow" ? "+" : "−";
+                    const cls = row.FlowType === "Inflow" ? "text-success" : "text-danger";
+                    const sign = row.FlowType === "Inflow" ? "+" : "−";
                     return `<span class="${cls}">${sign} ${formatINR2(data)}</span>`;
                 }
             }
@@ -245,7 +245,7 @@ function renderCashflowTable(data) {
 
         /* ── Row colour by flow type ── */
         createdRow: function (row, rowData) {
-            if (rowData.flowType === "Inflow")
+            if (rowData.FlowType === "Inflow")
                 $(row).addClass("table-success").css("opacity", "0.85");
             else
                 $(row).addClass("table-danger").css("opacity", "0.85");

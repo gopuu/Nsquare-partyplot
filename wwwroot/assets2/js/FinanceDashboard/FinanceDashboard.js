@@ -84,15 +84,14 @@
             $("#jobChartFilter").text("Filter : Custom Range");
             $(".chart-filter-finance .dropdown-item").removeClass("active");
             loadFinanceSummary(selectedFinanceDuration, fromDate, toDate);
+
+
         }
     });
 
     $("#btnReset").on("click", function () {
-
         selectedFinanceDuration = "thismonth";
-
-        $("#fromDate").val("");
-        $("#toDate").val("");
+        setCurrentMonthDates();
 
         $("#jobChartFilter").text("Filter : This Month");
 
@@ -150,8 +149,8 @@
         $("#filter_transaction_account").val("0");
         $("#filter_transaction_paymentmode").val("0");
 
-        $("#filter_transaction_fromdate").val("");
-        $("#filter_transaction_todate").val("");
+        selectedFinanceDuration = "thismonth";
+        setCurrentMonthDates();
 
         $("#filter_transaction_fromamount").val("");
         $("#filter_transaction_toamount").val("");
@@ -742,6 +741,9 @@ function setCurrentMonthDates() {
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     $("#fromDate").val(formatDate2(firstDay));
     $("#toDate").val(formatDate2(lastDay));
+
+    $("#filter_transaction_fromdate").val(formatDate2(firstDay));
+    $("#filter_transaction_todate").val(formatDate2(lastDay));
 }
 function toggleCategoryFilters(type) {
 
@@ -967,9 +969,9 @@ function renderTransactions(data) {
                 className: "text-end fw-semibold",
                 render: function (data, type, row) {
                     if (row.TransactionType === "INCOME")
-                        return `<span class="text-success">+ ${data}</span>`;
+                        return `<span class="text-success">+ ${formatINR2(data)}</span>`;
                     else
-                        return `<span class="text-danger">- ${data}</span>`;
+                        return `<span class="text-danger">- ${formatINR2(data)}</span>`;
                 }
             },
             { data: "CategoryName", title: "Category", className: "text-center" },
@@ -1030,7 +1032,7 @@ function renderTransactions(data) {
                     <td></td>
                     <td class="text-end fw-bold">TOTAL</td>
                     <td class="text-end fw-bold ${colorClass}">
-                         ₹  ${sign}  ${Math.abs(total).toFixed(2)}
+                        ${formatINR2(total)}
                     </td>
                     <td></td>
                     <td></td>

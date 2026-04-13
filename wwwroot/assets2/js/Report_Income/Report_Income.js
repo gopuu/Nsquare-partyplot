@@ -365,7 +365,7 @@ function renderIncomeTable(rows, totals) {
             {
                 data: "Amount",
                 title: "Amount",
-                className: "text-end fw-semibold text-danger",
+                className: "text-end fw-semibold text-success",
                 render: d => formatINR2(d)
             }
         ],
@@ -378,7 +378,7 @@ function renderIncomeTable(rows, totals) {
             $cells.eq(7).html("<strong>TOTAL INCOME</strong>");
 
             $cells.eq(8).html(`
-                <strong class="text-danger">
+                <strong class="text-success">
                     ${formatINR2(totals.TotalAmount)}
                 </strong>
             `);

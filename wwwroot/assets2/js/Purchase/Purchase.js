@@ -921,6 +921,7 @@ function resetFilter() {
     $("#sortByDropdown").text("Filter : This Month");
     $(".sort-option").removeClass("active");
     $('.sort-option[data-value="thismonth"]').addClass("active");
+    setCurrentMonthDates();
 
     // 🔹 CUSTOM DATE RANGE HIDE (if you add later)
     $("#customDateRange").hide();

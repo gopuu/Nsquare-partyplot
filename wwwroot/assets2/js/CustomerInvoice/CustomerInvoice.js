@@ -106,18 +106,15 @@ $(".sort-option").on("click", function (e) {
 });
 
 $("#fltEventFrom, #fltEventTo").on("change", function () {
-
     let fromDate = $("#fltEventFrom").val();
     let toDate = $("#fltEventTo").val();
 
     if (fromDate && toDate) {
         selectedMonthDuration = "customrange";
-
         $("#sortByDropdown").text("Filter : Custom Range");
         //$(".sub").text("In Custom Range");
 
         $(".sort-option").removeClass("active");
-
        // loadDashboardWidgetCounts(); // 🔥
     }
 });
@@ -755,14 +752,12 @@ $(function () {
     }
 
     //FILTER - PAYMENT ---- START ---------------------------
-    //collections
+    //payment collections widgte
     $(document).on("click", ".payment-option", function (e) {
         e.preventDefault();
 
         const newFilter = $(this).data("value");
-
         if (selectedPaymentDuration === newFilter) return;
-
         selectedPaymentDuration = newFilter;
 
         $(".payment-option").removeClass("active");
@@ -770,13 +765,43 @@ $(function () {
 
         $("#PaymentChartFilter").text($(this).text());
 
-        loadPaymentCollection(selectedPaymentDuration);
+        // 🔥 SHOW/HIDE DATE RANGE
+        if (newFilter === "customrange") {
+            $("#paymentDateRange").removeClass("d-none");
+        }
+        else {
+            $("#paymentDateRange").addClass("d-none");
+            // reset dates
+            $("#paymentFromDate").val('');
+            $("#paymentToDate").val('');
+            loadPaymentCollection(selectedPaymentDuration);
+        }
+    });
+    $(document).on("change", "#paymentFromDate, #paymentToDate", function () {
+        const from = $("#paymentFromDate").val();
+        const to = $("#paymentToDate").val();
+
+        // 🔒 Only trigger when both selected
+        if (!from || !to) return;
+
+        // optional: validation
+        if (from > to) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date Range',
+                text: 'From date cannot be greater than To date'
+            });
+            return;
+        }
+        loadPaymentCollection("customrange", from, to);
     });
 
-    //load Invoice Status
+    //load Invoice widget
     $(document).on("click", ".invoicestatus-option", function (e) {
         e.preventDefault();
+
         const newFilter = $(this).data("value");
+
         if (selectedStatusDuration === newFilter) return;
 
         selectedStatusDuration = newFilter;
@@ -786,7 +811,40 @@ $(function () {
 
         $("#InvoiceChartFilter").text($(this).text());
 
-        loadInvoiceStatus(selectedStatusDuration);
+        // 🔥 SHOW / HIDE DATE RANGE
+        if (newFilter === "customrange") {
+            $("#invoiceDateRange").removeClass("d-none");
+        }
+        else {
+            $("#invoiceDateRange").addClass("d-none");
+
+            // reset
+            $("#invoiceFromDate").val('');
+            $("#invoiceToDate").val('');
+
+            loadInvoiceStatus(selectedStatusDuration);
+        }
+    });
+    $(document).on("change", "#invoiceFromDate, #invoiceToDate", function () {
+
+        const from = $("#invoiceFromDate").val();
+        const to = $("#invoiceToDate").val();
+
+        if (!from || !to) return;
+
+        // 🔒 validation
+        if (from > to) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date Range',
+                text: 'From date cannot be greater than To date',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        loadInvoiceStatus("customrange", from, to);
     });
 
     //FILTER - PAYMENT ---- END -----------------------------
@@ -2644,12 +2702,22 @@ function resetForm() {
 function resetFilter() {
 
     $('#fltSearch').val('');
+    $('#fltEvent').val('0');
     $('#fltSlot').val('0');
     $('#fltEventFrom').val('');
     $('#fltEventTo').val('');
     $('#fltBookedFrom').val('');
     $('#fltBookedTill').val('');
     $('#fltEvent').val('0');
+
+    $('#fltPaymentStatus').val('0');
+    $('#fltIsInvoiceGenerated').val('');
+
+    selectedMonthDuration = "thismonth";
+    $("#sortByDropdown").text("Filter : This Month");
+
+    $(".sort-option").removeClass("active");
+    //$(".sort-option").addClass("active");
 
     //console.log('Filters reset');
     fetchData();

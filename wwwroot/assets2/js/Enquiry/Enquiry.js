@@ -1150,13 +1150,13 @@ function renderBoard() {
 
         if (process.EnquiryDealsJson.length > 0) {
             process.EnquiryDealsJson.forEach(deal => {
-                //console.log("deal render:", deal);
+                console.log("ProcessName:", process.ProcessName, ", deal render:", deal);
                 const hideFollowUp = (deal.Is_LeadBooked); // || deal.Is_LeadLost);
                 dealsHtml += `
                     <div class="card shadow-sm mb-2 deal-card cursor-pointer"
                         draggable = "true"
                         data-dealid="${deal.EnquiryDealId}"
-                        data-bookingid="${deal.BookingId || 0}"
+                        data-bookingid="${deal.BookingId}"
                         data-deal='${JSON.stringify(deal)}'
                         data-processid="${process.ProcessId}"   
                         data-isleadlost="${deal.Is_LeadLost}" 
@@ -1504,7 +1504,7 @@ board.addEventListener("mouseover", function (e) {
     if (card.contains(e.relatedTarget)) return;
 
     const deal = JSON.parse(card.dataset.deal);
-    //console.log("deal:", deal);
+    console.log("deal mouseover:", deal);
 
     tooltip.innerHTML = `
         <div class="title d-flex justify-content-between align-items-center">
