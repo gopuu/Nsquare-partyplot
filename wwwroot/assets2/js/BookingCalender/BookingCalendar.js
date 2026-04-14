@@ -1317,11 +1317,6 @@ function populateMonthButtons(months) {
             selectedMonth = idx;
             // Highlight selected month
             populateMonthButtons(months);
-
-            //console.log("Selected YearId:", selectedYearId, "MonthId:", selectedMonthId);
-            // Call renderBoard() or other logic if needed
-            //renderBoard();
-            //loadBookingCalendar();
         });
         monthButtons.appendChild(btn);
     });
@@ -4350,13 +4345,14 @@ Your feedback helps us improve our service.`;
 
     //Booking List MODAL -- START
     $(document).on("click", ".view-booking-btn", function () {
+        console.log("view list");
         const bookingid = $(this).data("bookingid");
         const hallname = $(this).data("hallname");
         var banquetId = 0;
         var eventDate = null;
         var actionMode = "singleData";
         loadBookingCalendar(bookingid, banquetId, eventDate, actionMode);
-        $("#bookingListModalTitle").text("Bookings (" + hallname + ")"); 
+        //$("#bookingListModalTitle").text("Bookings (" + hallname + ")"); 
 
         isBookingInfoModal_OpenFromBookingList = true;
         $("#bookingListModal").modal("hide");

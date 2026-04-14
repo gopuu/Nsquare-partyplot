@@ -12,7 +12,7 @@ $(document).ready(function () {
 
     loadLeadSourceChart("thismonth");
     loadLeadLostChart("thismonth");
-    loadYearDropdown(); //loadOverallBookingsStatistics();
+    loadYearDropdown(); //Overall Bookings Statistics - loadOverallBookingsStatistics();
 
     //8 Top Revenue Events -------------- START ------------------------
     let selectedRevenueDuration = "thismonth";
@@ -44,7 +44,7 @@ $(document).ready(function () {
         loadBookingSubEventTypeCorporate();
         loadBookingSubEventTypeFamilyFunction();
 
-        loadYearDropdown(); //loadOverallBookingsStatistics(currentYear);
+        loadYearDropdown(); //Overall Bookings Statistics - loadOverallBookingsStatistics();
         $("#yearDropdown").text(currentYear);
     });
 
@@ -1173,7 +1173,7 @@ function loadOverallBookingsStatistics(yearId, yearName) {
                                                 ${row.month} (${yearName})
                                             </div>
 
-                                            <div style="font-size:13px; color:#f39c12;">
+                                            <div style="font-size:13px;">
                                                 Booking Qty:
                                                 <span style="float:right; font-weight:600;">
                                                     ${row.BookingQty}
@@ -1183,7 +1183,7 @@ function loadOverallBookingsStatistics(yearId, yearName) {
                                             <div style="font-size:13px; color:#374151; margin-top:4px;">
                                                 Total Amount:
                                                 <span style="float:right; font-weight:600;">
-                                                    ₹${row.TotalAmount.toLocaleString()}
+                                                    ₹ ${formatINR(row.TotalAmount)}
                                                 </span>
                                             </div>
 
@@ -1418,16 +1418,42 @@ function loadTopRevenueEvents(monthDuration, fromDate = null, toDate = null) {
             //console.log("Top Revenue Events:", res);
 
             let html = "";
-
             if (res.status === "Success" && res.data && res.data.length > 0) {
                 res.data.forEach(item => {
                     html += `
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>${item.EventName}</span>
-                            <strong>₹ ${formatINR(item.Amount)}</strong>
-                        </li>`;
+                        <div class="revenue-item d-flex justify-content-between align-items-start p-3 mb-2 rounded">
+
+                            <!-- LEFT -->
+                            <div class="flex-grow-1">
+
+                                <!-- Line 1 -->
+                                <div class="d-flex justify-content-between">
+                                    <div class="fw-semibold text-dark">
+                                        ${item.EventTypeName}
+                                        <span class="text-muted">(${item.EventSubTypeName})</span>
+                                    </div>
+                                </div>
+
+                                <!-- Line 2 -->
+                                <div class="small text-secondary mt-1">
+                                    <span class="fw-semibold">${item.InvoiceNo}</span>
+                                    <span class="mx-1">•</span>
+                                    <span>${item.ClientName}</span>
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT (Amount) -->
+                            <div class="text-end ms-3">
+                                <div class="fw-bold text-success fs-7">
+                                    ₹ ${formatINR(item.Amount)}
+                                </div>
+                            </div>
+
+                        </div>`;
                 });
-            } else {
+            }
+            else {
                 html = `
                     <li class="list-group-item text-muted text-center">
                         No revenue events found

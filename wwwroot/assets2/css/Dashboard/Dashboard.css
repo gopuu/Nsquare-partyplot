@@ -1,4 +1,25 @@
-﻿.card {
+﻿/*TOP REVENUE CHART ---START */
+.revenue-item {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.revenue-item:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+}
+
+.revenue-item .fw-semibold {
+    font-size: 14.5px;
+}
+
+.revenue-item .small {
+    font-size: 13px;
+}
+/*TOP REVENUE CHART ---END */
+
+.card {
     position: relative;
     z-index: 1;
 }

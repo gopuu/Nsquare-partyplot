@@ -94,7 +94,11 @@
 
     public class TopRevenueEventItem
     {
-        public string? EventName { get; set; }
+        public string? FullTitle { get; set; }
         public decimal Amount { get; set; }
+        public string? EventTypeName { get; set; }
+        public string? EventSubTypeName { get; set; }
+        public string? ClientName { get; set; }
+        public string? InvoiceNo { get; set; }
     }
 }

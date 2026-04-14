@@ -346,8 +346,12 @@ namespace ERPAdmin.ApiControllers
                         {
                             result.Add(new TopRevenueEventItem
                             {
-                                EventName = dr["EventName"].ToString(),
-                                Amount = Convert.ToDecimal(dr["Amount"])
+                                FullTitle = dr["FullTitle"].ToString(),
+                                Amount = Convert.ToDecimal(dr["Amount"]),
+                                EventTypeName = dr["EventTypeName"].ToString(),
+                                EventSubTypeName = dr["EventSubTypeName"].ToString(),
+                                ClientName = dr["ClientName"].ToString(),
+                                InvoiceNo = dr["InvoiceNo"].ToString()
                             });
                         }
                     }
