@@ -32,7 +32,8 @@
     public class InvoiceHeader
     {
         public long? ProformaInvoiceNo { get; set; }
-        public long? InvoiceNo { get; set; }
+        public string? InvoiceNo { get; set; }
+        //public string? GSTInvoiceNo { get; set; }
         public string? Date { get; set; }
         public string? BookingRef { get; set; }
         public string? EventDate { get; set; }

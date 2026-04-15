@@ -423,7 +423,7 @@ namespace ERPAdmin.ApiControllers
         //6 Booking Statistics Widgets
         [HttpPost]
         [Route("GetOverallBookingStatistics")]
-        public IActionResult GetOverallBookingStatistics([FromBody] OverallBookingStatsRequest request)
+        private IActionResult GetOverallBookingStatistics([FromBody] OverallBookingStatsRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<OverallBookingStatsResponse> resultList = new List<OverallBookingStatsResponse>();

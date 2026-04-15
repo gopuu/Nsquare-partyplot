@@ -4,6 +4,7 @@
     {
         public long BookingId { get; set; }          // CustomerInvoice.Id
         public long? InvoiceNo { get; set; }     
+        public string? GSTInvoiceNo { get; set; }     
         public long? ProformaInvoiceNo { get; set; }     
         public bool? WithHeader { get; set; }
     }

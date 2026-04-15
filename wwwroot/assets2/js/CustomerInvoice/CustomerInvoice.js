@@ -395,10 +395,12 @@ $(function () {
 
         const bookingId = $(this).data('bookingid');
         const invoiceNo = $(this).data('invoiceno') || 0;
+        const gstinvoiceNo = $(this).data('gstinvoiceno') || '';
         const proformaNo = $(this).data('proformano') || 0;
 
         $("#sendBookingId").val(bookingId);
         $("#sendInvoiceNo").val(invoiceNo);
+        $("#sendGSTInvoiceNo").val(gstinvoiceNo);
         $("#sendProformaNo").val(proformaNo);
 
         // 🔹 Change modal title dynamically
@@ -503,6 +505,7 @@ $(function () {
         const request = {
             BookingId: bookingId,
             InvoiceNo: null,
+            GSTInvoiceNo: null,
             ProformaInvoiceNo: proformaNo,
             WithHeader: true,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
@@ -516,10 +519,12 @@ $(function () {
 
         const bookingId = $(this).data('bookingid');
         const invoiceNo = $(this).data('invoiceno');
+        const gstinvoiceNo = $(this).data('gstinvoiceno');
 
         const request = {
             BookingId: bookingId,
             InvoiceNo: invoiceNo,
+            GSTInvoiceNo: gstinvoiceNo,
             ProformaInvoiceNo: null,
             WithHeader: true,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
@@ -2621,13 +2626,14 @@ function renderTable(data, totals) {
                 title: 'Send Invoice',
                 name: 'SendInvoice',
                 render: row =>
-                    hasValidNo(row.InvoiceNo)
+                    hasValidNo(row.InvoiceNo) || row.GSTInvoiceNo
                         ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
-                       data-bookingid="${row.BookingId}"
-                       data-invoiceno="${row.InvoiceNo}"
-                       data-proformano="">
-                    <i class="fa fa-paper-plane me-1"></i>Send
-                </button>`
+                                   data-bookingid="${row.BookingId}"
+                                   data-invoiceno="${row.InvoiceNo}"
+                                   data-gstinvoiceno="${row.GSTInvoiceNo}"
+                                   data-proformano="">
+                                <i class="fa fa-paper-plane me-1"></i>Send
+                            </button>`
                         : '-'
             },
             //PDF (GST Invoice)
@@ -2637,13 +2643,14 @@ function renderTable(data, totals) {
                 name: 'PDFGST',
                 className: 'text-center',
                 render: row =>
-                    !hasValidNo(row.InvoiceNo)
-                        ? '-'
-                        : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-invoice"
+                    hasValidNo(row.InvoiceNo) || row.GSTInvoiceNo
+                        ? `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-invoice"
                                role="button"
                                data-bookingid="${row.BookingId}"
-                               data-invoiceno="${row.InvoiceNo}">
+                               data-invoiceno="${row.InvoiceNo}"
+                               data-gstinvoiceno="${row.GSTInvoiceNo}">
                            </i>`
+                        : '-'
             },
         ],
 

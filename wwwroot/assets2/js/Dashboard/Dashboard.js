@@ -1052,13 +1052,16 @@ $(document).on("click", ".year-option", function (e) {
 
 let bookingBarChart;
 function loadOverallBookingsStatistics(yearId, yearName) {
+    var payload = {
+        YearId: yearId
+    };
+    console.log("payload stats:", payload);
+
     $.ajax({
         url: '/api/Dashboard/Dashboard_GetOverallBookingsStatistics',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({
-            YearId: yearId
-        }),
+        data: JSON.stringify(payload),
         success: function (res) {
 
             if (res.status !== 'Success') return;

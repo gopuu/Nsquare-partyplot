@@ -75,6 +75,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@GSTInvoiceNo", request.GSTInvoiceNo);
                     cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
                     new SqlDataAdapter(cmd).Fill(dtInvoice);
                 }
@@ -117,7 +118,8 @@ namespace ERPAdmin.ApiControllers
                     header = new InvoiceHeader
                     {
                         ProformaInvoiceNo = Convert.ToInt64(row["ProformaInvoiceNo"]),
-                        InvoiceNo = Convert.ToInt64(row["InvoiceNo"]),
+                        InvoiceNo = row["InvoiceNo"].ToString() ?? null,
+                        //GSTInvoiceNo = row["GSTInvoiceNo"].ToString() ?? "",
                         Date = row["InvoiceDate_Format"].ToString() ?? "",
                         BookingRef = row["BookingRef"].ToString() ?? "",
                         EventDate = row["EventDate_Format"].ToString() ?? "",
@@ -245,7 +247,7 @@ namespace ERPAdmin.ApiControllers
                     });
                 }
 
-                AddMeta(titleText, header.InvoiceNo.ToString() ?? "-");
+                AddMeta(titleText, header.ProformaInvoiceNo > 0 ? header.ProformaInvoiceNo.ToString() : header.InvoiceNo);
                 AddMeta("Date", header.Date);
                 AddMeta("Booking Ref#", header.BookingRef);
                 AddMeta("Event Date", header.EventDate);
