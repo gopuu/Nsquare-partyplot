@@ -71,7 +71,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // 🔹 Invoice Report
-                    cmd = new SqlCommand("Report_CustomerInvoiceById", con);
+                    cmd = new SqlCommand("Report_GetCustomerInvoiceById", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
@@ -133,7 +133,8 @@ namespace ERPAdmin.ApiControllers
                         Address = row["Address"].ToString() ?? "",
                         Phone = row["Phone"].ToString() ?? "",
                         GSTIN = row["GSTIN"].ToString() ?? "",
-                        PAN = row["PAN"]?.ToString() ?? ""
+                        PAN = row["PAN"]?.ToString() ?? "",
+                        IsInterState = Convert.ToBoolean(row["IsInterState"]),
                     };
 
                     // 🔹 Totals
@@ -184,10 +185,14 @@ namespace ERPAdmin.ApiControllers
                 var fWhite = FontFactory.GetFont(FontFactory.HELVETICA, 8, iTextSharpFont.BOLD, BaseColor.WHITE);
                 //var fGrayHdr = FontFactory.GetFont(FontFactory.HELVETICA, 7, iTextSharpFont.BOLD, BaseColor.WHITE);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arialbd.ttf");
+                string fontPathB = Path.Combine(_env.WebRootPath, "fonts", "arialbd.ttf");
+                BaseFont bfB = BaseFont.CreateFont(fontPathB, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharpFont fBoldRupee = new iTextSharpFont(bfB, 8, iTextSharpFont.NORMAL);
+                iTextSharpFont fBoldRupee7 = new iTextSharpFont(bfB, 7, iTextSharpFont.NORMAL);
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
                 BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                iTextSharpFont fBoldRupee = new iTextSharpFont(bf, 8, iTextSharpFont.NORMAL);
-                iTextSharpFont fBoldRupee7 = new iTextSharpFont(bf, 7, iTextSharpFont.NORMAL);  
+                iTextSharpFont fRupee7 = new iTextSharpFont(bf, 7, iTextSharpFont.NORMAL);  
 
                 // ── Colors ─────────────────────────────────
                 var colWhite = BaseColor.WHITE;   // header blue
@@ -373,15 +378,15 @@ namespace ERPAdmin.ApiControllers
                 itemTable.HeaderRows = 2;
 
                 // ── Helper for data cell ──
-                PdfPCell TD(string text, int align = Element.ALIGN_CENTER, BaseColor bg = null)
+                PdfPCell TD(string text, int align = Element.ALIGN_CENTER, BaseColor bg = null, bool isRupeeFormat=false)
                 {
-                    return new PdfPCell(new Phrase(text, fSmall))
+                    return new PdfPCell(new Phrase(text, isRupeeFormat ? fRupee7 : fSmall7)) 
                     {
                         HorizontalAlignment = align,
                         BackgroundColor = bg ?? BaseColor.WHITE,
                         BorderColor = colBorder,
                         BorderWidth = 0.4f,
-                        Padding = 4
+                        Padding = 2
                     };
                 }
 
@@ -394,34 +399,52 @@ namespace ERPAdmin.ApiControllers
 
                     itemTable.AddCell(TD(item.HSN, Element.ALIGN_CENTER, rowBg));
                     itemTable.AddCell(TD(item.Description, Element.ALIGN_LEFT, rowBg));
-                    itemTable.AddCell(TD(item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
+                    itemTable.AddCell(TD("₹ " + item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
                     itemTable.AddCell(TD(item.Qty.ToString("0.##"), Element.ALIGN_CENTER, rowBg));
-                    itemTable.AddCell(TD(item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
-                    itemTable.AddCell(TD(item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg));
+                    itemTable.AddCell(TD("₹ " + item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
+                    itemTable.AddCell(TD("₹ " + item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
 
-                    var gst = company.GST?.Trim();
-                    bool isGujaratGST = !string.IsNullOrEmpty(gst) && gst.StartsWith("24");
+                    //var gst = company.GST?.Trim();
+                    // Use interstate flag directly
+                    bool isInterState = billTo.IsInterState ?? false;
 
                     // CGST %
-                    var cgstPercent = isGujaratGST ? $"{item.CGST_Percent.ToString("0.##")}%" : "-";
+                    var cgstPercent = !isInterState
+                        ? $"{item.CGST_Percent:0.##}%"
+                        : "-";
+
                     // CGST Amount
-                    var cgstAmt = isGujaratGST ? (item.CGST_Amount == 0 ? "-" : item.CGST_Amount.ToString("#,##0.##")) : "-";
+                    var cgstAmt = !isInterState
+                        ? (item.CGST_Amount == 0 ? "-" : "₹ " + item.CGST_Amount.ToString("#,##0.##"))
+                        : "-";
+
                     // SGST %
-                    var sgstPercent = isGujaratGST ? $"{item.SGST_Percent.ToString("0.##")}%" : "-";
+                    var sgstPercent = !isInterState
+                        ? $"{item.SGST_Percent:0.##}%"
+                        : "-";
+
                     // SGST Amount
-                    var sgstAmt = isGujaratGST ? (item.SGST_Amount == 0 ? "-" : item.SGST_Amount.ToString("#,##0.##")) : "-";
+                    var sgstAmt = !isInterState
+                        ? (item.SGST_Amount == 0 ? "-" : "₹ " + item.SGST_Amount.ToString("#,##0.##"))
+                        : "-";
+
                     // IGST %
-                    var igstPercent = isGujaratGST ? "-" : $"{item.IGST_Percent.ToString("0.##")}%";
+                    var igstPercent = isInterState
+                        ? $"{item.IGST_Percent:0.##}%"
+                        : "-";
+
                     // IGST Amount
-                    var igstAmt = isGujaratGST ? "-" : (item.IGST_Amount == 0 ? "-" : item.IGST_Amount.ToString("#,##0.##"));
+                    var igstAmt = isInterState
+                        ? (item.IGST_Amount == 0 ? "-" : "₹ " + item.IGST_Amount.ToString("#,##0.##"))
+                        : "-";
 
                     // Add to table
                     itemTable.AddCell(TD(cgstPercent, Element.ALIGN_CENTER, rowBg));
-                    itemTable.AddCell(TD(cgstAmt, Element.ALIGN_RIGHT, rowBg));
+                    itemTable.AddCell(TD(cgstAmt, Element.ALIGN_RIGHT, rowBg, true));
                     itemTable.AddCell(TD(sgstPercent, Element.ALIGN_CENTER, rowBg));
-                    itemTable.AddCell(TD(sgstAmt, Element.ALIGN_RIGHT, rowBg));
+                    itemTable.AddCell(TD(sgstAmt, Element.ALIGN_RIGHT, rowBg, true));
                     itemTable.AddCell(TD(igstPercent, Element.ALIGN_CENTER, rowBg));
-                    itemTable.AddCell(TD(igstAmt, Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(igstAmt, Element.ALIGN_CENTER, rowBg, true));
                 }
 
                 doc.Add(itemTable);

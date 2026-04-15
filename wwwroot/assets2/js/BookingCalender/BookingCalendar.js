@@ -1,4 +1,14 @@
-﻿
+﻿let isPastDateAllowed = false;
+const hostname = window.location.hostname.toLowerCase();
+// Extract subdomain safely
+const parts = hostname.split('.');
+const subdomain = parts.length > 2 ? parts[0] : null;
+// Condition
+if (subdomain === "divyesh" || hostname === "localhost" || hostname === "127.0.0.1") {
+    isPastDateAllowed = true;
+}
+console.log("isPastDateAllowed: ", isPastDateAllowed);
+
 // Toggle editors visibility
 var invoiceNo = 0;
 var proformaInvoiceNo = 0;
@@ -1393,7 +1403,7 @@ function generateEmptydays(year, month) {
 function generateShiftDataPerDay(dateObj) {
     return shiftNames.map(() => {
         const today = new Date();
-        if (dateObj < today) {
+        if (dateObj < today && !isPastDateAllowed) {
             return legendColors.past;    // ✅ Always gray for past
         }
         return legendColors.available;   // ✅ Always green for current & future
@@ -1471,7 +1481,7 @@ async function renderBoard(bookingData = null) {
         // - p-2 → padding
         // - name-cell → custom styling hook
         // - bg-warning-subtle → light background color (Bootstrap)
-        nameCell.className = "text-center rounded p-2 name-cell bg-warning-subtle";
+        nameCell.className = "text-center rounded p-2 name-cell bg-warning-subtle border";
         // Set the visible text as the hall's name
         nameCell.textContent = hall.HallName;
         // Append the name cell to the row (leftmost column)
@@ -1512,7 +1522,7 @@ async function renderBoard(bookingData = null) {
             // ===============================
             // Case 1: Past Date
             // ===============================
-            if (cellTime < todayTime) {
+            if (cellTime < todayTime && !isPastDateAllowed) {
                 cell.classList.add("bg-secondary", "text-white");
             }
 
@@ -2699,7 +2709,7 @@ function attachShiftClickListeners() {
             //if (color !== legendColors.past || (color === legendColors.past && bookingid > 0)) {
             if (color !== legendColors.blocked &&
                 (
-                    color !== legendColors.past ||
+                    (color !== legendColors.past) ||
                     //color === legendColors.present ||
                     //color === legendColors.future ||
                     (color === legendColors.past && bookingid > 0)

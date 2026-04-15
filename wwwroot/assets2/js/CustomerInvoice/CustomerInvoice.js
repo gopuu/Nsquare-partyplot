@@ -540,7 +540,7 @@ $(function () {
         recalcAll(row); // pass active row
     });
 
-    $(document).on('input change', '#gstin', function () {
+    $(document).on('change', '#customerState', function () {
         // GSTIN or global change → recalc all rows
         $('#invoiceItemsBody tr').each(function () {
             recalcRow($(this));
@@ -1293,6 +1293,7 @@ function openPaymentModal(type) {
     $("#paymentDetailsModal").modal("show");
     loadPaymentDetails(type);
 }
+
 function loadPaymentDetails(type) {
     var payload = {
         Type: type,
@@ -1596,24 +1597,32 @@ function recalcRow(row) {
     if (taxable < 0) taxable = 0;
     row.find('.taxable').val(taxable.toFixed(2));
 
-    // Step 4: GST Calculation
+    const stateName = $('#customerState').text(); // from dropdown
     let gstAmount = round2(taxable * gstRate / 100);
-
-    const gstin = ($('#gstin').val() || '').trim();
-    const stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "";
 
     let cgst = 0;
     let sgst = 0;
     let igst = 0;
 
-    if (gstin && stateCode !== "24") {
-        // Inter-state → IGST
-        igst = gstAmount;
+    // Validate state
+    if (!stateName || stateName=="" || stateName=="0") {
+        // ❌ No state selected
+        gstAmount = 0;
+        cgst = 0;
+        sgst = 0;
+        igst = 0;
     }
-    else {
-        // Intra-state → CGST + SGST
+    else if (stateName.toLowerCase() === "gujarat") {
+        // ✅ Gujarat → Intra-state
         cgst = gstAmount / 2;
         sgst = gstAmount / 2;
+        igst = 0;
+    }
+    else {
+        // ✅ Other state → Inter-state
+        igst = gstAmount;
+        cgst = 0;
+        sgst = 0;
     }
     let total = round2(taxable + gstAmount);
 
@@ -1796,7 +1805,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
         IsInclusiveGST: isInclusiveGST,
         IsProformaInvoice: isProformaInvoice
     };
-    //console.log("payload fetchInvoiceByBookingId:", payload);
+    console.log("payload fetchInvoiceByBookingId:", payload);
     $.ajax({
 
         url: '/api/CustomerInvoice/GetCustomerInvoiceByBookingId', // adjust if needed
@@ -1804,7 +1813,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (res) {
-            //console.log("fetch ByBookingId res:", res);
+            console.log("fetch ByBookingId res:", res);
             if (res.status !== 'Success' || !res.data) {
                 Swal.fire({
                     icon: 'warning',
@@ -1821,7 +1830,18 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
             $('#gstin').val(data.GSTIN);
             $('#emailId').val(data.Email);
             $('#address').val(data.Address);
-            $('#customerState').val(data.ClientStateId);
+
+            let stateId = data.ClientStateId;
+            // Check for null, undefined, empty string, or 0
+            if (!stateId || stateId === "0" || stateId === 0) {
+                // Set Gujarat (assuming value = 24 or your Gujarat ID)
+                $('#customerState option').filter(function () {
+                    return $(this).text().trim().toLowerCase() === 'gujarat';
+                }).prop('selected', true);
+            } else {
+                $('#customerState').val(stateId);
+
+            }
             $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
             $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
             $('#advancePaid').val(data.PaidAmount).attr('readonly', true);

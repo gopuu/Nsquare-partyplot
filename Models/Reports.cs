@@ -48,6 +48,7 @@
         public string? Phone { get; set; }
         public string? GSTIN { get; set; }
         public string? PAN { get; set; }
+        public bool? IsInterState { get; set; }
     }
 
     public class InvoiceItem

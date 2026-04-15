@@ -284,10 +284,15 @@ input[readonly] {
 }
 
 .name-cell {
-    min-width: 80px;
     font-weight: bold;
     font-size: 0.65rem;
-    white-space: nowrap;
+    max-width: 80px;
+    min-width: 80px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    flex: 0 0 100px; /* 🔥 IMPORTANT: fix width in flex */
 }
 
 .badge {
