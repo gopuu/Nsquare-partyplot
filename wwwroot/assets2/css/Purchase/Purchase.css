@@ -1,4 +1,16 @@
 ﻿/*GRID COLOR -- START*/
+
+/* 🗑️ Deleted - Light Gray */
+.row-deleted {
+    background-color: gray !important; /* soft gray */
+    border-left: 8px solid #6c757d; /* Bootstrap secondary */
+}
+/* 🔥 FORCE text color inside cells */
+.row-deleted td,
+.row-deleted th {
+    color: #fdfdfd !important; /* white text */
+}
+
 .row-green {
     background-color: #e6f4ea !important;
     border-left: 8px solid #28a745;

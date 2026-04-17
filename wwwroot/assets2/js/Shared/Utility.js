@@ -23,6 +23,75 @@ function downloadPurchaseInvoice(purchaseId = 0, invoiceNo = null, type="pdf") {
 
     downloadReport(url, payload, loaderMsg = "Generating Purchase Invoice..");
 }
+
+function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
+    if (!purchaseId && !invoiceNo) {
+        Swal.fire({
+            icon: "warning",
+            title: "Invalid Request",
+            text: "PurchaseId or InvoiceNo is required"
+        });
+        return;
+    }
+
+    const payload = {
+        Id: purchaseId,
+        InvoiceNo: invoiceNo ? invoiceNo.toString() : ""
+    };
+
+    $.ajax({
+        url: "/api/Purchase/GetPurchaseList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+
+        beforeSend: function () {
+            Swal.fire({
+                title: "Please wait...",
+                text: "Fetching invoice...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+        },
+
+        success: function (res) {
+            Swal.close();
+            if (res.status === "Success" && res.data && res.data.length > 0) {
+                let fileUrl = res.data[0].UploadInvoiceFile;
+                if (fileUrl) {
+                    // ✅ Open file in new tab
+                    //window.open(fileUrl, "_blank");
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = '';   // force download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                }
+                else {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Not Available",
+                        text: "Scanned invoice not uploaded"
+                    });
+                }
+
+            }
+            else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: res.message || "No data found"
+                });
+            }
+        },
+        error: function (xhr, status, err) {
+            Swal.close();
+            handleApiError(xhr, status, err, "Scan Invoice Download Failed");
+        }
+    });
+}
 //PURCHASE INVOICE REPORT MODAL --- END ------------------------
 
 //Download Receipt -- START

@@ -689,6 +689,12 @@ $(document).ready(function () {
         downloadPurchaseInvoice(purchaseId, invoiceNo);
     });
 
+    $(document).on("click", ".btn-download-scannedinvoice", function () {
+        const purchaseId = $(this).data("id");
+        const invoiceNo = $(this).data("invoice");
+        downloadPurchaseScannedInvoice(purchaseId, invoiceNo);
+    });
+
     function initToggle({ containerId, toggleId, labelId, storageKey, showText, hideText, messageId = null }) {
         const container = $(containerId);
         const toggle = $(toggleId);
@@ -1041,7 +1047,7 @@ function ViewPurchaseInvoiceReport(actionName) {
         EventFrom: $("#fltInvoiceFrom").val() || "",
         EventTo: $("#fltInvoiceTo").val() || "",
         FilterDuration: selectedMonthDuration,
-        PaymentStatusId: parseInt($("#fltPaymentStatus").val() || 0),
+        StatusId: parseInt($("#fltPaymentStatus").val() || 0),
         // ⚙️ Common
         WithHeader: withHeader,
         Columns: selectedColumns,
@@ -1400,7 +1406,7 @@ function fetchData() {
         EventFrom: $("#fltInvoiceFrom").val() || "",
         EventTo: $("#fltInvoiceTo").val() || "",
         FilterDuration: selectedMonthDuration,
-        PaymentStatusId: parseInt($("#fltPaymentStatus").val() || 0)
+        StatusId: parseInt($("#fltPaymentStatus").val() || 0)
     };
     //console.log("payload:", payload);
     $.ajax({
@@ -1423,7 +1429,7 @@ function fetchData() {
 }
 //SHOW GRID TABLE
 function renderTable(data) {
-    //console.log("render data:", data);
+    console.log("render data:", data);
 
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
@@ -1459,21 +1465,24 @@ function renderTable(data) {
             let total = data.TotalAmount ?? 0;
             let paid = data.PaidAmount ?? 0;
             let remain = data.OutstandingAmount ?? 0;
+            let isDeleted = data.IsDeleted ?? false;
+            $(row).removeClass("row-green row-orange row-red row-deleted");
 
-            // RESET first (important when redraw)
-            $(row).removeClass("row-green row-orange row-red");
-
-            if (remain === 0 && paid > 0) {
+            if (Math.abs(remain) < 0.01 && paid > 0 && !isDeleted) {
                 // ✅ FULL PAID
                 $(row).addClass("row-green");
             }
-            else if (paid === 0) {
+            else if (paid === 0 && !isDeleted) {
                 // ❌ NOT PAID
                 $(row).addClass("row-red");
             }
-            else if (remain > 0) {
+            else if (remain > 0 && !isDeleted) {
                 // ⚠️ PARTIAL
                 $(row).addClass("row-orange");
+            }
+            else if (isDeleted) {
+                // ⚠️ DELETED
+                $(row).addClass("row-deleted");
             }
         },
         initComplete: function () {
@@ -1556,7 +1565,7 @@ function renderTable(data) {
                         `;
                     }
                     // zero / no remaining → plain text
-                    return `<span class="text-muted">₹ ${remain}</span>`;
+                    return `<span class="text-mutedd">₹ ${remain}</span>`;
                 }
             },
 
@@ -1565,18 +1574,37 @@ function renderTable(data) {
                 title: "Created By",
                 render: (d) => `
                         <small>${d.CreatedBy ?? "-"}</small><br>
-                        <small class="text-muted">Created: ${d.CreatedOn}</small><br>
-                        ${d.ModifiedOn ? `<small class="text-muted">Last Modified: ${d.ModifiedOn ?? ""}</small>` : ""}                        
+                        <small class="text-mutedd">Created: ${d.CreatedOn}</small><br>
+                        ${d.ModifiedOn ? `<small class="text-mutedd">Last Modified: ${d.ModifiedOn ?? ""}</small>` : ""}                        
                     `
             },
-
             {
                 data: "PaymentStatus",
                 title: "Status",
                 render: (status) => {
-                    let cls = status === "Pending"
-                        ? "bg-warning text-white"
-                        : "bg-success";
+
+                    let cls = "";
+
+                    switch (status) {
+                        case "Full Paid":
+                            cls = "bg-success text-white";   // Green + White
+                            break;
+
+                        case "Partial Paid":
+                            cls = "bg-warning text-white";    // Orange + Black
+                            break;
+
+                        case "Pending":
+                            cls = "bg-danger text-white";    // Red + White
+                            break;
+
+                        case "Deleted":
+                            cls = "bg-secondary text-white";  // Gray + Black
+                            break;
+
+                        default:
+                            cls = "bg-light text-dark";
+                    }
 
                     return `<span class="badge ${cls}">${status}</span>`;
                 }
@@ -1585,6 +1613,20 @@ function renderTable(data) {
                 data: null,
                 title: "Action",
                 render: function (data, type, row) {
+                    let scannedInvoiceHtml = '';
+
+                    if (row.IsUploadedScannedInvoice) {
+                        scannedInvoiceHtml = `
+                            <li>
+                                <a class="dropdown-item btn-download-scannedinvoice cursor-pointer" 
+                                   data-id="${row.Id}"
+                                   data-invoice="${row.InvoiceNo}">
+                                    <i class="fa fa-download text-info me-2"></i> Scanned Invoice
+                                </a>
+                            </li>
+                        `;
+                    }
+
                     return `
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle btn-action-xss"
@@ -1602,6 +1644,8 @@ function renderTable(data) {
                                     </a>
                                 </li>
 
+                                ${scannedInvoiceHtml}   <!-- ✅ Conditional -->
+
                                 <li>
                                     <a class="dropdown-item btn-edit cursor-pointer" data-id="${row.Id}">
                                         <i class="fa fa-edit text-warning me-2"></i> Edit
@@ -1616,7 +1660,7 @@ function renderTable(data) {
 
                             </ul>
                         </div>
-                        `;
+                    `;
                 }
             }
         ];

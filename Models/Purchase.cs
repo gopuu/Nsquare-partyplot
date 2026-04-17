@@ -13,7 +13,7 @@ namespace ERPAdmin.Models
         public string? EventFrom { get; set; }
         public string? EventTo { get; set; }
         public string? FilterDuration { get; set; }
-        public int PaymentStatusId { get; set; }
+        public int StatusId { get; set; }
     }
     public class GetPurchaseListGridModel
     {
@@ -36,6 +36,8 @@ namespace ERPAdmin.Models
         public string? CreatedOn { get; set; }
         public string? ModifiedOn { get; set; }
         public string? PaymentStatus { get; set; }
+        public bool? IsDeleted { get; set; }
+        public bool? IsUploadedScannedInvoice { get; set; }
     }
     public class GetPurchaseListGridTotals
     {
@@ -60,7 +62,7 @@ namespace ERPAdmin.Models
         public string? EventFrom { get; set; }
         public string? EventTo { get; set; }
         public string? FilterDuration { get; set; }
-        public int PaymentStatusId { get; set; }
+        public int StatusId { get; set; }
         //default
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }
@@ -142,8 +144,8 @@ namespace ERPAdmin.Models
 
     public class GetPurchaseRequest
     {
-        public long? Id { get; set; }
-        public long? SupplierId { get; set; }
+        public long? PurchaseId { get; set; }
+        public long? SupplierId { get; set; } = 0;
         public string? InvoiceNo { get; set; }
     }
 

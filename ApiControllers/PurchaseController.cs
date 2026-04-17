@@ -64,7 +64,7 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetPurchaseList", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Id", request.Id > 0 ? request.Id : 0);
+                    cmd.Parameters.AddWithValue("@Id", request.PurchaseId > 0 ? request.PurchaseId : 0);
                     cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId > 0 ? request.SupplierId : 0);
                     cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo ??  "");
 
@@ -203,7 +203,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@EventFrom", request.EventFrom ?? "");
                     cmd.Parameters.AddWithValue("@EventTo", request.EventTo ?? "");
                     cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration ?? "");
-                    cmd.Parameters.AddWithValue("@PaymentStatusId", request.PaymentStatusId);
+                    cmd.Parameters.AddWithValue("@StatusId", request.StatusId);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(dsReport);
@@ -235,7 +235,10 @@ namespace ERPAdmin.ApiControllers
                         CreatedBy = Convert.ToString(row["CreatedBy"]),
                         CreatedOn = Convert.ToString(row["CreatedOn"]),
                         ModifiedOn = Convert.ToString(row["ModifiedOn"]),
-                        PaymentStatus = Convert.ToString(row["PaymentStatus"])
+                        PaymentStatus = Convert.ToString(row["PaymentStatus"]),
+
+                        IsUploadedScannedInvoice = Convert.ToBoolean(row["IsUploadedScannedInvoice"]),
+                        IsDeleted = Convert.ToBoolean(row["IsDeleted"])
                     };
 
                     list.Add(model);
@@ -782,8 +785,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
-                    cmd.Parameters.AddWithValue("@PaymentStatusId",
-                        request.PaymentStatusId == 0 ? (object)DBNull.Value : request.PaymentStatusId);
+                    cmd.Parameters.AddWithValue("@StatusId",
+                        request.StatusId == 0 ? (object)DBNull.Value : request.StatusId);
 
                     // 🔹 EXECUTE
                     dsReport = new DataSet();
@@ -1095,8 +1098,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
-                    cmd.Parameters.AddWithValue("@PaymentStatusId",
-                        request.PaymentStatusId == 0 ? (object)DBNull.Value : request.PaymentStatusId);
+                    cmd.Parameters.AddWithValue("@StatusId",
+                        request.StatusId == 0 ? (object)DBNull.Value : request.StatusId);
 
                     // 🔹 EXECUTE
                     dsReport = new DataSet();
@@ -1190,4 +1193,5 @@ namespace ERPAdmin.ApiControllers
         }
 
     }
+
 }
