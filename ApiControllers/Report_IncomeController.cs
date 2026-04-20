@@ -84,6 +84,7 @@ namespace ERPAdmin.ApiControllers
                             TransactionId = row["TransactionId"] != DBNull.Value ? Convert.ToInt64(row["TransactionId"]) : 0,
                             VoucherNo = row["VoucherNo"] != DBNull.Value ? Convert.ToString(row["VoucherNo"]) : "",
                             TransactionDate = row["TransactionDate"] != DBNull.Value ? Convert.ToString(row["TransactionDate"]) : "-",
+                            TransactionDate_Format = row["TransactionDate_Format"] != DBNull.Value ? Convert.ToString(row["TransactionDate_Format"]) : "-",
                             AccountName = row["Account"] != DBNull.Value ? Convert.ToString(row["Account"]) : "-",
                             CategoryName = row["Category"] != DBNull.Value ? Convert.ToString(row["Category"]) : "-",
                             CategoryId = row["CategoryId"] != DBNull.Value ? Convert.ToInt64(row["CategoryId"]) : 0,

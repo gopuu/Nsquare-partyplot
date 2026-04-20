@@ -225,7 +225,7 @@ function loadBookingGrid() {
 }
 
 function renderBookingTable(data) {
-
+    console.log("data:", data);
     if ($.fn.DataTable.isDataTable("#tableMain table")) {
         $("#tableMain table").DataTable().clear().destroy();
     }
@@ -255,8 +255,20 @@ function renderBookingTable(data) {
                     return (!data || data === 0) ? "-" : data;
                 }
             },
+            {
+                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Event Date',
+                name: 'EventDate',
+                render: function (data, type, row) {
 
-            { data: "EventDate", name: "EventDate", title: "Event Date" },
+                    if (type === 'display') {
+                        return row.EventDate_Format; // show formatted
+                    }
+
+                    return data; // use raw date for sorting
+                }
+            },
+
             { data: "EventDisplay", name: "EventDisplay", title: "Event" },
             { data: "HallName", name: "HallName", title: "Hall Name" },
 

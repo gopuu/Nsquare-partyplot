@@ -39,7 +39,7 @@
         public decimal Amount { get; set; }
 
         public string TransactionDate { get; set; }
-        public string TransactionDate2 { get; set; }
+        public string TransactionDate_Format { get; set; }
 
         public long PaymentModeId { get; set; }
         public string PaymentModeName { get; set; }

@@ -75,6 +75,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
                         ModDate = row["ModDate"] != DBNull.Value ? Convert.ToString(row["ModDate"]) : "-",
+                        ModDate_Format = row["ModDate_Format"] != DBNull.Value ? Convert.ToString(row["ModDate_Format"]) : "-",
                         Module = row["Module"] != DBNull.Value ? Convert.ToString(row["Module"]) : "-",
                         RefNo = row["RefNo"] != DBNull.Value ? Convert.ToString(row["RefNo"]) : "-",
                         Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0

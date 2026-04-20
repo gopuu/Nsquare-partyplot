@@ -75,6 +75,7 @@ namespace ERPAdmin.ApiControllers
                         SrNo = Convert.ToInt64(row["SrNo"]),
                         BookingId = Convert.ToInt64(row["BookingId"]),
                         EventDate = Convert.ToString(row["EventDate"]),
+                        EventDate_Format = Convert.ToString(row["EventDate_Format"]),
                         ShiftCode = Convert.ToString(row["ShiftCode"]),
                         ClientName = Convert.ToString(row["ClientName"]),
                         WastageKg = Convert.ToDecimal(row["WastageKg"])
@@ -515,6 +516,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     BookingId = h["BookingId"] != DBNull.Value ? Convert.ToInt64(h["BookingId"]) : 0,
                     EventDate = h["EventDate"]?.ToString(),
+                    EventDate_Format = h["EventDate_Format"]?.ToString(),
                     ShiftCode = h["ShiftCode"]?.ToString(),
                     ClientName = h["ClientName"]?.ToString(),
                     Items = new List<Report_FoodWastageDetailsModel_Items>()

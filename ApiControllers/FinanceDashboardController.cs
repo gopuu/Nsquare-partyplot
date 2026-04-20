@@ -83,8 +83,8 @@ namespace ERPAdmin.ApiControllers
 
                         Amount = Convert.ToDecimal(row["Amount"]),
 
-                        TransactionDate = Convert.ToString(row["TransactionDateStr"]),
-                        TransactionDate2 = Convert.ToString(row["TransactionDate2"]),
+                        TransactionDate = Convert.ToString(row["TransactionDate"]),
+                        TransactionDate_Format = Convert.ToString(row["TransactionDate_Format"]),
 
                         PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
                         PaymentModeName = Convert.ToString(row["PaymentModeName"]),

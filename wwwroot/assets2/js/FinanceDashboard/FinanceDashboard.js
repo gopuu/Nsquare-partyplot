@@ -922,7 +922,19 @@ function renderTransactions(data) {
                     return `<span class="badge ${badgeClass}">${data}</span>`;
                 }
             },
-            { data: "TransactionDate2", title: "Date", className: "text-center" },
+            //{ data: "TransactionDate2", title: "Date", className: "text-center" },
+            {
+                data: 'TransactionDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Transaction Date',
+                name: 'TransactionDate',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.TransactionDate_Format; // show formatted
+                    }
+                    return data; // use raw date for sorting
+                }
+            },
+
             {
                 data: "Amount",
                 title: "Amount",

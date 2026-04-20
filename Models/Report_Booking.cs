@@ -5,6 +5,7 @@
     {
         public long SrNo { get; set; }
         public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
         public string? EventTypeName { get; set; }
         public string? EventSubTypeName { get; set; }
         public string? EventDisplay { get; set; }

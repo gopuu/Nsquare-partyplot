@@ -4190,7 +4190,7 @@ function setShiftTime(shiftAbbr = null, dealData = null) {
 function loadEnquiryList() {
     //showLoader();
     $.ajax({
-        url: "/api/EnquiryDeal/GetEnquiryDealList",
+        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
         type: "GET",
         success: function (response) {
             //console.log("enquiry list response:", response);
@@ -4200,12 +4200,14 @@ function loadEnquiryList() {
                 $.each(response.data, function (index, item) {
                     options += `
                                <option
-                                   value="${item.Id}"
-                                   data-name="${item.Name || ''}"
-                                   data-email="${item.Email || ''}"
-                                   data-address="${item.Address || ''}"
-                                   data-contact="${item.Contact || ''}"
-                               >${item.Name} (${item.Contact})</option>`;
+                                   value="${item.ClientEnquiryId}"
+                                   data-name="${item.ClientName || ''}"
+                                   data-email="${item.ClientEmail || ''}"
+                                   data-address="${item.ClientAddress || ''}"
+                                   data-contact="${item.ClientContact || ''}"
+                                   data-gstin="${item.ClientGSTIN || ''}"
+                                   data-stateid="${item.ClientStateId || ''}"
+                               >${item.ClientName} (${item.ClientContact})</option>`;
                 });
                 $("#clientEnquiryDropdown, #quotation_clientId").html(options);
 

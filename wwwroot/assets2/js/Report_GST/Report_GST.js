@@ -254,10 +254,17 @@ function renderGSTSalesTable(data, totals) {
                 className: "text-center"
             },
             {
-                data: "InvoiceDate_Format",
-                title: "Invoice Date",
-                className: "text-center"
+                data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Invoice Date',
+                name: 'InvoiceDate',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.InvoiceDate_Format; // show formatted
+                    }
+                    return data; // use raw date for sorting
+                }
             },
+
             {
                 data: "Name",
                 title: "Customer Name"

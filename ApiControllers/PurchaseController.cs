@@ -219,6 +219,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         SupplierName = Convert.ToString(row["SupplierName"]),
+                        InvoiceDate_Format = Convert.ToString(row["InvoiceDate_Format"]),
                         InvoiceDate = Convert.ToString(row["InvoiceDate"]),
                         InvoiceNo = Convert.ToString(row["InvoiceNo"]),
                         PONo = Convert.ToString(row["PONo"]),
@@ -623,10 +624,12 @@ namespace ERPAdmin.ApiControllers
 
                             InvoiceNo = Convert.ToString(dr["InvoiceNo"]),
                             PONo = Convert.ToString(dr["PONo"]),
+                            InvoiceDate = Convert.ToString(dr["InvoiceDate"]),
                             InvoiceDate_Format = Convert.ToString(dr["InvoiceDate_Format"]),
 
                             SupplierName = Convert.ToString(dr["SupplierName"]),
 
+                            PaymentDate = Convert.ToString(dr["PaymentDate"]),
                             PaymentDate_Format = Convert.ToString(dr["PaymentDate_Format"]),
                             PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
 

@@ -73,8 +73,8 @@ namespace ERPAdmin.ApiControllers
                     rows.Add(new DailySalesGridModel
                     {
                         SrNo = Convert.ToInt64(dr["SrNo"]),
-                        Date = dr["Date"]?.ToString(),
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
+                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
 
                         TotalInvoices = Convert.ToInt32(dr["NoOfInvoicesGenerated"]),
                         GrossSales = Convert.ToDecimal(dr["GrossSales"]),
@@ -162,6 +162,7 @@ namespace ERPAdmin.ApiControllers
                         SrNo = Convert.ToInt64(dr["SrNo"]),
                         InvoiceNo = dr["InvoiceNo"]?.ToString(),
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
+                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
                         ClientName = dr["ClientName"]?.ToString(),
                         GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
                         Taxes = Convert.ToDecimal(dr["Taxes"]),

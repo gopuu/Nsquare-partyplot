@@ -697,7 +697,7 @@ function loadSlotDropdown() {
 }
 function loadEnquiryList(selectedClientId=0) {
     $.ajax({
-        url: "/api/EnquiryDeal/GetEnquiryDealList",
+        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
         type: "GET",
         success: function (response) {
             if (response.status === "Success") {
@@ -709,14 +709,15 @@ function loadEnquiryList(selectedClientId=0) {
 
                 $.each(response.data, function (index, item) {
                     options += `
-                        <option 
-                            value="${item.Id}"
-                            data-name="${item.Name || ''}"
-                            data-email="${item.Email || ''}"
-                            data-address="${item.Address || ''}"
-                            data-contact="${item.Contact || ''}">
-                            ${item.Name} (${item.Contact || ''})
-                        </option>`;
+                            <option
+                                value="${item.ClientEnquiryId}"
+                                data-name="${item.ClientName || ''}"
+                                data-email="${item.ClientEmail || ''}"
+                                data-address="${item.ClientAddress || ''}"
+                                data-contact="${item.ClientContact || ''}"
+                                data-gstin="${item.ClientGSTIN || ''}"
+                                data-stateid="${item.ClientStateId || ''}"
+                            >${item.ClientName} (${item.ClientContact})</option>`;
                 });
 
                 $("#clientId").html(options);

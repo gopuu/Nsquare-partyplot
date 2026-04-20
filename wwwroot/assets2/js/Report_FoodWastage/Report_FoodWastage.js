@@ -207,6 +207,21 @@ function renderFoodWastageDetailGrid(items) {
             },
 
             {
+                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Event Date',
+                name: 'EventDate',
+                width: "110px",
+                render: function (data, type, row) {
+
+                    if (type === 'display') {
+                        return row.EventDate_Format; // show formatted
+                    }
+
+                    return data; // use raw date for sorting
+                }
+            },
+
+            {
                 data: "MenuItemName"
             },
 
@@ -386,9 +401,18 @@ function renderFoodWastageTable(data) {
             },
 
             {
-                data: "EventDate",
-                title: "Date",
-                width: "110px"
+                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Event Date',
+                name: 'EventDate',
+                width: "110px",
+                render: function (data, type, row) {
+
+                    if (type === 'display') {
+                        return row.EventDate_Format; // show formatted
+                    }
+
+                    return data; // use raw date for sorting
+                }
             },
 
             {

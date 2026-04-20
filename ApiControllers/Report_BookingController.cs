@@ -71,6 +71,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         SrNo = Convert.ToInt64(row["SrNo"]),
                         EventDate = Convert.ToString(row["EventDate"]),
+                        EventDate_Format = Convert.ToString(row["EventDate_Format"]),
                         EventTypeName = Convert.ToString(row["EventTypeName"]),
                         EventSubTypeName = Convert.ToString(row["EventSubTypeName"]),
                         EventDisplay = Convert.ToString(row["EventDisplay"]),

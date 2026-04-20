@@ -375,11 +375,9 @@ namespace ERPAdmin.ApiControllers
 
                 DataTable dataTable = new DataTable();
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("GetEnquiryDealList", con))
+                using (SqlCommand cmd = new SqlCommand("GetClientListForDropdown", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = 0; // Fetch all for dropdown
-
                     con.Open();
                     using (SqlDataReader sqlDataReader = cmd.ExecuteReader())
                     {
@@ -396,16 +394,21 @@ namespace ERPAdmin.ApiControllers
                     {
                         var deal = new
                         {
-                            Id = Convert.ToInt64(dr["Id"]),
-                            Name = Convert.ToString(dr["Name"]),
-                            ProcessId = Convert.ToInt64(dr["ProcessId"]),
-                            ProcessName = Convert.ToString(dr["ProcessName"])
+                            ClientEnquiryId = dr["ClientEnquiryId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ClientEnquiryId"]),
+                            ClientName = dr["ClientName"] == DBNull.Value ? "" : dr["ClientName"].ToString(),
+                            ClientContact = dr["ClientContact"] == DBNull.Value ? "" : dr["ClientContact"].ToString(),
+                            ClientEmail = dr["ClientEmail"] == DBNull.Value ? "" : dr["ClientEmail"].ToString(),
+                            ClientAddress = dr["ClientAddress"] == DBNull.Value ? "" : dr["ClientAddress"].ToString(),
+                            ClientGSTIN = dr["ClientGSTIN"] == DBNull.Value ? "" : dr["ClientGSTIN"].ToString(),
+                            ClientStateId = dr["ClientStateId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ClientStateId"]),                            
+                            //ProcessId = Convert.ToInt64(dr["ProcessId"]),
+                            //ProcessName = Convert.ToString(dr["ProcessName"])
                         };
                         enquiryDeals.Add(deal);
                     }
                 }
 
-                apiResponse.message = "EnquiryDeals fetched successfully!";
+                apiResponse.message = "Client fetched successfully!";
                 apiResponse.data = enquiryDeals;
                 apiResponse.status = "Success";
                 return Ok(apiResponse);

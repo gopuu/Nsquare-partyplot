@@ -344,11 +344,33 @@ function renderIncomeTable(rows, totals) {
 
         columns: [
             { data: "SrNo", title: "#", width: "50px", className: "text-center" },
-            { data: "TransactionDate", title: "Date", width: "110px" },
-            { data: "VoucherNo", title: "Voucher No" },
+            {
+                data: "TransactionDate", // must be ISO format: yyyy-MM-dd
+                title: "Date",
+                width: "110px",
+                render: function (data, type, row) {
+
+                    if (type === 'display') {
+                        return row.TransactionDate_Format || data;
+                    }
+
+                    // sorting / filtering
+                    return data;
+                }
+            },
+            {
+                data: "VoucherNo",
+                title: "Voucher No",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return `<span class="badge bg-success">${data ?? '-'}</span>`;
+                    }
+                    return data; // keep raw for sorting/search
+                }
+            },
             { data: "AccountName", title: "Account" },
-            { data: "CategoryName", title: "Event Category" },
-            { data: "SubCategoryName", title: "Event Sub-Category" },
+            { data: "CategoryName", title: "Income Category" },
+            { data: "SubCategoryName", title: "Income Sub-Category" },
             {
                 data: "Notes",
                 title: "Notes",

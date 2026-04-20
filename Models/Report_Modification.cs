@@ -25,6 +25,7 @@ namespace ERPAdmin.Models
     {
         public long SrNo { get; set; }
         public string? ModDate { get; set; }
+        public string? ModDate_Format { get; set; }
         public string? Module { get; set; }
         public string? RefNo { get; set; }
         public decimal Amount { get; set; }

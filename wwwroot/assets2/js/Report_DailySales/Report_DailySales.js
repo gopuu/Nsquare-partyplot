@@ -261,14 +261,20 @@ function renderDailySalesTable(data, totals) {
             { data: "SrNo", title: "#" },
 
             {
-                data: "Date",
+                data: "InvoiceDate",
                 title: "Date",
                 render: function (data, type, row) {
-                    return `<a href="javascript:void(0)" 
+
+                    if (type === 'display') {
+                        return `<a href="javascript:void(0)" 
                             class="daily-sales-date"
                             data-date="${row.InvoiceDate}">
-                            ${data}
+                            ${row.InvoiceDate_Format}
                         </a>`;
+                    }
+
+                    // for sorting, filtering → return raw date
+                    return data;
                 }
             },
 
@@ -538,7 +544,18 @@ function renderDailySalesDetailsTable(rows, totals) {
 
             { data: "InvoiceNo", width: "120px" },
 
-            { data: "InvoiceDate", width: "120px" },
+            {
+                data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Invoice Date',
+                name: 'InvoiceDate',
+                width: "120px",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.InvoiceDate_Format; // show formatted
+                    }
+                    return data; // use raw date for sorting
+                }
+            },
 
             { data: "ClientName", width: "200px" },
 

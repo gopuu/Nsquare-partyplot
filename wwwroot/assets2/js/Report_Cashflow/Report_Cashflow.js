@@ -182,10 +182,18 @@ function renderCashflowTable(data) {
                 className: "text-center"
             },
             {
-                data: "TxnDate",
-                title: "Date",
-                width: "110px"
+                data: "TxnDate", // should be ISO format ideally
+                title: "Txn Date",
+                width: "110px",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.TxnDate_Format || data;
+                    }
+                    // sorting / filtering
+                    return data;
+                }
             },
+
             {
                 data: "FlowType",
                 title: "Type",

@@ -238,9 +238,16 @@ function renderModificationTable(data) {
                 className: "text-center"
             },
             {
-                data: "ModDate",
+                data: "ModDate", // should be ISO format ideally
                 title: "Date",
-                width: "110px"
+                width: "110px",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.ModDate_Format || data;
+                    }
+                    // sorting / filtering
+                    return data;
+                }
             },
             {
                 data: "Module",

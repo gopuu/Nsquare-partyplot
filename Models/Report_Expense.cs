@@ -31,6 +31,7 @@
         public long SrNo { get; set; }
         public long TransactionId { get; set; }
         public string? TransactionDate { get; set; }
+        public string? TransactionDate_Format { get; set; }
         public string? VoucherNo { get; set; }
         public string? AccountName { get; set; }
         public string? CategoryName { get; set; }

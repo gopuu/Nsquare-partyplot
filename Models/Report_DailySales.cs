@@ -40,6 +40,7 @@
         public long SrNo { get; set; }
         public string? Date { get; set; }
         public string? InvoiceDate { get; set; }
+        public string? InvoiceDate_Format { get; set; }
         public int TotalInvoices { get; set; }
         public decimal GrossSales { get; set; }
         public decimal Taxes { get; set; }
@@ -73,6 +74,7 @@
         public long SrNo { get; set; }
         public string? InvoiceNo { get; set; }
         public string? InvoiceDate { get; set; }
+        public string? InvoiceDate_Format { get; set; }
         public string? ClientName { get; set; }
         public decimal GrossAmount { get; set; }
         public decimal Taxes { get; set; }

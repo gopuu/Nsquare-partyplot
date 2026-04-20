@@ -21,6 +21,7 @@
         public long SrNo { get; set; }
         public long BookingId { get; set; }
         public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
         public string? ShiftCode { get; set; }
         public string? ClientName { get; set; }
         public decimal WastageKg { get; set; }
@@ -41,6 +42,7 @@
     {
         public long BookingId { get; set; }
         public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
         public string? ShiftCode { get; set; }
         public string? ClientName { get; set; }
         public List<Report_FoodWastageDetailsModel_Items>? Items { get; set; }

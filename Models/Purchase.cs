@@ -19,6 +19,7 @@ namespace ERPAdmin.Models
     {
         public long Id { get; set; }
         public string? SupplierName { get; set; }
+        public string? InvoiceDate_Format { get; set; }
         public string? InvoiceDate { get; set; }
         public string? InvoiceNo { get; set; }
         public string? PONo { get; set; }
@@ -257,10 +258,12 @@ namespace ERPAdmin.Models
 
         public string? InvoiceNo { get; set; }
         public string? PONo { get; set; }
+        public string? InvoiceDate { get; set; }
         public string? InvoiceDate_Format { get; set; }
 
         public string? SupplierName { get; set; }
 
+        public string? PaymentDate { get; set; }
         public string? PaymentDate_Format { get; set; }
         public decimal PaidAmount { get; set; }
 

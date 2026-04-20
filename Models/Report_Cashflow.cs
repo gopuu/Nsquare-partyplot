@@ -13,6 +13,7 @@
     {
         public long SrNo { get; set; }
         public string? TxnDate { get; set; }
+        public string? TxnDate_Format { get; set; }
         public string? FlowType { get; set; }
         public string? Description { get; set; }
         public decimal Amount { get; set; }

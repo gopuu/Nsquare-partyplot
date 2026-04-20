@@ -28,6 +28,7 @@
         public long SrNo { get; set; }
         public long EnquiryDealId { get; set; }
         public string? EventDate { get; set; }
+        public string? EventDate_Format { get; set; }
         public string? GuestName { get; set; }
         public string? EventType { get; set; }
         public string? EventSubType { get; set; }

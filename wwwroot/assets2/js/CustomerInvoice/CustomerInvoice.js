@@ -2424,7 +2424,19 @@ function renderTable(data, totals) {
                 }
             },
 
-            { data: 'EventDate_Format', title: 'Event Date', name:'EventDate_Format' },
+            {
+                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Event Date',
+                name: 'EventDate',
+                render: function (data, type, row) {
+
+                    if (type === 'display') {
+                        return row.EventDate_Format; // show formatted
+                    }
+
+                    return data; // use raw date for sorting
+                }
+            },
             { data: 'BookedOn', title: 'Booked On', name: 'BookedOn', visible: false },
             { data: 'EventName', title: 'Event (PAX)', name: 'EventName' },
             { data: 'HallName', title: 'Banquet', name: 'HallName' },

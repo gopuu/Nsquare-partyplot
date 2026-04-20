@@ -135,9 +135,20 @@ function renderTable(data) {
 
             { data: "SupplierName", title: "Supplier" },
 
+            //{
+            //    data: "PaymentDate_Format",
+            //    title: "Payment Date"
+            //},
             {
-                data: "PaymentDate_Format",
-                title: "Payment Date"
+                data: 'PaymentDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Payment Date',
+                name: 'PaymentDate',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.PaymentDate_Format; // show formatted
+                    }
+                    return data; // use raw date for sorting
+                }
             },
 
             {

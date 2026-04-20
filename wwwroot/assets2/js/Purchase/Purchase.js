@@ -1495,8 +1495,20 @@ function renderTable(data) {
         return [
             { data: "srno", title: "#" },
             { data: "SupplierName", title: "Supplier" },
-            { data: "InvoiceDate", title: "Invoice Date" },
+            //{ data: "InvoiceDate", title: "Invoice Date" },
+            {
+                data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Invoice Date',
+                name: 'InvoiceDate',
+                render: function (data, type, row) {
 
+                    if (type === 'display') {
+                        return row.InvoiceDate_Format; // show formatted
+                    }
+
+                    return data; // use raw date for sorting
+                }
+            },
             {
                 data: "InvoiceNo",
                 title: "Invoice No",

@@ -71,6 +71,7 @@ namespace ERPAdmin.ApiControllers
                             SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
                             EnquiryDealId = row["EnquiryDealId"] != DBNull.Value ? Convert.ToInt64(row["EnquiryDealId"]) : 0,
                             EventDate = row["EventDate"] != DBNull.Value ? Convert.ToString(row["EventDate"]) : "-",
+                            EventDate_Format = row["EventDate_Format"] != DBNull.Value ? Convert.ToString(row["EventDate_Format"]) : "-",
                             GuestName = row["GuestName"] != DBNull.Value ? Convert.ToString(row["GuestName"]) : "-",
                             EventType = row["EventType"] != DBNull.Value ? Convert.ToString(row["EventType"]) : "-",
                             EventSubType = row["EventSubType"] != DBNull.Value ? Convert.ToString(row["EventSubType"]) : "-",

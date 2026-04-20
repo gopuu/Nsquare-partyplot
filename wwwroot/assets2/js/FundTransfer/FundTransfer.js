@@ -504,11 +504,23 @@ function renderFundTransferTable(data, totalAmount) {
                 className: "text-end",
                 render: val => `<b>₹ ${Number(val).toLocaleString()}</b>`
             },
+            //{
+            //    data: "TransferDate_Format",
+            //    title: "Transfer Date",
+            //    className: "text-center"
+            //},
             {
-                data: "TransferDate_Format",
-                title: "Transfer Date",
-                className: "text-center"
+                data: 'TransferDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                title: 'Transfer Date',
+                name: 'TransferDate',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.TransferDate_Format; // show formatted
+                    }
+                    return data; // use raw date for sorting
+                }
             },
+
             {
                 data: "ReferenceNo",
                 title: "# Reference",
