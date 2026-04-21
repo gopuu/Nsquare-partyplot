@@ -455,6 +455,7 @@ namespace ERPAdmin.ApiControllers
                             "Gross Sales" => totalRow["GrossSales"].ToString() ?? "-",
                             "Taxes" => totalRow["Taxes"].ToString() ?? "-",
                             "Net Sales" => totalRow["NetSales"].ToString() ?? "-",
+                            "Payment Amount" => totalRow["TotalPayments"].ToString() ?? "-",
                             "Due Payments" => totalRow["DuePayments"].ToString() ?? "-",
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
@@ -811,10 +812,10 @@ namespace ERPAdmin.ApiControllers
                     fontSize = 7;
                 }
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD, BaseColor.WHITE);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, fontSize);
-                BaseColor thColor = new BaseColor(0, 121, 182);
-
+                BaseColor thColor = new BaseColor(240, 240, 240);
+                
                 foreach (DataRow hRow in headerTableDB.Rows)
                     table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
 
@@ -866,6 +867,7 @@ namespace ERPAdmin.ApiControllers
                             "Taxes" => totalRow["Taxes"].ToString(),
                             "Net Amount" => totalRow["NetAmount"].ToString(),
                             "Due Amount" => totalRow["DueAmount"].ToString(),
+                            "Paid Amount" => totalRow["PaidAmount"].ToString(),
                             _ => col.Ordinal == 0 ? "TOTAL" : ""
                         };
 

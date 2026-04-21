@@ -73,10 +73,11 @@
     {
         public long SrNo { get; set; }
 
-        public string? InvoiceNo { get; set; }
+        public long? InvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
 
         public string? InvoiceDate { get; set; }
-
+        public string? InvoiceDate_Format { get; set; }
         public long BookingId { get; set; }
 
         public string? ClientName { get; set; }

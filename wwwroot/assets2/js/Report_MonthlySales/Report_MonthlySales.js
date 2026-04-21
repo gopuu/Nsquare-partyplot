@@ -416,9 +416,7 @@ function loadMonthlySalesMonthDetails(monthId) {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
-
             //renderMonthlySalesDetailsTable(res.data.Rows, res.data.Totals);
-
             showLoader();
             setTimeout(() => {
                 renderMonthlySalesDetailsTable(res.data.Rows, res.data.Totals);
@@ -453,7 +451,6 @@ function renderMonthlySalesDetailsTable(rows, totals) {
         destroy: true,
 
         columns: [
-
             {
                 data: "SrNo",
                 width: "50px"
@@ -462,6 +459,7 @@ function renderMonthlySalesDetailsTable(rows, totals) {
             {
                 data: "BookingId",
                 width: "120px",
+                class: "text-center",
                 render: function (data, type, row) {
                     if (!data) return "";
                     return `#${data}`;
@@ -469,17 +467,21 @@ function renderMonthlySalesDetailsTable(rows, totals) {
             },
 
             {
-                data: "InvoiceNo",
+                data: null,
                 width: "120px",
+                class: "text-center",
                 render: function (data, type, row) {
-                    if (!data) return "";
-                    return `#${data}`;
+                    const invoice = row.GSTInvoiceNo || row.InvoiceNo;
+                    if (!invoice) return "";
+                    return `${invoice}`;
                 }
             },
 
             {
-                data: "InvoiceDate",
-                width: "120px"
+                data: "InvoiceDate_Format",
+                title: "Invoice Date",
+                width: "120px",
+                class: "text-center",
             },
 
             {

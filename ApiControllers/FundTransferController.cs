@@ -343,7 +343,7 @@ namespace ERPAdmin.ApiControllers
 
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
-                BaseColor thColor = new BaseColor(0, 121, 182);
+                BaseColor thColor = new BaseColor(240, 240, 240);
 
                 for (int i = 0; i < headerTableDB.Rows.Count; i++)
                     table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));

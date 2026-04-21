@@ -2096,7 +2096,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     let amount = parseFloat(data.Payment_Amount) || 0;
                     $("#bookingReport_PaidTillDate").text(amount).toggleClass("text-success", amount > 0);
 
-                    $("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
+                    const diff = (data.PaymentSummary_PayableAmount || 0) - (data.Payment_Amount || 0);
+                    const finalAmount = Math.abs(diff) < 1 ? 0 : diff;
+                    $("#bookingReport_OutstandingAmount").text(finalAmount);
 
                     //Payment Details Table
                     fillPaymentTrailTable(data.PaymentTrailList, bookingId);

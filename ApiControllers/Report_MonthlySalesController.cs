@@ -159,8 +159,12 @@ namespace ERPAdmin.ApiControllers
                     Rows.Add(new MonthlySalesMonthDetailsModel
                     {
                         SrNo = Convert.ToInt64(dr["SrNo"]),
-                        InvoiceNo = dr["InvoiceNo"]?.ToString(),
+
+                        InvoiceNo = dr["InvoiceNo"] != DBNull.Value ? Convert.ToInt64(dr["InvoiceNo"]) : (long?)null,
+                        GSTInvoiceNo = dr["GSTInvoiceNo"]?.ToString() ?? null,
+
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
+                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
                         BookingId = Convert.ToInt64(dr["BookingId"]),
 
                         ClientName = dr["ClientName"]?.ToString(),
