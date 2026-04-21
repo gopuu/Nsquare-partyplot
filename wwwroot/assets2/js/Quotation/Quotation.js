@@ -239,7 +239,7 @@
     });
 
     $("#decorationAmount, #soundAmount, #projectorAmount, #banquetRent").on("input", function () {
-            calculateTotals();
+        calculateTotals();
     });
 
     // On Slot Change
@@ -606,22 +606,18 @@ function resetForm() {
     calculateTotals();
 }
 function getPackagesJson() {
-
     let list = [];
-
     $(".package-checkbox:checked").each(function () {
         list.push({
             PackageId: parseInt($(this).val())
         });
     });
 
-    return JSON.stringify(list);
+    return list; // ✅ NOT string
 }
 
 function getOtherServicesJson() {
-
     let list = [];
-
     $(".service-row").each(function (index) {
 
         let name = $(this).find(".service-name").val();
@@ -636,15 +632,13 @@ function getOtherServicesJson() {
                 ServiceName: name,
                 ServiceDescription: desc,
                 Amount: amount,
-                Quantity: qty,
-                TotalAmount: total
+                Quantity: qty
             });
         }
     });
 
-    return JSON.stringify(list);
+    return list; // ✅ NOT string
 }
-
 //dropdown -- START ----------------------
 function fetchHallDetails(banquetId = 0) {
     $.ajax({
@@ -753,6 +747,7 @@ function loadEnquiryList(selectedClientId=0) {
                         return;
                     }
 
+                    $("#enquiryDealId").val(value);
                     $("#clientName").val(selected.data("name") || "");
                     $("#clientEmail").val(selected.data("email") || "");
                     $("#clientAddress").val(selected.data("address") || "");

@@ -561,17 +561,19 @@ function getPackagesJson() {
             PackageId: parseInt($(this).val())
         });
     });
-    return JSON.stringify(list);
+
+    return list; // ✅ NOT string
 }
 
 function getOtherServicesJson() {
     let list = [];
-    $(".quotation-service-row").each(function (index) {
-        let name = $(this).find(".quotation-service-name").val();
-        let amount = parseFloat($(this).find(".quotation-service-amount").val()) || 0;
-        let qty = parseInt($(this).find(".quotation-service-qty").val()) || 0;
-        let total = parseFloat($(this).find(".quotation-service-total").val()) || 0;
-        let desc = $(this).find(".quotation-service-desc").val();
+    $(".service-row").each(function (index) {
+
+        let name = $(this).find(".service-name").val();
+        let amount = parseFloat($(this).find(".service-amount").val()) || 0;
+        let qty = parseInt($(this).find(".service-qty").val()) || 0;
+        let total = parseFloat($(this).find(".service-total").val()) || 0;
+        let desc = $(this).find(".service-desc").val();
 
         if (name) {
             list.push({
@@ -579,12 +581,12 @@ function getOtherServicesJson() {
                 ServiceName: name,
                 ServiceDescription: desc,
                 Amount: amount,
-                Quantity: qty,
-                TotalAmount: total
+                Quantity: qty
             });
         }
     });
-    return JSON.stringify(list);
+
+    return list; // ✅ NOT string
 }
 
 // ➤ SAVE

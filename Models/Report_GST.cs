@@ -28,6 +28,7 @@
     public class GSTSalesGridModel
     {
         public long InvoiceNo { get; set; }
+        public long? BookingId { get; set; }
         public string? InvoiceDate { get; set; }
         public string? InvoiceDate_Format { get; set; }
         public string? Name { get; set; }

@@ -33,6 +33,7 @@
         public string? TransactionDate { get; set; }
         public string? TransactionDate_Format { get; set; }
         public string? VoucherNo { get; set; }
+        public long VoucherNo_Num { get; set; }
         public string? AccountName { get; set; }
         public string? CategoryName { get; set; }
         public long CategoryId { get; set; }

@@ -323,6 +323,7 @@ function renderExpenseTable(rows, totals) {
         $("#tblExpense").DataTable().clear().destroy();
     }
 
+    console.log("rows:", rows);
     $("#tblExpense").DataTable({
         data: rows,
         responsive: true,
@@ -350,6 +351,7 @@ function renderExpenseTable(rows, totals) {
                     return data;
                 }
             },
+
             {
                 data: "VoucherNo",
                 title: "Voucher No",
@@ -357,9 +359,14 @@ function renderExpenseTable(rows, totals) {
                     if (type === 'display') {
                         return `<span class="badge bg-danger">${data ?? '-'}</span>`;
                     }
-                    return data; // keep raw for sorting/search
+                    // 🔥 VERY IMPORTANT
+                    if (type === 'sort' || type === 'type') {
+                        return row.VoucherNo_Num || 0;
+                    }
+                    return data;
                 }
             },
+
             { data: "AccountName", title: "Account" },
             { data: "CategoryName", title: "Expense Category" },
             { data: "SubCategoryName", title: "Expense Sub-Category" },

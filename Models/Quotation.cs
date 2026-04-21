@@ -113,10 +113,22 @@
         public string? Notes { get; set; }
 
         // JSON strings
-        public string? PackagesJson { get; set; }
-        public string? OtherServicesJson { get; set; }
+        public List<SavePackageJson> PackagesJson { get; set; } = new();
+        public List<SaveOtherServiceJson> OtherServicesJson { get; set; } = new();
 
-        public long ActionBy { get; set; }
+    }
+    public class SavePackageJson
+    {
+        public long PackageId { get; set; }
+
+    }
+    public class SaveOtherServiceJson
+    {
+        public long SrNo { get; set; }
+        public string? ServiceName { get; set; }
+        public string? ServiceDescription { get; set; }
+        public decimal? Amount { get; set; }
+        public int? Quantity { get; set; }
     }
 
     //DELETE

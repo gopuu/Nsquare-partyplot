@@ -21,7 +21,6 @@ const REPORT_COLUMNS = [
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "gstSalesPrintWithHeader";
-const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
 
 /* ═══════════════════════════════════════════════════
    INIT
@@ -168,19 +167,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $(document).on("click", ".btn-view-invoice", function () {
-        const invoiceNo = $(this).data("invoice");
-        console.log("View Invoice:", invoiceNo);
+        const bookingId = $(this).data('bookingid');
+        const invoiceNo = $(this).data("invoiceno");
 
-        resetInvoiceForm();
-        $('#invoiceModalTitle').text('Invoice #' + invoiceNo + ' (Read Only)');
-        invoiceModal.show();
+        //NEW
+        const withHeader = $("#toggleWithHeader").is(":checked");
 
-        fetchInvoiceById({
-            BookingId: 0,
+        const request = {
+            BookingId: bookingId,
             InvoiceNo: invoiceNo,
-            ProformaInvoiceNo: 0
-        });
-
+            GSTInvoiceNo: null,
+            ProformaInvoiceNo: null,
+            WithHeader: withHeader,
+            ActionBy: Number(sessionStorage.getItem('userId') || 0)
+        };
+        generateInvoicePdf(request);
     });
 });
 
@@ -202,9 +203,7 @@ function loadGSTSalesGrid() {
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-
         success: function (res) {
-
             console.log("GST Grid:", res);
 
             if (res.status !== "Success") {
@@ -214,13 +213,10 @@ function loadGSTSalesGrid() {
 
             const rows = res.data?.rows || [];
             const totals = res.data?.totals || null;
-
             renderGSTSalesTable(rows, totals);
         },
-
-        error: function (xhr) {
-            console.error("Fetch GST Failed", xhr);
-            Swal.fire("Error", "Failed to load GST data", "error");
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load GST data")
         }
     });
 }
@@ -319,12 +315,12 @@ function renderGSTSalesTable(data, totals) {
                 title: "View Invoice",
                 className: "text-center",
                 render: function (data, type, row) {
-
                     if (!data) return "";
-
                     return `
-                        <button class="btn btn-xs btn-view-invoice btn-warning" data-invoice="${data.InvoiceNo}">
-                            View Invoice
+                        <button class="btn btn-xs btn-view-invoice btn-outline-danger"
+                                data-invoiceno="${data.InvoiceNo}" 
+                                data-bookingid="${data.BookingId}">
+                            <i class="fa fa-download me-1"></i> Invoice
                         </button>
                     `;
                 }
@@ -405,7 +401,7 @@ function ViewGSTSalesReport(actionName) {
 
         ActionBy: userId
     };
-    
+    console.log("payload:", payload);
     const url = actionName === "downloadExcel"
         ? "/api/Report_GST/DownloadGSTSalesReport_Excel"
         : "/api/Report_GST/DownloadGSTSalesReport_Pdf";
@@ -484,204 +480,4 @@ function updateSelectAllState() {
     const total = $(".column-checkbox").length;
     const checked = $(".column-checkbox:checked").length;
     $("#chk-select-all").prop("checked", total === checked);
-}
-
-function fetchInvoiceById(params) {
-    console.log("params:", params);
-    $.ajax({
-        url: '/api/CustomerInvoice/GetCustomerInvoiceById',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(params),
-        success: function (res) {
-
-            if (res.status !== 'Success' || !res.data) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invoice Not Found',
-                    text: 'Invoice data not found'
-                });
-                return;
-            }
-            const data = res.data;
-            console.log("GetCustomerInvoiceById data:", data);
-
-            /* ---------- MASTER ---------- */
-            $('#invoiceId').val(data.Id);
-            $('#bookingId').val(params.BookingId);
-            $('#customerName').val(data.CustomerName);
-            $('#invoiceDate').val(data.InvoiceDate);
-            $('#gstin').val(data.GSTIN);
-            $('#emailId').val(data.EmailId);
-            $('#address').val(data.Address);
-            $('#customerState').val(data.CustomerStateId);
-
-            $('#isExclusiveOfGST').val(data.IsExclusiveOfGST);
-            $('#isInclusiveOfGST').val(data.IsInclusiveOfGST);
-            $('#invoiceNo').data('isinclusivegst', data.IsInclusiveOfGST);
-
-            /* ---------- TOTALS (DIRECT SET) ---------- */
-            $('#subTotal').val(data.SubTotal);
-            $('#bookingDiscount').val(data.BookingDiscount);
-            $('#totalTaxable').val(data.TotalTaxableAmount);
-            $('#totalGST').val(data.TotalGST);
-            // Call after setting GST
-            updateInvoiceTitle(data.TotalGST);
-
-            $('#grandTotal').val(data.GrandTotal);
-            $('#roundOff').val(data.RoundOff);
-            $('#advancePaid').val(data.TotalAdvancePaid).attr('readonly', true);
-            $('#balanceAmount').val(data.BalanceAmount);
-            /* ---------- ITEMS ---------- */
-            $('#invoiceItemsBody').empty();
-
-            if (data.Items && data.Items.length > 0) {
-
-                data.Items.forEach(item => {
-                    const gstOptions = buildGSTDropdown(item.GSTRate);
-                    const row = `
-                        <tr>
-                            <td class="text-center col-index"></td>
-
-                            <td><input class="form-control form-control-sm desc p-1" value="${item.Description ?? ''}"></td>
-                            <td><input class="form-control form-control-sm hsn p-1" value="${item.HSN ?? ''}"></td>
-
-                            <td><input class="form-control form-control-sm text-end rate calc p-1" value="${item.Rate}"></td>
-                            <td><input class="form-control form-control-sm text-end qty calc p-1" value="${item.Qty}"></td>
-                            <td><input class="form-control form-control-sm text-end subtotal calc p-1" value="${item.SubTotal}"></td>
-
-                            <td><input class="form-control form-control-sm text-end discountrate calc p-1" value="${item.DiscountRate}"></td>
-                            <td>
-                                <select class="form-select form-select-sm discounttype p-1 calc">
-                                    <option value="1" ${item.DiscountTypeId == 1 ? "selected" : ""}>%</option>
-                                    <option value="2" ${item.DiscountTypeId == 2 ? "selected" : ""}>Flat</option>
-                                </select>
-                            </td>
-                            <td><input class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount}"></td>
-
-                            <td><input class="form-control form-control-sm text-end taxable p-1 calc" value="${item.TaxableAmount}"></td>
-
-                            <td class="col-gst p-1">
-                                <select class="form-select form-select-sm gst calc p-1">
-                                    ${gstOptions}
-                                </select>
-                            </td>
-
-                            <td><input class="form-control form-control-sm text-end cgst p-1" value="${item.CGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end sgst p-1" value="${item.SGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end igst p-1" value="${item.IGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end fw-bold total p-1" value="${item.Total}" readonly></td>
-
-                            <td class="text-center">
-                                <i class="fa fa-times text-danger btn-delete-row d-none"></i>
-                            </td>
-                        </tr>
-                    `;
-
-                    $('#invoiceItemsBody').append(row);
-                });
-
-                updateRowSequence();
-            }
-            $("#paymentSection").addClass("d-none");
-
-            // Disable all fields
-            $('.invoice-modal-body')
-                .find('input, select, textarea, button')
-                .prop('readonly', true);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Fetch Invoice Failed");
-        }
-    });
-}
-
-function updateRowSequence() {
-    $('#invoiceItemsBody tr').each(function (index) {
-        $(this).find('.col-index').text(index + 1);
-    });
-}
-var invoiceNo = 0;
-var proformaInvoiceNo = 0;
-var gstInvoiceNo = null;
-var invoiceType = null;
-
-function updateInvoiceTitle(totalGST) {
-    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
-    //console.log("isInclusiveGST:", isInclusiveGST);
-    const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
-
-    if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
-        $('#invoiceModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
-    }
-    else if (invoiceType == "invoice") {
-        $('#invoiceModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
-    }
-}
-
-let gstList = [];
-loadGSTMaster();
-function loadGSTMaster() {
-    $.ajax({
-        url: "/api/GSTMaster/GetGSTMaster",
-        type: "GET",
-        success: function (res) {
-            if (res.status === "Success") {
-                gstList = res.data;
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load GST master.");
-        }
-    });
-}
-function buildGSTDropdown(selectedGST = 0) {
-    let options = '';
-    gstList.forEach(g => {
-        const selected = parseFloat(g.GSTValue) === parseFloat(selectedGST)
-            ? 'selected'
-            : '';
-        options += `<option value="${g.GSTValue}" ${selected}>${g.GSTText}</option>`;
-    });
-    return options;
-}
-
-
-function resetInvoiceForm() {
-
-    $('#invoiceId').val(0);
-    $('#bookingId').val(0);
-    $('#invoiceNo').val('');
-
-    $('#customerName').val('');
-    $('#gstin').val('');
-    $('#emailId').val('');
-    $('#address').val('');
-
-    $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
-
-    $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
-
-    $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
-
-    $('#invoicePayment_DueBalance').val(0);
-    $('#advancePaid').val(0);
-
-    $('#subTotal').val(0);
-    $('#totalGST').val(0);
-    $('#grandTotal').val(0);
-
-    $('#invoiceItemsBody').empty();
-
-    const now = new Date();
-
-    const date = now.toISOString().split("T")[0];
-
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const time = `${hours}:${minutes}`;
-
-    $('#invoiceDate').val(date);
-    $('#invoicePayment_Date').val(date);
-    $('#invoicePayment_Time').val(time);
 }

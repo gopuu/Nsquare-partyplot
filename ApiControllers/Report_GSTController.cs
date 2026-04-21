@@ -67,6 +67,7 @@ namespace ERPAdmin.ApiControllers
                     rows.Add(new GSTSalesGridModel
                     {
                         InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
+                        BookingId = Convert.ToInt64(dr["BookingId"]),
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
                         InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
                         Name = dr["Name"]?.ToString(),

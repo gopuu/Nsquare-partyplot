@@ -93,6 +93,7 @@ namespace ERPAdmin.ApiControllers
                         Notes = Convert.ToString(row["Notes"]),
 
                         VoucherNo = Convert.ToString(row["VoucherNo"]),
+                        VoucherNo_Num = row["VoucherNo_Num"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["VoucherNo_Num"]),
 
                         ChequeBank = Convert.ToString(row["ChequeBank"]),
                         ChequeNo = Convert.ToString(row["ChequeNo"]),

@@ -60,15 +60,9 @@
         }
         else if (selectedFinanceDuration === "customrange") {
             $("#fromDate, #toDate").trigger("change");
-            return;
         }
 
-        if (selectedFinanceDuration === "customrange") {
-            $("#fromDate, #toDate").show();
-        } else {
-            $("#fromDate, #toDate").hide();
-        }
-
+        $("#fromDate, #toDate").prop("readonly", false);
         $("#fromDate").val(formatDate2(fromDate));
         $("#toDate").val(formatDate2(toDate));
 
@@ -78,14 +72,16 @@
     $("#fromDate, #toDate").on("change", function () {
         let fromDate = $("#fromDate").val();
         let toDate = $("#toDate").val();
+
         if (fromDate && toDate) {
-
             selectedFinanceDuration = "customrange";
+
             $("#jobChartFilter").text("Filter : Custom Range");
+            // ❌ remove all
             $(".chart-filter-finance .dropdown-item").removeClass("active");
+            // ✅ set active to custom range
+            $('.chart-filter-finance .dropdown-item[data-value="customrange"]').addClass("active");
             loadFinanceSummary(selectedFinanceDuration, fromDate, toDate);
-
-
         }
     });
 
@@ -150,10 +146,13 @@
         $("#filter_transaction_paymentmode").val("0");
 
         selectedFinanceDuration = "thismonth";
-        setCurrentMonthDates();
+        //setCurrentMonthDates();
 
         $("#filter_transaction_fromamount").val("");
         $("#filter_transaction_toamount").val("");
+
+        $("#filter_transaction_fromdate").val("");
+        $("#filter_transaction_todate").val("");
 
         // 🔁 Restore
         $("input[name='filter_transaction_type'][value='" + selectedType + "']").prop("checked", true);
@@ -702,8 +701,8 @@ function setCurrentMonthDates() {
     $("#fromDate").val(formatDate2(firstDay));
     $("#toDate").val(formatDate2(lastDay));
 
-    $("#filter_transaction_fromdate").val(formatDate2(firstDay));
-    $("#filter_transaction_todate").val(formatDate2(lastDay));
+    //$("#filter_transaction_fromdate").val(formatDate2(firstDay));
+    //$("#filter_transaction_todate").val(formatDate2(lastDay));
 }
 function toggleCategoryFilters(type) {
 
@@ -872,7 +871,7 @@ function fetchTransactions(payload = {}) {
         data: JSON.stringify(finalPayload),
         beforeSend: function () {
             showTempLoader("fetching Transactions...");
-            $("#tableMain_Transactions table").html("<tr><td class='text-center p-3'>Loading...</td></tr>");
+            $("#tableMain_Transactions table tbody").html("<tr><td class='text-center p-3'>Loading...</td></tr>");
         },
         success: function (res) {
             if (res.status === "Success") {
@@ -899,33 +898,53 @@ function renderTransactions(data) {
         table.DataTable().destroy();
     }
 
-    table.empty();
+    table.find('tbody').empty();
 
     table.DataTable({
         data: data,
         pageLength: 10,
         responsive: true,
+
+        stateSave: false,
+        ordering: true,          // Enable sorting
+        searching: true,         // Enable search functionality
+
+        paging: false,
+        scrollY: "60vh",
+        scrollCollapse: false,
+        scrollX: true,
+
         columns: [
-            {
-                data: null,
-                title: "#",
-                visible: false,
-                className: "text-center",
-                render: (data, type, row, meta) => meta.row + 1
-            },
             {
                 data: "VoucherNo",
                 title: "Voucher No",
                 className: "text-center",
                 render: function (data, type, row) {
-                    let badgeClass = row.TransactionType === "INCOME" ? "bg-success" : "bg-danger";
-                    return `<span class="badge ${badgeClass}">${data}</span>`;
+
+                    // ✅ Display (UI)
+                    if (type === 'display') {
+                        let badgeClass = row.TransactionType === "INCOME"
+                            ? "bg-success"
+                            : "bg-danger";
+
+                        return `<span class="badge ${badgeClass}">
+                        ${data ?? '-'}
+                    </span>`;
+                    }
+
+                    // 🔥 Numeric sorting using backend value
+                    if (type === 'sort' || type === 'type') {
+                        return row.VoucherNo_Num || 0;
+                    }
+
+                    // ✅ For filter/search
+                    return data;
                 }
             },
-            //{ data: "TransactionDate2", title: "Date", className: "text-center" },
+
             {
                 data: 'TransactionDate', // actual date (ISO format from backend: yyyy-MM-dd)
-                title: 'Transaction Date',
+                title: 'Txn Date',
                 name: 'TransactionDate',
                 render: function (data, type, row) {
                     if (type === 'display') {
@@ -950,6 +969,7 @@ function renderTransactions(data) {
             { data: "SubCategoryName", title: "Sub-Category", className: "text-center" },
             { data: "AccountName", title: "Source / Receiver", className: "text-center" },
             { data: "PaymentModeName", title: "Payment Mode", className: "text-center" },
+
             {
                 data: "Notes",
                 title: "Notes",
@@ -965,9 +985,11 @@ function renderTransactions(data) {
                 </span>`;
                 }
             },
+
             {
                 data: null,
                 title: 'Actions',
+                class: "text-center",
                 render: function (data, type, row) {
                     return `
                         <div class="dropdown">
@@ -997,10 +1019,8 @@ function renderTransactions(data) {
             }
 
         ],
-        drawCallback: function () {
-
+        footerCallback: function () {
             let api = this.api();
-
             // Remove old total row
             $("#tableMain_Transactions tbody tr.total-row").remove();
 
@@ -1034,15 +1054,13 @@ function renderTransactions(data) {
                 <tr class="total-row fw-bold">
                     <td></td>
                     <td class="text-end fw-bold">TOTAL</td>
-                    <td class="text-end fw-bold ${colorClass}">
-                        ${formatINR2(total)}
-                    </td>
+                    <td class="text-end fw-bold ${colorClass}">${sign} ${formatINR2(total)}</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td></td>
+                    <td></td> <!-- Actions -->
                 </tr>`;
             $("#tableMain_Transactions tbody").append(totalRow);
         },

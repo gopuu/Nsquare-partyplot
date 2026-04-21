@@ -119,7 +119,7 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
             }
             else {
                 Swal.fire({
-                    icon: 'error',
+                    icon: 'info',
                     title: 'Failed',
                     text: res.message || 'Failed to generate report'
                 });

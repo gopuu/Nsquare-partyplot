@@ -8,6 +8,7 @@ var invoiceNo = 0;
 var proformaInvoiceNo = 0;
 var gstInvoiceNo = null;
 var invoiceType = null;
+var isEditInvoice = false;
 
 const REPORT_COLUMNS_CUSTOMER_INVOICE = [
     { key: "InvoiceNo", label: "Invoice No" },
@@ -313,6 +314,7 @@ $(function () {
     $(document).on('click', '.btn-edit-invoice', function () {
         ShowHide_DeleteButton();
         resetForm();
+        isEditInvoice = true;
 
         const bookingId = $(this).data('bookingid');
         const edit_invoiceNo = $(this).data('invoiceno');
@@ -340,6 +342,7 @@ $(function () {
     $(document).on('click', '.btn-edit-gstinvoice', function () {
         ShowHide_DeleteButton();
         resetForm();
+        isEditInvoice = true;
 
         const bookingId = $(this).data('bookingid');
         const edit_gstinvoiceNo = $(this).data('gstinvoiceno');
@@ -367,6 +370,7 @@ $(function () {
     $(document).on('click', '.btn-edit-proforma', function () {
         ShowHide_DeleteButton();
         resetForm();
+        isEditInvoice = true;
 
         const bookingId = $(this).data('bookingid');
         const edit_proformaNo = $(this).data('proformano');
@@ -549,7 +553,7 @@ $(function () {
         // GSTIN or global change → recalc all rows
         $('#invoiceItemsBody tr').each(function () {
             recalcRow($(this));
-            console.log("here2");
+            //console.log("here2");
         });
         recalcAll();
     });
@@ -1276,18 +1280,23 @@ $(function () {
         openPaymentModal("PENDING");
     });
 
+    $('#roundOff').on('input change', function () {
+        calculateBalance();
+    });
 });
 
 function updateInvoiceTitle(totalGST) {
-    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
-    //console.log("isInclusiveGST:", isInclusiveGST);
-    const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
+    if (!isEditInvoice) {
+        const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+        //console.log("isInclusiveGST:", isInclusiveGST);
+        const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
 
-    if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
-        $('#invoiceModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
-    }
-    else if (invoiceType == "invoice"){
-        $('#invoiceModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
+        if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
+            $('#invoiceModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
+        }
+        else if (invoiceType == "invoice"){
+            $('#invoiceModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
+        }
     }
 }
 
@@ -1602,9 +1611,10 @@ function recalcRow(row) {
     if (taxable < 0) taxable = 0;
     row.find('.taxable').val(taxable.toFixed(2));
 
-    const stateName = $('#customerState').text(); // from dropdown
-    let gstAmount = round2(taxable * gstRate / 100);
+    const stateName = $('#customerState option:selected').text();
+    //console.log("stateName:", stateName);
 
+    let gstAmount = round2(taxable * gstRate / 100);
     let cgst = 0;
     let sgst = 0;
     let igst = 0;
@@ -1680,16 +1690,46 @@ function recalcAll() {
 
     // ✅ Step 4: Grand total
     const discount = parseFloat($('#bookingDiscount').val()) || 0;
-    const grandTotal = totalTaxable + totalGST - discount;
+    const grandTotal = totalTaxable + totalGST; // - discount;
     $('#grandTotal').val(grandTotal.toFixed(2));
 
     let roundedTotal = Math.round(grandTotal);
     $('#roundOff').val(roundedTotal.toFixed(2));
 
-    const advance = parseFloat($('#advancePaid').val()) || 0;
-    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount')
-        .val((roundedTotal - advance).toFixed(2));
+    calculateBalance();
 }
+function calculateBalance() {
+    const roundedTotal = parseFloat($('#roundOff').val()) || 0;
+    const advance = parseFloat($('#advancePaid').val()) || 0;
+
+    const balance = roundedTotal - advance;
+
+    // Show absolute value if overpaid
+    const displayBalance = balance; // < 0 ? Math.abs(balance) : balance;
+
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount')
+        .val(displayBalance.toFixed(2));
+
+    // Label handling
+    if (balance < 0) {
+        $("#label_balance")
+            .text("Overpaid (Refund Required)")
+            .removeClass("text-success")
+            .addClass("text-danger");
+    }
+    else if (balance === 0) {
+        $("#label_balance")
+            .text("Settled")
+            .removeClass("text-danger")
+            .addClass("text-success");
+    }
+    else {
+        $("#label_balance")
+            .text("Balance Due")
+            .removeClass("text-danger text-success");
+    }
+}
+
 
 let fixedSubTotal = 0;
 function setFixedSubTotal() {
@@ -2697,6 +2737,7 @@ function isPastDate(dateString) {
 }*/
 
 function resetForm() {
+    isEditInvoice = false;
     $("#btnAdjustDiff").addClass("d-none");
 
     invoiceType = null;

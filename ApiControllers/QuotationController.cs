@@ -249,88 +249,6 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("SaveQuotation2")]
-        private IActionResult SaveQuotation2([FromBody] SaveQuotationRequest model)
-        {
-            apiResponse apiResponse = new();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request,
-                    out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                long quotationId;
-
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveQuotation", con))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Id", model.Id);
-                    cmd.Parameters.AddWithValue("@EnquiryDealId", model.EnquiryDealId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@BanquetId", model.BanquetId);
-                    cmd.Parameters.AddWithValue("@SlotId", model.SlotId);
-                    cmd.Parameters.AddWithValue("@FromDate", model.FromDate);
-                    cmd.Parameters.AddWithValue("@TillDate", model.TillDate);
-                    cmd.Parameters.AddWithValue("@StartTime", model.StartTime ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@EndTime", model.EndTime ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@ClientId", model.ClientId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ClientName", model.ClientName);
-                    cmd.Parameters.AddWithValue("@Address", model.Address ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Email", model.Email ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ContactNo", model.ContactNo ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@GSTIN", model.GSTIN ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@StateId", model.StateId ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@EventSubTypeId", model.EventSubTypeId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@BanquetRent", model.BanquetRent);
-                    cmd.Parameters.AddWithValue("@Pax", model.Pax);
-                    cmd.Parameters.AddWithValue("@ReferenceTypeId", model.ReferenceTypeId ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@DecorationChargesAmount", model.DecorationChargesAmount);
-                    cmd.Parameters.AddWithValue("@SoundSystemChargesAmount", model.SoundSystemChargesAmount);
-                    cmd.Parameters.AddWithValue("@ProjectorChargesAmount", model.ProjectorChargesAmount);
-
-                    cmd.Parameters.AddWithValue("@IsPrintPriceExclusive", model.IsPrintPriceExclusive);
-                    cmd.Parameters.AddWithValue("@IsPrintFoodItems", model.IsPrintFoodItems);
-
-                    cmd.Parameters.AddWithValue("@SubTotal", model.SubTotal);
-                    cmd.Parameters.AddWithValue("@TaxAmount", model.TaxAmount);
-                    cmd.Parameters.AddWithValue("@GrandTotal", model.GrandTotal);
-                    cmd.Parameters.AddWithValue("@Notes", model.Notes ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@PackagesJson", model.PackagesJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@OtherServicesJson", model.OtherServicesJson ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
-
-                    con.Open();
-                    quotationId = Convert.ToInt64(cmd.ExecuteScalar());
-                    con.Close();
-                }
-
-                apiResponse.status = "Success";
-                apiResponse.message = model.Id > 0
-                    ? "Quotation updated successfully!"
-                    : "Quotation created successfully!";
-                apiResponse.data = new { QuotationId = quotationId };
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
-                apiResponse.status = "Error";
-                apiResponse.message = ex.Message;
-                return StatusCode(500, apiResponse);
-            }
-        }
-
-        [HttpPost]
         [Route("SaveQuotation")]
         public async Task<IActionResult> SaveQuotation([FromBody] SaveQuotationRequest model)
         {
@@ -385,9 +303,15 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@GrandTotal", model.GrandTotal);
                     cmd.Parameters.AddWithValue("@Notes", model.Notes ?? (object)DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@PackagesJson", model.PackagesJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@OtherServicesJson", model.OtherServicesJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PackagesJson", model.PackagesJson != null && model.PackagesJson.Any()
+                            ? JsonConvert.SerializeObject(model.PackagesJson)
+                            : (object)DBNull.Value
+                    );
 
+                    cmd.Parameters.AddWithValue("@OtherServicesJson", model.OtherServicesJson != null && model.OtherServicesJson.Any()
+                            ? JsonConvert.SerializeObject(model.OtherServicesJson)
+                            : (object)DBNull.Value
+                    );
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();

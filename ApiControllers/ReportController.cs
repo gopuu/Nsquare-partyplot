@@ -136,23 +136,25 @@ namespace ERPAdmin.ApiControllers
                         Phone = row["Phone"].ToString() ?? "",
                         GSTIN = row["GSTIN"].ToString() ?? "",
                         PAN = row["PAN"]?.ToString() ?? "",
-                        IsInterState = Convert.ToBoolean(row["IsInterState"]),
+                        IsInterState = row["IsInterState"] == DBNull.Value
+                            ? (bool?)null
+                            : Convert.ToBoolean(row["IsInterState"])
                     };
 
                     // 🔹 Totals
                     totals = new InvoiceTotals
                     {
-                        SubTotal = Convert.ToDecimal(row["SubTotal"]),
-                        Taxable = Convert.ToDecimal(row["Taxable"]),
-                        TotalDiscount = Convert.ToDecimal(row["TotalDiscount"]),
-                        TotalCGST = Convert.ToDecimal(row["TotalCGST"]),
-                        TotalSGST = Convert.ToDecimal(row["TotalSGST"]),
-                        TotalIGST = Convert.ToDecimal(row["TotalIGST"]),
-                        InvoiceTotal = Convert.ToDecimal(row["InvoiceTotal"]),
-                        RoundOff = Convert.ToDecimal(row["RoundOff"]),
-                        TotalAdvance = Convert.ToDecimal(row["TotalAdvance"]),
-                        Balance = Convert.ToDecimal(row["Balance"]),
-                        AmountInWords = row["AmountInWords"].ToString() ?? ""
+                        SubTotal = row.Field<decimal>("SubTotal"),
+                        Taxable = row.Field<decimal>("Taxable"),
+                        TotalDiscount = row.Field<decimal>("TotalDiscount"),
+                        TotalCGST = row.Field<decimal>("TotalCGST"),
+                        TotalSGST = row.Field<decimal>("TotalSGST"),
+                        TotalIGST = row.Field<decimal>("TotalIGST"),
+                        InvoiceTotal = row.Field<decimal>("InvoiceTotal"),
+                        RoundOff = row.Field<decimal>("RoundOff"),
+                        TotalAdvance = row.Field<decimal>("TotalAdvance"),
+                        Balance = row.Field<decimal>("Balance"),
+                        AmountInWords = row["AmountInWords"]?.ToString() ?? ""
                     };
 
                     string? json = dtInvoice.Rows[0]["JSON_Items"]?.ToString();
@@ -504,13 +506,27 @@ namespace ERPAdmin.ApiControllers
                 AddTotal("Subtotal", "₹ " + totals.SubTotal.ToString("N0"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Taxable", "₹ " + totals.Taxable.ToString("N0"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Total Discount Across All Services", "₹ " + totals.TotalDiscount.ToString("N0"), false, fBoldRupee7, fBoldRupee);
-                AddTotal("Total CGST in Rs.", "₹ " + totals.TotalCGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
-                AddTotal("Total SGST in Rs.", "₹ " + totals.TotalSGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
-                AddTotal("Total IGST in Rs.", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
+                AddTotal("Total CGST", "₹ " + totals.TotalCGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
+                AddTotal("Total SGST", "₹ " + totals.TotalSGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
+                AddTotal("Total IGST", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Invoice Total", "₹ " + totals.InvoiceTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
                 AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N0"), false, fBoldRupee, fBoldRupee);
-                AddTotal("Total Advance Paid", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
-                AddTotal("Balance Amount", "₹ " + totals.Balance.ToString("N0"), true, fBoldRupee, fBoldRupee);
+                AddTotal("Total Advance (Paid)", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
+                //AddTotal("Balance Amount", "₹ " + totals.Balance.ToString("N0"), true, fBoldRupee, fBoldRupee);
+                decimal balance = totals.Balance;
+                string label = "Balance Amount";
+                string value = "₹ " + Math.Abs(balance).ToString("N0");
+                if (balance < 0)
+                {
+                    label = "Overpaid (Refund Required)";
+                }
+                else if (balance == 0)
+                {
+                    label = "Settled";
+                }
+                AddTotal(label, value, true, fBoldRupee, fBoldRupee);
+
+
 
                 // LEFT SIDE (Amount in Words)
                 summaryRow.AddCell(new PdfPCell(leftInfo)

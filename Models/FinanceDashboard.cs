@@ -48,6 +48,7 @@
         public string Notes { get; set; }
 
         public string VoucherNo { get; set; }
+        public long? VoucherNo_Num { get; set; }
 
         public string ChequeBank { get; set; }
         public string ChequeNo { get; set; }

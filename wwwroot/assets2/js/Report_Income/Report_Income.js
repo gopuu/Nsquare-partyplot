@@ -365,6 +365,10 @@ function renderIncomeTable(rows, totals) {
                     if (type === 'display') {
                         return `<span class="badge bg-success">${data ?? '-'}</span>`;
                     }
+                    // 🔥 VERY IMPORTANT
+                    if (type === 'sort' || type === 'type') {
+                        return row.VoucherNo_Num || 0;
+                    }
                     return data; // keep raw for sorting/search
                 }
             },
