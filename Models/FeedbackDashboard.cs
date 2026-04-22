@@ -95,6 +95,7 @@
     {
         public int TotalFeedback { get; set; }
         public string? AvgRatingOutOf5 { get; set; }
+        public int TotalAssistedReviews { get; set; }
         public FeedbackReport JSON_FeedbackReport { get; set; }
         public List<CategoryRating> JSON_CategoryWiseRating { get; set; }
     }

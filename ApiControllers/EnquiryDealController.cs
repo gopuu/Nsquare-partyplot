@@ -154,6 +154,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@LeadSourceId", SqlDbType.BigInt).Value = model.LeadSourceId;
                     cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar, -1).Value = model.Remarks ?? string.Empty;
                     cmd.Parameters.Add("@PackageId", SqlDbType.BigInt).Value = model.PackageId;
+                    cmd.Parameters.Add("@LeadLostReasonCategoryId", SqlDbType.BigInt).Value = model.LeadLostReasonCategoryId;
+                    cmd.Parameters.Add("@LeadLostReasonId", SqlDbType.BigInt).Value = model.LeadLostReasonId;
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();

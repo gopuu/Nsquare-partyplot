@@ -7,14 +7,12 @@ $(document).ready(function () {
     loadFeedbackDashboard();
     loadDashboardEventInsights();
 
-
     //Widget count hover
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltipTriggerList.forEach(el => {
         new bootstrap.Tooltip(el);
     });
 });
-
 
 function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate = null) {
 
@@ -39,6 +37,7 @@ function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate
                 ======================= */
                 $("#valTotalFeedback").text(data.TotalFeedback || 0);
                 $("#valAvgRating").text(data.AvgRatingOutOf5 || "0%");
+                $("#valAI").text(data.TotalAssistedReviews || 0);
 
                 /* =======================
                    POS / NEG / NEU
@@ -53,8 +52,8 @@ function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate
             }
                 
         },
-        error: function (err) {
-            console.error("Error loading feedback counts:", err);
+        error: function (xhr, status, err) {
+            handleApiError(xhr, status, err, "Error loading feedback counts");
             resetFeedbackUI();
         }
     });
@@ -77,7 +76,6 @@ function loadCategoryWiseRatings(monthDuration = "thismonth", fromDate = null, t
                 $("#rating-container").html("<div class='text-muted text-center'>No data found</div>");
                 return;
             }
-
             renderCategoryRatings(res.data.JSON_CategoryWiseRating);
         },
         error: function () {
@@ -350,27 +348,24 @@ $(".chart-filter-ratingtime .dropdown-item").on("click", function (e) {
 });
 function formatMonthLabel(dateStr) {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short" });
+    return d.toLocaleDateString("en-IN", { month: "short" });
 }
 function formatMonth(monthKey) {
     const [year, month] = monthKey.split("-");
     const date = new Date(year, month - 1, 1);
 
-    return date.toLocaleDateString("en-US", { month: "short" });
+    return date.toLocaleDateString("en-IN", { month: "short" });
 }
-
 
 function loadFeedbackDashboard() {
     $.ajax({
-        url: '/api/FeedbackDashboard/GetFeedbackDashboardHots_Visitors',
+        url: '/api/FeedbackDashboard/GetFeedbackDashboardHost_Visitors',
         type: 'POST',
         contentType: 'application/json',
         success: function (response) {
-            console.log(response,"Hots_Visitors");
+            console.log("Host_Visitors:", response);
             if (response.status === "Success" && response.data.length > 0) {
-
                 response.data.forEach(function (item) {
-
                     if (item.FeedbackType === "Hosts") {
                         $("#hostTitle").text(item.Title);
                         $("#hostTotal").text(item.TotalFeedbacks);
@@ -384,12 +379,11 @@ function loadFeedbackDashboard() {
                         $("#visitorAvg").text(item.AverageRating + ' / 5');
                         $("#visitorNegative").text(item.NegativeFeedbackPercent + "%");
                     }
-
                 });
             }
         },
-        error: function (err) {
-            console.error("API Error", err);
+        error: function (xhr, status, err) {
+            handleApiError(xhr, status, err, "Failed to Load Host-Visitors")
         }
     });
 }
@@ -401,7 +395,6 @@ function loadDashboardEventInsights() {
         success: function (response) {
 
             console.log("API response:", response);
-
             if (response.status === "Success" && response.data) {
 
                 let d = response.data;

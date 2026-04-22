@@ -79,6 +79,7 @@
     {
         public long? PaymentId { get; set; }
         public long? BookingId { get; set; }
+        public bool? WithHeader { get; set; } = true;
     }
 
 

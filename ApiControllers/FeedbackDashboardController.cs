@@ -59,6 +59,9 @@ namespace ERPAdmin.ApiControllers
                                 // Avg Rating
                                 result.AvgRatingOutOf5 = dr["AvgRatingOutOf5"]?.ToString() ?? "0%";
 
+                                // Total Assisted Reviews
+                                result.TotalAssistedReviews = dr["TotalAssistedReviews"] != DBNull.Value ? Convert.ToInt32(dr["TotalAssistedReviews"]) : 0;
+
                                 // JSON Feedback Report
                                 var feedbackJson = dr["JSON_FeedbackReport"]?.ToString();
                                 if (!string.IsNullOrEmpty(feedbackJson))
@@ -419,10 +422,9 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         [HttpPost]
-        [Route("GetFeedbackDashboardHots_Visitors")]
-        public IActionResult GetFeedbackDashboardHots_Visitors()
+        [Route("GetFeedbackDashboardHost_Visitors")]
+        public IActionResult GetFeedbackDashboardHost_Visitors()
         {
             apiResponse apiResponse = new apiResponse();
             List<DashboardFeedbackCardResponse> list = new();
@@ -438,7 +440,7 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_GetFeedbackHots_Visitors", con))
+                using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_GetFeedbackHost_Visitors", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 

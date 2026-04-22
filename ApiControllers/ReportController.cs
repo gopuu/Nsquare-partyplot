@@ -2311,6 +2311,366 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        #endregion
+
+        #region INVENTORY DASHBOARD
+
+        [HttpPost]
+        [Route("Report_Inventory_StockOutSummary_RawMaterialWise_Pdf")]
+        public IActionResult Report_Inventory_StockOutSummary_RawMaterialWise_Pdf([FromBody] Report_SummaryStockOutRequest_PdfExcel request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataTable dtCompany = new DataTable();
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    // Company
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    new SqlDataAdapter(cmd).Fill(dtCompany);
+
+                    // Report
+                    cmd = new SqlCommand("Report_Inventory_StockOutSummary_RawMaterialWise", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@FromDate",
+                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate",
+                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@MonthDuration",
+                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    //cmd.Parameters.AddWithValue("@RawMaterialId",
+                    //    string.IsNullOrEmpty(request.RawMaterialId) ? (object)DBNull.Value : request.RawMaterialId);
+                    //cmd.Parameters.AddWithValue("@Columns",
+                    //    string.IsNullOrEmpty(request.Columns) ? (object)DBNull.Value : request.Columns);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                // ================= ASSIGN & VALIDATION =================
+                #region ASSIGN & VALIDATIONS
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
+                       logoFile = string.Empty, userName = string.Empty,
+                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
+
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+                if (isCompanyAvailable)
+                {
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                }
+
+                if (request.WithHeader ?? false)
+                {
+                    if (isCompanyAvailable)
+                    {
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? "";
+                        companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
+                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+
+                        // ── Resolve logo path (same logic as before, just storing the path string) ──
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                            if (System.IO.File.Exists(p1))
+                                logoFullPath = p1;
+                            else
+                            {
+                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                if (System.IO.File.Exists(p2))
+                                    logoFullPath = p2;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                    }
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data is incomplete. Required tables are missing.");
+
+                // ================= EXTRACT DATA =================
+                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+
+                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
+
+                using var stream = new MemoryStream();
+
+                bool isA4size = true; // default to A4
+                Document document = null;
+                if (dsReport.Tables[2].Columns.Count > 7)
+                {
+                    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                    isA4size = false;
+                }
+                else
+                {
+                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    isA4size = true;
+                }
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+                #endregion
+
+                // ── Attach StandardReport header-footer ──
+                #region HEADER_FOOTER
+                if (request.WithHeader ?? false)
+                {
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            propertyName,
+                            companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                else
+                {
+                    // no company header, but still want page number / generated-by footer
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                #endregion
+
+                document.Open();
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+                DataTable totalTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+
+                // ── Report title ──
+                document.Add(new Paragraph(reportName.ToUpper(),
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY))
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 10f
+                });
+
+                // ── Table ──
+                int columnCount = dataTableDB.Columns.Count;
+
+                PdfPTable table = new PdfPTable(columnCount);
+                table.WidthPercentage = 100;
+                table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
+
+                iTextSharpFont thFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 8, iTextSharpFont.BOLD, BaseColor.BLACK);
+                iTextSharpFont tdFont = new iTextSharpFont(iTextSharpFont.FontFamily.HELVETICA, 8);
+                BaseColor thColor = new BaseColor(240, 240, 240);
+
+                foreach (DataRow hRow in headerTableDB.Rows)
+                    table.AddCell(Utils.CreateHeaderCell(hRow["HeaderName"].ToString(), thFont, thColor));
+
+                table.HeaderRows = 1;
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        string value = row[col]?.ToString() ?? "-";
+                        if (col.ColumnName == "Total Stock Out Qty")
+                        {
+                            value = $"{value}";
+                        }
+                        table.AddCell(Utils.CreateBodyCell(value, tdFont));
+                    }
+                }
+
+                document.Add(table);
+                document.Close();
+
+                // ── Save ──
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "StockOutSummary_Report_*.pdf");
+
+                string fileName = $"StockOutSummary_Report_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(folder, fileName);
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                    stream.WriteTo(fileStream);
+
+                response.status = "Success";
+                response.message = "Summary Report Generated";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        [HttpPost]
+        [Route("Report_Inventory_StockOutSummary_RawMaterialWise_Excel")]
+        public IActionResult Report_Inventory_StockOutSummary_RawMaterialWise_Excel([FromBody] Report_SummaryStockOutRequest_PdfExcel request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataSet dsReport = new DataSet();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    SqlCommand cmd = new SqlCommand("Report_Inventory_StockOutSummary_RawMaterialWise", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@FromDate",
+                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
+                    cmd.Parameters.AddWithValue("@ToDate",
+                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
+                    cmd.Parameters.AddWithValue("@MonthDuration",
+                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    new SqlDataAdapter(cmd).Fill(dsReport);
+                }
+
+                if (dsReport.Tables.Count < 3)
+                    throw new Exception("Report data not found");
+
+                DataTable headerTableDB = dsReport.Tables[1];
+                DataTable dataTableDB = dsReport.Tables[2];
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Stock Out Summary");
+
+                int col = 1;
+
+                // ================= HEADERS =================
+                foreach (DataRow hRow in headerTableDB.Rows)
+                {
+                    var cell = worksheet.Cell(1, col);
+                    cell.Value = hRow["HeaderName"].ToString();
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    col++;
+                }
+
+                int row = 2;
+
+                // ================= DATA =================
+                foreach (DataRow dr in dataTableDB.Rows)
+                {
+                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                    {
+                        var cell = worksheet.Cell(row, i + 1);
+
+                        string columnName = dataTableDB.Columns[i].ColumnName;
+                        string value = dr[i]?.ToString() ?? "-";
+
+                        // 👉 Right align numeric columns
+                        if (columnName == "Stock Out Count" || columnName == "Total Stock Out Qty")
+                        {
+                            cell.Value = string.IsNullOrEmpty(value) ? "0" : value;
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
+                        else
+                        {
+                            cell.Value = value;
+                        }
+                    }
+                    row++;
+                }
+
+                // ================= AUTO FIT =================
+                worksheet.Columns().AdjustToContents();
+
+                // ================= SAVE =================
+                string folder = Path.Combine(_env.WebRootPath, "reports");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                Utils.deleteOldFiles(folder, "StockOutSummary_Report_*.xlsx");
+
+                string fileName = $"StockOutSummary_Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                string filePath = Path.Combine(folder, fileName);
+
+                workbook.SaveAs(filePath);
+
+                response.status = "Success";
+                response.message = "Stock Out Summary Excel generated successfully";
+                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
 
         #endregion
     }

@@ -386,6 +386,72 @@ function setStockOutDatesByDuration() {
     $("#stockOutToDate").val(toDate);
 }
 
+function ViewStockOutSummaryReport(type) {
+
+    const duration = $("#stockOutDuration").val();
+    const fromDate = $("#stockOutFromDate").val();
+    const toDate = $("#stockOutToDate").val();
+
+    // ✅ Validation (only for custom range)
+    if (duration === "customrange") {
+        if (!fromDate || !toDate) {
+            Swal.fire("Validation", "Please select From & To date", "warning");
+            return;
+        }
+    }
+
+    // ✅ Payload
+    const payload = {
+        FromDate: fromDate || null,
+        ToDate: toDate || null,
+        FilterDuration: duration || null,
+        //RawMaterialId: 0, // 👉 update if filter added
+        //Columns: null,    // 👉 or pass JSON if needed
+        WithHeader: true,
+        ActionBy: Number(sessionStorage.getItem('userId') || 0)
+    };
+
+    // ✅ API selection
+    let url = "";
+    if (type === "downloadPDF") {
+        url = "/api/Report/Report_Inventory_StockOutSummary_RawMaterialWise_Pdf";
+    } else {
+        url = "/api/Report/Report_Inventory_StockOutSummary_RawMaterialWise_Excel";
+    }
+
+    // ✅ Loader (optional)
+    Swal.fire({
+        title: "Generating report...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    // ✅ AJAX
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            Swal.close();
+            if (res.status === "Success") {
+                // ✅ Open file
+                if (res.data && res.data.FileUrl) {
+                    window.open(res.data.FileUrl, "_blank");
+                }
+            }
+            else {
+                Swal.fire("Error", res.message || "Failed to generate report", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Report Generation Failed");
+            Swal.close();
+        }
+    });
+}
+
+
 //Stock-Out Summary (Raw Material Wise)----------------------- END - ---------------------------------------
 
 

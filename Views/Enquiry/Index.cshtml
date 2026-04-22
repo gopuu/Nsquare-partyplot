@@ -127,18 +127,29 @@
                         <div class="input-group">
                             <select id="dealProcess" class="form-select form-select-sm"></select>
                         </div>
-                        <button type="button" class="btn btn-outline-primary d-none" id="openProcessModal">+</button>
-                        <div class="text-danger small mt-1 error-msg d-none">Please select process</div>
+                        <div id="dealProcessErr" class="text-danger small mt-1 d-none">
+                            Please select process
+                        </div>
                     </div>
+
                     <div class="col-md-6">
-                        <label for="dealName" class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control form-control-sm" id="dealName" placeholder="Name" maxlength="100">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter name</div>
+                        <label for="dealName" class="form-label">
+                            Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm" id="dealName">
+                        <div id="dealNameErr" class="text-danger small mt-1 d-none">
+                            Please enter name
+                        </div>
                     </div>
+
                     <div class="col-md-2">
-                        <label for="dealContact" class="form-label">Whatsapp No. <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control form-control-sm" id="dealContact" placeholder="1234567890" maxlength="10">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter Whatsapp no.</div>
+                        <label for="dealContact" class="form-label">
+                            Whatsapp No. <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm" id="dealContact">
+                        <div id="dealContactErr" class="text-danger small mt-1 d-none">
+                            Please enter Whatsapp no.
+                        </div>
                     </div>
 
                     <!-- Row 2: Address, Email -->
@@ -164,7 +175,9 @@
                                 </select>
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="openEventTypeModal">+</button>
                             </div>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select event type</div>
+                            <div id="eventTypeErr" class="text-danger small mt-1 d-none">
+                                Please select event type
+                            </div>
                         </div>
 
                         <!-- Event Sub-Type -->
@@ -178,7 +191,9 @@
                                 </select>
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="openEventSubTypeModal">+</button>
                             </div>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select event sub-type</div>
+                            <div id="eventSubTypeErr" class="text-danger small mt-1 d-none">
+                                Please select event sub-type
+                            </div>
                         </div>
 
                         <!-- Banquet Hall -->
@@ -191,7 +206,9 @@
                                     <option value="0">-- Select Banquet Hall --</option>
                                 </select>
                             </div>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select banquet hall</div>
+                            <div id="banquetHallErr" class="text-danger small mt-1 d-none">
+                                Please select banquet hall
+                            </div>
                         </div>
 
                         <!-- Info Line -->
@@ -209,7 +226,7 @@
                     <div class="col-md-2">
                         <label for="eventDate" class="form-label">Date Of Event <span class="text-danger">*</span></label>
                         <input class="form-control form-control-sm datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
-                        <div class="text-danger small mt-1 error-msg d-none">Please enter date</div>
+                        <div class="text-danger small mt-1 d-none" id="eventDateErr">Please enter date</div>
                         <div id="slotStatusMsg" class="small fw-semibold p-2 mt-2 rounded d-none"></div>
                         <div id="slotStatusWarning" class="small fw-semibold p-1 mt-1 rounded d-none fs-9"></div>
                     </div>
@@ -314,15 +331,22 @@
 
                     <!--Lead Source Dropdown-->
                     <div class="col-md-4">
-                        <label for="leadSourceDropdown" class="form-label">Lead Source <span class="text-danger">*</span></label>
+                        <label for="leadSourceDropdown" class="form-label">
+                            Lead Source <span class="text-danger">*</span>
+                        </label>
+
                         <div class="input-group">
                             <select id="leadSourceDropdown" class="form-select form-select-sm">
                                 <option value="0">-- Select Lead Source --</option>
                             </select>
                             <button type="button" class="btn btn-outline-primary btn-sm" id="openLeadSourceModal">+</button>
                         </div>
-                        <div class="text-danger small mt-1 error-msg d-none">Please select lead source</div>
-                        <!-- ℹ️ Info Line -->
+
+                        <div id="leadSourceErr" class="text-danger small mt-1 d-none">
+                            Please select lead source
+                        </div>
+
+                        <!-- Info -->
                         <p class="text-muted small mt-1 mb-2">
                             <i class="fa fa-info-circle me-1 text-primary"></i>
                             <span class="text-primary">
@@ -339,14 +363,16 @@
                             <label for="pax" class="form-label">
                                 Pax <span class="text-danger">*</span>
                             </label>
+
                             <input type="number"
                                    class="form-control form-control-sm"
                                    id="pax"
                                    placeholder="Enter Pax"
                                    min="0"
                                    step="1">
-                            <div class="text-danger small mt-1 error-msg d-none">
-                                Please enter Pax
+
+                            <div id="paxErr" class="text-danger small mt-1 d-none">
+                                Please enter valid Pax (greater than 0)
                             </div>
                         </div>
 
@@ -376,7 +402,8 @@
                                    placeholder="Per Pax Amount"
                                    step="1"
                                    min="0">
-                            <div class="text-danger small mt-1 error-msg d-none">
+
+                            <div id="packageAmountErr" class="text-danger small mt-1 d-none">
                                 Please enter valid Package Amount
                             </div>
                         </div>
@@ -393,7 +420,8 @@
                                    value="0"
                                    step="1"
                                    min="0">
-                            <div class="text-danger small mt-1 error-msg d-none">
+
+                            <div id="estimatedAmountErr" class="text-danger small mt-1 d-none">
                                 Please enter valid Amount
                             </div>
                         </div>
@@ -412,22 +440,75 @@
 
                     </div>
 
-                    <!-- Row 6: Remarks -->
-                    <div class="col-md-9">
-                        <label for="remark" class="form-label">Remarks / Notes</label>
-                        <textarea class="form-control form-control-sm" id="remark" rows="2" placeholder="Remarks"></textarea>
-                    </div>
+                    <!-- Row 6 + 7 Combined -->
+                    <div class="row">
 
-                    <!-- Submit -->
-                    <div class="col-md-3 text-end pt-7">
-                        <button type="button" class="btn btn-action-xs btn-outline-danger d-none" id="deleteDealBtn">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
-                        <button type="submit" class="btn btn-action-xs btn-outline-warning" id="saveDealBtn">
-                            <i class="fa fa-save"></i> Save Enquiry
-                        </button>
+                        <!-- Remarks (Left) -->
+                        <div class="col-md-6">
+                            <label for="remark" class="form-label">Remarks / Notes</label>
+                            <textarea class="form-control form-control-sm"
+                                      id="remark"
+                                      rows="3"
+                                      placeholder="Remarks"></textarea>
+                        </div>
+
+                        <!-- Lead Lost (Right) -->
+                        <div class="col-md-6 leadLostReasonSection_enquiry">
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="ddlLeadLostReasonCategory_enquiry">
+                                        Lead Lost Reason Category
+                                    </label>
+                                    <select class="form-select form-select-sm" id="ddlLeadLostReasonCategory_enquiry"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">
+                                        Please select Lead Lost Reason Category
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="ddlLeadLostReason_enquiry">
+                                        Lead Lost Reason
+                                    </label>
+                                    <select class="form-select form-select-sm" id="ddlLeadLostReason_enquiry"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">
+                                        Please select Lead Lost Reason
+                                    </div>
+                                </div>
+
+                                <!-- Message -->
+                                <div class="col-12">
+                                    <div id="leadLostMsg_enquiry"
+                                         class="text-warning small mt-1"
+                                         style="display:none;">
+                                        Please select proper <strong>Lead Lost Reason</strong> to ensure accurate analysis for Future Insights.
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
                 </form>
+            </div>
+            <div class="modal-footer justify-content-end">
+
+                <!-- Left: Delete -->
+                <button type="button"
+                        class="btn btn-outline-danger d-none"
+                        id="deleteDealBtn">
+                    <i class="fa fa-trash"></i> Delete
+                </button>
+
+                <!-- Right: Save -->
+                <button type="button"
+                        class="btn btn-warning"
+                        id="saveDealBtn">
+                    <i class="fa fa-save"></i> Save Enquiry
+                </button>
+
             </div>
         </div>
     </div>

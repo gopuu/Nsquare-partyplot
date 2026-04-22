@@ -1,8 +1,13 @@
 ﻿namespace ERPAdmin.Models
 {
-    public class InventoryDashboard
+    public class Report_SummaryStockOutRequest_PdfExcel : BaseClass
     {
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+        public bool? WithHeader { get; set; }
     }
+
     public class InventorySupplierItem
     {
         public string? SupplierName { get; set; }

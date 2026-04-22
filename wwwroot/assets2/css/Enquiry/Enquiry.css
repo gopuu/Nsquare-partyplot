@@ -1,4 +1,12 @@
-﻿.view-mode input {
+﻿.leadLostReasonSection_enquiry .row > div {
+    margin-bottom: 5px;
+}
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.view-mode input {
     background-color: #f8f9fa;
 }
 .small-text {

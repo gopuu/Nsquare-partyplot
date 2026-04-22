@@ -206,12 +206,11 @@
                     <div class="d-flex justify-content-between align-items-center mb-3 bg-warning-gradient rounded px-3 py-3">
                         <div>
                             <h6 class="mb-0 fw-semibold text-dark">Stock-Out Summary</h6>
-                            <small class="text-muted">Raw material wise consumption</small>
+                            <small class="text-muted">Raw material wise</small>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-                            <select id="stockOutDuration"
-                                    class="form-select form-select-sm w-auto">
+                            <select id="stockOutDuration" class="form-select form-select-sm w-auto">
                                 <option value="yesterday">Yesterday</option>
                                 <option value="last7days">Last 7 days</option>
                                 <option value="last30days">Last 30 days</option>
@@ -230,6 +229,30 @@
                             <input type="date"
                                    id="stockOutToDate"
                                    class="form-control form-control-sm date-filter">
+
+                            <div class="dropdown">
+                                <button class="btn btn-outline-dark btn-sm dropdown-toggle"
+                                        type="button"
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-download"></i>
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="ViewStockOutSummaryReport('downloadPDF')">
+                                            <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="ViewStockOutSummaryReport('downloadExcel')">
+                                            <i class="fas fa-file-excel text-success me-2"></i> Excel
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
                         </div>
                     </div>
 

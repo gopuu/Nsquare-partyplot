@@ -61,6 +61,8 @@
         public long? LeadSourceId { get; set; }
         public long? PackageId { get; set; }
         public string? Remarks { get; set; }
+        public long? LeadLostReasonCategoryId { get; set; }
+        public long? LeadLostReasonId { get; set; }
     }
 
     public class EnquiryDeal_forDragNDrop

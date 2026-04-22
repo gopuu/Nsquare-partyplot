@@ -247,14 +247,30 @@ function renderBookingTable(data) {
             { data: "Client_Contact", name: "Client_Contact", title: "Contact", className: "text-center" },
 
             {
-                data: "InvoiceNo",
+                data: null,
                 name: "InvoiceNo",
                 title: "Invoice No",
                 className: "text-center",
-                render: function (data) {
-                    return (!data || data === 0) ? "-" : data;
+                render: function (data, type, row) {
+
+                    const invoiceNo = row.InvoiceNo;
+                    const gstInvoiceNo = row.GSTInvoiceNo;
+
+                    // Prefer InvoiceNo if valid
+                    if (invoiceNo !== null && invoiceNo !== undefined && invoiceNo !== 0) {
+                        return invoiceNo;
+                    }
+
+                    // Fallback to GSTInvoiceNo if valid
+                    if (gstInvoiceNo !== null && gstInvoiceNo !== undefined && gstInvoiceNo !== "") {
+                        return gstInvoiceNo;
+                    }
+
+                    // Final fallback
+                    return "-";
                 }
             },
+
             {
                 data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
                 title: 'Event Date',

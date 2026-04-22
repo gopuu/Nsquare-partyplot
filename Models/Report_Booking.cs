@@ -23,7 +23,8 @@
         public string? Client_Name { get; set; }
         public string? Client_Contact { get; set; }
         public string? Client_Email { get; set; }
-        public long InvoiceNo { get; set; }
+        public long? InvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
     }
 
     public class BookingReportRequest : BaseClass

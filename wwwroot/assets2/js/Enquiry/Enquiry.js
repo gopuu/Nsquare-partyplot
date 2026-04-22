@@ -794,7 +794,7 @@ function loadLeadLostReasonCategoryList() {
         success: function (res) {
             //console.log("res mood:", res);
             if (res.status === "Success") {
-                let ddl = $("#ddlLeadLostReasonCategory");
+                let ddl = $("#ddlLeadLostReasonCategory, #ddlLeadLostReasonCategory_enquiry");
                 ddl.empty();
 
                 ddl.append('<option value="0">-- Select Reason Category --</option>');
@@ -821,7 +821,7 @@ function loadLeadLostReasonList(categoryId=0) {
         success: function (res) {
             //console.log("res mood:", res);
             if (res.status === "Success") {
-                let ddl = $("#ddlLeadLostReason");
+                let ddl = $("#ddlLeadLostReason, #ddlLeadLostReason_enquiry");
                 ddl.empty();
 
                 ddl.append('<option value="0">-- Select Reason --</option>');
@@ -1118,7 +1118,7 @@ function loadEnquiryDeals(processId = 0) {
         FromDate: duration === "customrange" ? $("#fromDate_filter").val() : null,
         ToDate: duration === "customrange" ? $("#toDate_filter").val() : null
     };
-    //console.log("EnquiryDeal inpuData:", inputData);
+    console.log("EnquiryDeal inpuData:", inputData);
 
     $.ajax({
         url: "/api/EnquiryDeal/GetEnquiryDealList_forDragNDrop",
@@ -1271,7 +1271,7 @@ function renderBoard() {
         // later you can call your API here
         // 🔥 Reset before fetching data
         resetDealForm();
-
+        
         $.ajax({
             url: `/api/EnquiryDeal/GetEnquiryDealById/${dealId} `,
             type: "GET",
@@ -1297,11 +1297,24 @@ function renderBoard() {
                         $("#dealModalLabel").text("Edit Deal (Enquiry)");
                         // Show delete button
                         $("#deleteDealBtn").removeClass("d-none").data("deal-id", dealId);
+                        // 🔒 Make all fields non-readonly
+                        $("#dealForm") 
+                            .find("input, textarea, select, button")
+                            .not("#deleteDealBtn, #saveDealBtn")
+                            .prop("disabled", false);
+                        $("#saveDealBtn").removeClass("d-none"); // hide delete btn
+
+                        //initLeadLostSection();
                     }
 
                     // Populate form fields
                     $("#dealId").val(data.Id);
                     $("#dealProcess").val(data.ProcessId).prop("disabled", true);;
+
+                    if (!isleadlost) {
+                        $("#dealProcess").trigger("change");
+                    }
+
                     $("#dealName").val(data.Name);
                     $("#dealContact").val(data.Contact);
                     $("#dealAddress").val(data.Address || "");
@@ -1920,6 +1933,28 @@ function resetDealForm() {
     $("#pax").siblings(".error-msg").hide();
     $("#leadSourceDropdown").siblings(".error-msg").hide();
     $("#estimatedAmount").siblings(".error-msg").hide();
+
+    $("#dealForm")
+        .find("input, textarea, select, button")
+        .not("#deleteDealBtn, #saveDealBtn")
+        .prop("disabled", false);
+
+    initLeadLostSection();
+
+}
+function initLeadLostSection() {
+    $("#ddlLeadLostReasonCategory_enquiry").val("0");
+    $("#ddlLeadLostReason_enquiry").val("0");
+
+    const category = $("#ddlLeadLostReasonCategory_enquiry");
+    const reason = $("#ddlLeadLostReason_enquiry");
+
+    // Disable by default
+    category.prop('disabled', true);
+    reason.prop('disabled', true);
+
+    // Hide message
+    $("#leadLostMsg_enquiry").hide();
 }
 
 // Validate Deal Form
@@ -1927,91 +1962,116 @@ function validateDealForm() {
     let isValid = true;
 
     // (0) Process / Stage
-    const dealProcessErr = document.getElementById("dealProcess").parentElement.nextElementSibling;
-    if ($("#dealProcess").val() === "" || $("#dealProcess").val() === "0") {
-        dealProcessErr.classList.remove("d-none");
+    const dealProcess = $("#dealProcess");
+    const dealProcessErr = $("#dealProcessErr");
+
+    const selectedOption = dealProcess.find(':selected');
+    const isLost = selectedOption.data('islost') === true || selectedOption.data('islost') === "true";
+
+    if (dealProcess.val() === "" || dealProcess.val() === "0") {
+        dealProcessErr.removeClass("d-none");
         isValid = false;
     } else {
-        dealProcessErr.classList.add("d-none");
+        dealProcessErr.addClass("d-none");
     }
 
     // (1) Name
-    const dealNameErr = document.getElementById("dealName").nextElementSibling;
-    if ($("#dealName").val().trim() === "") {
-        dealNameErr.classList.remove("d-none");
+    const dealName = $("#dealName");
+    const dealNameErr = $("#dealNameErr");
+
+    if (dealName.val().trim() === "") {
+        dealNameErr.removeClass("d-none");
         isValid = false;
     } else {
-        dealNameErr.classList.add("d-none");
+        dealNameErr.addClass("d-none");
     }
+
 
     // (2) Contact
-    const dealContactErr = document.getElementById("dealContact").nextElementSibling;
-    if ($("#dealContact").val().trim() === "") {
-        dealContactErr.classList.remove("d-none");
+    const dealContact = $("#dealContact");
+    const dealContactErr = $("#dealContactErr");
+
+    if (dealContact.val().trim() === "") {
+        dealContactErr.removeClass("d-none");
         isValid = false;
     } else {
-        dealContactErr.classList.add("d-none");
+        dealContactErr.addClass("d-none");
     }
+
 
     // (5) Event Type
-    const eventTypeErr = document.getElementById("eventTypeDropdown").parentElement.nextElementSibling;
-    if ($("#eventTypeDropdown").val() === "" || $("#eventTypeDropdown").val() === "0") {
-        eventTypeErr.classList.remove("d-none");
+    const eventType = $("#eventTypeDropdown");
+    const eventTypeErr = $("#eventTypeErr");
+
+    if (eventType.val() === "" || eventType.val() === "0") {
+        eventTypeErr.removeClass("d-none");
         isValid = false;
     } else {
-        eventTypeErr.classList.add("d-none");
+        eventTypeErr.addClass("d-none");
     }
 
-    // (5) Event Sub-Type
-    const eventSubTypeErr = document.getElementById("eventSubTypeDropdown").parentElement.nextElementSibling;
-    if ($("#eventSubTypeDropdown").val() === "" || $("#eventSubTypeDropdown").val() === "0") {
-        eventSubTypeErr.classList.remove("d-none");
+
+    // (6) Event Sub-Type
+    const eventSubType = $("#eventSubTypeDropdown");
+    const eventSubTypeErr = $("#eventSubTypeErr");
+
+    if (eventSubType.val() === "" || eventSubType.val() === "0") {
+        eventSubTypeErr.removeClass("d-none");
         isValid = false;
     } else {
-        eventSubTypeErr.classList.add("d-none");
+        eventSubTypeErr.addClass("d-none");
     }
 
-    // (6) Banquet Hall
-    const banquetHallErr = document.getElementById("banquetHallDropdown").parentElement.nextElementSibling;
-    if ($("#banquetHallDropdown").val() === "" || $("#banquetHallDropdown").val() === "0") {
-        banquetHallErr.classList.remove("d-none");
+
+    // (7) Banquet Hall
+    const banquetHall = $("#banquetHallDropdown");
+    const banquetHallErr = $("#banquetHallErr");
+
+    if (banquetHall.val() === "" || banquetHall.val() === "0") {
+        banquetHallErr.removeClass("d-none");
         isValid = false;
     } else {
-        banquetHallErr.classList.add("d-none");
+        banquetHallErr.addClass("d-none");
     }
 
     // (7) Event Date
-    const eventDateErr = document.getElementById("eventDate").nextElementSibling;
-    if ($("#eventDate").val() === "") {
-        eventDateErr.classList.remove("d-none");
+    const eventDate = $("#eventDate");
+    const eventDateErr = $("#eventDateErr");
+    const val = eventDate.val().trim();
+    console.log("e-date val:", val);
+    if (val === "") {
+        eventDateErr.removeClass("d-none");
         isValid = false;
     } else {
-        eventDateErr.classList.add("d-none");
+        eventDateErr.addClass("d-none");
     }
 
     // (8) Start Time
-    const eventStartErr = document.getElementById("eventStart").nextElementSibling;
-    if ($("#eventStart").val() === "") {
-        eventStartErr.classList.remove("d-none");
+    const eventStart = $("#eventStart");
+    const eventStartErr = eventStart.nextAll('.error-msg').first();
+
+    if (eventStart.val() === "") {
+        eventStartErr.removeClass("d-none");
         isValid = false;
     } else {
-        eventStartErr.classList.add("d-none");
+        eventStartErr.addClass("d-none");
     }
 
-    // (8) End Time
-    const eventEndErr = document.getElementById("eventEnd").nextElementSibling;
-    if ($("#eventEnd").val() === "") {
-        eventEndErr.classList.remove("d-none");
+
+    // (9) End Time
+    const eventEnd = $("#eventEnd");
+    const eventEndErr = eventEnd.nextAll('.error-msg').first();
+
+    if (eventEnd.val() === "") {
+        eventEndErr.removeClass("d-none");
         isValid = false;
     } else {
-        eventEndErr.classList.add("d-none");
+        eventEndErr.addClass("d-none");
     }
 
     // (8) Compare Start & End Time
     const startTime = $("#eventStart").val();
     const endTime = $("#eventEnd").val();
-    // const eventEndInput = document.getElementById("eventEnd");
-    // const eventEndErr = eventEndInput.nextElementSibling;
 
     // Run comparison only if both fields are filled
     if (startTime && endTime) {
@@ -2020,39 +2080,121 @@ function validateDealForm() {
         const end = parseTime(endTime);
 
         if (end <= start) {
-            eventEndErr.textContent = "End Time must be after Start Time";
-            eventEndErr.classList.remove("d-none");
+            eventEndErr.text("End Time must be after Start Time");
+            eventEndErr.removeClass("d-none");
+            $("#eventEnd").addClass("is-invalid");
             isValid = false;
         } else {
-            eventEndErr.classList.add("d-none");
+            eventEndErr.addClass("d-none");
+            $("#eventEnd").removeClass("is-invalid");
         }
     }
 
-    // (9) Pax
-    const paxErr = document.getElementById("pax").nextElementSibling;
-    if ($("#pax").val().trim() === "") {
-        paxErr.classList.remove("d-none");
+    // (10) Lead Source
+    const leadSource = $("#leadSourceDropdown").val();
+    const leadSourceErr = $("#leadSourceErr");
+    //console.log("leadSource:", leadSource);
+    if (leadSource === "" || leadSource === "0") {
+        leadSourceErr.removeClass("d-none");
         isValid = false;
     } else {
-        paxErr.classList.add("d-none");
+        leadSourceErr.addClass("d-none");
     }
 
-    // (10) Lead Source
-    const leadSourceErr = document.getElementById("leadSourceDropdown").parentElement.nextElementSibling;
-    if ($("#leadSourceDropdown").val() === "" || $("#leadSourceDropdown").val() === "0") {
-        leadSourceErr.classList.remove("d-none");
+    // (9) Pax
+    const pax = $("#pax");
+    const paxErr = $("#paxErr");
+
+    const paxVal = parseInt(pax.val());
+    console.log("paxVal val:", paxVal);
+
+    if (pax.val().trim() === "") {
+        paxErr.text("Please enter Pax").removeClass("d-none");
+        pax.addClass("is-invalid");
         isValid = false;
+
+    } else if (isNaN(paxVal) || paxVal <= 0) {
+        paxErr.text("PAX must be greater than 0").removeClass("d-none");
+        pax.addClass("is-invalid");
+        isValid = false;
+
     } else {
-        leadSourceErr.classList.add("d-none");
+        paxErr.addClass("d-none");
+        pax.removeClass("is-invalid");
     }
+
+
+    // (11) Estimated Package Amount
+    const packageAmount = $("#packageAmount");
+    const packageAmountErr = $("#packageAmountErr");
+
+    const pkgVal = parseInt(packageAmount.val());
+
+    if (packageAmount.val().trim() === "") {
+        packageAmountErr.text("Please enter Package Amount").removeClass("d-none");
+        packageAmount.addClass("is-invalid");
+        isValid = false;
+
+    } else if (isNaN(pkgVal) || pkgVal <= 0) {
+        packageAmountErr.text("Package Amount must be greater than 0").removeClass("d-none");
+        packageAmount.addClass("is-invalid");
+        isValid = false;
+
+    } else {
+        packageAmountErr.addClass("d-none");
+        packageAmount.removeClass("is-invalid");
+    }
+
 
     // (12) Estimated Amount
-    const estimatedAmountErr = document.getElementById("estimatedAmount").nextElementSibling;
-    if ($("#estimatedAmount").val().trim() === "" || Number($("#estimatedAmount").val()) <= 0) {
-        estimatedAmountErr.classList.remove("d-none");
+    const estimatedAmount = $("#estimatedAmount");
+    const estimatedAmountErr = $("#estimatedAmountErr");
+
+    const amtVal = parseInt(estimatedAmount.val());
+
+    if (estimatedAmount.val().trim() === "") {
+        estimatedAmountErr.text("Please enter Estimated Amount").removeClass("d-none");
+        estimatedAmount.addClass("is-invalid");
         isValid = false;
+
+    } else if (isNaN(amtVal) || amtVal <= 0) {
+        estimatedAmountErr.text("Estimated Amount must be greater than 0").removeClass("d-none");
+        estimatedAmount.addClass("is-invalid");
+        isValid = false;
+
     } else {
-        estimatedAmountErr.classList.add("d-none");
+        estimatedAmountErr.addClass("d-none");
+        estimatedAmount.removeClass("is-invalid");
+    }
+
+    // (13) Lead Lost Reason Category (ONLY if isLost = true)
+    if (isLost) {
+        const category = $("#ddlLeadLostReasonCategory_enquiry");
+        const categoryErr = category.nextAll('.error-msg').first();
+
+        if (category.val() === "" || category.val() === "0") {
+            categoryErr.removeClass("d-none");
+            isValid = false;
+        } else {
+            categoryErr.addClass("d-none");
+        }
+
+        // Lead Lost Reason
+        const reason = $("#ddlLeadLostReason_enquiry");
+        const reasonErr = reason.nextAll('.error-msg').first();
+
+        if (reason.val() === "" || reason.val() === "0") {
+            reasonErr.removeClass("d-none");
+            isValid = false;
+        } else {
+            reasonErr.addClass("d-none");
+        }
+    }
+    else {
+
+        // Hide errors when not required
+        $("#ddlLeadLostReasonCategory_enquiry").nextAll('.error-msg').first().addClass("d-none");
+        $("#ddlLeadLostReason_enquiry").nextAll('.error-msg').first().addClass("d-none");
     }
 
     return isValid;
@@ -2078,6 +2220,9 @@ function calculateEstimatedAmount() {
     const total = pax * packageAmount;
 
     $("#estimatedAmount").val(total > 0 ? total.toFixed(2) : "0").prop("readonly", true);
+
+    //$("#packageAmount, #estimatedAmount").removeClass("is-invalid");
+    //$("#packageAmountErr, #estimatedAmountErr").addClass("d-none").removeClass("is-invalid");
 }
 
 // Initial load
@@ -2135,6 +2280,11 @@ document.addEventListener("DOMContentLoaded", function () {
         calculateEstimatedAmount();
     });
 
+    //$(document).on('input change', '#packageAmount, #estimatedAmount', function () {
+    //    $("#packageAmountErr, #estimatedAmountErr").addClass("d-none").removeClass("is-invalid");
+    //    $("#packageAmount, #estimatedAmount").removeClass("is-invalid");
+    //});
+
     $("#ddlDuration").on("change", function () {
         const duration = $(this).val();
 
@@ -2152,6 +2302,54 @@ document.addEventListener("DOMContentLoaded", function () {
         loadLeadLostReasonList(cid);
     });
 
+    $(document).on('change', '#dealProcess', function () {
+
+        const selectedOption = $(this).find(':selected');
+        const isLost = selectedOption.data('islost') === true || selectedOption.data('islost') === "true";
+
+        const category = $("#ddlLeadLostReasonCategory_enquiry");
+        const reason = $("#ddlLeadLostReason_enquiry");
+
+        const categoryLabel = $("label[for='ddlLeadLostReasonCategory_enquiry']");
+        const reasonLabel = $("label[for='ddlLeadLostReason_enquiry']");
+
+        if (isLost) {
+
+            // Enable
+            category.prop('disabled', false);
+            reason.prop('disabled', false);
+
+            // Add *
+            if (!categoryLabel.find('.req-star').length) {
+                categoryLabel.append(' <span class="text-danger req-star">*</span>');
+            }
+            if (!reasonLabel.find('.req-star').length) {
+                reasonLabel.append(' <span class="text-danger req-star">*</span>');
+            }
+
+            $("#leadLostMsg_enquiry").show();
+
+        }
+        else {
+
+            // Disable
+            category.prop('disabled', true);
+            reason.prop('disabled', true);
+
+            // Reset
+            category.val("0").trigger('change');
+            reason.val("0").trigger('change');
+
+            // Remove *
+            categoryLabel.find('.req-star').remove();
+            reasonLabel.find('.req-star').remove();
+
+            $("#leadLostMsg_enquiry").hide();
+        }
+    });
+    $(document).on('change', '#ddlLeadLostReasonCategory_enquiry, #ddlLeadLostReason_enquiry', function () {
+        $(this).nextAll('.error-msg').first().addClass('d-none');
+    });
 
     $("#btnApplyFilters").on("click", function () {
         loadEnquiryDeals();
@@ -2413,7 +2611,10 @@ document.addEventListener("DOMContentLoaded", function () {
             Remarks: $("#remark").val().trim(),
             PackageId: parseInt($("#packageDropdown").val()) || 0,
             ActionBy: Number(sessionStorage.getItem("userId") ?? 0),
-            CompanyId: Number(sessionStorage.getItem("companyid") ?? 0)
+            CompanyId: Number(sessionStorage.getItem("companyid") ?? 0),
+
+            LeadLostReasonCategoryId: parseInt($("#ddlLeadLostReasonCategory_enquiry").val()) || 0,
+            LeadLostReasonId: parseInt($("#ddlLeadLostReason_enquiry").val()) || 0
         };
         console.log("Posting EnquiryDeal:", enquiryData);
 

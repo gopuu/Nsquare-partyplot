@@ -8,6 +8,7 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
 using static ERPAdmin.ApiControllers.ReportController;
@@ -197,20 +198,8 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(
-                    ControllerContext, Request,
-                    out string connString,
-                    out string domain,
-                    out IActionResult? errorResult))
-                {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
-                }
-
-                using MemoryStream stream = new MemoryStream();
-
-                Document document = new Document(PageSize.A4, 25, 25, 20, 30);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
 
                 DataTable dtCompany = new DataTable();
                 DataTable dt = new DataTable();
@@ -220,12 +209,10 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd;
-
-                    // COMPANY
-                    cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                    // Company Header
+                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // RECEIPTS
@@ -243,9 +230,130 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtPayments);
                 }
 
+                // ================= ASSIGN & VALIDATION =================
+                #region ASSIGN & VALIDATIONS
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
+                       logoFile = string.Empty, userName = string.Empty,
+                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
+
+                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
+                if (isCompanyAvailable)
+                {
+                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                }
+
+                if (request.WithHeader ?? false)
+                {
+                    if (isCompanyAvailable)
+                    {
+                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
+                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+
+                        // ── Resolve logo path (same logic as before, just storing the path string) ──
+                        if (!string.IsNullOrWhiteSpace(logoFile))
+                        {
+                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                            if (System.IO.File.Exists(p1))
+                                logoFullPath = p1;
+                            else
+                            {
+                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                if (System.IO.File.Exists(p2))
+                                    logoFullPath = p2;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        companyName = "[PAGE HEADER] Company Data Not Found";
+                    }
+                }
+
                 if (dt.Rows.Count == 0)
                     throw new Exception("No receipt data found.");
 
+                // ================= EXTRACT DATA =================
+                string reportName = "PAYMENT RECEIPT"; //dt.Rows[0]["ReportName"]?.ToString() ?? "";
+                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
+
+                using var stream = new MemoryStream();
+
+                bool isA4size = true; // default to A4
+                Document document = null;
+                document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                isA4size = true;
+
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                writer.CloseStream = false;
+                #endregion
+
+                // ── Attach StandardReport header-footer ──
+                #region HEADER_FOOTER
+                if (request.WithHeader ?? false)
+                {
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            propertyName, companyName,
+                            companyAddress,
+                            companyphoneNo,
+                            companygstin,
+                            companyemail,
+                            stateCode,
+                            logoFullPath,
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                else
+                {
+                    // no company header, but still want page number / generated-by footer
+                    if (isA4size)
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                    else
+                    {
+                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                            "", "", "", "", "", "", "", "",
+                            generatedDate,
+                            userName,
+                            request.WithHeader
+                        );
+                    }
+                }
+                #endregion
+
+                #region FONT
                 /* ================= FONTS ================= */
                 iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
                 iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
@@ -255,91 +363,7 @@ namespace ERPAdmin.ApiControllers
                 iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.NORMAL);
                 iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.BOLD);
                 iTextSharp.text.Font AmtFontBold13 = new iTextSharp.text.Font(bf, 13, iTextSharp.text.Font.BOLD);
-
-                /* ================= HEADER METHOD ================= */
-                PdfPTable BuildHeader()
-                {
-                    // Border settings -- START
-                    PdfContentByte cb = writer.DirectContent;
-                    float borderMargin = 10f; // distance from page edge
-                    float lineWidth = 0.5f;
-
-                    Rectangle rect = new Rectangle(
-                        document.PageSize.Left + borderMargin,
-                        document.PageSize.Bottom + borderMargin,
-                        document.PageSize.Right - borderMargin,
-                        document.PageSize.Top - borderMargin
-                    );
-
-                    rect.Border = Rectangle.BOX;
-                    rect.BorderWidth = lineWidth;
-                    rect.BorderColor = BaseColor.GRAY;
-                    cb.Rectangle(rect);
-                    // Border settings -- END
-
-                    PdfPTable headerTable = new PdfPTable(2);
-                    headerTable.WidthPercentage = 100;
-                    headerTable.SetWidths(new float[] { 20f, 80f });
-
-                    Image logo = null;
-                    string logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString();
-
-                    if (!string.IsNullOrWhiteSpace(logoFile))
-                    {
-                        string logoPath = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
-                        if (System.IO.File.Exists(logoPath))
-                            logo = Image.GetInstance(logoPath);
-                        else {
-                            logoPath = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                            if (System.IO.File.Exists(logoPath))
-                                logo = Image.GetInstance(logoPath);
-                        }
-                    }
-
-                    PdfPCell logoCell = logo != null
-                        ? new PdfPCell(logo)
-                        : new PdfPCell(new Phrase(""));
-
-                    if (logo != null)
-                        logo.ScaleToFit(92, 92);
-
-                    logoCell.Border = Rectangle.BOTTOM_BORDER;
-                    logoCell.Padding = 5;
-                    logoCell.BorderColor = BaseColor.LIGHT_GRAY;
-                    logoCell.BorderWidth = 0.5f;
-
-                    headerTable.AddCell(logoCell);
-
-                    PdfPCell detailCell = new PdfPCell
-                    {
-                        Border = Rectangle.BOTTOM_BORDER,
-                        Padding = 5,
-                        PaddingTop = 2,
-                        HorizontalAlignment = Element.ALIGN_CENTER,
-                        BorderWidth = 0.5f,
-                        BorderColor = BaseColor.LIGHT_GRAY
-                    };
-
-                    detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["PropertyName"]?.ToString(),
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12)));
-
-                    detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyName"]?.ToString(),
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
-
-                    detailCell.AddElement(new Paragraph(dtCompany.Rows[0]["CompanyAddress"]?.ToString(),
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
-
-                    string contact = dtCompany.Rows[0]["CompanyMobile"]?.ToString();
-                    string email = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
-                    string gstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-
-                    detailCell.AddElement(new Paragraph($"Contact: {contact} | Email: {email} | GSTIN: {gstin}",
-                        FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.DARK_GRAY)));
-
-                    headerTable.AddCell(detailCell);
-
-                    return headerTable;
-                }
+                #endregion
 
                 document.Open();
 
@@ -347,8 +371,6 @@ namespace ERPAdmin.ApiControllers
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
                     DataRow r = dt.Rows[i];
-
-                    document.Add(BuildHeader());
 
                     /* ================= DATA ================= */
                     string receiptNo = r["PaymentId"]?.ToString();
@@ -628,8 +650,8 @@ namespace ERPAdmin.ApiControllers
                             totalAmount += amt;
 
                             payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentId"]?.ToString() ?? "-", normalFont))
-                            { 
-                                HorizontalAlignment = Element.ALIGN_CENTER, 
+                            {
+                                HorizontalAlignment = Element.ALIGN_CENTER,
                                 Border = Rectangle.BOX,
                                 BorderWidth = 0.2f,
                                 BorderColor = BaseColor.LIGHT_GRAY
@@ -682,7 +704,7 @@ namespace ERPAdmin.ApiControllers
                             HorizontalAlignment = Element.ALIGN_RIGHT,
                             BackgroundColor = new BaseColor(230, 230, 230),
                             Padding = 5,
-                            Colspan=3,
+                            Colspan = 3,
                             Border = Rectangle.BOX,
                             BorderWidth = 0.2f,
                             BorderColor = BaseColor.LIGHT_GRAY
@@ -726,25 +748,24 @@ namespace ERPAdmin.ApiControllers
                         document.NewPage();
                 }
 
+                //document.Add(table);
                 document.Close();
 
-                /* ================= SAVE ================= */
+                #region SAVE
                 string folder = Path.Combine(_env.WebRootPath, "reports");
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
                 Utils.deleteOldFiles(folder, "Payment_Receipt_*.pdf");
 
                 string fileName = $"Payment_Receipt_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
 
-                using (FileStream fs = new FileStream(filePath, FileMode.Create))
-                {
-                    stream.WriteTo(fs);
-                }
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                    stream.WriteTo(fileStream);
+                #endregion
 
                 response.status = "Success";
-                response.message = "Receipt Generated Successfully";
+                response.message = "Payment Receipt Generated";
                 response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
 
                 return Ok(response);
@@ -756,6 +777,7 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+
 
     }
 }

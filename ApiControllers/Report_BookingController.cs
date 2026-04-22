@@ -90,8 +90,13 @@ namespace ERPAdmin.ApiControllers
                         Client_Name = Convert.ToString(row["Client_Name"]),
                         Client_Contact = Convert.ToString(row["Client_Contact"]),
                         Client_Email = Convert.ToString(row["Client_Email"]),
-                        InvoiceNo = Convert.ToInt64(row["InvoiceNo"])
+                        InvoiceNo = row["InvoiceNo"] != DBNull.Value
+                            ? Convert.ToInt64(row["InvoiceNo"])
+                            : 0,
 
+                        GSTInvoiceNo = row["GSTInvoiceNo"] != DBNull.Value
+                            ? Convert.ToString(row["GSTInvoiceNo"])
+                            : "",
                     });
                 }
 

@@ -481,6 +481,30 @@ $(function () {
                 if (res.status === "Success") {
                     handleApiSuccess("Invoice Sent");
                     $("#sendInvoiceModal").modal("hide");
+
+                    //SEND WHATSAPP MSG
+                    /*
+                    const invoiceNo = $("#sendInvoiceNo").val() || "";
+                    const bookingId = $("#sendBookingId").val();
+
+                    // 👉 Your invoice link (adjust as per your system)
+                    const invoiceLink = `${window.location.origin}/Invoice/View?bookingId=${bookingId}`;
+
+                    // 👉 Message
+                    const message = `Hello,\n\nYour Invoice (${invoiceNo}) is ready.\n\nView here:\n${invoiceLink}\n\nThank you.`;
+
+                    // 👉 Encode message
+                    const encodedMessage = encodeURIComponent(message);
+
+                    // 👉 Add country code (India)
+                    const fullNumber = "91" + cleanedNumber;
+
+                    // 👉 WhatsApp URL
+                    const whatsappUrl = `https://wa.me/${fullNumber}?text=${encodedMessage}`;
+
+                    // 👉 Open in new tab
+                    window.open(whatsappUrl, '_blank');
+                    */
                 }
                 else {
                     Swal.fire({

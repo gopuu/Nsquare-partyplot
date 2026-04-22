@@ -1692,12 +1692,10 @@ async function renderBoard(bookingData = null) {
 
                     // If FULL DAY booking exists → override display text
                     const fdBooking = bookingsToday.find(b => b.ShiftCode === "FD");
-
                     if (fdBooking) {
                         displayText = "FD"; // show FD
                     }
                     else if (bookingsToday.length > 0) {
-
                         // Count unique bookings for that day
                         const uniqueBookingIds = [...new Set(bookingsToday.map(b => b.BookingId))];
 
@@ -1815,15 +1813,13 @@ async function renderBoard(bookingData = null) {
                 // ===============================
                 let spanCount = 1;
                 // Guard: only proceed if valid booking exists and not blocked
-                if (bookingMatch && !isBlocked) {
+                if ( (bookingMatch && !isBlocked) || isBlocked ) {
 
                     const bookingShift = (bookingMatch.ShiftCode || "").trim().toUpperCase();
-
                     // ===============================
                     // ✅ Case 1: FULL DAY booking → merge ALL remaining slots
                     // ===============================
                     if (bookingShift === "FD") {
-
                         for (let j = i + 1; j < shiftNames.length; j++) {
                             spanCount++;
                             skipNextSlots.add(j); // hide all next slots
@@ -1844,8 +1840,14 @@ async function renderBoard(bookingData = null) {
                 // 🚨 DAY-LEVEL OVERRIDE (Final Color Decision)
                 // ===============================
 
+                // 🎯 CASE 5: Blocked slot (admin/manual block)
+                if (isBlocked) {
+                    finalColor = "dark";
+                    textColor = "text-white";
+                }
+
                 // 🎯 CASE 1: Full Day booking exists → only FD slot should be red
-                if (hasFDBooking && shiftCode === "FD") {
+                else if (hasFDBooking && shiftCode === "FD") {
                     finalColor = "danger";       // red background
                     textColor = "text-white";    // white text
                 }
@@ -1866,12 +1868,6 @@ async function renderBoard(bookingData = null) {
                 else if (isBookingTentative) {
                     finalColor = "white";
                     textColor = "text-dark";
-                }
-
-                // 🎯 CASE 5: Blocked slot (admin/manual block)
-                else if (isBlocked) {
-                    finalColor = "dark";
-                    textColor = "text-white";
                 }
 
                 // ===============================
@@ -1948,7 +1944,7 @@ async function renderBoard(bookingData = null) {
     // 🪄 Attach hover listeners to badges
     document.addEventListener("mouseover", function (e) {
         const badge = e.target.closest(".badge[data-shift]");
-        console.log("cell badge:", badge);
+        //console.log("cell badge:", badge);
         if (!badge) return;
 
         //const isBlocked = badge.dataset.isblocked;
@@ -1975,7 +1971,43 @@ async function renderBoard(bookingData = null) {
         let isBlocked = false;
         if (badge.classList.contains("bg-dark")) {
             isBlocked = true;
-            //console.log("isBlocked");
+
+            const shiftIcons = {
+                FD: "fa-solid fa-sun",
+                MO: "fa-solid fa-cloud-sun",
+                AF: "fa-solid fa-sun",
+                EV: "fa-solid fa-cloud-moon",
+                ON: "fa-solid fa-moon"
+            };
+
+            const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock";
+
+            tooltip.innerHTML = `
+                <div class="tooltip-card">
+                    <div class="tooltip-header">
+                        <i class="fa-solid fa-ban"></i> Hall Blocked
+                    </div>
+
+                    <div class="tooltip-body">
+                        <div class="tooltip-row">
+                            <i class="${iconClass}"></i>
+                            <span>${shiftname} (${shiftcode})</span>
+                        </div>
+
+                        <div class="tooltip-row">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <span>${date_full}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            tooltip.style.display = "block";
+            tooltip.style.background = "#000";     // ✅ black bg
+            tooltip.style.color = "#fff";          // ✅ white text
+            //tooltip.style.border = "1px solid #333";
+            tooltip.style.boxShadow = "0 4px 10px rgba(0,0,0,0.5)";
+            return;
         }
 
         // 🔎 Get all bookings for this hall & date
@@ -2194,6 +2226,7 @@ async function renderBoard(bookingData = null) {
                 EV: "fa-solid fa-cloud-moon",
                 ON: "fa-solid fa-moon"
             };
+
             const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock"; // fallback
             tooltip.innerHTML = `
                 <div>
@@ -4042,9 +4075,10 @@ Your feedback helps us improve our service.`;
             data: JSON.stringify(payload),
             success: function (res) {
                 if (res.status === "Success") {
-                    handleApiSuccess();
+                    handleApiSuccess("Saved");
                     resetForm_HallBlock();
                     loadHallBlocks();
+                    loadBookingCalendar();
                 }
                 else {
                     Swal.fire({
