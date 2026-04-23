@@ -23,7 +23,7 @@ const HEADER_KEY = "gstCustomerInvoicePrintWithHeader";
 let selected_widgetPurchaseDuration = "thismonth";
 let selected_widgetOutstandingDuration = "thismonth";
 
-$(document).ready(function () {
+$(document).ready(function (event) {
     setCurrentMonthDates();
 
     //DROPDOWNS
@@ -87,28 +87,30 @@ $(document).ready(function () {
 
         let table = $('#tableMain table').DataTable();
         let rowData = table.row($(this).closest("tr")).data();
-
-        if (!rowData) return;
         let purchaseId = rowData.Id;
 
         var payload = {
-            Id: purchaseId,
+            PurchaseId: purchaseId,
             SupplierId: 0,
-            InvoiceNo: ""
+            InvoiceNo: null
         };
+        console.log("edit payload:", payload);
+
+        rowData = null;
         $.ajax({
             url: "/api/Purchase/GetPurchaseList",
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (response) {
+                console.log("edit response:", response);
                 let data = response?.data ?? [];
                 if (!data.length) {
                     Swal.fire("Error", "Data not found", "error");
                     return;
                 }
                 rowData = data[0]; // single record
-                //console.log("rowData edit:", rowData);
+                console.log("rowData edit:", rowData);
                 // =========================================
                 // BASIC HEADER
                 // =========================================
@@ -182,9 +184,14 @@ $(document).ready(function () {
                 // =========================================
                 $("#purchaseItemsBody").empty();
                 rowIndex = 0;
+                let selected_rows = 0;
+
                 if (rowData.JSON_PurchaseItems && rowData.JSON_PurchaseItems.length > 0) {
+
                     rowData.JSON_PurchaseItems.forEach(item => {
                         rowIndex++;
+                        //console.log("row:", rowIndex);
+                        if (item.IsSelected) selected_rows++;
 
                         let newRow = buildRowForEdit(item);
                         $("#purchaseItemsBody").append(newRow);
@@ -193,6 +200,10 @@ $(document).ready(function () {
                 else {
                     addInitialRow();
                 }
+
+                //console.log("rowIndex:", rowIndex, ", selected_rows:", selected_rows);
+                // ✅ Correct master checkbox logic
+                $("#selectAllItems").prop("checked", rowIndex > 0 && rowIndex === selected_rows);
 
                 updateSrNo();
                 calculateSubTotals();
@@ -253,7 +264,6 @@ $(document).ready(function () {
         // SELECT FILE
         let fileInput = $("#uploadInvoiceFile").get(0);
         let file = fileInput.files.length > 0 ? fileInput.files[0] : null;
-
         function getBase64WithoutMeta(file, callback) {
             let reader = new FileReader();
             reader.onload = function (e) {
@@ -265,15 +275,13 @@ $(document).ready(function () {
 
         function collectItems() {
             let items = [];
-
             $("#purchaseItemsBody tr").each(function () {
                 let row = $(this);
-
                 items.push({
-                    PurchaseId: $("#purchaseId").val(),
-                    RawMaterialId: row.find(".rawMaterialSelect").val(),
+                    PurchaseId: Number($("#purchaseId").val()),
+                    RawMaterialId: Number(row.find(".rawMaterialSelect").val()),
                     Qty: parseFloat(row.find(".qtyInput").val()) || 0,
-                    UnitId: row.find(".unitSelect").val(),
+                    UnitId: Number(row.find(".unitSelect").val()),
                     Price: parseFloat(row.find(".priceInput").val()) || 0,
                     Amount: parseFloat(row.find(".amountInput").val()) || 0,
                     CGST: parseFloat(row.find(".cgstInput").val()) || 0,
@@ -290,9 +298,9 @@ $(document).ready(function () {
         function submitSave(base64File) {
 
             let payload = {
-                Id: purchaseId,
+                Id: Number(purchaseId),
                 PurchaseFrom: 1,
-                SupplierId: supplierId,
+                SupplierId: Number(supplierId),
                 InvoiceDate: invoiceDate,
                 InvoiceNo: invoiceNo,
                 PONo: poNo,
@@ -313,14 +321,14 @@ $(document).ready(function () {
                 TCS_Percent: tcsPercent,
                 TDS_Percent: tdsPercent,
 
-                GrandTotal_Amount: grandTotal,
+                GrandTotal_Amount: Number(grandTotal),
 
                 PaymentType: paymentType,
-                PaymentDate: paymentType === 2 ? $("#paymentDate").val() : null,
-                PaidAmount: paymentType === 2 ? paidAmount : null,
-                PaymentModeId: paymentType === 2 ? $("#paymentModeId").val() : null,
-                PaymentRefNo: paymentType === 2 ? $("#paymentRefNo").val() : null,
-                PaymentAccountId: paymentType === 2 ? $("#paymentAccountId").val() : null,
+                PaymentDate: paymentType === 2 ? paymentDate : null,
+                PaidAmount: paymentType === 2 ? Number(paidAmount) : null,
+                PaymentModeId: paymentType === 2 ? Number(paymentModeId) : null,
+                PaymentRefNo: paymentType === 2 ? paymentRefNo : null,
+                PaymentAccountId: paymentType === 2 ? Number($("#paymentAccountId").val()) : null,
                 PaymentRemarks: paymentType === 2 ? $("#paymentRemarks").val() : null,
 
                 ChequeBank: paymentType === 2 ? $("#chequeBank").val() : null,
@@ -332,10 +340,10 @@ $(document).ready(function () {
                 IsUpdateInventoryStock: isUpdateInventory,
                 JSON_PurchaseItems: itemsList,
                 IsActive: true,
-                ActionBy: sessionStorage.getItem("userId") || 0
+                ActionBy: Number(sessionStorage.getItem("userId") || 0)
             };
 
-            //console.log("PAYLOAD:", payload);
+            console.log("PAYLOAD:", payload);
 
             $.ajax({
                 url: "/api/Purchase/SavePurchase",
@@ -365,6 +373,8 @@ $(document).ready(function () {
 
                             // 🔁 Reload payment list if needed
                             resetFormFields(); // Reset form fields when modal is shown
+                            loadRawMaterialsDropdown();
+
                             //fetchData();
                             //loadWidgetsData();
                         });
@@ -450,6 +460,8 @@ $(document).ready(function () {
                         icon: "error"
                     });
                 }
+
+                loadRawMaterialsDropdown();
                 //fetchData();
                 //loadWidgetsData();
                 $('#deleteRecordModal').modal('hide');
@@ -487,12 +499,26 @@ $(document).ready(function () {
 
     // RAW MATERIAL SELECT → SHOW STOCK
     $(document).on("change", ".rawMaterialSelect", function () {
+        const $this = $(this);
         updateUnitsDropdown(this);
 
-        let currentQty = $(this).find("option:selected").data("currentqty") ?? 0;
-        $(this).closest("td").find(".stockHint")
-            .text("Current Stock: " + currentQty)
-            .removeClass("d-none");
+        let currentQty = $this.find("option:selected").data("currentqty") ?? 0;
+
+        let td = $this.closest("td");
+        let stockEl = td.find(".stockValue");
+        let qtyInput = td.closest("tr").find(".qtyInput");
+        // Update stock text + color
+        stockEl.text(currentQty)
+            .toggleClass("text-danger", currentQty <= 0)
+            .toggleClass("text-success", currentQty > 0);
+
+        // ✅ Disable/Enable Qty
+        if (currentQty <= 0) {
+            qtyInput.val(0).prop("disabled", true);
+        }
+        else {
+            qtyInput.prop("disabled", false);
+        }
     });
 
     // ADD NEW ROW BUTTON
@@ -1082,31 +1108,35 @@ function addNewRow() {
     rowIndex++;
 
     //RAW MATERIALS DROPDOWN
-    let rawMaterial_Html_dropdown = `<select class="form-select form-select-sm rawMaterialSelect">`;
-    rawMaterial_Html_dropdown += `<option value="0" data-currentqty="0">--Select Raw Material--</option>`;
-    rawMaterials.forEach(x => {
-        rawMaterial_Html_dropdown += `
-            <option value="${x.Id}" 
-                data-currentqty="${x.CurrentQty ?? 0}">
-                ${x.Name}
-            </option>
-        `;
-    });
-    rawMaterial_Html_dropdown += `</select>
-            <div class="text-muted small stockHint d-none"></div>`;
+    let rawMaterial_Html_dropdown = `
+        <div class="raw-material-wrapper">
+            <select class="form-select form-select-sm rawMaterialSelect">
+                <option value="0" data-currentqty="0">--Select Raw Material--</option>
+                ${rawMaterials.map(x => `
+                    <option value="${x.Id}" data-currentqty="${x.CurrentQty ?? 0}">
+                        ${x.Name}
+                    </option>
+                `).join("")}
+            </select>
+
+            <div class="stockHint text-muted small">
+                Current Stock: <span class="stockValue">0</span>
+            </div>
+        </div>
+    `;
 
     //UNITS DROPDOWN
     //console.log("unitMaster:", unitMaster);
-    let unit_Html_dropdown = `<select class="form-select form-select-sm unitSelect">`;
-    unit_Html_dropdown += `<option value="0" data-currentqty="0">--Select--</option>`;
-    unitMaster.forEach(x => {
-        unit_Html_dropdown += `
+    const unit_Html_dropdown = `
+        <select class="form-select form-select-sm unitSelect">
+            <option value="0">-- Select --</option>
+            ${unitMaster.map(x => `
                 <option value="${x.Id}">
                     ${x.UnitName}
                 </option>
-            `;
-    });
-    unit_Html_dropdown += `</select>`;
+            `).join("")}
+        </select>
+    `;
     //console.log("unit_Html_dropdown:", unit_Html_dropdown);
 
     let newRow = $(`
@@ -1125,7 +1155,7 @@ function addNewRow() {
 
                 <!-- Qty -->
                 <td>
-                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="1" value="0">
+                    <input type="number" class="form-control form-control-sm qtyInput mb-2" min="0" step="1" value="0">
                 </td>
 
                 <!-- Unit -->
@@ -1141,18 +1171,19 @@ function addNewRow() {
                     <input type="number" class="form-control form-control-sm priceInput" min="0" step="1" value="0">
                 </td>
 
-                <!-- Amount -->
-                <td>
-                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="1" value="0">
-                </td>
-
                 <!-- Tax % -->
                 <td>
                     <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="1">
-                        <input type="number" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="1">
-                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" step="1">
+                        <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %"  min="0" max="100" step="1">
+                        <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="1">
+                        <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="1">
+                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" max="100" step="1">
                     </div>
+                </td>
+
+                <!-- Amount -->
+                <td>
+                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="1" value="0">
                 </td>
 
                 <!-- Actions -->
@@ -1269,8 +1300,8 @@ function updateUnitsDropdown(rawMaterialSelect) {
 
 
 function buildRowForEdit(item) {
-
-    rowIndex++;
+    console.log("item:", item);
+    //rowIndex++;
 
     let rawMaterialId = item.RawMaterialId;
     let qty = item.Qty;
@@ -1280,39 +1311,47 @@ function buildRowForEdit(item) {
     let cgst = item.CGST;
     let sgst = item.SGST;
     let igst = item.IGST;
+    let cgst_sgst = cgst + sgst;
+    let isChecked = item.IsSelected ? "checked" : "";
 
     // ----------------------------------------
     // 1️⃣ Populate RAW MATERIAL dropdown same as ADD
     // ----------------------------------------
     //RAW MATERIALS DROPDOWN
-    let rawMaterial_Html_dropdown = `<select class="form-select form-select-sm rawMaterialSelect">`;
-    rawMaterial_Html_dropdown += `<option value="0" data-currentqty="0">--Select Raw Materail--</option>`;
-    rawMaterials.forEach(x => {
-        rawMaterial_Html_dropdown += `
-                <option value="${x.Id}" data-currentqty="${x.CurrentQty ?? 0}"
-                    data-unitid='${JSON.stringify(x.JSON_PurchaseUnits || []).replace(/"/g, "&quot;")}'>
-                    ${x.Name}
-                </option>
-            `;
-    });
-    rawMaterial_Html_dropdown += `</select>
-            <div class="text-muted small stockHint d-none"></div>`;
+    let rawMaterial_Html_dropdown = `
+        <div class="raw-material-wrapper">
+            <select class="form-select form-select-sm rawMaterialSelect">
+                <option value="0" data-currentqty="0">--Select Raw Material--</option>
+                ${rawMaterials.map(x => `
+                    <option value="${x.Id}" data-currentqty="${x.CurrentQty ?? 0}">
+                        ${x.Name}
+                    </option>
+                `).join("")}
+            </select>
+
+            <div class="stockHint text-muted small">
+                Current Stock: <span class="stockValue">0</span>
+            </div>
+        </div>
+    `;
 
     //UNITS DROPDOWN
-    let unit_Html_dropdown = `<select class="form-select form-select-sm unitSelect">`;
-    unit_Html_dropdown += `<option value="0" data-currentqty="0"></option>`;
-    unitMaster.forEach(x => {
-        unit_Html_dropdown += `
+    //console.log("unitMaster:", unitMaster);
+    const unit_Html_dropdown = `
+        <select class="form-select form-select-sm unitSelect">
+            <option value="0">-- Select --</option>
+            ${unitMaster.map(x => `
                 <option value="${x.Id}">
                     ${x.UnitName}
                 </option>
-            `;
-    });
-    unit_Html_dropdown += `</select>`;
+            `).join("")}
+        </select>
+    `;
+    //console.log("unit_Html_dropdown:", unit_Html_dropdown);
 
     let row = $(`
             <tr data-index="${rowIndex}">
-                <td class="text-center align-middle"><input type="checkbox" class="row-check"></td>
+                <td class="text-center align-middle"><input type="checkbox" class="row-check" ${isChecked}></td>
                 <td class="text-center align-middle sr-no">${rowIndex}</td>
 
                 <!-- Raw Material -->
@@ -1322,8 +1361,7 @@ function buildRowForEdit(item) {
 
                 <!-- Qty -->
                 <td>
-                    <input type="number" class="form-control form-control-sm qtyInput"
-                           min="0" step="1" value="${qty}">
+                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="1" value="${qty}">
                 </td>
 
                 <!-- Unit -->
@@ -1340,24 +1378,24 @@ function buildRowForEdit(item) {
                            min="0" step="1" value="${price}">
                 </td>
 
-                <!-- AMOUNT -->
-                <td>
-                    <input type="number" class="form-control form-control-sm amountInput"
-                           min="0" step="1" value="${amount}">
-                </td>
-
                 <!-- TAX -->
                 <td>
                     <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm cgstInput" placeholder="CGST %" value="${cgst}">
-                        <input type="number" class="form-control form-control-sm sgstInput" placeholder="SGST %" value="${sgst}">
-                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %" value="${igst}">
+                        <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %" value="${cgst_sgst}" min="0" max="100" step="1">
+                        <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %" value="${cgst}" min="0" max="100" step="1">
+                        <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %" value="${sgst}" min="0" max="100" step="1">
+                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %" value="${igst}" min="0" max="100" step="1">
                     </div>
+                </td>
+
+                <!-- AMOUNT -->
+                <td>
+                    <input type="number" class="form-control form-control-sm amountInput" min="0" step="1" value="${amount}">
                 </td>
 
                 <!-- ACTION -->
                 <td>
-                    <button class="btn btn-sm btn-outline-primary btnEditRow"><i class="fa fa-pen"></i></button>
+                    <button class="btn btn-sm btn-outline-primary btnEditRow d-none"><i class="fa fa-pen"></i></button>
                     <button class="btn btn-sm btn-outline-danger btnDeleteRow"><i class="fa fa-trash"></i></button>
                 </td>
 
@@ -1512,11 +1550,13 @@ function renderTable(data) {
             {
                 data: "InvoiceNo",
                 title: "Invoice No",
+                className: "text-center",
                 render: d => d ? `#${d}` : "-"
             },
             {
                 data: "PONo",
                 title: "PO No",
+                className: "text-center",
                 render: d => d ? `#${d}` : "-"
             },
 
@@ -1593,6 +1633,7 @@ function renderTable(data) {
             {
                 data: "PaymentStatus",
                 title: "Status",
+                className: "text-center",
                 render: (status) => {
 
                     let cls = "";
@@ -1624,6 +1665,7 @@ function renderTable(data) {
             {
                 data: null,
                 title: "Action",
+                className: "text-center",
                 render: function (data, type, row) {
                     let scannedInvoiceHtml = '';
 
@@ -1700,7 +1742,6 @@ function bindTotals(t) {
 
 // Reset form fields
 function resetFormFields() {
-
     // ========== BASIC INFO ==========
     $("#purchaseId").val(0);
 
@@ -2188,11 +2229,11 @@ function calculateGrandTotal() {
 }
 
 $("#discountValue, #deliveryCharge, #deliveryCGST, #deliverySGST, #tcsPercent, #tdsPercent").on("input", function () {
-        calculateDiscount();
-        calculateOtherCharges();
-        calculateTaxes();
-        calculateGrandTotal();
-    });
+    calculateDiscount();
+    calculateOtherCharges();
+    calculateTaxes();
+    calculateGrandTotal();
+});
 
 //<!--BEHAVIOUR - ADD MODAL - DISCOUNT, TAX OTHER -- END -->
 
@@ -2203,9 +2244,11 @@ $("#btnSubTotalMenu").on("click", function () {
 });
 
 // AUTO CALCULATIONS
-$(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput, .sgstInput, .igstInput", function () {
+$(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput_sgstInput, .igstInput", function () {
+
     let row = $(this).closest("tr");
 
+    // --- Get values safely ---
     let qty = parseFloat(row.find(".qtyInput").val()) || 0;
     let price = parseFloat(row.find(".priceInput").val()) || 0;
     let unitText = row.find(".unitSelect option:selected").text().trim();
@@ -2214,11 +2257,54 @@ $(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput,
     let qtyFormatted = formatQty(qty);
     row.find(".orderQtyLabel").text(`${qtyFormatted} ${unitText}`);
 
-    // Amount
-    row.find(".amountInput").val((qty * price).toFixed(2));
+    // --- Amount ---
+    let amount = qty * price;
+    row.find(".amountInput").val(amount.toFixed(2));
 
-    calculateRowTotal($(this).closest("tr"));
+    // --- Handle CGST + SGST ---
+    if ($(this).hasClass("cgstInput_sgstInput")) {
+        let totalTax = parseFloat($(this).val()) || 0;
 
+        if (totalTax < 0) totalTax = 0;
+        if (totalTax > 100) totalTax = 100;
+
+        let half = totalTax / 2;
+
+        row.find(".cgstInput").val(half.toFixed(2));
+        row.find(".sgstInput").val(half.toFixed(2));
+
+        // clear IGST
+        row.find(".igstInput").val("");
+    }
+
+    // --- Handle IGST ---
+    if ($(this).hasClass("igstInput")) {
+        let igst = parseFloat($(this).val()) || 0;
+
+        if (igst < 0) igst = 0;
+        if (igst > 100) igst = 100;
+
+        // clear CGST/SGST
+        row.find(".cgstInput").val(0);
+        row.find(".sgstInput").val(0);
+        row.find(".cgstInput_sgstInput").val("");
+    }
+
+    // --- Get final tax values ---
+    let cgst = parseFloat(row.find(".cgstInput").val()) || 0;
+    let sgst = parseFloat(row.find(".sgstInput").val()) || 0;
+    let igst = parseFloat(row.find(".igstInput").val()) || 0;
+
+    // --- Calculate tax ---
+    let taxPercent = igst > 0 ? igst : (cgst + sgst);
+    let taxAmount = amount * taxPercent / 100;
+
+    // --- Final total ---
+    let total = amount + taxAmount;
+
+    row.find(".totalInput").val(total.toFixed(2));
+
+    calculateRowTotal(row);
 });
 
 function calculateRowTotal(row) {

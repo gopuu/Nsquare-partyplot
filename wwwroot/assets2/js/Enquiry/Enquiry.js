@@ -819,7 +819,7 @@ function loadLeadLostReasonList(categoryId=0) {
             LeadLostCategoryId: categoryId
         }),
         success: function (res) {
-            //console.log("res mood:", res);
+            console.log("res LeadLost Reason List:", res);
             if (res.status === "Success") {
                 let ddl = $("#ddlLeadLostReason, #ddlLeadLostReason_enquiry");
                 ddl.empty();
@@ -827,7 +827,7 @@ function loadLeadLostReasonList(categoryId=0) {
                 ddl.append('<option value="0">-- Select Reason --</option>');
 
                 $.each(res.data, function (i, item) {
-                    ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                    ddl.append(`<option value="${item.Id}" data-categoryid="${item.LeadLostCategoryId}">${item.Name}</option>`);
                 });
             }
         },
@@ -993,8 +993,12 @@ function resetFollowUpForm() {
 
     $("#hfIsLeadLost").val(0);
     $(".leadLostReasonSection").hide();
+
+    loadLeadLostReasonCategoryList();
+    loadLeadLostReasonList();
     $("#ddlLeadLostReasonCategory").val("0");
     $("#ddlLeadLostReason").val("0");
+
 }
 
 function updateNextFollowUpValue() {
@@ -1939,8 +1943,10 @@ function resetDealForm() {
         .not("#deleteDealBtn, #saveDealBtn")
         .prop("disabled", false);
 
-    initLeadLostSection();
 
+    loadLeadLostReasonCategoryList();
+    loadLeadLostReasonList();
+    initLeadLostSection();
 }
 function initLeadLostSection() {
     $("#ddlLeadLostReasonCategory_enquiry").val("0");
@@ -2300,6 +2306,27 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#ddlLeadLostReasonCategory").on("change", function () {
         const cid = $(this).val();
         loadLeadLostReasonList(cid);
+    });
+    $("#ddlLeadLostReason").on("change", function () {
+        const selectedOption = $(this).find("option:selected");
+        const categoryId = selectedOption.data("categoryid");
+
+        if (categoryId && categoryId != 0) {
+            $("#ddlLeadLostReasonCategory").val(categoryId);
+        }
+    });
+
+    $("#ddlLeadLostReasonCategory_enquiry").on("change", function () {
+        const cid = $(this).val();
+        loadLeadLostReasonList(cid);
+    });
+    $("#ddlLeadLostReason_enquiry").on("change", function () {
+        const selectedOption = $(this).find("option:selected");
+        const categoryId = selectedOption.data("categoryid");
+
+        if (categoryId && categoryId != 0) {
+            $("#ddlLeadLostReasonCategory_enquiry").val(categoryId);
+        }
     });
 
     $(document).on('change', '#dealProcess', function () {

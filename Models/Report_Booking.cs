@@ -54,6 +54,7 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
+        public bool? IsInvoiceGenerated { get; set; } = null;
     }
 }
 

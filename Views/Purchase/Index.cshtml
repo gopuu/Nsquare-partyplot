@@ -6,6 +6,7 @@
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
 
+
 @section Styles {
     <link href="~/assets2/css/customdatatable/customdatatable.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/assets2/css/Purchase/Purchase.css" asp-append-version="true" rel="stylesheet" />
@@ -466,8 +467,8 @@
                                         <th style="width:120px">Unit <span class="text-danger">*</span></th>
                                         <th style="width:120px">Order Qty</th>
                                         <th style="width:120px">Price</th>
-                                        <th style="width:120px">Amount</th>
                                         <th style="width:260px" class="text-center align-middle">Tax (%)</th>
+                                        <th style="width:120px">Amount</th>
                                         <th style="width:50px">Action</th>
                                     </tr>
                                 </thead>
@@ -606,6 +607,12 @@
 
                                 <hr>
 
+                                <!-- GRAND TOTAL -->
+                                <div class="totals-row">
+                                    <strong>Grand Total</strong>
+                                    <strong class="totals-amount" id="txtGrandTotal">0.00</strong>
+                                </div>
+
                                 <!-- PAYMENT TYPE -->
                                 <div class="mb-2">
                                     <label class="form-label mb-1">Payment Type:</label><br>
@@ -688,12 +695,6 @@
                                     </div>
                                 </div>
 
-                                <!-- GRAND TOTAL -->
-                                <div class="totals-row">
-                                    <strong>Grand Total</strong>
-                                    <strong class="totals-amount" id="txtGrandTotal">0.00</strong>
-                                </div>
-
                             </div>
                         </div>
                     </div>
@@ -701,7 +702,7 @@
             </div>
 
             <!-- FOOTER BUTTONS -->
-            <div class="modal-footer d-flex justify-content-between align-items-center">
+            <div class="modal-footer d-flex justify-content-between align-items-center py-2">
 
                 <!-- LEFT SIDE CHECKBOX -->
                 <div class="form-check">

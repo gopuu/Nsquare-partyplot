@@ -58,6 +58,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
                     cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@MonthDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@IsInvoiceGenerated", request.IsInvoiceGenerated);
 
                     con.Open();
 

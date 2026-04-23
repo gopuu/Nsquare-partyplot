@@ -1,4 +1,10 @@
-﻿/*GRID COLOR -- START*/
+﻿.raw-material-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* tight spacing */
+}
+
+/*GRID COLOR -- START*/
 
 /* 🗑️ Deleted - Light Gray */
 .row-deleted {
@@ -191,6 +197,8 @@
 .compact-table .stockHint {
     font-size: 11px;
     margin-top: 2px;
+    line-height: 1.2;
+    color: #6c757d;
 }
 
 /*ITEMS*/

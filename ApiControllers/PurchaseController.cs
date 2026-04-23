@@ -64,9 +64,9 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("GetPurchaseList", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Id", request.PurchaseId > 0 ? request.PurchaseId : 0);
+                    cmd.Parameters.AddWithValue("@PurchaseId", request.PurchaseId > 0 ? request.PurchaseId : 0);
                     cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId > 0 ? request.SupplierId : 0);
-                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo ??  "");
+                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
 
                     con.Open();
                     using SqlDataReader dr = cmd.ExecuteReader();

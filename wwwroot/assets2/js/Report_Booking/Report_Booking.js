@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loadBookingGrid();
     });
 
-    $("#ddlEventSubType, #ddlCompanyHall, #txtSearch").on("change", function () {
+    $("#ddlEventSubType, #ddlCompanyHall, #txtSearch, #fltIsInvoiceGenerated").on("change", function () {
         loadBookingGrid();
     });
 
@@ -140,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#ddlCompanyHall").val("0");
         $("#fromDate").val("");
         $("#toDate").val("");
+        $("#fltIsInvoiceGenerated").val("");
         setCurrentMonthDates();
         loadBookingGrid();
     });    
@@ -201,6 +202,7 @@ function loadBookingGrid() {
         HallId: parseInt($("#ddlCompanyHall").val()) || 0,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
+        IsInvoiceGenerated: $("#fltIsInvoiceGenerated").val() === "" ? null : $("#fltIsInvoiceGenerated").val() === "true" ? true : false,
         FilterDuration: selectedMonthDuration,
         ActionBy: userId
     };
@@ -236,7 +238,7 @@ function renderBookingTable(data) {
         pageLength: 25,
         scrollX: true,
         order: [[1, "desc"]],
-
+        autoWidth: false,
         paging: false,
         scrollY: "60vh",          // table body scroll height
         scrollCollapse: true,     // shrink if less rows
@@ -292,15 +294,28 @@ function renderBookingTable(data) {
 
             { data: "Package", name: "Package", title: "Package" },
 
-            { data: "InvoiceAmount", name: "InvoiceAmount", title: "Invoice Amount", className: "text-end", render: d => formatINR2(d) },
-
-            { data: "DealAmount", name: "DealAmount", title: "Deal Amount", className: "text-end", render: d => formatINR2(d) },
-
-            { data: "Discount", name: "Discount", title: "Discount", className: "text-end", render: d => formatINR2(d) },
+            {
+                data: "DealAmount",
+                name: "DealAmount",
+                title: "Deal Amount (Booking Amt)",
+                className: "text-end",
+                width: "120px",
+                render: d => formatINR2(d)
+            },
+            {
+                data: "InvoiceAmount",
+                name: "InvoiceAmount",
+                title: "Gross Sales (Invoice Amt)",
+                className: "text-end",
+                width: "120px",
+                render: d => formatINR2(d)
+            },
 
             { data: "Tax", name: "Tax", title: "Tax", className: "text-end", render: d => formatINR2(d) },
 
-            { data: "TotalAmount", name: "TotalAmount", title: "Total", className: "text-end", render: d => formatINR2(d) },
+            { data: "Discount", name: "Discount", title: "Discount", className: "text-end", render: d => formatINR2(d) },
+
+            { data: "TotalAmount", name: "TotalAmount", title: "Net Sales", className: "text-end", render: d => formatINR2(d) },
         ],
 
         footerCallback: function (row, data, start, end, display) {
@@ -320,10 +335,10 @@ function renderBookingTable(data) {
             const total = sumByField('TotalAmount');
 
             $(api.column('Pax:name').footer()).html(pax);
-            $(api.column('InvoiceAmount:name').footer()).html(formatINR2(invoice));
             $(api.column('DealAmount:name').footer()).html(formatINR2(deal));
-            $(api.column('Discount:name').footer()).html(formatINR2(discount));
+            $(api.column('InvoiceAmount:name').footer()).html(formatINR2(invoice));
             $(api.column('Tax:name').footer()).html(formatINR2(tax));
+            $(api.column('Discount:name').footer()).html(formatINR2(discount));
             $(api.column('TotalAmount:name').footer()).html(formatINR2(total));
         },
         initComplete: function () {
