@@ -63,11 +63,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
 
-                    cmd.Parameters.AddWithValue("@VoucherNo",
-                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
-
-                    cmd.Parameters.AddWithValue("@InvoiceNo",
-                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@VoucherNo_InvoiceNo",
+                        string.IsNullOrEmpty(request.VoucherNo_InvoiceNo) ? (object)DBNull.Value : request.VoucherNo_InvoiceNo);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
@@ -174,11 +171,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
 
-                    cmd.Parameters.AddWithValue("@VoucherNo",
-                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
-
-                    cmd.Parameters.AddWithValue("@InvoiceNo",
-                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@VoucherNo_InvoiceNo",
+                        string.IsNullOrEmpty(request.VoucherNo_InvoiceNo) ? (object)DBNull.Value : request.VoucherNo_InvoiceNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -543,11 +537,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
 
-                    cmd.Parameters.AddWithValue("@VoucherNo",
-                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
-
-                    cmd.Parameters.AddWithValue("@InvoiceNo",
-                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
+                    cmd.Parameters.AddWithValue("@VoucherNo_InvoiceNo",
+                        string.IsNullOrEmpty(request.VoucherNo_InvoiceNo) ? (object)DBNull.Value : request.VoucherNo_InvoiceNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }

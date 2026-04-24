@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loadCashflowGrid();
     });
 
-    $("#fromDate, #toDate, #filter_transaction_account, #filter_transaction_paymentmode, #filter_voucher_no, #filter_invoice_no, input[name='filter_transaction_type']").on("change", function () {
+    $("#fromDate, #toDate, #filter_transaction_account, #filter_transaction_paymentmode, #filter_voucher_invoice_no, input[name='filter_transaction_type']").on("change", function () {
         // If user manually edits date → switch dropdown to custom
         if ($("#quickRange").val() !== "customrange") {
             $("#quickRange").val("customrange");
@@ -131,8 +131,7 @@ function loadCashflowGrid() {
     const paymentModeId = $("#filter_transaction_paymentmode").val() || 0;
 
     // 🔹 Search fields
-    const voucherNo = $("#filter_voucher_no").val()?.trim() || null;
-    const invoiceNo = $("#filter_invoice_no").val()?.trim() || null;
+    const voucherNo_InvoiceNo = $("#filter_voucher_invoice_no").val()?.trim() || null;
 
     const payload = {
         FromDate: fromDate,
@@ -143,8 +142,7 @@ function loadCashflowGrid() {
         PaymentModeId: parseInt(paymentModeId),
         AccountId: parseInt(accountId),
 
-        VoucherNo: voucherNo,
-        InvoiceNo: invoiceNo
+        VoucherNo_InvoiceNo: voucherNo_InvoiceNo,
     };
 
     $("#tableMain").html(`<div class="text-center py-5">Loading...</div>`);
@@ -333,8 +331,7 @@ function ViewCashflowReport(actionName) {
     const paymentModeId = $("#filter_transaction_paymentmode").val() || 0;
 
     // 🔹 Search fields
-    const voucherNo = $("#filter_voucher_no").val()?.trim() || null;
-    const invoiceNo = $("#filter_invoice_no").val()?.trim() || null;
+    const voucherNo_InvoiceNo = $("#filter_voucher_invoice_no").val()?.trim() || null;
 
     const payload = {
         FromDate: fromDate,
@@ -345,8 +342,7 @@ function ViewCashflowReport(actionName) {
         PaymentModeId: parseInt(paymentModeId),
         AccountId: parseInt(accountId),
 
-        VoucherNo: voucherNo,
-        InvoiceNo: invoiceNo,
+        VoucherNo_InvoiceNo: voucherNo_InvoiceNo,
 
         WithHeader: withHeader,
         ActionBy: userId

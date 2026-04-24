@@ -36,8 +36,7 @@
         public int AccountId { get; set; } = 0;
 
         // 🔹 Search Filters
-        public string? VoucherNo { get; set; }
-        public string? InvoiceNo { get; set; }
+        public string? VoucherNo_InvoiceNo { get; set; }
     }
 
     public class CashflowSummary
