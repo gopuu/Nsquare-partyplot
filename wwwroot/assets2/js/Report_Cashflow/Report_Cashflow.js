@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setCurrentMonthDates();
     loadCashflowGrid();
+    loadAccountDropdown();
+    loadPaymentModeDropdown();
 
     /* ── Quick range ── */
     $("#quickRange").on("change", function () {
@@ -65,13 +67,14 @@ document.addEventListener("DOMContentLoaded", function () {
         loadCashflowGrid();
     });
 
-    $("#fromDate, #toDate").on("change", function () {
+    $("#fromDate, #toDate, #filter_transaction_account, #filter_transaction_paymentmode, #filter_voucher_no, #filter_invoice_no, input[name='filter_transaction_type']").on("change", function () {
         // If user manually edits date → switch dropdown to custom
         if ($("#quickRange").val() !== "customrange") {
             $("#quickRange").val("customrange");
             // Optional: update variable also
             selectedMonthDuration = "customrange";
         }
+        loadCashflowGrid();
     });
 
     /* ── Filter panel ── */
@@ -107,23 +110,44 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-/* ═══════════════════════════════════════════════════
-   LOAD GRID
-═══════════════════════════════════════════════════ */
 function loadCashflowGrid() {
 
+    // 🔹 TYPE (Radio → INT mapping)
+    const txnTypeVal = $("input[name='filter_transaction_type']:checked").val();
+
+    let txnType = 0; // default ALL
+    if (txnTypeVal === "INCOME") txnType = 1;
+    else if (txnTypeVal === "EXPENSE") txnType = 2;
+
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
+    // 🔹 Account / Payment
+    const accountId = $("#filter_transaction_account").val() || 0;
+    const paymentModeId = $("#filter_transaction_paymentmode").val() || 0;
+
+    // 🔹 Search fields
+    const voucherNo = $("#filter_voucher_no").val()?.trim() || null;
+    const invoiceNo = $("#filter_invoice_no").val()?.trim() || null;
+
     const payload = {
-        FromDate: $("#fromDate").val() || null,
-        ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
+
+        TxnType: parseInt(txnType),
+        PaymentModeId: parseInt(paymentModeId),
+        AccountId: parseInt(accountId),
+
+        VoucherNo: voucherNo,
+        InvoiceNo: invoiceNo
     };
 
-    $("#tableMain").html(`
-        <div class="text-center py-5 text-muted">
-            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-            Loading Cashflow data...
-        </div>
-    `);
+    $("#tableMain").html(`<div class="text-center py-5">Loading...</div>`);
     $("#cashflowSummarySection").hide();
 
     $.ajax({
@@ -133,236 +157,153 @@ function loadCashflowGrid() {
         data: JSON.stringify(payload),
         success: function (res) {
 
-            $("#tableMain").html(`
-                <table id="tblCashflow" class="table table-bordered w-100">
-                    <tfoot>
-                        <tr>
-                            <th></th><th></th><th></th><th></th><th></th>
-                        </tr>
-                    </tfoot>
-                </table>
-            `);
-
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
 
-            renderCashflowTable(res.data.LineItems);
+            renderCashflowTable(res.data.LineItems, res.data.Summary);
             renderCashflowSummary(res.data.Summary);
         },
-        error: function (xhr, status, error) {
-            console.error("Fetch Cashflow Data Failed", xhr, status, error);
-            $("#tableMain").html(`<div class="alert alert-danger">Failed to load data. Please try again.</div>`);
+        error: function () {
+            $("#tableMain").html(`<div class="alert alert-danger">Failed to load data</div>`);
         }
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER LINE ITEMS TABLE
-═══════════════════════════════════════════════════ */
-function renderCashflowTable(data) {
+function renderCashflowTable(data, summary) {
+
+    $("#tableMain").html(`
+        <table id="tblCashflow" class="table table-bordered table-sm w-100">
+            <tfoot>
+                <tr id="tblFooter"></tr>
+            </tfoot>
+        </table>
+    `);
 
     if ($.fn.DataTable.isDataTable("#tblCashflow")) {
         $("#tblCashflow").DataTable().clear().destroy();
     }
 
-    $("#tblCashflow").DataTable({
+    const table = $("#tblCashflow").DataTable({
         data: data,
-        responsive: true,
-        pageLength: 25,
+
+        paging: false,
+        scrollCollapse: false,
         scrollX: true,
+        //pageLength: 25,
+
         order: [[1, "asc"]],
 
         columns: [
+            { data: "SrNo", title: "#", className: "text-center", width: "50px" },
+
             {
-                data: "SrNo",
-                title: "#",
-                width: "50px",
-                className: "text-center"
-            },
-            {
-                data: "TxnDate", // should be ISO format ideally
-                title: "Txn Date",
-                width: "110px",
-                render: function (data, type, row) {
-                    if (type === 'display') {
-                        return row.TxnDate_Format || data;
-                    }
-                    // sorting / filtering
-                    return data;
-                }
+                data: "TxnDate",
+                title: "Date",
+                className: "text-center",
+                render: (d, t, r) => t === "display" ? r.TxnDate_Format : d
             },
 
             {
                 data: "FlowType",
                 title: "Type",
-                width: "100px",
                 className: "text-center",
-                render: function (data) {
-                    const cls = data === "Inflow" ? "success" : "danger";
-                    const icon = data === "Inflow"
-                        ? "fa-arrow-down"
-                        : "fa-arrow-up";
-                    return `<span class="badge bg-${cls}">
-                                <i class="fa ${icon} me-1"></i>${data}
-                            </span>`;
+                render: d => {
+                    const cls = d === "Inflow" ? "success" : "danger";
+                    return `<span class="badge bg-${cls}">${d}</span>`;
                 }
             },
-            {
-                data: "Description",
-                title: "Description"
-            },
+
+            { data: "TxnType", className: "text-center", title: "Txn Type" },
+            { data: "Description", title: "Description" },
+            { data: "VoucherNo", className: "text-center", title: "Voucher" },
+            { data: "InvoiceNo", className: "text-center", title: "Invoice" },
+            { data: "SourceName", className: "text-center", title: "Source" },
+            { data: "ReceiverName", className: "text-center", title: "Receiver" },
+            { data: "PaymentModeName", className: "text-center", title: "Payment Mode" },
+
             {
                 data: "Amount",
                 title: "Amount",
                 className: "text-end fw-semibold",
-                render: function (data, type, row) {
-                    const cls = row.FlowType === "Inflow" ? "text-success" : "text-danger";
-                    const sign = row.FlowType === "Inflow" ? "+" : "−";
-                    return `<span class="${cls}">${sign} ${formatINR2(data)}</span>`;
+                render: (d, t, r) => {
+                    const cls = r.FlowType === "Inflow" ? "text-success" : "text-danger";
+                    const sign = r.FlowType === "Inflow" ? "+" : "-";
+                    return `<span class="${cls}">${sign} ${formatINR2(d)}</span>`;
                 }
             }
         ],
 
-        /* ── Footer: separate inflow / outflow totals ── */
-        footerCallback: function (tfoot, data, start, end, display) {
-
-            const api = this.api();
-            let totalInflow = 0;
-            let totalOutflow = 0;
-
-            api.rows({ page: "all" }).every(function () {
-                const d = this.data();
-                if (d.FlowType === "Inflow")
-                    totalInflow += parseFloat(d.Amount) || 0;
-                else
-                    totalOutflow += parseFloat(d.Amount) || 0;
-            });
-
-            const $cells = $(tfoot).find("th");
-            $cells.eq(0).html("<strong>TOTAL</strong>");
-            $cells.eq(1).html("");
-            $cells.eq(2).html("");
-            $cells.eq(3).html("");
-            $cells.eq(4).html(`
-                <div class="text-success fw-semibold">▲ ${formatINR2(totalInflow)}</div>
-                <div class="text-danger fw-semibold">▼ ${formatINR2(totalOutflow)}</div>
-            `);
-        },
-
-        /* ── Row colour by flow type ── */
-        createdRow: function (row, rowData) {
-            if (rowData.FlowType === "Inflow")
-                $(row).addClass("table-success").css("opacity", "0.85");
-            else
-                $(row).addClass("table-danger").css("opacity", "0.85");
-        },
-
-        language: {
-            emptyTable: "No cashflow records found for the selected period."
+        createdRow: function (row, data) {
+            $(row).addClass(data.FlowType === "Inflow" ? "table-success" : "table-danger")
+                .css("opacity", "0.85");
         },
 
         initComplete: function () {
-            $(this.api().table().header())
-                .find('th')
-                .addClass('bg-warning-subtle text-dark');
-        },
 
+            // 🔥 Footer from API summary (NOT recalculated)
+            if (!summary) return;
+
+            const footer = `
+                <th colspan="10" class="text-end">TOTAL</th>
+                <th class="text-end">
+                    <div class="text-success">▲ ${formatINR2(summary.TotalInflow)}</div>
+                    <div class="text-danger">▼ ${formatINR2(summary.TotalOutflow)}</div>
+                    <div class="fw-bold">Net: ${formatINR2(summary.NetCashflow)}</div>
+                </th>
+            `;
+
+            $("#tblFooter").html(footer);
+        }
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER SUMMARY CARDS
-═══════════════════════════════════════════════════ */
 function renderCashflowSummary(summary) {
 
-    if (!summary) return;
+    if (!summary) {
+        $("#cashflowSummarySection").hide();
+        return;
+    }
 
+    const totalInflow = parseFloat(summary.TotalInflow) || 0;
+    const totalOutflow = parseFloat(summary.TotalOutflow) || 0;
     const netCashflow = parseFloat(summary.NetCashflow) || 0;
 
-    const cards = [
-        {
-            label: "Total Inflow",
-            value: summary.TotalInflow,
-            icon: "fa-arrow-trend-up",
-            color: "success",
-            light: "success",
-            formula: "Sales Collection (Customer Invoices)\n+ Other Income (Income Transactions)"
-        },
-        {
-            label: "Total Outflow",
-            value: summary.TotalOutflow,
-            icon: "fa-arrow-trend-down",
-            color: "danger",
-            light: "danger",
-            formula: "Expense Payments (Expense Transactions)\n+ Purchase Payments (Purchase_Payment)"
-        }
-    ];
+    const isPositive = netCashflow >= 0;
 
-    let cardsHtml = "";
-    cards.forEach(c => {
-        const formatted = formatINR2(parseFloat(c.value) || 0);
-        const tooltipHtml = `<div class='text-start'><span class='text-warning fw-semibold'>${c.label}</span><hr class='my-1'/>${c.formula.replace(/\n/g, "<br/>")}</div>`;
+    $("#cashflowSummaryCards").html(`
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="text-muted small">Total Inflow</div>
+                    <div class="fw-bold text-success">${formatINR2(totalInflow)}</div>
+                </div>
+            </div>
+        </div>
 
-        cardsHtml += `
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-${c.light} h-100 cf-summary-card"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 data-bs-custom-class="pl-formula-tooltip"
-                 data-bs-html="true"
-                 title="${tooltipHtml.replace(/"/g, '&quot;')}"
-                 style="cursor:help;">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-${c.light} bg-opacity-10 p-3 flex-shrink-0">
-                        <i class="fa ${c.icon} text-${c.color} fa-lg"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">
-                            ${c.label}
-                            <i class="fa fa-circle-info ms-1 text-secondary" style="font-size:10px;"></i>
-                        </div>
-                        <div class="fw-bold fs-6 text-${c.color}">${formatted}</div>
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="text-muted small">Total Outflow</div>
+                    <div class="fw-bold text-danger">${formatINR2(totalOutflow)}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card ${isPositive ? "border-success" : "border-danger"}">
+                <div class="card-body">
+                    <div class="text-muted small">Net Cashflow</div>
+                    <div class="fw-bold ${isPositive ? "text-success" : "text-danger"}">
+                        ${formatINR2(netCashflow)}
                     </div>
                 </div>
             </div>
-        </div>`;
-    });
-
-    $("#cashflowSummaryCards").html(cardsHtml);
-
-    // Net Cashflow banner
-    const isPositive = netCashflow >= 0;
-    const bannerCls = isPositive ? "bg-success" : "bg-danger";
-    const bannerIcon = isPositive ? "fa-droplet" : "fa-triangle-exclamation";
-    const bannerText = isPositive ? "Positive Net Cashflow" : "Negative Net Cashflow";
-    const netFormula = "Total Inflow − Total Outflow";
-
-    const tooltipHtml = `<div class='text-start'><span class='text-warning fw-semibold'>Net Cashflow</span><hr class='my-1'/>${netFormula}</div>`;
-
-    $("#netCashflowBanner").html(`
-        <span class="badge ${bannerCls} fs-5 px-4 py-3 rounded-3 cf-summary-card"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              data-bs-custom-class="pl-formula-tooltip"
-              data-bs-html="true"
-              title="${tooltipHtml.replace(/"/g, '&quot;')}"
-              style="cursor:help;">
-            <i class="fa ${bannerIcon} me-2"></i>
-            ${bannerText}: ${formatINR2(Math.abs(netCashflow))}
-            <i class="fa fa-circle-info ms-2" style="font-size:11px;opacity:0.7;"></i>
-        </span>
-    `).show();
+        </div>
+    `);
 
     $("#cashflowSummarySection").show();
-
-    // ── Init tooltips ──
-    document.querySelectorAll(".cf-summary-card[data-bs-toggle='tooltip']").forEach(el => {
-        const existing = bootstrap.Tooltip.getInstance(el);
-        if (existing) existing.dispose();
-        new bootstrap.Tooltip(el, { trigger: "hover focus", html: true });
-    });
 }
 
 /* ═══════════════════════════════════════════════════
@@ -373,17 +314,47 @@ function ViewCashflowReport(actionName) {
     const withHeader = $("#toggleWithHeader").is(":checked");
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
+    // 🔹 TYPE (Radio → INT mapping)
+    const txnTypeVal = $("input[name='filter_transaction_type']:checked").val();
+
+    let txnType = 0; // default ALL
+    if (txnTypeVal === "INCOME") txnType = 1;
+    else if (txnTypeVal === "EXPENSE") txnType = 2;
+
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
+    // 🔹 Account / Payment
+    const accountId = $("#filter_transaction_account").val() || 0;
+    const paymentModeId = $("#filter_transaction_paymentmode").val() || 0;
+
+    // 🔹 Search fields
+    const voucherNo = $("#filter_voucher_no").val()?.trim() || null;
+    const invoiceNo = $("#filter_invoice_no").val()?.trim() || null;
+
     const payload = {
-        FromDate: $("#fromDate").val() || null,
-        ToDate: $("#toDate").val() || null,
-        FilterDuration: selectedMonthDuration,
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
+
+        TxnType: parseInt(txnType),
+        PaymentModeId: parseInt(paymentModeId),
+        AccountId: parseInt(accountId),
+
+        VoucherNo: voucherNo,
+        InvoiceNo: invoiceNo,
+
         WithHeader: withHeader,
         ActionBy: userId
     };
 
     const url = actionName === "downloadExcel"
         ? "/api/Report_Cashflow/DownloadCashflowReport_Excel"
-        : "/api/Report_Cashflow/DownloadCashflowReport";
+        : "/api/Report_Cashflow/DownloadCashflowReport_Pdf";
 
     showTempLoader("Generating Cashflow Report...");
 
@@ -428,3 +399,65 @@ function setCurrentMonthDates() {
     $("#fromDate").val(formatDate2(firstDay));
     $("#toDate").val(formatDate2(lastDay));
 }
+
+// Load Account dropdown dynamically
+function loadAccountDropdown(selectedId = "") {
+    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
+    $.ajax({
+        url: "/api/AccountMaster/GetAccount",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0, ActionBy: actionBy }),
+        success: function (response) {
+            let dropdown = $(".ddlAccount");
+            dropdown.empty(); // clear previous values
+            dropdown.append('<option value="0">--Select--</option>');
+
+            if (response.status === "Success" && response.data.length > 0) {
+                response.data.forEach(item => {
+                    dropdown.append(
+                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
+                                ${item.AccountName}
+                        </option>`
+                    );
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load account dropdown data");
+        }
+    });
+}
+function loadPaymentModeDropdown() {
+    const payload = {
+        Id: 0
+    };
+    $.ajax({
+        url: "/api/PaymentMode/GetPaymentMode",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("payment mode res:", res);
+            const ddl = $(".ddlPaymentMode");
+            ddl.empty().append('<option value="0">--Select--</option>');
+
+            if (res?.status === "Success" && Array.isArray(res.data)) {
+                res.data
+                    .filter(x => x.IsActive)
+                    .forEach(pm => {
+                        ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
+                        `);
+                    });
+            } else {
+                Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Payment Mode Dropdown Error");
+        }
+    });
+}
+
+

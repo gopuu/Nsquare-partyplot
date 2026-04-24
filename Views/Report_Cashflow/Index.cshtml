@@ -93,6 +93,29 @@
 
     <div class="filter-body">
 
+        <!--TYPE-->
+        <div class="mb-3">
+            <label class="form-label">TYPE</label>
+
+            <div class="d-flex gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_all" value="ALL" checked>
+                    <label class="form-check-label" for="type_all">All</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_income" value="INCOME">
+                    <label class="form-check-label text-success" for="type_income">Income</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="filter_transaction_type" id="type_expense" value="EXPENSE">
+                    <label class="form-check-label text-danger" for="type_expense">Expense</label>
+                </div>
+            </div>
+        </div>
+
+        <!--DURATION-->
         <div class="mb-3">
             <label class="form-label">Duration</label>
             <select id="quickRange" class="form-select form-select-sm">
@@ -106,6 +129,7 @@
             </select>
         </div>
 
+        <!--DATE RANGE-->
         <div class="row g-2">
             <div class="col-md-6 mb-3">
                 <label class="form-label">From Date</label>
@@ -115,6 +139,33 @@
                 <label class="form-label">To Date</label>
                 <input type="date" id="toDate" class="form-control form-control-sm">
             </div>
+        </div>
+
+        <!-- ACCOUNT & PAYMENT -->
+        <div class="row g-3">
+            <!-- ACCOUNT -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">ACCOUNT</label>
+                <select id="filter_transaction_account" class="form-select ddlAccount"></select>
+            </div>
+
+            <!-- PAYMENT MODE -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">PAYMENT MODE</label>
+                <select id="filter_transaction_paymentmode" class="form-select ddlPaymentMode"></select>
+            </div>
+        </div>
+
+        <!--VOUCHER NO-->
+        <div class="mb-3">
+            <label class="form-label">VOUCHER NO</label>
+            <input type="text" id="filter_voucher_no" class="form-control" placeholder="Voucher No">
+        </div>
+
+        <!--Invoice No-->
+        <div class="mb-3">
+            <label class="form-label">INVOICE NO</label>
+            <input type="text" id="filter_invoice_no" class="form-control" placeholder="Invoice No">
         </div>
 
     </div>

@@ -49,12 +49,25 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandTimeout = 120;
 
+                    // 🔹 Filters
                     cmd.Parameters.AddWithValue("@FromDate",
                         string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
                     cmd.Parameters.AddWithValue("@ToDate",
                         string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    cmd.Parameters.AddWithValue("@TxnType", request.TxnType);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+
+                    cmd.Parameters.AddWithValue("@VoucherNo",
+                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
+
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
@@ -67,31 +80,49 @@ namespace ERPAdmin.ApiControllers
                 DataTable dtSummary = ds.Tables[1];
 
                 var lineItems = new List<CashflowLineItem>();
+
                 foreach (DataRow row in dtLines.Rows)
                 {
                     lineItems.Add(new CashflowLineItem
                     {
                         SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        TxnDate = row["TxnDate"] != DBNull.Value ? Convert.ToString(row["TxnDate"]) : "-",
-                        TxnDate_Format = row["TxnDate_Format"] != DBNull.Value ? Convert.ToString(row["TxnDate_Format"]) : "-",
-                        FlowType = row["FlowType"] != DBNull.Value ? Convert.ToString(row["FlowType"]) : "-",
-                        Description = row["Description"] != DBNull.Value ? Convert.ToString(row["Description"]) : "-",
+                        TxnDate = row["TxnDate"]?.ToString() ?? "-",
+                        TxnDate_Format = row["TxnDate_Display"]?.ToString() ?? "-",
+
+                        FlowType = row["FlowType"]?.ToString() ?? "-",
+                        TxnType = row["TxnType"]?.ToString() ?? "-",
+
+                        Description = row["Description"]?.ToString() ?? "-",
+                        VoucherNo = row["VoucherNo"]?.ToString() ?? "-",
+                        InvoiceNo = row["InvoiceNo"]?.ToString() ?? "-",
+
+                        SourceName = row["SourceName"]?.ToString() ?? "-",
+                        ReceiverName = row["ReceiverName"]?.ToString() ?? "-",
+                        PaymentModeName = row["PaymentModeName"]?.ToString() ?? "-",
+
                         Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0
                     });
                 }
 
                 var summary = new CashflowSummary();
+
                 if (dtSummary.Rows.Count > 0)
                 {
                     DataRow s = dtSummary.Rows[0];
+
                     summary.TotalInflow = s["TotalInflow"] != DBNull.Value ? Convert.ToDecimal(s["TotalInflow"]) : 0;
                     summary.TotalOutflow = s["TotalOutflow"] != DBNull.Value ? Convert.ToDecimal(s["TotalOutflow"]) : 0;
                     summary.NetCashflow = s["NetCashflow"] != DBNull.Value ? Convert.ToDecimal(s["NetCashflow"]) : 0;
                 }
 
                 apiResponse.message = "Cashflow report fetched successfully!";
-                apiResponse.data = new CashflowGridResponse { LineItems = lineItems, Summary = summary };
+                apiResponse.data = new CashflowGridResponse
+                {
+                    LineItems = lineItems,
+                    Summary = summary
+                };
                 apiResponse.status = "Success";
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -104,8 +135,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadCashflowReport")]
-        public IActionResult DownloadCashflowReport([FromBody] CashflowReportRequest request)
+        [Route("DownloadCashflowReport_Pdf")]
+        public IActionResult DownloadCashflowReport_Pdf([FromBody] CashflowReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -126,15 +157,28 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                    cmd = new SqlCommand("Report_GetCashflowDetail", con);
+                    cmd = new SqlCommand("Report_GetCashflowDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandTimeout = 120;
+                    // 🔹 Filters
                     cmd.Parameters.AddWithValue("@FromDate",
                         string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
                     cmd.Parameters.AddWithValue("@ToDate",
                         string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    cmd.Parameters.AddWithValue("@TxnType", request.TxnType);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+
+                    cmd.Parameters.AddWithValue("@VoucherNo",
+                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
+
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -288,7 +332,7 @@ namespace ERPAdmin.ApiControllers
                     SpacingAfter = 10f
                 });
 
-                // ── Data table ──
+                // ── Data table (Dynamic SPI Based) ──
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
                 Font boldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
@@ -296,15 +340,44 @@ namespace ERPAdmin.ApiControllers
                 BaseColor inflowBg = new BaseColor(232, 245, 233);
                 BaseColor outflowBg = new BaseColor(255, 235, 238);
 
-                PdfPTable table = new PdfPTable(5);
-                table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 8f, 18f, 16f, 38f, 20f });
+                int colCount = dataTableDB.Columns.Count;
 
-                for (int i = 0; i < headerTableDB.Rows.Count; i++)
-                    table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
+                PdfPTable table = new PdfPTable(colCount);
+                table.WidthPercentage = 100;
+
+                // 🔥 Smart column widths (SPI tuned)
+                float[] colWidths = new float[]
+                {
+                    6f,   // SrNo
+                    14f,  // Date
+                    10f,  // FlowType
+                    10f,  // TxnType
+                    28f,  // Description
+                    12f,  // Voucher
+                    14f,  // Invoice
+                    16f,  // Source
+                    16f,  // Receiver
+                    12f,  // PaymentMode
+                    12f   // Amount
+                };
+
+                // adjust if mismatch
+                if (colWidths.Length == colCount)
+                    table.SetWidths(colWidths);
+
+                // 🔹 Headers
+                foreach (DataRow hRow in headerTableDB.Rows)
+                {
+                    table.AddCell(Utils.CreateHeaderCell(
+                        hRow[0]?.ToString() ?? "",
+                        thFont,
+                        thColor
+                    ));
+                }
 
                 table.HeaderRows = 1;
 
+                // 🔹 Data Rows
                 foreach (DataRow row in dataTableDB.Rows)
                 {
                     string flowType = row["FlowType"]?.ToString() ?? "";
@@ -312,17 +385,25 @@ namespace ERPAdmin.ApiControllers
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
+                        string colName = col.ColumnName;
                         string val = row[col]?.ToString() ?? "-";
+
+                        // 🔥 Format Amount
+                        if (colName == "Amount" && decimal.TryParse(val, out decimal amt))
+                            val = amt.ToString("N2");
 
                         PdfPCell cell = new PdfPCell(new Phrase(val, tdFont))
                         {
                             BackgroundColor = rowBg,
-                            Padding = 6,
+                            Padding = 5,
                             BorderColor = BaseColor.LIGHT_GRAY,
-                            HorizontalAlignment = col.ColumnName == "Amount"
-                                ? Element.ALIGN_RIGHT
-                                : Element.ALIGN_LEFT
+
+                            HorizontalAlignment =
+                                colName == "Amount" ? Element.ALIGN_RIGHT :
+                                colName == "SrNo" ? Element.ALIGN_CENTER :
+                                Element.ALIGN_LEFT
                         };
+
                         table.AddCell(cell);
                     }
                 }
@@ -445,15 +526,28 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail", con);
+                    SqlCommand cmd = new SqlCommand("Report_GetCashflowDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandTimeout = 120;
+                    // 🔹 Filters
                     cmd.Parameters.AddWithValue("@FromDate",
                         string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+
                     cmd.Parameters.AddWithValue("@ToDate",
                         string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+
                     cmd.Parameters.AddWithValue("@FilterDuration",
                         string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
+                    cmd.Parameters.AddWithValue("@TxnType", request.TxnType);
+                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
+                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
+
+                    cmd.Parameters.AddWithValue("@VoucherNo",
+                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
+
+                    cmd.Parameters.AddWithValue("@InvoiceNo",
+                        string.IsNullOrEmpty(request.InvoiceNo) ? (object)DBNull.Value : request.InvoiceNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -468,70 +562,114 @@ namespace ERPAdmin.ApiControllers
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Cashflow Report");
 
-                // ── Headers ──
-                int col = 1;
-                foreach (DataRow hRow in headerTableDB.Rows)
+                // 🔹 Column count
+                int colCount = dataTableDB.Columns.Count;
+
+                // ================= HEADER =================
+                for (int i = 0; i < headerTableDB.Rows.Count; i++)
                 {
-                    worksheet.Cell(1, col).Value = hRow["HeaderName"].ToString();
-                    worksheet.Cell(1, col).Style.Font.Bold = true;
-                    worksheet.Cell(1, col).Style.Fill.BackgroundColor = XLColor.FromArgb(0, 121, 182);
-                    worksheet.Cell(1, col).Style.Font.FontColor = XLColor.White;
-                    worksheet.Cell(1, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    col++;
+                    var cell = worksheet.Cell(1, i + 1);
+                    cell.Value = headerTableDB.Rows[i][0]?.ToString();
+
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.BackgroundColor = XLColor.FromArgb(0, 121, 182);
+                    cell.Style.Font.FontColor = XLColor.White;
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 }
 
-                // ── Data rows ──
+                // Freeze header
+                worksheet.SheetView.FreezeRows(1);
+
+                // ================= DATA =================
                 int row = 2;
+
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
                     string flowType = dr["FlowType"]?.ToString() ?? "";
 
-                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
+                    for (int i = 0; i < colCount; i++)
                     {
+                        string colName = dataTableDB.Columns[i].ColumnName;
                         var cell = worksheet.Cell(row, i + 1);
-                        cell.Value = dr[i]?.ToString() ?? "-";
 
+                        object val = dr[i] ?? "";
+
+                        // 🔥 Numeric formatting
+                        if (colName == "Amount" && decimal.TryParse(val.ToString(), out decimal amt))
+                        {
+                            cell.Value = amt;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
+                        else
+                        {
+                            cell.Value = val.ToString();
+                            cell.Style.Alignment.Horizontal =
+                                colName == "SrNo"
+                                ? XLAlignmentHorizontalValues.Center
+                                : XLAlignmentHorizontalValues.Left;
+                        }
+
+                        // 🔥 Row color
                         cell.Style.Fill.BackgroundColor = flowType == "Inflow"
                             ? XLColor.FromArgb(232, 245, 233)
                             : XLColor.FromArgb(255, 235, 238);
-
-                        if (dataTableDB.Columns[i].ColumnName == "Amount")
-                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                     }
+
                     row++;
                 }
 
-                // ── Summary section ──
+                // ================= AUTO FILTER =================
+                worksheet.Range(1, 1, row - 1, colCount).SetAutoFilter();
+
+                // ================= COLUMN WIDTH =================
+                worksheet.Columns().AdjustToContents();
+
+                // ================= SUMMARY =================
                 if (summaryTableDB != null && summaryTableDB.Rows.Count > 0)
                 {
                     DataRow s = summaryTableDB.Rows[0];
-                    row += 1;
+
+                    row += 2;
 
                     // Title
-                    worksheet.Cell(row, 1).Value = "CASHFLOW SUMMARY";
-                    worksheet.Range(row, 1, row, 5).Merge();
-                    worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Font.FontColor = XLColor.White;
-                    worksheet.Cell(row, 1).Style.Fill.BackgroundColor = XLColor.FromArgb(33, 37, 41);
-                    worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    var titleCell = worksheet.Cell(row, 1);
+                    titleCell.Value = "CASHFLOW SUMMARY";
+                    worksheet.Range(row, 1, row, colCount).Merge();
+                    titleCell.Style.Font.Bold = true;
+                    titleCell.Style.Font.FontColor = XLColor.White;
+                    titleCell.Style.Fill.BackgroundColor = XLColor.FromArgb(33, 37, 41);
+                    titleCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
                     row++;
 
-                    void AddSummaryRow(string label, string value, XLColor bg, bool bold = false)
+                    void AddSummaryRow(string label, decimal value, XLColor bg, bool bold = false)
                     {
-                        worksheet.Cell(row, 1).Value = label;
-                        worksheet.Cell(row, 1).Style.Fill.BackgroundColor = bg;
-                        if (bold) worksheet.Cell(row, 1).Style.Font.Bold = true;
+                        var labelCell = worksheet.Cell(row, 1);
+                        var valueCell = worksheet.Cell(row, 2);
 
-                        worksheet.Cell(row, 2).Value = value;
-                        worksheet.Cell(row, 2).Style.Fill.BackgroundColor = bg;
-                        worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        if (bold) worksheet.Cell(row, 2).Style.Font.Bold = true;
+                        labelCell.Value = label;
+                        valueCell.Value = value;
+
+                        valueCell.Style.NumberFormat.Format = "#,##0.00";
+
+                        labelCell.Style.Fill.BackgroundColor = bg;
+                        valueCell.Style.Fill.BackgroundColor = bg;
+
+                        valueCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                        if (bold)
+                        {
+                            labelCell.Style.Font.Bold = true;
+                            valueCell.Style.Font.Bold = true;
+                        }
+
                         row++;
                     }
 
-                    AddSummaryRow("Total Inflow", s["TotalInflow"].ToString(), XLColor.FromArgb(232, 245, 233));
-                    AddSummaryRow("Total Outflow", s["TotalOutflow"].ToString(), XLColor.FromArgb(255, 235, 238));
-                    AddSummaryRow("Net Cashflow", s["NetCashflow"].ToString(), XLColor.FromArgb(240, 240, 240), bold: true);
+                    AddSummaryRow("Total Inflow", Convert.ToDecimal(s["TotalInflow"]), XLColor.FromArgb(232, 245, 233));
+                    AddSummaryRow("Total Outflow", Convert.ToDecimal(s["TotalOutflow"]), XLColor.FromArgb(255, 235, 238));
+                    AddSummaryRow("Net Cashflow", Convert.ToDecimal(s["NetCashflow"]), XLColor.FromArgb(240, 240, 240), true);
                 }
 
                 worksheet.Columns().AdjustToContents();
