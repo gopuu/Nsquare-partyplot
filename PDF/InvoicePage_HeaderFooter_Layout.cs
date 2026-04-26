@@ -129,7 +129,7 @@ namespace ERPAdmin.PDF
                 try
                 {
                     var logo = Image.GetInstance(logoPath);
-                    logo.ScaleToFit(92f, 92f);
+                    logo.ScaleToFit(60f, 60f);
                     logoCell = new PdfPCell(logo);
                 }
                 catch
@@ -273,7 +273,7 @@ namespace ERPAdmin.PDF
                 try
                 {
                     var logo = Image.GetInstance(logoPath);
-                    logo.ScaleToFit(92f, 92f);
+                    logo.ScaleToFit(60f, 60f);
                     logoCell = new PdfPCell(logo);
                 }
                 catch

@@ -125,6 +125,7 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
+                string latestImagePath = string.Empty;
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     SqlCommand cmd = new SqlCommand("SaveCompanyInvoiceSetup", con);
@@ -158,7 +159,6 @@ namespace ERPAdmin.ApiControllers
 
                     con.Open();
                     Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                    string latestImagePath = string.Empty;
                     //photo upload
                     if (model.CompanyLogo != string.Empty && model.CompanyLogo != null)
                     {
@@ -177,13 +177,12 @@ namespace ERPAdmin.ApiControllers
 
                         latestImagePath = domainUrl + $"/uploads/org/{domain}/CompanyInvoice_CompanyLogo_Image/" + model.CompanyLogo;
                     }
-
                     con.Close();
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = model.Id == null ? "Invoice setup created successfully." : "Invoice setup updated successfully.";
-                apiResponse.data = null;
+                apiResponse.data = new { companylogo = latestImagePath} ;
                 return Ok(apiResponse);
             }
             catch (Exception ex)

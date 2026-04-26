@@ -340,6 +340,7 @@
         public decimal PaymentSummary_BookingDiscount_Total { get; set; }
         public decimal PaymentSummary_PayableAmount { get; set; }
         public long? Booked_By_EmpId { get; set; }
+        public string? Payment_Status { get; set; }
         public string? Booked_By_EmpName { get; set; }
         public string? Booked_On { get; set; }
         public List<GetFoodPackage>? JSON_FoodPackage { get; set; }

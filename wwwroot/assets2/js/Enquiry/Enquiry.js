@@ -1992,12 +1992,10 @@ function validateDealForm() {
         dealNameErr.addClass("d-none");
     }
 
-
     // (2) Contact
-    const dealContact = $("#dealContact");
+    const dealContact = $("#dealContact").val().trim();
     const dealContactErr = $("#dealContactErr");
-
-    if (dealContact.val().trim() === "") {
+    if (!dealContact || dealContact.length !== 10 || !/^\d+$/.test(dealContact)) {
         dealContactErr.removeClass("d-none");
         isValid = false;
     } else {
@@ -2920,6 +2918,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // When SubType changes
+    $(document).on("change", "#eventSubTypeDropdown", function () {
+        const selectedOption = $(this).find("option:selected");
+        const eventTypeId = selectedOption.data("eventtypeid");
+
+        // If no event selected OR mismatch → auto assign
+        if (eventTypeId && $("#eventTypeDropdown").val() != eventTypeId) {
+            $("#eventTypeDropdown").val(eventTypeId);
+                //.trigger("change");
+        }
+    });
+
+    // When Sub Event Type changes
+    $(document).on("change", "#quotation_subEventTypeId", function () {
+        const selectedOption = $(this).find("option:selected");
+        const eventTypeId = selectedOption.data("eventtypeid");
+
+        const eventDropdown = $("#quotation_eventTypeId");
+
+        // Auto assign EventType if not selected OR mismatch
+        if (eventTypeId && eventDropdown.val() != eventTypeId) {
+            eventDropdown.val(eventTypeId);
+                //.trigger("change");
+        }
+    });
+
     //EVENT TYPE MASTER -- END ----------------------------------------------------------------------
 
     //EVENT SUB-TYPE MASTER -- START --------------------------------------------------------------------
@@ -3442,8 +3466,7 @@ function loadEventSubTypeList(eventTypeId = 0) {
             if (response.status === "Success") {
                 let rows = "";
                 let srNo = 1;
-                let options = `<option value = "0"> --Select Sub-Event--</option> `;
-                let options1 = `<option value = "0">--Select SubEvent--</option> `;
+                let options = `<option value = "0"> --Select SubEvent--</option> `;
 
                 $.each(response.data, function (index, item) {
                     rows += `
@@ -3459,20 +3482,17 @@ function loadEventSubTypeList(eventTypeId = 0) {
                                     </button>
                                 </td>
                             </tr>
-    `;
-                    options += `<option value = "${item.Id}"> ${item.Name}</option> `;
-                    options1 += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                    `;
+                    options += `<option value = "${item.Id}" data-eventtypeid="${item.EventTypeId}">${item.Name}</option> `;
                 });
 
                 $("#eventSubTypeTable tbody").html(rows);
-                $("#eventSubTypeDropdown").html(options);
-                $("#booking_subEventDropdown, #quotation_subEventTypeId").html(options1);
+                $("#booking_subEventDropdown, #quotation_subEventTypeId, #eventSubTypeDropdown").html(options);
             } else {
                 $("#eventSubTypeTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#eventSubTypeDropdown, #quotation_subEventTypeId").html(`<option value = "0">No Sub-Event Found</option> `);
-                $("#booking_subEventDropdown").html(`<option value = "0">No Event Found</option> `);
+                $("#eventSubTypeDropdown, #quotation_subEventTypeId, #booking_subEventDropdown").html(`<option value = "0">No SubEvent Found</option> `);
             }
         },
         error: function (xhr, status, error) {
@@ -4351,6 +4371,7 @@ function saveBooking() {
             if (response.status === "Success") {
                 handleApiSuccess();
                 resetBooking();
+                loadEnquiryList();
                 $("#bookingModal").modal("hide");
             }
             else {

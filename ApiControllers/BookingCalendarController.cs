@@ -162,6 +162,7 @@ namespace ERPAdmin.ApiControllers
                         booking.PaymentSummary_BookingDiscount_Type_Amount = dr["PaymentSummary_BookingDiscount_Type_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_BookingDiscount_Type_Amount"]);
                         booking.PaymentSummary_BookingDiscount_Total = dr["PaymentSummary_BookingDiscount_Total"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_BookingDiscount_Total"]);
                         booking.PaymentSummary_PayableAmount = dr["PaymentSummary_PayableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_PayableAmount"]);
+                        booking.Payment_Status = dr["Payment_Status"] == DBNull.Value ? "" : Convert.ToString(dr["Payment_Status"]);
 
                         booking.Booked_By_EmpId = dr["Booked_By_EmpId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booked_By_EmpId"]);
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);

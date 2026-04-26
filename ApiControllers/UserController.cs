@@ -120,7 +120,12 @@ namespace ERPAdmin.ApiControllers
                             ? dr["Company_Name"].ToString()
                             : "NSquare";
 
-                        userDetail.companylogo = dr["Company_Logo"].ToString();
+                        //userDetail.companylogo = dr["Company_Logo"].ToString();
+                        userDetail.companylogo = dr["Company_Logo"] != DBNull.Value
+                                                && !string.IsNullOrEmpty(dr["Company_Logo"].ToString())
+                                            ? domainUrl + $"/uploads/org/{domain}/CompanyInvoice_CompanyLogo_Image/" + dr["Company_Logo"].ToString()
+                                            : string.Empty;
+
                         userDetail.issuperuser = Convert.ToBoolean(dr["IsSuperUser"]);
 
                         // ===== JWT TOKEN =====

@@ -656,30 +656,41 @@ $(function () {
 
         //const isGstIncluded = $('#isGstIncluded').is(':checked');
         var totalGst = parseFloat($('#totalGST').val()) || 0;
-        const gstInvoiceNoVal = gstInvoiceNo;
-        const invoiceNoVal = $('#invoiceNo').val();
-        const proformaNoVal = $('#proformaInvoiceNo').val();
 
         const isExclusiveOfGST = $('#isExclusiveOfGST').val() === 'true' || $('#isExclusiveOfGST').val() === '1';
         const isInclusiveOfGST = $('#isInclusiveOfGST').val() === 'true' || $('#isInclusiveOfGST').val() === '1';
 
+        const id = parseInt($('#invoiceId').val()) || 0;
+        var gstInvoiceNoVal = gstInvoiceNo;
+        var invoiceNoVal = $('#invoiceNo').val();
+        var proformaNoVal = $('#proformaInvoiceNo').val();
+
+        if (id > 0) {
+            gstInvoiceNoVal = $('#gstInvoiceNo').val() || null;
+            invoiceNoVal = Number($('#invoiceNo').val() || null);
+            proformaNoVal = Number($('#proformaInvoiceNo').val() || null);
+        }
+        else {
+            invoiceNoVal = (invoiceType === "invoice" && (totalGst > 0 || gstInvoiceNo == null))
+                ? (invoiceNoVal ? Number(invoiceNoVal) : null)
+                : null;
+
+            proformaNoVal = (invoiceType === "proforma")
+                ? (proformaNoVal ? Number(proformaNoVal) : null)
+                : null;
+
+            gstInvoiceNoVal = (invoiceType === "invoice" && Math.abs(totalGst) < 0.01 && gstInvoiceNoVal !== '')
+                ? gstInvoiceNoVal
+                : null;
+        }
+
         const request = {
-            Id: parseInt($('#invoiceId').val()) || 0,
+            Id: id,
             BookingId: parseInt($('#bookingId').val()) || 0,
 
-            InvoiceNo: (invoiceType === "invoice" && (totalGst > 0 || gstInvoiceNo == null))
-                ? (invoiceNoVal ? Number(invoiceNoVal) : null)
-                : null,
-
-            ProformaInvoiceNo: (invoiceType === "proforma")
-                ? (proformaNoVal ? Number(proformaNoVal) : null)
-                : null,
-
-            GSTInvoiceNo: (invoiceType === "invoice"
-                && Math.abs(totalGst) < 0.01
-                && gstInvoiceNoVal !== '')
-                ? gstInvoiceNoVal
-                : null,
+            InvoiceNo: invoiceNoVal,
+            ProformaInvoiceNo: proformaNoVal,
+            GSTInvoiceNo: gstInvoiceNoVal,
 
             IsExclusiveOfGST : isExclusiveOfGST,
             IsInclusiveOfGST : isInclusiveOfGST,
@@ -717,7 +728,7 @@ $(function () {
             JSON_Items: items,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
         };
-        //console.log("save payload:", request);
+        console.log("save payload:", request);
 
         $.ajax({
             url: '/api/CustomerInvoice/SaveCustomerInvoice', // adjust if needed

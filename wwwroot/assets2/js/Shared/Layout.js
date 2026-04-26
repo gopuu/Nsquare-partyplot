@@ -76,15 +76,28 @@ function generateGUID() {
 }
 
 //WHATSAPP -- END
-
-
-function showTempLoader(title = "Checking Availability") {
+function showTempLoader2(title = "Checking Availability") {
     // Show loader before AJAX
     Swal.fire({
         title: title,
         text: "Please wait...",
         allowOutsideClick: false,
         allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+function showTempLoader(title = "Checking Availability") {
+    Swal.fire({
+        title: title,
+        text: "Please wait...",
+        position: 'bottom-end',   // 🔥 bottom-right
+        toast: true,              // makes it compact
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        backdrop: false,          // remove screen overlay
         didOpen: () => {
             Swal.showLoading();
         }
@@ -176,6 +189,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // Set user name
     if (userName) {
         $("#lblUserName").text(userName);
+    }
+
+    // Get logo from sessionStorage
+    const logo = sessionStorage.getItem('companylogo');
+    // Set to img
+    if (logo) {
+        $(".infinitylogo_img").attr("src", logo);
     }
 
     //LIVE DATE-TIME ------

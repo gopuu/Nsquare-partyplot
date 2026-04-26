@@ -2486,6 +2486,11 @@ function saveInvoiceSetupToApi(companyLogo) {
             if (res.status === "Success") {
                 handleApiSuccess("Saved");
                 loadInvoiceSetupData();
+
+                if (res.data && res.data.companylogo) {
+                    sessionStorage.setItem('companylogo', res.data.companylogo);
+                    window.location.reload();
+                }
             } else {
                 Swal.fire("Error", res.message || "Failed to save data", "error");
             }

@@ -4,7 +4,9 @@ const hostname = window.location.hostname.toLowerCase();
 const parts = hostname.split('.');
 const subdomain = parts.length > 2 ? parts[0] : null;
 // Condition
-if (subdomain === "divyesh" || hostname === "localhost" || hostname === "127.0.0.1") {
+if (subdomain === "divyesh"
+    //|| hostname === "localhost" || hostname === "127.0.0.1"
+) {
     isPastDateAllowed = true;
 }
 console.log("isPastDateAllowed: ", isPastDateAllowed);
@@ -386,7 +388,7 @@ function loadEventTypeList() {
                 $("#booking_eventDropdown").html(options);
                 //loadSubEventList(eventTypeId);
             } else {
-                $("#eventTypeDropdown").html(`<option value = "0"> No Event Type Found</option> `);
+                $("#booking_eventDropdown").html(`<option value = "0"> No Event Type Found</option> `);
             }
         },
         error: function (xhr, status, error) {
@@ -405,7 +407,7 @@ function loadSubEventList(eventTypeId=0) {
             if (response.status === "Success") {
                 let options = `<option value="0">-- Select SubEvent --</option>`; // default option
                 $.each(response.data, function (index, item) {
-                    options += `<option value="${item.Id}">${item.Name}</option>`;
+                    options += `<option value="${item.Id}" data-eventtypeid="${item.EventTypeId}">${item.Name}</option>`;
                 });
                 $("#booking_subEventDropdown").html(options);
             } else {
@@ -1650,6 +1652,12 @@ async function renderBoard(bookingData = null) {
                 var clientContact = null;
                 var eventDateRange = null;
 
+                var eventType = null;
+                var eventSubType = null;
+                var eventPackage = null;
+                var amount = 0;
+                var paymentStatus = null;
+
                 const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
                 const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
 
@@ -1734,6 +1742,12 @@ async function renderBoard(bookingData = null) {
                             clientName = booking.Client_Name;
                             clientContact = booking.Client_Contact;
 
+                            eventType = booking.Booking_EventName;
+                            eventSubType = booking.Booking_SubEventName;
+                            eventPackage = booking.Booking_PackageName;
+                            amount = booking.PaymentSummary_PayableAmount;
+                            paymentStatus = booking.Payment_Status;
+
                             eventDateRange =
                                 booking.FromDate_Short + ' ' +
                                 booking.StartTime_Full + ' - ' +
@@ -1787,6 +1801,12 @@ async function renderBoard(bookingData = null) {
                             eventName = booking.Booking_SubEventName;
                             clientName = booking.Client_Name;
                             clientContact = booking.Client_Contact;
+
+                            eventType = booking.Booking_EventName;
+                            eventSubType = booking.Booking_SubEventName;
+                            eventPackage = booking.Booking_PackageName;
+                            amount = booking.PaymentSummary_PayableAmount;
+                            paymentStatus = booking.Payment_Status;
 
                             // Build display date-time range string
                             eventDateRange =
@@ -1879,7 +1899,6 @@ async function renderBoard(bookingData = null) {
                 const mergeStyle = spanCount > 1
                     ? `style="height:${spanCount * 28}px; line-height:${spanCount * 28}px;"`
                     : "";
-
                 // ===============================
                 // Render slot badge (UI element)
                 // ===============================
@@ -1894,6 +1913,12 @@ async function renderBoard(bookingData = null) {
 
                     data-shift="${shiftCode}"              
                     data-shiftname="${shiftFull}"          
+
+                    data-eventtype="${eventType}"          
+                    data-eventsubtype="${eventSubType}"          
+                    data-package="${eventPackage}"       
+                    data-amount="${amount}"       
+                    data-paymentstatus="${paymentStatus}"       
 
                     data-date="${dateStr}"                 
                     data-date_format="${dateStr_Format}"   
@@ -2056,16 +2081,62 @@ async function renderBoard(bookingData = null) {
 
                 html += `
                     <div style="padding-bottom:8px;">
-                        <strong>
+
+                        <!-- Header -->
+                        <div style="font-weight:600; margin-bottom:6px;">
                             <i class="fa-solid fa-calendar-alt" style="color:#e11d48;"></i>
-                            ${b.Booking_SubEventName} (${b.ShiftCode})
+                            ${b.Booking_EventName || ''} - ${b.Booking_SubEventName || ''} (${b.ShiftCode || ''})
                             ${isTentative ? `<span style="margin-left:6px; font-size:11px; color:#be123c; background:#ffe4e6; padding:2px 6px; border-radius:6px;">Tentative</span>` : ``}
-                        </strong><br>
-                        <i class="fa-solid fa-user" style="color:#fb7185;"></i> ${b.Client_Name}<br>
-                        <i class="fa-solid fa-phone" style="color:#fb7185;"></i> ${b.Client_Contact}<br>
-                        <i class="fa-solid fa-clock" style="color:#fb7185;"></i>
-                        ${b.FromDate_Short} ${b.StartTime_Full} - 
-                        ${b.TillDate_Short} ${b.EndTime_Full}
+                        </div>
+
+                        <!-- Client -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-user" style="color:#fb7185;"></i>
+                            ${b.Client_Name || '-'}
+                        </div>
+
+                        <!-- Contact -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-phone" style="color:#fb7185;"></i>
+                            ${b.Client_Contact || '-'}
+                        </div>
+
+                        <!-- Time -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-clock" style="color:#fb7185;"></i>
+                            ${b.FromDate_Short || ''} ${b.StartTime_Full || ''} -
+                            ${b.TillDate_Short || ''} ${b.EndTime_Full || ''}
+                        </div>
+
+                        <!-- Banquet -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-building" style="color:#fb7185;"></i>
+                            ${b.BanquetName || '-'}
+                        </div>
+
+                        <!-- Package -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-utensils" style="color:#fb7185;"></i>
+                            ${(b.JSON_FoodPackage && b.JSON_FoodPackage.length > 0)
+                                        ? b.JSON_FoodPackage[0].FoodPackageName
+                                        : '-'}
+                        </div>
+
+                        <!-- Amount -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-indian-rupee-sign" style="color:#fb7185;"></i>
+                            ${(parseFloat(b.PaymentSummary_PayableAmount) || 0).toLocaleString('en-IN')}
+                        </div>
+
+                        <!-- Payment Status -->
+                        <div style="margin-bottom:4px;">
+                            <i class="fa-solid fa-circle-check" style="color:${b.Payment_Status === 'Paid' ? '#22c55e' :
+                                        b.Payment_Status === 'Partial' ? '#f59e0b' :
+                                            '#ef4444'
+                                    };"></i>
+                            ${b.Payment_Status || 'Unpaid'}
+                        </div>
+
                     </div>
                 `;
 
@@ -2073,7 +2144,7 @@ async function renderBoard(bookingData = null) {
                 if (index !== bookingsForDay.length - 1) {
                     html += `
                         <hr style="
-                            border: 1px solid #fff;
+                            border: 1px solid #e5e7eb;
                             margin: 6px 0;
                         ">
                     `;
@@ -2170,7 +2241,7 @@ async function renderBoard(bookingData = null) {
             tooltip.innerHTML = `
                 <div style="font-weight:600; margin-bottom:6px;">
                     <i class="fa-solid fa-calendar-alt" style="color:#e11d48;"></i>
-                    ${booking.Booking_SubEventName} (${booking.ShiftCode})
+                    ${booking.Booking_EventName} - ${booking.Booking_SubEventName} (${booking.ShiftCode})
                     ${isTentative ? `<span style="margin-left:6px; font-size:11px; color:#be123c; background:#ffe4e6; padding:2px 6px; border-radius:6px;">Tentative</span>` : ``}
                 </div>
 
@@ -2189,6 +2260,28 @@ async function renderBoard(bookingData = null) {
                     ${booking.FromDate_Short} ${booking.StartTime_Full} -
                     ${booking.TillDate_Short} ${booking.EndTime_Full}
                 </div>
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-building" style="color:#fb7185;"></i>
+                    ${booking.BanquetName || '-'}
+                </div>
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-utensils" style="color:#fb7185;"></i>
+                    ${booking.JSON_FoodPackage[0].FoodPackageName || '-'}
+                </div>
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-indian-rupee-sign" style="color:#fb7185;"></i>
+                    ${booking.PaymentSummary_PayableAmount ? booking.PaymentSummary_PayableAmount.toLocaleString('en-IN') : '0'}
+                </div>
+
+                <div style="margin-bottom:4px;">
+                    <i class="fa-solid fa-circle-check" style="color:${booking.Payment_Status === 'Paid' ? '#22c55e' :
+                        booking.Payment_Status === 'Partial' ? '#f59e0b' : '#ef4444' };"></i>
+                    ${booking.Payment_Status || 'Unpaid'}
+                </div>
+
             `;
 
             // 🎨 Default (Confirmed Booking)
@@ -4388,6 +4481,20 @@ Your feedback helps us improve our service.`;
         let selectedEventTypeId = $(this).val();
         loadSubEventList(selectedEventTypeId); // Pass selected EventTypeId
     });
+    // When Sub Event changes
+    $(document).on("change", "#booking_subEventDropdown", function () {
+        const selectedOption = $(this).find("option:selected");
+        const eventTypeId = selectedOption.data("eventtypeid");
+
+        const eventDropdown = $("#booking_eventDropdown");
+
+        // Auto assign EventType if not selected OR mismatch
+        if (eventTypeId && eventDropdown.val() != eventTypeId) {
+            eventDropdown.val(eventTypeId)
+                //.trigger("change")
+                ;
+        }
+    });
 
     //Booking List MODAL -- START
     $(document).on("click", ".view-booking-btn", function () {
@@ -6536,12 +6643,14 @@ function saveBooking() {
                         else {
                             resetBooking();
                             loadBookingCalendar();
+                            loadEnquiryList();
                         }
                     });
                 }
                 else {
                     resetBooking();
                     loadBookingCalendar();
+                    loadEnquiryList();
                     //CLOSE MODAL
                     //bookingModal.hide();
                     $("#bookingModal").modal("hide");

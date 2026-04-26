@@ -933,6 +933,7 @@ namespace ERPAdmin.ApiControllers
                 iTextSharp.text.Font normalFont9 = FontFactory.GetFont(FontFactory.HELVETICA, 9);
 
                 iTextSharp.text.Font boldFont7 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8);
+                iTextSharp.text.Font boldFont7_gray = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.GRAY);
                 iTextSharp.text.Font normalFont7 = FontFactory.GetFont(FontFactory.HELVETICA, 8);
 
                 string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
@@ -942,7 +943,7 @@ namespace ERPAdmin.ApiControllers
 
                 string fontPath_ArialUnicode = Path.Combine(_env.WebRootPath, "fonts", "arialuni.ttf"); // Segoe UI Symbol
                 BaseFont bfSymbol = BaseFont.CreateFont(fontPath_ArialUnicode, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                iTextSharp.text.Font checkboxFont = new iTextSharp.text.Font(bfSymbol, 10, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font checkboxFont = new iTextSharp.text.Font(bfSymbol, 15, iTextSharp.text.Font.NORMAL);
 
                 #endregion
 
@@ -1238,13 +1239,13 @@ namespace ERPAdmin.ApiControllers
 
                 PdfPTable wrapperTbl = new PdfPTable(2);
                 wrapperTbl.WidthPercentage = 100;
-                wrapperTbl.SetWidths(new float[] { 50, 50 });
+                wrapperTbl.SetWidths(new float[] { 60, 40 });
                 wrapperTbl.SpacingBefore = 15;
 
                 /* ================= LEFT SIDE : FOOTER ================= */
                 PdfPTable footerTbl = new PdfPTable(2);
                 footerTbl.WidthPercentage = 100;
-                footerTbl.SetWidths(new float[] { 30, 70 });
+                footerTbl.SetWidths(new float[] { 25, 75 });
 
                 // 🔹 Helper
                 void AddFooterRow(string title, string value)
@@ -1264,10 +1265,20 @@ namespace ERPAdmin.ApiControllers
 
                 // 🔹 DATA
                 DataRow f = dtFooter.Rows[0];
+                string line = "______________________________________________________";
+                AddFooterRow(f["FeedbackTitle"]?.ToString(), line);
+                AddFooterRow("", line);
+                AddFooterRow(f["Comments"]?.ToString(), line);
+                AddFooterRow("", line);
 
-                AddFooterRow(f["FeedbackTitle"]?.ToString(), "_______________________________");
-                AddFooterRow(f["Comments"]?.ToString(), "_______________________________");
-                AddFooterRow(f["GuestSignature"]?.ToString(), "_______________________________");
+                // 🔹 Spacer row
+                footerTbl.AddCell(new PdfPCell(new Phrase(" "))
+                {
+                    Border = Rectangle.NO_BORDER,
+                    Colspan = 2,
+                    FixedHeight = 10 // adjust gap size
+                });
+                AddFooterRow(f["GuestSignature"]?.ToString(), line);
 
                 // 🔹 Add to wrapper (LEFT)
                 wrapperTbl.AddCell(new PdfPCell(footerTbl)
@@ -1281,10 +1292,11 @@ namespace ERPAdmin.ApiControllers
                 PdfPTable feedbackTbl = new PdfPTable(1);
                 feedbackTbl.WidthPercentage = 100;
                 // 🔹 Title
-                feedbackTbl.AddCell(new PdfPCell(new Phrase("FEEDBACK:", boldFont7))
+                feedbackTbl.AddCell(new PdfPCell(new Phrase("FEEDBACK", boldFont7_gray))
                 {
                     Border = Rectangle.NO_BORDER,
-                    PaddingBottom = 8
+                    PaddingBottom = 8,
+                    HorizontalAlignment = Element.ALIGN_CENTER
                 });
 
                 // 🔹 Helper
@@ -1293,13 +1305,14 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 INNER TABLE (2 columns: label | stars)
                     PdfPTable rowTbl = new PdfPTable(2);
                     rowTbl.WidthPercentage = 100;
-                    rowTbl.SetWidths(new float[] { 60, 40 });
+                    rowTbl.SetWidths(new float[] { 40, 60 });
 
                     // LEFT → LABEL
                     rowTbl.AddCell(new PdfPCell(new Phrase(label, boldFont7))
                     {
                         Border = Rectangle.NO_BORDER,
-                        PaddingBottom = 4
+                        PaddingTop = 10,
+                        PaddingBottom = 1
                     });
 
                     // RIGHT → STARS (right aligned)
@@ -1347,7 +1360,7 @@ namespace ERPAdmin.ApiControllers
                 #endregion
 
                 #region PAGE 2
-                document.NewPage();
+                //document.NewPage();
 
                 /* ================= CHECKLIST ================= */
                 #region EVENT DAY SMART CHECKLIST 1
@@ -1398,13 +1411,18 @@ namespace ERPAdmin.ApiControllers
                     };
 
                     // 🔹 Create inner flow (same line wrapping)
-                    Phrase optionsPhrase = new Phrase();
+                    Paragraph optionsPara = new Paragraph();
+                    optionsPara.SetLeading(0, 1.2f); // line spacing
+
                     foreach (var item in grp)
                     {
-                        optionsPhrase.Add(new Chunk("☐ ", checkboxFont)); // checkbox
-                        optionsPhrase.Add(new Chunk(item["OptionText"] + "    ", normalFont7));
+                        optionsPara.Add(new Chunk("☐ ", checkboxFont));
+                        optionsPara.Add(new Chunk(item["OptionText"] + "    ", normalFont7));
                     }
-                    optionsCell.AddElement(optionsPhrase);
+
+                    optionsPara.SpacingAfter = 5f; // 🔥 this is your padding-bottom
+                    optionsCell.AddElement(optionsPara); 
+                    
                     checklistTbl.AddCell(optionsCell);
                 }
 
@@ -1437,9 +1455,9 @@ namespace ERPAdmin.ApiControllers
                     .ToList();
 
                 // 🔹 OUTER TABLE (2 columns)
-                PdfPTable outerTbl = new PdfPTable(2);
+                PdfPTable outerTbl = new PdfPTable(3);
                 outerTbl.WidthPercentage = 100;
-                outerTbl.SetWidths(new float[] { 50, 50 });
+                outerTbl.SetWidths(new float[] { 33, 33, 33 });
                 outerTbl.SpacingBefore = 5;
 
                 int colIndex = 0;
