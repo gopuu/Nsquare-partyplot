@@ -791,9 +791,16 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Id", request.Id);
                     cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
 
-                    cmd.Parameters.AddWithValue("@InvoiceNo", request.InvoiceNo);
-                    cmd.Parameters.AddWithValue("@ProformaInvoiceNo", request.ProformaInvoiceNo);
-                    cmd.Parameters.AddWithValue("@GSTInvoiceNo", request.GSTInvoiceNo);
+                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value =
+                        request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value;
+
+                    cmd.Parameters.Add("@ProformaInvoiceNo", SqlDbType.BigInt).Value =
+                        request.ProformaInvoiceNo.HasValue ? (object)request.ProformaInvoiceNo.Value : DBNull.Value;
+
+                    cmd.Parameters.Add("@GSTInvoiceNo", SqlDbType.NVarChar, 50).Value =
+                        string.IsNullOrWhiteSpace(request.GSTInvoiceNo)
+                            ? (object)DBNull.Value
+                            : request.GSTInvoiceNo.Trim();
 
                     cmd.Parameters.AddWithValue("@IsExclusiveOfGST", request.IsExclusiveOfGST);
                     cmd.Parameters.AddWithValue("@IsInclusiveOfGST", request.IsInclusiveOfGST);

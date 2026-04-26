@@ -4,11 +4,15 @@ const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal')
 const sendInvoiceModal = new bootstrap.Modal(document.getElementById('sendInvoiceModal'));
 const paymentModal = document.getElementById('paymentModal');
 
-var invoiceNo = 0;
-var proformaInvoiceNo = 0;
-var gstInvoiceNo = null;
+var nextInvoiceNo = null;
+var nextProformaInvoiceNo = null;
+var nextGstInvoiceNo = null;
+
 var invoiceType = null;
 var isEditInvoice = false;
+let originalIsInvoice  = null;
+// set this when modal opens in EDIT mode
+// true = white (GST > 0), false = black
 
 const REPORT_COLUMNS_CUSTOMER_INVOICE = [
     { key: "InvoiceNo", label: "Invoice No" },
@@ -273,11 +277,10 @@ $(function () {
         const bookingId = $(this).data('bookingid');
         //console.log('Create Proforma BookingId:', bookingId);
         $('#bookingId').val(bookingId);
-        $('#invoiceNo').val(0);
-        $('#proformaInvoiceNo').val(proformaInvoiceNo);
+        $('#proformaInvoiceNo').val(nextProformaInvoiceNo);
 
         invoiceType = "proforma";
-        $('#invoiceModalTitle').text('Create Proforma Invoice #' + proformaInvoiceNo);
+        $('#invoiceModalTitle').text('Create Proforma Invoice #' + nextProformaInvoiceNo);
         invoiceModal.show();
 
         const isInclusiveGST = false;
@@ -295,9 +298,7 @@ $(function () {
 
         //console.log('Create Invoice BookingId:', bookingId);
         $('#bookingId').val(bookingId);
-        $('#invoiceNo').val(invoiceNo);
-        $('#invoiceNo').data('isinclusivegst', isInclusiveGST);
-        $('#proformaInvoiceNo').val(0);
+        $('#invoiceNo').val(invoiceNo).data('isinclusivegst', isInclusiveGST);
 
         invoiceType = "invoice";
 
@@ -320,11 +321,10 @@ $(function () {
         const edit_invoiceNo = $(this).data('invoiceno');
         fixedSubTotal = $(this).data('finalamount');
         $('#bookingId').val(bookingId);
-        $('#invoiceNo').val(edit_invoiceNo);
-        $('#gstInvoiceNo').val(0);
-        $('#proformaInvoiceNo').val(0);
+        $('#invoiceNo').val(edit_invoiceNo).data('prev_invoiceno', edit_invoiceNo);
 
         invoiceType = "invoice";
+        originalIsInvoice  = true;
 
         $('#invoiceModalTitle').text('Edit Invoice #' + edit_invoiceNo);
         invoiceModal.show();
@@ -348,11 +348,10 @@ $(function () {
         const edit_gstinvoiceNo = $(this).data('gstinvoiceno');
         fixedSubTotal = $(this).data('finalamount');
         $('#bookingId').val(bookingId);
-        $('#invoiceNo').val(0);
-        $('#gstInvoiceNo').val(edit_gstinvoiceNo);
-        $('#proformaInvoiceNo').val(0);
+        $('#gstInvoiceNo').val(edit_gstinvoiceNo).data('prev_gstinvoiceno', edit_gstinvoiceNo);
 
         invoiceType = "invoice";
+        originalIsInvoice  = false;
 
         $('#invoiceModalTitle').text('Edit Invoice #' + edit_gstinvoiceNo);
         invoiceModal.show();
@@ -376,8 +375,6 @@ $(function () {
         const edit_proformaNo = $(this).data('proformano');
 
         $('#bookingId').val(bookingId);
-        $('#invoiceNo').val(0);
-        $('#gstInvoiceNo').val(0);
         $('#proformaInvoiceNo').val(edit_proformaNo);
 
         invoiceType = "proforma";
@@ -567,10 +564,9 @@ $(function () {
     });
 
     // On input change
-    $(document).on('input change', '.calc', function () {
+    $(document).on('change', '.calc', function () {
         let row = $(this).closest('tr');
         recalcRow(row);
-        recalcAll(row); // pass active row
     });
 
     $(document).on('change', '#customerState', function () {
@@ -579,7 +575,6 @@ $(function () {
             recalcRow($(this));
             //console.log("here2");
         });
-        recalcAll();
     });
 
     // On Advance input change
@@ -661,28 +656,36 @@ $(function () {
         const isInclusiveOfGST = $('#isInclusiveOfGST').val() === 'true' || $('#isInclusiveOfGST').val() === '1';
 
         const id = parseInt($('#invoiceId').val()) || 0;
-        var gstInvoiceNoVal = gstInvoiceNo;
+
+        var gstInvoiceNoVal = $('#gstInvoiceNo').val()?.trim();
         var invoiceNoVal = $('#invoiceNo').val();
         var proformaNoVal = $('#proformaInvoiceNo').val();
 
-        if (id > 0) {
-            gstInvoiceNoVal = $('#gstInvoiceNo').val() || null;
-            invoiceNoVal = Number($('#invoiceNo').val() || null);
-            proformaNoVal = Number($('#proformaInvoiceNo').val() || null);
-        }
-        else {
-            invoiceNoVal = (invoiceType === "invoice" && (totalGst > 0 || gstInvoiceNo == null))
-                ? (invoiceNoVal ? Number(invoiceNoVal) : null)
-                : null;
+        // ✅ Convert LONG fields properly
+        invoiceNoVal = invoiceNoVal ? Number(invoiceNoVal) : null;
+        proformaNoVal = proformaNoVal ? Number(proformaNoVal) : null;
+        // ✅ Convert string field
+        gstInvoiceNoVal = gstInvoiceNoVal ? gstInvoiceNoVal : null;
 
-            proformaNoVal = (invoiceType === "proforma")
-                ? (proformaNoVal ? Number(proformaNoVal) : null)
-                : null;
+        //gstInvoiceNoVal = $('#gstInvoiceNo').val() || null;
+        //invoiceNoVal = Number($('#invoiceNo').val() || null);
+        //proformaNoVal = Number($('#proformaInvoiceNo').val() || null);
 
-            gstInvoiceNoVal = (invoiceType === "invoice" && Math.abs(totalGst) < 0.01 && gstInvoiceNoVal !== '')
-                ? gstInvoiceNoVal
-                : null;
-        }
+        //invoiceNoVal = (invoiceType === "invoice"
+        //        && (totalGst > 0 || gstInvoiceNo == null))
+        //    ? (invoiceNoVal ? Number(invoiceNoVal) : null)
+        //    : null;
+
+        //proformaNoVal = (invoiceType === "proforma")
+        //    ? (proformaNoVal ? Number(proformaNoVal) : null)
+        //    : null;
+
+        //gstInvoiceNoVal = (invoiceType === "invoice"
+        //        && Math.abs(totalGst) < 0.01
+        //        && gstInvoiceNoVal !== null
+        //        && gstInvoiceNoVal !== '')
+        //    ? gstInvoiceNoVal
+        //    : null;
 
         const request = {
             Id: id,
@@ -1321,18 +1324,109 @@ $(function () {
 });
 
 function updateInvoiceTitle(totalGST) {
-    if (!isEditInvoice) {
-        const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
-        //console.log("isInclusiveGST:", isInclusiveGST);
-        const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
 
-        if (gstInvoiceNo !== null && gstInvoiceNo !== '' && parseFloat(totalGST) === 0 && invoiceType == "invoice") {
-            $('#invoiceModalTitle').text(`Create Invoice #${gstInvoiceNo} (${gstLabel})`);
+    // 🚫 Skip everything except "invoice"
+    if (invoiceType !== "invoice") {
+        return;
+    }
+
+    const gstValue = parseFloat(totalGST) || 0;
+    const isCurrentInvoiceW = gstValue > 0;
+
+    var lblPrefix = isEditInvoice ? "Edit Invoice" : "Create Invoice";
+
+    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+    const gstLabel = isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST';
+
+    // 🚨 BLOCK: InvoiceW → InvoiceB (EDIT MODE ONLY)
+    if (isEditInvoice && originalIsInvoice === true && !isCurrentInvoiceW) {
+        // revert GST change if needed (optional)
+        // totalGST = previous value;
+
+        //Swal.fire({
+        //    icon: 'error',
+        //    title: 'Conversion Not Allowed',
+        //    html: `
+        //        You cannot convert a <b>GST Invoice</b> to a <b>Invoice</b>.<br><br>
+        //        👉 Please delete this invoice and create a new one if required.
+        //    `
+        //});
+
+        return;
+    }
+
+    if (isEditInvoice) {
+        var prevGstInvoiceNo = $('#gstInvoiceNo').data('prev_gstinvoiceno');
+        //InvoiceB → InvoiceW
+        if (originalIsInvoice == false && isCurrentInvoiceW) {
+            $('#invoiceModalTitle').text(`${lblPrefix} #${nextInvoiceNo} (${gstLabel})`);
+            $('#invoiceNo').val(nextInvoiceNo);
+            $('#gstInvoiceNo').val('');
         }
-        else if (invoiceType == "invoice"){
-            $('#invoiceModalTitle').text(`Create Invoice #${invoiceNo} (${gstLabel})`);
+        else if (prevGstInvoiceNo !== null && prevGstInvoiceNo !== '' && prevGstInvoiceNo !== undefined) {
+            $('#invoiceModalTitle').text(`${lblPrefix} #${prevGstInvoiceNo} (${gstLabel})`);
+            $('#invoiceNo').val('');
+            $('#gstInvoiceNo').val(prevGstInvoiceNo);
+        }
+        console.log("prevGstInvoiceNo:", prevGstInvoiceNo);
+    }
+    //NEW INVOICE
+    else {
+        if (nextGstInvoiceNo !== null && nextGstInvoiceNo !== '' && parseFloat(totalGST) === 0) {
+            $('#invoiceModalTitle').text(`${lblPrefix} #${nextGstInvoiceNo} (${gstLabel})`);
+            $('#invoiceNo').val('');
+            $('#gstInvoiceNo').val(nextGstInvoiceNo);
+        }
+        else {
+            $('#invoiceModalTitle').text(`${lblPrefix} #${nextInvoiceNo} (${gstLabel})`);
+            $('#invoiceNo').val(nextInvoiceNo);
+            $('#gstInvoiceNo').val('');
         }
     }
+}
+
+function updateInvoiceTitle_OLD(totalGST) {
+    if (invoiceType !== "invoice") return;
+
+    const gstValue = parseFloat(totalGST) || 0;
+    const isCurrentInvoiceW = gstValue > 0;
+
+    var lblPrefix = isEditInvoice ? "Edit Invoice" : "Create Invoice";
+
+    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
+    const gstLabel = isCurrentInvoiceW
+        ? (isInclusiveGST ? 'Rates Inclusive GST' : 'Rates Exclusive GST')
+        : '';
+
+    // 🚨 BLOCK: InvoiceW → InvoiceB (EDIT MODE ONLY)
+    if (isEditInvoice && originalIsInvoice === true && !isCurrentInvoiceW) {
+        // revert GST change if needed (optional)
+        // totalGST = previous value;
+
+        //Swal.fire({
+        //    icon: 'error',
+        //    title: 'Conversion Not Allowed',
+        //    html: `
+        //        You cannot convert a <b>GST Invoice</b> to a <b>Invoice</b>.<br><br>
+        //        👉 Please delete this invoice and create a new one if required.
+        //    `
+        //});
+
+        return;
+    }
+
+    // ✅ Invoice Number Logic
+    if (nextGstInvoiceNo && gstValue === 0) {
+        // GST-INVOICE
+        $('#invoiceModalTitle').text(`${lblPrefix} #${nextGstInvoiceNo} (${gstLabel})`);
+        $('#invoiceNo').val('');
+        $('#gstInvoiceNo').val(nextGstInvoiceNo);
+    } else {
+        // INVOICE
+        $('#invoiceModalTitle').text(`${lblPrefix} #${nextInvoiceNo} (${gstLabel})`);
+        $('#invoiceNo').val(nextInvoiceNo);
+        $('#gstInvoiceNo').val('');
+}
 }
 
 let paymentTable = null;
@@ -1616,8 +1710,9 @@ function adjustLastRow(diff) {
 function round2(val) {
     return Math.round(val * 100) / 100;
 }
-function recalcRow(row) {
 
+function recalcRow(row) {
+ 
     const rate = parseFloat(row.find('.rate').val()) || 0;
     const qty = parseFloat(row.find('.qty').val()) || 0;
     const gstRate = parseFloat(row.find('.gst').val()) || 0;
@@ -2337,7 +2432,7 @@ function fillPaymentTrailTable(paymentList = [], bookingId) {
 }
 
 //FOR SUMMARY -- END
-
+/*
 function calculateInvoiceTotals() {
     let subTotal = 0, totalGST = 0, grandTotal = 0;
 
@@ -2353,7 +2448,7 @@ function calculateInvoiceTotals() {
     updateInvoiceTitle(totalGST);
     $('#grandTotal').val(grandTotal.toFixed(2));
 }
-
+*/
 function getNextInvoiceNumbers() {
 
     $.ajax({
@@ -2361,18 +2456,9 @@ function getNextInvoiceNumbers() {
         type: 'GET',
         success: function (res) {
             if (res.status === 'Success' && res.data) {
-                invoiceNo = res.data.NextInvoiceNo;
-                proformaInvoiceNo = res.data.NextProformaInvoiceNo;
-                gstInvoiceNo = res.data.NextGSTInvoiceNo;
-
-                //console.log('Invoice No:', invoiceNo);
-                //console.log('Proforma Invoice No:', proformaInvoiceNo);
-                //console.log('GST Invoice No:', gstInvoiceNo);
-
-                // OPTIONAL: Assign to inputs
-                //$('#invoiceNo').val(invoiceNo);
-                //$('#proformaInvoiceNo').val(proformaInvoiceNo);
-                //$('#gstInvoiceNo').val(gstInvoiceNo);
+                nextInvoiceNo = res.data.NextInvoiceNo;
+                nextProformaInvoiceNo = res.data.NextProformaInvoiceNo;
+                nextGstInvoiceNo = res.data.NextGSTInvoiceNo;
             }
         },
         error: function (xhr, status, error) {
@@ -2759,6 +2845,7 @@ function renderTable(data, totals) {
         
     }); 
 }
+
 /*
 function isPastDate(dateString) {
     if (!dateString) return false;
@@ -2778,10 +2865,12 @@ function resetForm() {
     $("#btnAdjustDiff").addClass("d-none");
 
     invoiceType = null;
+    originalIsInvoice  = null;
+
     $('#invoiceId').val(0);
     $('#bookingId').val(0);
-    $('#invoiceNo').val('').removeData('isinclusivegst');
-    $('#gstInvoiceNo').val('');
+    $('#invoiceNo').val('').removeData('isinclusivegst').removeData('prev_invoiceno');
+    $('#gstInvoiceNo').val('').removeData('prev_gstinvoiceno', null);;
     $('#proformaInvoiceNo').val('');
     fixedSubTotal = 0;
 
