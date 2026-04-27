@@ -1,0 +1,230 @@
+﻿body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+#reloadCountdown {
+    font-size: 13px;
+    opacity: 0.8;
+}
+/* Hover effect */
+#feedbackFab:hover {
+    transform: scale(1.1);
+    background: #1d4ed8;
+}
+
+.feedback-title {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+    font-size: 28px;
+    background: linear-gradient(90deg, #ffc107, #ff9800);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: yellow
+}
+.feedback-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 700px;
+    margin: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+
+.loading-state {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #6c757d;
+}
+
+.feedback-card {
+    background: #ffffff;
+    max-width: 500px;
+    margin: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,.15);
+    padding: 25px;
+}
+
+.option-grid {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.option-card {
+    text-align: center;
+    cursor: pointer;
+}
+
+    .option-card img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        padding: 10px;
+        border: 2px dashed #ddd;
+    }
+
+    .option-card.active img {
+        border: 3px solid orange;
+    }
+
+.option-text {
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+.nav-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--bs-primary);
+    color: #fff;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(13,110,253,0.35);
+}
+
+    .nav-btn:hover {
+        background-color: var(--bs-primary-bg-subtle);
+        color: var(--bs-primary);
+    }
+
+    .nav-btn.save {
+        background-color: var(--bs-success);
+    }
+
+    .nav-btn.hidden {
+        visibility: hidden;
+    }
+
+.feedback-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 0 auto;
+    max-width: 90%;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+    .feedback-hint.positive {
+        background: linear-gradient(135deg, #e7fff3, #ffffff);
+        border: 1px dashed #28a745;
+        color: #155724;
+    }
+
+        .feedback-hint.positive i {
+            color: #28a745;
+        }
+
+    .feedback-hint.neutral {
+        background: linear-gradient(135deg, #fff7e6, #ffffff);
+        border: 1px dashed #f4a259;
+        color: #6c4a00;
+    }
+
+        .feedback-hint.neutral i {
+            color: #f4a259;
+        }
+
+    .feedback-hint.negative {
+        background: linear-gradient(135deg, #fff1f1, #ffffff);
+        border: 1px dashed #dc3545;
+        color: #721c24;
+    }
+
+        .feedback-hint.negative i {
+            color: #dc3545;
+        }
+
+.save-loader {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    color: #0d6efd;
+}
+
+.thank-you-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thank-you-card {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 24px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+    animation: popIn .5s ease;
+}
+
+.thank-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #28a745, #4cd964);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    color: #fff;
+    font-size: 32px;
+}
+
+.thank-you-card h3 {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.thank-you-card p {
+    color: #6c757d;
+    font-size: 15px;
+}
+
+.thank-sub {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #495057;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

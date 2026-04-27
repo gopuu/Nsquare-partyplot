@@ -36,5 +36,7 @@
         public string? LeadSource { get; set; }
         public string? EnquiryDateTime { get; set; }
         public decimal LossAmount { get; set; }
+        public string? LeadLostReason_CategoryName { get; set; }
+        public string? LeadLostReason_Name { get; set; }
     }
 }

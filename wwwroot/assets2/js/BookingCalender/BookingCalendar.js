@@ -9,7 +9,7 @@ if (subdomain === "divyesh"
 ) {
     isPastDateAllowed = true;
 }
-console.log("isPastDateAllowed: ", isPastDateAllowed);
+//console.log("isPastDateAllowed: ", isPastDateAllowed);
 
 // Toggle editors visibility
 var invoiceNo = 0;
@@ -3670,7 +3670,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Open foodwestage modal safely
-    document.getElementById('btnFoodWestage').addEventListener('click', function () {
+    document.getElementById('btnFoodWastage').addEventListener('click', function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
         //console.log("💳 Enter Food Westage clicked - Booking ID:", bookingId);
         $("#tblFoodWastage tbody").empty();
@@ -3766,7 +3766,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // 📢 Request Feedback
     document.getElementById("btnRequestFeedback").addEventListener("click", function () {
         const bookingId = getBookingId();
+        let name = $("#btnRequestFeedback").data("name");
+        let contact = $("#btnRequestFeedback").data("contact");
         //console.log("📢 Request Feedback clicked - Booking ID:", bookingId);
+        $("#fbName").val(name);
+        $("#fbWhatsapp").val(contact);  
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
@@ -5773,8 +5777,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
-                    $("#bookingReport_clientName").text(data.Client_Name || "—");
-                    $("#bookingReport_clientContact").text(data.Client_Contact || "—");
+                    var c_name = data.Client_Name || "-";
+                    var c_contact = data.Client_Contact || "";
+                    $("#bookingReport_clientName").text(c_name);
+                    $("#bookingReport_clientContact").text(c_contact);
+
+                    $("#btnRequestFeedback").attr("data-name", c_name);
+                    $("#btnRequestFeedback").attr("data-contact", c_contact);
+
                     $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                     $("#bookingReport_clientEmail").text(data.Client_Email || "—");
                     $("#bookingReport_clientBookedBy").text(data.Booked_By_EmpName || "—");

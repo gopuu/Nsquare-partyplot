@@ -7,6 +7,8 @@ const REPORT_COLUMNS = [
     { key: "EventSubType", label: "Event Sub Type" },
     { key: "LeadSource", label: "Lead Source" },
     { key: "EnquiryDateTime", label: "Enquiry DateTime" },
+    { key: "LeadLostCategory", label: "Lost Reason Category" },
+    { key: "LeadLostReason", label: "Lost Reason" },
     { key: "LossAmount", label: "Loss Amount" }
 ];
 
@@ -273,6 +275,9 @@ function loadRevenueLossGrid() {
 
                             <th></th>
                             <th></th>
+
+                            <th></th>
+                            <th></th>
                             <th></th>
                             <th></th>
                         </tr>
@@ -344,11 +349,11 @@ function renderRevenueLossTable(rows, totals) {
             },
             {
                 data: "EventType",
-                title: "Event"
+                title: "Event Category"
             },
             {
                 data: "EventSubType",
-                title: "Sub-Event"
+                title: "Event SubCategory"
             },
             {
                 data: "LeadSource",
@@ -357,6 +362,14 @@ function renderRevenueLossTable(rows, totals) {
             {
                 data: "EnquiryDateTime",
                 title: "Enquiry DateTime"
+            },
+            {
+                data: "LeadLostReason_CategoryName",
+                title: "Lead Lost Reason - Category"
+            },
+            {
+                data: "LeadLostReason_Name",
+                title: "Lead Lost Reason"
             },
             {
                 data: "LossAmount",
@@ -377,15 +390,13 @@ function renderRevenueLossTable(rows, totals) {
             $cells.eq(3).html("");
 
             $cells.eq(4).html("");
+            $cells.eq(5).html("");
 
-            $cells.eq(5).html("<strong>TOTAL</strong>");
+            $cells.eq(6).html("");
+            $cells.eq(7).html("");
+            $cells.eq(8).html("<strong>TOTAL</strong>");
 
-            $cells.eq(6).html(`
-                <strong class="text-danger fs-8">
-                    ${totals.TotalLeadLost}
-                </strong>
-            `);
-            $cells.eq(7).html(`
+            $cells.eq(9).html(`
                 <strong class="text-danger fs-8">
                     ${formatINR2(totals.TotalLossAmount)}
                 </strong>

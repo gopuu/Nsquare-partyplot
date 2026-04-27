@@ -78,7 +78,9 @@ namespace ERPAdmin.ApiControllers
                             LeadSource = row["LeadSource"] != DBNull.Value ? Convert.ToString(row["LeadSource"]) : "-",
                             EventDisplay = row["EventDisplay"] != DBNull.Value ? Convert.ToString(row["EventDisplay"]) : "-",
                             EnquiryDateTime = row["EnquiryDateTime"] != DBNull.Value ? Convert.ToString(row["EnquiryDateTime"]) : "-",
-                            LossAmount = row["LossAmount"] != DBNull.Value ? Convert.ToDecimal(row["LossAmount"]) : 0
+                            LossAmount = row["LossAmount"] != DBNull.Value ? Convert.ToDecimal(row["LossAmount"]) : 0,
+                            LeadLostReason_CategoryName = row["LeadLostReason_CategoryName"] != DBNull.Value ? Convert.ToString(row["LeadLostReason_CategoryName"]) : "-",
+                            LeadLostReason_Name = row["LeadLostReason_Name"] != DBNull.Value ? Convert.ToString(row["LeadLostReason_Name"]) : "-"
                         });
                     }
                 }
@@ -309,7 +311,7 @@ namespace ERPAdmin.ApiControllers
                 table.WidthPercentage = 100;
                 table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.BLACK);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
@@ -331,6 +333,8 @@ namespace ERPAdmin.ApiControllers
                             "event" => Element.ALIGN_LEFT,
                             "sub-event" => Element.ALIGN_LEFT,
                             "lead source" => Element.ALIGN_LEFT,
+                            "lost reason category" => Element.ALIGN_LEFT,
+                            "lost reason" => Element.ALIGN_LEFT,
                             "enquiry datetime" => Element.ALIGN_LEFT,
                             _ => Element.ALIGN_RIGHT
                         };
