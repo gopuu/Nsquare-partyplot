@@ -1,14 +1,30 @@
-﻿var unitMaster = [];
+﻿/* ═══════════════════════════════════════════════════
+   COLUMN DEFINITIONS
+═══════════════════════════════════════════════════ */
+const REPORT_COLUMNS = [
+    { key: "SrNo", label: "Sr. No."},
+    { key: "CategoryName", label: "Category"},
+    { key: "RawMaterialName", label: "Raw Material"},
+    { key: "UnitName", label: "Unit"},
+    { key: "CurrentQty", label: "Stock Available"}
+];
+
+let selectedColumns = REPORT_COLUMNS.map(c => c.key);
+let selectedMonthDuration = "thismonth";
+const HEADER_KEY = "expensePrintWithHeader";
+
+var unitMaster = [];
 
 $(document).ready(function () {
-    fetchData(0, 0, 0);
+    fetchData();
     GetCategoryMasterData();
     GetRawMaterialMasterData();  // Load ALL initially
     GetUnitMasterData();
+    loadColumnCheckboxes();
 
     AppSignalR.subscribePurchase((data) => {
         //console.log("SignalR: Purchase Updated");
-        fetchData(0, 0, 0);
+        fetchData();
         GetRawMaterialMasterData();  // Load ALL initially
     });
 
@@ -18,18 +34,17 @@ $(document).ready(function () {
     $("#filterItemCategory").on("change", function () {
         let categoryId = $(this).val();
         GetRawMaterialMasterData(categoryId);
-        fetchData(categoryId, 0, 0);
+        fetchData();
     });
 
     // On Raw Material Change → Load allowed units only
     $(document).on("change", "#filterRawMaterial", function () {
         // 1. GET SELECTED RAW MATERIAL ID
         rawMaterialId = $(this).val();
-        fetchData(0, rawMaterialId, 0);
+        fetchData();
 
         let selectedOption = $(this).find("option:selected");
         let jsonUnits = selectedOption.attr("data-unitIdList");
-
 
         // Reset Unit dropdown
         $("#filterUnit").empty().append(`<option value="0">All</option>`);
@@ -66,11 +81,26 @@ $(document).ready(function () {
     // When Unit changes → Fetch Inventory
     $("#filterUnit").on("change", function () {
         let unitId = $(this).val();
-        fetchData(0, rawMaterialId, unitId);
+        fetchData();
     });
 
-    // CLEAR FILTERS
-    $(document).on("click", "#btnClearFilters", function () {
+    /* ── Filter panel ── */
+    $("#filterPanel").on("click", function (e) { e.stopPropagation(); });
+
+    $(document).on("click", function (e) {
+        if ($(e.target).closest(".dropdown, .dropdown-menu, #filterPanel, #btnToggleFilter").length > 0) return;
+        $("#filterPanel").removeClass("active");
+    });
+
+    $("#btnToggleFilter").on("click", function () { $("#filterPanel").toggleClass("active"); });
+    $("#btnCloseFilter").on("click", function () { $("#filterPanel").removeClass("active"); });
+
+    $("#btnApplyFilter").on("click", function () {
+        $("#filterPanel").removeClass("active");
+        fetchData();
+    });
+
+    $("#btnResetFilter").on("click", function () {
         // Reset Category → "All"
         $("#filterItemCategory").val("0");
 
@@ -83,10 +113,44 @@ $(document).ready(function () {
 
         // Optionally reload inventory list
         rawMaterialId = 0;
-        fetchData(0, 0, 0);
+        fetchData();
+    });
+
+    /* ── With Header ── */
+    const saved = sessionStorage.getItem(HEADER_KEY);
+    if (saved !== null)
+        document.getElementById("toggleWithHeader").checked = (saved === "true");
+
+    document.getElementById("toggleWithHeader").addEventListener("change", function () {
+        sessionStorage.setItem(HEADER_KEY, this.checked);
+    });
+
+    /* ── Column selector ── */
+    $("#btn-select-columns").on("click", function () {
+        loadColumnCheckboxes();
+        $("#modalColumns").modal("show");
+    });
+
+    $("#btn-reset-columns").on("click", function () {
+        $(".column-checkbox").prop("checked", true);
+        $("#chk-select-all").prop("checked", true);
+    });
+
+    $("#btn-save-columns").on("click", function () {
+        selectedColumns = [];
+        $(".column-checkbox:checked").each(function () {
+            selectedColumns.push($(this).val());
+        });
+        $("#modalColumns").modal("hide");
+        fetchData();
+    });
+
+    $("#chk-select-all").on("change", function () {
+        $(".column-checkbox").prop("checked", this.checked);
     });
 });
 
+//history btn
 $(document).on("click", ".btn-history", function () {
     let id = $(this).data("id");
     let name = $(this).data("name");
@@ -109,49 +173,48 @@ function loadHistory(id) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-
-            if (res.status !== "Success") {
+            console.log("History response:", res);
+            if (res.status === "Success" && res.data.length == 0) {
                 $("#historyTimeline").html("<p>No history found</p>");
-                return;
             }
+            else {
+                let html = `<div class="timeline">`;
 
-            let html = `<div class="timeline">`;
+                res.data.forEach(x => {
 
-            res.data.forEach(x => {
+                    html += `
+                    <div class="timeline-item">
 
-                html += `
-                <div class="timeline-item">
+                        <div class="timeline-dot"></div>
 
-                    <div class="timeline-dot"></div>
+                        <div class="timeline-content">
 
-                    <div class="timeline-content">
+                            <div class="fw-bold">
+                                ${x.Quantity_In} ${x.UnitName} (In) / ${x.Quantity_Out} ${x.UnitName} (Out)
+                            </div>
 
-                        <div class="fw-bold">
-                            ${x.Quantity_In} ${x.UnitName} (In) / ${x.Quantity_Out} ${x.UnitName} (Out)
-                        </div>
+                            <div class="text-muted small">
+                                ${x.ModifiedOn2}
+                            </div>
 
-                        <div class="text-muted small">
-                            ${x.ModifiedOn2}
-                        </div>
+                            <div class="small">
+                                ${x.Remarks || ""}
+                            </div>
 
-                        <div class="small">
-                            ${x.Remarks || ""}
-                        </div>
+                            <div class="small text-primary">
+                                By ${x.ModifiedBy}
+                            </div>
 
-                        <div class="small text-primary">
-                            By ${x.ModifiedBy}
                         </div>
 
                     </div>
+                    `;
+                });
 
-                </div>
-                `;
-            });
+                html += `</div>`;
 
-            html += `</div>`;
-
-            $("#historyTimeline").html(html);
-
+                $("#historyTimeline").html(html);
+            }
             $("#historyModal").modal("show");
         },
         error: function (xhr, status, error) {
@@ -160,7 +223,6 @@ function loadHistory(id) {
         }
     });
 }
-
 
 /* ====== RENDER TABLE ====== */
 function renderTable(data) {
@@ -188,7 +250,7 @@ function renderTable(data) {
                     <td>${escapeHtml(r.RawMaterialName || '')}</td>
                     <td class="align-middle">${escapeHtml(closingText)}</td>
 
-                    <td class="bg-ai">
+                    <td class="bg-success-light">
                         <div class="input-group input-group-sm" style="width: 200px;">
                             <input type="number" min="0" step="1"
                                    class="form-control stock-inward-qty"
@@ -197,7 +259,7 @@ function renderTable(data) {
                         </div>
                     </td>
 
-                    <td class="bg-warning-gradient">
+                    <td class="bg-danger-light">
                         <div class="input-group input-group-sm" style="width: 200px;">
                             <input type="number" min="0" step="1"
                                    class="form-control stock-outward-qty"
@@ -247,6 +309,7 @@ function renderTable(data) {
         initComplete: function () {
             $(this.api().table().header())
                 .find('th')
+                .not(':eq(3), :eq(4)') // exclude 4th & 5th column (0-based index)
                 .addClass('bg-warning-subtle text-dark');
         }
     });
@@ -256,9 +319,13 @@ function renderTable(data) {
 
 
 /* ====== FETCH DATA ====== */
-function fetchData(itemCategoryId = 0, rawMaterialId = 0, unitId = 0) {
-
+function fetchData() {
     $('#btnLoadStock').prop('disabled', true);
+
+    var itemCategoryId = $("#filterItemCategory").val();
+    var rawMaterialId = $("#filterRawMaterial").val();
+    var unitId = $("#filterUnit").val();
+
     const payload = {
         ItemCategoryId: itemCategoryId,  //Number($('#filterCategory').val() || 0),
         RawMaterialId: rawMaterialId,
@@ -430,3 +497,86 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+//HELPER TO LOAD COLUMN CHECKBOXES IN MODAL
+function loadColumnCheckboxes() {
+    let html = "";
+    REPORT_COLUMNS.forEach(col => {
+        const isChecked = selectedColumns.includes(col.key);
+        html += `
+        <div class="col-md-4 mb-2">
+            <div class="form-check">
+                <input class="form-check-input column-checkbox"
+                       type="checkbox"
+                       value="${col.key}"
+                       ${isChecked ? "checked" : ""}>
+                <label class="form-check-label">${col.label}</label>
+            </div>
+        </div>`;
+    });
+    $("#column-list").html(html);
+    updateSelectAllState();
+}
+
+function updateSelectAllState() {
+    const total = $(".column-checkbox").length;
+    const checked = $(".column-checkbox:checked").length;
+    $("#chk-select-all").prop("checked", total === checked);
+}
+
+/* ═══════════════════════════════════════════════════
+   DOWNLOAD PDF / EXCEL
+═══════════════════════════════════════════════════ */
+function ViewStockReport(actionName) {
+
+    const withHeader = $("#toggleWithHeader").is(":checked");
+    const userId = parseInt(sessionStorage.getItem("userId") || 0);
+
+    var itemCategoryId = $("#filterItemCategory").val();
+    var rawMaterialId = $("#filterRawMaterial").val();
+    var unitId = $("#filterUnit").val();
+
+    const payload = {
+        ItemCategoryId: itemCategoryId,  //Number($('#filterCategory').val() || 0),
+        RawMaterialId: rawMaterialId,
+        UnitId: unitId,
+        WithHeader: withHeader,
+        Columns: selectedColumns,
+        ActionBy: userId
+    };
+
+    const url = actionName === "downloadExcel"
+        ? "/api/Inventory/DownloadStockReport_Excel"
+        : "/api/Inventory/DownloadStockReport_Pdf";
+
+    showTempLoader("Generating Report...");
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("res:", res);
+            Swal.close();
+
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
+            const ts = new Date().toISOString().replace(/[:.-]/g, "");
+            const link = document.createElement("a");
+            link.href = res.data.FileUrl;
+            link.download = `Inventory_Report_${ts}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+        error: function (xhr, status, error) {
+            Swal.close();
+            handleApiError(xhr, status, error, "Inventory Report Download Failed");
+            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+        }
+    });
+}

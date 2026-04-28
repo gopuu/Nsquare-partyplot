@@ -21,7 +21,7 @@ namespace ERPAdmin.ApiControllers
     {
         private readonly string domainUrl;
         private readonly IWebHostEnvironment _env;
-        private string connString = string.Empty;
+        //private string connString = string.Empty;
 
         public Report_ExpenseController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {

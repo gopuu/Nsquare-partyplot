@@ -31,12 +31,20 @@
     public class GetStockListRequest
     {
         public long? ItemCategoryId { get; set; }
-        public string? ItemCategoryName { get; set; }
         public long? RawMaterialId { get; set; }
-        public string? RawMaterialName { get; set; }
         public long? UnitId { get; set; }
-        public string? UnitName { get; set; }
-
     }
+
+    #region REPORT
+    public class StockReportRequest : BaseClass
+    {
+        public List<string>? Columns { get; set; }
+        public long ItemCategoryId { get; set; }
+        public long RawMaterialId { get; set; }
+        public long UnitId { get; set; }
+        public bool? WithHeader { get; set; }
+    }
+
+    #endregion
 
 }

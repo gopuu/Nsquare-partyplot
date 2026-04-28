@@ -1,0 +1,23 @@
+﻿#feedbackFab {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* 🔥 important for clipping */
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+.feedback-icon {
+    width: 120%;
+    height: 120%;
+    object-fit: cover; /* 🔥 fills properly */
+    border-radius: 50%; /* ensures round image */
+}

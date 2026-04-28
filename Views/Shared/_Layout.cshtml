@@ -60,6 +60,7 @@
     <link href="/assets2/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
     <link href="/assets2/vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
     <link rel="stylesheet" href="~/assets2/css/Shared/Layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets2/css/shared/cssforbothlayout.css" asp-append-version="true" />
 
     <!--jquery-->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin=""></script>
@@ -1568,7 +1569,9 @@
 
     <!-- Feedback Link Button -->
     <div id="feedbackFab" title="Open Feedback Form">
-        <i class="fa-solid fa-comment-dots"></i>
+        <img src="/assets2/img/feedback/feedback_icon2.svg"
+             alt="Feedback Link"
+             class="feedback-icon">
     </div>
     
     <!-- Loader Overlay -->
@@ -1601,6 +1604,7 @@
     @RenderSection("Styles", required: false)
 
     <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/shared/jsforbothlayout.js" asp-append-version="true"></script>
     <script>
         /*
         document.querySelectorAll('.modules-parent').forEach(item => {

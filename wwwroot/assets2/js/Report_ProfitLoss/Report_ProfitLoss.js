@@ -405,7 +405,7 @@ function renderSummaryCards(summary) {
                             ${c.label}
                             <i class="fa fa-circle-info ms-1 text-secondary" style="font-size:10px;"></i>
                         </div>
-                        <div class="fw-bold fs-6 text-${c.color}">${formatted}</div>
+                        <div class="fw-bold fs-7 text-${c.color}">${formatted}</div>
                     </div>
                 </div>
             </div>
