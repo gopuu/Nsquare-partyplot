@@ -2692,13 +2692,14 @@ function renderTable(data, totals) {
                 data: null,
                 title: 'Send Proforma',
                 name: 'SendProforma',
+                className: 'text-center',
                 render: row =>
                     hasValidNo(row.ProformaInvoiceNo)
                         ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
                        data-bookingid="${row.BookingId}"
                        data-invoiceno=""
-                       data-proformano="${row.ProformaInvoiceNo}">
-                    <i class="fa fa-paper-plane me-1"></i>Send
+                       data-proformano="${row.ProformaInvoiceNo}" disabled>
+                    <i class="fa fa-paper-plane me-1"></i>Coming Soon
                 </button>`
                         : '-'
             },
@@ -2766,14 +2767,14 @@ function renderTable(data, totals) {
                                             data-finalamount="${row.TotalAmount}"
                                             data-bookingid="${row.BookingId}" data-isinclusivegst="false"
                                             disabled>
-                                        Create Invoice (Rates Exclusive of GST)
+                                            + Invoice (GST Exclusive)
                                     </button>
                                     <br/>
                                     <button class="btn btn-warning btn-action-xs2 mb-1"
                                             data-finalamount="${row.TotalAmount}"
                                             data-bookingid="${row.BookingId}" data-isinclusivegst="true"
                                             disabled>
-                                        Create Invoice (Rates Inclusive of GST)
+                                            + Invoice (GST Inclusive)
                                     </button>
                                 </span>
                             `;
@@ -2783,13 +2784,13 @@ function renderTable(data, totals) {
                             <button class="btn btn-success btn-action-xs2 mb-1 btn-create-invoice"
                                     data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="false">
-                                Create Invoice (Rates Exclusive of GST)
+                                + Invoice (GST Exclusive)
                             </button>
                             <br/>
                             <button class="btn btn-warning btn-action-xs2 mb-1 btn-create-invoice"
                                     data-finalamount="${row.TotalAmount}"
                                     data-bookingid="${row.BookingId}" data-isinclusivegst="true">
-                                Create Invoice (Rates Inclusive of GST)
+                                + Invoice (GST Inclusive)
                             </button>
                         `;
                     }
@@ -2800,14 +2801,15 @@ function renderTable(data, totals) {
                 data: null,
                 title: 'Send Invoice',
                 name: 'SendInvoice',
+                className: 'text-center',
                 render: row =>
                     hasValidNo(row.InvoiceNo) || row.GSTInvoiceNo
                         ? `<button class="btn btn-outline-primary btn-action-xs2 btn-send-invoice"
                                    data-bookingid="${row.BookingId}"
                                    data-invoiceno="${row.InvoiceNo}"
                                    data-gstinvoiceno="${row.GSTInvoiceNo}"
-                                   data-proformano="">
-                                <i class="fa fa-paper-plane me-1"></i>Send
+                                   data-proformano="" disabled>
+                                <i class="fa fa-paper-plane me-1"></i>Coming Soon
                             </button>`
                         : '-'
             },

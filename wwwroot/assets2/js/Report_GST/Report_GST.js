@@ -221,6 +221,7 @@ function loadGSTSalesGrid() {
     });
 }
 
+
 /* ═══════════════════════════════════════════════════
    RENDER TABLE
 ═══════════════════════════════════════════════════ */
@@ -233,11 +234,12 @@ function renderGSTSalesTable(data, totals) {
     $("#tableMain table").DataTable({
 
         data: data,
-        responsive: true,
+        responsive: false,
         pageLength: 25,
         scrollX: true,
         order: [[0, "desc"]],
 
+        autoWidth: false,
         paging: false,
         scrollY: "60vh",          // table body scroll height
         scrollCollapse: true,     // shrink if less rows
@@ -246,7 +248,7 @@ function renderGSTSalesTable(data, totals) {
         columns: [
             {
                 data: "InvoiceNo",
-                title: "Invoice No",
+                title: "Inv.No.",
                 className: "text-center"
             },
             {
@@ -312,7 +314,7 @@ function renderGSTSalesTable(data, totals) {
 
             {
                 data: null,
-                title: "View Invoice",
+                title: "Invoice",
                 className: "text-center",
                 render: function (data, type, row) {
                     if (!data) return "";
@@ -320,7 +322,7 @@ function renderGSTSalesTable(data, totals) {
                         <button class="btn btn-xs btn-view-invoice btn-outline-danger"
                                 data-invoiceno="${data.InvoiceNo}" 
                                 data-bookingid="${data.BookingId}">
-                            <i class="fa fa-download me-1"></i> Invoice
+                            <i class="fa fa-download me-1"></i>
                         </button>
                     `;
                 }
