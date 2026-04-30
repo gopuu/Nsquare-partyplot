@@ -186,6 +186,16 @@ function renderAllInOneTable(data) {
 
     data.forEach((x, i) => x.srno = i + 1);
     $("#tableAllInOne table").DataTable({
+        pageLength: 10,
+        paging: false,
+        scrollY: '60vh',
+        scrollCollapse: false,
+        ordering: false,
+        autoWidth: false,
+        language: {
+            emptyTable: "No data found"
+        },
+
         data: data,
         columns: [
             { data: "srno", title: "Sr. No." },

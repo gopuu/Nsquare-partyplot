@@ -103,6 +103,10 @@ function populateYearDropdown() {
     });
 }
 
+function toTitleCase(str) {
+    return (str || "").toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
 /* =========================
    LOAD MONTHS
 ========================= */
@@ -128,7 +132,7 @@ function fetchMonthData(yearId) {
                 fromDropdown.append(`<option value="0">Select</option>`);
                 toDropdown.append(`<option value="0">Select</option>`);
 
-                months.forEach(m => {
+                months.forEach((m,index) => {
 
                     let option1 = $("<option>");
                     option1.val(m.MonthId);
@@ -137,6 +141,16 @@ function fetchMonthData(yearId) {
                     let option2 = $("<option>");
                     option2.val(m.MonthId);
                     option2.text(m.MonthName);
+
+                    // ✅ Select first month in FROM dropdown
+                    if (index === 0) {
+                        option1.prop("selected", true);
+                    }
+
+                    // ✅ Select last month in TO dropdown
+                    if (index === months.length - 1) {
+                        option2.prop("selected", true);
+                    }
 
                     fromDropdown.append(option1);
                     toDropdown.append(option2);
@@ -176,7 +190,6 @@ function loadProfitLossGrid() {
             Loading P&amp;L data...
         </div>
     `);
-    $("#plSummarySection").hide();
 
     $.ajax({
         url: "/api/Report_ProfitLoss/GetProfitLossGrid",
@@ -199,9 +212,7 @@ function loadProfitLossGrid() {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
-
-            renderProfitLossTable(res.data.LineItems);
-            renderSummaryCards(res.data.Summary);
+            renderProfitLossStatement(res.data);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fetch P&L Data Failed");
@@ -213,240 +224,118 @@ function loadProfitLossGrid() {
 /* ═══════════════════════════════════════════════════
    RENDER LINE ITEMS TABLE
 ═══════════════════════════════════════════════════ */
-function renderProfitLossTable(data) {
+function renderProfitLossStatement(data) {
 
-    if ($.fn.DataTable.isDataTable("#tblProfitLoss")) {
-        $("#tblProfitLoss").DataTable().clear().destroy();
+    if (!data) {
+        $("#tableMain").html(`<div class="alert alert-warning">No data found</div>`);
+        return;
     }
 
-    $("#tblProfitLoss").DataTable({
-        data: data,
-        responsive: true,
-        paging: false,         // P&L always has ≤ 4 rows — no paging needed
-        searching: false,
-        info: false,
-        scrollX: true,
-        order: [],
+    const revenue = data.Revenue || [];
+    const cogs = data.COGS || [];
+    const expenses = data.Expenses || [];
 
-        scrollY: "60vh",          // table body scroll height
-        scrollCollapse: true,     // shrink if less rows
-        scrollX: true,            // horizontal scroll if needed
+    const totalRevenue = formatINR2(data.TotalRevenue || 0);
+    const netPL = data.NetProfitLoss || 0;
 
-        columns: [
-            {
-                data: "SrNo",
-                title: "#",
-                width: "50px",
-                className: "text-center"
-            },
-            {
-                data: "Type",
-                title: "Type",
-                width: "120px",
-                render: function (data) {
-                    const badges = {
-                        "Sales": "success",
-                        "Income": "info",
-                        "Purchase": "danger",
-                        "Expense": "warning"
-                    };
-                    const cls = badges[data] || "secondary";
-                    return `<span class="badge bg-${cls}">${data}</span>`;
-                }
-            },
-            {
-                data: "Description",
-                title: "Description"
-            },
-            {
-                data: "Amount",
-                title: "Amount",
-                className: "text-end fw-semibold",
-                render: function (data, type, row) {
-                    const cls = row.nature === "Credit" ? "text-success" : "text-danger";
-                    return `<span class="${cls}">${formatINR2(data)}</span>`;
-                }
-            },
-            {
-                data: "Nature",
-                title: "Nature",
-                className: "text-center",
-                render: function (data) {
-                    const cls = data === "Credit" ? "success" : "danger";
-                    return `<span class="badge bg-${cls}-subtle text-${cls}-emphasis border border-${cls}-subtle">${data}</span>`;
-                }
-            }
-        ],
+    let html = `
+    <div class="pl-container">
 
-        /* ── Footer totals ── */
-        footerCallback: function (tfoot, data, start, end, display) {
+        <!-- (1) REVENUE -->
+        <table class="table table-bordered mb-0">
+            <tr class="pl-section-header">
+                <th colspan="3">(1) Revenue</th>
+            </tr>`;
 
-            const api = this.api();
-
-            const totalCredit = api.column(3, { page: "all" }).data()
-                .reduce((acc, val, idx) => {
-                    const nature = api.row(idx).data()?.Nature;
-                    return nature === "Credit" ? acc + (parseFloat(val) || 0) : acc;
-                }, 0);
-
-            const totalDebit = api.column(3, { page: "all" }).data()
-                .reduce((acc, val, idx) => {
-                    const nature = api.row(idx).data()?.Nature;
-                    return nature === "Debit" ? acc + (parseFloat(val) || 0) : acc;
-                }, 0);
-
-            const $cells = $(tfoot).find("th");
-            $cells.eq(0).html("<strong>TOTAL</strong>");
-            $cells.eq(1).html("");
-            $cells.eq(2).html("");
-            $cells.eq(3).html(`
-                <div class="text-success">${formatINR2(totalCredit)} <small class="text-muted">Credit</small></div>
-                <div class="text-danger">${formatINR2(totalDebit)} <small class="text-muted">Debit</small></div>
-            `);
-            $cells.eq(4).html("");
-        },
-
-        /* ── Row colouring by nature ── */
-        createdRow: function (row, rowData) {
-            if (rowData.nature === "Credit") {
-                $(row).addClass("table-success").css("opacity", "0.9");
-            } else {
-                $(row).addClass("table-danger").css("opacity", "0.9");
-            }
-        },
-
-        language: {
-            emptyTable: "No P&L data found for the selected period."
-        },
-
-        initComplete: function () {
-            $(this.api().table().header())
-                .find('th')
-                .addClass('bg-warning-subtle text-dark');
-        },
-
-    });
-}
-
-/* ═══════════════════════════════════════════════════
-   RENDER SUMMARY CARDS
-═══════════════════════════════════════════════════ */
-function renderSummaryCards(summary) {
-    if (!summary) return;
-
-    const netProfit = parseFloat(summary.NetProfit) || 0;
-    const grossProfit = parseFloat(summary.GrossProfit) || 0;
-
-    const cards = [
-        {
-            label: "Total Sales",
-            value: summary.TotalSales,
-            icon: "fa-file-invoice-dollar",
-            color: "success",
-            light: "success",
-            formula: "Customer Invoices (GrandTotal)"
-        },
-        {
-            label: "Other Income",
-            value: summary.TotalOtherIncome,
-            icon: "fa-circle-plus",
-            color: "info",
-            light: "info",
-            formula: "Income Transactions (Amount)"
-        },
-        {
-            label: "Total Purchase",
-            value: summary.TotalPurchase,
-            icon: "fa-cart-shopping",
-            color: "danger",
-            light: "danger",
-            formula: "Purchase (Grand Total Amount)"
-        },
-        {
-            label: "Total Expense",
-            value: summary.TotalExpense,
-            icon: "fa-money-bill-wave",
-            color: "warning",
-            light: "warning",
-            formula: "Expense Transactions (Amount)"
-        },
-        {
-            label: "Gross Profit",
-            value: summary.GrossProfit,
-            icon: "fa-chart-line",
-            color: grossProfit >= 0 ? "success" : "danger",
-            light: grossProfit >= 0 ? "success" : "danger",
-            formula: "Total Sales\n− Total Purchase"
-        }
-    ];
-
-    let cardsHtml = "";
-    cards.forEach(c => {
-        const formatted = formatINR2(parseFloat(c.value) || 0);
-
-        // Tooltip content — newlines become <br> inside data-bs-html tooltip
-        const tooltipText = c.formula.replace(/\n/g, "&#10;");
-
-        cardsHtml += `
-        <div class="col-md-4 col-lg">
-            <div class="card border-${c.light} h-100 pl-summary-card"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 data-bs-custom-class="pl-formula-tooltip"
-                 data-bs-html="true"
-                 title="<div class='text-start'><span class='text-warning fw-semibold'>${c.label}</span><hr class='my-1'/>${c.formula.replace(/\n/g, "<br/>")}</div>"
-                 style="cursor:help;">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-${c.light} bg-opacity-10 p-3 flex-shrink-0">
-                        <i class="fa ${c.icon} text-${c.color} fa-lg"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">
-                            ${c.label}
-                            <i class="fa fa-circle-info ms-1 text-secondary" style="font-size:10px;"></i>
-                        </div>
-                        <div class="fw-bold fs-7 text-${c.color}">${formatted}</div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+    revenue.forEach((r, i) => {
+        html += `
+        <tr>
+            <td style="width:50px;" class="text-center">${i + 1}</td>
+            <td>${toTitleCase(r.Description)}</td>
+            <td class="text-end">${formatINR2(r.Amount)}</td>
+        </tr>`;
     });
 
-    $("#plSummaryCards").html(cardsHtml);
+    html += `
+        <tr class="pl-total-row">
+            <td colspan="2" class="fw-bold text-success text-center">Total Revenue</td>
+            <td class="text-end fw-bold text-success">${totalRevenue}</td>
+        </tr>
+        </table>
 
-    // ── Net Profit banner ──
-    const bannerCls = netProfit >= 0 ? "bg-success" : "bg-danger";
-    const bannerIcon = netProfit >= 0 ? "fa-trophy" : "fa-triangle-exclamation";
-    const bannerText = netProfit >= 0 ? "Net Profit" : "Net Loss";
-    const netFormula = "(Total Sales + Other Income) − (Total Purchase + Total Expense)";
 
-    $("#netProfitBanner").html(`
-        <span class="badge ${bannerCls} fs-5 px-4 py-3 rounded-3 pl-summary-card"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              data-bs-custom-class="pl-formula-tooltip"
-              data-bs-html="true"
-              title="<div class='text-start'><span class='text-warning fw-semibold'>${bannerText}</span><hr class='my-1'/>${netFormula}</div>"
-              style="cursor:help;">
-            <i class="fa ${bannerIcon} me-2"></i>
-            ${bannerText}: ${formatINR2(Math.abs(netProfit))}
-            <i class="fa fa-circle-info ms-2" style="font-size:11px; opacity:0.7;"></i>
-        </span>
-    `).show();
+        <!-- (2) COGS -->
+        <table class="table table-bordered mb-0 mt-2">
+            <tr class="pl-section-header">
+                <th colspan="3">(2) COGS</th>
+            </tr>`;
 
-    $("#plSummarySection").show();
-
-    // ── Init Bootstrap tooltips on newly rendered cards ──
-    document.querySelectorAll(".pl-summary-card[data-bs-toggle='tooltip']").forEach(el => {
-        // Dispose any existing instance first (safe re-init on filter change)
-        const existing = bootstrap.Tooltip.getInstance(el);
-        if (existing) existing.dispose();
-
-        new bootstrap.Tooltip(el, {
-            trigger: "hover focus",
-            html: true
-        });
+    cogs.forEach((c, i) => {
+        html += `
+        <tr>
+            <td style="width:50px;" class="text-center">${i + 1}</td>
+            <td>${toTitleCase(c.Description)}</td>
+            <td class="text-end">${formatINR2(c.Amount)}</td>
+        </tr>`;
     });
+
+    html += `</table>`;
+
+
+    /* ========= EXPENSE TABLE ========= */
+    html += `
+        <table class="table table-bordered mt-2">
+            <tr class="pl-section-header">
+                <th colspan="3">(3) Operating Expenses</th>
+            </tr>
+            <tr class="table-light fw-semibold">
+                <th class="fs-9" style="width:80px;font-weight:700;">Sr. No.</th>
+                <th class="fs-9" style="font-weight:700">Category Name</th>
+                <th class="fs-9 text-end" style="font-weight:700">Amount</th>
+            </tr>`;
+
+    /* Expense Rows */
+    expenses.forEach((e, i) => {
+        html += `
+        <tr>
+            <td class="text-center">${i + 1}</td>
+            <td>${toTitleCase(e.Description)}</td>
+            <td class="text-end">${formatINR2(e.Amount)}</td>
+        </tr>`;
+    });
+
+
+    /* ========= NET P&L (INSIDE SAME TABLE) ========= */
+
+    const isProfit = netPL > 0;
+    const isLoss = netPL < 0;
+
+    let rowClass = "table-secondary";
+    let textClass = "text-dark";
+
+    if (isProfit) {
+        rowClass = "table-success";
+        textClass = "text-success";
+    }
+    else if (isLoss) {
+        rowClass = "table-danger";
+        textClass = "text-danger";
+    }
+
+    /* Net Row */
+    html += `
+        <tr class="${rowClass}">
+            <td colspan="2" class="fw-bold text-center">
+                Net P&amp;L
+            </td>
+            <td class="fw-bold text-end ${textClass}">
+                ${formatINR2(Math.abs(netPL))}
+            </td>
+        </tr>
+    </table>
+    </div>`;
+
+    $("#tableMain").html(html);
 }
 
 /* ═══════════════════════════════════════════════════

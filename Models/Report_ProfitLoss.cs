@@ -14,7 +14,6 @@
         public int Year { get; set; }
         public int MonthId_From { get; set; }
         public int MonthId_To { get; set; }
-
         public bool? WithHeader { get; set; }
     }
 

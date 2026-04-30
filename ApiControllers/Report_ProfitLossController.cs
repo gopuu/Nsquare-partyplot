@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Presentation;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
@@ -48,62 +49,93 @@ namespace ERPAdmin.ApiControllers
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue("@YearId",
-                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
-
-                    cmd.Parameters.AddWithValue("@Year",
-                        request.Year == 0 ? (object)DBNull.Value : request.Year);
-
-                    cmd.Parameters.AddWithValue("@MonthId_From",
-                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
-
-                    cmd.Parameters.AddWithValue("@MonthId_To",
-                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
+                    cmd.Parameters.AddWithValue("@YearId", request.YearId == 0 ? (object)DBNull.Value : request.YearId);
+                    cmd.Parameters.AddWithValue("@Year", request.Year == 0 ? (object)DBNull.Value : request.Year);
+                    cmd.Parameters.AddWithValue("@MonthId_From", request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
+                    cmd.Parameters.AddWithValue("@MonthId_To", request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
                 }
 
-                if (ds.Tables.Count < 2)
+                if (ds.Tables.Count < 3)
                     throw new Exception("P&L data incomplete.");
 
-                DataTable dtLines = ds.Tables[0];
+                DataTable dt = ds.Tables[0];
                 DataTable dtSummary = ds.Tables[1];
+                DataTable dtNet = ds.Tables[2];
 
-                var lineItems = new List<ProfitLossLineItem>();
+                /* ===============================
+                   SECTION SPLIT (IMPORTANT)
+                   =============================== */
 
-                foreach (DataRow row in dtLines.Rows)
-                {
-                    lineItems.Add(new ProfitLossLineItem
+                var revenue = dt.AsEnumerable()
+                    .Where(x => x["Type"].ToString() == "Revenue")
+                    .Select(x => new ProfitLossLineItem
                     {
-                        SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        Type = row["Type"] != DBNull.Value ? Convert.ToString(row["Type"]) : "-",
-                        Description = row["Description"] != DBNull.Value ? Convert.ToString(row["Description"]) : "-",
-                        Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0,
-                        Nature = row["Nature"] != DBNull.Value ? Convert.ToString(row["Nature"]) : "-"
-                    });
-                }
+                        Description = x["Description"].ToString(),
+                        Amount = Convert.ToDecimal(x["Amount"])
+                    }).ToList();
 
-                var summary = new ProfitLossSummary();
+                var cogs = dt.AsEnumerable()
+                    .Where(x => x["Type"].ToString() == "COGS")
+                    .Select(x => new ProfitLossLineItem
+                    {
+                        Description = x["Description"].ToString(),
+                        Amount = Convert.ToDecimal(x["Amount"])
+                    }).ToList();
+
+                var expenses = dt.AsEnumerable()
+                    .Where(x => x["Type"].ToString() == "Operating Expenses")
+                    .Select(x => new ProfitLossLineItem
+                    {
+                        Description = x["Description"].ToString(),
+                        Amount = Convert.ToDecimal(x["Amount"])
+                    }).ToList();
+
+                /* ===============================
+                   SUMMARY
+                   =============================== */
+
+                decimal totalRevenue = 0, totalCOGS = 0, totalExpense = 0;
 
                 if (dtSummary.Rows.Count > 0)
                 {
-                    DataRow s = dtSummary.Rows[0];
-
-                    summary.TotalSales = s["TotalSales"] != DBNull.Value ? Convert.ToDecimal(s["TotalSales"]) : 0;
-                    summary.TotalPurchase = s["TotalPurchase"] != DBNull.Value ? Convert.ToDecimal(s["TotalPurchase"]) : 0;
-                    summary.TotalOtherIncome = s["TotalOtherIncome"] != DBNull.Value ? Convert.ToDecimal(s["TotalOtherIncome"]) : 0;
-                    summary.TotalExpense = s["TotalExpense"] != DBNull.Value ? Convert.ToDecimal(s["TotalExpense"]) : 0;
-                    summary.GrossProfit = s["GrossProfit"] != DBNull.Value ? Convert.ToDecimal(s["GrossProfit"]) : 0;
-                    summary.NetProfit = s["NetProfit"] != DBNull.Value ? Convert.ToDecimal(s["NetProfit"]) : 0;
+                    var s = dtSummary.Rows[0];
+                    totalRevenue = s["TotalRevenue"] != DBNull.Value ? Convert.ToDecimal(s["TotalRevenue"]) : 0;
+                    totalCOGS = s["TotalCOGS"] != DBNull.Value ? Convert.ToDecimal(s["TotalCOGS"]) : 0;
+                    totalExpense = s["TotalExpense"] != DBNull.Value ? Convert.ToDecimal(s["TotalExpense"]) : 0;
                 }
 
-                apiResponse.message = "P&L report fetched successfully!";
-                apiResponse.data = new ProfitLossGridResponse
+                decimal netPL = 0;
+
+                if (dtNet.Rows.Count > 0)
                 {
-                    LineItems = lineItems,
-                    Summary = summary
+                    netPL = dtNet.Rows[0]["NetProfitLoss"] != DBNull.Value
+                        ? Convert.ToDecimal(dtNet.Rows[0]["NetProfitLoss"])
+                        : 0;
+                }
+
+                /* ===============================
+                   FINAL RESPONSE STRUCTURE
+                   =============================== */
+
+                var responseData = new
+                {
+                    Revenue = revenue,
+                    TotalRevenue = totalRevenue,
+
+                    COGS = cogs,
+                    TotalCOGS = totalCOGS,
+
+                    Expenses = expenses,
+                    TotalExpense = totalExpense,
+
+                    NetProfitLoss = netPL
                 };
+
+                apiResponse.message = "P&L report fetched successfully!";
+                apiResponse.data = responseData;
                 apiResponse.status = "Success";
 
                 return Ok(apiResponse);
@@ -213,7 +245,7 @@ namespace ERPAdmin.ApiControllers
                     throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                string reportName = dsReport.Tables[0].Rows[0]["ReportTitle"]?.ToString() ?? "P&L STATEMENT";
 
                 float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
 
@@ -297,99 +329,249 @@ namespace ERPAdmin.ApiControllers
 
                 document.Open();
 
-                DataTable headerTableDB = dsReport.Tables[1];
-                DataTable dataTableDB = dsReport.Tables[2];
-                DataTable summaryTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
+                //var dtHeader = dsReport.Tables[0];
+                var dt = dsReport.Tables[1];
+                var dtSummary = dsReport.Tables[2];
+                var dtNet = dsReport.Tables[3];
 
                 /* ── Report Title ── */
-                document.Add(new Paragraph(reportName.ToUpper(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY))
+
+                document.Add(new Paragraph(reportName.ToUpper(), FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY))
                 {
                     Alignment = Element.ALIGN_CENTER,
                     SpacingAfter = 10f
                 });
 
-                /* ── Data Table ── */
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
+                var revenue = dt.AsEnumerable().Where(x => x["Type"].ToString() == "Revenue").ToList();
+                var cogs = dt.AsEnumerable().Where(x => x["Type"].ToString() == "COGS").ToList();
+                var expenses = dt.AsEnumerable().Where(x => x["Type"].ToString() == "Operating Expenses").ToList();
 
-                BaseColor thColor = new BaseColor(240, 240, 240);
-                BaseColor creditBg = new BaseColor(232, 245, 233);
-                BaseColor debitBg = new BaseColor(255, 235, 238);
+                decimal totalRevenue = dtSummary.Rows.Count > 0 ? Convert.ToDecimal(dtSummary.Rows[0]["TotalRevenue"]) : 0;
+                decimal netPL = dtNet.Rows.Count > 0 ? Convert.ToDecimal(dtNet.Rows[0]["NetProfitLoss"]) : 0;
 
-                int columnCount = dataTableDB.Columns.Count;
 
-                PdfPTable table = new PdfPTable(columnCount);
-                table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 8f, 18f, 38f, 22f, 14f });
+                /* =========================
+                   COMMON STYLES
+                   ========================= */
 
-                for (int i = 0; i < headerTableDB.Rows.Count; i++)
-                    table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
+                iTextSharp.text.Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
+                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
+                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8);
 
-                table.HeaderRows = 1;
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
 
-                foreach (DataRow row in dataTableDB.Rows)
+                BaseColor headerBg = new BaseColor(220, 220, 220);
+                BaseColor totalBg = new BaseColor(212, 237, 218);
+
+
+                /* ========================= (1) REVENUE ========================= */
+                PdfPTable revenueTable = new PdfPTable(3);
+                revenueTable.WidthPercentage = 70;
+                revenueTable.SetWidths(new float[] { 10, 60, 30 });
+
+                PdfPCell revHeader = new PdfPCell(new Phrase("(1) Revenue", headerFont))
                 {
-                    string nature = row["Nature"]?.ToString() ?? "";
-                    BaseColor rowBg = nature == "Credit" ? creditBg : debitBg;
+                    Colspan = 3,
+                    BackgroundColor = headerBg,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 6
+                };
+                revenueTable.AddCell(revHeader);
 
-                    foreach (DataColumn col in dataTableDB.Columns)
+                int i = 1;
+                foreach (var r in revenue)
+                {
+                    // Sr No (Center)
+                    revenueTable.AddCell(new PdfPCell(new Phrase(i++.ToString(), normalFont))
                     {
-                        string val = row[col]?.ToString() ?? "-";
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
 
-                        PdfPCell cell = new PdfPCell(new Phrase(val, tdFont))
-                        {
-                            BackgroundColor = rowBg,
-                            Padding = 6,
-                            BorderColor = BaseColor.LIGHT_GRAY,
-                            HorizontalAlignment = col.ColumnName == "Amount"
-                                ? Element.ALIGN_RIGHT
-                                : Element.ALIGN_LEFT
-                        };
+                    // Description (Left - default but explicit is better)
+                    revenueTable.AddCell(new PdfPCell(new Phrase(r["Description"].ToString(), normalFont))
+                    {
+                        HorizontalAlignment = Element.ALIGN_LEFT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
 
-                        table.AddCell(cell);
-                    }
+                    // Amount (Right)
+                    revenueTable.AddCell(new PdfPCell(new Phrase("₹ " + Convert.ToDecimal(r["Amount"]).ToString("N2"), AmtFontNormal))
+                    {
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
                 }
 
-                document.Add(table);
-
-                /* ── SUMMARY ── */
-                if (summaryTableDB != null && summaryTableDB.Rows.Count > 0)
+                /* Total Revenue */
+                PdfPCell totalLbl = new PdfPCell(new Phrase("Total Revenue", AmtFontNormal))
                 {
-                    DataRow s = summaryTableDB.Rows[0];
+                    Colspan = 2,
+                    BackgroundColor = totalBg,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 6
+                };
+                PdfPCell totalVal = new PdfPCell(new Phrase("₹ " + totalRevenue.ToString("N2"), AmtFontNormal))
+                {
+                    BackgroundColor = totalBg,
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    Padding = 6
+                };
 
-                    decimal totalSales = Convert.ToDecimal(s["TotalSales"]);
-                    decimal totalPurchase = Convert.ToDecimal(s["TotalPurchase"]);
-                    decimal totalOtherIncome = Convert.ToDecimal(s["TotalOtherIncome"]);
-                    decimal totalExpense = Convert.ToDecimal(s["TotalExpense"]);
-                    decimal grossProfit = Convert.ToDecimal(s["GrossProfit"]);
-                    decimal netProfit = Convert.ToDecimal(s["NetProfit"]);
+                revenueTable.AddCell(totalLbl);
+                revenueTable.AddCell(totalVal);
 
-                    document.Add(new Paragraph(" ") { SpacingAfter = 10f });
+                document.Add(revenueTable);
 
-                    PdfPTable summaryTable = new PdfPTable(2);
-                    summaryTable.WidthPercentage = 55;
-                    summaryTable.HorizontalAlignment = Element.ALIGN_RIGHT;
+                /* =========================
+                   (2) COGS
+                   ========================= */
+                PdfPTable cogsTable = new PdfPTable(3);
+                cogsTable.WidthPercentage = 70;
+                cogsTable.SetWidths(new float[] { 10, 60, 30 });
 
-                    void AddSummary(string label, decimal value)
+                cogsTable.AddCell(new PdfPCell(new Phrase("(2) COGS", headerFont))
+                {
+                    Colspan = 3,
+                    BackgroundColor = headerBg,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 6
+                });
+
+                i = 1;
+                foreach (var c in cogs)
+                {
+                    // Sr No (Center)
+                    cogsTable.AddCell(new PdfPCell(new Phrase(i++.ToString(), normalFont))
                     {
-                        summaryTable.AddCell(new PdfPCell(new Phrase(label)) { Padding = 6 });
-                        summaryTable.AddCell(new PdfPCell(new Phrase(value.ToString("N2")))
-                        {
-                            Padding = 6,
-                            HorizontalAlignment = Element.ALIGN_RIGHT
-                        });
-                    }
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
 
-                    AddSummary("Total Sales", totalSales);
-                    AddSummary("Total Other Income", totalOtherIncome);
-                    AddSummary("Total Purchase", totalPurchase);
-                    AddSummary("Total Expense", totalExpense);
-                    AddSummary("Gross Profit", grossProfit);
-                    AddSummary("Net Profit", netProfit);
+                    // Description (Left)
+                    cogsTable.AddCell(new PdfPCell(new Phrase(c["Description"].ToString(), normalFont))
+                    {
+                        HorizontalAlignment = Element.ALIGN_LEFT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
 
-                    document.Add(summaryTable);
+                    // Amount (Right)
+                    cogsTable.AddCell(new PdfPCell(new Phrase("₹ " + Convert.ToDecimal(c["Amount"]).ToString("N2"), AmtFontNormal))
+                    {
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        PaddingRight = 8
+                    });
                 }
+                document.Add(cogsTable);
+
+                /* =========================
+                   (3) EXPENSES
+                   ========================= */
+                PdfPTable expTable = new PdfPTable(3);
+                expTable.WidthPercentage = 70;
+                expTable.SetWidths(new float[] { 10, 60, 30 });
+
+                expTable.AddCell(new PdfPCell(new Phrase("(3) Operating Expenses", headerFont))
+                {
+                    Colspan = 3,
+                    BackgroundColor = headerBg,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 6
+                });
+                /* header row */
+                // Sr. No. (Center)
+                expTable.AddCell(new PdfPCell(new Phrase("Sr. No.", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6
+                });
+
+                // Category (Left)
+                expTable.AddCell(new PdfPCell(new Phrase("Category", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_LEFT,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6
+                });
+
+                // Amount (Right)
+                expTable.AddCell(new PdfPCell(new Phrase("Amount", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6,
+                    PaddingRight = 8
+                });
+
+                i = 1;
+                foreach (var e in expenses)
+                {
+                    // Sr No (Center)
+                    expTable.AddCell(new PdfPCell(new Phrase(i++.ToString(), normalFont))
+                    {
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
+
+                    // Description (Left)
+                    expTable.AddCell(new PdfPCell(new Phrase(e["Description"].ToString(), normalFont))
+                    {
+                        HorizontalAlignment = Element.ALIGN_LEFT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5
+                    });
+
+                    // Amount (Right)
+                    expTable.AddCell(new PdfPCell(new Phrase("₹ " + Convert.ToDecimal(e["Amount"]).ToString("N2"), AmtFontNormal))
+                    {
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        PaddingRight = 8
+                    });
+                }
+
+                /* =========================
+                   NET P&L (INSIDE SAME TABLE)
+                   ========================= */
+                bool isProfit = netPL > 0;
+                bool isLoss = netPL < 0;
+
+                BaseColor netBg = BaseColor.LIGHT_GRAY;
+                if (isProfit) netBg = new BaseColor(183, 215, 168);
+                else if (isLoss) netBg = new BaseColor(244, 199, 195);
+
+                PdfPCell netLbl = new PdfPCell(new Phrase("Net P&L", AmtFontNormal))
+                {
+                    Colspan = 2,
+                    BackgroundColor = netBg,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    Padding = 6
+                };
+
+                PdfPCell netVal = new PdfPCell(new Phrase("₹ " + Math.Abs(netPL).ToString("N2"), AmtFontNormal))
+                {
+                    BackgroundColor = netBg,
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    Padding = 6
+                };
+
+                expTable.AddCell(netLbl);
+                expTable.AddCell(netVal);
+
+                document.Add(expTable);
 
                 document.Close();
 
@@ -467,96 +649,151 @@ namespace ERPAdmin.ApiControllers
                 DataTable summaryTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
                 using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("P&L Report");
+                var ws = workbook.Worksheets.Add("P&L Report");
 
-                // ── Headers ──
-                int col = 1;
-                foreach (DataRow hRow in headerTableDB.Rows)
+                int row = 1;
+
+                /* ========================= TITLE ========================= */
+                ws.Cell(row, 1).Value = dsReport.Tables[0].Rows[0]["ReportTitle"]?.ToString() ?? "P&L STATEMENT";
+                ws.Range(row, 1, row, 3).Merge();
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontSize = 16;
+                ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row += 2;
+
+                /* ========================= EXTRACT DATA ========================= */
+                var dt = dsReport.Tables[0];
+                var dtSummary = dsReport.Tables[1];
+                var dtNet = dsReport.Tables[2];
+
+                var revenue = dt.AsEnumerable().Where(x => x["Type"].ToString() == "Revenue").ToList();
+                var cogs = dt.AsEnumerable().Where(x => x["Type"].ToString() == "COGS").ToList();
+                var expenses = dt.AsEnumerable().Where(x => x["Type"].ToString() == "Operating Expenses").ToList();
+
+                decimal totalRevenue = Convert.ToDecimal(dtSummary.Rows[0]["TotalRevenue"]);
+                decimal netPL = Convert.ToDecimal(dtNet.Rows[0]["NetProfitLoss"]);
+
+
+                /* =========================STYLES========================= */
+                var headerBg = XLColor.FromArgb(220, 220, 220);
+                var totalBg = XLColor.FromArgb(212, 237, 218);
+                var profitBg = XLColor.FromArgb(183, 215, 168);
+                var lossBg = XLColor.FromArgb(244, 199, 195);
+                var neutralBg = XLColor.FromArgb(230, 230, 230);
+
+
+                /* =========================
+                   (1) REVENUE
+                   ========================= */
+                ws.Cell(row, 1).Value = "(1) Revenue";
+                ws.Range(row, 1, row, 3).Merge().Style.Fill.BackgroundColor = headerBg;
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row++;
+
+                int i = 1;
+                foreach (var r in revenue)
                 {
-                    worksheet.Cell(1, col).Value = hRow["HeaderName"].ToString();
-                    worksheet.Cell(1, col).Style.Font.Bold = true;
-                    worksheet.Cell(1, col).Style.Fill.BackgroundColor = XLColor.FromArgb(0, 121, 182);
-                    worksheet.Cell(1, col).Style.Font.FontColor = XLColor.White;
-                    worksheet.Cell(1, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    col++;
-                }
-
-                // ── Data rows ──
-                int row = 2;
-                foreach (DataRow dr in dataTableDB.Rows)
-                {
-                    string nature = dr["Nature"]?.ToString() ?? "";
-
-                    for (int i = 0; i < dataTableDB.Columns.Count; i++)
-                    {
-                        var cell = worksheet.Cell(row, i + 1);
-                        cell.Value = dr[i]?.ToString() ?? "-";
-
-                        if (nature == "Credit")
-                            cell.Style.Fill.BackgroundColor = XLColor.FromArgb(232, 245, 233);
-                        else
-                            cell.Style.Fill.BackgroundColor = XLColor.FromArgb(255, 235, 238);
-
-                        if (dataTableDB.Columns[i].ColumnName == "Amount")
-                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    }
+                    ws.Cell(row, 1).Value = i++;
+                    ws.Cell(row, 2).Value = r["Description"].ToString();
+                    ws.Cell(row, 3).Value = Convert.ToDecimal(r["Amount"]);
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "₹ #,##0.00";
+                    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                     row++;
                 }
 
-                // ── Summary section ──
-                if (summaryTableDB != null && summaryTableDB.Rows.Count > 0)
+                /* Total Revenue */
+                ws.Range(row, 1, row, 2).Merge().Value = "Total Revenue";
+                ws.Range(row, 1, row, 2).Style.Fill.BackgroundColor = totalBg;
+                ws.Cell(row, 3).Value = totalRevenue;
+                ws.Cell(row, 3).Style.Fill.BackgroundColor = totalBg;
+                ws.Cell(row, 3).Style.NumberFormat.Format = "₹ #,##0.00";
+                ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                ws.Row(row).Style.Font.Bold = true;
+                row += 2;
+
+
+                /* =========================
+                   (2) COGS
+                   ========================= */
+
+                ws.Cell(row, 1).Value = "(2) COGS";
+                ws.Range(row, 1, row, 3).Merge().Style.Fill.BackgroundColor = headerBg;
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row++;
+
+                i = 1;
+                foreach (var c in cogs)
                 {
-                    DataRow s = summaryTableDB.Rows[0];
-                    row += 1; // blank gap
-
-                    // Summary title
-                    worksheet.Cell(row, 1).Value = "P & L SUMMARY";
-                    worksheet.Range(row, 1, row, 5).Merge();
-                    worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Font.FontColor = XLColor.White;
-                    worksheet.Cell(row, 1).Style.Fill.BackgroundColor = XLColor.FromArgb(33, 37, 41);
-                    worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(row, 1).Value = i++;
+                    ws.Cell(row, 2).Value = c["Description"].ToString();
+                    ws.Cell(row, 3).Value = Convert.ToDecimal(c["Amount"]);
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "₹ #,##0.00";
+                    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                     row++;
-
-                    void AddSummaryExcelRow(string label, string value, XLColor bg)
-                    {
-                        worksheet.Cell(row, 1).Value = label;
-                        worksheet.Cell(row, 1).Style.Fill.BackgroundColor = bg;
-                        worksheet.Cell(row, 2).Value = value;
-                        worksheet.Cell(row, 2).Style.Fill.BackgroundColor = bg;
-                        worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        row++;
-                    }
-
-                    XLColor creditBg = XLColor.FromArgb(232, 245, 233);
-                    XLColor debitBg = XLColor.FromArgb(255, 235, 238);
-                    XLColor neutralBg = XLColor.FromArgb(240, 240, 240);
-
-                    AddSummaryExcelRow("Total Sales", s["TotalSales"].ToString(), creditBg);
-                    AddSummaryExcelRow("Total Other Income", s["TotalOtherIncome"].ToString(), creditBg);
-                    AddSummaryExcelRow("Total Purchase", s["TotalPurchase"].ToString(), debitBg);
-                    AddSummaryExcelRow("Total Expense", s["TotalExpense"].ToString(), debitBg);
-
-                    // Gross & Net
-                    worksheet.Cell(row, 1).Value = "Gross Profit";
-                    worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Fill.BackgroundColor = neutralBg;
-                    worksheet.Cell(row, 2).Value = s["GrossProfit"].ToString();
-                    worksheet.Cell(row, 2).Style.Font.Bold = true;
-                    worksheet.Cell(row, 2).Style.Fill.BackgroundColor = neutralBg;
-                    worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    row++;
-
-                    worksheet.Cell(row, 1).Value = "Net Profit";
-                    worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Fill.BackgroundColor = neutralBg;
-                    worksheet.Cell(row, 2).Value = s["NetProfit"].ToString();
-                    worksheet.Cell(row, 2).Style.Font.Bold = true;
-                    worksheet.Cell(row, 2).Style.Fill.BackgroundColor = neutralBg;
-                    worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                 }
 
-                worksheet.Columns().AdjustToContents();
+                row += 1;
+
+
+                /* =========================
+                   (3) EXPENSES
+                   ========================= */
+
+                ws.Cell(row, 1).Value = "(3) Operating Expenses";
+                ws.Range(row, 1, row, 3).Merge().Style.Fill.BackgroundColor = headerBg;
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                row++;
+
+                /* header */
+                ws.Cell(row, 1).Value = "Sr. No.";
+                ws.Cell(row, 2).Value = "Category Name";
+                ws.Cell(row, 3).Value = "Amount";
+                ws.Range(row, 1, row, 3).Style.Font.Bold = true;
+                ws.Range(row, 1, row, 3).Style.Fill.BackgroundColor = XLColor.LightGray;
+                row++;
+
+                i = 1;
+                foreach (var e in expenses)
+                {
+                    ws.Cell(row, 1).Value = i++;
+                    ws.Cell(row, 2).Value = e["Description"].ToString();
+                    ws.Cell(row, 3).Value = Convert.ToDecimal(e["Amount"]);
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "₹ #,##0.00";
+                    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    row++;
+                }
+
+
+                /* =========================
+                   NET P&L (INSIDE SAME TABLE)
+                   ========================= */
+
+                var netBg = neutralBg;
+                if (netPL > 0) netBg = profitBg;
+                else if (netPL < 0) netBg = lossBg;
+
+                ws.Range(row, 1, row, 2).Merge().Value = "Net P&L";
+                ws.Range(row, 1, row, 2).Style.Fill.BackgroundColor = netBg;
+                ws.Cell(row, 3).Value = Math.Abs(netPL);
+                ws.Cell(row, 3).Style.Fill.BackgroundColor = netBg;
+                ws.Cell(row, 3).Style.NumberFormat.Format = "₹ #,##0.00";
+                ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                ws.Row(row).Style.Font.Bold = true;
+
+
+                /* =========================
+                   FINAL FORMATTING
+                   ========================= */
+
+                ws.Columns(1, 3).AdjustToContents();
+                ws.Columns(1, 1).Width = 10;
+                ws.Columns(2, 2).Width = 40;
+                ws.Columns(3, 3).Width = 18;
+
+                ws.Columns().AdjustToContents();
 
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
