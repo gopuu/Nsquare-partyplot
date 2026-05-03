@@ -13,11 +13,14 @@
         public string? TransferDate_Format { get; set; }
         public string? ReferenceNo { get; set; }
         public string? Notes { get; set; }
+        public long FundTransfer_Category_Id { get; set; }
+        public string? FundTransfer_Category_Name { get; set; }
     }
     public class GetFundTransferRequest
     {
         public long Id { get; set; } = 0;
         public long FromAccountId { get; set; } = 0;
+        public long FundTransfer_Category_Id { get; set; } = 0;
         public long ToAccountId { get; set; } = 0;
         public string? FilterDuration { get; set; }
         public string? FromDate { get; set; }
@@ -36,6 +39,7 @@
         public string? ToDate { get; set; }
         public bool? WithHeader { get; set; }
         public decimal? Amount { get; set; }
+        public long FundTransfer_Category_Id { get; set; } = 0;
     }
 
     public class SaveFundTransferRequest : BaseClass
@@ -43,10 +47,12 @@
         public long Id { get; set; }
         public long FromAccountId { get; set; }
         public long ToAccountId { get; set; }
+        public long FundTransfer_Category_Id { get; set; }
         public decimal Amount { get; set; }
         public string? TransferDate { get; set; }
         public string? ReferenceNo { get; set; }
         public string? Notes { get; set; }
+
     }
 
     public class DeleteFundTransferRequest : BaseClass

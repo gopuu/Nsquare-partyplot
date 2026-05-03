@@ -37,7 +37,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" data-bs-toggle="tab" href="#tab-food-services" role="tab">Food Rates & Services</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item d-none">
                                 <a class="nav-link" data-bs-toggle="tab" href="#tab-terms" role="tab">Terms & Conditions</a>
                             </li>
                         </ul>
@@ -1082,7 +1082,7 @@
                                 <div style="flex: 0 0 30%;">
                                     <div class="row g-3">
                                         <!-- GST Invoice Setup -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <h5 class="mb-3">GST Invoice Setup</h5>
                                             <div class="row g-3">
                                                 <div class="col-md-6">
@@ -1097,7 +1097,7 @@
                                         </div>
 
                                         <!-- Proforma Invoice Setup -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <h5 class="mb-3">Proforma Invoice Setup</h5>
                                             <div class="row g-3">
                                                 <div class="col-md-6">
@@ -1112,7 +1112,7 @@
                                         </div>
 
                                         <!-- Receipt Setup -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <h5 class="mb-3">Receipt Setup</h5>
                                             <div class="row g-3">
                                                 <div class="col-md-6">
@@ -1123,7 +1123,7 @@
                                         </div>
 
                                         <!-- Checkbox Options -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" id="PrintLogoProspectus">
                                                 <label class="form-check-label" for="PrintLogoProspectus">Print logo in function prospectus</label>
@@ -1157,7 +1157,7 @@
                                         </div>
 
                                         <!-- Signatory Label -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <h6 class="mb-3">Signatory Label</h6>
                                             <select class="form-select" name="signatoryLabel" id="signatoryLabelSelect">
                                                 <option value="1" selected>Proprietor</option>
@@ -1171,7 +1171,7 @@
                                         </div>
 
                                         <!-- Bank Details -->
-                                        <div class="col-12">
+                                        <div class="col-12 d-none">
                                             <div class="form-check mb-3">
                                                 <input class="form-check-input" type="checkbox" id="PrintBankDetails">
                                                 <label class="form-check-label" for="PrintBankDetails">Print Bank Details on the Invoice</label>
@@ -1218,16 +1218,16 @@
 
                                         <!-- Save Button -->
                                         <div class="col-md-12 d-flex align-items-center justify-content-end">
-                                            <button class="btn btn-warning" onclick="saveInvoiceSetupData()"><i class="fa fa-save me-1"></i> Save Invoice Design</button>
+                                            <button class="btn btn-warning" onclick="saveInvoiceSetupData()"><i class="fa fa-save me-1"></i> Save</button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Right Panel (70%) -->
                                 <div style="flex: 0 0 70%; display: flex; justify-content: center; align-items: flex-start;">
-                                    <img src="/assets2/img/invoiceTemplate.jpg"
+                                    <img src="/assets2/img/invoiceTemplate1.png"
                                          alt="Invoice Preview"
-                                         style="width: 50%; max-width: 800px; height: 80%; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />
+                                         id="invoiceImageSample"/>
                                 </div>
                             </div>
                         </div>

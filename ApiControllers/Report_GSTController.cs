@@ -309,6 +309,7 @@ namespace ERPAdmin.ApiControllers
 
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
+                table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
 
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 7, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 7);

@@ -138,6 +138,11 @@
             <select id="filter_ddlToAccount" class="form-select form-select-sm"></select>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select id="filter_ddlCategory" class="form-select form-select-sm"></select>
+        </div>
+
     </div>
 
     <div class="filter-footer">
@@ -184,57 +189,95 @@
 
 <!-- Add Fund Transfer -->
 <div class="modal fade" id="FundTransferModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <div class="modal-header bg-warning text-white py-2">
+            <div class="modal-header bg-warning text-white py-1">
                 <h5 class="modal-title text-white" id="FundTransferModalTitle">Add Fund Transfer</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body p-4">
+
                 <input type="hidden" id="FundTransferId" value="0">
 
-                <div class="row g-3">
+                <!-- Section: Accounts -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary">Account Details</h6>
 
-                    <div class="col-md-6">
-                        <label class="form-label">From<span class="text-danger">*</span></label>
-                        <select id="ddlFromAccount" class="form-select">
-                            <option value="">-- Select From --</option>
-                        </select>
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">From Account <span class="text-danger">*</span></label>
+                                <select id="ddlFromAccount" class="form-select">
+                                    <option value="">-- Select Account --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">To Account <span class="text-danger">*</span></label>
+                                <select id="ddlToAccount" class="form-select">
+                                    <option value="">-- Select Account --</option>
+                                </select>
+                            </div>
+
+                        </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">To<span class="text-danger">*</span></label>
-                        <select id="ddlToAccount" class="form-select">
-                            <option value="">-- Select To --</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Amount <span class="text-danger">*</span></label>
-                        <input type="number" id="txtAmount" class="form-control" placeholder="Enter Amount">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Transfer Date <span class="text-danger">*</span></label>
-                        <input type="date" id="txtTransferDate" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Reference No</label>
-                        <input type="text" id="txtReferenceNo" class="form-control" placeholder="Enter Reference No">
-                    </div>
-
-                    <!-- Notes full row -->
-                    <div class="col-12">
-                        <label class="form-label">Notes</label>
-                        <textarea id="txtNotes" class="form-control" rows="3" placeholder="Write full notes..."></textarea>
-                    </div>
-
                 </div>
-            </div>
 
+                <!-- Section: Transaction -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary">Transaction Info</h6>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Amount <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" id="txtAmount" class="form-control" placeholder="0.00">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                                <select id="ddlCategory" class="form-select">
+                                    <option value="">-- Select Category --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Transfer Date <span class="text-danger">*</span></label>
+                                <input type="date" id="txtTransferDate" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Additional Info -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary">Additional Details</h6>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Reference No</label>
+                                <input type="text" id="txtReferenceNo" class="form-control" placeholder="Optional">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Notes</label>
+                                <textarea id="txtNotes" class="form-control" rows="2" placeholder="Add remarks..."></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>

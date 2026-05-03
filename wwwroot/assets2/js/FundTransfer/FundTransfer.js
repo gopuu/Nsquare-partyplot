@@ -8,7 +8,8 @@ const REPORT_COLUMNS = [
     { key: "FromAccountName", label: "From Account" },
     { key: "ToAccountName", label: "To Account" },
     { key: "Amount", label: "Amount" },
-    { key: "Notes", label: "Notes" }
+    { key: "Notes", label: "Notes" },
+    { key: "Category", label: "Category" }
 ];
 
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
@@ -19,6 +20,7 @@ $(document).ready(function () {
     loadAccountDropdowns();
     fetchFundTransfers();
     setCurrentMonthDates();
+    loadFundTransferCategory();
 
     //ADD 
     $(document).on("click", "#btn-add-fund-transfer", function () {
@@ -50,16 +52,26 @@ $(document).ready(function () {
             TransferDate: $("#txtTransferDate").val(),
             ReferenceNo: $("#txtReferenceNo").val(),
             Notes: $("#txtNotes").val(),
-            ActionBy: sessionStorage.getItem("userId") ?? 0
+            ActionBy: sessionStorage.getItem("userId") ?? 0,
+            FundTransfer_Category_Id: $("#ddlCategory").val()
         };
-        if (!model.FromAccountId || !model.ToAccountId || !model.Amount || !model.TransferDate) {
-            Swal.fire("Required", "Please fill all mandatory fields.", "warning");
+
+        // ✅ Required field validation
+        if (!validateRequiredFields(fundTransferValidationRules)) {
             return;
         }
+
+        // ✅ Business validations
         if (model.FromAccountId === model.ToAccountId) {
             Swal.fire("Invalid", "From Account and To Account cannot be same!", "warning");
             return;
         }
+
+        if (parseFloat(model.Amount) <= 0) {
+            Swal.fire("Invalid", "Amount must be greater than zero.", "warning");
+            return;
+        }
+
         $.ajax({
             url: "/api/FundTransfer/SaveFundTransfer",
             type: "POST",
@@ -134,6 +146,7 @@ $(document).ready(function () {
 
         $("#txtReferenceNo").val(rowData.ReferenceNo);
         $("#txtNotes").val(rowData.Notes);
+        $("#ddlCategory").val(rowData.FundTransfer_Category_Id);
 
         // Update Title
         $("#FundTransferModalTitle").text("Edit Fund Transfer");
@@ -190,7 +203,7 @@ $(document).ready(function () {
     });
 
     /* ── Other filter dropdowns ── */
-    $("#filter_ddlFromAccount, #filter_ddlToAccount, #filter_txtAmount").on("change", function () {
+    $("#filter_ddlFromAccount, #filter_ddlToAccount, #filter_ddlCategory, #filter_txtAmount").on("change", function () {
         fetchFundTransfers();
     });
 
@@ -274,6 +287,7 @@ $(document).ready(function () {
         $("#txtAmount").val("");
         $("#filter_ddlFromAccount").val("0");
         $("#filter_ddlToAccount").val("0");
+        $("#filter_ddlCategory").val("0");
         setCurrentMonthDates();
         fetchFundTransfers();
     });
@@ -312,6 +326,29 @@ $(document).ready(function () {
     });
 
 });
+
+//VALIDATIONS ---START
+const fundTransferValidationRules = [
+    { id: "ddlFromAccount", name: "From Account" },
+    { id: "ddlToAccount", name: "To Account" },
+    { id: "txtAmount", name: "Amount" },
+    { id: "txtTransferDate", name: "Transfer Date" },
+    { id: "ddlCategory", name: "Category" }
+];
+function validateRequiredFields(rules) {
+    for (let field of rules) {
+        let value = $("#" + field.id).val();
+
+        if (!value || value.trim() === "" || value === "0") {
+            Swal.fire("Required", `${field.name} is required.`, "warning");
+            $("#" + field.id).focus();
+            return false;
+        }
+    }
+    return true;
+}
+
+//VALIDATIONS ---END
 
 let accountList = [];
 function loadAccountDropdowns() {
@@ -388,21 +425,56 @@ function getAccountsByPermission(permission) {
 }
 //----- ACCOUNTS RIGHTS -- END ------------------------------------
 
+//----- CATEGORY -- START------------------------------------
+function loadFundTransferCategory() {
+    var payload = { id: 0 };
+    $.ajax({
+        url: '/api/FundTransfer_Category/GetFundTransferCategoryList', // 🔁 update controller name
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload), // 0 = get all
+        success: function (response) {
+            if (response.status === "Success") {
+                let data = response.data;
+
+                let ddlCategory = $("#filter_ddlCategory, #ddlCategory");
+                // Clear existing
+                ddlCategory.empty();
+
+                // Default option
+                $("#filter_ddlCategory").append(`<option value="0">All</option>`);
+                $("#ddlCategory").append(`<option value="0">Select</option>`);
+
+                // Append data
+                $.each(data, function (i, item) {
+                    let option = `<option value="${item.Id}">${item.Name}</option>`;
+                    ddlCategory.append(option);
+                });
+            }
+            else {
+                console.error("API Error:", response.message);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Error loading categories"); 
+        }
+    });
+}
+//----- CATEGORY -- END ------------------------------------
+
 
 function resetFundTransferForm() {
-    $("#FundTransferForm")[0].reset(); // Agar form id hai
+    //$("#FundTransferForm")[0].reset();
     bindDropdown("#ddlFromAccount", accountList);
     bindDropdown("#ddlToAccount", accountList);
-}
 
-// RESET FORM
-function resetFundTransferForm() {
     $("#FundTransferId").val(0);
     $("#ddlFromAccount").val("0");
     $("#ddlToAccount").val("0");
     $("#txtAmount").val("0");
     $("#txtReferenceNo").val("");
     $("#txtNotes").val("");
+    $("#ddlCategory").val("0");
     // Reset to today's date
     document.getElementById("txtTransferDate").valueAsDate = new Date();
 }
@@ -417,7 +489,8 @@ function fetchFundTransfers() {
         Amount: $('#filter_txtAmount').val() || 0,
         FilterDuration: $('#quickRange').val(),
         FromDate: $('#fromDate').val() || null,
-        ToDate: $('#toDate').val() || null
+        ToDate: $('#toDate').val() || null,
+        FundTransfer_Category_Id: $('#filter_ddlCategory').val() || 0
     };
 
     //console.log("payload:", payload);
@@ -469,6 +542,7 @@ function renderFundTransferTable(data, totalAmount) {
                 { title: "Transfer Date" },
                 { title: "# Reference" },
                 { title: "Notes" },
+                { title: "Category" },
                 { title: "Actions" }
             ],
             language: {
@@ -496,29 +570,19 @@ function renderFundTransferTable(data, totalAmount) {
 
         columns: [
             { data: "srno", title: "#", className: "text-center" },
-            { data: "FromAccountName", title: "From" },
-            { data: "ToAccountName", title: "To" },
+            { data: "FromAccountName", title: "From", className: "text-center" },
+            { data: "ToAccountName", title: "To", className: "text-center" },
             {
                 data: "Amount",
                 title: "Amount",
                 className: "text-end",
-                render: val => `<b>₹ ${Number(val).toLocaleString()}</b>`
+                render: val => `<b>₹ ${formatINR(val)}</b>`
             },
-            //{
-            //    data: "TransferDate_Format",
-            //    title: "Transfer Date",
-            //    className: "text-center"
-            //},
             {
-                data: 'TransferDate', // actual date (ISO format from backend: yyyy-MM-dd)
+                data: 'TransferDate_Format', // actual date (ISO format from backend: yyyy-MM-dd)
                 title: 'Transfer Date',
                 name: 'TransferDate',
-                render: function (data, type, row) {
-                    if (type === 'display') {
-                        return row.TransferDate_Format; // show formatted
-                    }
-                    return data; // use raw date for sorting
-                }
+                className: "text-center"
             },
 
             {
@@ -527,6 +591,8 @@ function renderFundTransferTable(data, totalAmount) {
                 render: data => data ? `#${data}` : "-"
             },
             { data: "Notes", title: "Notes" },
+            { data: "FundTransfer_Category_Name", title: "Category", className: "text-center" },
+
             {
                 data: null,
                 title: "Actions",
@@ -605,6 +671,7 @@ function ViewFundTransferReport(actionName) {
         FilterDuration: $('#quickRange').val(),
         FromDate: $('#fromDate').val() || null,
         ToDate: $('#toDate').val() || null,
+        FundTransfer_Category_Id: $('#filter_ddlCategory').val() || 0,
         WithHeader: withHeader,
         Columns: selectedColumns,
         ActionBy: userId

@@ -511,14 +511,6 @@ $(document).ready(function (event) {
         stockEl.text(currentQty)
             .toggleClass("text-danger", currentQty <= 0)
             .toggleClass("text-success", currentQty > 0);
-
-        // ✅ Disable/Enable Qty
-        if (currentQty <= 0) {
-            qtyInput.val(0).prop("disabled", true);
-        }
-        else {
-            qtyInput.prop("disabled", false);
-        }
     });
 
     // ADD NEW ROW BUTTON
@@ -1155,7 +1147,7 @@ function addNewRow() {
 
                 <!-- Qty -->
                 <td>
-                    <input type="number" class="form-control form-control-sm qtyInput mb-2" min="0" step="1" value="0">
+                    <input type="number" class="form-control form-control-sm qtyInput mb-2" min="0" step="0.1" value="0">
                 </td>
 
                 <!-- Unit -->
@@ -1361,7 +1353,7 @@ function buildRowForEdit(item) {
 
                 <!-- Qty -->
                 <td>
-                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="1" value="${qty}">
+                    <input type="number" class="form-control form-control-sm qtyInput" min="0" step="0.1" value="${qty}">
                 </td>
 
                 <!-- Unit -->
@@ -2018,7 +2010,7 @@ function loadRawMaterialsDropdown() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, ItemCategoryId: 0 }),
         success: function (response) {
-            //console.log("response rawMaterials:", response);
+            console.log("response rawMaterials:", response);
             rawMaterials = response.data;
         },
         error: function (xhr, status, error) {
