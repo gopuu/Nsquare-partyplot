@@ -268,10 +268,13 @@
             ChequeBank: $("#paymentChequebank_Expense").val().trim() || null,
             ChequeNo: $("#paymentChequeNo_Expense").val().trim() || null,
             ChequeDate: $("#paymentChequeDate_Expense").val() || null,
+            BillFile: $("#BillFileBase64_Expense").val() || null,
 
-            ActionBy: Number(sessionStorage.getItem("userId") || 0)
+            ActionBy: Number(sessionStorage.getItem("userId") || 0),
+            
+
         };
-        // console.log("SAVE PAYLOAD:", payload);
+        console.log("SAVE PAYLOAD:", payload);
         $.ajax({
             url: "/api/ExpenseTransactions/SaveExpenseTransaction",
             type: "POST",
@@ -450,6 +453,7 @@
             ChequeBank: $("#paymentChequebank_Income").val().trim() || null,
             ChequeNo: $("#paymentChequeNo_Income").val().trim() || null,
             ChequeDate: $("#paymentChequeDate_Income").val() || null,
+            BillFile: $("#BillFileBase64_Income").val() || null,
 
             ActionBy: Number(sessionStorage.getItem("userId") || 0)
         };
@@ -691,8 +695,51 @@
             categoryDropdown.val(categoryId); //.trigger("change");
         }
     });
+
+    //Bill File > Base64
+    // Bind separately
+    $("#BillFile_Expense").on("change", function () {
+        handleFileUpload(this, "#BillFileBase64_Expense");
+    });
+
+    $("#BillFile_Income").on("change", function () {
+        handleFileUpload(this, "#BillFileBase64_Income");
+    });
+
     //INCOME TXN --- END ---------------------------
 });
+function resetFile(fileInputId, hiddenInputId) {
+    $(fileInputId).val('');
+    $(hiddenInputId).val('');
+}
+
+function handleFileUpload(fileInput, hiddenInputSelector) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const maxSizeMB = 2;
+
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File too large',
+            text: `File size must be less than ${maxSizeMB}MB`
+        });
+
+        $(fileInput).val('');
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        const base64String = e.target.result.split(',')[1];
+        $(hiddenInputSelector).val(base64String);
+    };
+
+    reader.readAsDataURL(file);
+}
+
 
 function setCurrentMonthDates() {
     const today = new Date();
@@ -969,6 +1016,26 @@ function renderTransactions(data) {
             { data: "SubCategoryName", title: "Sub-Category", className: "text-center" },
             { data: "AccountName", title: "Source / Receiver", className: "text-center" },
             { data: "PaymentModeName", title: "Payment Mode", className: "text-center" },
+            {
+                data: "BillFile",
+                title: "Attachment",
+                className: "text-center",
+                orderable: false,
+                render: function (data, type, row) {
+
+                    // Handle null / empty
+                    if (!data || data.trim() === "") {
+                        return "-";
+                    }
+
+                    // Return download button
+                    return `
+                        <a href="${data}" target="_blank" download class="btn btn-xs btn-outline-primary">
+                            <i class="fa fa-download"></i>
+                        </a>
+                    `;
+                }
+            },
 
             {
                 data: "Notes",
@@ -1100,6 +1167,9 @@ function resetFormFields_Expense() {
     $("#paymentChequebank_Expense").val("");
     $("#paymentChequeNo_Expense").val("");
     $("#paymentChequeDate_Expense").val("");
+
+    $("#BillFile_Expense").val('');
+    $("#BillFileBase64_Expense").val('');
 
     $("#txtNotes_Expense").val("");
 
@@ -1268,6 +1338,9 @@ function resetFormFields_Income() {
     $("#paymentChequebank_Income").val("");
     $("#paymentChequeNo_Income").val("");
     $("#paymentChequeDate_Income").val("");
+
+    $("#BillFile_Income").val('');
+    $("#BillFileBase64_Income").val('');
 
     $("#txtNotes_Income").val("");
 

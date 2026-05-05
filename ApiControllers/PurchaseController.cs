@@ -343,8 +343,6 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@IsUpdateInventoryStock", SqlDbType.Bit).Value = model.IsUpdateInventoryStock;
 
-                    cmd.Parameters.Add("@UploadInvoiceFile", SqlDbType.NVarChar).Value = DBNull.Value;
-
                     var itemsJson = model.JSON_PurchaseItems != null
                         ? Newtonsoft.Json.JsonConvert.SerializeObject(model.JSON_PurchaseItems)
                         : null;

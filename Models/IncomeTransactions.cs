@@ -51,6 +51,7 @@
         public string? ChequeBank { get; set; }
         public string? ChequeNo { get; set; }
         public string? ChequeDate { get; set; }
+        public string? BillFile { get; set; }
     }
 
     public class DeleteIncomeTransactionRequest : BaseClass

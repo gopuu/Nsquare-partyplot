@@ -25,34 +25,35 @@
     public class IncomeExpenseTransactionModel
     {
         public long Id { get; set; }
-        public string TransactionType { get; set; }
+        public string? TransactionType { get; set; }
 
         public long AccountId { get; set; }
-        public string AccountName { get; set; }
+        public string? AccountName { get; set; }
 
         public long CategoryId { get; set; }
-        public string CategoryName { get; set; }
+        public string? CategoryName { get; set; }
 
         public long? SubCategoryId { get; set; }
-        public string SubCategoryName { get; set; }
+        public string? SubCategoryName { get; set; }
 
         public decimal Amount { get; set; }
 
-        public string TransactionDate { get; set; }
-        public string TransactionDate_Format { get; set; }
+        public string? TransactionDate { get; set; }
+        public string? TransactionDate_Format { get; set; }
 
         public long PaymentModeId { get; set; }
-        public string PaymentModeName { get; set; }
+        public string? PaymentModeName { get; set; }
 
-        public string TransactionId { get; set; }
-        public string Notes { get; set; }
+        public string? TransactionId { get; set; }
+        public string? Notes { get; set; }
 
-        public string VoucherNo { get; set; }
+        public string? VoucherNo { get; set; }
         public long? VoucherNo_Num { get; set; }
 
-        public string ChequeBank { get; set; }
-        public string ChequeNo { get; set; }
-        public string ChequeDate { get; set; }
+        public string? ChequeBank { get; set; }
+        public string? ChequeNo { get; set; }
+        public string? ChequeDate { get; set; }
+        public string? BillFile { get; set; }
     }
 
     public class DashboardFinanceSummary

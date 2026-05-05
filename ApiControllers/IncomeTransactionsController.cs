@@ -19,17 +19,23 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class IncomeTransactionsController : MasterController
     {
+        private readonly ImageUploadService _imageUploadService;
         private readonly string domainUrl;
         private string connString = string.Empty;
-        public IncomeTransactionsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        private readonly IWebHostEnvironment _env;
+        public IncomeTransactionsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, 
+            ImageUploadService imageUploadService, IWebHostEnvironment env) 
+            : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
+            _env = env;
+            _imageUploadService = imageUploadService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
         [HttpPost]
-        [Route("GetIncomeTransactionList")]
-        public IActionResult GetIncomeTransactionList([FromBody] GetIncomeTransactionRequest request)
+        [Route("GetIncomeTransactionList_OLD")]
+        private IActionResult GetIncomeTransactionList_OLD([FromBody] GetIncomeTransactionRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<IncomeTransactionModel> list = new List<IncomeTransactionModel>();
@@ -111,13 +117,13 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveIncomeTransaction([FromBody] SaveIncomeTransactionRequest model)
         {
             apiResponse apiResponse = new apiResponse();
-
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                long rowId = 0;
+                long rowid = 0;
+
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveIncomeTransaction", con))
                 {
@@ -140,12 +146,35 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();
-                    rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                    rowid = Convert.ToInt64(cmd.ExecuteScalar());
+
+                    string latestImagePath = string.Empty;
+                    //photo upload
+                    if (model.BillFile != string.Empty && model.BillFile != null)
+                    {
+                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.BillFile);
+
+                        string folderPath = $"org/{domain}/IncomeTransactions/"; // Updated to include domain
+                        string fileName = $"Income_VN_{model.VoucherNo}_TxnId_{rowid.ToString()}";
+
+                        _imageUploadService.DeleteImages(folderPath, $"{fileName}");
+                        model.BillFile = _imageUploadService.UploadImage(model.BillFile, folderPath, fileName, imgType);
+
+                        //update table
+                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
+                        cmd2.CommandType = CommandType.StoredProcedure;
+                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
+                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.BillFile; // Kept max for nvarchar(max)
+                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "IncomeTransactions";
+                        cmd2.ExecuteNonQuery();
+
+                        latestImagePath = $"{domainUrl}/uploads/{folderPath}/{model.BillFile}";
+                    }
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = model.Id > 0 ? "Income transaction updated successfully!" : "Income transaction inserted successfully!";
-                apiResponse.data = new { IncomeId = rowId };
+                apiResponse.data = new { IncomeId = rowid };
                 return Ok(apiResponse);
             }
             catch (Exception ex)

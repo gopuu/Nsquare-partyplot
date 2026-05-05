@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
@@ -21,15 +22,21 @@ namespace ERPAdmin.ApiControllers
     {
         private readonly string domainUrl;
         private string connString = string.Empty;
-        public ExpenseTransactionsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        private readonly ImageUploadService _imageUploadService;
+        private readonly IWebHostEnvironment _env;
+
+        public ExpenseTransactionsController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor,
+            ImageUploadService imageUploadService, IWebHostEnvironment env) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
+            _env = env;
+            _imageUploadService = imageUploadService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
         [HttpPost]
-        [Route("GetExpenseTransactionList")]
-        public IActionResult GetExpenseTransactionList([FromBody] GetExpenseTransactionRequest request)
+        [Route("GetExpenseTransactionList_OLD")]
+        private IActionResult GetExpenseTransactionList_OLD([FromBody] GetExpenseTransactionRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<ExpenseTransactionModel> list = new List<ExpenseTransactionModel>();
@@ -115,7 +122,7 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                long rowId = 0;
+                long rowid = 0;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveExpenseTransaction", con))
@@ -139,12 +146,36 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     con.Open();
-                    rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                    rowid = Convert.ToInt64(cmd.ExecuteScalar());
+
+                    string latestImagePath = string.Empty;
+                    //photo upload
+                    if (model.BillFile != string.Empty && model.BillFile != null)
+                    {
+                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.BillFile);
+
+                        string folderPath = $"org/{domain}/ExpenseTransactions/"; // Updated to include domain
+                        string fileName = $"Expense_VN_{model.VoucherNo}_TxnId_{rowid.ToString()}";
+
+                        _imageUploadService.DeleteImages(folderPath, $"{fileName}");
+                        model.BillFile = _imageUploadService.UploadImage(model.BillFile, folderPath, $"{fileName}", imgType);
+
+                        //update table
+                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
+                        cmd2.CommandType = CommandType.StoredProcedure;
+                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
+                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.BillFile; // Kept max for nvarchar(max)
+                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "ExpenseTransactions";
+                        cmd2.ExecuteNonQuery();
+
+                        latestImagePath = $"{domainUrl}/uploads/{folderPath}/{model.BillFile}";
+                    }
+
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = model.Id > 0 ? "Expense transaction updated!" : "Expense transaction added!";
-                apiResponse.data = new { ExpenseId = rowId };
+                apiResponse.data = new { ExpenseId = rowid };
                 return Ok(apiResponse);
             }
             catch (Exception ex)

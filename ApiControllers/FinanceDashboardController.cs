@@ -1,6 +1,8 @@
-﻿using ERPAdmin.Helper;
+﻿using DocumentFormat.OpenXml.EMMA;
+using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.Services;
+using iTextSharp.text.pdf.codec;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -67,10 +69,27 @@ namespace ERPAdmin.ApiControllers
 
                 foreach (DataRow row in dt.Rows)
                 {
+                    string transactionType = Convert.ToString(row["TransactionType"]);
+                    string billFileName = Convert.ToString(row["BillFile"]);
+
+                    string billFilePath = string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(billFileName))
+                    {
+                        if (transactionType == "INCOME")
+                        {
+                            billFilePath = $"{domainUrl}/uploads/org/{domain}/IncomeTransactions/{billFileName}";
+                        }
+                        else if (transactionType == "EXPENSE")
+                        {
+                            billFilePath = $"{domainUrl}/uploads/org/{domain}/ExpenseTransactions/{billFileName}";
+                        }
+                    }
+
                     list.Add(new IncomeExpenseTransactionModel
                     {
                         Id = Convert.ToInt64(row["Id"]),
-                        TransactionType = Convert.ToString(row["TransactionType"]),
+                        TransactionType = transactionType,
 
                         AccountId = Convert.ToInt64(row["AccountId"]),
                         AccountName = Convert.ToString(row["AccountName"]),
@@ -98,10 +117,12 @@ namespace ERPAdmin.ApiControllers
                         ChequeBank = Convert.ToString(row["ChequeBank"]),
                         ChequeNo = Convert.ToString(row["ChequeNo"]),
 
-                        ChequeDate = row["ChequeDate"] == DBNull.Value
-                            || string.IsNullOrWhiteSpace(row["ChequeDate"]?.ToString())
-                                ? string.Empty
-                                : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd")
+                        ChequeDate = row["ChequeDate"] == DBNull.Value ||
+                                     string.IsNullOrWhiteSpace(row["ChequeDate"]?.ToString())
+                                        ? string.Empty
+                                        : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
+
+                        BillFile = billFilePath
                     });
                 }
 
