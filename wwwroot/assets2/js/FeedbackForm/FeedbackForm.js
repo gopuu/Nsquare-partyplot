@@ -187,7 +187,7 @@ function submitFeedback() {
         BookingId: Number(bookingId),
         CustomerName: customerName,
         WhatsappNo: whatsappNo,
-        Responses: responses
+        FeedbackResponseJSON: responses
     };
     console.log("payload:", payload);
 

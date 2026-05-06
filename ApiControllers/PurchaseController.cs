@@ -324,10 +324,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@TDS_Percent", SqlDbType.Decimal).Value = model.TDS_Percent;
 
                     cmd.Parameters.Add("@GrandTotal_Amount", SqlDbType.Decimal).Value = model.GrandTotal_Amount;
-
                     cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object)model.PaymentType ?? DBNull.Value;
+
                     cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object)model.PaymentDate ?? DBNull.Value;
-                    //cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal).Value = (object)model.PaidAmount ?? DBNull.Value;
                     var pPaid = cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal);
                     pPaid.Precision = 18;
                     pPaid.Scale = 2;

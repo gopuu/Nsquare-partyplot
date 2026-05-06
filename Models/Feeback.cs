@@ -72,7 +72,7 @@
         public long? BookingId { get; set; }
         public string? CustomerName { get; set; }
         public string? WhatsappNo { get; set; }
-        public List<FeedbackResponseRequest>? Responses { get; set; }
+        public List<FeedbackResponseRequest>? FeedbackResponseJSON { get; set; }
     }
 
     public class FeedbackResponseRequest

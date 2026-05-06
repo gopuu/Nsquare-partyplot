@@ -68,6 +68,13 @@ function renderFeedbackTable(data) {
 
     $('#tableMain table').DataTable({
         data: data,
+        paging: false,          // remove pagination
+        searching: false,       // optional
+        info: false,            // optional
+        ordering: false,        // optional
+        scrollY: '75vh',       // fixed height
+        scrollCollapse: false, // keep fixed height even with 0/1 rows
+        autoWidth: false,
         columns: [
             { data: 'srno', title: '#', className: 'text-center' },
             { data: 'CustomerName', title: 'Customer' },

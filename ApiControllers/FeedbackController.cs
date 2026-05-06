@@ -111,7 +111,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 // Convert to JSON for SP
-                string jsonData = JsonConvert.SerializeObject(request.Responses);
+                string jsonData = JsonConvert.SerializeObject(request.FeedbackResponseJSON);
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveFeedback", con))

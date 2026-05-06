@@ -190,593 +190,593 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        [HttpPost]
-        [Route("DownloadPaymentReceipt")]
-        public IActionResult DownloadPaymentReceipt([FromBody] DownloadBookingReceiptRequest request)
-        {
-            apiResponse response = new apiResponse();
-
-            try
+            [HttpPost]
+            [Route("DownloadPaymentReceipt")]
+            public IActionResult DownloadPaymentReceipt([FromBody] DownloadBookingReceiptRequest request)
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                    return errorResult!;
+                apiResponse response = new apiResponse();
 
-                DataTable dtCompany = new DataTable();
-                DataTable dt = new DataTable();
-                DataTable dtPayments = new DataTable();
-
-                using (SqlConnection con = new SqlConnection(connString))
+                try
                 {
-                    con.Open();
+                    if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                        return errorResult!;
 
-                    // Company Header
-                    SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
-                    new SqlDataAdapter(cmd).Fill(dtCompany);
+                    DataTable dtCompany = new DataTable();
+                    DataTable dt = new DataTable();
+                    DataTable dtPayments = new DataTable();
 
-                    // RECEIPTS
-                    cmd = new SqlCommand("Report_GetBooking_Payments_Receipt", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-                    cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = request.PaymentId;
-                    new SqlDataAdapter(cmd).Fill(dt);
+                    using (SqlConnection con = new SqlConnection(connString))
+                    {
+                        con.Open();
 
-                    // PAYMENTS
-                    cmd = new SqlCommand("Report_GetBooking_Payments", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = 0;
-                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
-                    new SqlDataAdapter(cmd).Fill(dtPayments);
-                }
+                        // Company Header
+                        SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
+                        new SqlDataAdapter(cmd).Fill(dtCompany);
 
-                // ================= ASSIGN & VALIDATION =================
-                #region ASSIGN & VALIDATIONS
-                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
-                       companyphoneNo = string.Empty, companygstin = "", companyemail = "",
-                       logoFile = string.Empty, userName = string.Empty,
-                       stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
+                        // RECEIPTS
+                        cmd = new SqlCommand("Report_GetBooking_Payments_Receipt", con);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                        cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = request.PaymentId;
+                        new SqlDataAdapter(cmd).Fill(dt);
 
-                bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
-                if (isCompanyAvailable)
-                {
-                    userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
-                    generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
-                }
+                        // PAYMENTS
+                        cmd = new SqlCommand("Report_GetBooking_Payments", con);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@PaymentId", SqlDbType.BigInt).Value = 0;
+                        cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = request.BookingId;
+                        new SqlDataAdapter(cmd).Fill(dtPayments);
+                    }
 
-                if (request.WithHeader ?? false)
-                {
+                    // ================= ASSIGN & VALIDATION =================
+                    #region ASSIGN & VALIDATIONS
+                    string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                        companyphoneNo = string.Empty, companygstin = "", companyemail = "",
+                        logoFile = string.Empty, userName = string.Empty,
+                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
+
+                    bool isCompanyAvailable = dtCompany != null && dtCompany.Rows.Count > 0;
                     if (isCompanyAvailable)
                     {
-                        propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
-                        companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
-                        companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
-                        logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
-                        companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
-                        companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
-                        stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+                        userName = dtCompany.Rows[0]["UserName"]?.ToString() ?? "";
+                        generatedDate = dtCompany.Rows[0]["GeneratedDate"]?.ToString() ?? "";
+                    }
 
-                        // ── Resolve logo path (same logic as before, just storing the path string) ──
-                        if (!string.IsNullOrWhiteSpace(logoFile))
+                    if (request.WithHeader ?? false)
+                    {
+                        if (isCompanyAvailable)
                         {
-                            string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
-                            if (System.IO.File.Exists(p1))
-                                logoFullPath = p1;
-                            else
+                            propertyName = dtCompany.Rows[0]["PropertyName"]?.ToString() ?? ""; companyName = dtCompany.Rows[0]["CompanyName"]?.ToString() ?? "";
+                            companyAddress = dtCompany.Rows[0]["CompanyAddress"]?.ToString() ?? "";
+                            companyphoneNo = dtCompany.Rows[0]["CompanyMobile"]?.ToString() ?? "";
+                            logoFile = dtCompany.Rows[0]["CompanyLogo"]?.ToString() ?? "";
+                            companygstin = dtCompany.Rows[0]["CompanyGST"]?.ToString();
+                            companyemail = dtCompany.Rows[0]["CompanyEmail"]?.ToString();
+                            stateCode = dtCompany.Rows[0]["StateCode"]?.ToString() ?? ""; // adjust column name if needed
+
+                            // ── Resolve logo path (same logic as before, just storing the path string) ──
+                            if (!string.IsNullOrWhiteSpace(logoFile))
                             {
-                                string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
-                                if (System.IO.File.Exists(p2))
-                                    logoFullPath = p2;
+                                string p1 = Path.Combine(_env.WebRootPath, "uploads", "org", domain, "CompanyInvoice_CompanyLogo_Image", logoFile);
+                                if (System.IO.File.Exists(p1))
+                                    logoFullPath = p1;
+                                else
+                                {
+                                    string p2 = Path.Combine(_env.WebRootPath, "assets2", "img", logoFile);
+                                    if (System.IO.File.Exists(p2))
+                                        logoFullPath = p2;
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        companyName = "[PAGE HEADER] Company Data Not Found";
-                    }
-                }
-
-                if (dt.Rows.Count == 0)
-                    throw new Exception("No receipt data found.");
-
-                // ================= EXTRACT DATA =================
-                string reportName = "PAYMENT RECEIPT"; //dt.Rows[0]["ReportName"]?.ToString() ?? "";
-                float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
-
-                using var stream = new MemoryStream();
-
-                bool isA4size = true; // default to A4
-                Document document = null;
-                document = new Document(PageSize.A4, 16, 16, topMargin, 50);
-                isA4size = true;
-
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                writer.CloseStream = false;
-                #endregion
-
-                // ── Attach StandardReport header-footer ──
-                #region HEADER_FOOTER
-                if (request.WithHeader ?? false)
-                {
-                    if (isA4size)
-                    {
-                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            propertyName, companyName,
-                            companyAddress,
-                            companyphoneNo,
-                            companygstin,
-                            companyemail,
-                            stateCode,
-                            logoFullPath,
-                            generatedDate,
-                            userName,
-                            request.WithHeader
-                        );
-                    }
-                    else
-                    {
-                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            propertyName, companyName,
-                            companyAddress,
-                            companyphoneNo,
-                            companygstin,
-                            companyemail,
-                            stateCode,
-                            logoFullPath,
-                            generatedDate,
-                            userName,
-                            request.WithHeader
-                        );
-                    }
-                }
-                else
-                {
-                    // no company header, but still want page number / generated-by footer
-                    if (isA4size)
-                    {
-                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
-                            "", "", "", "", "", "", "", "",
-                            generatedDate,
-                            userName,
-                            request.WithHeader
-                        );
-                    }
-                    else
-                    {
-                        writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
-                            "", "", "", "", "", "", "", "",
-                            generatedDate,
-                            userName,
-                            request.WithHeader
-                        );
-                    }
-                }
-                #endregion
-
-                #region FONT
-                /* ================= FONTS ================= */
-                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
-                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
-
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.NORMAL);
-                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.BOLD);
-                iTextSharp.text.Font AmtFontBold13 = new iTextSharp.text.Font(bf, 13, iTextSharp.text.Font.BOLD);
-                #endregion
-
-                document.Open();
-
-                /* ================= LOOP RECEIPTS ================= */
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-                    DataRow r = dt.Rows[i];
-
-                    /* ================= DATA ================= */
-                    string receiptNo = r["PaymentId"]?.ToString();
-                    string receiptDate = r["PaymentDateTime"]?.ToString();
-
-                    string customerName = r["Name"]?.ToString();
-                    string customerMobile = r["Mobile"]?.ToString();
-
-                    string eventName = r["EventName"]?.ToString();
-                    string subEventName = r["SubEventName"]?.ToString();
-                    string eventDate = r["EventDate"]?.ToString();
-                    string hallName = r["HallName"]?.ToString();
-
-                    string startTime = r["StartTime_Full"]?.ToString();
-                    string shift = r["ShiftFullName"]?.ToString();
-
-                    document.Add(new Paragraph("\n"));
-                    /* ================= TITLE ================= */
-                    PdfPTable titleTable = new PdfPTable(1);
-                    titleTable.WidthPercentage = 100;
-
-                    titleTable.AddCell(new PdfPCell(
-                        new Phrase("PAYMENT RECEIPT",
-                        FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK)))
-                    {
-                        BackgroundColor = BaseColor.WHITE, //new BaseColor(0, 102, 204),
-                        HorizontalAlignment = Element.ALIGN_CENTER,
-                        Padding = 6,
-                        Border = Rectangle.BOX,
-                        BorderColor = BaseColor.LIGHT_GRAY,
-                        BorderWidth = 0.2f
-                    });
-
-                    document.Add(titleTable);
-
-                    /* ================= TOP ================= */
-                    PdfPTable top = new PdfPTable(2);
-                    top.WidthPercentage = 100;
-                    top.SetWidths(new float[] { 70, 30 });
-
-                    top.AddCell(new PdfPCell(new Phrase($"RECEIPT NO: {receiptNo}", normalFont))
-                    { Border = Rectangle.NO_BORDER });
-
-                    top.AddCell(new PdfPCell(new Phrase($"DATE: {receiptDate}", normalFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        HorizontalAlignment = Element.ALIGN_RIGHT
-                    });
-
-                    document.Add(top);
-
-                    /* ================= DETAILS ================= */
-                    PdfPTable tbl = new PdfPTable(3);
-                    tbl.WidthPercentage = 100;
-                    tbl.SetWidths(new float[] { 19.5f, 3, 77 });
-
-                    void AddRow(string label, string value)
-                    {
-                        tbl.AddCell(new PdfPCell(new Phrase(label, normalFont)) { Border = Rectangle.NO_BORDER });
-
-                        tbl.AddCell(new PdfPCell(new Phrase(":", normalFont))
+                        else
                         {
-                            Border = Rectangle.NO_BORDER,
-                            HorizontalAlignment = Element.ALIGN_CENTER
+                            companyName = "[PAGE HEADER] Company Data Not Found";
+                        }
+                    }
+
+                    if (dt.Rows.Count == 0)
+                        throw new Exception("No receipt data found.");
+
+                    // ================= EXTRACT DATA =================
+                    string reportName = "PAYMENT RECEIPT"; //dt.Rows[0]["ReportName"]?.ToString() ?? "";
+                    float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
+
+                    using var stream = new MemoryStream();
+
+                    bool isA4size = true; // default to A4
+                    Document document = null;
+                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    isA4size = true;
+
+                    PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                    writer.CloseStream = false;
+                    #endregion
+
+                    // ── Attach StandardReport header-footer ──
+                    #region HEADER_FOOTER
+                    if (request.WithHeader ?? false)
+                    {
+                        if (isA4size)
+                        {
+                            writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                                propertyName, companyName,
+                                companyAddress,
+                                companyphoneNo,
+                                companygstin,
+                                companyemail,
+                                stateCode,
+                                logoFullPath,
+                                generatedDate,
+                                userName,
+                                request.WithHeader
+                            );
+                        }
+                        else
+                        {
+                            writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                                propertyName, companyName,
+                                companyAddress,
+                                companyphoneNo,
+                                companygstin,
+                                companyemail,
+                                stateCode,
+                                logoFullPath,
+                                generatedDate,
+                                userName,
+                                request.WithHeader
+                            );
+                        }
+                    }
+                    else
+                    {
+                        // no company header, but still want page number / generated-by footer
+                        if (isA4size)
+                        {
+                            writer.PageEvent = new PdfHeaderFooter_StandardReport_A4(
+                                "", "", "", "", "", "", "", "",
+                                generatedDate,
+                                userName,
+                                request.WithHeader
+                            );
+                        }
+                        else
+                        {
+                            writer.PageEvent = new PdfHeaderFooter_StandardReport_A4_Rotate(
+                                "", "", "", "", "", "", "", "",
+                                generatedDate,
+                                userName,
+                                request.WithHeader
+                            );
+                        }
+                    }
+                    #endregion
+
+                    #region FONT
+                    /* ================= FONTS ================= */
+                    iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+                    iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+                    string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                    BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                    iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.NORMAL);
+                    iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 9, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font AmtFontBold13 = new iTextSharp.text.Font(bf, 13, iTextSharp.text.Font.BOLD);
+                    #endregion
+
+                    document.Open();
+
+                    /* ================= LOOP RECEIPTS ================= */
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        DataRow r = dt.Rows[i];
+
+                        /* ================= DATA ================= */
+                        string receiptNo = r["PaymentId"]?.ToString();
+                        string receiptDate = r["PaymentDateTime"]?.ToString();
+
+                        string customerName = r["Name"]?.ToString();
+                        string customerMobile = r["Mobile"]?.ToString();
+
+                        string eventName = r["EventName"]?.ToString();
+                        string subEventName = r["SubEventName"]?.ToString();
+                        string eventDate = r["EventDate"]?.ToString();
+                        string hallName = r["HallName"]?.ToString();
+
+                        string startTime = r["StartTime_Full"]?.ToString();
+                        string shift = r["ShiftFullName"]?.ToString();
+
+                        document.Add(new Paragraph("\n"));
+                        /* ================= TITLE ================= */
+                        PdfPTable titleTable = new PdfPTable(1);
+                        titleTable.WidthPercentage = 100;
+
+                        titleTable.AddCell(new PdfPCell(
+                            new Phrase("PAYMENT RECEIPT",
+                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK)))
+                        {
+                            BackgroundColor = BaseColor.WHITE, //new BaseColor(0, 102, 204),
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 6,
+                            Border = Rectangle.BOX,
+                            BorderColor = BaseColor.LIGHT_GRAY,
+                            BorderWidth = 0.2f
                         });
 
-                        //tbl.AddCell(new PdfPCell(new Phrase(value ?? "-", boldFont))
-                        //{
-                        //    Border = Rectangle.BOTTOM_BORDER,
-                        //    PaddingBottom = 5
-                        //});
-                        PdfPCell valueCell = new PdfPCell(new Phrase(value ?? "-", boldFont)) //normalFont
+                        document.Add(titleTable);
+
+                        /* ================= TOP ================= */
+                        PdfPTable top = new PdfPTable(2);
+                        top.WidthPercentage = 100;
+                        top.SetWidths(new float[] { 70, 30 });
+
+                        top.AddCell(new PdfPCell(new Phrase($"RECEIPT NO: {receiptNo}", normalFont))
+                        { Border = Rectangle.NO_BORDER });
+
+                        top.AddCell(new PdfPCell(new Phrase($"DATE: {receiptDate}", normalFont))
                         {
-                            Border = Rectangle.NO_BORDER, // ❌ remove default solid border
+                            Border = Rectangle.NO_BORDER,
+                            HorizontalAlignment = Element.ALIGN_RIGHT
+                        });
+
+                        document.Add(top);
+
+                        /* ================= DETAILS ================= */
+                        PdfPTable tbl = new PdfPTable(3);
+                        tbl.WidthPercentage = 100;
+                        tbl.SetWidths(new float[] { 19.5f, 3, 77 });
+
+                        void AddRow(string label, string value)
+                        {
+                            tbl.AddCell(new PdfPCell(new Phrase(label, normalFont)) { Border = Rectangle.NO_BORDER });
+
+                            tbl.AddCell(new PdfPCell(new Phrase(":", normalFont))
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                HorizontalAlignment = Element.ALIGN_CENTER
+                            });
+
+                            //tbl.AddCell(new PdfPCell(new Phrase(value ?? "-", boldFont))
+                            //{
+                            //    Border = Rectangle.BOTTOM_BORDER,
+                            //    PaddingBottom = 5
+                            //});
+                            PdfPCell valueCell = new PdfPCell(new Phrase(value ?? "-", boldFont)) //normalFont
+                            {
+                                Border = Rectangle.NO_BORDER, // ❌ remove default solid border
+                                PaddingBottom = 5
+                            };
+
+                            // ✅ Apply dotted underline
+                            valueCell.CellEvent = new DottedBottomBorder();
+                            tbl.AddCell(valueCell);
+                        }
+
+                        // 🔹 Title Row (full width)
+                        PdfPCell titleCell = new PdfPCell(new Phrase("Customer Details", boldFont))
+                        {
+                            Colspan = 3,
+                            Border = Rectangle.NO_BORDER,
+                            PaddingTop = 10,
                             PaddingBottom = 5
                         };
+                        tbl.AddCell(titleCell);
+                        AddRow("Name", customerName);
+                        AddRow("Mobile:", customerMobile);
 
-                        // ✅ Apply dotted underline
-                        valueCell.CellEvent = new DottedBottomBorder();
-                        tbl.AddCell(valueCell);
-                    }
-
-                    // 🔹 Title Row (full width)
-                    PdfPCell titleCell = new PdfPCell(new Phrase("Customer Details", boldFont))
-                    {
-                        Colspan = 3,
-                        Border = Rectangle.NO_BORDER,
-                        PaddingTop = 10,
-                        PaddingBottom = 5
-                    };
-                    tbl.AddCell(titleCell);
-                    AddRow("Name", customerName);
-                    AddRow("Mobile:", customerMobile);
-
-                    // 🔹 Title Row (full width)
-                    titleCell = new PdfPCell(new Phrase("Event Details", boldFont))
-                    {
-                        Colspan = 3,
-                        Border = Rectangle.NO_BORDER,
-                        PaddingTop = 10,
-                        PaddingBottom = 5
-                    };
-                    tbl.AddCell(titleCell);
-                    AddRow("Event Type", $"{eventName} ({subEventName})");
-                    AddRow("Event Date ", $"{eventDate}");
-                    AddRow("Hall Name", $"{hallName} at {startTime} ({shift})");
-
-                    document.Add(tbl);
-
-                    /* ================= PAYMENT DETAILS ================= */
-
-                    decimal totalAmout = r["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["TotalAmount"]);
-                    decimal paidTillDate = r["PaidTillDate"] == DBNull.Value ? 0 : Convert.ToDecimal(r["PaidTillDate"]);
-                    decimal thisPayment = r["ThisPayment"] == DBNull.Value ? 0 : Convert.ToDecimal(r["ThisPayment"]);
-                    decimal totalPaid = r["TotalPaid"] == DBNull.Value ? 0 : Convert.ToDecimal(r["TotalPaid"]);
-                    decimal outstandingAmount = r["OutstandingAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["OutstandingAmount"]);
-
-                    //document.Add(new Paragraph("\n"));
-
-                    /* ================= PAYMENT DETAILS ================= */
-
-                    PdfPTable paySummary = new PdfPTable(3);
-                    paySummary.WidthPercentage = 40;   // instead of 100
-                    paySummary.HorizontalAlignment = Element.ALIGN_LEFT; // or CENTER
-                    //paySummary.SetWidths(new float[] { 25, 3, 72 });
-                    paySummary.SetWidths(new float[] { 50, 5, 45 });
-                    // 🔹 Title Row (full width)
-                    titleCell = new PdfPCell(new Phrase("Payment Details", boldFont))
-                    {
-                        Colspan = 3,
-                        Border = Rectangle.NO_BORDER,
-                        PaddingTop = 10,
-                        PaddingBottom = 5
-                    };
-                    paySummary.AddCell(titleCell);
-
-                    // 🔹 Helper (same pattern as above table)
-                    void AddPayRow2(string label, string value)
-                    {
-                        paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
+                        // 🔹 Title Row (full width)
+                        titleCell = new PdfPCell(new Phrase("Event Details", boldFont))
                         {
-                            Border = Rectangle.NO_BORDER
-                        });
-
-                        paySummary.AddCell(new PdfPCell(new Phrase(":", normalFont))
-                        {
+                            Colspan = 3,
                             Border = Rectangle.NO_BORDER,
-                            HorizontalAlignment = Element.ALIGN_CENTER
-                        });
-
-                        paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
-                        {
-                            Border = Rectangle.BOTTOM_BORDER,
-                            PaddingBottom = 5,
-                            HorizontalAlignment = Element.ALIGN_RIGHT   // 💡 amount right aligned
-                        });
-                    }
-                    void AddPayRow(string label, string value)
-                    {
-                        paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
-                        {
-                            Border = Rectangle.NO_BORDER,
-                            Padding = 2
-                        });
-
-                        paySummary.AddCell(new PdfPCell(new Phrase(":", normalFont))
-                        {
-                            Border = Rectangle.NO_BORDER,
-                            HorizontalAlignment = Element.ALIGN_CENTER,
-                            Padding = 2
-                        });
-
-                        //paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
-                        //{
-                        //    Border = Rectangle.BOTTOM_BORDER,
-                        //    PaddingBottom = 3,
-                        //    PaddingTop = 2,
-                        //    HorizontalAlignment = Element.ALIGN_RIGHT
-                        //});
-
-                        PdfPCell valueCell = new PdfPCell(new Phrase(value, AmtFontNormal)) //normalFont
-                        {
-                            Border = Rectangle.NO_BORDER, // ❌ remove default solid border
-                            PaddingBottom = 3,
-                            PaddingTop = 2,
-                            HorizontalAlignment = Element.ALIGN_RIGHT
+                            PaddingTop = 10,
+                            PaddingBottom = 5
                         };
+                        tbl.AddCell(titleCell);
+                        AddRow("Event Type", $"{eventName} ({subEventName})");
+                        AddRow("Event Date ", $"{eventDate}");
+                        AddRow("Hall Name", $"{hallName} at {startTime} ({shift})");
 
-                        // ✅ Apply dotted underline
-                        valueCell.CellEvent = new DottedBottomBorder();
-                        paySummary.AddCell(valueCell);
+                        document.Add(tbl);
 
-                    }
-                    // 🔹 Data
-                    AddPayRow("Total Booking Amount", $"₹ {totalAmout:N0}");
-                    AddPayRow("Paid Till Date", $"₹ {paidTillDate:N0}");
-                    AddPayRow("This Payment", $"₹ {thisPayment:N0}");
-                    AddPayRow("Total Paid", $"₹ {totalPaid:N0}");
-                    AddPayRow("Outstanding Amount", $"₹ {outstandingAmount:N0}");
+                        /* ================= PAYMENT DETAILS ================= */
 
-                    document.Add(paySummary);
+                        decimal totalAmout = r["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["TotalAmount"]);
+                        decimal paidTillDate = r["PaidTillDate"] == DBNull.Value ? 0 : Convert.ToDecimal(r["PaidTillDate"]);
+                        decimal thisPayment = r["ThisPayment"] == DBNull.Value ? 0 : Convert.ToDecimal(r["ThisPayment"]);
+                        decimal totalPaid = r["TotalPaid"] == DBNull.Value ? 0 : Convert.ToDecimal(r["TotalPaid"]);
+                        decimal outstandingAmount = r["OutstandingAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["OutstandingAmount"]);
 
-                    document.Add(new Paragraph("\n"));
+                        //document.Add(new Paragraph("\n"));
 
-                    /* ================= AMOUNT BOX ================= */
-                    PdfPTable amtTbl = new PdfPTable(2);
-                    amtTbl.WidthPercentage = 100;
-                    amtTbl.SetWidths(new float[] { 30, 70 });
+                        /* ================= PAYMENT DETAILS ================= */
 
-                    amtTbl.AddCell(new PdfPCell(new Phrase($"₹ {thisPayment:N0}", AmtFontBold13))
-                    {
-                        Border = Rectangle.BOX,
-                        FixedHeight = 35,
-                        BorderWidth = 0.5f,
-                        BorderColor = BaseColor.DARK_GRAY,
-                        HorizontalAlignment = Element.ALIGN_CENTER,
-                        VerticalAlignment = Element.ALIGN_MIDDLE
-                    });
+                        PdfPTable paySummary = new PdfPTable(3);
+                        paySummary.WidthPercentage = 40;   // instead of 100
+                        paySummary.HorizontalAlignment = Element.ALIGN_LEFT; // or CENTER
+                        //paySummary.SetWidths(new float[] { 25, 3, 72 });
+                        paySummary.SetWidths(new float[] { 50, 5, 45 });
+                        // 🔹 Title Row (full width)
+                        titleCell = new PdfPCell(new Phrase("Payment Details", boldFont))
+                        {
+                            Colspan = 3,
+                            Border = Rectangle.NO_BORDER,
+                            PaddingTop = 10,
+                            PaddingBottom = 5
+                        };
+                        paySummary.AddCell(titleCell);
 
-                    amtTbl.AddCell(new PdfPCell(new Phrase("Authorised Signatory", normalFont))
-                    {
-                        Border = Rectangle.NO_BORDER,
-                        HorizontalAlignment = Element.ALIGN_RIGHT,
-                        VerticalAlignment = Element.ALIGN_BOTTOM
-                    });
+                        // 🔹 Helper (same pattern as above table)
+                        void AddPayRow2(string label, string value)
+                        {
+                            paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
+                            {
+                                Border = Rectangle.NO_BORDER
+                            });
 
-                    document.Add(amtTbl);
+                            paySummary.AddCell(new PdfPCell(new Phrase(":", normalFont))
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                HorizontalAlignment = Element.ALIGN_CENTER
+                            });
 
-                    /* ================= PAYMENT HISTORY ================= */
-                    if (dtPayments.Rows.Count > 0)
-                    {
+                            paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
+                            {
+                                Border = Rectangle.BOTTOM_BORDER,
+                                PaddingBottom = 5,
+                                HorizontalAlignment = Element.ALIGN_RIGHT   // 💡 amount right aligned
+                            });
+                        }
+                        void AddPayRow(string label, string value)
+                        {
+                            paySummary.AddCell(new PdfPCell(new Phrase(label, normalFont))
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                Padding = 2
+                            });
+
+                            paySummary.AddCell(new PdfPCell(new Phrase(":", normalFont))
+                            {
+                                Border = Rectangle.NO_BORDER,
+                                HorizontalAlignment = Element.ALIGN_CENTER,
+                                Padding = 2
+                            });
+
+                            //paySummary.AddCell(new PdfPCell(new Phrase(value, AmtFontNormal))
+                            //{
+                            //    Border = Rectangle.BOTTOM_BORDER,
+                            //    PaddingBottom = 3,
+                            //    PaddingTop = 2,
+                            //    HorizontalAlignment = Element.ALIGN_RIGHT
+                            //});
+
+                            PdfPCell valueCell = new PdfPCell(new Phrase(value, AmtFontNormal)) //normalFont
+                            {
+                                Border = Rectangle.NO_BORDER, // ❌ remove default solid border
+                                PaddingBottom = 3,
+                                PaddingTop = 2,
+                                HorizontalAlignment = Element.ALIGN_RIGHT
+                            };
+
+                            // ✅ Apply dotted underline
+                            valueCell.CellEvent = new DottedBottomBorder();
+                            paySummary.AddCell(valueCell);
+
+                        }
+                        // 🔹 Data
+                        AddPayRow("Total Booking Amount", $"₹ {totalAmout:N0}");
+                        AddPayRow("Paid Till Date", $"₹ {paidTillDate:N0}");
+                        AddPayRow("This Payment", $"₹ {thisPayment:N0}");
+                        AddPayRow("Total Paid", $"₹ {totalPaid:N0}");
+                        AddPayRow("Outstanding Amount", $"₹ {outstandingAmount:N0}");
+
+                        document.Add(paySummary);
+
                         document.Add(new Paragraph("\n"));
 
-                        // HISTORY TITLE
-                        PdfPTable title2 = new PdfPTable(1);
-                        title2.WidthPercentage = 100;
+                        /* ================= AMOUNT BOX ================= */
+                        PdfPTable amtTbl = new PdfPTable(2);
+                        amtTbl.WidthPercentage = 100;
+                        amtTbl.SetWidths(new float[] { 30, 70 });
 
-                        PdfPCell titleCell2 = new PdfPCell(
-                            new Phrase("ALL PAYMENT HISTORY",
-                            FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK))
-                        );
-                        titleCell2.BackgroundColor = BaseColor.WHITE;
-                        titleCell2.HorizontalAlignment = Element.ALIGN_CENTER;
-                        titleCell2.Padding = 5;
-                        titleCell2.Border = Rectangle.BOX;
-                        titleCell2.BorderWidth = 0.2f;
-                        titleCell2.BorderColor = BaseColor.LIGHT_GRAY;
-
-                        title2.AddCell(titleCell2);
-                        document.Add(title2);
-                        // HISTORY TITLE
-
-                        PdfPTable payTbl = new PdfPTable(6);
-                        payTbl.WidthPercentage = 100;
-                        payTbl.SetWidths(new float[] { 15, 20, 15, 15, 15, 20 });
-                        payTbl.HeaderRows = 1;
-
-                        void H(string t)
+                        amtTbl.AddCell(new PdfPCell(new Phrase($"₹ {thisPayment:N0}", AmtFontBold13))
                         {
-                            payTbl.AddCell(new PdfPCell(new Phrase(t, boldFont))
+                            Border = Rectangle.BOX,
+                            FixedHeight = 35,
+                            BorderWidth = 0.5f,
+                            BorderColor = BaseColor.DARK_GRAY,
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            VerticalAlignment = Element.ALIGN_MIDDLE
+                        });
+
+                        amtTbl.AddCell(new PdfPCell(new Phrase("Authorised Signatory", normalFont))
+                        {
+                            Border = Rectangle.NO_BORDER,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            VerticalAlignment = Element.ALIGN_BOTTOM
+                        });
+
+                        document.Add(amtTbl);
+
+                        /* ================= PAYMENT HISTORY ================= */
+                        if (dtPayments.Rows.Count > 0)
+                        {
+                            document.Add(new Paragraph("\n"));
+
+                            // HISTORY TITLE
+                            PdfPTable title2 = new PdfPTable(1);
+                            title2.WidthPercentage = 100;
+
+                            PdfPCell titleCell2 = new PdfPCell(
+                                new Phrase("ALL PAYMENT HISTORY",
+                                FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK))
+                            );
+                            titleCell2.BackgroundColor = BaseColor.WHITE;
+                            titleCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+                            titleCell2.Padding = 5;
+                            titleCell2.Border = Rectangle.BOX;
+                            titleCell2.BorderWidth = 0.2f;
+                            titleCell2.BorderColor = BaseColor.LIGHT_GRAY;
+
+                            title2.AddCell(titleCell2);
+                            document.Add(title2);
+                            // HISTORY TITLE
+
+                            PdfPTable payTbl = new PdfPTable(6);
+                            payTbl.WidthPercentage = 100;
+                            payTbl.SetWidths(new float[] { 15, 20, 15, 15, 15, 20 });
+                            payTbl.HeaderRows = 1;
+
+                            void H(string t)
+                            {
+                                payTbl.AddCell(new PdfPCell(new Phrase(t, boldFont))
+                                {
+                                    BackgroundColor = new BaseColor(230, 230, 230),
+                                    HorizontalAlignment = Element.ALIGN_CENTER,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+                            }
+
+                            H("Receipt No"); H("Date & Time"); H("Mode"); H("Amount"); H("Balance"); H("Notes");
+
+                            decimal totalAmount = 0;
+                            foreach (DataRow pr in dtPayments.Rows)
+                            {
+                                decimal amt = pr["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["Amount"]);
+                                decimal bal = pr["DueBalance"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["DueBalance"]);
+                                totalAmount += amt;
+
+                                payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentId"]?.ToString() ?? "-", normalFont))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_CENTER,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+
+                                payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentDateTimeFormat"]?.ToString() ?? "-", normalFont))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_CENTER,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+
+                                payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentModeName"]?.ToString() ?? "-", normalFont))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_CENTER,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+
+                                payTbl.AddCell(new PdfPCell(new Phrase($"₹ {amt:N0}", AmtFontNormal))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+
+                                payTbl.AddCell(new PdfPCell(new Phrase($"₹ {bal:N0}", AmtFontNormal))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+
+                                payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentNotes"]?.ToString() ?? "-", normalFont))
+                                {
+                                    HorizontalAlignment = Element.ALIGN_LEFT,
+                                    Border = Rectangle.BOX,
+                                    BorderWidth = 0.2f,
+                                    BorderColor = BaseColor.LIGHT_GRAY
+                                });
+                            }
+
+                            // 🔹 Total Amount TITLE
+                            payTbl.AddCell(new PdfPCell(new Phrase($"TOTAL", AmtFontBold))
+                            {
+                                HorizontalAlignment = Element.ALIGN_RIGHT,
+                                BackgroundColor = new BaseColor(230, 230, 230),
+                                Padding = 5,
+                                Colspan = 3,
+                                Border = Rectangle.BOX,
+                                BorderWidth = 0.2f,
+                                BorderColor = BaseColor.LIGHT_GRAY
+                            });
+
+                            // 🔹 Total Amount (Amount column)
+                            payTbl.AddCell(new PdfPCell(new Phrase($"₹ {totalAmount:N0}", AmtFontBold))
+                            {
+                                HorizontalAlignment = Element.ALIGN_RIGHT,
+                                BackgroundColor = new BaseColor(230, 230, 230),
+                                Padding = 2,
+                                PaddingTop = 5,
+                                Border = Rectangle.BOX,
+                                BorderWidth = 0.2f,
+                                BorderColor = BaseColor.LIGHT_GRAY
+                            });
+
+                            // 🔹 Empty Balance column (optional)
+                            payTbl.AddCell(new PdfPCell(new Phrase(""))
                             {
                                 BackgroundColor = new BaseColor(230, 230, 230),
-                                HorizontalAlignment = Element.ALIGN_CENTER,
                                 Border = Rectangle.BOX,
                                 BorderWidth = 0.2f,
                                 BorderColor = BaseColor.LIGHT_GRAY
                             });
+
+                            // 🔹 Empty Notes column (optional)
+                            payTbl.AddCell(new PdfPCell(new Phrase(""))
+                            {
+                                BackgroundColor = new BaseColor(230, 230, 230),
+                                Border = Rectangle.BOX,
+                                BorderWidth = 0.2f,
+                                BorderColor = BaseColor.LIGHT_GRAY
+                            });
+
+                            document.Add(payTbl);
                         }
 
-                        H("Receipt No"); H("Date & Time"); H("Mode"); H("Amount"); H("Balance"); H("Notes");
-
-                        decimal totalAmount = 0;
-                        foreach (DataRow pr in dtPayments.Rows)
-                        {
-                            decimal amt = pr["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["Amount"]);
-                            decimal bal = pr["DueBalance"] == DBNull.Value ? 0 : Convert.ToDecimal(pr["DueBalance"]);
-                            totalAmount += amt;
-
-                            payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentId"]?.ToString() ?? "-", normalFont))
-                            {
-                                HorizontalAlignment = Element.ALIGN_CENTER,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-
-                            payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentDateTimeFormat"]?.ToString() ?? "-", normalFont))
-                            {
-                                HorizontalAlignment = Element.ALIGN_CENTER,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-
-                            payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentModeName"]?.ToString() ?? "-", normalFont))
-                            {
-                                HorizontalAlignment = Element.ALIGN_CENTER,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-
-                            payTbl.AddCell(new PdfPCell(new Phrase($"₹ {amt:N0}", AmtFontNormal))
-                            {
-                                HorizontalAlignment = Element.ALIGN_RIGHT,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-
-                            payTbl.AddCell(new PdfPCell(new Phrase($"₹ {bal:N0}", AmtFontNormal))
-                            {
-                                HorizontalAlignment = Element.ALIGN_RIGHT,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-
-                            payTbl.AddCell(new PdfPCell(new Phrase(pr["PaymentNotes"]?.ToString() ?? "-", normalFont))
-                            {
-                                HorizontalAlignment = Element.ALIGN_LEFT,
-                                Border = Rectangle.BOX,
-                                BorderWidth = 0.2f,
-                                BorderColor = BaseColor.LIGHT_GRAY
-                            });
-                        }
-
-                        // 🔹 Total Amount TITLE
-                        payTbl.AddCell(new PdfPCell(new Phrase($"TOTAL", AmtFontBold))
-                        {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
-                            BackgroundColor = new BaseColor(230, 230, 230),
-                            Padding = 5,
-                            Colspan = 3,
-                            Border = Rectangle.BOX,
-                            BorderWidth = 0.2f,
-                            BorderColor = BaseColor.LIGHT_GRAY
-                        });
-
-                        // 🔹 Total Amount (Amount column)
-                        payTbl.AddCell(new PdfPCell(new Phrase($"₹ {totalAmount:N0}", AmtFontBold))
-                        {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
-                            BackgroundColor = new BaseColor(230, 230, 230),
-                            Padding = 2,
-                            PaddingTop = 5,
-                            Border = Rectangle.BOX,
-                            BorderWidth = 0.2f,
-                            BorderColor = BaseColor.LIGHT_GRAY
-                        });
-
-                        // 🔹 Empty Balance column (optional)
-                        payTbl.AddCell(new PdfPCell(new Phrase(""))
-                        {
-                            BackgroundColor = new BaseColor(230, 230, 230),
-                            Border = Rectangle.BOX,
-                            BorderWidth = 0.2f,
-                            BorderColor = BaseColor.LIGHT_GRAY
-                        });
-
-                        // 🔹 Empty Notes column (optional)
-                        payTbl.AddCell(new PdfPCell(new Phrase(""))
-                        {
-                            BackgroundColor = new BaseColor(230, 230, 230),
-                            Border = Rectangle.BOX,
-                            BorderWidth = 0.2f,
-                            BorderColor = BaseColor.LIGHT_GRAY
-                        });
-
-                        document.Add(payTbl);
+                        // NEW PAGE
+                        if (i < dt.Rows.Count - 1)
+                            document.NewPage();
                     }
 
-                    // NEW PAGE
-                    if (i < dt.Rows.Count - 1)
-                        document.NewPage();
+                    //document.Add(table);
+                    document.Close();
+
+                    #region SAVE
+                    string folder = Path.Combine(_env.WebRootPath, "reports");
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                    Utils.deleteOldFiles(folder, "Payment_Receipt_*.pdf");
+
+                    string fileName = $"Payment_Receipt_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                    string filePath = Path.Combine(folder, fileName);
+
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                        stream.WriteTo(fileStream);
+                    #endregion
+
+                    response.status = "Success";
+                    response.message = "Payment Receipt Generated";
+                    response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
+
+                    return Ok(response);
                 }
-
-                //document.Add(table);
-                document.Close();
-
-                #region SAVE
-                string folder = Path.Combine(_env.WebRootPath, "reports");
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                Utils.deleteOldFiles(folder, "Payment_Receipt_*.pdf");
-
-                string fileName = $"Payment_Receipt_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                string filePath = Path.Combine(folder, fileName);
-
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                    stream.WriteTo(fileStream);
-                #endregion
-
-                response.status = "Success";
-                response.message = "Payment Receipt Generated";
-                response.data = new { FileUrl = $"{domainUrl}/reports/{fileName}" };
-
-                return Ok(response);
+                catch (Exception ex)
+                {
+                    response.status = "Fail";
+                    response.message = ex.Message;
+                    return Ok(response);
+                }
             }
-            catch (Exception ex)
-            {
-                response.status = "Fail";
-                response.message = ex.Message;
-                return Ok(response);
-            }
-        }
 
 
     }
