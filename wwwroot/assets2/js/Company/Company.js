@@ -1995,6 +1995,8 @@ function resetHallRentForm() {
         partitionLabel.textContent = "No";
     }
 
+    resetHallMergeSection();
+
     // Reset checkboxes, icons, and active class
     document.querySelectorAll('#hallRentForm .option-item').forEach(item => {
         const checkbox = item.querySelector('.option-checkbox');
@@ -2010,12 +2012,31 @@ function resetHallRentForm() {
         item.classList.remove("active");
     });
 
-
     // Reset file inputs
     document.querySelectorAll('#hallRentForm input[type="file"]').forEach(fileInput => {
         fileInput.value = "";
     });
     resetHallPreviews();
+}
+
+// RESET HALL MERGE SECTION
+function resetHallMergeSection() {
+
+    // SWITCH OFF
+    $("#HallMergeToggle")
+        .prop("checked", false);
+
+    // LABEL
+    $("#hallMergeLabel")
+        .text("No");
+
+    // HIDE SECTION
+    $(".hall-merge-fields")
+        .addClass("d-none");
+
+    // CLEAR CHECKBOX LIST
+    $("#mergeHallContainer")
+        .html("");
 }
 
 // Function to fetch hall details
@@ -2107,11 +2128,6 @@ function populateHallTable(halls) {
         let hall = $(this).data("hall"); // parse hall JSON object
         console.log("edit hall:", hall);
 
-        console.log("edit hall:", hall.Image1);
-        console.log("edit hall:", hall.Image2);
-        console.log("edit hall:", hall.Image3);
-        console.log("edit hall:", hall.Image4);
-        console.log("edit hall:", hall.Image5);
         loadHallImages(hall);
 
         // Fill form fields
@@ -2121,9 +2137,30 @@ function populateHallTable(halls) {
         $("#HallRent").val(hall.RentPerDay);
         $("#PartitionToggle").prop("checked", hall.IsPartitioned == true);
 
+        $("#HallCapacity_WithPartition").val(hall.CapacityWithPartition_Id);
+        $("#HallRent_WithPartition").val(hall.RentWithPartition);
+
         $("#Video360Link").val(hall.Video360Link);
         $("#PromoVideo1").val(hall.PromoVideo1);
         $("#PromoVideo2").val(hall.PromoVideo2);
+
+        // HALL MERGE
+        $("#HallMergeToggle")
+            .prop("checked", hall.IsHallMerged == true)
+            .trigger("change");
+
+
+        // KEEP SELECTED AFTER CHECKBOXES RENDER
+        /*if (hall.IsHallMerged == true &&
+            hall.MergeHall_List &&
+            hall.MergeHall_List.length > 0) {
+
+            setTimeout(() => {
+                hall.MergeHall_List.forEach(item => {
+                    $(`#mergeHall_${item.Hall_Id}`).prop("checked", true);
+                });
+            }, 300);
+        }*/
 
         // ✅ Good For checkboxes
         //setGoodForOptions(hall);
@@ -2296,12 +2333,13 @@ function renderMergeHallCheckboxes() {
     // current editing hall id
     let currentHallId = $("#hdnHallId").val() || 0;
 
-    console.log("hallList render:", hallList);
+    console.log("hallList render1:", hallList);
     // only non-merged halls
     let filteredHalls = hallList.filter(x =>
         !x.isHallMerged &&
         x.id != currentHallId
     );
+    console.log("hallList render2:", hallList);
 
     if (filteredHalls.length === 0) {
         html = `<div class="text-muted">No halls available</div>`;
