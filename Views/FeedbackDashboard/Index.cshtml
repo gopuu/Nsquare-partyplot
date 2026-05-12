@@ -26,13 +26,13 @@
                                     </button>
 
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="jobChartFilter">
-                                        <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 7 days</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 30 days</a></li>
-                                        <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                        <li><a class="dropdown-item" href="#">Custom Range</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="yesterday">Yesterday</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last7days">Last 7 days</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last30days">Last 30 days</a></li>
+                                        <li><a class="dropdown-item active" href="#" data-value="thismonth">This Month</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="lastmonth">Last Month</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last12months">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="customrange">Custom Range</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -174,13 +174,13 @@
                                     </button>
 
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 7 days</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 30 days</a></li>
-                                        <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                        <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                        <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="yesterday">Yesterday</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last7days">Last 7 days</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last30days">Last 30 days</a></li>
+                                        <li><a class="dropdown-item active" href="#" data-value="thismonth">This Month</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="lastmonth">Last Month</a></li>
+                                        <li><a class="dropdown-item" href="#" data-value="last12months">Last 12 Months</a></li>
+                                        <li><a class="dropdown-item " href="#" data-value="customrange">Custom Range</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -209,14 +209,14 @@
                                                 This Month
                                             </button>
 
-                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 7 days</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 30 days</a></li>
-                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm"> 
+                                                <li><a class="dropdown-item" href="#" data-value="yesterday">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last7days">Last 7 days</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last30days">Last 30 days</a></li>
+                                                <li><a class="dropdown-item active" href="#" data-value="thismonth">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="lastmonth">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last12months">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#" data-value="customrange">Custom Range</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -242,13 +242,13 @@
                                             </button>
 
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 7 days</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 30 days</a></li>
-                                                <li><a class="dropdown-item active" href="#">This Month</a></li>
-                                                <li><a class="dropdown-item" href="#">Last Month</a></li>
-                                                <li><a class="dropdown-item" href="#">Last 12 Months</a></li>
-                                                <li><a class="dropdown-item " href="#">Custom Range</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="yesterday">Yesterday</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last7days">Last 7 days</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last30days">Last 30 days</a></li>
+                                                <li><a class="dropdown-item active" href="#" data-value="thismonth">This Month</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="lastmonth">Last Month</a></li>
+                                                <li><a class="dropdown-item" href="#" data-value="last12months">Last 12 Months</a></li>
+                                                <li><a class="dropdown-item " href="#" data-value="customrange">Custom Range</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -351,7 +351,7 @@
                                 <div class="card-body pt-1">
                                     <h4 id="totalRevenue" class="mt-0 mb-1"></h4>
                                     <p class="text-muted mb-2">
-                                        revenue and <span id="totalVisits"></span> visits via Reelo 🚀
+                                        revenue and <span id="totalVisits"></span> visits 🚀
                                     </p>
                                     <img src="~/assets2/img/avgbill.png" class="img-fluid rounded img_logo">
                                 </div>
@@ -409,7 +409,7 @@
 
                                 <div class="card-body pt-1">
                                     <p class="mt-0 mb-2">
-                                        ₹<span id="avgOrderValueAmount"></span>
+                                        <span id="avgOrderValueAmount" class="fw-bold"></span>
                                         with customers ordering
                                         <strong><span id="avgItems"></span></strong>
                                         items per order 💰
@@ -440,7 +440,6 @@
                                     <p class="mt-0 mb-2">
                                         Customers visit on average
                                         <strong><span id="visitFrequencyValue"></span></strong>
-                                        time(s) a year 🙂
                                     </p>
 
                                     <img src="~/assets2/img/customeravg.png"

@@ -177,6 +177,18 @@ namespace ERPAdmin.ApiControllers
                                 Amenity_ShoeRack = reader["Amenity_ShoeRack"] == DBNull.Value ? false : Convert.ToBoolean(reader["Amenity_ShoeRack"]),
                                 Amenity_RedCarpet = reader["Amenity_RedCarpet"] == DBNull.Value ? false : Convert.ToBoolean(reader["Amenity_RedCarpet"]),
                                 Is_Blocked = reader["Is_Blocked"] == DBNull.Value ? false : Convert.ToBoolean(reader["Is_Blocked"]),
+
+                                CapacityWithPartition_Id = reader["CapacityWithPartition_Id"] == DBNull.Value ? (int?)null
+                                        : Convert.ToInt32(reader["CapacityWithPartition_Id"]),
+
+                                RentWithPartition = reader["RentWithPartition"] == DBNull.Value ? (decimal?)null
+                                        : Convert.ToDecimal(reader["RentWithPartition"]),
+
+                                IsHallMerged = reader["IsHallMerged"] == DBNull.Value ? false
+                                        : Convert.ToBoolean(reader["IsHallMerged"]),
+
+                                MergeHall_List = reader["MergeHall_JSON"] == DBNull.Value ? new List<MergeHall_List>()
+                                        : JsonConvert.DeserializeObject<List<MergeHall_List>>(reader["MergeHall_JSON"].ToString()),
                             };
                             halls.Add(hall);
                         }
@@ -266,7 +278,21 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Amenity_ShoeRack", SqlDbType.Bit).Value = model.Amenity_ShoeRack;
                     cmd.Parameters.Add("@Amenity_RedCarpet", SqlDbType.Bit).Value = model.Amenity_RedCarpet;
                     cmd.Parameters.Add("@Is_Blocked", SqlDbType.Bit).Value = model.Is_Blocked;
-                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.Action_By;
+
+                    cmd.Parameters.Add("@CapacityWithPartition_Id", SqlDbType.Int).Value = model.CapacityWithPartition_Id ?? (object)DBNull.Value;
+                    cmd.Parameters.Add("@RentWithPartition", SqlDbType.Decimal).Value = model.RentWithPartition ?? (object)DBNull.Value;
+                    cmd.Parameters.Add("@IsHallMerged", SqlDbType.Bit).Value = model.IsHallMerged;
+
+                    string? mergeHallJson = (model.MergeHall_JSON != null && model.MergeHall_JSON.Any())
+                            ? JsonConvert.SerializeObject(model.MergeHall_JSON)
+                            : null;
+
+                    cmd.Parameters.Add("@MergeHall_JSON", SqlDbType.NVarChar).Value =
+                        string.IsNullOrWhiteSpace(mergeHallJson)
+                            ? (object)DBNull.Value
+                            : mergeHallJson;
+
+                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     con.Open();
                     //cmd.ExecuteNonQuery();
@@ -419,13 +445,14 @@ public class GetCompanyHallDetailsRequest
 {
     public long? Id { get; set; }
 }
+
 public class GetCompanyHallDetailsRequest_IsBlocked : BaseClass
 {
     public long? Id { get; set; }
     public bool Is_Blocked { get; set; }
 
 }
-public class SaveCompanyHallDetailsRequest
+public class SaveCompanyHallDetailsRequest : BaseClass
 {
     public long Id { get; set; }
     public string HallName { get; set; } = string.Empty;
@@ -478,7 +505,13 @@ public class SaveCompanyHallDetailsRequest
     public bool Amenity_ShoeRack { get; set; }
     public bool Amenity_RedCarpet { get; set; }
     public bool Is_Blocked { get; set; }
-    public long Action_By { get; set; }
+    public int? CapacityWithPartition_Id { get; set; }
+    public decimal? RentWithPartition { get; set; }
+    public bool IsHallMerged { get; set; }
+    public List<MergeHall_List>? MergeHall_JSON { get; set; }
 }
 
-
+public class MergeHall_List
+{
+    public long? Hall_Id { get; set; }
+}

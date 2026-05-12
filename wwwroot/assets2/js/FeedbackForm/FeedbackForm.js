@@ -16,14 +16,12 @@ $(document).ready(function () {
     if (params.has("w")) whatsappNo = atobFix(params.get("w"));
 
     loadFeedbackForm();
-
-    $("#btnNext").on("click", handleNext);
-    $("#btnPrev").on("click", handlePrev);
 });
 
 /* ================= LOAD FORM ================= */
 function loadFeedbackForm() {
     $.get("/api/Feedback/GetFeedbackFormData", function (res) {
+        console.log("res:", res);
         steps = res.data.sort((a, b) => a.StepOrder - b.StepOrder);
         console.log("res steps:", steps);
         currentStepIndex = 0;
@@ -38,10 +36,18 @@ function renderStep() {
 
     $("#stepTitle").text(step.StepTitle);
     $("#stepsContainer").empty();
-    $(".btn-actions").removeClass("d-none");
 
     step.HasTextBox ? renderTextBox(step) : renderOptions(step);
-    updateNavButtons();
+    //updateNavButtons();
+}
+function moveToNextStep() {
+    if (currentStepIndex === steps.length - 1) {
+        submitFeedback();
+    }
+    else {
+        currentStepIndex++;
+        renderStep();
+    }
 }
 
 /* ================= OPTIONS ================= */
@@ -71,6 +77,42 @@ function renderOptions(step) {
                 .get();
 
             feedbackResponses[step.StepId] = selected;
+
+            const isSingleSelect = !step.IsMultiSelect;
+
+            // ================= SINGLE SELECT =================
+            if (isSingleSelect) {
+                setTimeout(() => {
+                    moveToNextStep();
+                }, 300);
+            }
+            // ================= MULTI SELECT =================
+            else {
+                // Remove old timer if exists
+                clearInterval(window.multiSelectTimer);
+
+                // Remove old countdown UI
+                $("#multiSelectCountdown").remove();
+
+                let seconds = 3;
+
+                // Countdown UI
+                $("#stepsContainer").append(`
+                    <div id="multiSelectCountdown"
+                         class="text-center mt-4 text-primary fw-bold fs-5">
+                        Moving next in ${seconds}...
+                    </div>
+                `);
+
+                window.multiSelectTimer = setInterval(() => {
+                    seconds--;
+                    $("#multiSelectCountdown").text(`Moving next in ${seconds}...`);
+                    if (seconds <= 0) {
+                        clearInterval(window.multiSelectTimer);
+                        moveToNextStep();
+                    }
+                }, 1000);
+            }
 
             $("#hiddenMessage").remove();
             if (opt.HiddenMessage) {
@@ -105,7 +147,7 @@ function renderOptions(step) {
 }
 
 /* ================= TEXTBOX ================= */
-function renderTextBox(step) {
+function renderTextBox2(step) {
     const textarea = $(`<textarea class="form-control" rows="4"
                 placeholder="Enter your feedback"></textarea>`);
 
@@ -115,47 +157,31 @@ function renderTextBox(step) {
 
     $("#stepsContainer").append(textarea);
 }
+function renderTextBox(step) {
 
-/* ================= NAVIGATION ================= */
-function handleNext() {
-    const stepId = steps[currentStepIndex].StepId;
+    const wrapper = $(`
+        <div class="text-center">
+            <textarea class="form-control mb-3"
+                      rows="4"
+                      placeholder="Enter your feedback"></textarea>
 
-    if (!feedbackResponses[stepId] && stepId < 4) {
-        $("#feedbackError").removeClass("d-none");
-        return;
-    }
-    else {
-        $("#feedbackError").addClass("d-none");
-    }
+            <button class="btn btn-primary px-4" id="btnSubmitFeedback">
+                Submit Feedback
+            </button>
+        </div>
+    `);
 
-    if (currentStepIndex === steps.length - 1) {
+    wrapper.find("textarea").on("input", function () {
+        feedbackResponses[step.StepId] = $(this).val();
+    });
+
+    wrapper.find("#btnSubmitFeedback").on("click", function () {
+
         submitFeedback();
-        return;
-    }
 
-    currentStepIndex++;
-    renderStep();
-}
+    });
 
-function handlePrev() {
-    currentStepIndex--;
-    renderStep();
-}
-
-function updateNavButtons() {
-    const isFirst = currentStepIndex === 0;
-    const isLast = currentStepIndex === steps.length - 1;
-
-    $("#btnPrev").toggleClass("hidden", isFirst);
-
-    const icon = $("#btnNext i");
-    if (isLast) {
-        icon.removeClass("fa-chevron-right").addClass("fa-check");
-        $("#btnNext").addClass("save");
-    } else {
-        icon.removeClass("fa-check").addClass("fa-chevron-right");
-        $("#btnNext").removeClass("save");
-    }
+    $("#stepsContainer").append(wrapper);
 }
 
 /* ================= SUBMIT ================= */
@@ -199,7 +225,9 @@ function submitFeedback() {
         beforeSend: function () {
             showSaveLoader();   // 👈 loader ON + buttons disabled
         },
-        success: function () {
+        success: function (res) {
+            console.log("save res:", res);
+
             $(".feedback-card").fadeOut(300, function () {
                 $("#thankYouScreen").removeClass("d-none");
                 if (bookingId == 0) {
@@ -213,24 +241,34 @@ function submitFeedback() {
                         $("#countdownSeconds").text(seconds);
 
                         if (seconds <= 0) {
+
                             clearInterval(interval);
 
-                            if (bookingId == 0) {
-                                // Reset UI (SPA-style reload)
-                                $("#thankYouScreen").addClass("d-none");
-                                $(".feedback-card").fadeIn(300);
+                            steps = [];
+                            currentStepIndex = 0;
+                            feedbackResponses = {};
 
-                                steps = [];
-                                currentStepIndex = 0;
-                                feedbackResponses = {};
+                            $("#stepTitle").text("");
+
+                            // Show loader before loading form
+                            $("#stepsContainer").html(`
+                                <div class="loading-state text-center py-5">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <div class="mt-2">
+                                        Please wait, loading feedback form…
+                                    </div>
+                                </div>
+                            `);
+
+                            $("#thankYouScreen").fadeOut(200, function () {
+                                $(this).addClass("d-none");
+
+                                $(".feedback-card").fadeIn(200);
 
                                 loadFeedbackForm();
-                            } else {
-                                // Optional full reload
-                                // location.reload();
-                            }
+                            });
                         }
-                    }, 1000);
+                    }, 300);
                 }
                 else {
                     $("#reloadCountdown").addClass("d-none");

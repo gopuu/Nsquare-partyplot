@@ -63,6 +63,12 @@
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
     }
+    public class DashboardFeedbackHV_Request
+    {
+        public string? MonthDuration { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+    }
     public class DashboardPaymentDetailsRequest
     {
         public string? Type { get; set; } = string.Empty; // PAID / PENDING
@@ -110,9 +116,12 @@
     public class DashboardEventInsightResponse
     {
         public decimal? AvgbillingValue { get; set; }
+        public decimal? AvgbillingValue_PAX { get; set; }
         public decimal? CorporateEventValue { get; set; }
+        public long? CorporateEventValue_Count { get; set; }
         public decimal? Familyeventbillingvalue { get; set; }
-        public decimal? RevenueDistributionValue { get; set; }
+        public decimal? RevenueDistribution_CustomerValue { get; set; }
+        public decimal? RevenueDistribution_TotalValue { get; set; }
 
         public string? AvgbillingText { get; set; }
         public string? CorporateEventText { get; set; }

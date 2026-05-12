@@ -1,10 +1,11 @@
 ﻿using ERPAdmin.Helper;
+using ERPAdmin.Models;
 using ERPAdmin.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
-using ERPAdmin.Models;
 using System.Text.Json;
 
 namespace ERPAdmin.ApiControllers
@@ -424,7 +425,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("GetFeedbackDashboardHost_Visitors")]
-        public IActionResult GetFeedbackDashboardHost_Visitors()
+        public IActionResult GetFeedbackDashboardHost_Visitors([FromBody] DashboardFeedbackHV_Request request)
         {
             apiResponse apiResponse = new apiResponse();
             List<DashboardFeedbackCardResponse> list = new();
@@ -443,6 +444,9 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("Dashboard_Feedback_GetFeedbackHost_Visitors", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@MonthDuration", request.MonthDuration);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate);
 
                     con.Open();
                     using (SqlDataReader dr = cmd.ExecuteReader())
@@ -515,13 +519,22 @@ namespace ERPAdmin.ApiControllers
                             data = new DashboardEventInsightResponse
                             {
                                 AvgbillingText = dr["AvgbillingText"]?.ToString(),
-                                CorporateEventText = dr["CorporateEventText"]?.ToString(),
-                                FamilyeventbillingText = dr["FamilyeventbillingText"]?.ToString(),
-                                RevenueDistributionText = dr["RevenueDistributionText"]?.ToString(),
                                 AvgbillingValue = dr["AvgbillingValue"] != DBNull.Value ? Convert.ToDecimal(dr["AvgbillingValue"]) : 0,
+                                AvgbillingValue_PAX = dr["AvgbillingValue_PAX"] != DBNull.Value ? Convert.ToDecimal(dr["AvgbillingValue_PAX"]) : 0,
+
+                                CorporateEventText = dr["CorporateEventText"]?.ToString(),
                                 CorporateEventValue = dr["CorporateEventValue"] != DBNull.Value ? Convert.ToDecimal(dr["CorporateEventValue"]) : 0,
+                                CorporateEventValue_Count = dr["CorporateEventValue_Count"] != DBNull.Value ? Convert.ToInt64(dr["CorporateEventValue_Count"]) : 0,
+
+                                FamilyeventbillingText = dr["FamilyeventbillingText"]?.ToString(),
                                 Familyeventbillingvalue = dr["Familyeventbillingvalue"] != DBNull.Value ? Convert.ToDecimal(dr["Familyeventbillingvalue"]) : 0,
-                                RevenueDistributionValue = dr["RevenueDistributionValue"] != DBNull.Value ? Convert.ToDecimal(dr["RevenueDistributionValue"]) : 0,
+
+                                RevenueDistributionText = dr["RevenueDistributionText"]?.ToString(),
+                                RevenueDistribution_CustomerValue = dr["RevenueDistribution_CustomerValue"] != DBNull.Value ? 
+                                    Convert.ToDecimal(dr["RevenueDistribution_CustomerValue"]) : 0,
+
+                                RevenueDistribution_TotalValue = dr["RevenueDistribution_TotalValue"] != DBNull.Value ? 
+                                    Convert.ToDecimal(dr["RevenueDistribution_TotalValue"]) : 0,
 
                             };
                         }

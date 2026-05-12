@@ -6,6 +6,13 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="wwwroot\assets2\img\Feedback\old\**" />
+	  <Content Remove="wwwroot\assets2\img\Feedback\old\**" />
+	  <EmbeddedResource Remove="wwwroot\assets2\img\Feedback\old\**" />
+	  <None Remove="wwwroot\assets2\img\Feedback\old\**" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
 		<PackageReference Include="Dapper" Version="2.1.72" />

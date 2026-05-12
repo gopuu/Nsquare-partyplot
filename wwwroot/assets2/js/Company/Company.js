@@ -1859,11 +1859,30 @@ document.addEventListener('DOMContentLoaded', function () {
             imagesBase64.push(base64);
         }
 
+        // SELECTED MERGE HALLS
+        let mergeHallList =
+            $(".merge-hall-checkbox:checked")
+                .map(function () {
+                    return { Hall_Id: parseInt($(this).val()) };
+                }).get();
+
+        // VALIDATION
+        if ($("#HallMergeToggle").is(":checked")) {
+            if (mergeHallList.length < 2) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Validation",
+                    text: "Please select at least 2 halls for merge."
+                });
+                return;
+            }
+        }
+
         // Prepare request object
         const requestData = {
             Id: document.getElementById("HallId").value, // if editing, set proper ID
             HallName: document.getElementById("HallName").value,
-            CapacityRange: document.getElementById("HallCapacity").selectedIndex, // example mapping
+            CapacityRange: document.getElementById("HallCapacity").value,
             RentPerDay: parseFloat(document.getElementById("HallRent").value || 0),
             IsPartitioned: document.getElementById("PartitionToggle").checked,
 
@@ -1920,6 +1939,12 @@ document.addEventListener('DOMContentLoaded', function () {
             Amenity_ShoeRack: getCheckboxValue("Amenities_ShoeRack"),
             Amenity_RedCarpet: getCheckboxValue("Amenities_RedCarpet"),
             Is_Blocked: false,
+            CapacityWithPartition_Id: document.getElementById("HallCapacity").value,
+            RentWithPartition: parseFloat(document.getElementById("HallRent").value || 0),
+
+            IsHallMerged: $("#HallMergeToggle").is(":checked"),
+            MergeHall_JSON: mergeHallList,
+
             Action_By: userId // Example user id
         };
         console.log("hall requestData:", requestData);
@@ -1994,6 +2019,7 @@ function resetHallRentForm() {
 }
 
 // Function to fetch hall details
+var hallList = null;
 function fetchHallDetails() {
     //showLoader();
     $.ajax({
@@ -2005,6 +2031,9 @@ function fetchHallDetails() {
             console.log("GetCompanyHallDetailsList res:", response);
             if (response.status === "Success" && response.data) {
                 populateHallTable(response.data);
+
+                hallList = response.data; //.filter(x => !x.isHallMerged);
+                console.log("Filtered Hall List:", hallList);
             } else {
                 //console.error('Failed to fetch hall details:', response.message);
                 // Swal.fire({
@@ -2244,6 +2273,60 @@ function populateHallTable(halls) {
         });
     });
 }
+
+// HALL MERGE TOGGLE
+$("#HallMergeToggle").change(function () {
+    let isChecked = $(this).is(":checked");
+    $("#hallMergeLabel").text(isChecked ? "Yes" : "No");
+    $(".hall-merge-fields").toggleClass("d-none", !isChecked);
+
+    // LOAD HALLS
+    if (isChecked) {
+        renderMergeHallCheckboxes();
+    }
+    else {
+        $("#mergeHallContainer").html("");
+    }
+});
+// RENDER NON-MERGED HALLS
+function renderMergeHallCheckboxes() {
+
+    let html = "";
+
+    // current editing hall id
+    let currentHallId = $("#hdnHallId").val() || 0;
+
+    console.log("hallList render:", hallList);
+    // only non-merged halls
+    let filteredHalls = hallList.filter(x =>
+        !x.isHallMerged &&
+        x.id != currentHallId
+    );
+
+    if (filteredHalls.length === 0) {
+        html = `<div class="text-muted">No halls available</div>`;
+    }
+    else {
+        filteredHalls.forEach(hall => {
+            html += `
+                <div class="form-check mb-2">
+
+                    <input class="form-check-input merge-hall-checkbox"
+                           type="checkbox"
+                           value="${hall.Id}"
+                           id="mergeHall_${hall.Id}" />
+
+                    <label class="form-check-label" for="mergeHall_${hall.Id}">
+                        ${hall.HallName}
+                    </label>
+                </div>
+            `;
+        });
+    }
+
+    $("#mergeHallContainer").html(html);
+}
+
 
 // ✅ Convert file input to Base64
 function getBase64(file) {
