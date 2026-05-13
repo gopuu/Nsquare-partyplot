@@ -2145,13 +2145,10 @@ function populateHallTable(halls) {
         $("#PromoVideo2").val(hall.PromoVideo2);
 
         // HALL MERGE
-        $("#HallMergeToggle")
-            .prop("checked", hall.IsHallMerged == true)
-            .trigger("change");
-
+        $("#HallMergeToggle").prop("checked", hall.IsHallMerged == true).trigger("change");
 
         // KEEP SELECTED AFTER CHECKBOXES RENDER
-        /*if (hall.IsHallMerged == true &&
+        if (hall.IsHallMerged == true &&
             hall.MergeHall_List &&
             hall.MergeHall_List.length > 0) {
 
@@ -2160,7 +2157,7 @@ function populateHallTable(halls) {
                     $(`#mergeHall_${item.Hall_Id}`).prop("checked", true);
                 });
             }, 300);
-        }*/
+        }
 
         // ✅ Good For checkboxes
         //setGoodForOptions(hall);
@@ -2327,19 +2324,17 @@ $("#HallMergeToggle").change(function () {
 });
 // RENDER NON-MERGED HALLS
 function renderMergeHallCheckboxes() {
-
     let html = "";
-
     // current editing hall id
-    let currentHallId = $("#hdnHallId").val() || 0;
+    let currentHallId = $("#HallId").val() || 0;
 
     console.log("hallList render1:", hallList);
     // only non-merged halls
     let filteredHalls = hallList.filter(x =>
-        !x.isHallMerged &&
-        x.id != currentHallId
+        !x.IsHallMerged &&
+        x.Id != currentHallId
     );
-    console.log("hallList render2:", hallList);
+    console.log("hallList render2:", filteredHalls);
 
     if (filteredHalls.length === 0) {
         html = `<div class="text-muted">No halls available</div>`;
