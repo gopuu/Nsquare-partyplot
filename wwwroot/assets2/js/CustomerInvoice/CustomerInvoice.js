@@ -991,12 +991,12 @@ $(function () {
                         // ❌ If NO → do nothing (flow continues)
 
                         $("#outstanding_paymentForm")[0].reset();
-                        //$("#PaymentModal").modal("hide");
+                        $("#paymentModal").modal("hide");
 
                         // 🔁 Reload payment list if needed
                         //loadBookingCalendar();
                         fetchData();
-                        loadPaymentHistory(bookingId);
+                        //loadPaymentHistory(bookingId);
                     });
                 } else {
                     Swal.fire("Error", response?.message || "Save failed!", "error");

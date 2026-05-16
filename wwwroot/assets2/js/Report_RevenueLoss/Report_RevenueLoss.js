@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function loadEventTypeDropdown() {
     $.ajax({
-        url: "/api/EventType/GetEventTypeListForDropdown",
+        url: "/api/EventType/GetEventTypeList",
         type: "GET",
         success: function (response) {
 

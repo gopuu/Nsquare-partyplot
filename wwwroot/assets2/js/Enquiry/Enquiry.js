@@ -399,7 +399,6 @@ $(document).on("click", ".btn-delete-quotation", function () {
     let $btn = $(this); // ✅ store reference
     let quotationId = $btn.data("id");
     let enquiryId = $("#quotationList_enquiryDealId").val(); // or pass from context
-    let actionBy = sessionStorage.getItem("userId") ?? 0;
 
     console.log("Delete Quotation Clicked:", quotationId);
 
@@ -417,7 +416,7 @@ $(document).on("click", ".btn-delete-quotation", function () {
 
             const deleteObj = {
                 Id: quotationId,
-                ActionBy: actionBy
+                ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
             };
 
             $.ajax({
@@ -647,6 +646,7 @@ $("#quotation_btnSaveQuotation").click(function () {
         // ===== Audit =====
         ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
+
     $("#quotation_btnSaveQuotation").prop("disabled", true);
     console.log("Quotation Data save:", payload);
 
@@ -1775,15 +1775,16 @@ var bookingId = 0;
 function saveFollowUpAndMoveDeal() {
     console.log("pendingMoveData:", pendingMoveData);
     if (!pendingMoveData) return;
-    let actionBy = sessionStorage.getItem("userId") ?? 0;
+
     const payload = {
         EnquiryDealId: pendingMoveData.EnquiryDealId,
         ProcessId: pendingMoveData.ProcessId,
         FollowUpDate: $("#nextFollowUpDate_modalFollowup").val() || null,
         Remarks: $("#txtDiscussionNotes").val() || null,
         FileUpload: $("#attachmentBase64_followUp").val() || null,
-        ActionBy: Number(actionBy)
+        ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
+
     console.log("SaveEnquiryDeal_forDragNDrop payload:", payload);
     $.ajax({
         url: "/api/EnquiryDeal/SaveEnquiryDeal_forDragNDrop",
@@ -2747,7 +2748,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var inputData = {
                     Id: dealId,
-                    ActionBy: userId // use logged-in user id
+                    ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
                 };
 
                 $.ajax({
@@ -2796,16 +2797,16 @@ document.addEventListener("DOMContentLoaded", function () {
             return; // stop submission if validation fails
         }
         ////showLoader()();
-
-        let id = $("#eventTypeId").val();
+        let id = Number($("#eventTypeId").val()) ?? 0;
         let name = $("#eventTypeName").val();
 
         var inputData = {
             Id: id,
             Name: name,
-            ActionBy: userId // set actual logged-in user id
+            ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
         };
 
+        console.log("inputData EventType:", inputData);
         $.ajax({
             url: "/api/EventType/SaveEventType",   // your API for saving event type
             type: "POST",
@@ -2869,7 +2870,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var inputData = {
                     Id: id,
-                    ActionBy: userId // set actual logged-in user id
+                    ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
                 }
 
                 $.ajax({
@@ -2964,7 +2965,7 @@ document.addEventListener("DOMContentLoaded", function () {
             Id: id,
             Name: name,
             EventTypeId: eventTypeId,
-            ActionBy: userId // set actual logged-in user id
+            ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
         };
 
         $.ajax({
@@ -3024,7 +3025,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var inputData = {
                     Id: id,
-                    ActionBy: userId
+                    ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
                 };
 
                 $.ajax({
@@ -3077,7 +3078,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var inputData = {
             Id: id,
             Name: name,
-            ActionBy: userId // set actual logged-in user id
+            ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
         };
 
         $.ajax({
@@ -3142,7 +3143,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var inputData = {
                     Id: id,
-                    ActionBy: userId // set actual logged-in user id
+                    ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
                 }
 
                 $.ajax({
@@ -3380,7 +3381,7 @@ function loadEventTypeList() {
         url: "/api/EventType/GetEventTypeList",
         type: "GET",
         success: function (response) {
-            //console.log("eventType response:", response);
+            console.log("eventType response:", response);
             if (response.status === "Success") {
                 let rows = "";
                 let srNo = 1;
@@ -3393,17 +3394,19 @@ function loadEventTypeList() {
                                 <td class="text-center">${srNo++}</td>
                                 <td>${item.Name}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-warning btn-action-xs me-1 edit-eventType">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
+                                    ${item.IsEditable ? `
+                                        <button class="btn btn-outline-warning btn-action-xs me-1 edit-eventType">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                    ` : ''}
                                     <button class="btn btn-outline-danger btn-action-xs delete-eventType">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
     `;
-                    options += `<option value = "${item.Id}"> ${item.Name}</option> `;
-                    options1 += `<option value = "${item.Id}"> ${item.Name}</option> `;
+                    options += `<option value = "${item.Id}"> ${item.Name}</option>`;
+                    options1 += `<option value = "${item.Id}"> ${item.Name}</option>`;
                 });
 
                 $("#eventTypeTable tbody").html(rows);
@@ -4205,7 +4208,7 @@ function saveBooking() {
     //const form = $("#bookingForm");
     const $label = $("#label_date_shift");
 
-    let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
+    userId = Number(sessionStorage.getItem('userId')) || 0;
 
     var quillCustomer = new Quill('#OtherCharges_customerEditor', {
         theme: 'snow'
@@ -4288,7 +4291,7 @@ function saveBooking() {
         PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text() || 0),
         PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text() || 0),
 
-        ActionBy: userId
+        ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
 
     // 🔹 2. Build Food Packages JSON --here
@@ -5470,8 +5473,11 @@ function loadPaymentModeDropdown() {
 
 loadAccountDropdown();
 function loadAccountDropdown() {
-    var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
-    var payload = { Id: 0, ActionBy: actionBy };
+
+    var payload = {
+        Id: 0,
+        ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
+    };
     $.ajax({
         url: "/api/AccountMaster/GetAccount",
         type: "POST",

@@ -352,7 +352,7 @@ function renderBookingTable(data) {
 
 function loadEventTypeDropdown(selectedId = "") {
     $.ajax({
-        url: "/api/EventType/GetEventTypeListForDropdown",
+        url: "/api/EventType/GetEventTypeList",
         type: "GET",
         success: function (response) {
 

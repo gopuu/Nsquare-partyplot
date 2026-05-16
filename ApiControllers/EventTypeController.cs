@@ -21,8 +21,8 @@ namespace ERPAdmin.ApiControllers
         //private readonly ConnClass _connClass;
         private string connString = string.Empty;
 
-        public EventTypeController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-                : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        public EventTypeController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) 
+            : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
             //_configuration = configuration;
@@ -61,6 +61,7 @@ namespace ERPAdmin.ApiControllers
                         EventType eventType = new EventType();
                         eventType.Id = Convert.ToInt64(dr["id"]);
                         eventType.Name = Convert.ToString(dr["name"]);
+                        eventType.IsEditable = Convert.ToBoolean(dr["isEditable"]);
                         eventTypes.Add(eventType);
                     }
                 }
@@ -167,7 +168,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpGet]
         [Route("GetEventTypeDetailById/{id}")]
-        public IActionResult GetEventTypeDetailById(Int64 id)
+        private IActionResult GetEventTypeDetailById(Int64 id)
         {
             apiResponse apiResponse = new apiResponse();
             //dynamic response = new ExpandoObject();
@@ -221,7 +222,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpGet]
         [Route("GetEventTypeListForDropdown")]
-        public IActionResult GetEventTypeListForDropdown()
+        private IActionResult GetEventTypeListForDropdown()
         {
             apiResponse apiResponse = new apiResponse();
             try
