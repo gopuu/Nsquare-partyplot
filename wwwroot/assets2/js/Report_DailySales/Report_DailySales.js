@@ -262,7 +262,7 @@ function renderDailySalesTable(data, totals) {
 
             {
                 data: "InvoiceDate",
-                title: "Date",
+                title: "Invoice Date",
                 render: function (data, type, row) {
 
                     if (type === 'display') {
