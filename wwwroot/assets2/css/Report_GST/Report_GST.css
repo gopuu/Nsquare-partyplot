@@ -1,1 +1,86 @@
-﻿
+﻿/* =========================================================
+   DATATABLE STABLE SCROLL FIX
+========================================================= */
+
+.dataTables_wrapper {
+    width: 100%;
+}
+
+/* Header / body / footer alignment */
+
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table,
+.dataTables_scrollBody table,
+.dataTables_scrollFootInner,
+.dataTables_scrollFootInner table {
+    width: 100% !important;
+}
+
+/* Prevent footer drift */
+
+.dataTables_scrollFoot {
+    overflow: hidden !important;
+}
+
+/* Proper auto layout */
+
+table.dataTable {
+    width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+}
+
+    /* General cells */
+
+    table.dataTable th,
+    table.dataTable td {
+        box-sizing: border-box;
+        vertical-align: middle;
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+/* Wrap long text */
+
+.wrap-col {
+    white-space: normal !important;
+    word-break: break-word;
+    min-width: 140px;
+}
+
+/* Keep compact columns single-line */
+
+.nowrap-col {
+    white-space: nowrap !important;
+}
+
+/* Header */
+
+table.dataTable thead th {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Footer */
+
+table.dataTable tfoot th {
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Prevent overlap */
+
+.dataTables_scrollBody {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+/* Invoice button compact */
+
+.btn-view-invoice {
+    padding: 2px 7px;
+    font-size: 11px;
+}

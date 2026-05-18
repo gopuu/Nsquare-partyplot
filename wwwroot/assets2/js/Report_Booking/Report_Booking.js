@@ -232,16 +232,18 @@ function renderBookingTable(data) {
         $("#tableMain table").DataTable().clear().destroy();
     }
 
-    $("#tableMain table").DataTable({
+    const table = $("#tableMain table").DataTable({
         data: data,
-        responsive: true,
+        responsive: false,
         pageLength: 25,
         scrollX: true,
         order: [[1, "desc"]],
         autoWidth: false,
         paging: false,
-        scrollY: "60vh",          // table body scroll height
-        scrollCollapse: true,     // shrink if less rows
+        fixedHeader: true,
+        deferRender: true,
+        //scrollY: "60vh",          // table body scroll height
+        scrollCollapse: false,     // shrink if less rows
 
         columns: [
             { data: "BookingId", name: "BookingId", title: "#BRN" },
@@ -341,12 +343,18 @@ function renderBookingTable(data) {
             $(api.column('Discount:name').footer()).html(formatINR2(discount));
             $(api.column('TotalAmount:name').footer()).html(formatINR2(total));
         },
+
         initComplete: function () {
             $(this.api().table().header())
                 .find('th')
                 .addClass('bg-warning-subtle text-dark');
         },
+    });
 
+    table.columns.adjust();
+
+    $(window).on('resize', function () {
+        table.columns.adjust();
     });
 }
 

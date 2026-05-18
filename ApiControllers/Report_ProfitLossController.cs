@@ -48,27 +48,30 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("Report_GetProfitLossDetail_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@YearId", request.YearId == 0 ? (object)DBNull.Value : request.YearId);
-                    cmd.Parameters.AddWithValue("@Year", request.Year == 0 ? (object)DBNull.Value : request.Year);
-                    cmd.Parameters.AddWithValue("@MonthId_From", request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
-                    cmd.Parameters.AddWithValue("@MonthId_To", request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate ?? (object)DBNull.Value);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
                 }
 
-                if (ds.Tables.Count < 3)
+                if (ds.Tables.Count < 4)
                     throw new Exception("P&L data incomplete.");
 
-                DataTable dt = ds.Tables[0];
-                DataTable dtSummary = ds.Tables[1];
-                DataTable dtNet = ds.Tables[2];
+                DataTable dtTitle = ds.Tables[0];
+                DataTable dt = ds.Tables[1];
+                DataTable dtSummary = ds.Tables[2];
+                DataTable dtNet = ds.Tables[3];
 
-                /* ===============================
-                   SECTION SPLIT (IMPORTANT)
-                   =============================== */
+                /* ========= TITLE ===== */
+                string reportTitle = "";
+                if (dtTitle.Rows.Count > 0)
+                {
+                    reportTitle = dtTitle.Rows[0]["ReportTitle"]?.ToString() ?? "";
+                }
 
+                /* ======= SECTION SPLIT (IMPORTANT) ===== */
                 var revenue = dt.AsEnumerable()
                     .Where(x => x["Type"].ToString() == "Revenue")
                     .Select(x => new ProfitLossLineItem
@@ -96,9 +99,7 @@ namespace ERPAdmin.ApiControllers
                 /* ===============================
                    SUMMARY
                    =============================== */
-
                 decimal totalRevenue = 0, totalCOGS = 0, totalExpense = 0;
-
                 if (dtSummary.Rows.Count > 0)
                 {
                     var s = dtSummary.Rows[0];
@@ -108,7 +109,6 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 decimal netPL = 0;
-
                 if (dtNet.Rows.Count > 0)
                 {
                     netPL = dtNet.Rows[0]["NetProfitLoss"] != DBNull.Value
@@ -122,6 +122,8 @@ namespace ERPAdmin.ApiControllers
 
                 var responseData = new
                 {
+                    ReportTitle = reportTitle,
+
                     Revenue = revenue,
                     TotalRevenue = totalRevenue,
 
@@ -179,18 +181,9 @@ namespace ERPAdmin.ApiControllers
 
                     cmd = new SqlCommand("Report_GetProfitLossDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@YearId",
-                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
-
-                    cmd.Parameters.AddWithValue("@Year",
-                        request.Year == 0 ? (object)DBNull.Value : request.Year);
-
-                    cmd.Parameters.AddWithValue("@MonthId_From",
-                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
-
-                    cmd.Parameters.AddWithValue("@MonthId_To",
-                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate ?? (object)DBNull.Value);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -625,18 +618,9 @@ namespace ERPAdmin.ApiControllers
 
                     cmd = new SqlCommand("Report_GetProfitLossDetail_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@YearId",
-                        request.YearId == 0 ? (object)DBNull.Value : request.YearId);
-
-                    cmd.Parameters.AddWithValue("@Year",
-                        request.Year == 0 ? (object)DBNull.Value : request.Year);
-
-                    cmd.Parameters.AddWithValue("@MonthId_From",
-                        request.MonthId_From == 0 ? (object)DBNull.Value : request.MonthId_From);
-
-                    cmd.Parameters.AddWithValue("@MonthId_To",
-                        request.MonthId_To == 0 ? (object)DBNull.Value : request.MonthId_To);
+                    cmd.Parameters.AddWithValue("@FilterDuration", request.FilterDuration ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", request.FromDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", request.ToDate ?? (object)DBNull.Value);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }

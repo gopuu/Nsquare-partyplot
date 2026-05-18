@@ -1,57 +1,228 @@
-﻿.pl-half-container {
-    width: 50%;
-    margin: 0 auto; /* center horizontally */
+﻿/* =========================================================
+   COMPACT P&L UI
+========================================================= */
+.pl-report-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 6px;
 }
 
-.pl-container table {
+/* HEADER */
+.pl-report-header {
+    margin-bottom: 18px !important;
+}
+
+.pl-report-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 2px !important;
+}
+
+.pl-report-header .small {
+    font-size: 12px;
+}
+
+/* SUMMARY CARDS */
+.pl-summary-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+    transition: 0.2s ease;
+    min-height: 110px;
+}
+
+    .pl-summary-card:hover {
+        transform: translateY(-2px);
+    }
+
+.pl-summary-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.pl-summary-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.04);
+    font-size: 14px;
+}
+
+.pl-summary-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+}
+
+.pl-summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.pl-summary-footer {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* LEFT BORDER COLORS */
+
+.pl-summary-card.revenue {
+    border-left: 4px solid #16a34a;
+}
+
+.pl-summary-card.cogs {
+    border-left: 4px solid #f59e0b;
+}
+
+.pl-summary-card.expense {
+    border-left: 4px solid #ef4444;
+}
+
+.pl-summary-card.profit {
+    border-left: 4px solid #22c55e;
+}
+
+.pl-summary-card.loss {
+    border-left: 4px solid #dc2626;
+}
+
+/* ICON COLORS */
+
+.pl-summary-card.revenue .pl-summary-icon {
+    color: #16a34a;
+    background: rgba(22,163,74,0.10);
+}
+
+.pl-summary-card.cogs .pl-summary-icon {
+    color: #f59e0b;
+    background: rgba(245,158,11,0.12);
+}
+
+.pl-summary-card.expense .pl-summary-icon {
+    color: #ef4444;
+    background: rgba(239,68,68,0.10);
+}
+
+.pl-summary-card.profit .pl-summary-icon {
+    color: #22c55e;
+    background: rgba(34,197,94,0.10);
+}
+
+.pl-summary-card.loss .pl-summary-icon {
+    color: #dc2626;
+    background: rgba(220,38,38,0.10);
+}
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+    .pl-summary-card {
+        min-height: auto;
+        padding: 12px;
+    }
+
+    .pl-summary-value {
+        font-size: 18px;
+    }
+
+    .pl-summary-icon {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* TABLE CARDS */
+.pl-report-wrapper .card {
+    border-radius: 12px;
+}
+
+.pl-report-wrapper .card-header {
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.pl-report-wrapper .table {
     margin-bottom: 0;
 }
 
-.pl-section-header {
-    background: #e9ecef;
-    font-weight: 700;
-    text-align: center;
+.pl-report-wrapper table thead th {
+    font-size: 11px;
+    padding: 10px 12px;
+    letter-spacing: 0.4px;
 }
 
-.pl-total-row {
-    background: #d4edda;
+.pl-report-wrapper table tbody td {
+    padding: 10px 12px;
+    font-size: 14px;
 }
 
-.pl-net-row {
-    background: #f8f9fa;
-    font-size: 16px;
+.pl-report-wrapper table tfoot th {
+    padding: 12px;
+    font-size: 14px;
 }
 
-.table-success {
-    background-color: #d4edda !important;
+/* GROSS PROFIT ALERT */
+.pl-report-wrapper .alert {
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 18px !important;
 }
 
-.table-danger {
-    background-color: #f8d7da !important;
+    .pl-report-wrapper .alert .fs-5 {
+        font-size: 18px !important;
+    }
+
+/* FINAL NET CARD */
+.pl-report-wrapper .display-6 {
+    font-size: 28px !important;
+    line-height: 1.1;
 }
 
-.table-secondary {
-    background-color: #e2e3e5 !important;
+.pl-report-wrapper .fs-3 {
+    font-size: 22px !important;
 }
 
-/* ── P&L Formula Tooltip ── */
-.pl-formula-tooltip .tooltip-inner {
-    background-color: #1e1e2e;
-    color: #cdd6f4;
-    font-size: 0.80rem;
-    text-align: left;
-    max-width: 400px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    line-height: 1.6;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+/* REDUCE SECTION GAP */
+.pl-report-wrapper .mb-4 {
+    margin-bottom: 1rem !important;
 }
 
-.pl-formula-tooltip .tooltip-arrow::before {
-    border-top-color: #1e1e2e;
+/* RESULT TEXT */
+.pl-report-header .fs-4 {
+    font-size: 18px !important;
 }
 
-.pl-formula-tooltip hr {
-    border-color: rgba(255,255,255,0.15);
-    margin: 4px 0;
+/* MOBILE */
+@media (max-width: 768px) {
+
+    .pl-report-title {
+        font-size: 17px;
+    }
+
+    .pl-summary-value {
+        font-size: 16px;
+    }
+
+    .pl-report-wrapper table tbody td {
+        font-size: 13px;
+    }
+
+    .pl-report-wrapper .display-6 {
+        font-size: 22px !important;
+    }
 }

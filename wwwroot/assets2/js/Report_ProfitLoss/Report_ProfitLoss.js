@@ -1,27 +1,83 @@
 ﻿//let selectedMonthDuration = "thismonth";
 const HEADER_KEY = "profitLossPrintWithHeader";
-
-let selectedYearId = null;
-let selectedYear = new Date().getFullYear();
-let selectedMonthFrom = null;
-let selectedMonthTo = null;
-
-let selectedMonthId = null;
+let selectedMonthDuration = "thismonth";
 
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", function () {
 
-    populateYearDropdown();
+    setCurrentMonthDates();
+    loadProfitLossGrid();
 
-    /* ── Quick Year Range ── */
+    /* ── Quick range ── */
     $("#quickRange").on("change", function () {
-        selectedYearId = $(this).val();
-        selectedYear = $("#quickRange option:selected").data("year");
-        fetchMonthData(selectedYearId);
+        const newFilter = $(this).val();
+
+        if (selectedMonthDuration === newFilter) return;
+
+        selectedMonthDuration = newFilter;
+
+        const today = new Date();
+
+        let fromDate, toDate;
+
+        switch (selectedMonthDuration) {
+            case "thismonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+
+            case "lastmonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+
+            case "thiscalendaryear":
+                fromDate = new Date(today.getFullYear(), 0, 1);
+                toDate = new Date(today.getFullYear(), 11, 31);
+                break;
+
+            case "lastcalendaryear":
+                fromDate = new Date(today.getFullYear() - 1, 0, 1);
+                toDate = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+
+            case "thisfinancialyear":
+                if (today.getMonth() >= 3) {
+                    // Apr current year → Mar next year
+                    fromDate = new Date(today.getFullYear(), 3, 1);
+                    toDate = new Date(today.getFullYear() + 1, 2, 31);
+                }
+                else {
+                    // Apr previous year → Mar current year
+                    fromDate = new Date(today.getFullYear() - 1, 3, 1);
+                    toDate = new Date(today.getFullYear(), 2, 31);
+                }
+                break;
+
+            case "lastfinancialyear":
+                if (today.getMonth() >= 3) {
+                    // Apr previous year → Mar current year
+                    fromDate = new Date(today.getFullYear() - 1, 3, 1);
+                    toDate = new Date(today.getFullYear(), 2, 31);
+                }
+                else {
+                    // Apr 2 years back → Mar previous year
+                    fromDate = new Date(today.getFullYear() - 2, 3, 1);
+                    toDate = new Date(today.getFullYear() - 1, 2, 31);
+                }
+                break;
+        }
+
+        $("#fromDate").val(formatDate2(fromDate));
+
+        $("#toDate").val(formatDate2(toDate));
+
+        loadProfitLossGrid();
     });
-    $("#quickRange_MonthFrom, #quickRange_MonthTo").on("change", function () {
+
+    $("#fromDate, #toDate").on("change", function () {
         loadProfitLossGrid();
     });
 
@@ -43,11 +99,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $("#btnResetFilter").on("click", function () {
         $("#quickRange").val("thismonth");
-        $("#quickRange_MonthFrom").val("0");
-        $("#quickRange_MonthTo").val("0");
-
-        selectedMonthFrom = null;
-        selectedMonthTo = null;
+        selectedMonthDuration = "thismonth";
+        setCurrentMonthDates();
         loadProfitLossGrid();
     });
 
@@ -61,125 +114,31 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-/* =========================
-   LOAD YEAR DROPDOWN
-========================= */
-function populateYearDropdown() {
-    $.ajax({
-        url: "/api/YearMaster/GetYearList",
-        type: "GET",
-        contentType: "application/json",
-        success: function (res) {
-            if (res.status === "Success") {
-                const years = res.data || [];
-                let dropdown = $("#quickRange");
-
-                dropdown.empty();
-                console.log("years:", years);
-
-                years.forEach(y => {
-                    let option = $("<option>");
-
-                    option.val(y.Id);
-                    option.attr("data-year", y.YearName);
-
-                    if (parseInt(y.YearName) === selectedYear) {
-                        option.prop("selected", true);
-                        selectedYearId = y.Id;
-                        option.text(y.YearName + " (This Year)");
-                    }
-                    else {
-                        option.text(y.YearName);
-                    }
-                    dropdown.append(option);
-                });
-                // Fetch months for current year
-                fetchMonthData(selectedYearId);
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Error fetching years");
-        }
-    });
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
 }
 
 function toTitleCase(str) {
     return (str || "").toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
-/* =========================
-   LOAD MONTHS
-========================= */
-function fetchMonthData(yearId) {
-    var payload = { YearId: parseInt(yearId), MonthId: 0 };
-    console.log("month list payload:", payload);
-
-    $.ajax({
-        url: "/api/MonthMaster/GetMonthList",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            if (res.status === "Success") {
-                const months = res.data || [];
-                console.log("months:", months);
-                let fromDropdown = $("#quickRange_MonthFrom");
-                let toDropdown = $("#quickRange_MonthTo");
-
-                fromDropdown.empty();
-                toDropdown.empty();
-
-                fromDropdown.append(`<option value="0">Select</option>`);
-                toDropdown.append(`<option value="0">Select</option>`);
-
-                months.forEach((m,index) => {
-
-                    let option1 = $("<option>");
-                    option1.val(m.MonthId);
-                    option1.text(m.MonthName);
-
-                    let option2 = $("<option>");
-                    option2.val(m.MonthId);
-                    option2.text(m.MonthName);
-
-                    // ✅ Select first month in FROM dropdown
-                    if (index === 0) {
-                        option1.prop("selected", true);
-                    }
-
-                    // ✅ Select last month in TO dropdown
-                    if (index === months.length - 1) {
-                        option2.prop("selected", true);
-                    }
-
-                    fromDropdown.append(option1);
-                    toDropdown.append(option2);
-
-                });
-
-                // Load grid with current year
-                loadProfitLossGrid();
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Error fetching months");
-        }
-    });
-}
-
 /* ═══════════════════════════════════════════════════
    LOAD GRID
 ═══════════════════════════════════════════════════ */
 function loadProfitLossGrid() {
-    selectedYearId = Number($("#quickRange").val() || 0);
-    selectedMonthFrom = Number($("#quickRange_MonthFrom").val() || 0);
-    selectedMonthTo = Number($("#quickRange_MonthTo").val() || 0);
+
+    const filterDuration = $("#quickRange").val() || null;
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
 
     const payload = {
-        YearId: selectedYearId,
-        Year: selectedYear,
-        MonthId_From: selectedMonthFrom,
-        MonthId_To: selectedMonthTo
+        FilterDuration: filterDuration,
+        FromDate: fromDate,
+        ToDate: toDate
     };
 
     console.log("payload:", payload);
@@ -212,6 +171,12 @@ function loadProfitLossGrid() {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
+
+            // Update report title
+            if (res.data && res.data.ReportTitle) {
+                $("#reportTitle").text(res.data.ReportTitle);
+            }
+
             renderProfitLossStatement(res.data);
         },
         error: function (xhr, status, error) {
@@ -225,6 +190,382 @@ function loadProfitLossGrid() {
    RENDER LINE ITEMS TABLE
 ═══════════════════════════════════════════════════ */
 function renderProfitLossStatement(data) {
+
+    if (!data) {
+
+        $("#tableMain").html(`
+            <div class="alert alert-warning mb-0">
+                No data found
+            </div>
+        `);
+
+        return;
+    }
+
+    const revenue = data.Revenue || [];
+    const cogs = data.COGS || [];
+    const expenses = data.Expenses || [];
+
+    const totalRevenue = data.TotalRevenue || 0;
+    const totalCOGS = data.TotalCOGS || 0;
+    const totalExpense = data.TotalExpense || 0;
+
+    const grossProfit = totalRevenue - totalCOGS;
+
+    const netPL = data.NetProfitLoss || 0;
+
+    const isProfit = netPL >= 0;
+
+    let html = `
+    <div class="pl-report-wrapper">
+
+        <!-- SUMMARY CARDS -->
+        <div class="row g-2 mb-3">
+
+            <!-- Revenue -->
+            <div class="col-6 col-md-3">
+                <div class="pl-summary-card revenue">
+
+                    <div class="pl-summary-top">
+                        <div class="pl-summary-icon">
+                            <i class="fa fa-arrow-trend-up"></i>
+                        </div>
+
+                        <div class="pl-summary-label">
+                            Revenue
+                        </div>
+                    </div>
+
+                    <div class="pl-summary-value">
+                        ${formatINR2(totalRevenue)}
+                    </div>
+
+                    <div class="pl-summary-footer text-success">
+                        Income Generated
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- COGS -->
+            <div class="col-6 col-md-3">
+                <div class="pl-summary-card cogs">
+
+                    <div class="pl-summary-top">
+                        <div class="pl-summary-icon">
+                            <i class="fa fa-box"></i>
+                        </div>
+
+                        <div class="pl-summary-label">
+                            COGS
+                        </div>
+                    </div>
+
+                    <div class="pl-summary-value">
+                        ${formatINR2(totalCOGS)}
+                    </div>
+
+                    <div class="pl-summary-footer text-warning">
+                        Direct Costs
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="col-6 col-md-3">
+                <div class="pl-summary-card expense">
+
+                    <div class="pl-summary-top">
+                        <div class="pl-summary-icon">
+                            <i class="fa fa-wallet"></i>
+                        </div>
+
+                        <div class="pl-summary-label">
+                            Expenses
+                        </div>
+                    </div>
+
+                    <div class="pl-summary-value">
+                        ${formatINR2(totalExpense)}
+                    </div>
+
+                    <div class="pl-summary-footer text-danger">
+                        Operating Costs
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Net -->
+            <div class="col-6 col-md-3">
+                <div class="pl-summary-card ${isProfit ? 'profit' : 'loss'}">
+
+                    <div class="pl-summary-top">
+                        <div class="pl-summary-icon">
+                            <i class="fa fa-chart-line"></i>
+                        </div>
+
+                        <div class="pl-summary-label">
+                            Net P&L
+                        </div>
+                    </div>
+
+                    <div class="pl-summary-value">
+                        ${formatINR2(Math.abs(netPL))}
+                    </div>
+
+                    <div class="
+                        pl-summary-footer
+                        ${isProfit ? 'text-success' : 'text-danger'}
+                    ">
+                        ${isProfit ? 'Net Profit' : 'Net Loss'}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- REVENUE -->
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-success-subtle">
+                <div class="fw-bold">
+                    Revenue
+                </div>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:70px;">#</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>`;
+
+    revenue.forEach((r, i) => {
+
+        html += `
+            <tr>
+                <td class="text-muted">
+                    ${i + 1}
+                </td>
+
+                <td>
+                    ${toTitleCase(r.Description)}
+                </td>
+
+                <td class="text-end fw-semibold">
+                    ${formatINR2(r.Amount)}
+                </td>
+            </tr>`;
+    });
+
+    html += `
+                    </tbody>
+
+                    <tfoot class="table-success">
+                        <tr>
+                            <th colspan="2">
+                                Total Revenue
+                            </th>
+
+                            <th class="text-end">
+                                ${formatINR2(totalRevenue)}
+                            </th>
+                        </tr>
+                    </tfoot>
+
+                </table>
+            </div>
+        </div>
+
+
+        <!-- COGS -->
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-warning-subtle">
+                <div class="fw-bold">
+                    Cost of Goods Sold (COGS)
+                </div>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:70px;">#</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>`;
+
+    cogs.forEach((c, i) => {
+
+        html += `
+            <tr>
+                <td class="text-muted">
+                    ${i + 1}
+                </td>
+
+                <td>
+                    ${toTitleCase(c.Description)}
+                </td>
+
+                <td class="text-end fw-semibold">
+                    ${formatINR2(c.Amount)}
+                </td>
+            </tr>`;
+    });
+
+    html += `
+                    </tbody>
+
+                    <tfoot class="table-warning">
+                        <tr>
+                            <th colspan="2">
+                                Total COGS
+                            </th>
+
+                            <th class="text-end">
+                                ${formatINR2(totalCOGS)}
+                            </th>
+                        </tr>
+                    </tfoot>
+
+                </table>
+            </div>
+        </div>
+
+
+        <!-- GROSS PROFIT -->
+        <div class="alert alert-info border-0 shadow-sm mb-4">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div class="fw-bold">
+                    Gross Profit
+                </div>
+
+                <div class="fw-bold fs-5">
+                    ${formatINR2(grossProfit)}
+                </div>
+            </div>
+        </div>
+
+
+        <!-- EXPENSES -->
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-danger-subtle">
+                <div class="fw-bold">
+                    Operating Expenses
+                </div>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:70px;">#</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>`;
+
+    expenses.forEach((e, i) => {
+
+        html += `
+            <tr>
+                <td class="text-muted">
+                    ${i + 1}
+                </td>
+
+                <td>
+                    ${toTitleCase(e.Description)}
+                </td>
+
+                <td class="text-end fw-semibold">
+                    ${formatINR2(e.Amount)}
+                </td>
+            </tr>`;
+    });
+
+    html += `
+                    </tbody>
+
+                    <tfoot class="table-danger">
+                        <tr>
+                            <th colspan="2">
+                                Total Expenses
+                            </th>
+
+                            <th class="text-end">
+                                ${formatINR2(totalExpense)}
+                            </th>
+                        </tr>
+                    </tfoot>
+
+                </table>
+            </div>
+        </div>
+
+
+        <!-- FINAL NET P&L -->
+        <div class="
+            card border-0 shadow-lg
+            ${isProfit ? 'bg-success-subtle' : 'bg-danger-subtle'}
+        ">
+
+            <div class="card-body py-4">
+
+                <div class="row align-items-center">
+
+                    <div class="col-md-6">
+
+                        <div class="small text-muted mb-1">
+                            Final Result
+                        </div>
+
+                        <div class="fw-bold fs-3">
+                            Net ${isProfit ? 'Profit' : 'Loss'}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 text-md-end">
+
+                        <div class="
+                            fw-bold display-6
+                            ${isProfit ? 'text-success' : 'text-danger'}
+                        ">
+                            ${formatINR2(Math.abs(netPL))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>`;
+
+    $("#tableMain").html(html);
+}
+
+function renderProfitLossStatement2(data) {
 
     if (!data) {
         $("#tableMain").html(`<div class="alert alert-warning">No data found</div>`);
@@ -346,11 +687,14 @@ function ViewProfitLossReport(actionName) {
     const withHeader = $("#toggleWithHeader").is(":checked");
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
+    const filterDuration = $("#quickRange").val() || null;
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
-        YearId: selectedYearId,
-        Year: selectedYear,
-        MonthId_From: selectedMonthFrom,
-        MonthId_To: selectedMonthTo,
+        FilterDuration: filterDuration,
+        FromDate: fromDate,
+        ToDate: toDate,
         WithHeader: withHeader,
         ActionBy: userId
     };

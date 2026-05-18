@@ -253,15 +253,21 @@ function renderGSTSalesTable(data, totals) {
 
         autoWidth: false,
         paging: false,
-        scrollY: "60vh",          // table body scroll height
-        scrollCollapse: true,     // shrink if less rows
+        //scrollY: "60vh",          // table body scroll height
+        scrollCollapse: false,     // shrink if less rows
         scrollX: true,            // horizontal scroll if needed
+
+        deferRender: true,
+        fixedHeader: true,
+        searching: true,
+        ordering: true,
+        order: [[0, "desc"]],
 
         columns: [
             {
                 data: "DisplayInvoiceNo",
                 title: "Inv.No.",
-                className: "text-center"
+                className: "text-center nowrap-col"
             },
             {
                 data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
@@ -277,15 +283,18 @@ function renderGSTSalesTable(data, totals) {
 
             {
                 data: "Name",
-                title: "Customer Name"
+                title: "Customer Name",
+                className: "wrap-col"
             },
             {
                 data: "GSTIN",
-                title: "GSTIN"
+                title: "GSTIN",
+                className: "nowrap-col"
             },
             {
                 data: "EventType",
-                title: "Event Type"
+                title: "Event Type",
+                className: "wrap-col"
             },
             {
                 data: "SubTotal",
@@ -342,18 +351,19 @@ function renderGSTSalesTable(data, totals) {
 
             {
                 data: "PaymentMode",
-                title: "Payment Mode"
+                title: "Payment Mode",
+                className: "wrap-col"
             },
             {
                 data: "PaidAmount",
                 title: "Paid Amount",
-                className: "text-end text-success",
+                className: "text-end text-success nowrap-col",
                 render: d => formatINR2(d)
             },
             {
                 data: "DueAmount",
                 title: "Due Amount",
-                className: "text-end text-danger",
+                className: "text-end text-danger nowrap-col",
                 render: d => formatINR2(d)
             }
         ],
@@ -385,10 +395,21 @@ function renderGSTSalesTable(data, totals) {
             emptyTable: "No GST data found for the selected period."
         },
         initComplete: function () {
-            $(this.api().table().header())
+
+            const api = this.api();
+
+            $(api.table().header())
                 .find('th')
                 .addClass('bg-warning-subtle text-dark');
-        },
+
+            setTimeout(() => {
+                api.columns.adjust().draw();
+            }, 100);
+
+            $(window).on('resize', function () {
+                api.columns.adjust();
+            });
+        }
 
     });
 }

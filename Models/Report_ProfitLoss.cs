@@ -2,18 +2,16 @@
 {
     public class ProfitLossGridRequest
     {
-        public int YearId { get; set; }
-        public int Year { get; set; }
-        public int MonthId_From { get; set; }
-        public int MonthId_To { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
     }
 
     public class ProfitLossReportRequest : BaseClass
     {
-        public int YearId { get; set; }
-        public int Year { get; set; }
-        public int MonthId_From { get; set; }
-        public int MonthId_To { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
         public bool? WithHeader { get; set; }
     }
 

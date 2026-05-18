@@ -3405,10 +3405,14 @@ function loadEventTypeList() {
                                         <button class="btn btn-outline-warning btn-action-xs me-1 edit-eventType">
                                             <i class="fa fa-pencil"></i>
                                         </button>
-                                    ` : ''}
-                                    <button class="btn btn-outline-danger btn-action-xs delete-eventType">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
+                                        <button class="btn btn-outline-danger btn-action-xs delete-eventType">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    ` : 
+                                    `<span class="text-danger small fw-semibold">
+                                        Modification Not Allowed
+                                    </span>`
+                                }
                                 </td>
                             </tr>
     `;

@@ -13,7 +13,7 @@
 <div class="content">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-warning mb-0">Profit &amp; Loss Report</h4>
+        <h4 class="text-warning mb-0" id="reportTitle">Profit &amp; Loss Report</h4>
 
         <div class="d-flex align-items-center gap-2">
 
@@ -79,25 +79,29 @@
 
     <div class="filter-body">
 
-        <!-- YEAR -->
+        <!--DURATION-->
         <div class="mb-3">
-            <label class="form-label">Year</label>
-            <select id="quickRange" class="form-select form-select-sm"></select>
+            <label class="form-label">Duration</label>
+            <select id="quickRange" class="form-select form-select-sm">
+                <option value="thismonth">This Month</option>
+                <option value="lastmonth">Last Month</option>
+                <option value="thiscalendaryear">This Calendar Year</option>
+                <option value="thisfinancialyear">This Financial Year</option>
+                <option value="lastcalendaryear">Last Calendar Year</option>
+                <option value="lastfinancialyear">Last Financial Year</option>
+            </select>
         </div>
 
-        <!-- MONTH RANGE -->
+        <!--DATE RANGE-->
         <div class="row g-2">
-
             <div class="col-md-6 mb-3">
-                <label class="form-label">Month From</label>
-                <select id="quickRange_MonthFrom" class="form-select form-select-sm"></select>
+                <label class="form-label">From Date</label>
+                <input type="date" id="fromDate" class="form-control form-control-sm">
             </div>
-
             <div class="col-md-6 mb-3">
-                <label class="form-label">Month To</label>
-                <select id="quickRange_MonthTo" class="form-select form-select-sm"></select>
+                <label class="form-label">To Date</label>
+                <input type="date" id="toDate" class="form-control form-control-sm">
             </div>
-
         </div>
 
     </div>
