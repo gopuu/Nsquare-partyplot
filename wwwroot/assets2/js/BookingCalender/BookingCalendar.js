@@ -226,14 +226,16 @@ var banquetHallsList = [
 function fetchHallDetails(bookingData, banquetId = 0) {
     //showLoader();
     $.ajax({
-        url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
+        url: '/api/Company_HallDetails/GetCompanyHallDetailsList',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ Id: banquetId }), // Get all halls
         success: function (response) {
-            //console.log("Get Hall res:", response);
+            console.log("Get Hall res:", response);
             if (response.status === "Success" && response.data && response.data.length > 0) {
-                banquetHallsList = response.data;
+                //banquetHallsList = response.data;
+                banquetHallsList = response.data.filter(x => x.IsHallMerged === false);
+
                 let options = `<option value="0">-- Select Hall --</option>`; // default option
                 $.each(response.data, function (index, item) {
                     options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
@@ -3727,6 +3729,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Open payment modal safely
     document.getElementById('btnEnterPayment').addEventListener('click', function () {
         const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
+        const clientName = $(this).data('name');
+        const contactNo = $(this).data('contact');
+        const eventName = $(this).data('event');
+
         //console.log("💳 Enter Payment Details clicked - Booking ID:", bookingId);
         resetPaymentModal();
 
@@ -3744,6 +3750,12 @@ document.addEventListener("DOMContentLoaded", function () {
             $("#dueMessage").addClass("d-none");
             $("#paymentAmount").prop("disabled", false);
         }
+
+        $("#paymentModal_summary_bookingId").text("#" + bookingId || "-");
+        $("#paymentModal_summary_client").text(clientName || "-");
+        $("#paymentModal_summary_contact").text(contactNo || "-");
+        $("#paymentModal_summary_event").text(eventName || "-");
+
         $("#paymentDueBalance, #originalDueAmount").val(dueAmount);
 
         setCurrentPaymentDateTime();
@@ -5779,11 +5791,18 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //Client Details
                     var c_name = data.Client_Name || "-";
                     var c_contact = data.Client_Contact || "";
+                    var c_event =
+                        (data.Booking_EventName || "-") +
+                        " (" +
+                        (data.Booking_PAX || 0) +
+                        " Pax)";                    
+
                     $("#bookingReport_clientName").text(c_name);
                     $("#bookingReport_clientContact").text(c_contact);
 
-                    $("#btnRequestFeedback").attr("data-name", c_name);
-                    $("#btnRequestFeedback").attr("data-contact", c_contact);
+                    $("#btnRequestFeedback, #btnEnterPayment").attr("data-name", c_name);
+                    $("#btnRequestFeedback, #btnEnterPayment").attr("data-contact", c_contact);
+                    $("#btnEnterPayment").attr("data-event", c_event);
 
                     $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                     $("#bookingReport_clientEmail").text(data.Client_Email || "—");
@@ -7122,6 +7141,11 @@ $(document).on("input", ".wastageInput", function () {
 function resetPaymentModal() {
     $("#paymentForm")[0].reset();
     $("#PaymentModal").modal("hide");
+
+    $("#paymentModal_summary_bookingId").text("-");
+    $("#paymentModal_summary_client").text("-");
+    $("#paymentModal_summary_contact").text("-");
+    $("#paymentModal_summary_event").text("-");
 
     // Hide dynamic sections manually
     $("#paymentTxn").closest(".col-md-6").addClass("d-none");

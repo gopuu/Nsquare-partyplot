@@ -9,6 +9,7 @@
         public string? FilterDuration { get; set; }
         public long? InvoiceNo { get; set; }
         public string? NameEmailContactNo { get; set; }
+        public bool? IsWithGST { get; set; }
     }
 
     public class GSTSalesReportRequest : BaseClass
@@ -18,16 +19,18 @@
         public string? FilterDuration { get; set; }
         public long? InvoiceNo { get; set; }
         public string? NameEmailContactNo { get; set; }
+        public bool? IsWithGST { get; set; }
 
         public bool? WithHeader { get; set; }
         public List<string>? Columns { get; set; }
     }
 
     // ── Grid Model ──────────────────────────────────────────────────
-
     public class GSTSalesGridModel
     {
         public long InvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
+        public string? DisplayInvoiceNo { get; set; }
         public long? BookingId { get; set; }
         public string? InvoiceDate { get; set; }
         public string? InvoiceDate_Format { get; set; }

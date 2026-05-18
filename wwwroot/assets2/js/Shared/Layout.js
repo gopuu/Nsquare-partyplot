@@ -1,4 +1,5 @@
-﻿const walletToast = Swal.mixin({
+﻿
+const walletToast = Swal.mixin({
     toast: true,
     position: "top-end", // 👉 top-right
     showConfirmButton: false,
@@ -183,6 +184,7 @@ function updateLiveDateTime() {
     $("#liveDateTime").addClass("d-none");
 }
 
+
 document.addEventListener("DOMContentLoaded", function () {
     const userName = sessionStorage.getItem("userName");
     const userImage = sessionStorage.getItem("userImage") || "/assets2/img/user.png";
@@ -197,6 +199,20 @@ document.addEventListener("DOMContentLoaded", function () {
     if (logo) {
         $(".infinitylogo_img").attr("src", logo);
     }
+
+    //settings
+    // initial fetch
+    //layout_fetchData_Settings();
+
+    // realtime admin updates
+    /*
+    if (!window._settingsSubscribed) {
+        window._settingsSubscribed = true;
+        AppSignalR.subscribeSettings(() => {
+            layout_fetchData_Settings();
+        });
+    }
+    */
 
     //LIVE DATE-TIME ------
     // Run immediately
@@ -323,6 +339,61 @@ document.addEventListener("DOMContentLoaded", function () {
    fetchBalance_Layout();
 
 });
+
+
+window.AppSettings = {
+    showLimit: false
+};
+
+function applyShowLimit() {
+
+    $(".showLimit_section").toggleClass(
+        "d-none",
+        window.AppSettings.showLimit
+    );
+}
+
+function updateShowLimitSetting(settingsData) {
+
+    if (!Array.isArray(settingsData)) return;
+
+    const showLimitItem = settingsData.find(x =>
+        x.Name?.trim().toLowerCase() === "show limit"
+    );
+
+    window.AppSettings.showLimit =
+        showLimitItem?.Value?.toString().toLowerCase() === "true"
+        || showLimitItem?.Value == "1";
+
+    applyShowLimit();
+
+    // optional global event
+    $(document).trigger(
+        "showLimitChanged",
+        [window.AppSettings.showLimit]
+    );
+}
+
+function layout_fetchData_Settings() {
+    $.ajax({
+        url: "/api/Settings/GetSettings",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ Id: 0 }),
+        success: function (response) {
+            //data = response; // Store the fetched data
+            console.log("response fetchData. :", response);
+            var data = response.data;
+            //renderTable(data);
+            updateShowLimitSetting(data || []);
+        },
+        error: function (xhr, statue, error) {
+            handleApiError(xhr, statue, error, "Fetch Settings Failed.");
+        }
+    });
+}
+
+
 function fetchBalance_Layout() {
     let companyId = sessionStorage.getItem("companyid") || 1;
 

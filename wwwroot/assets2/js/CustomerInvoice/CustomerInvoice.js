@@ -1015,6 +1015,10 @@ $(function () {
         $("#outstanding_paymentForm")[0].reset();
 
         const bookingId = $(this).data('bookingid');
+        const clientName = $(this).data('clientname');
+        const contactNo = $(this).data('contactno');
+        const eventName = $(this).data('eventname');
+
         const dueAmount = Number($(this).data('outstandingamount')) || 0;
         if (dueAmount <= 0) {
             $("#dueMessage").removeClass("d-none");
@@ -1025,8 +1029,12 @@ $(function () {
             $("#outstandingPayment_Amount").prop("readonly", false);
         }
 
-        //console.log("Outstanding clicked for BookingId:", bookingId);
+        $("#paymentModal_summary_bookingId").text("#" + bookingId || "-");
+        $("#paymentModal_summary_client").text(clientName || "-");
+        $("#paymentModal_summary_contact").text(contactNo || "-");
+        $("#paymentModal_summary_event").text(eventName || "-");
 
+        //console.log("Outstanding clicked for BookingId:", bookingId);
         $("#outstandingPayment_DueBalance, #outstandingPayment_originalDueAmount").val(dueAmount);
         $("#outstanding_paymentBookingId").val(bookingId);
         setCurrentPaymentDateTime();
@@ -2629,6 +2637,9 @@ function renderTable(data, totals) {
                         return `
                             <button class="btn btn-sm btn-action-xss btn-outline-danger btn-outstanding"
                                     data-bookingid="${d.BookingId}"
+                                    data-clientname="${d.ClientName}"
+                                    data-contactno="${d.ClientContactNo}"
+                                    data-eventname="${d.EventName}"
                                     data-outstandingamount="${outstanding}">
                                 ₹ ${formatted}
                             </button>

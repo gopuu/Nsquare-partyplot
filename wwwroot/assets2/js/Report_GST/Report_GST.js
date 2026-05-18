@@ -31,6 +31,16 @@ document.addEventListener("DOMContentLoaded", function () {
     loadGSTSalesGrid();
     loadColumnCheckboxes();
 
+    //settings
+    layout_fetchData_Settings();
+    // realtime admin updates
+    if (!window._settingsSubscribed) {
+        window._settingsSubscribed = true;
+        AppSignalR.subscribeSettings(() => {
+            layout_fetchData_Settings();
+        });
+    }
+
     /* ── Quick range ── */
     $("#quickRange").on("change", function () {
 
@@ -98,8 +108,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#filterPanel").removeClass("active");
     });
 
-    /* Date change */
-    $("#fromDate, #toDate").on("change", function () {
+    /* Date & Invoice change */
+    $("#fromDate, #toDate, #toggleWithGST").on("change", function () {
         loadGSTSalesGrid();
     });
 
@@ -130,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#quickRange").val("thisyear");
         selectedMonthDuration = "thisyear";
         setCurrentMonthDates();
+        $("#txtSearch, #txtSearchInvoiceNo, #toggleWithGST").val("");
         loadGSTSalesGrid();
     });
 
@@ -195,7 +206,8 @@ function loadGSTSalesGrid() {
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration || null,
         InvoiceNo: $("#txtSearchInvoiceNo").val().trim() || null,
-        NameEmailContactNo: $("#txtSearch").val()?.trim() || null
+        NameEmailContactNo: $("#txtSearch").val()?.trim() || null,
+        IsWithGST: $("#toggleWithGST").val() === "" ? null : $("#toggleWithGST").val() === "true"
     };
 
     $.ajax({
@@ -247,7 +259,7 @@ function renderGSTSalesTable(data, totals) {
 
         columns: [
             {
-                data: "InvoiceNo",
+                data: "DisplayInvoiceNo",
                 title: "Inv.No.",
                 className: "text-center"
             },
@@ -397,6 +409,7 @@ function ViewGSTSalesReport(actionName) {
         FilterDuration: selectedMonthDuration || null,
         InvoiceNo: invoiceNo !== "" ? Number(invoiceNo) : null,
         NameEmailContactNo: $("#txtSearch").val().trim() || null,
+        IsWithGST: $("#toggleWithGST").val() === "" ? null : $("#toggleWithGST").val() === "true",
 
         WithHeader: withHeader,
         Columns: selectedColumns,

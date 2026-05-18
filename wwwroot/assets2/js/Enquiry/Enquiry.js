@@ -1962,6 +1962,9 @@ function initLeadLostSection() {
 
     // Hide message
     $("#leadLostMsg_enquiry").hide();
+
+    // HIDE
+    $('.leadLostReasonSection_enquiry').addClass('d-none');
 }
 
 // Validate Deal Form
@@ -2340,6 +2343,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const reasonLabel = $("label[for='ddlLeadLostReason_enquiry']");
 
         if (isLost) {
+            // SHOW
+            $('.leadLostReasonSection_enquiry').removeClass('d-none');
 
             // Enable
             category.prop('disabled', false);
@@ -2357,14 +2362,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
         else {
+            // HIDE
+            $('.leadLostReasonSection_enquiry').addClass('d-none');
 
             // Disable
             category.prop('disabled', true);
             reason.prop('disabled', true);
 
             // Reset
-            category.val("0").trigger('change');
-            reason.val("0").trigger('change');
+            category.val("0"); //.trigger('change');
+            reason.val("0"); //.trigger('change');
 
             // Remove *
             categoryLabel.find('.req-star').remove();

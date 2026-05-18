@@ -1559,6 +1559,49 @@
             </div>
             <div class="modal-body">
                 <form id="paymentForm">
+                    <!-- Booking Summary -->
+                    <div class="row g-2 mb-2">
+
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-2 h-100 bg-light">
+                                <div class="small text-muted">Booking ID</div>
+                                <div class="fw-semibold text-dark" id="paymentModal_summary_bookingId">-</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 col-6">
+                            <div class="border rounded p-2 h-100 bg-light">
+                                <div class="small text-muted">Client</div>
+                                <div class="fw-semibold text-dark text-truncate"
+                                     id="paymentModal_summary_client">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded p-2 h-100 bg-light">
+                                <div class="small text-muted">Contact</div>
+                                <div class="fw-semibold text-dark"
+                                     id="paymentModal_summary_contact">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 col-6">
+                            <div class="border rounded p-2 h-100 bg-light">
+                                <div class="small text-muted">Event (PAX)</div>
+                                <div class="fw-semibold text-dark text-truncate"
+                                     id="paymentModal_summary_event">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
                     <div class="row g-2">
                         <input type="hidden" id="paymentBookingId">
 

@@ -4,6 +4,7 @@
         //console.log("Settings Page Update", data);
         fetchData();
     });
+
     // Edit button click
     $(document).on('click', '.btn-edit', function (event) {
         var canEdit = (sessionStorage.getItem('CanEdit') || localStorage.getItem('CanEdit')) === 'true';
@@ -203,7 +204,7 @@ function initializeSorting() {
 
 //get data from API
 function fetchData() {
-        $.ajax({
+    $.ajax({
         url: "/api/Settings/GetSettings",
         method: "POST",
         contentType: "application/json",

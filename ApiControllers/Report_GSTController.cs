@@ -57,6 +57,8 @@ namespace ERPAdmin.ApiControllers
                     request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value);
                 cmd.Parameters.AddWithValue("@NameEmailContactNo",
                     string.IsNullOrWhiteSpace(request.NameEmailContactNo) ? (object)DBNull.Value : request.NameEmailContactNo);
+                cmd.Parameters.AddWithValue("@IsWithGST",
+                    request.IsWithGST.HasValue ? (object)request.IsWithGST.Value : DBNull.Value);
 
                 con.Open();
                 using SqlDataReader dr = cmd.ExecuteReader();
@@ -67,6 +69,8 @@ namespace ERPAdmin.ApiControllers
                     rows.Add(new GSTSalesGridModel
                     {
                         InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
+                        GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]),
+                        DisplayInvoiceNo = Convert.ToString(dr["DisplayInvoiceNo"]),
                         BookingId = Convert.ToInt64(dr["BookingId"]),
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
                         InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
@@ -155,6 +159,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@FilterDuration", SqlDbType.NVarChar, 50).Value = (object?)request.FilterDuration ?? DBNull.Value;
                     cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value;
                     cmd.Parameters.Add("@NameEmailContactNo", SqlDbType.NVarChar, 50).Value = (object?)request.NameEmailContactNo ?? DBNull.Value;
+                    cmd.Parameters.AddWithValue("@IsWithGST", request.IsWithGST.HasValue ? (object)request.IsWithGST.Value : DBNull.Value);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -436,6 +441,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@FilterDuration", SqlDbType.NVarChar, 50).Value = (object?)request.FilterDuration ?? DBNull.Value;
                     cmd.Parameters.Add("@InvoiceNo", SqlDbType.BigInt).Value = request.InvoiceNo.HasValue ? (object)request.InvoiceNo.Value : DBNull.Value;
                     cmd.Parameters.Add("@NameEmailContactNo", SqlDbType.NVarChar, 50).Value = (object?)request.NameEmailContactNo ?? DBNull.Value;
+                    cmd.Parameters.AddWithValue("@IsWithGST", request.IsWithGST.HasValue ? (object)request.IsWithGST.Value : DBNull.Value);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
