@@ -136,8 +136,8 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@StatusId", SqlDbType.BigInt).Value = model.StatusId;
                     cmd.Parameters.Add("@MoodId", SqlDbType.BigInt).Value = model.MoodId;
+                    cmd.Parameters.Add("@ProbabilityId", SqlDbType.BigInt).Value = model.ProbabilityId ?? (object)DBNull.Value;
                     cmd.Parameters.Add("@OutcomeId", SqlDbType.BigInt).Value = model.OutcomeId ?? (object)DBNull.Value;
-                    cmd.Parameters.Add("@Probability", SqlDbType.Int).Value = model.Probability ?? (object)DBNull.Value;
 
                     cmd.Parameters.Add("@DiscussionNotes", SqlDbType.NVarChar).Value = (object)model.DiscussionNotes ?? DBNull.Value;
                     cmd.Parameters.Add("@InternalRemarks", SqlDbType.NVarChar).Value = (object)model.InternalRemarks ?? DBNull.Value;
@@ -357,6 +357,54 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 apiResponse.message = "Mood list fetched successfully!";
+                apiResponse.data = list;
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpGet]
+        [Route("GetEnquiryFollowUp_ProbabilityList")]
+        public IActionResult GetEnquiryFollowUp_ProbabilityList()
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<MoodResponse> list = new List<MoodResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetEnquiryFollowUp_ProbabilityList", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    dt.Load(dr);
+                    con.Close();
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    list.Add(new MoodResponse
+                    {
+                        Id = Convert.ToInt32(row["Id"]),
+                        Name = Convert.ToString(row["Name"])
+                    });
+                }
+
+                apiResponse.message = "Probability list fetched successfully!";
                 apiResponse.data = list;
                 apiResponse.status = "Success";
                 return Ok(apiResponse);

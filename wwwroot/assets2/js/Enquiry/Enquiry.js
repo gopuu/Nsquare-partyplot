@@ -787,6 +787,28 @@ function loadMoodList() {
         }
     });
 }
+function loadProbabilityList() {
+    $.ajax({
+        url: "/api/EnquiryFollowup/GetEnquiryFollowUp_ProbabilityList",
+        type: "GET",
+        success: function (res) {
+            //console.log("res mood:", res);
+            if (res.status === "Success") {
+                let ddl = $("#ddlProbability");
+                ddl.empty();
+
+                ddl.append('<option value="0">-- Select Probability --</option>');
+
+                $.each(res.data, function (i, item) {
+                    ddl.append(`<option value="${item.Id}">${item.Name}</option>`);
+                });
+            }
+        },
+        error: function (xhr, error, status) {
+            handleApiError(xhr, error, status, "Failed to fetch follow-up Probability list");
+        }
+    });
+}
 function loadLeadLostReasonCategoryList() {
     $.ajax({
         url: "/api/EnquiryFollowup/GetEnquiryFollowUp_LeadLostReasonCategoryList",
@@ -920,7 +942,7 @@ function renderFollowUpHistory(list) {
                     ${shortNotes}
                 </td>
                 <td>${item.AssignedToName}</td>
-                <td>${item.Probability}%</td>
+                <td>${item.ProbabilityName}</td>
                 <td>${item.FollowUpLeadLostReasonName}</td>
                 <td>
                     <button class="btn btn-action-xs btn-outline-warning edit-followup" data-id="${item.FollowUpId}">
@@ -973,10 +995,12 @@ function resetFollowUpForm() {
     const followUpType = $("#ddlFollowUpType option:first").val();
     const status = $("#ddlStatus option:first").val();
     const mood = $("#ddlMood option:first").val();
+    const probability = $("#ddlProbability option:first").val();
 
     $("#ddlFollowUpType").val(followUpType || "");
     $("#ddlStatus").val(status || "");
     $("#ddlMood").val(mood || "");
+    $("#ddlProbability").val(probability || "");
 
     $("#txtDiscussionNotes").val("");
     // Set today's date
@@ -988,8 +1012,6 @@ function resetFollowUpForm() {
     //$("#nextFollowUpTime_modalFollowup").prop("selectedIndex", 0).trigger("change");
 
     //updateNextFollowUpValue();
-
-    $("#txtProbability").val("0");
 
     $("#hfIsLeadLost").val(0);
     $(".leadLostReasonSection").hide();
@@ -1039,6 +1061,7 @@ $(document).on("click", ".edit-followup", function () {
                 $("#ddlFollowUpType").val(item.FollowUpTypeId);
                 $("#ddlStatus").val(item.StatusId);
                 $("#ddlMood").val(item.MoodId);
+                $("#ddlProbability").val(item.ProbabilityId);
                 $("#txtDiscussionNotes").val(item.DiscussionNotes);
 
                 if (item.NextFollowUpDateTime) {
@@ -1046,8 +1069,6 @@ $(document).on("click", ".edit-followup", function () {
                     $("#nextFollowUpTime_modalFollowup").val(item.NextFollowUpTime); // HH:mm
                 }
                 $("#txtNextFollowUpDateTime").val(item.NextFollowUpDate + 'T' + item.NextFollowUpTime);
-
-                $("#txtProbability").val(item.Probability);
 
                 if (item.FollowUpLeadLostReasonCategoryId > 0) {
                     $(".leadLostReasonSection").show();
@@ -1451,13 +1472,13 @@ function renderBoard() {
             NextFollowUpDateTime: $("#txtNextFollowUpDateTime").val() || null,
             StatusId: Number( $("#ddlStatus").val() || 0),
             MoodId: Number( $("#ddlMood").val() || 0),
+            ProbabilityId: Number($("#ddlProbability").val() || 0),
             OutcomeId: null,             // you can add later
-            Probability: $("#txtProbability").val() || null,
             DiscussionNotes: $("#txtDiscussionNotes").val(),
             InternalRemarks: null,
             CustomerRemarks: null,
             FileUpload: fileUpload_base64,
-            AssignedTo: 1,               // dynamic later
+            AssignedTo: 0,               // dynamic later
             IsClosed: false,
             ActionBy: Number(sessionStorage.getItem("userId") ?? 0)
         };
@@ -2264,6 +2285,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadFollowUpTypes();
     loadFollowUpStatus();
     loadMoodList();
+    loadProbabilityList();
     loadLeadLostReasonCategoryList();
     loadLeadLostReasonList();
     loadTimeDropdown();

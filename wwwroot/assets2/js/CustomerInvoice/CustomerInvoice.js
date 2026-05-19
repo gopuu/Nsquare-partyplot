@@ -785,6 +785,7 @@ $(function () {
         }
 
         // ❌ Still mismatch → block
+        /*
         if (Math.abs(diff) > 0.05) {
             $("#btnAdjustDiff").removeClass("d-none");
             $("#diffValue").text(diff.toFixed(2));
@@ -795,6 +796,7 @@ $(function () {
             });
             return false;
         }
+        */
         return true;
     }
 
@@ -1036,6 +1038,8 @@ $(function () {
 
         //console.log("Outstanding clicked for BookingId:", bookingId);
         $("#outstandingPayment_DueBalance, #outstandingPayment_originalDueAmount").val(dueAmount);
+        $("#outstandingPayment_DueBalance").prop("readonly", true);
+
         $("#outstanding_paymentBookingId").val(bookingId);
         setCurrentPaymentDateTime();
 
@@ -1049,11 +1053,12 @@ $(function () {
         const originalDue = Number($("#outstandingPayment_originalDueAmount").val()) || 0;
         let payAmount = Number($(this).val()) || 0;
 
-        //if (payAmount > originalDue) {
-            //payAmount = originalDue;
+        if (payAmount > originalDue) {
+            payAmount = originalDue;
             //$(this).val(originalDue);
-        //}
-        //$(this).val(payAmount);
+        }
+        $(this).val(payAmount);
+
         const remaining = originalDue - payAmount;
         $("#outstandingPayment_DueBalance").val(remaining.toFixed(2));
     });
@@ -1064,11 +1069,11 @@ $(function () {
         let payAmount = Number($(this).val()) || 0;
 
         // 🔒 Prevent overpayment
-        //if (payAmount > originalDue) {
-            //payAmount = originalDue;
+        if (payAmount > originalDue) {
+            payAmount = originalDue;
             //$(this).val(originalDue);
-        //}
-        //$(this).val(payAmount);
+        }
+        $(this).val(payAmount);
         const remaining = originalDue - payAmount;
         $("#invoicePayment_DueBalance, #balanceAmount").val(remaining.toFixed(2));
     });
@@ -1845,8 +1850,8 @@ function calculateBalance() {
     // Show absolute value if overpaid
     const displayBalance = balance; // < 0 ? Math.abs(balance) : balance;
 
-    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount')
-        .val(displayBalance.toFixed(2));
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val(displayBalance.toFixed(2));
+    //$("#invoicePayment_DueBalance").prop("readonly", true);
 
     // Label handling
     if (balance < 0) {
@@ -2542,7 +2547,7 @@ function fetchData(isGenerated) {
 }
 
 function renderTable(data, totals) {
-    //console.log("render data:", data);
+    console.log("render data:", data);
     if ($.fn.dataTable.isDataTable('#tableMain table')) {
         $('#tableMain table').DataTable().clear().destroy();
     }
@@ -2621,6 +2626,22 @@ function renderTable(data, totals) {
                 name: 'TotalAmount',
                 width: "80px",
                 render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
+            },
+            //PaidAmount
+            {
+                data: 'PaidAmount',
+                title: 'Paid Amt.',
+                className: 'text-end',
+                name: 'PaidAmount',
+                width: "80px",
+                render: function (d) {
+                    let paid = d ?? 0;
+                    return `
+                        <span class="text-success fw-bold">
+                            ₹ ${Number(paid).toLocaleString('en-IN')}
+                        </span>
+                    `;
+                }
             },
             //OutstandingAmount
             {
@@ -2848,6 +2869,7 @@ function renderTable(data, totals) {
             const format = val => `₹ ${Number(val || 0).toLocaleString('en-IN')}`;
 
             $(api.column('TotalAmount:name').footer()).html(format(totals.TotalAmount));
+            $(api.column('PaidAmount:name').footer()).html(format(totals.TotalPaid));
             $(api.column('OutstandingAmount:name').footer()).html(format(totals.TotalOutstanding));
         },
         initComplete: function () {
@@ -2898,7 +2920,7 @@ function resetForm() {
     $('#invoicePayment_Mode, #invoicePayment_Account').val('0');
     $('#invoicePayment_Txn, #invoicePayment_ChequeBank, #invoicePayment_ChequeNo, #invoicePayment_ChequeDate, #invoicePayment_NextDueDate').val('');
     $('#invoicePayment_Amount, #invoicePayment_originalDueAmount').val(0);
-    $('#invoicePayment_DueBalance').val("0.00").prop('readonly', false);
+    $('#invoicePayment_DueBalance').val("0.00").prop('readonly', true);
     $('#advancePaid').val("0.00").attr('readonly', true);
 
     $('#subTotal, #bookingDiscount, #totalTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
@@ -3032,13 +3054,15 @@ function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
             console.log("res count PaymentCollection finance:", res);
             if (res.status === "Success" && res.data) {
                 //PAYMENT COLLECTION
+                const total = res.data.TotalAmount || 1; // avoid divide by zero
                 const paid = res.data.PaidAmount;
                 const pending = res.data.PendingAmount;
-                const total = res.data.TotalAmount || 1; // avoid divide by zero
 
+                $("#txtTotalAmount").text(formatINR(total));
                 $("#txtPaidAmount").text(formatINR(paid));
                 $("#txtPendingAmount").text(formatINR(pending));
 
+                $("#barTotal").css("width", "100%");
                 $("#barPaid").css("width", calcPercent(paid, total) + "%");
                 $("#barPending").css("width", calcPercent(pending, total) + "%");
             }

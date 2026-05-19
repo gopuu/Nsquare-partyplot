@@ -119,6 +119,32 @@
                                     </div>
                                 </div>
 
+                                <!-- Total Amount -->
+                                <div class="kpi-item mb-3" id="totalAmountTitle">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+
+                                            <div class="kpi-icon bg-primary-subtle text-primary">
+                                                <i class="fa fa-wallet"></i>
+                                            </div>
+
+                                            <span class="ms-2 small fw-medium text-muted custom-tooltip"
+                                                  data-tooltip="Total Amount for Selected Period Events">
+                                                Total Amount
+                                            </span>
+
+                                        </div>
+
+                                        <span class="text-primary fw-bold">
+                                            ₹ <span id="txtTotalAmount">0</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="progress mt-2 kpi-progress mb-3">
+                                        <div id="barTotal" class="progress-bar bg-primary"></div>
+                                    </div>
+                                </div>
+
                                 <!-- Payment Received -->
                                 <div class="kpi-item mb-3" id="paymentReceivedTitle">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -127,7 +153,10 @@
                                             <div class="kpi-icon bg-success-subtle text-success">
                                                 <i class="fa fa-arrow-down"></i>
                                             </div>
-                                            <span class="ms-2 small fw-medium text-muted">Payment Received</span>
+                                            <span class="ms-2 small fw-medium text-muted custom-tooltip"
+                                                  data-tooltip="Total Amount Collected (Advance + Final Payments) for Selected Period Events">
+                                                Payment Received
+                                             </span>
                                         </div>
 
                                         <span class="text-success fw-bold">
@@ -148,7 +177,8 @@
                                             <div class="kpi-icon bg-danger-subtle text-danger">
                                                 <i class="fa fa-hourglass-half"></i>
                                             </div>
-                                            <span class="ms-2 small fw-medium text-muted">
+                                            <span class="ms-2 small fw-medium text-muted custom-tooltip"
+                                                  data-tooltip="Total Outstanding Amount for Selected Period Events">
                                                 Payment Pending
                                             </span>
                                         </div>
@@ -218,7 +248,8 @@
                                             <div class="kpi-icon bg-success-subtle text-success">
                                                 <i class="fa fa-check-circle"></i>
                                             </div>
-                                            <span class="ms-2 small fw-medium text-muted">
+                                            <span class="ms-2 small fw-medium text-muted custom-tooltip"
+                                                  data-tooltip="Total number of invoices generated for selected period Events">
                                                 Invoice Generated
                                             </span>
                                         </div>
@@ -241,7 +272,8 @@
                                             <div class="kpi-icon bg-danger-subtle text-danger">
                                                 <i class="fa fa-clock"></i>
                                             </div>
-                                            <span class="ms-2 small fw-medium text-muted">
+                                            <span class="ms-2 small fw-medium text-muted custom-tooltip"
+                                                  data-tooltip="Total number of invoices Generation pending for selected period events">
                                                 Invoice Pending
                                             </span>
                                         </div>
@@ -407,6 +439,7 @@
                             <tr class="table-footer-total">
                                 <th colspan="9" class="text-end">TOTAL</th>
                                 <th id="ftTotalAmount" class="text-center"></th>
+                                <th id="ftPaidAmount" class="text-center text-success"></th>
                                 <th id="ftOutstandingAmount" class="text-center text-danger"></th>
                                 <th colspan="7"></th>
                             </tr>
@@ -682,20 +715,15 @@
                                     <input type="date" id="invoicePayment_NextDueDate" class="form-control form-control-sm">
                                 </div>
 
-                                <!-- Buttons Row -->
-                                <div class="col-md-12 d-flex justify-content-between align-items-center mt-2">
-                                    <!-- Left -->
-                                    <div>
-                                        <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
-                                    </div>
+                                <!-- Buttons -->
+                                <div class="col-md-3 d-flex justify-content-between align-items-center mt-4">
+                                    <input type="button" id="invoicePayment_btnWriteNote" class="btn btn-outline-primary btn-sm" value="Payment Notes">
                                 </div>
 
                                 <!-- Note Editor -->
                                 <div class="col-md-12 invoicePayment_EditorContainer mt-2 d-none">
                                     <div id="invoicePayment_noteEditor">
-                                        <textarea class="form-control"
-                                                  rows="4"
-                                                  placeholder="Write your note here..."></textarea>
+                                        <textarea class="form-control" rows="4" placeholder="Write your note here..."></textarea>
                                     </div>
                                 </div>
 
@@ -1363,23 +1391,11 @@
                             <label class="form-label">Next Due Date</label>
                             <input type="date" id="outstandingPayment_NextDueDate" class="form-control">
                         </div>
-                        <div class="col-md-12 mb-1 d-flex justify-content-between align-items-center">
 
-                            <!-- LEFT SIDE -->
-                            <div class="d-flex gap-2">
+                        <div class="col-md-3 mb-1 pt-4">
                                 <input type="button" id="outstandingPayment_btnwritrnote"
                                        class="btn btn-outline-primary btn-sm"
-                                       value="Payment Notes">
-                            </div>
-
-                            <!-- RIGHT SIDE -->
-                            <div>
-                                <button class="btn btn-sm btn-outline-secondary" type="reset">Reset</button>
-                                <button type="button" class="btn btn-sm btn-primary" id="btnSavePayment">
-                                    Save
-                                </button>
-
-                            </div>
+                                       value="Add Remarks">
                         </div>
 
                         <!-- NOTE EDITOR -->
@@ -1388,6 +1404,21 @@
                                 <textarea class="form-control" rows="6" placeholder="Write your note here..."></textarea>
                             </div>
                         </div>
+
+                        <div class="col-md-12 mt-3">
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                <button type="reset" class="btn btn-sm btn-outline-secondary px-3">
+                                    <i class="fa fa-rotate-left me-1"></i>
+                                    Reset
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-primary px-4" id="btnSavePayment">
+                                    <i class="fa fa-save me-1"></i>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </form>
             </div>

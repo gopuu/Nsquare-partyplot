@@ -76,10 +76,11 @@
         public long? MoodId { get; set; }
         public string? MoodName { get; set; }          // optional (future use)
 
+        public long? ProbabilityId { get; set; }
+        public string? ProbabilityName { get; set; }          // optional (future use)
+
         public long? OutcomeId { get; set; }
         public string? OutcomeName { get; set; }       // optional (future use)
-
-        public decimal? Probability { get; set; }
 
         public string? DiscussionNotes { get; set; }
         public string? InternalRemarks { get; set; }
@@ -126,9 +127,9 @@
 
         public long? StatusId { get; set; }
         public long? MoodId { get; set; }
+        public long? ProbabilityId { get; set; }
 
         public long? OutcomeId { get; set; }
-        public decimal? Probability { get; set; }
 
         public string? DiscussionNotes { get; set; }
         public string? InternalRemarks { get; set; }

@@ -172,11 +172,14 @@
     //FILTER --- END---------------------------------------
 
     //Tooltip - on-hover widget ---START ------
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipTriggerList.forEach(el => {
-        new bootstrap.Tooltip(el, {
-            delay: { show: 200, hide: 100 }
-        });
+    $('.custom-tooltip').each(function () {
+        let tooltipText = $(this).attr('data-tooltip');
+
+        $(this).attr('data-bs-toggle', 'tooltip');
+        $(this).attr('data-bs-placement', 'top');
+        $(this).attr('title', tooltipText);
+
+        new bootstrap.Tooltip(this);
     });
     //Tooltip - on-hover widget ---END --------
 

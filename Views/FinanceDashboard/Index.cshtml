@@ -73,7 +73,7 @@
 
                     <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-success">Revenue</h6>
+                        <h6 class="fw-bold mb-0 text-success custom-tooltip" data-tooltip="Total Revenue for the selected period">Revenue</h6>
                         <h5 class="text-success mb-0">
                             ₹ <span id="txtTotalIncomes" class="fs-7">0</span>
                         </h5>
@@ -84,7 +84,7 @@
 
                         <!-- Invoice Income -->
                         <div class="d-flex justify-content-between">
-                            <span>Invoice Revenue</span>
+                            <span class="custom-tooltip" data-tooltip="Revenue from invoices generated for selected period events">Invoice Revenue</span>
                             <span id="txtInvoiceIncome">0</span>
                         </div>
                         <div class="progress mb-2" style="height:6px;">
@@ -93,7 +93,7 @@
 
                         <!-- Categorised Income -->
                         <div class="d-flex justify-content-between">
-                            <span>Categorised Income</span>
+                            <span class="custom-tooltip" data-tooltip="Revenue entries have been categorized from credit/income transactions">Categorised Income</span>
                             <span id="txtCategorisedIncome">0</span>
                         </div>
                         <div class="progress" style="height:6px;">
@@ -112,7 +112,7 @@
                 <div class="card-body">
 
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-danger">Expense</h6>
+                        <h6 class="fw-bold mb-0 text-danger custom-tooltip" data-tooltip="Total Expense for the selected period">Expense</h6>
                         <h5 class="text-danger mb-0">
                             ₹ <span id="txtTotalExpenses" class="fs-7">0</span>
                         </h5>
@@ -122,7 +122,7 @@
 
                         <!-- Purchase Expense -->
                         <div class="d-flex justify-content-between">
-                            <span>Vendor Purchase</span>
+                            <span class="custom-tooltip" data-tooltip="Total expenses from inventory purchases for the selected period">Vendor Purchase</span>
                             <span id="txtPurchaseExpense">0</span>
                         </div>
                         <div class="progress mb-2" style="height:6px;">
@@ -131,7 +131,7 @@
 
                         <!-- Categorised Expense -->
                         <div class="d-flex justify-content-between">
-                            <span>Categorised Expense</span>
+                            <span class="custom-tooltip" data-tooltip="Total expenses from inventory purchases for the selected period">Categorised Expense</span>
                             <span id="txtCategorisedExpense">0</span>
                         </div>
                         <div class="progress" style="height:6px;">
@@ -150,7 +150,7 @@
                 <div class="card-body">
 
                     <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0">Net Profit</h6>
+                        <h6 class="fw-bold mb-0 custom-tooltip" data-tooltip="Net profit has been calculated from total revenue and total expenses">Net Profit/Loss</h6>
                         <h5 id="txtGrossProfit" class="mb-0 fs-7">₹ 0</h5>
                     </div>
 

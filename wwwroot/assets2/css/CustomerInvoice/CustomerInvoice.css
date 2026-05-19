@@ -39,9 +39,6 @@
     font-size: 11px;
 }
 
-.row-outstanding {
-    background-color: #fff3f3 !important;
-}
 
 /* Sticky footer (optional but powerful) */
 #invoiceTable tfoot {
@@ -83,7 +80,7 @@
 }
 
 .row-outstanding {
-    background-color: #f8d7da !important; /* light red */
+    background-color: #ffebef !important; /* light red */
 }
 
 #tableMain table {

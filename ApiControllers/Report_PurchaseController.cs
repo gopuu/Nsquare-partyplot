@@ -792,7 +792,21 @@ namespace ERPAdmin.ApiControllers
                 int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 6, 30, 10, 10, 10, 10, 10, 10, 10 });
+                table.SetWidths(new float[]
+                {
+                    5,   // Sr No
+                    18,  // Raw Material
+                    6,   // Qty
+                    8,   // Unit
+                    6,   // Price
+                    8,   // Amount
+                    6,   // CGST Rate
+                    7,   // CGST Amt
+                    6,   // SGST Rate
+                    7,   // SGST Amt
+                    5,   // IGST Rate
+                    8    // IGST Amt
+                });
 
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
@@ -835,14 +849,14 @@ namespace ERPAdmin.ApiControllers
                 totalTable.AddCell(Utils.CreateTotalLabelCell("Sub Total"));
                 totalTable.AddCell(Utils.CreateTotalValueCell(inv["SubTotal"]));
 
+                totalTable.AddCell(Utils.CreateTotalLabelCell("Discount"));
+                totalTable.AddCell(Utils.CreateTotalValueCell(inv["Discount"]));
+
                 totalTable.AddCell(Utils.CreateTotalLabelCell("Other Charges"));
                 totalTable.AddCell(Utils.CreateTotalValueCell(inv["OtherCharges"]));
 
                 totalTable.AddCell(Utils.CreateTotalLabelCell("Other Taxes"));
                 totalTable.AddCell(Utils.CreateTotalValueCell(inv["OtherTaxes"]));
-
-                totalTable.AddCell(Utils.CreateTotalLabelCell("Discount"));
-                totalTable.AddCell(Utils.CreateTotalValueCell(inv["Discount"]));
 
                 totalTable.AddCell(Utils.CreateTotalLabelCell("Grand Total", true));
                 totalTable.AddCell(Utils.CreateTotalValueCell(inv["GrandTotal"], true));
