@@ -1160,22 +1160,26 @@ function addNewRow() {
 
                 <!-- Price -->
                 <td>
-                    <input type="number" class="form-control form-control-sm priceInput" min="0" step="1" value="0">
+                    <input type="number" class="form-control form-control-sm priceInput" min="0" step="0.01" value="0">
                 </td>
 
-                <!-- Tax % -->
+                <!-- CGST+SGST Tax % -->
                 <td>
-                    <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %"  min="0" max="100" step="1">
-                        <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="1">
-                        <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="1">
-                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" max="100" step="1">
-                    </div>
+                    <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %"  min="0" max="100" step="0.01">
+                    <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %"  min="0" step="0.01">
+                    <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %"  min="0" step="0.01">
+                    <div class="cgstSgstHint text-muted small"><span class="cgstSgstValue">0</span></div>
+                </td>
+
+                <!-- IGST Tax % -->
+                <td>
+                    <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %"  min="0" max="100" step="0.01">
+                    <div class="igstHint text-muted small"><span class="igstValue">0</span></div>
                 </td>
 
                 <!-- Amount -->
                 <td>
-                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="1" value="0">
+                    <input type="number" class="form-control form-control-sm amountInput"  min="0" step="0.01" value="0">
                 </td>
 
                 <!-- Actions -->
@@ -1300,10 +1304,19 @@ function buildRowForEdit(item) {
     let unit = item.UnitId;
     let price = item.Price;
     let amount = item.Amount;
+
     let cgst = item.CGST;
     let sgst = item.SGST;
+
+    let cgst_amt = item.CGST_Amount;
+    let sgst_amt = item.SGST_Amount;
+
     let igst = item.IGST;
+    let igst_amt = item.IGST_Amount;
+
     let cgst_sgst = cgst + sgst;
+    let cgst_sgst_amt = cgst_amt + sgst_amt;
+
     let isChecked = item.IsSelected ? "checked" : "";
 
     // ----------------------------------------
@@ -1366,23 +1379,26 @@ function buildRowForEdit(item) {
 
                 <!-- PRICE -->
                 <td>
-                    <input type="number" class="form-control form-control-sm priceInput"
-                           min="0" step="1" value="${price}">
+                    <input type="number" class="form-control form-control-sm priceInput" min="0" step="0.01" value="${price}">
                 </td>
 
-                <!-- TAX -->
+                <!-- CGST + SGST TAX -->
                 <td>
-                    <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %" value="${cgst_sgst}" min="0" max="100" step="1">
-                        <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %" value="${cgst}" min="0" max="100" step="1">
-                        <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %" value="${sgst}" min="0" max="100" step="1">
-                        <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %" value="${igst}" min="0" max="100" step="1">
-                    </div>
+                    <input type="number" class="form-control form-control-sm cgstInput_sgstInput" placeholder="CGST + SGST %" value="${cgst_sgst}" min="0" max="100" step="0.01">
+                    <input type="hidden" class="form-control form-control-sm cgstInput" placeholder="CGST %" value="${cgst}" min="0" max="100" step="0.01">
+                    <input type="hidden" class="form-control form-control-sm sgstInput" placeholder="SGST %" value="${sgst}" min="0" max="100" step="0.01">
+                    <div class="cgstSgstHint text-muted small"><span class="cgstSgstValue">₹ ${cgst_sgst_amt}</span></div>
+                </td>
+
+                <!-- IGST TAX -->
+                <td>
+                    <input type="number" class="form-control form-control-sm igstInput" placeholder="IGST %" value="${igst}" min="0" max="100" step="0.01">
+                    <div class="igstHint text-muted small"><span class="igstValue">₹ ${igst_amt}</span></div>
                 </td>
 
                 <!-- AMOUNT -->
                 <td>
-                    <input type="number" class="form-control form-control-sm amountInput" min="0" step="1" value="${amount}">
+                    <input type="number" class="form-control form-control-sm amountInput" min="0" step="0.01" value="${amount}">
                 </td>
 
                 <!-- ACTION -->
@@ -2265,8 +2281,15 @@ $(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput_
         row.find(".cgstInput").val(half.toFixed(2));
         row.find(".sgstInput").val(half.toFixed(2));
 
+        // --- GST Amount ---
+        let gstAmount = amount * totalTax / 100;
+        //row.find(".cgstSgstValue").html(`CGST: ${(gstAmount / 2).toFixed(2)} + SGST: ${(gstAmount / 2).toFixed(2)}`);
+        row.find(".cgstSgstValue").html(`₹ ${(gstAmount).toFixed(2)}`);
+
         // clear IGST
         row.find(".igstInput").val("");
+        // clear IGST hint
+        row.find(".igstValue").html("0");
     }
 
     // --- Handle IGST ---
@@ -2280,6 +2303,12 @@ $(document).on("input change", ".qtyInput, .priceInput, .unitSelect, .cgstInput_
         row.find(".cgstInput").val(0);
         row.find(".sgstInput").val(0);
         row.find(".cgstInput_sgstInput").val("");
+
+        // --- GST Amount ---
+        let igstAmount = amount * igst / 100;
+        row.find(".igstValue").html(`₹ ${igstAmount.toFixed(2)}`);
+        // clear CGST/SGST hint
+        row.find(".cgstSgstValue").html("0");
     }
 
     // --- Get final tax values ---

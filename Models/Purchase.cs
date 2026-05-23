@@ -140,6 +140,9 @@ namespace ERPAdmin.Models
         public decimal CGST { get; set; }
         public decimal SGST { get; set; }
         public decimal IGST { get; set; }
+        public decimal CGST_Amount { get; set; }
+        public decimal SGST_Amount { get; set; }
+        public decimal IGST_Amount { get; set; }
         public bool IsSelected { get; set; }
     }
 

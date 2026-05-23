@@ -950,7 +950,7 @@ function renderConversionRows() {
                 <span class="input-group-text">=</span>
 
                 <input type="number"
-                       step="1"
+                       step="0.01"
                        class="form-control conversion-input"
                        value="${isSame ? 1 : ""}"
                        ${isSame ? "readonly" : ""}>
@@ -1159,7 +1159,7 @@ function handleConversionVisibility() {
 function addRestockRow(qty = "0", unitId = "") {
     let row = `
             <tr>
-                <td><input type="number" step="1" class="form-control restockQty" value="${qty}"></td>
+                <td><input type="number" step="0.01" class="form-control restockQty" value="${qty}"></td>
                 <td>
                     <select class="form-select restockUnit">
                         ${$("#consumptionUnitId").html()}

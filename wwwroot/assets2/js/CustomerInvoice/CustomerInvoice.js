@@ -1062,6 +1062,17 @@ $(function () {
         const remaining = originalDue - payAmount;
         $("#outstandingPayment_DueBalance").val(remaining.toFixed(2));
     });
+    // Pay Full
+    $('#outstandingPayment_btnPayFull').on('click', function () {
+        const due = parseFloat($('#outstandingPayment_DueBalance').val()) || 0;
+        $('#outstandingPayment_Amount').val(due);
+    });
+    // Pay Half
+    $('#outstandingPayment_btnPayHalf').on('click', function () {
+        const due = parseFloat($('#outstandingPayment_DueBalance').val()) || 0;
+        const half = (due / 2).toFixed(2);
+        $('#outstandingPayment_Amount').val(half);
+    });
 
     //invoicePayment_Amount - Input
     $(document).on("input", "#invoicePayment_Amount", function () {
@@ -1076,6 +1087,17 @@ $(function () {
         $(this).val(payAmount);
         const remaining = originalDue - payAmount;
         $("#invoicePayment_DueBalance, #balanceAmount").val(remaining.toFixed(2));
+    });
+    // Pay Full
+    $('#invoicePayment_btnPayFull').on('click', function () {
+        const due = parseFloat($('#invoicePayment_DueBalance').val()) || 0;
+        $('#invoicePayment_Amount').val(due);
+    });
+    // Pay Half
+    $('#invoicePayment_btnPayHalf').on('click', function () {
+        const due = parseFloat($('#invoicePayment_DueBalance').val()) || 0;
+        const half = (due / 2).toFixed(2);
+        $('#invoicePayment_Amount').val(half);
     });
 
     //outstandingPayment_btnwritrnote - click

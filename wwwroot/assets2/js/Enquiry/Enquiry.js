@@ -2279,7 +2279,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadEventTypeList();
     loadEventSubTypeList();
-    loadBanquetHallList();
+    //loadBanquetHallList();
     loadLeadSourceList();
 
     loadFollowUpTypes();
@@ -3379,7 +3379,7 @@ function renderFoodPackages(packages) {
 //banquet hall details - dropdown -- START ----------------------
 function fetchHallDetails() {
     $.ajax({
-        url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
+        url: '/api/Company_HallDetails/GetCompanyHallDetailsList',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }), // Get all halls
@@ -3389,13 +3389,14 @@ function fetchHallDetails() {
                 banquetHallsList = response.data;
                 let options = `<option value="0">-- Select Hall --</option>`; // default option
                 $.each(response.data, function (index, item) {
-                    options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
+                    options += `<option value="${item.Id}">${item.HallName_Display}</option>`;
                 });
-                $("#banquetDropdown, #quotation_banquetId").html(options);
+                $("#banquetHallDropdown, #banquetDropdown, #quotation_banquetId").html(options);
             }
             else {
-                $("#banquetDropdown, #quotation_banquetId").html(`<option value="0">No Hall Found</option>`);
+                $("#banquetHallDropdown, #banquetDropdown, #quotation_banquetId").html(`<option value="0">No Hall Found</option>`);
             }
+
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, 'Failed to fetch hall details');
@@ -3577,32 +3578,6 @@ function validateEventSubTypeForm() {
     }
 
     return isValid;
-}
-
-// Load banquet hall list from API
-function loadBanquetHallList() {
-    $.ajax({
-        url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ Id: 0 }), // Get all halls
-        success: function (response) {
-            //console.log("banquetHall response:", response);
-            if (response.status === "Success") {
-                let options = `<option value = "0"> --Select Banquet Hall--</option> `; // default option
-                $.each(response.data, function (index, item) {
-                    options += `<option value = "${item.Id}"> ${item.HallName} (${item.CapacityRangeText})</option> `;
-                });
-                $("#banquetHallDropdown, #banquetDropdown").html(options);
-            }
-            else {
-                $("#banquetHallDropdown, #banquetDropdown").html(`<option value = "0">No Banquet Hall Found</option> `);
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'Error fetching banquet hall list')
-        }
-    });
 }
 
 // Load lead source list from API
@@ -5099,10 +5074,10 @@ function populateAddonModal(savedItems = []) {
                             <span>${item.ItemName}</span>
                         </div>
 
-                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1" step="1"
+                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1" step="0.01"
                                value="${rate}" min="0" style="width:90px;">
 
-                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1" step="1"
+                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1" step="0.01"
                                value="${pax}" min="0" style="width:90px;">
 
                         <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light"

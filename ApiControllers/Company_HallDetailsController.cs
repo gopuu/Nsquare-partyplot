@@ -102,6 +102,7 @@ namespace ERPAdmin.ApiControllers
                             {
                                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt64(reader["Id"]),
                                 HallName = reader["HallName"] == DBNull.Value ? string.Empty : reader["HallName"].ToString(),
+                                HallName_Display = reader["HallName_Display"] == DBNull.Value ? string.Empty : reader["HallName_Display"].ToString(),
                                 CapacityRange = reader["CapacityRange"] == DBNull.Value ? 0 : Convert.ToInt64(reader["CapacityRange"]),
                                 CapacityRangeText = reader["CapacityRangeText"] == DBNull.Value ? string.Empty : Convert.ToString(reader["CapacityRangeText"]),
                                 RentPerDay = reader["RentPerDay"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["RentPerDay"]),
@@ -380,58 +381,6 @@ namespace ERPAdmin.ApiControllers
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
-                apiResponse.status = "Error";
-                apiResponse.message = ex.Message;
-                apiResponse.data = null;
-                return StatusCode(500, apiResponse);
-            }
-        }
-
-        [HttpPost]
-        [Route("GetCompanyHallDetailsList_Dropdown")]
-        public IActionResult GetCompanyHallDetailsList_Dropdown([FromBody] GetCompanyHallDetailsRequest request)
-        {
-            var apiResponse = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                    return errorResult!;
-
-                List<dynamic> halls = new();
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    SqlCommand cmd = new SqlCommand("GetCompanyHallDetailsList", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = (object)request.Id ?? DBNull.Value;
-
-                    con.Open();
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var hall = new
-                            {
-                                Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt64(reader["Id"]),
-                                HallName = reader["HallName"] == DBNull.Value ? string.Empty : reader["HallName"].ToString(),
-                                CapacityRange = reader["CapacityRange"] == DBNull.Value ? 0 : Convert.ToInt64(reader["CapacityRange"]),
-                                CapacityRangeText = reader["CapacityRangeText"] == DBNull.Value ? string.Empty : Convert.ToString(reader["CapacityRangeText"]),
-                            };
-                            halls.Add(hall);
-                        }
-                    }
-                    con.Close();
-                }
-
-                apiResponse.status = "Success";
-                apiResponse.message = "Hall fetched successfully.";
-                apiResponse.data = halls;
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;

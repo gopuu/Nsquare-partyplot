@@ -642,7 +642,7 @@ function getOtherServicesJson() {
 //dropdown -- START ----------------------
 function fetchHallDetails(banquetId = 0) {
     $.ajax({
-        url: '/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown',
+        url: '/api/Company_HallDetails/GetCompanyHallDetailsList',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ Id: banquetId }), // Get all halls
@@ -651,7 +651,7 @@ function fetchHallDetails(banquetId = 0) {
             if (response.status === "Success" && response.data && response.data.length > 0) {
                 let options = `<option value="0">-- Select --</option>`; // default option
                 $.each(response.data, function (index, item) {
-                    options += `<option value="${item.Id}">${item.HallName} (${item.CapacityRangeText})</option>`;
+                    options += `<option value="${item.Id}">${item.HallName_Display}</option>`;
                 });
                 $("#banquetId").html(options);
                 // ✅ If banquetId is passed → select & STOP

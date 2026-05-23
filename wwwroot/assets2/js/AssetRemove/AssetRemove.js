@@ -364,7 +364,7 @@ function addNewRow() {
             <td>
                 <input type="number" 
                        class="form-control form-control-sm qtyInput" 
-                       min="0" step="1" value="0">
+                       min="0" step="0.01" value="0">
             </td>
 
             <!-- Reason -->

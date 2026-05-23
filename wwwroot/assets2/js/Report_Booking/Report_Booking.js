@@ -422,29 +422,21 @@ function loadEventSubTypeDropdown(eventTypeId, selectedId = "") {
     });
 }
 function loadCompanyHallDropdown(selectedId = "") {
-
     $.ajax({
-        url: "/api/Company_HallDetails/GetCompanyHallDetailsList_Dropdown",
+        url: "/api/Company_HallDetails/GetCompanyHallDetailsList",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({
-            Id: 0   // 0 or null = get all halls
+            Id: 0
         }),
         success: function (response) {
 
             let dropdown = $("#ddlCompanyHall");
             dropdown.empty();
-
             dropdown.append(`<option value="0">-- Select Hall --</option>`);
-
             if (response.status === "Success" && response.data.length > 0) {
-
                 response.data.forEach(item => {
-                    dropdown.append(
-                        `<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>
-                            ${item.HallName} (${item.CapacityRangeText})
-                        </option>`
-                    );
+                    dropdown.append(`<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>${item.HallName_Display}</option>`);
                 });
             }
         },

@@ -1011,10 +1011,10 @@ function populateAddonModal(savedItems = []) {
                             <span>${item.ItemName}</span>
                         </div>
 
-                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="1"
+                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01"
                                value="${rate}" min="0" style="width:90px;">
 
-                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="1"
+                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01"
                                value="${pax}" min="0" style="width:90px;">
 
                         <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1"
@@ -3709,7 +3709,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                        class="form-control text-end wastageInput"
                                        value="${wastage}"
                                        min="0"
-                                       step="1">
+                                       step="0.01">
                             </td>
                         </tr>
                     `;
@@ -3766,13 +3766,24 @@ document.addEventListener("DOMContentLoaded", function () {
         const originalDue = Number($("#originalDueAmount").val()) || 0;
         let payAmount = Number($(this).val()) || 0;
 
-        //if (payAmount > originalDue) {
-        //    payAmount = originalDue;
-        //    $(this).val(originalDue);
-        //}
+        if (payAmount > originalDue) {
+            payAmount = originalDue;
+            $(this).val(originalDue);
+        }
 
         const remaining = originalDue - payAmount;
         $("#paymentDueBalance").val(remaining);
+    }); 5
+    // Pay Full
+    $('#payment_btnPayFull').on('click', function () {
+        const due = parseFloat($('#paymentDueBalance').val()) || 0;
+        $('#paymentAmount').val(due);
+    });
+    // Pay Half
+    $('#payment_btnPayHalf').on('click', function () {
+        const due = parseFloat($('#paymentDueBalance').val()) || 0;
+        const half = (due / 2).toFixed(2);
+        $('#paymentAmount').val(half);
     });
 
     // 📢 Request Feedback
@@ -5459,7 +5470,7 @@ function addIngredientRow(data = {}) {
                 </td>
 
                 <td>
-                    <input type="number" class="form-control ing-qty" min="0" step="1" value="${data.Quantity || ''}">
+                    <input type="number" class="form-control ing-qty" min="0" step="0.01" value="${data.Quantity || ''}">
                 </td>
 
                 <td>
@@ -7281,9 +7292,9 @@ $("#btnSavePayment").click(function () {
                         downloadReport(url, payload, "Generating Receipt...");
                     }
                     // ❌ If NO → do nothing (flow continues)
-
                     resetPaymentModal();
-                    loadPaymentHistory(bookingId);
+                    //loadPaymentHistory(bookingId);
+                    $("#paymentModal").modal("hide");
                 });
 
             }
@@ -7573,7 +7584,7 @@ $("#btnAddVendorParticular").on("click", function () {
                                        class="form-control form-control-sm vw-amount"
                                        value="0"
                                        min="0"
-                                       step="1">
+                                       step="0.01">
                             </td>
                             <td>
                                 <input type="number"

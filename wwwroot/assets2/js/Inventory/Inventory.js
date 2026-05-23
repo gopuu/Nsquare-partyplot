@@ -252,7 +252,7 @@ function renderTable(data) {
 
                     <td class="bg-success-light">
                         <div class="input-group input-group-sm" style="width: 200px;">
-                            <input type="number" min="0" step="1"
+                            <input type="number" min="0" step="0.01"
                                    class="form-control stock-inward-qty"
                                    id="${inputId}" placeholder="Stock Inward">
                             <span class="input-group-text px-2">/ ${escapeHtml(r.UnitName || '')}</span>
@@ -261,7 +261,7 @@ function renderTable(data) {
 
                     <td class="bg-danger-light">
                         <div class="input-group input-group-sm" style="width: 200px;">
-                            <input type="number" min="0" step="1"
+                            <input type="number" min="0" step="0.01"
                                    class="form-control stock-outward-qty"
                                    id="${inputId}" placeholder="Stock Outward">
                             <span class="input-group-text px-2">/ ${escapeHtml(r.UnitName || '')}</span>
