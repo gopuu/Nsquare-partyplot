@@ -4481,8 +4481,13 @@ Your feedback helps us improve our service.`;
                 if (res.data && res.data.WarningMessage && res.data.WarningMessage.trim() !== "") {
                     warningBox
                         .removeClass("d-none")
-                        .addClass("bg-warning-subtle text-dark")
-                        .text(res.data.WarningMessage);
+                        //.addClass("bg-warning-subtle text-dark")
+                        .addClass("alert text-white")
+                        .css({
+                            "background-color": "#e5780b",
+                            "border": "1px solid #e5780b",
+                        })
+                        .html(res.data.WarningMessage);
                 }
                 else {
                     warningBox.addClass("d-none");

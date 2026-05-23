@@ -128,14 +128,15 @@
             <input type="number" id="filter_txtAmount" class="form-select form-select-sm" placeholder="Search Amount" step="0.01" min="0" />
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">From Account</label>
-            <select id="filter_ddlFromAccount" class="form-select form-select-sm"></select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">To Account</label>
-            <select id="filter_ddlToAccount" class="form-select form-select-sm"></select>
+        <div class="row g-2">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">From Account</label>
+                <select id="filter_ddlFromAccount" class="form-select form-select-sm"></select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">To Account</label>
+                <select id="filter_ddlToAccount" class="form-select form-select-sm"></select>
+            </div>
         </div>
 
         <div class="mb-3">
@@ -187,105 +188,111 @@
     </div>
 </div>
 
-<!-- Add Fund Transfer -->
+<!-- FUND TRANSFER MODAL -->
 <div class="modal fade" id="FundTransferModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <div class="modal-header bg-warning text-white py-1">
-                <h5 class="modal-title text-white" id="FundTransferModalTitle">Add Fund Transfer</h5>
+            <!-- HEADER -->
+            <div class="modal-header bg-warning py-2">
+                <h5 class="modal-title text-white d-flex align-items-center gap-2">
+                    <span id="fundTransferTitleText">Fund Transfer</span>
+                    <span id="fundTransferVoucherDisplay" class="badge bg-light text-dark" data-bs-toggle="tooltip" title="Voucher No (Auto Generated)"></span>
+                </h5>
+
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body p-4">
+            <!-- BODY -->
+            <div class="modal-body">
 
                 <input type="hidden" id="FundTransferId" value="0">
 
-                <!-- Section: Accounts -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3 text-primary">Account Details</h6>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">From Account <span class="text-danger">*</span></label>
-                                <select id="ddlFromAccount" class="form-select">
-                                    <option value="">-- Select Account --</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">To Account <span class="text-danger">*</span></label>
-                                <select id="ddlToAccount" class="form-select">
-                                    <option value="">-- Select Account --</option>
-                                </select>
-                            </div>
-
-                        </div>
+                <!-- 💰 AMOUNT -->
+                <div class="text-center mb-4">
+                    <label class="form-label text-muted">Transfer Amount<span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" id="txtAmount" class="form-control text-center fs-3 fw-bold border-warning" placeholder="0">
                     </div>
                 </div>
 
-                <!-- Section: Transaction -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3 text-primary">Transaction Info</h6>
+                <!-- 🔄 FROM / TO ACCOUNT / DATE-->
+                <div class="row g-3 mb-3">
 
-                        <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">From Account<span class="text-danger">*</span></label>
+                        <select id="ddlFromAccount" class="form-select ddlAccount"></select>
+                    </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Amount <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" id="txtAmount" class="form-control" placeholder="0.00">
-                                </div>
-                            </div>
+                    <div class="col-md-4">
+                        <label class="form-label">To Account<span class="text-danger">*</span></label>
+                        <select id="ddlToAccount" class="form-select ddlAccount"></select>
+                    </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
-                                <select id="ddlCategory" class="form-select">
-                                    <option value="">-- Select Category --</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Transfer Date <span class="text-danger">*</span></label>
-                                <input type="date" id="txtTransferDate" class="form-control">
-                            </div>
-                        </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Transfer Date<span class="text-danger">*</span></label>
+                        <input type="date" id="txtTransferDate" class="form-control">
                     </div>
                 </div>
 
-                <!-- Section: Additional Info -->
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3 text-primary">Additional Details</h6>
+                <!-- 📂 CATEGORY + REF. No -->
+                <div class="row g-3 mb-3">
 
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Reference No</label>
-                                <input type="text" id="txtReferenceNo" class="form-control" placeholder="Optional">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Notes</label>
-                                <textarea id="txtNotes" class="form-control" rows="2" placeholder="Add remarks..."></textarea>
-                            </div>
-
-                        </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Category<span class="text-danger">*</span></label>
+                        <select id="ddlCategory" class="form-select"></select>
                     </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Reference No</label>
+                        <input type="text" id="txtReferenceNo" class="form-control" placeholder="Optional">
+                    </div>
+
+                </div>
+
+                <!-- 📎 NOTES -->
+                <div class="row mt-3 align-items-end">
+
+                    <!-- NOTES -->
+                    <div class="col-md-12">
+                        <label class="form-label">Notes</label>
+                        <textarea id="txtNotes_FundTransfer" class="form-control" rows="2" placeholder="Optional..."></textarea>
+                    </div>
+
+                </div>
+
+                <!-- ℹ️ INFO -->
+                <div class="form-text mt-3 text-warning">
+
+                    Note: Ensure the correct source and destination account
+                    are selected to maintain accurate fund tracking.
+
                 </div>
 
             </div>
 
+            <!-- FOOTER -->
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-outline-warning btn-sm" id="btnSaveFundTransfer">Save</button>
+
+                <button class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button class="btn btn-warning text-white px-4"
+                        id="btnSaveFundTransfer">
+
+                    Save Transfer
+
+                </button>
+
             </div>
+
         </div>
     </div>
 </div>
+
 
 <!-- DELETE MODAL -->
 <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">

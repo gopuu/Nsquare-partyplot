@@ -326,6 +326,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@GrandTotal_Amount", SqlDbType.Decimal).Value = model.GrandTotal_Amount;
                     cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object)model.PaymentType ?? DBNull.Value;
 
+                    cmd.Parameters.Add("@PaymentAccountId", SqlDbType.BigInt).Value = (object)model.PaymentAccountId ?? DBNull.Value;
                     cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object)model.PaymentDate ?? DBNull.Value;
                     var pPaid = cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal);
                     pPaid.Precision = 18;
@@ -334,7 +335,6 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.Add("@PaymentModeId", SqlDbType.BigInt).Value = (object)model.PaymentModeId ?? DBNull.Value;
                     cmd.Parameters.Add("@PaymentRefNo", SqlDbType.NVarChar).Value = (object)model.PaymentRefNo ?? DBNull.Value;
-                    cmd.Parameters.Add("@PaymentAccountId", SqlDbType.BigInt).Value = (object)model.PaymentAccountId ?? DBNull.Value;
                     cmd.Parameters.Add("@PaymentRemarks", SqlDbType.NVarChar).Value = (object)model.PaymentRemarks ?? DBNull.Value;
                     cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar).Value = (object)model.ChequeBank ?? DBNull.Value;
                     cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar).Value = (object)model.ChequeNo ?? DBNull.Value;

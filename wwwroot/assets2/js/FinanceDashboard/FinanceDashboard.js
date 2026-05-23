@@ -132,8 +132,8 @@
     $("#filter_transaction_reset").on("click", function () {
 
         // 🔒 Preserve
-        const selectedType = $("input[name='filter_transaction_type']:checked").val();
-        const voucherNo = $("#filter_voucher_no").val();
+        const selectedType = "ALL"; //$("input[name='filter_transaction_type']:checked").val();
+        //const voucherNo = $("#filter_voucher_no").val();
 
         // 🔄 Reset others
         $("#filter_income_category").val("0");
@@ -145,7 +145,7 @@
         $("#filter_transaction_account").val("0");
         $("#filter_transaction_paymentmode").val("0");
 
-        selectedFinanceDuration = "thismonth";
+        //selectedFinanceDuration = "thismonth";
         //setCurrentMonthDates();
 
         $("#filter_transaction_fromamount").val("");
@@ -155,8 +155,8 @@
         $("#filter_transaction_todate").val("");
 
         // 🔁 Restore
-        $("input[name='filter_transaction_type'][value='" + selectedType + "']").prop("checked", true);
-        $("#filter_voucher_no").val(voucherNo);
+        $("input[name='filter_transaction_type'][value='" + selectedType + "']").prop("checked", true).trigger("change");
+        $("#filter_voucher_no").val("");
 
         // Optional: reload with current preserved filters
         $("#filter_transaction_apply").click();
@@ -165,6 +165,24 @@
     $("input[name='filter_transaction_type']").on("change", function () {
         const type = $(this).val();
         toggleCategoryFilters(type);
+
+        // Voucher Prefix Text
+        let prefixText = "CR / EX";
+
+        let placeholder = "Enter Voucher No";
+        placeholder = "e.g. CR-01 / EX-01 / 1";
+
+        if (type === "INCOME") {
+            prefixText = "CR-";
+            placeholder = "e.g. CR-01 or 1";
+        }
+        else if (type === "EXPENSE") {
+            prefixText = "EX-";
+            placeholder = "e.g. EX-01 or 1";
+        }
+
+        $("#voucherTypeText").text(prefixText);
+        $("#filter_voucher_no").attr("placeholder", placeholder);
     });
     //TRANSACTIONS GRID - FILTER -- START -------------------------
 
@@ -925,7 +943,7 @@ function fetchTransactions(payload = {}) {
         },
         success: function (res) {
             if (res.status === "Success") {
-                renderTransactions(res.data);
+                renderTransactions(res.data.Transactions, res.data.Totals);
             } else {
                 $("#tableMain_Transactions table").html(`<tr><td class='text-danger p-3'>${res.message}</td></tr>`);
             }
@@ -939,8 +957,10 @@ function fetchTransactions(payload = {}) {
         }
     });
 }
-function renderTransactions(data) {
+function renderTransactions(data, totals) {
     console.log("render data:", data);
+    console.log("totals:", totals);
+
     let table = $("#tableMain_Transactions table");
 
     // Destroy if already initialized
@@ -960,8 +980,8 @@ function renderTransactions(data) {
         searching: true,         // Enable search functionality
 
         paging: false,
-        scrollY: "60vh",
-        scrollCollapse: false,
+        //scrollY: "60vh",
+        scrollCollapse: true,
         scrollX: true,
 
         columns: [
@@ -1089,51 +1109,44 @@ function renderTransactions(data) {
             }
 
         ],
+
         footerCallback: function () {
+
             let api = this.api();
-            // Remove old total row
-            $("#tableMain_Transactions tbody tr.total-row").remove();
 
-            let total = 0;
+            let totalAmount = parseFloat(totals?.TotalAmount || 0);
+            let voucherCounts = parseInt(totals?.VoucherCounts || 0);
 
-            api.rows({ page: 'current' }).every(function () {
-                let row = this.data();
-                let amount = parseFloat(row.Amount) || 0;
+            // Color class
+            let colorClass = "text-dark";
 
-                if (row.TransactionType === "INCOME") {
-                    total += amount;
-                } else {
-                    total -= amount;
-                }
-            });
-
-            // 🎯 Color logic
-            let colorClass = "text-dark"; // default (0)
-
-            if (total > 0) {
-                colorClass = "text-success"; // green
-            } else if (total < 0) {
-                colorClass = "text-danger"; // red
+            if (totalAmount > 0) {
+                colorClass = "text-success";
+            }
+            else if (totalAmount < 0) {
+                colorClass = "text-danger";
             }
 
-            // Sign display (+ / -)
-            let sign = total > 0 ? "" : total < 0 ? "-" : "";
+            // Footer cells
+            let footerCells = $(api.table().footer()).find('th');
 
-            // Append row
-            let totalRow = `
-                <tr class="total-row fw-bold">
-                    <td></td>
-                    <td class="text-end fw-bold">TOTAL</td>
-                    <td class="text-end fw-bold ${colorClass}">${sign} ${formatINR2(total)}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td> <!-- Actions -->
-                </tr>`;
-            $("#tableMain_Transactions tbody").append(totalRow);
+            // 1st Column
+            $(footerCells[0])
+                .html(`${voucherCounts} Voucher(s)`)
+                .addClass("text-center fw-bold");
+
+            // 2nd Column
+            $(footerCells[1])
+                .html("TOTAL")
+                .addClass("text-end fw-bold");
+
+            // 3rd Column
+            $(footerCells[2])
+                .html(formatINR2(totalAmount))
+                .removeClass("text-success text-danger text-dark")
+                .addClass(`text-end fw-bold ${colorClass}`);
         },
+
         initComplete: function () {
             $(this.api().table().header())
                 .find('th')
@@ -1142,6 +1155,7 @@ function renderTransactions(data) {
     });
 
 }
+
 //TRANSACTIONS GRID --END
 
 

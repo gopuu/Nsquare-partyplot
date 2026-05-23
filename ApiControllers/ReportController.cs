@@ -1360,7 +1360,7 @@ namespace ERPAdmin.ApiControllers
                 #endregion
 
                 #region PAGE 2
-                //document.NewPage();
+                document.NewPage();
 
                 /* ================= CHECKLIST ================= */
                 #region EVENT DAY SMART CHECKLIST 1
@@ -1543,21 +1543,54 @@ namespace ERPAdmin.ApiControllers
 
                 /* ================= FOOD WASTE ================= */
                 #region FOOD WASTE
-                // 🔹 TITLE
-                PdfPTable foodTitleTbl = new PdfPTable(1);
+                // 🔹 TITLE TABLE
+                PdfPTable foodTitleTbl = new PdfPTable(3);
                 foodTitleTbl.WidthPercentage = 100;
                 foodTitleTbl.SpacingBefore = 5f;
 
-                foodTitleTbl.AddCell(new PdfPCell(new Phrase(dtFoodWasteTitle.Rows[0][0].ToString(), boldFont7))
+                // Left Empty Cell
+                foodTitleTbl.AddCell(new PdfPCell(new Phrase(""))
                 {
-                    HorizontalAlignment = Element.ALIGN_CENTER,
-                    Padding = 5,
-                    BackgroundColor = new BaseColor(240, 240, 240),
                     Border = Rectangle.BOX,
                     BorderWidth = 0.2f,
-                    BorderColor = BaseColor.LIGHT_GRAY
+                    BorderColor = BaseColor.LIGHT_GRAY,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Padding = 5
                 });
+
+                // Center Title
+                foodTitleTbl.AddCell(new PdfPCell(new Phrase(
+                    dtFoodWasteTitle.Rows[0]["FoodWasteTitle"].ToString().ToUpper(),
+                    boldFont7))
+                {
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Padding = 5
+                });
+
+                // Right Side Location + DateTime
+                foodTitleTbl.AddCell(new PdfPCell(new Phrase(
+                    dtFoodWasteTitle.Rows[0]["LocationDateTime"].ToString(),
+                    normalFont7))
+                {
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Border = Rectangle.BOX,
+                    BorderWidth = 0.2f,
+                    BorderColor = BaseColor.LIGHT_GRAY,
+                    BackgroundColor = new BaseColor(240, 240, 240),
+                    Padding = 5
+                });
+
+                // Width Ratio
+                foodTitleTbl.SetWidths(new float[] { 25f, 50f, 25f });
+
                 document.Add(foodTitleTbl);
+
 
                 // 🔹 MAIN TABLE (5 columns)
                 PdfPTable wasteTbl = new PdfPTable(3);
@@ -1582,8 +1615,8 @@ namespace ERPAdmin.ApiControllers
 
                 // 🔹 HEADER ROW
                 FH("Sr No.");
-                FH("Items");
-                FH("Weight (Kg)");
+                FH("Item Name");
+                FH("Weight (KG/Litre)");
 
                 int srno = 1;
 

@@ -30,14 +30,18 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetIncomeExpenseTransactionList([FromBody] GetIncomeExpenseTransactionRequest request)
         {
             apiResponse apiResponse = new apiResponse();
+
             List<IncomeExpenseTransactionModel> list = new List<IncomeExpenseTransactionModel>();
+
+            object totals = new();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
                     return errorResult!;
-
-                DataTable dt = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("GetIncomeExpenseTransaction", con))
@@ -55,7 +59,7 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@FromDate", (object?)request.FromDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ToDate", (object?)request.ToDate ?? DBNull.Value);
- 
+
                     cmd.Parameters.AddWithValue("@FromAmount", (object?)request.FromAmount ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ToAmount", (object?)request.ToAmount ?? DBNull.Value);
 
@@ -63,72 +67,107 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@VoucherNo", (object?)request.VoucherNo ?? DBNull.Value);
 
                     con.Open();
-                    SqlDataReader dr = cmd.ExecuteReader();
-                    dt.Load(dr);
-                }
 
-                foreach (DataRow row in dt.Rows)
-                {
-                    string transactionType = Convert.ToString(row["TransactionType"]);
-                    string billFileName = Convert.ToString(row["BillFile"]);
-
-                    string billFilePath = string.Empty;
-
-                    if (!string.IsNullOrWhiteSpace(billFileName))
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
-                        if (transactionType == "INCOME")
+                        //---------------------------------------------------
+                        // RESULT SET 1 : TRANSACTIONS
+                        //---------------------------------------------------
+
+                        while (dr.Read())
                         {
-                            billFilePath = $"{domainUrl}/uploads/org/{domain}/IncomeTransactions/{billFileName}";
+                            string transactionType = Convert.ToString(dr["TransactionType"]);
+                            string billFileName = Convert.ToString(dr["BillFile"]);
+
+                            string billFilePath = string.Empty;
+
+                            if (!string.IsNullOrWhiteSpace(billFileName))
+                            {
+                                if (transactionType == "INCOME")
+                                {
+                                    billFilePath = $"{domainUrl}/uploads/org/{domain}/IncomeTransactions/{billFileName}";
+                                }
+                                else if (transactionType == "EXPENSE")
+                                {
+                                    billFilePath = $"{domainUrl}/uploads/org/{domain}/ExpenseTransactions/{billFileName}";
+                                }
+                            }
+
+                            list.Add(new IncomeExpenseTransactionModel
+                            {
+                                Id = Convert.ToInt64(dr["Id"]),
+                                TransactionType = transactionType,
+
+                                AccountId = Convert.ToInt64(dr["AccountId"]),
+                                AccountName = Convert.ToString(dr["AccountName"]),
+
+                                CategoryId = Convert.ToInt64(dr["CategoryId"]),
+                                CategoryName = Convert.ToString(dr["CategoryName"]),
+
+                                SubCategoryId = dr["SubCategoryId"] == DBNull.Value
+                                    ? (long?)null
+                                    : Convert.ToInt64(dr["SubCategoryId"]),
+
+                                SubCategoryName = Convert.ToString(dr["SubCategoryName"]),
+
+                                Amount = Convert.ToDecimal(dr["Amount"]),
+
+                                TransactionDate = Convert.ToString(dr["TransactionDate"]),
+                                TransactionDate_Format = Convert.ToString(dr["TransactionDate_Format"]),
+
+                                PaymentModeId = dr["PaymentModeId"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToInt64(dr["PaymentModeId"]),
+
+                                PaymentModeName = Convert.ToString(dr["PaymentModeName"]),
+
+                                TransactionId = Convert.ToString(dr["TransactionId"]),
+                                Notes = Convert.ToString(dr["Notes"]),
+
+                                VoucherNo = Convert.ToString(dr["VoucherNo"]),
+
+                                VoucherNo_Num = dr["VoucherNo_Num"] == DBNull.Value
+                                    ? (long?)null
+                                    : Convert.ToInt64(dr["VoucherNo_Num"]),
+
+                                ChequeBank = Convert.ToString(dr["ChequeBank"]),
+                                ChequeNo = Convert.ToString(dr["ChequeNo"]),
+
+                                ChequeDate = dr["ChequeDate"] == DBNull.Value ||
+                                             string.IsNullOrWhiteSpace(dr["ChequeDate"]?.ToString())
+                                                ? string.Empty
+                                                : Convert.ToDateTime(dr["ChequeDate"]).ToString("yyyy-MM-dd"),
+
+                                BillFile = billFilePath
+                            });
                         }
-                        else if (transactionType == "EXPENSE")
+
+                        //---------------------------------------------------
+                        // RESULT SET 2 : TOTALS
+                        //---------------------------------------------------
+
+                        if (dr.NextResult())
                         {
-                            billFilePath = $"{domainUrl}/uploads/org/{domain}/ExpenseTransactions/{billFileName}";
+                            if (dr.Read())
+                            {
+                                totals = new
+                                {
+                                    VoucherCounts = Convert.ToInt32(dr["VoucherCounts"]),
+                                    TotalAmount = Convert.ToDecimal(dr["TotalAmount"])
+                                };
+                            }
                         }
                     }
-
-                    list.Add(new IncomeExpenseTransactionModel
-                    {
-                        Id = Convert.ToInt64(row["Id"]),
-                        TransactionType = transactionType,
-
-                        AccountId = Convert.ToInt64(row["AccountId"]),
-                        AccountName = Convert.ToString(row["AccountName"]),
-
-                        CategoryId = Convert.ToInt64(row["CategoryId"]),
-                        CategoryName = Convert.ToString(row["CategoryName"]),
-
-                        SubCategoryId = row["SubCategoryId"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["SubCategoryId"]),
-                        SubCategoryName = Convert.ToString(row["SubCategoryName"]),
-
-                        Amount = Convert.ToDecimal(row["Amount"]),
-
-                        TransactionDate = Convert.ToString(row["TransactionDate"]),
-                        TransactionDate_Format = Convert.ToString(row["TransactionDate_Format"]),
-
-                        PaymentModeId = row["PaymentModeId"] == DBNull.Value ? 0 : Convert.ToInt64(row["PaymentModeId"]),
-                        PaymentModeName = Convert.ToString(row["PaymentModeName"]),
-
-                        TransactionId = Convert.ToString(row["TransactionId"]),
-                        Notes = Convert.ToString(row["Notes"]),
-
-                        VoucherNo = Convert.ToString(row["VoucherNo"]),
-                        VoucherNo_Num = row["VoucherNo_Num"] == DBNull.Value ? (long?)null : Convert.ToInt64(row["VoucherNo_Num"]),
-
-                        ChequeBank = Convert.ToString(row["ChequeBank"]),
-                        ChequeNo = Convert.ToString(row["ChequeNo"]),
-
-                        ChequeDate = row["ChequeDate"] == DBNull.Value ||
-                                     string.IsNullOrWhiteSpace(row["ChequeDate"]?.ToString())
-                                        ? string.Empty
-                                        : Convert.ToDateTime(row["ChequeDate"]).ToString("yyyy-MM-dd"),
-
-                        BillFile = billFilePath
-                    });
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = "Transactions fetched successfully!";
-                apiResponse.data = list;
+
+                apiResponse.data = new
+                {
+                    Transactions = list,
+                    Totals = totals
+                };
 
                 return Ok(apiResponse);
             }

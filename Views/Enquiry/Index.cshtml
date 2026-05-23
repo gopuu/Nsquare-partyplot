@@ -228,7 +228,6 @@
                         <input class="form-control form-control-sm datetimepicker flatpickr-input" id="eventDate" type="text" placeholder="dd/mm/yyyy" data-options="{&quot;disableMobile&quot;:true,&quot;dateFormat&quot;:&quot;d/m/Y&quot;}" readonly="readonly">
                         <div class="text-danger small mt-1 d-none" id="eventDateErr">Please enter date</div>
                         <div id="slotStatusMsg" class="small fw-semibold p-2 mt-2 rounded d-none"></div>
-                        <div id="slotStatusWarning" class="small fw-semibold p-1 mt-1 rounded d-none fs-9"></div>
                     </div>
 
                     <!-- START TIME FIELD -->
@@ -443,12 +442,17 @@
                     <!-- Row 6 + 7 Combined -->
                     <div class="row">
 
+                        <!-- Warning Msg -->
+                        <div class="col-md-6">
+                            <div id="slotStatusWarning" class="small fw-semibold p-1 mt-1 rounded d-none fs-9"></div>
+                        </div>
+
                         <!-- Remarks (Left) -->
                         <div class="col-md-6">
                             <label for="remark" class="form-label">Remarks / Notes</label>
                             <textarea class="form-control form-control-sm"
                                       id="remark"
-                                      rows="3"
+                                      rows="4"
                                       placeholder="Remarks"></textarea>
                         </div>
 
@@ -489,8 +493,8 @@
                             </div>
 
                         </div>
-
                     </div>
+                    
                 </form>
             </div>
             <div class="modal-footer justify-content-end">

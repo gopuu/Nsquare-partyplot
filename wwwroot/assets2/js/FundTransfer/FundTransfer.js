@@ -436,7 +436,7 @@ function loadFundTransferCategory() {
         success: function (response) {
             if (response.status === "Success") {
                 let data = response.data;
-
+                
                 let ddlCategory = $("#filter_ddlCategory, #ddlCategory");
                 // Clear existing
                 ddlCategory.empty();
