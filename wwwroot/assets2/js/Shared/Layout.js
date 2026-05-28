@@ -30,7 +30,27 @@ AppSignalR.subscribeWallet(function (data) {
 });
 
 //WHATSAPP -- START
-function sendWhatsAppMessage(requestData=null) {
+function sendWhatsAppMessage({mobileNo = '', templateName = '', variables = [], actionBy = 0, isPromotional = false}) {
+
+    if (!mobileNo || !templateName)
+        return;
+
+    let requestData = {
+        companyId: Number(sessionStorage.getItem("companyid") ?? 0),
+        mobileNo: `91${mobileNo}`,
+        messageType: "TEMPLATE",
+        messageCount: 1,
+
+        referenceId: generateGUID(),
+        templateId: null,
+        isPromotional: isPromotional,
+        actionBy: Number(actionBy),
+
+        templateName: templateName,
+        message: variables.join('&')
+    };
+
+    console.log("requestData:", requestData);
 
     $.ajax({
         url: "/api/Wallet/SendWhatsApp", // 🔥 update controller name

@@ -1729,7 +1729,7 @@ function enableDragDrop() {
                         console.error("Error parsing deal data:", err);
                         return;
                     }
-                    
+
                     //OPEN BOOKING MODAL
                     const dateStr = dealData.EventDate;       // for display
                     const dateStr_Format = dealData.EventDate_Format1;
@@ -1815,23 +1815,6 @@ function saveFollowUpAndMoveDeal() {
         success: function (res) {
             if (res.status === "Success") {
                 handleApiSuccess('Saved!');
-                /*
-                var requestData = {
-                    companyId: Number(sessionStorage.getItem("companyid") ?? 0),
-                    mobileNo: "8306588313", //enquiryData.Contact,
-                    messageType: "TEMPLATE",
-                    messageCount: 1,
-                    referenceId: generateGUID(), // IMPORTANT (unique)
-                    templateId: null,
-                    isPromotional: false,
-                    actionBy: Number(sessionStorage.getItem("userId") ?? 0),
-
-                    templateName: "infinity_enquiry",
-                    //message: "{Name}&{BName}&{Mobile}&{OrgName}" //Customer Name + banquet hall + banquet contact + banquet company
-                    message: "Gopal&How&are&you2"
-                };
-                sendWhatsAppMessage(requestData);
-                */
 
                 // Close modal
                 $("#followupModal").modal("hide");
@@ -2681,6 +2664,7 @@ document.addEventListener("DOMContentLoaded", function () {
             success: function (response) {
                 if (response.status === "Success") {
                     console.log("response data:", response.data);
+
                     loadEnquiryList();
                     handleApiSuccess('Saved!');
                     loadEnquiryDeals();
@@ -2689,6 +2673,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     if (isConfirmed) {
                         resetBooking();
+
                         //OPEN BOOKING MODAL
                         const dateStr = enquiryData.EventDate;       // for display
                         //const dateStr_Format = enquiryData.EventDate_Format1;
@@ -2728,20 +2713,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         $("#title_bookingModal").text("Add Booking Details");
                         $("#bookingModal").modal("show");
 
-                        var requestData = {
-                            companyId: Number(sessionStorage.getItem("companyid") ?? 0),
-                            mobileNo: enquiryData.Contact,
-                            messageType: "TEMPLATE",
-                            messageCount: 1,
-                            referenceId: generateGUID(), // IMPORTANT (unique)
-                            templateId: null,
-                            isPromotional: false,
-                            actionBy: Number(sessionStorage.getItem("userId") ?? 0),
-
-                            templateName: "infinity_enquiry",
-                            message: "Gopal&Product A&5000"
-                        };
-                        sendWhatsAppMessage(requestData);
                     }
                     // TODO: refresh deal list if you have one
                     // loadDealList();
@@ -4309,7 +4280,6 @@ function saveBooking() {
 
     // 🔹 2. Build Food Packages JSON --here
     const foodPackages = [];
-
     $(".foodPackageContainer > .food-block, #foodPackageContainer > .food-row").each(function () {
         const $row = $(this);
 
@@ -4385,6 +4355,7 @@ function saveBooking() {
         success: function (response) {
             //console.log("save response:", response);
             if (response.status === "Success") {
+
                 handleApiSuccess();
                 resetBooking();
                 loadEnquiryList();

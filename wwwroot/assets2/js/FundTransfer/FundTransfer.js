@@ -43,7 +43,8 @@ $(document).ready(function () {
     });
 
     // SAVE FUND TRANSFER
-    $("#btnSaveFundTransfer").click(function () {
+    $("#btnSaveFundTransfer").click(function (event) {
+        event.preventDefault();
         let model = {
             Id: $("#FundTransferId").val(),
             FromAccountId: $("#ddlFromAccount").val(),

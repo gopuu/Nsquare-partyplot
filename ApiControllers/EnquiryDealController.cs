@@ -22,17 +22,17 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class EnquiryDealController : MasterController
     {
-        //private readonly IConfiguration _configuration;
-        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
         private readonly ImageUploadService _imageUploadService;
         private readonly string domainUrl;
+        private readonly WhatsAppService _whatsAppService;
         public EnquiryDealController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, 
-            ImageUploadService imageUploadService)
+            ImageUploadService imageUploadService, WhatsAppService whatsAppService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
             _imageUploadService = imageUploadService;
+            _whatsAppService = whatsAppService;
             //_configuration = configuration;
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
@@ -170,8 +170,10 @@ namespace ERPAdmin.ApiControllers
                     int endHH = 0, endMM = 0;
                     string endAMPM = "";
 
-                    string bName = "", orgName = "";
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_orgMobile = "", whatsapp_orgName = "", 
+                        whatsapp_client_contactno = "", templateName = "";
                     int companyId = 0;
+                    bool isSendMsg = false;
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -192,12 +194,39 @@ namespace ERPAdmin.ApiControllers
                             endMM = reader["EndMM"] != DBNull.Value ? Convert.ToInt32(reader["EndMM"]) : 0;
                             endAMPM = reader["EndAMPM"]?.ToString();
 
-                            bName = reader["BName"]?.ToString() ?? "";
-                            orgName = reader["OrgName"]?.ToString() ?? "";
+                            whatsapp_name = reader["Name"]?.ToString() ?? "";
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+                            whatsapp_client_contactno = model.Contact ?? "";
                             companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
                     }
                     con.Close();
+
+                    //NOTIFY 1 SEND WHATSAPP - NEW ENQUIRY CREATED
+                    if (model.Id == 0 && isSendMsg)
+                    {
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: model.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
 
                     apiResponse.message = model.Id > 0 ? "EnquiryDeal updated successfully!" : "EnquiryDeal inserted successfully!";
                     apiResponse.status = "Success";
@@ -654,3 +683,22 @@ namespace ERPAdmin.ApiControllers
 
     }
 }
+
+
+/* WHATSAPP via JS / AJAX
+var requestData = {
+    companyId: Number(sessionStorage.getItem("companyid") ?? 0),
+    mobileNo: "918306588313", //enquiryData.Contact,
+    messageType: "TEMPLATE",
+    messageCount: 1,
+    referenceId: generateGUID(), // IMPORTANT (unique)
+    templateId: null,
+    isPromotional: false,
+    actionBy: Number(sessionStorage.getItem("userId") ?? 0),
+
+    templateName: "infinity_enquiry_clone_c39cy",
+    //message: "{Name}&{BName}&{Mobile}&{OrgName}" //Customer Name + banquet hall + banquet contact + banquet company
+    message: "Gopalbhai&for your enquiry of Rama Hall&8866296682&Ramayana Banquet Hall"
+};
+sendWhatsAppMessage(requestData);
+*/

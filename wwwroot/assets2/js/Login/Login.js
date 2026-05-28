@@ -70,6 +70,7 @@ $(document).ready(function () {
                     sessionStorage.setItem('companyid', response.data.companyid);
                     sessionStorage.setItem('companyname', response.data.companyname);
                     sessionStorage.setItem('companylogo', response.data.companylogo);
+                    sessionStorage.setItem('companycontact', response.data.phoneno);
 
                     window.location.href = '/Home/Dashboard';
                 }

@@ -387,7 +387,7 @@ namespace ERPAdmin.ApiControllers
                         amount = deductedAmount,
                         type = "DEBIT"
                     });
-
+                
                 return Ok(new apiResponse
                 {
                     status = "Success",
@@ -415,13 +415,13 @@ namespace ERPAdmin.ApiControllers
         {
             try
             {
-                if (request.MobileNo.Length != 10)
+                if (request.MobileNo.Length != 12)
                     return "Fail";
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-                string apiUrl = "https://crm.officialwa.com/api/meta/v19.0/967450513117306/messages";
-
+                string apiUrl = "https://crm.officialwa.com/api/meta/v19.0/1094783270388218/messages";
+                
                 string[] msgParts = request.Message.Split('&');
 
                 var parametersList = msgParts.Select(x => new
@@ -461,7 +461,7 @@ namespace ERPAdmin.ApiControllers
                     client.DefaultRequestHeaders.Clear();
 
                     client.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", "lcWjpW63LuhJjmTHvGjmQIF6NFYwNqIdnxzcXsRWmNw1yVT1AchnxUikZTxyUEFQU4XAlQhe4YRqEapuRYQHff38jkQvZe7oelrsRKKmlS7oPyNPEIHREFTSA0uIO7lpuDyVU5ERVJTQ09SRQFELw0cfA1xE5tHKIN2tH7WcwwrPybRY5AZcZNAiz72VU5ERVJTQ09SRQGb5oMq1LF5p9qlJ2F5b0EdjBwREFTSAREFTSAwhVwSStOSCg");
+                        new AuthenticationHeaderValue("Bearer", "ypGdt57xJYtdOhTjkVyltE5AAPafjdFCi1WT9MPEoQj0XtidBDMttprF0REFTSAnYF6jIPxj9Cpn30bJDlIsRT3vREFTSARpb421ALJMH0DGKR7jNRVdGXD8vzaOVU5ERVJTQ09SRQ3zEnI6ZY");
 
                     //var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var content = new StringContent(jsonPayload);

@@ -23,17 +23,20 @@ namespace ERPAdmin.ApiControllers
         private string connString = string.Empty;
         private readonly IWebHostEnvironment _env;
         private readonly string domainUrl;
+        private readonly WhatsAppService _whatsAppService;
 
-        public Booking_PaymentsController(IConfiguration configuration, IWebHostEnvironment env,  IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        public Booking_PaymentsController(IConfiguration configuration, IWebHostEnvironment env,  IHttpContextAccessor httpContextAccessor, 
+            ImageUploadService imageUploadService, WhatsAppService whatsAppService) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             _env = env;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+            _whatsAppService = whatsAppService;
         }
 
         [HttpPost]
         [Route("SaveBookingPayment")]
-        public IActionResult SaveBookingPayment([FromBody] SaveBookingPaymentRequest model)
+        public async Task<IActionResult> SaveBookingPayment([FromBody] SaveBookingPaymentRequest model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -49,13 +52,14 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 long paymentId = 0;
+                long bookingId = 0;
 
                 using (SqlConnection conn = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveBooking_Payments", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = model.BookingId;
+                    bookingId = model.BookingId; // assign here to use later in WhatsApp logic
+                    cmd.Parameters.Add("@BookingId", SqlDbType.BigInt).Value = bookingId;
                     cmd.Parameters.Add("@AccountId", SqlDbType.BigInt).Value = model.AccountId;
                     cmd.Parameters.Add("@ModeId", SqlDbType.BigInt).Value = model.ModeId;
                     cmd.Parameters.Add("@DateOfPayment", SqlDbType.VarChar).Value = model.DateOfPayment;
@@ -89,9 +93,62 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add(outputParam);
 
                     conn.Open();
-                    cmd.ExecuteNonQuery();
 
-                    paymentId = outputParam.Value != DBNull.Value ? Convert.ToInt64(outputParam.Value) : 0;
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                           whatsapp_client_contactno = "", templateName = "";
+
+                    int companyId = 0;
+
+                    bool isSendMsg = false;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            //bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
+                            paymentId = reader["PaymentId"] != DBNull.Value ? Convert.ToInt64(reader["PaymentId"]) : 0;
+
+                            whatsapp_client_contactno = reader["Client_Contact"]?.ToString() ?? "";
+
+                            whatsapp_name = reader["Name"]?.ToString() ?? "";
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_EDate = reader["EDate"]?.ToString() ?? "";
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
+                        }
+                    }
+
+                    paymentId = outputParam.Value != DBNull.Value ? Convert.ToInt64(outputParam.Value) : paymentId;
+
+                    //NOTIFY 3 SEND WHATSAPP - NEW PAYMENT
+                    if (isSendMsg)
+                    {
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            model.Amount.ToString(),
+                            whatsapp_bName,
+                            whatsapp_EDate,
+                            model.BookingId.ToString(),
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: model.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
+
                 }
 
                 apiResponse.status = "Success";

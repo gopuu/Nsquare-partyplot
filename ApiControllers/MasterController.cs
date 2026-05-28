@@ -24,12 +24,7 @@ namespace ERPAdmin.ApiControllers
             _connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
 
-        protected bool TryGetConnectionAndDomain(
-            ControllerContext controllerContext,
-            HttpRequest request,
-            out string connString,
-            out string domain,
-            out IActionResult? errorResult)
+        protected bool TryGetConnectionAndDomain(ControllerContext controllerContext, HttpRequest request, out string connString, out string domain, out IActionResult? errorResult)
         {
             connString = _connClass.GetChildConnectionString();
             domain = _connClass.GetDomainName();

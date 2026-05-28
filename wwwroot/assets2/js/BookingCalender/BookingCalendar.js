@@ -6653,6 +6653,8 @@ function saveBooking() {
 
                 var paymentId = response.data.PaymentId;
                 if (paymentId > 0 && bookingData.BookingId == 0) {
+                    var bookingId = response.data.BookingId;
+
                     // ✅ Swal Confirmation
                     Swal.fire({
                         title: 'Download Receipt?',
@@ -6666,7 +6668,7 @@ function saveBooking() {
                     }).then((result) => {
                         var payload = {
                             PaymentId: paymentId,
-                            BookingId: response.data.BookingId,
+                            BookingId: bookingId,
                             ActionBy: userId
                         }
                         var url = "/api/Booking_Payments/DownloadPaymentReceipt";

@@ -16,10 +16,7 @@ namespace ERPAdmin.ApiControllers
     [ApiController]
     public class LocalityController : MasterController
     {
-        //private readonly IConfiguration _configuration;
-        //private readonly ConnClass _connClass;
         private string connString = string.Empty;
-
         public LocalityController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             //_configuration = configuration;
@@ -130,7 +127,6 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("DeleteLocality")]
-
         public IActionResult DeleteLocality([FromBody] DeleteLocality model)
         {
             apiResponse apiResponse = new apiResponse();
@@ -160,64 +156,6 @@ namespace ERPAdmin.ApiControllers
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
                 apiResponse.message = ex.Message;
-                apiResponse.status = "Error";
-                return StatusCode(500, apiResponse);
-            }
-        }
-
-        [HttpGet]
-        [Route("GetLocalityDetailById/{id}")]
-        private IActionResult GetLocalityDetailById(Int64 id)
-        {
-            apiResponse apiResponse = new apiResponse();
-            //dynamic response = new ExpandoObject();
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                { return errorResult!; }
-                DataSet ds = new DataSet();
-                SqlConnection conn = new SqlConnection(connString);
-                {
-                    conn.Open();
-                    SqlCommand cmd = new SqlCommand("GetLocalityList", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@id", SqlDbType.BigInt).Value = id;
-                    SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                    adapter.Fill(ds);
-                    conn.Close();
-                }
-
-                Locality locality = new Locality();
-                DataTable dt = ds.Tables[0];
-
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        locality.Id = Convert.ToInt64(dr["id"]);
-                        locality.Name = Convert.ToString(dr["locality_name"]);
-                        locality.CityId = Convert.ToInt64(dr["city_id"]);
-                        locality.CityName = Convert.ToString(dr["city_name"]);
-                    }
-                    apiResponse.message = "Locality fetched successfully!";
-                    apiResponse.data = locality;
-                }
-                else
-                {
-                    apiResponse.message = "Data not found!";
-                    apiResponse.data = null;
-                    //apiResponse.status = "Error";
-                }
-                apiResponse.status = "Success";
-                return Ok(apiResponse); //return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                //Log Error
-                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
-
-                apiResponse.message = ex.Message;
-                apiResponse.data = null;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
             }

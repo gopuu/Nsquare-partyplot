@@ -1,5 +1,7 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Office2010.Excel;
+//using DocumentFormat.OpenXml.EMMA;
+//using DocumentFormat.OpenXml.Office2010.Excel;
+//using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Razorpay.Api;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -26,10 +29,15 @@ namespace ERPAdmin.ApiControllers
         private readonly string domainUrl;
         private string connString = string.Empty;
         private readonly IWebHostEnvironment _env;
+        private readonly WhatsAppService _whatsAppService;
+        private readonly IInvoicePdfService _invoicePdfService;
 
-        public CustomerInvoiceController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) 
+        public CustomerInvoiceController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor, 
+            WhatsAppService whatsAppService, IInvoicePdfService invoicePdfService) : base(configuration, httpContextAccessor) 
         {
             _env = env;
+            _whatsAppService = whatsAppService;
+            _invoicePdfService = invoicePdfService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
@@ -375,7 +383,7 @@ namespace ERPAdmin.ApiControllers
 
                 // Header row
                 foreach (DataRow hRow in headerTableDB.Rows)
-                    table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
+                    table.AddCell(Helper.Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
                 // Data rows
@@ -396,7 +404,7 @@ namespace ERPAdmin.ApiControllers
                             _ => Element.ALIGN_RIGHT
                         };
 
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                        table.AddCell(Helper.Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
                     }
                 }
 
@@ -436,7 +444,7 @@ namespace ERPAdmin.ApiControllers
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                Utils.deleteOldFiles(folder, "CustomerInvoice_*.pdf");
+                Helper.Utils.deleteOldFiles(folder, "CustomerInvoice_*.pdf");
 
                 string fileName = $"CustomerInvoice_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 string filePath = Path.Combine(folder, fileName);
@@ -576,7 +584,7 @@ namespace ERPAdmin.ApiControllers
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-                Utils.deleteOldFiles(folder, "CustomerInvoice_*.xlsx");
+                Helper.Utils.deleteOldFiles(folder, "CustomerInvoice_*.xlsx");
 
                 string fileName = $"CustomerInvoice_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 string filePath = Path.Combine(folder, fileName);
@@ -770,7 +778,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("SaveCustomerInvoice")]
-        public IActionResult SaveCustomerInvoice([FromBody] SaveCustomerInvoiceRequest request)
+        public async Task<IActionResult> SaveCustomerInvoice([FromBody] SaveCustomerInvoiceRequest request)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -781,7 +789,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
-                long invoiceId;
+                long invoiceId=0;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveCustomerInvoice", con))
@@ -851,7 +859,102 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
 
                     con.Open();
-                    invoiceId = Convert.ToInt64(cmd.ExecuteScalar());
+                    //invoiceId = Convert.ToInt64(cmd.ExecuteScalar());
+
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_url = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                           whatsapp_client_contactno = "", templateName = "", templateName_Feedback = "";
+
+                    int companyId = 0;
+
+                    bool isSendMsg = false, isSendMsg_Feedback = false;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            //bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
+                            invoiceId = reader["CustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["CustomerInvoiceId"]) : 0;
+
+                            whatsapp_client_contactno = reader["Client_Contact"]?.ToString() ?? "";
+
+                            whatsapp_name = reader["Name"]?.ToString() ?? "";
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_EDate = reader["EDate"]?.ToString() ?? "";
+
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
+
+                            templateName_Feedback = reader["TempName_Feedback"]?.ToString() ?? "";
+                            isSendMsg_Feedback = reader["IsSendMsg_Feedback"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg_Feedback"]) : false;
+                        }
+                    }
+
+                    //NOTIFY 4 SEND WHATSAPP - NEW INVOICE
+                    if (request.Id==0 && isSendMsg)
+                    {
+                        //Generate Invoice PDF
+                        CustomerInvoiceReportRequest pdfRequest = new CustomerInvoiceReportRequest
+                        {
+                            BookingId = request.BookingId,
+                            InvoiceNo = request.InvoiceNo,
+                            GSTInvoiceNo = request.GSTInvoiceNo,
+                            ProformaInvoiceNo = request.ProformaInvoiceNo,
+                            ActionBy = request.ActionBy
+                        };
+                        string fileUrl = await _invoicePdfService.GenerateCustomerInvoicePdf(pdfRequest, connString, domain, domainUrl);
+                        whatsapp_url = fileUrl;
+
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_url,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: request.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
+
+                    //NOTIFY 5 SEND WHATSAPP - FEEDBACK REQUEST WHEN INVOICE GENERATED
+                    if (request.Id == 0 && isSendMsg_Feedback)
+                    {
+                        whatsapp_url = $"{domainUrl}/feedbackForm" ;
+
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_EDate,
+                            whatsapp_url,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName_Feedback,
+                            variables: variables,
+                            actionBy: request.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
+
                 }
 
                 apiResponse.status = "Success";
@@ -984,20 +1087,13 @@ namespace ERPAdmin.ApiControllers
         //Send Invoice
         [HttpPost]
         [Route("SendCustomerInvoice")]
-        public IActionResult SendCustomerInvoice([FromBody] SendInvoiceRequest model)
+        public async Task<IActionResult> SendCustomerInvoice([FromBody] SendInvoiceRequest model)
         {
             apiResponse apiResponse = new apiResponse();
             try
             {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext,
-                        Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SendCustomerInvoice", con))
@@ -1006,6 +1102,7 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@BookingId", model.BookingId);
                     cmd.Parameters.AddWithValue("@InvoiceNo", model.InvoiceNo ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@GSTInvoiceNo", model.GSTInvoiceNo ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@ProformaInvoiceNo", model.ProformaInvoiceNo ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmailId", model.EmailId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@ContactNo", model.ContactNo ?? (object)DBNull.Value);
@@ -1014,16 +1111,64 @@ namespace ERPAdmin.ApiControllers
 
                     con.Open();
 
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_url = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                           whatsapp_client_contactno = "", templateName = "";
+                    int companyId = 0;
+                    bool isSendMsg = false;
+
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            apiResponse.status =
-                                Convert.ToInt32(reader["Status"]) == 1 ? "Success" : "Error";
+                            apiResponse.status = Convert.ToInt32(reader["Status"]) == 1 ? "Success" : "Error";
+                            apiResponse.message = reader["Message"]?.ToString() ?? "Unknown response";
 
-                            apiResponse.message =
-                                reader["Message"]?.ToString() ?? "Unknown response";
+                            whatsapp_client_contactno = model.WhatsappNo ?? "";
+
+                            whatsapp_name = reader["Name"]?.ToString() ?? "";
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
+                    }
+
+                    //NOTIFY 4 SEND WHATSAPP - REQUEST SEND INVOICE
+                    if (isSendMsg)
+                    {
+                        //Generate Invoice PDF
+                        CustomerInvoiceReportRequest pdfRequest = new CustomerInvoiceReportRequest
+                        {
+                            BookingId = model.BookingId,
+                            InvoiceNo = model.InvoiceNo,
+                            GSTInvoiceNo = model.GSTInvoiceNo,
+                            ProformaInvoiceNo = model.ProformaInvoiceNo,
+                            ActionBy = model.ActionBy
+                        };
+                        string fileUrl = await _invoicePdfService.GenerateCustomerInvoicePdf(pdfRequest, connString, domain, domainUrl);
+                        whatsapp_url = fileUrl;
+
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_url,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: model.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
                     }
 
                     con.Close();

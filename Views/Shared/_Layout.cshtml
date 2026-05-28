@@ -843,13 +843,46 @@
                                 </ul>
                             </li>
 
-                            <li>
-                                <a class="dropdown-item @(currentController == "Settings" ? "active" : "")" href="/Settings">
+                            <!--Settings-->
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "Settings" ? "active" : "")"
+                                   id="settingsMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="settings"></span>Settings
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="me-2 uil" data-feather="settings"></span>Settings
+                                        </span>
                                     </div>
                                 </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="dropdown-item" href="/Settings">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="file-text"></span>
+                                                General Settings
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/NotificationTemplate">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="tool"></span>
+                                                Manage Notifications
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                </ul>
                             </li>
+
+
                             <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
                                     <div class="dropdown-item-wrapper">

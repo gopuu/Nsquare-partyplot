@@ -5,6 +5,7 @@
     {
         public long BookingId { get; set; }
         public long? InvoiceNo { get; set; }
+        public string? GSTInvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
         public string? EmailId { get; set; }
         public string? ContactNo { get; set; }

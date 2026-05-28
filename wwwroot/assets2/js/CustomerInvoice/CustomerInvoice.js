@@ -405,11 +405,12 @@ $(function () {
         $("#sendProformaNo").val(proformaNo);
 
         // 🔹 Change modal title dynamically
-        if (proformaNo) {
+        /*if (proformaNo) {
             $("#sendInvoiceModal .modal-title").text("Send Proforma Invoice");
         } else {
             $("#sendInvoiceModal .modal-title").text("Send Invoice");
-        }
+        }*/
+        $("#sendInvoiceModal .modal-title").text("Send Invoice");
 
         $("#sendEmail").val("");
         $("#sendContact").val("");
@@ -458,8 +459,9 @@ $(function () {
 
         const payload = {
             BookingId: parseInt($("#sendBookingId").val()),
-            InvoiceNo: $("#sendInvoiceNo").val() || "",
-            ProformaInvoiceNo: $("#sendProformaNo").val() || "",
+            InvoiceNo: $("#sendInvoiceNo").val() || null,
+            GSTInvoiceNo: $("#sendGSTInvoiceNo").val() || null,
+            ProformaInvoiceNo: $("#sendProformaNo").val() || null,
             EmailId: email,
             ContactNo: contact,
             WhatsappNo: whatsapp,
@@ -2862,7 +2864,7 @@ function renderTable(data, totals) {
                                    data-bookingid="${row.BookingId}"
                                    data-invoiceno="${row.InvoiceNo}"
                                    data-gstinvoiceno="${row.GSTInvoiceNo}"
-                                   data-proformano="" disabled>
+                                   data-proformano="">
                                 <i class="fa fa-paper-plane me-1"></i>Coming Soon
                             </button>`
                         : '-'
@@ -3076,7 +3078,7 @@ function loadPaymentCollection(monthDuration, fromDate = null, toDate = null) {
             console.log("res count PaymentCollection finance:", res);
             if (res.status === "Success" && res.data) {
                 //PAYMENT COLLECTION
-                const total = res.data.TotalAmount || 1; // avoid divide by zero
+                const total = res.data.TotalAmount; // avoid divide by zero
                 const paid = res.data.PaidAmount;
                 const pending = res.data.PendingAmount;
 

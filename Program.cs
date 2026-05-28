@@ -27,6 +27,11 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddEndpointsApiExplorer();
 // Register services
 builder.Services.AddScoped<ImageUploadService>();
+builder.Services.AddScoped<WhatsAppService>();
+builder.Services.AddScoped<IInvoicePdfService, InvoicePdfService>();
+builder.Services.AddHostedService<EventReminderWorker>();
+builder.Services.AddScoped<EventReminderService>();
+
 //ConnCLass
 //builder.Services.AddSingleton<ConnClass>(); // Or use Scoped if needed
 //excel upload

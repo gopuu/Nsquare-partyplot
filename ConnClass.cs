@@ -85,7 +85,7 @@ namespace ERPAdmin
                 _childConnString = string.Empty;
             }
         }
-        private string GetDomainOrTenant()
+        public string GetDomainOrTenant()
         {
             // 1️⃣ First, check custom header (For Mobile Apps)
             var request = _httpContextAccessor.HttpContext?.Request;

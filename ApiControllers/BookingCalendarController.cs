@@ -4,6 +4,7 @@ using ERPAdmin.ApiControllers;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
+using ERPAdmin.Services;
 using Humanizer;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
@@ -25,12 +26,14 @@ namespace ERPAdmin.ApiControllers
         private readonly string domainUrl;
         private string connString = string.Empty;
         private readonly IWebHostEnvironment _env;
+        private readonly WhatsAppService _whatsAppService;
 
-        public BookingCalendarController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
+        public BookingCalendarController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor, WhatsAppService whatsAppService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
             _env = env;
+            _whatsAppService = whatsAppService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}";
 
@@ -205,7 +208,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("SaveBookingCalendar")]
-        public IActionResult SaveBookingCalendar([FromBody] SaveBookingCalendar model)
+        public async Task<IActionResult> SaveBookingCalendar([FromBody] SaveBookingCalendar model)
         {
             apiResponse apiResponse = new apiResponse();
             try
@@ -299,19 +302,54 @@ namespace ERPAdmin.ApiControllers
                     // 🔹 Execute SP
                     con.Open();
 
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                        whatsapp_client_contactno = "", templateName = "";
+                    int companyId = 0;
+                    bool isSendMsg = false;
+
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            bookingId = reader["BookingId"] != DBNull.Value
-                                ? Convert.ToInt64(reader["BookingId"])
-                                : 0;
+                            bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
+                            paymentId = reader["PaymentId"] != DBNull.Value ? Convert.ToInt64(reader["PaymentId"]) : 0;
 
-                            paymentId = reader["PaymentId"] != DBNull.Value
-                                ? Convert.ToInt64(reader["PaymentId"])
-                                : 0;
+                            whatsapp_name = reader["Name"]?.ToString() ?? "";
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_EDate = reader["EDate"]?.ToString() ?? "";
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+                            whatsapp_client_contactno = model.Client_Contact ?? "";
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
                     }
+
+                    //NOTIFY 2 SEND WHATSAPP - NEW BOOKING CREATED
+                    if (model.BookingId == 0 && isSendMsg)
+                    {
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_EDate,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: model.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
+
+
                 }
 
                 apiResponse.status = "Success";
