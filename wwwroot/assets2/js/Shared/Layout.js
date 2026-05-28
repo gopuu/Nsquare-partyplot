@@ -29,6 +29,58 @@ AppSignalR.subscribeWallet(function (data) {
     }
 });
 
+function fillTimeDropdown(dropdownId = '#time', interval = 5) {
+    const dropdown = $(dropdownId);
+    dropdown.empty();
+    dropdown.append(`<option value="">Select Time</option>`);
+    //------------------------------------------
+    // Generate 24 Hours
+    //------------------------------------------
+    for (let hour24 = 0; hour24 < 24; hour24++) {
+
+        for (let minute = 0; minute < 60; minute += interval) {
+
+            //------------------------------------------
+            // Value (24 Hour Format)
+            //------------------------------------------
+            const hh =
+                hour24.toString().padStart(2, '0');
+
+            const mm =
+                minute.toString().padStart(2, '0');
+
+            const value24 =
+                `${hh}:${mm}`;
+
+            //------------------------------------------
+            // Text (12 Hour Format)
+            //------------------------------------------
+            const period =
+                hour24 >= 12 ? 'PM' : 'AM';
+
+            let hour12 =
+                hour24 % 12;
+
+            if (hour12 === 0) {
+                hour12 = 12;
+            }
+
+            const text12 =
+                `${hour12}:${mm} ${period}`;
+
+            //------------------------------------------
+            // Append Option
+            //------------------------------------------
+            dropdown.append(`
+                <option value="${value24}">
+                    ${text12}
+                </option>
+            `);
+        }
+    }
+}
+
+
 //WHATSAPP -- START
 function sendWhatsAppMessage({mobileNo = '', templateName = '', variables = [], actionBy = 0, isPromotional = false}) {
 

@@ -33,3 +33,99 @@
     </div>
 
 </div>
+
+<!-- ===================================================== -->
+<!-- REMINDER MODAL -->
+<!-- ===================================================== -->
+<div class="modal fade" id="reminderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- HEADER -->
+            <div class="modal-header bg-warning text-white py-2">
+                <h5 class="modal-title text-white">Manage Event Reminders</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+                <!-- ================================ -->
+                <!-- FORM -->
+                <!-- ================================ -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light p-2">
+                        <h6 class="mb-0 fw-bold" id="reminderModalTitle">Add / Edit Reminder</h6>
+                    </div>
+
+                    <div class="card-body">
+                        <input type="hidden" id="Reminder_Id" value="0">
+                        <div class="row g-3">
+                            <!-- TITLE -->
+                            <div class="col-lg-4">
+                                <label class="form-label fw-semibold">Title</label>
+                                <input type="text" class="form-control" id="Reminder_Title" placeholder="Ex: 1 Day Before">
+                            </div>
+
+                            <!-- TRIGGER DAYS -->
+                            <div class="col-lg-2">
+                                <label class="form-label fw-semibold">Trigger Days</label>
+                                <input type="number" class="form-control" id="Reminder_TriggerDays" placeholder="Ex: 1">
+                            </div>
+
+                            <!-- TRIGGER TIME -->
+                            <div class="col-lg-2">
+                                <label class="form-label fw-semibold">Trigger Time</label>
+                                <select class="form-control" id="Reminder_TriggerTime"></select>
+                            </div>
+
+                            <!-- ENABLE -->
+                            <div class="col-lg-2">
+                                <label class="form-label fw-semibold d-block">Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="Reminder_IsEnabled" checked>
+                                    <label class="form-check-label" for="Reminder_IsEnabled">Enabled</label>
+                                </div>
+                            </div>
+
+                            <!-- SAVE BUTTON -->
+                            <div class="col-lg-2 pt-3">
+                                <button type="button" class="btn btn-success px-4" id="btnSaveReminder">
+                                    <i class="fa fa-save me-1"></i>
+                                    Save
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================ -->
+                <!-- GRID -->
+                <!-- ================================ -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light p-2">
+                        <h6 class="mb-0 fw-bold p-1">Reminder Settings</h6>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="tableReminder" width="100%">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Days</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Modified</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

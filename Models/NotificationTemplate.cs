@@ -8,6 +8,7 @@
         public string? PTFlag { get; set; }
         public long EventId { get; set; }
         public bool IsSendMsg { get; set; }
+        public bool HasReminders { get; set; }
     }
     public class SaveNotification_TemplateParameterList
     {
