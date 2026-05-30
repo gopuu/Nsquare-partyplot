@@ -11,7 +11,7 @@ $(document).ready(function () {
     });
 });
 
-let companyId = Number(sessionStorage.getItem("companyid") || 1);
+let companyId = Number(sessionStorage.getItem("companyid") || 0);
 
 // RECHARGE START --------------------------------------------
 // 🔷 2. Get Ledger
@@ -149,7 +149,7 @@ function initRecharge() {
                         <button class="btn btn-outline-primary btn-sm quick-amt" data-amt="2000">₹2000</button>
                     </div>
 
-                    <small class="text-muted d-block mt-2">Minimum amount: ₹1</small>
+                    <small class="text-muted d-block mt-2">Minimum amount: ₹100</small>
                 </div>
             `,
             confirmButtonText: "Proceed to Pay",
@@ -179,8 +179,8 @@ function initRecharge() {
                 const value = document.getElementById("swalAmount").value;
                 const amount = parseFloat(value);
 
-                if (!amount || amount <= 0) {
-                    Swal.showValidationMessage("⚠️ Please enter a valid amount");
+                if (!amount || amount < 100) {
+                    Swal.showValidationMessage("⚠️ Please enter a valid amount (minimum ₹100)");
                     return false;
                 }
 
@@ -218,6 +218,7 @@ function startRecharge(amount) {
         }
     });
 }
+
 function openRazorpay(order, amount) {
     let companyName = sessionStorage.getItem("companyname");
 
@@ -290,3 +291,8 @@ function verifyPayment(response, amount) {
     });
 }
 // RECHARGE END --------------------------------------------
+
+
+
+
+
