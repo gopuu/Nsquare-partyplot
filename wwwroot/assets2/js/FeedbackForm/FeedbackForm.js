@@ -227,52 +227,74 @@ function submitFeedback() {
         },
         success: function (res) {
             console.log("save res:", res);
+            if (res.status !== "Success") {
+                handleApiError(null, "error", res.message, "Failed to save feedback");
+                return;
+            }
 
+            handleApiSuccess(res.message);
+
+            // Open Google Review URL if BookingId exists
+            if (Number(bookingId) > 0) {
+                const reviewUrl = res?.data?.ReviewUrl;
+                if (reviewUrl) {
+                    window.open(reviewUrl, "_blank");
+                }
+                return;
+            }
+            console.log("BookingId is 0, review URL not opened.");
+
+            // Show Thank You Screen
             $(".feedback-card").fadeOut(300, function () {
+
                 $("#thankYouScreen").removeClass("d-none");
-                if (bookingId == 0) {
-                    $("#reloadCountdown").removeClass("d-none");
-                    let seconds = 3;
-                    // Initialize UI
-                    $("#countdownSeconds").text(seconds);
-                    // Start countdown
-                    const interval = setInterval(function () {
-                        seconds--;
-                        $("#countdownSeconds").text(seconds);
 
-                        if (seconds <= 0) {
-
-                            clearInterval(interval);
-
-                            steps = [];
-                            currentStepIndex = 0;
-                            feedbackResponses = {};
-
-                            $("#stepTitle").text("");
-
-                            // Show loader before loading form
-                            $("#stepsContainer").html(`
-                                <div class="loading-state text-center py-5">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                    <div class="mt-2">
-                                        Please wait, loading feedback form…
-                                    </div>
-                                </div>
-                            `);
-
-                            $("#thankYouScreen").fadeOut(200, function () {
-                                $(this).addClass("d-none");
-
-                                $(".feedback-card").fadeIn(200);
-
-                                loadFeedbackForm();
-                            });
-                        }
-                    }, 300);
-                }
-                else {
+                // No reload needed
+                if (Number(bookingId) !== 0) {
                     $("#reloadCountdown").addClass("d-none");
+                    return;
                 }
+
+                $("#reloadCountdown").removeClass("d-none");
+
+                let seconds = 3;
+                $("#countdownSeconds").text(seconds);
+
+                const interval = setInterval(function () {
+                    seconds--;
+                    $("#countdownSeconds").text(seconds);
+                    if (seconds > 0)
+                        return;
+
+                    clearInterval(interval);
+
+                    // Reset form variables
+                    steps = [];
+                    currentStepIndex = 0;
+                    feedbackResponses = {};
+
+                    $("#stepTitle").text("");
+
+                    // Loader
+                    $("#stepsContainer").html(`
+                        <div class="loading-state text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div class="mt-2">
+                                Please wait, loading feedback form…
+                            </div>
+                        </div>
+                    `);
+
+                    $("#thankYouScreen").fadeOut(200, function () {
+
+                        $(this).addClass("d-none");
+
+                        $(".feedback-card").fadeIn(200);
+
+                        loadFeedbackForm();
+                    });
+
+                }, 1000);
             });
         },
         error: function (xhr, status, error) {
@@ -287,10 +309,13 @@ function submitFeedback() {
 /* ================= UTIL ================= */
 function atobFix(v) {
     v = v.replace(/-/g, '+').replace(/_/g, '/');
-    while (v.length % 4) v += '=';
-    return atob(v);
-}
 
+    while (v.length % 4)
+        v += '=';
+    return decodeURIComponent(
+        escape(atob(v))
+    );
+}
 function showSaveLoader() {
     $("#saveLoader").removeClass("d-none");
     disableNavButtons(true);

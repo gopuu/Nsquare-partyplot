@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 //using static ERPAdmin.Controllers.CategoryMasterController;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,13 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.PropertyNamingPolicy = null; // 👈 Prevents camelCase
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+});
+
 
 // Add services to the container.
 //builder.Services.AddControllersWithViews();
@@ -102,7 +110,7 @@ builder.Services.AddHttpClient();
 //builder.Services.AddScoped<IWhatsAppService, WhatsAppService>(); // recommended
 
 var app = builder.Build();
-
+app.UseForwardedHeaders();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

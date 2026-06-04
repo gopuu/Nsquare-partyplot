@@ -1306,6 +1306,10 @@ function renderLeadSourceChart(apiData) {
             values.push(item.LeadSourceCount);
             percents.push(item.LeadSourcePercent);
         });
+
+        const wrapper = document.querySelector(".chart-scroll-wrapper");
+        const dynamicHeight = Math.max(300, labels.length * 35);
+        document.getElementById("leadSourceChart").style.height = dynamicHeight + "px";
     }
 
     const ctx = document.getElementById("leadSourceChart").getContext("2d");

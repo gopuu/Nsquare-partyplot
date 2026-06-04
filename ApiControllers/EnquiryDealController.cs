@@ -132,6 +132,9 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveEnquiryDeal", con)) // You need to create this SP
                 {
@@ -157,6 +160,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@LeadLostReasonCategoryId", SqlDbType.BigInt).Value = model.LeadLostReasonCategoryId;
                     cmd.Parameters.Add("@LeadLostReasonId", SqlDbType.BigInt).Value = model.LeadLostReasonId;
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+
+                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
 
                     con.Open();
                     long newId = 0;

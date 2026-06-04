@@ -1425,6 +1425,7 @@ async function renderBoard(bookingData = null) {
     cacheddays = await generatedays(selectedYear, selectedMonth);
 
     console.log("renderBoard bookingData:", bookingData);
+    console.log("renderBoard cacheddays:", cacheddays);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -2449,12 +2450,14 @@ function enableEnquiryTooltips() {
         }
 
         let totalAmount = 0;
+        let totalPax = 0;
 
         let html = `
             <table class="table table-sm table-bordered m-0">
                 <thead>
                     <tr>
                         <th>Client</th>
+                        <th>Pax</th>
                         <th class="text-end">Amount</th>
                     </tr>
                 </thead>
@@ -2466,10 +2469,14 @@ function enableEnquiryTooltips() {
             const amount = parseFloat(x.Amount) || 0;
             totalAmount += amount;
 
+            const pax = parseFloat(x.Pax) || 0;
+            totalPax += pax;
+
             html += `
                 <tr>
                     <td>${x.Name}</td>
-                    <td class="text-end">₹${amount.toLocaleString()}</td>
+                    <td>${pax.toLocaleString()}</td>
+                    <td class="text-end">₹ ${amount.toLocaleString()}</td>
                 </tr>
             `;
         });
@@ -2478,7 +2485,8 @@ function enableEnquiryTooltips() {
         html += `
             <tr class="fw-bold">
                 <td>Total</td>
-                <td class="text-end">₹${totalAmount.toLocaleString()}</td>
+                <td>${totalPax.toLocaleString()}</td>
+                <td class="text-end">₹ ${totalAmount.toLocaleString()}</td>
             </tr>
         `;
 
@@ -3861,32 +3869,56 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("fbName").addEventListener("input", clearErrors);
     document.getElementById("fbWhatsapp").addEventListener("input", clearErrors);
 
-    document.getElementById("btnWhatsapp").addEventListener("click", function () {
+    document.getElementById("btnWhatsapp").addEventListener("click", async function () {
+
         if (!validateFeedbackForm()) {
             return;
         }
 
-        const name = document.getElementById("fbName").value.trim();
-        const whatsapp = document.getElementById("fbWhatsapp").value.trim();
-        const whatsappFullNumber = "91" + whatsapp;
+        try {
 
-        const bookingId = getBookingId(); // already available
-        const feedbackUrl = generateFeedbackUrl(bookingId, name, whatsappFullNumber);
+            const btn = this;
+            btn.disabled = true;
+            const userId = parseInt(sessionStorage.getItem('userId') || 0);
 
-        const message =
-            `Hello ${name},
+            const payload = {
+                bookingId: getBookingId(),
+                customerName: document.getElementById("fbName").value.trim(),
+                whatsappNo: document.getElementById("fbWhatsapp").value.trim(),
+                actionBy: userId || 0
+            };
 
-Thank you for your booking.
+            console.log("Payload:", payload);
 
-We request you to share your feedback using the link below:
-${feedbackUrl}
+            const response = await fetch("/api/Feedback/SendFeedback", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            console.log("API Result:", result);
+            btn.disabled = true;
+            if (result.status === "Success") {
+                handleApiSuccess(result.message);
+                $("#feedbackModal").modal("hide");
+            } 
+            else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: result.message || "Something went wrong."
+                });
+            }
+        } 
+        catch (err) {
+            handleApiError(null, "error", err, "Failed to send feedback request");
+        }
+        finally {
+            btn.disabled = false;
+        }
 
-Your feedback helps us improve our service.`;
-
-        const whatsappUrl = `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, "_blank");
-        //bootstrap.Modal.getInstance(document.getElementById("feedbackModal")).hide();
-        $("#feedbackModal").modal("hide");
     });
 
     // ❌ Cancel Booking

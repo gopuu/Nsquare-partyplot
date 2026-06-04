@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
+using System.Text;
 using System.Text.Json;
 
 namespace ERPAdmin.ApiControllers
@@ -21,12 +22,15 @@ namespace ERPAdmin.ApiControllers
     {
         private string connString = string.Empty;
         private readonly string domainUrl;
+        private readonly WhatsAppService _whatsAppService;
 
-        public FeedbackController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService)
+        public FeedbackController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService, 
+            WhatsAppService whatsAppService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
+            _whatsAppService = whatsAppService;
         }
 
         [HttpGet]
@@ -134,7 +138,8 @@ namespace ERPAdmin.ApiControllers
                             {
                                 response.data = new
                                 {
-                                    FeedbackId = dr["FeedbackId"]
+                                    FeedbackId = dr["FeedbackId"],
+                                    ReviewUrl = dr["ReviewUrl"]
                                 };
                             }
                         }
@@ -149,6 +154,113 @@ namespace ERPAdmin.ApiControllers
 
             return Ok(response);
         }
+
+        [HttpPost]
+        [Route("SendFeedback")]
+        public async Task<IActionResult> SendFeedback([FromBody] SendFeedbackRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                long invoiceId = 0;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SendFeedback", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@BookingId", request.BookingId);
+                    cmd.Parameters.AddWithValue("@CustomerName", request.CustomerName);
+                    cmd.Parameters.AddWithValue("@WhatsappNo", request.WhatsappNo);
+                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+                    con.Open();
+
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_url = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                           whatsapp_client_contactno = "", templateName = "";
+
+                    int companyId = 0;
+
+                    bool isSendMsg = false;
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            //bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
+                            whatsapp_client_contactno = (reader["Client_Contact"]?.ToString() ?? "");
+
+                            whatsapp_name = (reader["Name"]?.ToString() ?? "");
+                            whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                            whatsapp_EDate = reader["EDate"]?.ToString() ?? "";
+
+                            whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                            whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+
+                            companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+
+                            templateName = reader["TempName"]?.ToString() ?? "";
+                            isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
+                        }
+                    }
+
+                    //NOTIFY 5 SEND WHATSAPP - FEEDBACK REQUEST WHEN REQUESTED
+                    if (request.BookingId > 0 && isSendMsg)
+                    {
+                        //whatsapp_url = $"{domainUrl}/feedbackForm" ;
+                        string encBookingId = ERPAdmin.Helper.Utils.Encode(request.BookingId.ToString());
+                        string encName = ERPAdmin.Helper.Utils.Encode(whatsapp_name);
+                        string encWhatsapp = ERPAdmin.Helper.Utils.Encode(whatsapp_client_contactno);
+
+                        whatsapp_url =
+                            $"{domainUrl}/feedbackForm" +
+                            $"?bid={encBookingId}" +
+                            $"&n={encName}" +
+                            $"&w={encWhatsapp}";
+
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_EDate,
+                            whatsapp_url,
+                            whatsapp_orgMobile,
+                            whatsapp_orgName
+                        };
+
+                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: request.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl
+                        );
+                    }
+
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Feedback Request sent successfully.";
+                apiResponse.data = new { InvoiceId = invoiceId };
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(200, apiResponse);
+            }
+        }
+
 
         [HttpPost]
         [Route("GetFeedback")]
@@ -376,4 +488,7 @@ namespace ERPAdmin.ApiControllers
         }
 
     }
+
 }
+
+

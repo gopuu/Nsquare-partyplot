@@ -410,6 +410,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
    fetchBalance_Layout();
 
+
+   //ALL-IN-ONE LINK ---- START -----------------------------
+    $(".btnCopy_AllInLink").click(function () {
+        const link = window.location.origin + "/AllInOneLink";
+        navigator.clipboard.writeText(link);
+
+        // optional toast/message
+        $(this).html(`<i class="fa-solid fa-check me-1"></i>Copied`);
+
+        setTimeout(() => {
+            $(this).html(`
+                <i class="fa-regular fa-copy me-1"></i>Copy Link
+            `);
+        }, 2000);
+    });
+   //ALL-IN-ONE LINK ---- END -----------------------------
+
 });
 
 

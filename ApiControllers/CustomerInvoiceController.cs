@@ -781,7 +781,6 @@ namespace ERPAdmin.ApiControllers
         public async Task<IActionResult> SaveCustomerInvoice([FromBody] SaveCustomerInvoiceRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
@@ -790,6 +789,8 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 long invoiceId=0;
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveCustomerInvoice", con))
@@ -850,13 +851,14 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@TotalAdvancePaid", request.TotalAdvancePaid);
                     cmd.Parameters.AddWithValue("@BalanceAmount", request.BalanceAmount);
 
-                    cmd.Parameters.AddWithValue(
-                        "@JSON_Items",
-                        request.JSON_Items != null
+                    cmd.Parameters.AddWithValue("@JSON_Items", request.JSON_Items != null
                             ? JsonConvert.SerializeObject(request.JSON_Items)
                             : DBNull.Value
                     );
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+
+                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
 
                     con.Open();
                     //invoiceId = Convert.ToInt64(cmd.ExecuteScalar());
@@ -932,7 +934,16 @@ namespace ERPAdmin.ApiControllers
                     //NOTIFY 5 SEND WHATSAPP - FEEDBACK REQUEST WHEN INVOICE GENERATED
                     if (request.Id == 0 && isSendMsg_Feedback)
                     {
-                        whatsapp_url = $"{domainUrl}/feedbackForm" ;
+                        //whatsapp_url = $"{domainUrl}/feedbackForm" ;
+                        string encBookingId = ERPAdmin.Helper.Utils.Encode(request.BookingId.ToString());
+                        string encName = ERPAdmin.Helper.Utils.Encode(whatsapp_name);
+                        string encWhatsapp = ERPAdmin.Helper.Utils.Encode(whatsapp_client_contactno);
+
+                        whatsapp_url =
+                            $"{domainUrl}/feedbackForm" +
+                            $"?bid={encBookingId}" +
+                            $"&n={encName}" +
+                            $"&w={encWhatsapp}";
 
                         List<string> variables = new List<string>
                         {

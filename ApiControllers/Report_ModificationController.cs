@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
@@ -49,14 +50,10 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandTimeout = 120;
 
-                    cmd.Parameters.AddWithValue("@Module",
-                        string.IsNullOrEmpty(request.Module) ? (object)DBNull.Value : request.Module);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@ModuleId", request.ModuleId > 0 ? request.ModuleId : (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     con.Open();
                     new SqlDataAdapter(cmd).Fill(ds);
@@ -69,16 +66,21 @@ namespace ERPAdmin.ApiControllers
                 DataTable dtSummary = ds.Tables[1];
 
                 var lineItems = new List<ModificationLineItem>();
+
                 foreach (DataRow row in dtLines.Rows)
                 {
                     lineItems.Add(new ModificationLineItem
                     {
                         SrNo = row["SrNo"] != DBNull.Value ? Convert.ToInt64(row["SrNo"]) : 0,
-                        ModDate = row["ModDate"] != DBNull.Value ? Convert.ToString(row["ModDate"]) : "-",
-                        ModDate_Format = row["ModDate_Format"] != DBNull.Value ? Convert.ToString(row["ModDate_Format"]) : "-",
-                        Module = row["Module"] != DBNull.Value ? Convert.ToString(row["Module"]) : "-",
-                        RefNo = row["RefNo"] != DBNull.Value ? Convert.ToString(row["RefNo"]) : "-",
-                        Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0
+                        ModuleName = row["ModuleName"]?.ToString() ?? "-",
+                        RowId = row["RowId"] != DBNull.Value ? Convert.ToInt64(row["RowId"]) : 0,
+                        ReferenceNo = row["ReferenceNo"]?.ToString() ?? "-",
+                        OldAmount = row["OldAmount"] != DBNull.Value ? Convert.ToDecimal(row["OldAmount"]) : 0,
+                        NewAmount = row["NewAmount"] != DBNull.Value ? Convert.ToDecimal(row["NewAmount"]) : 0,
+                        ImpactAmount = row["ImpactAmount"] != DBNull.Value ? Convert.ToDecimal(row["ImpactAmount"]) : 0,
+                        ModifiedDateTime = row["ModifiedDateTime"]?.ToString() ?? "-",
+                        ModifiedDateTime_Format = row["ModifiedDateTime_Format"]?.ToString() ?? "-",
+                        ModifiedBy = row["ModifiedBy"]?.ToString() ?? "-"
                     });
                 }
 
@@ -87,15 +89,9 @@ namespace ERPAdmin.ApiControllers
                 {
                     DataRow s = dtSummary.Rows[0];
                     summary.TotalModifications = s["TotalModifications"] != DBNull.Value ? Convert.ToInt32(s["TotalModifications"]) : 0;
-                    summary.SalesCount = s["SalesCount"] != DBNull.Value ? Convert.ToInt32(s["SalesCount"]) : 0;
-                    summary.PurchaseCount = s["PurchaseCount"] != DBNull.Value ? Convert.ToInt32(s["PurchaseCount"]) : 0;
-                    summary.ExpenseCount = s["ExpenseCount"] != DBNull.Value ? Convert.ToInt32(s["ExpenseCount"]) : 0;
-                    summary.IncomeCount = s["IncomeCount"] != DBNull.Value ? Convert.ToInt32(s["IncomeCount"]) : 0;
-                    summary.SalesAmount = s["SalesAmount"] != DBNull.Value ? Convert.ToDecimal(s["SalesAmount"]) : 0;
-                    summary.PurchaseAmount = s["PurchaseAmount"] != DBNull.Value ? Convert.ToDecimal(s["PurchaseAmount"]) : 0;
-                    summary.ExpenseAmount = s["ExpenseAmount"] != DBNull.Value ? Convert.ToDecimal(s["ExpenseAmount"]) : 0;
-                    summary.IncomeAmount = s["IncomeAmount"] != DBNull.Value ? Convert.ToDecimal(s["IncomeAmount"]) : 0;
-                    summary.TotalAmount = s["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(s["TotalAmount"]) : 0;
+                    summary.TotalOldAmount = s["TotalOldAmount"] != DBNull.Value ? Convert.ToDecimal(s["TotalOldAmount"]) : 0;
+                    summary.TotalNewAmount = s["TotalNewAmount"] != DBNull.Value ? Convert.ToDecimal(s["TotalNewAmount"]) : 0;
+                    summary.TotalImpactAmount = s["TotalImpactAmount"] != DBNull.Value ? Convert.ToDecimal(s["TotalImpactAmount"]) : 0;
                 }
 
                 apiResponse.message = "Modification report fetched successfully!";
@@ -114,10 +110,9 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("DownloadModificationReport")]
-        public IActionResult DownloadModificationReport([FromBody] ModificationReportRequest request)
+        public IActionResult DownloadModificationReport([FromBody] ModificationReportRequest_PdfExcel request)
         {
             apiResponse response = new apiResponse();
-
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
@@ -143,16 +138,12 @@ namespace ERPAdmin.ApiControllers
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Module",
-                        string.IsNullOrEmpty(request.Module) ? (object)DBNull.Value : request.Module);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ModuleId", request.ModuleId.HasValue && request.ModuleId.Value > 0
+                            ? request.ModuleId.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -207,10 +198,13 @@ namespace ERPAdmin.ApiControllers
                     throw new Exception("Report data is incomplete. Required tables are missing.");
 
                 // ================= EXTRACT DATA =================
-                string reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                string reportName = "";
+                if (dsReport.Tables.Count > 0 && dsReport.Tables[0].Rows.Count > 0)
+                {
+                    reportName = dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "";
+                }
 
                 float topMargin = (request.WithHeader ?? false) ? 80f : 36f;
-
                 using var stream = new MemoryStream();
 
                 bool isA4size = true; // default to A4
@@ -296,32 +290,35 @@ namespace ERPAdmin.ApiControllers
                 DataTable summaryTableDB = dsReport.Tables.Count > 3 ? dsReport.Tables[3] : null;
 
                 // ── Report title ──
-                document.Add(new Paragraph(reportName.ToUpper(),
-                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY))
+                document.Add(new Paragraph(reportName.ToUpper(), FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.GRAY))
                 {
                     Alignment = Element.ALIGN_CENTER,
                     SpacingAfter = 10f
                 });
 
                 // ── Data table ──
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
-                Font boldFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
+                iTextSharp.text.Font thFont = new iTextSharp.text.Font(iTextSharp.text.Font.FontFamily.HELVETICA, 8, iTextSharp.text.Font.BOLD, BaseColor.BLACK);
+                iTextSharp.text.Font tdFont = new iTextSharp.text.Font(iTextSharp.text.Font.FontFamily.HELVETICA, 8);
+                iTextSharp.text.Font boldFont = new iTextSharp.text.Font(iTextSharp.text.Font.FontFamily.HELVETICA, 8, iTextSharp.text.Font.BOLD);
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
-                // Module colour map
-                Dictionary<string, BaseColor> moduleBg = new Dictionary<string, BaseColor>
-                {
-                    { "Sales",    new BaseColor(232, 245, 233) },   // green
-                    { "Purchase", new BaseColor(255, 235, 238) },   // red
-                    { "Expense",  new BaseColor(255, 248, 225) },   // yellow
-                    { "Income",   new BaseColor(227, 242, 253) }    // blue
-                };
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
 
                 int columnCount = dataTableDB.Columns.Count;
                 PdfPTable table = new PdfPTable(columnCount);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 8f, 18f, 18f, 36f, 20f });
+
+                if (columnCount == 9)
+                {
+                    table.SetWidths(new float[] { 6f,15f,10f,18f,12f,12f,12f,20f,15f });
+                }
+                else
+                {
+                    table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
+                }
 
                 for (int i = 0; i < headerTableDB.Rows.Count; i++)
                     table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
@@ -330,21 +327,52 @@ namespace ERPAdmin.ApiControllers
 
                 foreach (DataRow row in dataTableDB.Rows)
                 {
-                    string mod = row["Module"]?.ToString() ?? "";
-                    BaseColor rowBg = moduleBg.ContainsKey(mod) ? moduleBg[mod] : BaseColor.WHITE;
-
+                    BaseColor rowBg = BaseColor.WHITE;
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string val = row[col]?.ToString() ?? "-";
+                        //string val = row[col]?.ToString() ?? "-";
+                        string value = "";
+                        switch (col.ColumnName)
+                        {
+                            case "Old Amount":
+                                value = "₹ " + Convert.ToDecimal(row["Old Amount"]).ToString("N2");
+                                break;
 
-                        PdfPCell cell = new PdfPCell(new Phrase(val, tdFont))
+                            case "New Amount":
+                                value = "₹ " + Convert.ToDecimal(row["New Amount"]).ToString("N2");
+                                break;
+
+                            case "Impact Amount":
+                                value = "₹ " + Convert.ToDecimal(row["Impact Amount"]).ToString("N2");
+                                break;
+
+                            default: 
+                                value = row[col]?.ToString() ?? "-";
+                                break;
+                        }
+
+                        iTextSharp.text.Font cellFont =
+                        (
+                            col.ColumnName == "Old Amount" ||
+                            col.ColumnName == "New Amount" ||
+                            col.ColumnName == "Impact Amount"
+                        )
+                        ? AmtFontNormal
+                        : tdFont;
+
+                        PdfPCell cell = new PdfPCell(new Phrase(value, cellFont))
                         {
                             BackgroundColor = rowBg,
                             Padding = 6,
                             BorderColor = BaseColor.LIGHT_GRAY,
-                            HorizontalAlignment = col.ColumnName == "Amount Impact"
-                                ? Element.ALIGN_RIGHT
-                                : Element.ALIGN_LEFT
+                            HorizontalAlignment =
+                            (
+                                col.ColumnName == "Old Amount" ||
+                                col.ColumnName == "New Amount" ||
+                                col.ColumnName == "Impact Amount"
+                            )
+                            ? Element.ALIGN_RIGHT
+                            : Element.ALIGN_LEFT
                         };
                         table.AddCell(cell);
                     }
@@ -357,18 +385,49 @@ namespace ERPAdmin.ApiControllers
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string value = col.ColumnName switch
-                        {
-                            "Amount Impact" => $"{totalRow["TotalAmount"]}",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                        string value = "";
 
-                        table.AddCell(new PdfPCell(new Phrase(value, boldFont))
+                        switch (col.ColumnName)
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            case "Sr. No.":
+                                value = "TOTAL";
+                                break;
+
+                            case "Old Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalOldAmount"]).ToString("N2");
+                                break;
+
+                            case "New Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalNewAmount"]).ToString("N2");
+                                break;
+
+                            case "Impact Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalImpactAmount"]).ToString("N2");
+                                break;
+                        }
+
+                        iTextSharp.text.Font cellFont =
+                        (
+                            col.ColumnName == "Old Amount" ||
+                            col.ColumnName == "New Amount" ||
+                            col.ColumnName == "Impact Amount"
+                        )
+                        ? AmtFontBold
+                        : boldFont;
+
+                        table.AddCell(new PdfPCell(new Phrase(value, cellFont))
+                        {
                             BackgroundColor = new BaseColor(240, 240, 240),
                             BorderColor = BaseColor.LIGHT_GRAY,
-                            Padding = 6
+                            Padding = 6,
+                            HorizontalAlignment =
+                            (
+                                col.ColumnName == "Old Amount" ||
+                                col.ColumnName == "New Amount" ||
+                                col.ColumnName == "Impact Amount"
+                            )
+                            ? Element.ALIGN_RIGHT
+                            : Element.ALIGN_LEFT
                         });
                     }
                 }
@@ -382,98 +441,46 @@ namespace ERPAdmin.ApiControllers
 
                     document.Add(new Paragraph(" ") { SpacingAfter = 10f });
 
-                    PdfPTable summaryTable = new PdfPTable(3);
-                    summaryTable.WidthPercentage = 65;
+                    PdfPTable summaryTable = new PdfPTable(2);
+                    summaryTable.WidthPercentage = 45;
                     summaryTable.HorizontalAlignment = Element.ALIGN_RIGHT;
-                    summaryTable.SetWidths(new float[] { 35f, 25f, 40f });
+                    summaryTable.SetWidths(new float[] { 60f, 40f });
 
-                    BaseColor summaryHeaderBg = new BaseColor(33, 37, 41);
-                    Font summaryHeaderFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                    Font summaryLabelFont = new Font(Font.FontFamily.HELVETICA, 9);
-                    Font summaryValueFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD);
-
-                    // Header row
-                    foreach (string hdr in new[] { "Module", "Count", "Amount Impact" })
+                    void AddSummaryRow(string label, string value, bool isAmount = false)
                     {
-                        summaryTable.AddCell(new PdfPCell(new Phrase(hdr, summaryHeaderFont))
+                        summaryTable.AddCell(new PdfPCell(new Phrase(label, tdFont))
                         {
-                            BackgroundColor = summaryHeaderBg,
-                            Padding = 7,
-                            Border = Rectangle.NO_BORDER,
-                            HorizontalAlignment = Element.ALIGN_CENTER
-                        });
-                    }
-
-                    void AddModuleRow(string module, string countKey, string amtKey, BaseColor bg)
-                    {
-                        // Handle NULL safely for count
-                        int count = s[countKey] != DBNull.Value ? Convert.ToInt32(s[countKey]) : 0;
-
-                        // Handle NULL safely for amount
-                        decimal amount = s[amtKey] != DBNull.Value ? Convert.ToDecimal(s[amtKey]) : 0;
-
-                        summaryTable.AddCell(new PdfPCell(new Phrase(module, summaryLabelFont))
-                        {
-                            BackgroundColor = bg,
-                            Border = Rectangle.NO_BORDER, 
                             Padding = 6
                         });
 
-                        summaryTable.AddCell(new PdfPCell(new Phrase(count.ToString(), summaryValueFont))
+                        summaryTable.AddCell(new PdfPCell(
+                            new Phrase(value, isAmount ? AmtFontBold : boldFont))
                         {
-                            BackgroundColor = bg,
                             Padding = 6,
-                            Border = Rectangle.NO_BORDER,
-                            HorizontalAlignment = Element.ALIGN_CENTER
-                        });
-
-                        summaryTable.AddCell(new PdfPCell(new Phrase(amount.ToString("N2"), summaryValueFont))
-                        {
-                            BackgroundColor = bg,
-                            Padding = 6,
-                            Border = Rectangle.NO_BORDER,
                             HorizontalAlignment = Element.ALIGN_RIGHT
                         });
                     }
-                    AddModuleRow("Sales", "SalesCount", "SalesAmount", new BaseColor(232, 245, 233));
-                    AddModuleRow("Purchase", "PurchaseCount", "PurchaseAmount", new BaseColor(255, 235, 238));
-                    AddModuleRow("Expense", "ExpenseCount", "ExpenseAmount", new BaseColor(255, 248, 225));
-                    AddModuleRow("Income", "IncomeCount", "IncomeAmount", new BaseColor(227, 242, 253));
 
-                    // Divider
-                    summaryTable.AddCell(new PdfPCell(new Phrase(" "))
-                    {
-                        Colspan = 3,
-                        BackgroundColor = new BaseColor(200, 200, 200),
-                        FixedHeight = 1f,
-                        Border = Rectangle.NO_BORDER
-                    });
+                    AddSummaryRow(
+                        "Total Modifications",
+                        s["TotalModifications"].ToString());
 
-                    // Total row
-                    summaryTable.AddCell(new PdfPCell(new Phrase("TOTAL", boldFont))
-                    { 
-                        BackgroundColor = new BaseColor(240, 240, 240), 
-                        Border = Rectangle.NO_BORDER,
-                        Padding = 6 
-                    });
-                    summaryTable.AddCell(new PdfPCell(new Phrase(s["TotalModifications"].ToString(), boldFont))
-                    { 
-                        BackgroundColor = new BaseColor(240, 240, 240),
-                        Border = Rectangle.NO_BORDER,
-                        Padding = 6, 
-                        HorizontalAlignment = Element.ALIGN_CENTER 
-                    });
-                    summaryTable.AddCell(new PdfPCell(new Phrase(Convert.ToDecimal(s["TotalAmount"]).ToString("N2"), boldFont))
-                    { 
-                        BackgroundColor = new BaseColor(240, 240, 240),
-                        Border = Rectangle.NO_BORDER,
-                        Padding = 6, 
-                        HorizontalAlignment = Element.ALIGN_RIGHT 
-                    });
+                    AddSummaryRow(
+                        "Total Old Amount",
+                        "₹ " + Convert.ToDecimal(s["TotalOldAmount"]).ToString("N2"),
+                        true);
 
+                    AddSummaryRow(
+                        "Total New Amount",
+                        "₹ " + Convert.ToDecimal(s["TotalNewAmount"]).ToString("N2"),
+                        true);
+
+                    AddSummaryRow(
+                        "Total Impact Amount",
+                        "₹ " + Convert.ToDecimal(s["TotalImpactAmount"]).ToString("N2"),
+                        true);
                     document.Add(summaryTable);
                 }
-
                 document.Close();
 
                 string folder = Path.Combine(_env.WebRootPath, "reports");
@@ -500,7 +507,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("DownloadModificationReport_Excel")]
-        public IActionResult DownloadModificationReport_Excel([FromBody] ModificationReportRequest request)
+        public IActionResult DownloadModificationReport_Excel([FromBody] ModificationReportRequest_PdfExcel request)
         {
             apiResponse response = new apiResponse();
 
@@ -523,16 +530,11 @@ namespace ERPAdmin.ApiControllers
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Module",
-                        string.IsNullOrEmpty(request.Module) ? (object)DBNull.Value : request.Module);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ModuleId", request.ModuleId > 0 ? request.ModuleId : (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -546,15 +548,6 @@ namespace ERPAdmin.ApiControllers
 
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Modification Report");
-
-                // Module colour map
-                var moduleColors = new Dictionary<string, XLColor>
-                {
-                    { "Sales",    XLColor.FromArgb(232, 245, 233) },
-                    { "Purchase", XLColor.FromArgb(255, 235, 238) },
-                    { "Expense",  XLColor.FromArgb(255, 248, 225) },
-                    { "Income",   XLColor.FromArgb(227, 242, 253) }
-                };
 
                 // ── Headers ──
                 int col = 1;
@@ -570,21 +563,23 @@ namespace ERPAdmin.ApiControllers
 
                 // ── Data rows ──
                 int row = 2;
+                XLColor rowColor = XLColor.White;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
-                    string module = dr["Module"]?.ToString() ?? "";
-                    XLColor rowColor = moduleColors.ContainsKey(module)
-                        ? moduleColors[module]
-                        : XLColor.White;
-
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
                     {
                         var cell = worksheet.Cell(row, i + 1);
                         cell.Value = dr[i]?.ToString() ?? "-";
                         cell.Style.Fill.BackgroundColor = rowColor;
 
-                        if (dataTableDB.Columns[i].ColumnName == "Amount Impact")
+                        if (
+                            dataTableDB.Columns[i].ColumnName == "Old Amount" ||
+                            dataTableDB.Columns[i].ColumnName == "New Amount" ||
+                            dataTableDB.Columns[i].ColumnName == "Impact Amount"
+                        )
+                        {
                             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
                     }
                     row++;
                 }
@@ -597,71 +592,64 @@ namespace ERPAdmin.ApiControllers
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
-                        string value = columnName switch
+
+                        string value = "";
+                        switch (columnName)
                         {
-                            "Amount Impact" => totalRow["TotalAmount"].ToString(),
-                            _ => i == 0 ? "TOTAL" : ""
-                        };
+                            case "Sr. No.":
+                                value = "TOTAL";
+                                break;
+
+                            case "Old Amount":
+                                value = Convert.ToDecimal(totalRow["TotalOldAmount"]).ToString("N2");
+                                break;
+
+                            case "New Amount":
+                                value = Convert.ToDecimal(totalRow["TotalNewAmount"]).ToString("N2");
+                                break;
+
+                            case "Impact Amount":
+                                value = Convert.ToDecimal(totalRow["TotalImpactAmount"]).ToString("N2");
+                                break;
+                        }
 
                         var cell = worksheet.Cell(row, i + 1);
                         cell.Value = value;
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
-                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        cell.Style.Alignment.Horizontal =
+                            (
+                                columnName == "Old Amount" ||
+                                columnName == "New Amount" ||
+                                columnName == "Impact Amount"
+                            )
+                            ? XLAlignmentHorizontalValues.Right
+                            : XLAlignmentHorizontalValues.Left;
                     }
                     row += 2;
 
-                    // ── Per-module summary ──
-                    worksheet.Cell(row, 1).Value = "MODULE SUMMARY";
-                    worksheet.Range(row, 1, row, 3).Merge();
+                    worksheet.Cell(row, 1).Value = "SUMMARY";
+                    worksheet.Range(row, 1, row, 2).Merge();
                     worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Font.FontColor = XLColor.White;
                     worksheet.Cell(row, 1).Style.Fill.BackgroundColor = XLColor.FromArgb(33, 37, 41);
-                    worksheet.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(row, 1).Style.Font.FontColor = XLColor.White;
                     row++;
 
-                    // Sub-header
-                    foreach (var (hdr, c) in new[] { ("Module", 1), ("Count", 2), ("Amount Impact", 3) })
+                    void AddSummary(string label, string value)
                     {
-                        worksheet.Cell(row, c).Value = hdr;
-                        worksheet.Cell(row, c).Style.Font.Bold = true;
-                        worksheet.Cell(row, c).Style.Fill.BackgroundColor = XLColor.FromArgb(33, 37, 41);
-                        worksheet.Cell(row, c).Style.Font.FontColor = XLColor.White;
-                        worksheet.Cell(row, c).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    }
-                    row++;
+                        worksheet.Cell(row, 1).Value = label;
+                        worksheet.Cell(row, 1).Style.Font.Bold = true;
 
-                    void AddModuleSummaryRow(string module, string countKey, string amtKey, XLColor bg)
-                    {
-                        worksheet.Cell(row, 1).Value = module;
-                        worksheet.Cell(row, 1).Style.Fill.BackgroundColor = bg;
-
-                        worksheet.Cell(row, 2).Value = totalRow[countKey].ToString();
-                        worksheet.Cell(row, 2).Style.Fill.BackgroundColor = bg;
-                        worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                        worksheet.Cell(row, 3).Value = Convert.ToDecimal(totalRow[amtKey]).ToString("N2");
-                        worksheet.Cell(row, 3).Style.Fill.BackgroundColor = bg;
-                        worksheet.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        worksheet.Cell(row, 2).Value = value;
+                        worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                         row++;
                     }
 
-                    AddModuleSummaryRow("Sales", "SalesCount", "SalesAmount", XLColor.FromArgb(232, 245, 233));
-                    AddModuleSummaryRow("Purchase", "PurchaseCount", "PurchaseAmount", XLColor.FromArgb(255, 235, 238));
-                    AddModuleSummaryRow("Expense", "ExpenseCount", "ExpenseAmount", XLColor.FromArgb(255, 248, 225));
-                    AddModuleSummaryRow("Income", "IncomeCount", "IncomeAmount", XLColor.FromArgb(227, 242, 253));
+                    AddSummary("Total Modifications", totalRow["TotalModifications"].ToString());
+                    AddSummary("Total Old Amount", Convert.ToDecimal(totalRow["TotalOldAmount"]).ToString("N2"));
+                    AddSummary("Total New Amount", Convert.ToDecimal(totalRow["TotalNewAmount"]).ToString("N2"));
+                    AddSummary("Total Impact Amount", Convert.ToDecimal(totalRow["TotalImpactAmount"]).ToString("N2"));
 
-                    // Grand total
-                    worksheet.Cell(row, 1).Value = "TOTAL";
-                    worksheet.Cell(row, 1).Style.Font.Bold = true;
-                    worksheet.Cell(row, 1).Style.Fill.BackgroundColor = XLColor.LightGray;
-
-                    worksheet.Cell(row, 2).Value = totalRow["TotalModifications"].ToString();
-                    worksheet.Cell(row, 2).Style.Font.Bold = true;
-                    worksheet.Cell(row, 2).Style.Fill.BackgroundColor = XLColor.LightGray;
-                    worksheet.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                    worksheet.Cell(row, 3).Value = Convert.ToDecimal(totalRow["TotalAmount"]).ToString("N2");
                     worksheet.Cell(row, 3).Style.Font.Bold = true;
                     worksheet.Cell(row, 3).Style.Fill.BackgroundColor = XLColor.LightGray;
                     worksheet.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -689,5 +677,72 @@ namespace ERPAdmin.ApiControllers
                 return Ok(response);
             }
         }
+
+        [HttpGet]
+        [Route("GetModuleMasterForModificationReport")]
+        public IActionResult GetModuleMasterForModificationReport()
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<GetModuleMasterForModificationReportResponse> list =
+                new List<GetModuleMasterForModificationReportResponse>();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext,
+                    Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetModuleMaster_ForModificationReport", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        dt.Load(reader);
+                    }
+                }
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(new GetModuleMasterForModificationReportResponse
+                    {
+                        Id = dr["Id"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt64(dr["Id"]),
+
+                        Name = dr["Name"] == DBNull.Value
+                            ? string.Empty
+                            : Convert.ToString(dr["Name"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Modules fetched successfully!";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
     }
 }

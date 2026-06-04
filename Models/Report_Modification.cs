@@ -2,47 +2,57 @@
 
 namespace ERPAdmin.Models
 {
+    public class GetModuleMasterForModificationReportResponse
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+    }
+
     public class ModificationReportGridRequest
     {
-        public string? Module { get; set; }
+        public long? ModuleId { get; set; }
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
     }
 
-    public class ModificationReportRequest
+    public class ModificationReportRequest : BaseClass
     {
-        public string? Module { get; set; }
+        public long? ModuleId { get; set; }
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+    }
+
+    public class ModificationReportRequest_PdfExcel : BaseClass
+    {
+        public long? ModuleId { get; set; }
         public string? FromDate { get; set; }
         public string? ToDate { get; set; }
         public string? FilterDuration { get; set; }
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }
-        public long ActionBy { get; set; }
     }
 
     public class ModificationLineItem
     {
         public long SrNo { get; set; }
-        public string? ModDate { get; set; }
-        public string? ModDate_Format { get; set; }
-        public string? Module { get; set; }
-        public string? RefNo { get; set; }
-        public decimal Amount { get; set; }
+        public string ModuleName { get; set; }
+        public long RowId { get; set; }
+        public string ReferenceNo { get; set; }
+        public decimal OldAmount { get; set; }
+        public decimal NewAmount { get; set; }
+        public decimal ImpactAmount { get; set; }
+        public string ModifiedDateTime { get; set; }
+        public string ModifiedDateTime_Format { get; set; }
+        public string ModifiedBy { get; set; }
     }
-
     public class ModificationSummary
     {
-        public int TotalModifications { get; set; }
-        public int SalesCount { get; set; }
-        public int PurchaseCount { get; set; }
-        public int ExpenseCount { get; set; }
-        public int IncomeCount { get; set; }
-        public decimal SalesAmount { get; set; }
-        public decimal PurchaseAmount { get; set; }
-        public decimal ExpenseAmount { get; set; }
-        public decimal IncomeAmount { get; set; }
-        public decimal TotalAmount { get; set; }
+        public long TotalModifications { get; set; }
+        public decimal TotalOldAmount { get; set; }
+        public decimal TotalNewAmount { get; set; }
+        public decimal TotalImpactAmount { get; set; }
     }
 
     public class ModificationGridResponse

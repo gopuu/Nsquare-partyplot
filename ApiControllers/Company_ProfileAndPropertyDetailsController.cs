@@ -115,6 +115,7 @@ namespace ERPAdmin.ApiControllers
                                                     : string.Empty,
 
                                 CompanyMobile = reader["CompanyMobile"] == DBNull.Value ? null : reader["CompanyMobile"].ToString(),
+                                ReviewUrl = reader["ReviewUrl"] == DBNull.Value ? null : reader["ReviewUrl"].ToString(),
                                 AcceptGST = reader["AcceptGST"] == DBNull.Value ? false : Convert.ToBoolean(reader["AcceptGST"]),
                                 GSTIN = reader["GSTIN"] == DBNull.Value ? null : reader["GSTIN"].ToString(),
                                 VATNumber = reader["VATNumber"] == DBNull.Value ? null : reader["VATNumber"].ToString(),
@@ -185,6 +186,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@CompanyAddress", SqlDbType.NVarChar, 240).Value = model.CompanyAddress;
                     cmd.Parameters.Add("@CompanyPanNo", SqlDbType.NVarChar, 10).Value = model.CompanyPanNo;
                     cmd.Parameters.Add("@CompanyMobile", SqlDbType.NVarChar, 10).Value = model.CompanyMobile;
+                    cmd.Parameters.Add("@ReviewUrl", SqlDbType.NVarChar, -1).Value = model.ReviewUrl;
                     cmd.Parameters.Add("@AcceptGST", SqlDbType.Bit).Value = model.AcceptGST;
                     cmd.Parameters.Add("@GSTIN", SqlDbType.NVarChar, 15).Value = model.GSTIN;
                     cmd.Parameters.Add("@VATNumber", SqlDbType.NVarChar, 15).Value = model.VATNumber;

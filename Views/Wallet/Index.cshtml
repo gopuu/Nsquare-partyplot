@@ -4,9 +4,9 @@
     var domain = Context.Request.Scheme + "://" + Context.Request.Host;
 }
 
-<link href="@(domain + Url.Content("~/assets2/css/dataTables.bootstrap5.min.css"))" rel="stylesheet" />
-<script src="@(domain + Url.Content("~/assets2/js/jquery.dataTables.min.js"))"></script>
-<script src="@(domain + Url.Content("~/assets2/js/dataTables.bootstrap5.min.js"))"></script>
+<link href="~/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<script src="~/assets2/js/jquery.dataTables.min.js"></script>
+<script src="~/assets2/js/dataTables.bootstrap5.min.js"></script>
 
 @*
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
@@ -17,11 +17,11 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 @section Styles {
-    <link href="@(domain + Url.Content("~/assets2/css/Wallet/Wallet.css"))" asp-append-version="true" rel="stylesheet" />
+    <link href="~/assets2/css/Wallet/Wallet.css" asp-append-version="true" rel="stylesheet" />
 }
 
 @section Scripts {
-    <script src="@(domain + Url.Content("~/assets2/js/Wallet/Wallet.js"))" asp-append-version="true"></script>
+    <script src="~/assets2/js/Wallet/Wallet.js" asp-append-version="true"></script>
 }
 
 <div class="content">

@@ -11,8 +11,8 @@
             return;
         }
         resetAllInOneFields();
-        $("#allInOneModalTitle").text("Add All In One");
-        $("#allInOneModal").modal("show");
+        $("#allInOneMasterModalTitle").text("Add All In One");
+        $("#allInOneMasterModal").modal("show");
     });
 
     // 💾 Save
@@ -66,7 +66,7 @@
             success: function (res) {
                 if (res.status === "Success") {
                     handleApiSuccess("All In One saved successfully.");
-                    $("#allInOneModal").modal("hide");
+                    $("#allInOneMasterModal").modal("hide");
                     fetchAllInOne();
                 } else {
                     Swal.fire("Error", res.message, "error");
@@ -96,8 +96,8 @@
         }
 
         $("#allInOneImage").val(""); // clear file input
-        $("#allInOneModalTitle").text("Edit All In One");
-        $("#allInOneModal").modal("show");
+        $("#allInOneMasterModalTitle").text("Edit All In One");
+        $("#allInOneMasterModal").modal("show");
     });
 
     function previewAllInOneImage(input) {
@@ -198,7 +198,11 @@ function renderAllInOneTable(data) {
 
         data: data,
         columns: [
-            { data: "srno", title: "Sr. No." },
+            { 
+                data: "srno", 
+                className: "text-center",
+                title: "#" 
+            },
             { data: "Title", title: "Title" },
             {
                 data: "Link",
@@ -212,6 +216,7 @@ function renderAllInOneTable(data) {
             },
             {
                 data: "Image", title: "Image",
+                className: "text-center",
                 render: function (d) {
                     return d
                         ? `<img src="${d}" class="rounded_img"/>`
@@ -221,6 +226,7 @@ function renderAllInOneTable(data) {
             {
                 data: null,
                 title: "Actions",
+                className: "text-center",
                 render: () => `
                     <button class="btn btn-outline-warning btn-action-xss btn-edit">
                         <i class="fa fa-edit"></i>

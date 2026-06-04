@@ -304,7 +304,7 @@ namespace ERPAdmin.ApiControllers
 
                 string fontPath_ArialUnicode = Path.Combine(_env.WebRootPath, "fonts", "arialuni.ttf"); // Segoe UI Symbol
                 BaseFont bfSymbol = BaseFont.CreateFont(fontPath_ArialUnicode, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                iTextFont checkboxFont = new iTextFont(bfSymbol, 15, iTextFont.NORMAL);
+                iTextFont checkboxFont = new iTextFont(bfSymbol, 12, iTextFont.NORMAL);
 
                 #endregion
 
@@ -749,6 +749,7 @@ namespace ERPAdmin.ApiControllers
                     // LEFT COLUMN (KEY)
                     checklistTbl.AddCell(new PdfPCell(new Phrase(grp.Key, boldFont7))
                     {
+                        HorizontalAlignment = Element.ALIGN_MIDDLE,
                         VerticalAlignment = Element.ALIGN_MIDDLE,
                         Padding = 2,
                         Border = Rectangle.BOX,
@@ -773,7 +774,7 @@ namespace ERPAdmin.ApiControllers
                     foreach (var item in grp)
                     {
                         optionsPara.Add(new Chunk("☐ ", checkboxFont));
-                        optionsPara.Add(new Chunk(item["OptionText"] + "    ", normalFont7));
+                        optionsPara.Add(new Chunk(item["OptionText"] + "    ", normalFont9));
                     }
 
                     optionsPara.SpacingAfter = 5f; // 🔥 this is your padding-bottom
@@ -839,9 +840,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             Phrase phrase = new Phrase();
 
-                            phrase.Add(new Chunk("  ", normalFont7));          // spacing
+                            phrase.Add(new Chunk("  ", normalFont9));          // spacing
                             phrase.Add(new Chunk("☐ ", checkboxFont));         // ✅ checkbox font
-                            phrase.Add(new Chunk("Issue: ____________________", normalFont7)); // normal text
+                            phrase.Add(new Chunk("Issue: ____________________", normalFont9)); // normal text
 
                             inner.AddCell(new PdfPCell(phrase)
                             {
@@ -853,9 +854,9 @@ namespace ERPAdmin.ApiControllers
                         {
                             Phrase phrase = new Phrase();
 
-                            phrase.Add(new Chunk("  ", normalFont7));          // spacing
+                            phrase.Add(new Chunk("  ", normalFont9));          // spacing
                             phrase.Add(new Chunk("☐ ", checkboxFont));         // ✅ checkbox font
-                            phrase.Add(new Chunk(text, normalFont7));          // normal text
+                            phrase.Add(new Chunk(text, normalFont9));          // normal text
 
                             inner.AddCell(new PdfPCell(phrase)
                             {
@@ -930,10 +931,11 @@ namespace ERPAdmin.ApiControllers
 
                 // Right Side Location + DateTime
                 foodTitleTbl.AddCell(new PdfPCell(new Phrase(
-                    dtFoodWasteTitle.Rows[0]["LocationDateTime"].ToString(),
+                    //dtFoodWasteTitle.Rows[0]["LocationDateTime"].ToString(),
+                    "Location: \nsTime:",
                     normalFont7))
                 {
-                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    HorizontalAlignment = Element.ALIGN_LEFT,
                     VerticalAlignment = Element.ALIGN_MIDDLE,
                     Border = Rectangle.BOX,
                     BorderWidth = 0.2f,

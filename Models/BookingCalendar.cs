@@ -117,6 +117,7 @@
     public class EnquiryCalendarMock_Customer
     {
         public string Name { get; set; }
+        public long Pax { get; set; }
         public decimal Amount { get; set; }
     }
 

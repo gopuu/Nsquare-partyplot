@@ -374,6 +374,36 @@ namespace ERPAdmin.ApiControllers
                 };
                 revenueTable.AddCell(revHeader);
 
+                /* header row */
+                // Sr. No. (Center)
+                revenueTable.AddCell(new PdfPCell(new Phrase("Sr. No.", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    BackgroundColor = headerBg,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6
+                });
+
+                // Category (Left)
+                revenueTable.AddCell(new PdfPCell(new Phrase("Category", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_LEFT,
+                    BackgroundColor = headerBg,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6
+                });
+
+                // Amount (Right)
+                revenueTable.AddCell(new PdfPCell(new Phrase("Amount", boldFont))
+                {
+                    HorizontalAlignment = Element.ALIGN_RIGHT,
+                    BackgroundColor = headerBg,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    Padding = 6,
+                    PaddingRight = 8
+                });
+
+
                 int i = 1;
                 foreach (var r in revenue)
                 {
@@ -480,31 +510,6 @@ namespace ERPAdmin.ApiControllers
                     BackgroundColor = headerBg,
                     HorizontalAlignment = Element.ALIGN_CENTER,
                     Padding = 6
-                });
-                /* header row */
-                // Sr. No. (Center)
-                expTable.AddCell(new PdfPCell(new Phrase("Sr. No.", boldFont))
-                {
-                    HorizontalAlignment = Element.ALIGN_CENTER,
-                    VerticalAlignment = Element.ALIGN_MIDDLE,
-                    Padding = 6
-                });
-
-                // Category (Left)
-                expTable.AddCell(new PdfPCell(new Phrase("Category", boldFont))
-                {
-                    HorizontalAlignment = Element.ALIGN_LEFT,
-                    VerticalAlignment = Element.ALIGN_MIDDLE,
-                    Padding = 6
-                });
-
-                // Amount (Right)
-                expTable.AddCell(new PdfPCell(new Phrase("Amount", boldFont))
-                {
-                    HorizontalAlignment = Element.ALIGN_RIGHT,
-                    VerticalAlignment = Element.ALIGN_MIDDLE,
-                    Padding = 6,
-                    PaddingRight = 8
                 });
 
                 i = 1;

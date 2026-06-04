@@ -123,6 +123,8 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 long rowid = 0;
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveExpenseTransaction", con))
@@ -144,6 +146,9 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
 
                     con.Open();
                     rowid = Convert.ToInt64(cmd.ExecuteScalar());

@@ -140,6 +140,9 @@ namespace ERPAdmin.ApiControllers
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+
                 long rowId = 0;
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveFundTransfer", con))
@@ -153,8 +156,11 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@TransferDate", model.TransferDate);
                     cmd.Parameters.AddWithValue("@ReferenceNo", (object)model.ReferenceNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
                     cmd.Parameters.AddWithValue("@FundTransfer_Category_Id", model.FundTransfer_Category_Id);
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
 
                     con.Open();
                     rowId = Convert.ToInt64(cmd.ExecuteScalar());
@@ -417,6 +423,11 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 7);
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
+
                 // Header row
                 foreach (DataRow hRow in headerTableDB.Rows)
                     table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
@@ -427,42 +438,85 @@ namespace ERPAdmin.ApiControllers
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string colName = col.ColumnName.Trim().ToLower();
+                        string colName = col.ColumnName.Trim();
 
-                        int align = colName switch
+                        bool isAmountColumn =
+                            colName.Equals("Amount", StringComparison.OrdinalIgnoreCase);
+
+                        string value = row[col]?.ToString() ?? "-";
+
+                        if (isAmountColumn &&
+                            decimal.TryParse(value, out decimal amount))
+                        {
+                            value = "₹ " + amount.ToString("N2");
+                        }
+
+                        int align = colName.ToLower() switch
                         {
                             "sr. no." => Element.ALIGN_CENTER,
-                            "reference #" => Element.ALIGN_CENTER,
+                            "reference no." => Element.ALIGN_CENTER,
                             "transfer date" => Element.ALIGN_CENTER,
                             "from account" => Element.ALIGN_CENTER,
                             "to account" => Element.ALIGN_CENTER,
+                            "category" => Element.ALIGN_CENTER,
                             "notes" => Element.ALIGN_LEFT,
                             _ => Element.ALIGN_RIGHT
                         };
 
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                        table.AddCell(
+                            Utils.CreateBodyCell(
+                                value,
+                                isAmountColumn ? AmtFontNormal : tdFont,
+                                align
+                            )
+                        );
                     }
                 }
 
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+
+                    Font totalFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        10,
+                        Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string value = col.ColumnName switch
-                        {
-                            "Amount" => $"{totalRow["TotalAmount"]}",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                        string colName = col.ColumnName.Trim();
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                        bool isAmountColumn = false;
+                        string value = "";
+
+                        switch (colName)
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            case "Amount":
+                                value = "₹ " +
+                                    Convert.ToDecimal(totalRow["TotalAmount"])
+                                        .ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            default:
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                break;
+                        }
+
+                        int align =
+                            value == "TOTAL"
+                                ? Element.ALIGN_CENTER
+                                : Element.ALIGN_RIGHT;
+
+                        table.AddCell(new PdfPCell(
+                            new Phrase(
+                                value,
+                                isAmountColumn ? AmtFontBold : totalFont))
+                        {
+                            HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
                             Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderColor = new BaseColor(220, 220, 220),
                             BorderWidth = 0.5f
                         });
                     }

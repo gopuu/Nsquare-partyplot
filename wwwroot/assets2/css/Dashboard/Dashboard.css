@@ -1,4 +1,10 @@
-﻿/*TOP REVENUE CHART ---START */
+﻿.chart-scroll-wrapper {
+    height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/*TOP REVENUE CHART ---START */
 .revenue-item {
     background: #ffffff;
     border: 1px solid #e5e7eb;

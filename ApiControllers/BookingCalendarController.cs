@@ -218,6 +218,10 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 long bookingId = 0, paymentId = 0;
+
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveBookingCalendar", con))
                 {
@@ -298,6 +302,9 @@ namespace ERPAdmin.ApiControllers
                         model.JSON_FoodPackage != null ? JsonConvert.SerializeObject(model.JSON_FoodPackage) : (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Action_By", model.ActionBy);
+
+                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
 
                     // 🔹 Execute SP
                     con.Open();

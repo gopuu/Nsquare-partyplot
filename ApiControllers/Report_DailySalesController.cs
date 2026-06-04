@@ -252,8 +252,9 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
+                #region ASSIGN & VALIDATION
                 // ================= ASSIGN & VALIDATION =================
-                string propertyName= string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
                        companyphoneNo = string.Empty, companygstin = "", companyemail = "",
                        logoFile = string.Empty, userName = string.Empty,
                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
@@ -380,6 +381,8 @@ namespace ERPAdmin.ApiControllers
                     }
                 }
 
+                #endregion
+
                 document.Open();
 
                 DataTable headerTableDB = dsReport.Tables[1];
@@ -402,6 +405,11 @@ namespace ERPAdmin.ApiControllers
                 Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
 
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
+
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
                 foreach (DataRow hRow in headerTableDB.Rows)
@@ -413,25 +421,42 @@ namespace ERPAdmin.ApiControllers
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        int align = Element.ALIGN_RIGHT; // default
+                        int align = Element.ALIGN_RIGHT;
 
-                        string colName = col.ColumnName.Trim().ToLower();
+                        string colName = col.ColumnName.Trim();
 
-                        if (colName == "sr. no." ||
-                            colName == "date" ||
-                            colName == "no of invoice generated") 
+                        bool isAmountColumn =
+                            colName.Equals("Gross Sales", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Taxes", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Net Sales", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Payment Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Due Payments", StringComparison.OrdinalIgnoreCase);
+
+                        string value = row[col]?.ToString() ?? "-";
+
+                        if (isAmountColumn &&
+                            decimal.TryParse(value, out decimal amount))
+                        {
+                            value = "₹ " + amount.ToString("N2");
+                        }
+
+                        string colNameLower = colName.ToLower();
+
+                        if (colNameLower == "sr. no." ||
+                            colNameLower == "date" ||
+                            colNameLower == "no of invoice generated")
                         {
                             align = Element.ALIGN_CENTER;
                         }
-                        else if (colName == "payment mode")
+                        else if (colNameLower == "payment mode")
                         {
                             align = Element.ALIGN_LEFT;
                         }
 
                         table.AddCell(
                             Utils.CreateBodyCell(
-                                row[col]?.ToString() ?? "-",
-                                tdFont,
+                                value,
+                                isAmountColumn ? AmtFontNormal : tdFont,
                                 align
                             )
                         );
@@ -439,7 +464,6 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // ===== TOTAL ROW =====
-
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -448,29 +472,63 @@ namespace ERPAdmin.ApiControllers
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        int align = Element.ALIGN_RIGHT; // default
-                        string? value = col.ColumnName switch
-                        {
-                            "No of Invoice Generated" => totalRow["TotalInvoices"].ToString() ?? "-",
-                            "Gross Sales" => totalRow["GrossSales"].ToString() ?? "-",
-                            "Taxes" => totalRow["Taxes"].ToString() ?? "-",
-                            "Net Sales" => totalRow["NetSales"].ToString() ?? "-",
-                            "Payment Amount" => totalRow["TotalPayments"].ToString() ?? "-",
-                            "Due Payments" => totalRow["DuePayments"].ToString() ?? "-",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                        int align = Element.ALIGN_RIGHT;
 
-                        if (col.ColumnName == "No of Invoice Generated" || value == "TOTAL")
+                        string colName = col.ColumnName.Trim();
+
+                        bool isAmountColumn = false;
+                        string value = "";
+
+                        switch (colName)
+                        {
+                            case "No of Invoice Generated":
+                                value = Convert.ToDecimal(totalRow["TotalInvoices"]).ToString("N0");
+                                break;
+
+                            case "Gross Sales":
+                                value = "₹ " + Convert.ToDecimal(totalRow["GrossSales"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Taxes":
+                                value = "₹ " + Convert.ToDecimal(totalRow["Taxes"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Net Sales":
+                                value = "₹ " + Convert.ToDecimal(totalRow["NetSales"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Payment Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalPayments"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Due Payments":
+                                value = "₹ " + Convert.ToDecimal(totalRow["DuePayments"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            default:
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                break;
+                        }
+
+                        if (colName == "No of Invoice Generated" || value == "TOTAL")
                         {
                             align = Element.ALIGN_CENTER;
                         }
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                        table.AddCell(new PdfPCell(
+                            new Phrase(
+                                value,
+                                isAmountColumn ? AmtFontBold : totalFont))
                         {
                             HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
                             Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderColor = new BaseColor(220, 220, 220),
                             BorderWidth = 0.5f
                         });
                     }
@@ -661,8 +719,9 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
+                #region ASSIGN & VALIDATION
                 // ================= ASSIGN & VALIDATION =================
-                string propertyName= string.Empty, companyName = string.Empty, companyAddress = string.Empty,
+                string propertyName = string.Empty, companyName = string.Empty, companyAddress = string.Empty,
                        companyphoneNo = string.Empty, companygstin = "", companyemail = "",
                        logoFile = string.Empty, userName = string.Empty,
                        stateCode = string.Empty, logoFullPath = string.Empty, generatedDate = "";
@@ -788,6 +847,7 @@ namespace ERPAdmin.ApiControllers
                         );
                     }
                 }
+                #endregion
 
                 document.Open();
 
@@ -815,7 +875,12 @@ namespace ERPAdmin.ApiControllers
                 Font thFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD, BaseColor.BLACK);
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, fontSize);
                 BaseColor thColor = new BaseColor(240, 240, 240);
-                
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
+
                 foreach (DataRow hRow in headerTableDB.Rows)
                     table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
 
@@ -825,29 +890,47 @@ namespace ERPAdmin.ApiControllers
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        //table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
-                        int align = Element.ALIGN_RIGHT; // default
+                        int align = Element.ALIGN_RIGHT;
 
-                        string colName = col.ColumnName.Trim().ToLower();
+                        string colName = col.ColumnName.Trim();
 
-                        if (colName == "sr. no." ||
-                            colName == "invoice no" ||
-                            colName == "invoice date" ||
-                            colName == "booking id" ||
-                            colName == "client name" ||
-                            colName == "payment modes")
+                        bool isAmountColumn =
+                            colName.Equals("Gross Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Taxes", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Paid Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Due Amount", StringComparison.OrdinalIgnoreCase);
+
+                        string value = row[col]?.ToString() ?? "-";
+
+                        if (isAmountColumn &&
+                            decimal.TryParse(value, out decimal amount))
+                        {
+                            value = "₹ " + amount.ToString("N2");
+                        }
+
+                        string colNameLower = colName.ToLower();
+
+                        if (colNameLower == "sr. no." ||
+                            colNameLower == "invoice no" ||
+                            colNameLower == "invoice date" ||
+                            colNameLower == "booking id")
                         {
                             align = Element.ALIGN_CENTER;
+                        }
+                        else if (colNameLower == "client name" ||
+                                 colNameLower == "payment modes")
+                        {
+                            align = Element.ALIGN_LEFT;
                         }
 
                         table.AddCell(
                             Utils.CreateBodyCell(
-                                row[col]?.ToString() ?? "-",
-                                tdFont,
+                                value,
+                                isAmountColumn ? AmtFontNormal : tdFont,
                                 align
                             )
                         );
-
                     }
                 }
 
@@ -855,35 +938,68 @@ namespace ERPAdmin.ApiControllers
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, fontSize, Font.BOLD);
+
+                    Font totalFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        fontSize,
+                        Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        int align = Element.ALIGN_RIGHT; // default
+                        int align = Element.ALIGN_RIGHT;
 
-                        string value = col.ColumnName switch
+                        string colName = col.ColumnName.Trim();
+
+                        bool isAmountColumn = false;
+                        string value = "";
+
+                        switch (colName)
                         {
-                            "Gross Amount" => totalRow["GrossAmount"].ToString(),
-                            "Taxes" => totalRow["Taxes"].ToString(),
-                            "Net Amount" => totalRow["NetAmount"].ToString(),
-                            "Due Amount" => totalRow["DueAmount"].ToString(),
-                            "Paid Amount" => totalRow["PaidAmount"].ToString(),
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                            case "Gross Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["GrossAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Taxes":
+                                value = "₹ " + Convert.ToDecimal(totalRow["Taxes"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Net Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["NetAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Paid Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["PaidAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Due Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["DueAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            default:
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                break;
+                        }
 
                         if (value == "TOTAL")
                         {
                             align = Element.ALIGN_CENTER;
                         }
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                        table.AddCell(new PdfPCell(
+                            new Phrase(
+                                value,
+                                isAmountColumn ? AmtFontBold : totalFont))
                         {
                             HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
                             Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderColor = new BaseColor(220, 220, 220),
                             BorderWidth = 0.5f
-
                         });
                     }
                 }

@@ -320,19 +320,42 @@ namespace ERPAdmin.ApiControllers
                 Font tdFont = new Font(Font.FontFamily.HELVETICA, 7);
                 BaseColor thColor = new BaseColor(240, 240, 240);
 
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
+
                 // Header row
                 foreach (DataRow hRow in headerTableDB.Rows)
                     table.AddCell(Utils.CreateHeaderCell(hRow[0].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
-                // Data rows
+
                 foreach (DataRow row in dataTableDB.Rows)
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string colName = col.ColumnName.Trim().ToLower();
+                        string colName = col.ColumnName.Trim();
 
-                        int align = colName switch
+                        bool isAmountColumn =
+                            colName.Equals("Sub Total", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("CGST", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SGST", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("IGST", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Total GST", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Invoice Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Paid Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Due Amount", StringComparison.OrdinalIgnoreCase);
+
+                        string value = row[col]?.ToString() ?? "-";
+
+                        if (isAmountColumn &&
+                            decimal.TryParse(value, out decimal amount))
+                        {
+                            value = "₹ " + amount.ToString("N2");
+                        }
+
+                        int align = colName.ToLower() switch
                         {
                             "invoice no" => Element.ALIGN_CENTER,
                             "invoice date" => Element.ALIGN_CENTER,
@@ -343,35 +366,85 @@ namespace ERPAdmin.ApiControllers
                             _ => Element.ALIGN_RIGHT
                         };
 
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                        table.AddCell(
+                            Utils.CreateBodyCell(
+                                value,
+                                isAmountColumn ? AmtFontNormal : tdFont,
+                                align
+                            ));
                     }
                 }
 
-                // Total row
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 7, Font.BOLD);
+
+                    Font totalFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        7,
+                        Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
                         int align = Element.ALIGN_RIGHT;
-                        string value = col.ColumnName switch
+                        bool isAmountColumn = false;
+
+                        string value = "";
+
+                        switch (col.ColumnName)
                         {
-                            "Sub Total" => totalRow["TotalSubTotal"].ToString() ?? "-",
-                            "CGST" => totalRow["TotalCGST"].ToString() ?? "-",
-                            "SGST" => totalRow["TotalSGST"].ToString() ?? "-",
-                            "IGST" => totalRow["TotalIGST"].ToString() ?? "-",
-                            "Total GST" => totalRow["TotalTax"].ToString() ?? "-",
-                            "Invoice Amount" => totalRow["TotalInvoiceAmount"].ToString() ?? "-",
-                            "Paid Amount" => totalRow["TotalPaidAmount"].ToString() ?? "-",
-                            "Due Amount" => totalRow["TotalDueAmount"].ToString() ?? "-",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                            case "Sub Total":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotal"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
 
-                        if (value == "TOTAL") align = Element.ALIGN_CENTER;
+                            case "CGST":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalCGST"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                            case "SGST":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSGST"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "IGST":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalIGST"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Total GST":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTax"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Invoice Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Paid Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalPaidAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Due Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDueAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            default:
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                break;
+                        }
+
+                        if (value == "TOTAL")
+                            align = Element.ALIGN_CENTER;
+
+                        table.AddCell(new PdfPCell(
+                            new Phrase(
+                                value,
+                                isAmountColumn ? AmtFontBold : totalFont))
                         {
                             HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),

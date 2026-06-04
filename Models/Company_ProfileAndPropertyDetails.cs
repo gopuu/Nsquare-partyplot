@@ -17,6 +17,7 @@
         public string CompanyPanNo { get; set; } = string.Empty;
         public string CompanyPanCardUpload { get; set; } = string.Empty;
         public string CompanyMobile { get; set; } = string.Empty;
+        public string ReviewUrl { get; set; } = string.Empty;
         public bool AcceptGST { get; set; }
         public string GSTIN { get; set; } = string.Empty;
         public string VATNumber { get; set; } = string.Empty;

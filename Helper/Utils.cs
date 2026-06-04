@@ -1,5 +1,6 @@
 ﻿using iTextSharp.text;
 using iTextSharp.text.pdf;
+using System.Text;
 
 namespace ERPAdmin.Helper
 {
@@ -33,7 +34,17 @@ namespace ERPAdmin.Helper
                 }
             }
         }
+        public static string Encode(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
 
+            var bytes = Encoding.UTF8.GetBytes(value);
+            return Convert.ToBase64String(bytes)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+        }
         public static PdfPCell CreateHeaderCell(string text, Font font, BaseColor bgColor)
         {
             return new PdfPCell(new Phrase(text, font))

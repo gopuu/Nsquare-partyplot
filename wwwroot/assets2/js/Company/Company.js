@@ -109,6 +109,7 @@ function getCompanyProfile() {
                 $("#CompanyProfile_Address").val(d.CompanyAddress);
                 $("#CompanyProfile_PanNo").val(d.CompanyPanNo);
                 $("#CompanyProfile_Mobile").val(d.CompanyMobile);
+                $("#CompanyProfile_ReviewUrl").val(d.ReviewUrl);
                 $("#CompanyProfile_AcceptGST").prop("checked", d.AcceptGST);
                 $("#CompanyProfile_GSTIN").val(d.GSTIN);
                 // Show/Hide GSTIN input based on checkbox
@@ -302,6 +303,7 @@ function saveCompanyProfileDataToApi(panCardImage) {
         CompanyPanNo: $("#CompanyProfile_PanNo").val(),
         CompanyPanCardUpload: panCardImage,
         CompanyMobile: $("#CompanyProfile_Mobile").val(),
+        ReviewUrl: $("#CompanyProfile_ReviewUrl").val(),
         AcceptGST: $("#CompanyProfile_AcceptGST").is(":checked"),
         GSTIN: $("#CompanyProfile_GSTIN").val(),
         VATNumber: $("#CompanyProfile_VATNumber").val(),

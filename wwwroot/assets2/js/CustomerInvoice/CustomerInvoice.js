@@ -91,9 +91,14 @@ $(".sort-option").on("click", function (e) {
         toDate = fromDate;
     }
     else if (selectedMonthDuration === "last12months") {
-        fromDate = new Date(today);
-        fromDate.setMonth(today.getMonth() - 12);
-        toDate = today;
+        //fromDate = new Date(today);
+        //fromDate.setMonth(today.getMonth() - 12);
+        //toDate = today;
+
+        // From: 12 months back from current month
+        fromDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+        // To: Last date of current month
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     }
     else if (selectedMonthDuration === "customrange") {
         // custom range me datepicker pe user select karega
@@ -1273,11 +1278,16 @@ $(function () {
 
     //tooltip -widget---------- START -----------------------
     const tooltipContent = {
+        // ================= TOTAL =================
+        totalAmountTitle: `Total Amount, for Selected Period Events`,
         // ================= PAYMENT COLLECTION =================
         paymentReceivedTitle: `Total of collected Advance + Invoice Amounts, within the selected period`,
-
         // ================= UPCOMING PAYMENT =================
-        upcomingPaymentTitle: `Total of pending Invoice Payments, due within the selected period.`
+        upcomingPaymentTitle: `Total of pending Invoice Payments, due within the selected period.`,
+        // ================= INVOICE GENERATED =================
+        invoiceGeneratedTitle: `Total number of invoices generated, for selected period Events.`,
+        // ================= INVOICE PENDING =================
+        invoicePendingTitle: `Total number of invoices Generation pending, for selected period events.`
     };
 
     Object.keys(tooltipContent).forEach(id => {

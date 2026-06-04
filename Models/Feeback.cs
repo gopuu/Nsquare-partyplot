@@ -1,5 +1,13 @@
 ﻿namespace ERPAdmin.Models
 {
+    //SEND
+    public class SendFeedbackRequest : BaseClass
+    {
+        public long? BookingId { get; set; }
+        public string? CustomerName { get; set; }
+        public string? WhatsappNo { get; set; }
+    }
+
     //Dashboard Rating Overtime
     public class FeedbackRatingOverTimeRequest
     {

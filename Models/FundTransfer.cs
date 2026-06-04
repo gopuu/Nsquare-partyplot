@@ -52,7 +52,6 @@
         public string? TransferDate { get; set; }
         public string? ReferenceNo { get; set; }
         public string? Notes { get; set; }
-
     }
 
     public class DeleteFundTransferRequest : BaseClass

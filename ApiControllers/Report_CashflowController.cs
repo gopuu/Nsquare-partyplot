@@ -334,6 +334,11 @@ namespace ERPAdmin.ApiControllers
                 BaseColor inflowBg = new BaseColor(232, 245, 233);
                 BaseColor outflowBg = new BaseColor(255, 235, 238);
 
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                //iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
+
                 int colCount = dataTableDB.Columns.Count;
 
                 PdfPTable table = new PdfPTable(colCount);
@@ -382,26 +387,33 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName;
                         string val = row[col]?.ToString() ?? "-";
 
-                        // 🔥 Format Amount
-                        if (colName == "Amount" && decimal.TryParse(val, out decimal amt))
-                            val = amt.ToString("N2");
+                        bool isAmountColumn = colName.Equals("Amount", StringComparison.OrdinalIgnoreCase);
 
-                        PdfPCell cell = new PdfPCell(new Phrase(val, tdFont))
+                        if (isAmountColumn &&
+                            decimal.TryParse(val, out decimal amt))
+                        {
+                            val = "₹ " + amt.ToString("N2");
+                        }
+
+                        PdfPCell cell = new PdfPCell(
+                            new Phrase(
+                                val,
+                                isAmountColumn ? AmtFontNormal : tdFont))
                         {
                             BackgroundColor = rowBg,
                             Padding = 5,
                             BorderColor = BaseColor.LIGHT_GRAY,
 
                             HorizontalAlignment =
-                                colName == "Amount" ? Element.ALIGN_RIGHT :
-                                colName == "SrNo" ? Element.ALIGN_CENTER :
-                                Element.ALIGN_LEFT
+                                isAmountColumn ? Element.ALIGN_RIGHT :
+                                colName.Equals("SrNo", StringComparison.OrdinalIgnoreCase)
+                                    ? Element.ALIGN_CENTER
+                                    : Element.ALIGN_LEFT
                         };
 
                         table.AddCell(cell);
                     }
                 }
-
                 document.Add(table);
 
                 // ── Summary box ──
@@ -409,9 +421,17 @@ namespace ERPAdmin.ApiControllers
                 {
                     DataRow s = summaryTableDB.Rows[0];
 
-                    decimal totalInflow = s["TotalInflow"] != DBNull.Value ? Convert.ToDecimal(s["TotalInflow"]) : 0;
-                    decimal totalOutflow = s["TotalOutflow"] != DBNull.Value ? Convert.ToDecimal(s["TotalOutflow"]) : 0;
-                    decimal netCashflow = s["NetCashflow"] != DBNull.Value ? Convert.ToDecimal(s["NetCashflow"]) : 0;
+                    decimal totalInflow = s["TotalInflow"] != DBNull.Value
+                        ? Convert.ToDecimal(s["TotalInflow"])
+                        : 0;
+
+                    decimal totalOutflow = s["TotalOutflow"] != DBNull.Value
+                        ? Convert.ToDecimal(s["TotalOutflow"])
+                        : 0;
+
+                    decimal netCashflow = s["NetCashflow"] != DBNull.Value
+                        ? Convert.ToDecimal(s["NetCashflow"])
+                        : 0;
 
                     document.Add(new Paragraph(" ") { SpacingAfter = 10f });
 
@@ -421,12 +441,20 @@ namespace ERPAdmin.ApiControllers
                     summaryTable.SetWidths(new float[] { 60f, 40f });
 
                     BaseColor summaryHeaderBg = new BaseColor(33, 37, 41);
-                    Font summaryHeaderFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
-                    Font summaryLabelFont = new Font(Font.FontFamily.HELVETICA, 9);
-                    Font summaryValueFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD);
+
+                    Font summaryHeaderFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        10,
+                        Font.BOLD,
+                        BaseColor.WHITE);
+
+                    Font summaryLabelFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        9);
 
                     // Header
-                    PdfPCell hCell = new PdfPCell(new Phrase("CASHFLOW SUMMARY", summaryHeaderFont))
+                    PdfPCell hCell = new PdfPCell(
+                        new Phrase("CASHFLOW SUMMARY", summaryHeaderFont))
                     {
                         Colspan = 2,
                         BackgroundColor = summaryHeaderBg,
@@ -434,26 +462,45 @@ namespace ERPAdmin.ApiControllers
                         Border = Rectangle.NO_BORDER,
                         HorizontalAlignment = Element.ALIGN_CENTER
                     };
+
                     summaryTable.AddCell(hCell);
 
                     void AddRow(string label, decimal value, BaseColor bg, bool isTotal = false)
                     {
-                        Font lf = isTotal
+                        Font labelFont = isTotal
                             ? new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD)
                             : summaryLabelFont;
-                        Font vf = isTotal
-                            ? new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD,
-                                  value >= 0 ? new BaseColor(27, 94, 32) : new BaseColor(183, 28, 28))
-                            : summaryValueFont;
 
-                        summaryTable.AddCell(new PdfPCell(new Phrase(label, lf))
+                        iTextSharp.text.Font valueFont;
+
+                        if (isTotal)
+                        {
+                            valueFont = new iTextSharp.text.Font(
+                                bf,
+                                10,
+                                iTextSharp.text.Font.BOLD,
+                                value >= 0
+                                    ? new BaseColor(27, 94, 32)
+                                    : new BaseColor(183, 28, 28));
+                        }
+                        else
+                        {
+                            valueFont = AmtFontNormal;
+                        }
+
+                        // Label Cell
+                        summaryTable.AddCell(new PdfPCell(
+                            new Phrase(label, labelFont))
                         {
                             BackgroundColor = bg,
                             Padding = 6,
                             Border = Rectangle.NO_BORDER,
                             HorizontalAlignment = Element.ALIGN_LEFT
                         });
-                        summaryTable.AddCell(new PdfPCell(new Phrase(value.ToString("N2"), vf))
+
+                        // Amount Cell
+                        summaryTable.AddCell(new PdfPCell(
+                            new Phrase("₹ " + value.ToString("N2"), valueFont))
                         {
                             BackgroundColor = bg,
                             Padding = 6,
@@ -462,8 +509,16 @@ namespace ERPAdmin.ApiControllers
                         });
                     }
 
-                    AddRow("Total Inflow", totalInflow, new BaseColor(232, 245, 233));
-                    AddRow("Total Outflow", totalOutflow, new BaseColor(255, 235, 238));
+                    // Rows
+                    AddRow(
+                        "Total Inflow",
+                        totalInflow,
+                        new BaseColor(232, 245, 233));
+
+                    AddRow(
+                        "Total Outflow",
+                        totalOutflow,
+                        new BaseColor(255, 235, 238));
 
                     // Divider
                     summaryTable.AddCell(new PdfPCell(new Phrase(" "))
@@ -474,11 +529,14 @@ namespace ERPAdmin.ApiControllers
                         Border = Rectangle.NO_BORDER
                     });
 
-                    AddRow("Net Cashflow", netCashflow, new BaseColor(240, 240, 240), isTotal: true);
+                    AddRow(
+                        "Net Cashflow",
+                        netCashflow,
+                        new BaseColor(240, 240, 240),
+                        true);
 
                     document.Add(summaryTable);
                 }
-
                 document.Close();
 
                 string folder = Path.Combine(_env.WebRootPath, "reports");

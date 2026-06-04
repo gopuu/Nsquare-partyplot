@@ -3,18 +3,15 @@
 ═══════════════════════════════════════════════════ */
 const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No" },
-    { key: "ModDate", label: "Date" },
-    { key: "Module", label: "Module" },
-    { key: "RefNo", label: "Reference" },
-    { key: "Amount", label: "Amount Impact" }
+    { key: "ModuleName", label: "Module" },
+    { key: "RowId", label: "Row Id" },
+    { key: "ReferenceNo", label: "Reference No" },
+    { key: "OldAmount", label: "Old Amount" },
+    { key: "NewAmount", label: "New Amount" },
+    { key: "ImpactAmount", label: "Impact Amount" },
+    { key: "ModifiedDateTime", label: "Modified Datetime" },
+    { key: "ModifiedBy", label: "Modified By" }
 ];
-
-const MODULE_CONFIG = {
-    Sales: { color: "success", icon: "fa-file-invoice-dollar", bg: "#e8f5e9" },
-    Purchase: { color: "danger", icon: "fa-cart-shopping", bg: "#ffebee" },
-    Expense: { color: "warning", icon: "fa-money-bill-wave", bg: "#fff8e1" },
-    Income: { color: "info", icon: "fa-circle-plus", bg: "#e3f2fd" }
-};
 
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 let selectedMonthDuration = "thismonth";
@@ -28,6 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setCurrentMonthDates();
     loadModificationGrid();
     loadColumnCheckboxes();
+    loadModules();
 
     /* ── Module filter live reload ── */
     $("#ddlModule").on("change", function () {
@@ -118,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#btnResetFilter").on("click", function () {
         $("#quickRange").val("thismonth");
         selectedMonthDuration = "thismonth";
-        $("#ddlModule").val("");
+        $("#ddlModule").val("0");
         setCurrentMonthDates();
         loadModificationGrid();
     });
@@ -163,11 +161,12 @@ document.addEventListener("DOMContentLoaded", function () {
 function loadModificationGrid() {
 
     const payload = {
-        Module: $("#ddlModule").val() || null,
+        ModuleId: parseInt($("#ddlModule").val()) || 0,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration
     };
+    console.log("grid payload:", payload);
 
     $("#tableMain").html(`
         <div class="text-center py-5 text-muted">
@@ -203,7 +202,7 @@ function loadModificationGrid() {
             renderModificationSummary(res.data.Summary);
         },
         error: function (xhr, status, error) {
-            console.error("Fetch Modification Data Failed", xhr, status, error);
+            //handleApiError(xhr, status, error, "Download Modification Report Failed");
             $("#tableMain").html(`<div class="alert alert-danger">Failed to load data. Please try again.</div>`);
         }
     });
@@ -220,7 +219,7 @@ function renderModificationTable(data) {
 
     $("#tblModification").DataTable({
         data: data,
-        responsive: true,
+        responsive: false,
         pageLength: 25,
         scrollX: true,
         order: [[1, "asc"]],
@@ -234,78 +233,74 @@ function renderModificationTable(data) {
             {
                 data: "SrNo",
                 title: "#",
-                width: "50px",
+                width: "60px",
                 className: "text-center"
             },
             {
-                data: "ModDate", // should be ISO format ideally
-                title: "Date",
-                width: "110px",
-                render: function (data, type, row) {
-                    if (type === 'display') {
-                        return row.ModDate_Format || data;
-                    }
-                    // sorting / filtering
-                    return data;
-                }
-            },
-            {
-                data: "Module",
+                data: "ModuleName",
                 title: "Module",
-                width: "110px",
-                className: "text-center",
+                width: "150px"
+            },
+            {
+                data: "RowId",
+                title: "Row Id",
+                width: "100px",
+                className: "text-center"
+            },
+            {
+                data: "ReferenceNo",
+                title: "Reference No (InvoiceNo / VoucherNo / Ref.No)"
+            },
+            {
+                data: "OldAmount",
+                title: "Old Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+            {
+                data: "NewAmount",
+                title: "New Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+            {
+                data: "ImpactAmount",
+                title: "Impact Amount",
+                className: "text-end fw-bold",
                 render: function (data) {
-                    const cfg = MODULE_CONFIG[data] || { color: "secondary", icon: "fa-circle" };
-                    return `<span class="badge bg-${cfg.color}">
-                                <i class="fa ${cfg.icon} me-1"></i>${data}
-                            </span>`;
+                    const amount = parseFloat(data || 0);
+
+                    return `
+                        <span class="${amount >= 0 ? 'text-success' : 'text-danger'}">
+                            ${formatINR2(amount)}
+                        </span>
+                    `;
                 }
             },
             {
-                data: "RefNo",
-                title: "Reference"
+                data: "ModifiedDateTime_Format",
+                title: "Modified Datetime",
+                width: "180px"
             },
             {
-                data: "Amount",
-                title: "Amount Impact",
-                className: "text-end fw-semibold",
-                render: d => formatINR2(d)
+                data: "ModifiedBy",
+                title: "Modified By",
+                width: "150px"
             }
         ],
-
-        /* ── Footer totals ── */
-        footerCallback: function (tfoot, data, start, end, display) {
-
-            const api = this.api();
-            const sumCol = idx =>
-                api.column(idx, { page: "all" })
-                    .data()
-                    .reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
-
-            const $cells = $(tfoot).find("th");
-            $cells.eq(0).html("<strong>TOTAL</strong>");
-            $cells.eq(1).html("");
-            $cells.eq(2).html(`<strong>${api.rows({ page: "all" }).count()} records</strong>`);
-            $cells.eq(3).html("");
-            $cells.eq(4).html(`<strong>${formatINR2(sumCol(4))}</strong>`);
-        },
-
-        /* ── Row colour by module ── */
-        createdRow: function (row, rowData) {
-            const cfg = MODULE_CONFIG[rowData.Module];
-            if (cfg) {
-                $(row).css("background-color", cfg.bg);
-            }
-        },
 
         language: {
             emptyTable: "No modification records found for the selected period."
         },
 
         initComplete: function () {
-            $(this.api().table().header())
-                .find('th')
-                .addClass('bg-warning-subtle text-dark');
+            const api = this.api();
+
+            $(api.table().header())
+                .find("th")
+                .addClass("bg-warning-subtle text-dark");
+
+            api.columns.adjust();
         },
 
     });
@@ -318,99 +313,55 @@ function renderModificationSummary(summary) {
 
     if (!summary) return;
 
-    const modules = [
-        {
-            key: "Sales",
-            countKey: "SalesCount",
-            amtKey: "SalesAmount",
-            formula: "Customer Invoice"
-        },
-        {
-            key: "Purchase",
-            countKey: "PurchaseCount",
-            amtKey: "PurchaseAmount",
-            formula: "Purchase"
-        },
-        {
-            key: "Expense",
-            countKey: "ExpenseCount",
-            amtKey: "ExpenseAmount",
-            formula: "Expense Transactions"
-        },
-        {
-            key: "Income",
-            countKey: "IncomeCount",
-            amtKey: "IncomeAmount",
-            formula: "Income Transactions"
-        }
-    ];
-
-    let cardsHtml = "";
-    modules.forEach(m => {
-        const cfg = MODULE_CONFIG[m.key];
-        const count = parseInt(summary[m.countKey]) || 0;
-        const amount = parseFloat(summary[m.amtKey]) || 0;
-        const tooltipHtml = `<div class='text-start'><span class='text-warning fw-semibold'>${m.key} Modifications</span><hr class='my-1'/>${m.formula.replace(/\n/g, "<br/>")}</div>`;
-
-        cardsHtml += `
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-${cfg.color} h-100 mod-summary-card"
-                 data-bs-toggle="tooltip"
-                 data-bs-placement="top"
-                 data-bs-custom-class="pl-formula-tooltip"
-                 data-bs-html="true"
-                 title="${tooltipHtml.replace(/"/g, '&quot;')}"
-                 style="cursor:help;">
+    $("#modSummaryCards").html(`
+        <div class="col-md-3">
+            <div class="card border-primary">
                 <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <div class="rounded-circle bg-${cfg.color} bg-opacity-10 p-3 flex-shrink-0">
-                            <i class="fa ${cfg.icon} text-${cfg.color} fa-lg"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small">
-                                ${m.key}
-                                <i class="fa fa-circle-info ms-1 text-secondary" style="font-size:10px;"></i>
-                            </div>
-                            <div class="fw-bold fs-7 text-${cfg.color}">${m.key} Modifications</div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                        <span class="badge bg-${cfg.color} bg-opacity-75">
-                            <i class="fa fa-pen me-1"></i>${count} records
-                        </span>
-                        <span class="fw-semibold text-${cfg.color}">${formatINR2(amount)}</span>
+                    <div class="small text-muted">Total Modifications</div>
+                    <div class="fs-4 fw-bold">
+                        ${summary.TotalModifications || 0}
                     </div>
                 </div>
             </div>
-        </div>`;
-    });
+        </div>
 
-    $("#modSummaryCards").html(cardsHtml);
+        <div class="col-md-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <div class="small text-muted">Total Old Amount</div>
+                    <div class="fs-5 fw-bold">
+                        ${formatINR2(summary.TotalOldAmount)}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    // Total banner
-    const total = parseInt(summary.TotalModifications) || 0;
-    const totalAmt = parseFloat(summary.TotalAmount) || 0;
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="small text-muted">Total New Amount</div>
+                    <div class="fs-5 fw-bold">
+                        ${formatINR2(summary.TotalNewAmount)}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    $("#modTotalBanner").html(`
-        <span class="badge bg-secondary fs-6 px-4 py-3 rounded-3 me-3">
-            <i class="fa fa-pen-to-square me-2"></i>
-            Total Modifications: <strong>${total}</strong>
-        </span>
-        <span class="badge bg-dark fs-6 px-4 py-3 rounded-3">
-            <i class="fa fa-indian-rupee-sign me-2"></i>
-            Total Amount Impact: <strong>${formatINR2(totalAmt)}</strong>
-        </span>
-    `).show();
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="small text-muted">Total Impact Amount</div>
+                    <div class="fs-5 fw-bold">
+                        ${formatINR2(summary.TotalImpactAmount)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
 
     $("#modSummarySection").show();
-
-    // ── Init tooltips ──
-    document.querySelectorAll(".mod-summary-card[data-bs-toggle='tooltip']").forEach(el => {
-        const existing = bootstrap.Tooltip.getInstance(el);
-        if (existing) existing.dispose();
-        new bootstrap.Tooltip(el, { trigger: "hover focus", html: true });
-    });
 }
+
 
 /* ═══════════════════════════════════════════════════
    DOWNLOAD PDF / EXCEL
@@ -421,7 +372,7 @@ function ViewModificationReport(actionName) {
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
     const payload = {
-        Module: $("#ddlModule").val() || null,
+        ModuleId: Number($("#ddlModule").val()) || 0,
         FromDate: $("#fromDate").val() || null,
         ToDate: $("#toDate").val() || null,
         FilterDuration: selectedMonthDuration,
@@ -429,6 +380,7 @@ function ViewModificationReport(actionName) {
         Columns: selectedColumns,
         ActionBy: userId
     };
+    console.log("report payload:", payload);
 
     const url = actionName === "downloadExcel"
         ? "/api/Report_Modification/DownloadModificationReport_Excel"
@@ -461,8 +413,7 @@ function ViewModificationReport(actionName) {
         },
         error: function (xhr, status, error) {
             Swal.close();
-            console.error("Download Modification Report Failed", xhr, status, error);
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+            handleApiError(xhr, status, error, "Download Modification Report Failed");
         }
     });
 }
@@ -502,3 +453,26 @@ function updateSelectAllState() {
     const checked = $(".column-checkbox:checked").length;
     $("#chk-select-all").prop("checked", total === checked);
 }
+
+function loadModules() {
+    $.ajax({
+        url: "/api/Report_Modification/GetModuleMasterForModificationReport",
+        type: "GET",
+        dataType: "json",
+        success: function (res) {
+            let options = '<option value="0">-- All Modules --</option>';
+            if (res.status === "Success" && res.data?.length > 0) {
+                $.each(res.data, function (index, item) {
+                    options += `<option value="${item.Id}">${item.Name}</option>`;
+                });
+            }
+            $("#ddlModule").html(options);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load modules");
+            $("#ddlModule").html('<option value="">-- All Modules --</option>');
+        }
+    });
+}
+
+

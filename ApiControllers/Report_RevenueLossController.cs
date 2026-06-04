@@ -311,24 +311,41 @@ namespace ERPAdmin.ApiControllers
                 table.WidthPercentage = 100;
                 table.SetWidths(Enumerable.Repeat(1f, columnCount).ToArray());
 
-                Font thFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.BLACK);
-                Font tdFont = new Font(Font.FontFamily.HELVETICA, 9);
+                Font thFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.BLACK);
+                Font tdFont = new Font(Font.FontFamily.HELVETICA, 8);
                 BaseColor thColor = new BaseColor(240, 240, 240);
+
+                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font AmtFontNormal = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font AmtFontBold = new iTextSharp.text.Font(bf, 8, iTextSharp.text.Font.BOLD);
 
                 for (int i = 0; i < headerTableDB.Rows.Count; i++)
                     table.AddCell(Utils.CreateHeaderCell(headerTableDB.Rows[i][0].ToString(), thFont, thColor));
 
                 table.HeaderRows = 1;
 
-                foreach (DataRow row in dataTableDB.Rows) {
-                    foreach (DataColumn col in dataTableDB.Columns) {
-                        ///table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                foreach (DataRow row in dataTableDB.Rows)
+                {
+                    foreach (DataColumn col in dataTableDB.Columns)
+                    {
+                        string colName = col.ColumnName.Trim();
 
-                        string colName = col.ColumnName.Trim().ToLower();
-                        int align = colName switch
+                        bool isAmountColumn =
+                            colName.Equals("Loss Amount", StringComparison.OrdinalIgnoreCase);
+
+                        string value = row[col]?.ToString() ?? "-";
+
+                        if (isAmountColumn &&
+                            decimal.TryParse(value, out decimal amount))
+                        {
+                            value = "₹ " + amount.ToString("N2");
+                        }
+
+                        int align = colName.ToLower() switch
                         {
                             "sr. no." => Element.ALIGN_CENTER,
-                            "date" => Element.ALIGN_CENTER,
+                            "event date" => Element.ALIGN_CENTER,
                             "guest name" => Element.ALIGN_LEFT,
                             "event" => Element.ALIGN_LEFT,
                             "sub-event" => Element.ALIGN_LEFT,
@@ -339,30 +356,61 @@ namespace ERPAdmin.ApiControllers
                             _ => Element.ALIGN_RIGHT
                         };
 
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont, align));
+                        table.AddCell(
+                            Utils.CreateBodyCell(
+                                value,
+                                isAmountColumn ? AmtFontNormal : tdFont,
+                                align
+                            )
+                        );
                     }
                 }
 
-                // ── Totals row ──
+                //TOTALs
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+
+                    Font totalFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        10,
+                        Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string value = col.ColumnName switch
-                        {
-                            "Loss Amount" => $"{totalRow["TotalLossAmount"]}",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
-                        };
+                        string colName = col.ColumnName.Trim();
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
+                        bool isAmountColumn = false;
+                        string value = "";
+
+                        switch (colName)
                         {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            case "Loss Amount":
+                                value = "₹ " +
+                                        Convert.ToDecimal(totalRow["TotalLossAmount"])
+                                        .ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            default:
+                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                break;
+                        }
+
+                        int align =
+                            value == "TOTAL"
+                                ? Element.ALIGN_CENTER
+                                : Element.ALIGN_RIGHT;
+
+                        table.AddCell(new PdfPCell(
+                            new Phrase(
+                                value,
+                                isAmountColumn ? AmtFontBold : totalFont))
+                        {
+                            HorizontalAlignment = align,
                             BackgroundColor = new BaseColor(240, 240, 240),
                             Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220), // light gray
+                            BorderColor = new BaseColor(220, 220, 220),
                             BorderWidth = 0.5f
                         });
                     }
