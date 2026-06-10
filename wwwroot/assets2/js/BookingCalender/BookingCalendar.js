@@ -2475,7 +2475,7 @@ function enableEnquiryTooltips() {
             html += `
                 <tr>
                     <td>${x.Name}</td>
-                    <td>${pax.toLocaleString()}</td>
+                    <td><i class='fas fa-user'></i> ${pax.toLocaleString()}</td>
                     <td class="text-end">₹ ${amount.toLocaleString()}</td>
                 </tr>
             `;
@@ -2485,7 +2485,7 @@ function enableEnquiryTooltips() {
         html += `
             <tr class="fw-bold">
                 <td>Total</td>
-                <td>${totalPax.toLocaleString()}</td>
+                <td><i class='fas fa-user'></i> ${totalPax.toLocaleString()}</td>
                 <td class="text-end">₹ ${totalAmount.toLocaleString()}</td>
             </tr>
         `;

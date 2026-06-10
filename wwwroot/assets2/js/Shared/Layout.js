@@ -141,7 +141,7 @@ function sendWhatsAppMessage({mobileNo = '', templateName = '', variables = [], 
     });
 }
 function generateGUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    return 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0,
             v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -184,15 +184,15 @@ function handleApiSuccess(msg = "Saved successfully!") {
         icon: "success",
         title: msg,
         showConfirmButton: false,
-        timer: 1200,
+        timer: 800,
         timerProgressBar: true,
         didOpen: (toast) => {
             toast.addEventListener('mouseenter', Swal.stopTimer);
             toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
     });
-
 }
+
 function formatINR(amount) {
     if (!amount) return "0";
     return amount.toLocaleString("en-IN");

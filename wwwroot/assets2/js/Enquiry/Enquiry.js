@@ -1165,6 +1165,125 @@ function loadEnquiryDeals(processId = 0) {
     });
 }
 
+//SORTING DATA
+let currentSortField = "EventDate";
+let currentSortDirection = "asc";
+function sortDeals() {
+    processes.forEach(process => {
+        process.EnquiryDealsJson.sort((a, b) => {
+            let valueA;
+            let valueB;
+
+            switch (currentSortField) {
+                case "EventDate":
+                    valueA = new Date(a.EventDate);
+                    valueB = new Date(b.EventDate);
+                    break;
+
+                case "Amount":
+                    valueA = Number(a.Amount || 0);
+                    valueB = Number(b.Amount || 0);
+                    break;
+
+                case "Pax":
+                    valueA = Number(a.Pax || 0);
+                    valueB = Number(b.Pax || 0);
+                    break;
+            }
+
+            if (valueA < valueB)
+                return currentSortDirection === "asc" ? -1 : 1;
+
+            if (valueA > valueB)
+                return currentSortDirection === "asc" ? 1 : -1;
+
+            return 0;
+        });
+    });
+    renderBoard();
+    refreshSortUI();
+}
+
+function refreshSortUI() {
+
+    // Reset all links
+    $('#sortEventDate, #sortAmount, #sortPax')
+        .removeClass('text-warning fw-bold')
+        .addClass('text-dark');
+
+    // Reset all icons
+    $('#sortEventDate_icon, #sortAmount_icon, #sortPax_icon')
+        .removeClass('fa-sort-up fa-sort-down text-warning')
+        .addClass('fa-sort');
+
+    let $link;
+    let $icon;
+
+    switch (currentSortField) {
+
+        case 'EventDate':
+            $link = $('#sortEventDate');
+            $icon = $('#sortEventDate_icon');
+            break;
+
+        case 'Amount':
+            $link = $('#sortAmount');
+            $icon = $('#sortAmount_icon');
+            break;
+
+        case 'Pax':
+            $link = $('#sortPax');
+            $icon = $('#sortPax_icon');
+            break;
+    }
+
+    $link
+        .removeClass('text-dark')
+        .addClass('text-warning fw-bold');
+
+    $icon.removeClass('fa-sort');
+
+    if (currentSortDirection === 'asc') {
+        $icon.addClass('fa-sort-up text-warning');
+    }
+    else {
+        $icon.addClass('fa-sort-down text-warning');
+    }
+}
+
+
+$('#sortEventDate').click(function () {
+    if (currentSortField === "EventDate")
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+    else {
+        currentSortField = "EventDate";
+        currentSortDirection = "asc";
+    }
+    sortDeals();
+});
+
+$('#sortAmount').click(function () {
+    if (currentSortField === "Amount")
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+    else {
+        currentSortField = "Amount";
+        currentSortDirection = "desc";
+    }
+    sortDeals();
+});
+
+$('#sortPax').click(function () {
+    if (currentSortField === "Pax")
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+    else {
+        currentSortField = "Pax";
+        currentSortDirection = "desc";
+    }
+    sortDeals();
+});
+
+
+
 // Render board dynamically
 function renderBoard() {
     const board = document.getElementById("processBoard");
@@ -2308,6 +2427,7 @@ document.addEventListener("DOMContentLoaded", function () {
             $("#fromDate_filter").val("");
             $("#toDate_filter").val("");
         }
+        loadEnquiryDeals();
     });
 
     $("#ddlLeadLostReasonCategory").on("change", function () {

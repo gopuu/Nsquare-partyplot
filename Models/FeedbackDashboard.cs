@@ -134,7 +134,7 @@
     public class CategoryRating
     {
         public string? CategoryName { get; set; }
-        public string? AvgRating { get; set; }
+        public decimal? AvgRating { get; set; }
         public int PositiveCount { get; set; }
         public string? PositiveIcon { get; set; }
         public int NeutralCount { get; set; }

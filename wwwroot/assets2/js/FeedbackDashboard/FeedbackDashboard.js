@@ -42,9 +42,9 @@ function loadFeedbackCounts(monthDuration = "thismonth", fromDate = null, toDate
                    POS / NEG / NEU
                 ======================= */
                 if (data.JSON_FeedbackReport) {
-                    $("#valPositive").text(formatPercent(data.JSON_FeedbackReport.Positive));
-                    $("#valNegative").text(formatPercent(data.JSON_FeedbackReport.Negative));
-                    $("#valNeutral").text(formatPercent(data.JSON_FeedbackReport.Neutral));
+                    $("#valPositive").text(data.JSON_FeedbackReport.Positive);
+                    $("#valNegative").text(data.JSON_FeedbackReport.Negative);
+                    $("#valNeutral").text(data.JSON_FeedbackReport.Neutral);
                 } else {
                     $("#valPositive, #valNegative, #valNeutral").text("0%");
                 }
@@ -127,27 +127,27 @@ function renderCategoryRatings(list) {
             <!-- Center : Avg Rating -->
             <div class="avg-rating-box">
                 <div class="avg-text">Avg Rate</div>
-                <div class="avg-value fs-9">${item.AvgRating} / 5</div>
-                <div class="avg-sub d-none">Out of 5</div>
+                <div class="avg-value fs-8">${item.AvgRating}</div>
+                <div class="avg-sub">Out of 5</div>
             </div>
 
             <!-- Right : Feedback counts -->
             <div class="feedback-box">
                 
                 <div class="feedback-item positive">
-                    😊
+                    <div class="icon fs-6">😊</div>
                     <div class="count text-success fs-9">${item.PositiveCount}</div>
                     <div class="label text-success">Positive</div>
                 </div>
 
                 <div class="feedback-item neutral">
-                    😐
+                    <div class="icon fs-6">😐</div>
                     <div class="count text-secondary fs-9">${item.NeutralCount}</div>
                     <div class="label text-secondary">Neutral</div>
                 </div>
 
                 <div class="feedback-item negative">
-                    🙁
+                    <div class="icon fs-6">🙁</div>
                     <div class="count text-danger fs-9">${item.NegativeCount}</div>
                     <div class="label text-danger">Negative</div>
                 </div>
@@ -214,7 +214,6 @@ function renderRatingBreakdown(list) {
     let html = "";
 
     list.forEach(item => {
-
         const percentValue = parseFloat(item.Percentage) || 0;
 
         html += `
@@ -224,10 +223,11 @@ function renderRatingBreakdown(list) {
                  style="height:${percentValue.toFixed(2)}%">
             </div>
 
-            <div class="emoji">${item.IconUrl}</div>
+            <div class="emoji fs-6">${item.IconUrl}</div>
 
             <div class="percent">${formatPercent(item.Percentage)}</div>
             <div class="count">${item.Count} Ratings</div>
+            <div class="star">${item.RatingValue}⭐</div>
         </div>`;
     });
 
@@ -278,16 +278,14 @@ function loadRatingsOverTime(monthDuration = "thismonth") {
 }
 
 function renderRatingSpikes(list) {
-
+    console.log("list:", list);
     const monthMap = {};
 
     // 🔹 Merge all ratings → month-wise total
     list.forEach(rating => {
         rating.Data.forEach(d => {
-
             const dateObj = new Date(d.Date);
-            const monthKey =
-                dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, "0");
+            const monthKey = dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, "0");
 
             monthMap[monthKey] = (monthMap[monthKey] || 0) + d.Count;
         });
@@ -303,26 +301,34 @@ function renderRatingSpikes(list) {
     }
 
     const maxValue = Math.max(...values);
-    const maxHeight = 200;
+    const maxHeight = 150;
 
     let spikeHtml = "";
     let dateHtml = "";
 
+    console.log("maxValue:", maxValue);
     months.forEach(key => {
 
-        const height = maxValue === 0
-            ? 4
-            : (monthMap[key] / maxValue) * maxHeight;
+        const count = monthMap[key];
+        console.log("count:", count);
 
+        const height = maxValue === 0 ? 4 : (count / maxValue) * maxHeight;
         spikeHtml += `
-            <div class="spike" style="height:${height}px"></div>
-        `;
-
+            <div class="spike"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 title="${formatMonth(key)}<br>${count} Ratings"
+                 style="height:${height}px">
+            </div>`;
         dateHtml += `<span>${formatMonth(key)}</span>`;
     });
 
     $("#ratingSpikeArea").html(spikeHtml);
     $("#ratingDateRow").html(dateHtml);
+
+    $('[data-bs-toggle="tooltip"]').tooltip({
+        html: true
+    });
 }
 
 $(".chart-filter-ratingtime .dropdown-item").on("click", function (e) {

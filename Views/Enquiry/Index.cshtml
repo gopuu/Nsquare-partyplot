@@ -28,6 +28,17 @@
                         <div class="col-8">
 
                             <div class="d-flex justify-content-end align-items-center gap-2">
+                                <a href="javascript:void(0);" id="sortEventDate" class="sort-link text-decoration-none text-dark small fw-semibold">
+                                    <i id="sortEventDate_icon" class="fas fa-sort me-1"></i> Event Date
+                                </a>
+
+                                <a href="javascript:void(0);" id="sortAmount" class="sort-link text-decoration-none text-dark small fw-semibold">
+                                    <i id="sortAmount_icon" class="fas fa-sort me-1"></i> Amount
+                                </a>
+
+                                <a href="javascript:void(0);" id="sortPax" class="sort-link text-decoration-none text-dark small fw-semibold">
+                                    <i id="sortPax_icon" class="fas fa-sort me-1"></i> PAX
+                                </a>
 
                                 <!-- Add Process -->
                                 <button class="btn btn-outline-primary btn-sm fw-bold py-1 px-2 d-none"
@@ -67,11 +78,17 @@
 
                                         <!-- Custom Date Range (Hidden by default) -->
                                         <div id="customDateRange" class="d-none">
-                                            <label class="form-label mb-1">From Date</label>
-                                            <input type="date" class="form-control form-control-sm mb-2" id="fromDate_filter">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1">From Date</label>
+                                                    <input type="date" class="form-control form-control-sm" id="fromDate_filter">
+                                                </div>
 
-                                            <label class="form-label mb-1">To Date</label>
-                                            <input type="date" class="form-control form-control-sm mb-2" id="toDate_filter">
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1">To Date</label>
+                                                    <input type="date" class="form-control form-control-sm" id="toDate_filter">
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <!-- Amount Range -->

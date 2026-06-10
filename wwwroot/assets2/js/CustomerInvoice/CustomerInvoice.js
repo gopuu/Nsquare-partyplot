@@ -435,9 +435,10 @@ $(function () {
         $("#chkSMS").prop("checked", $(this).val().trim() !== "");
     });
 
+    /*
     $("#sendWhatsapp").on("input", function () {
         $("#chkWhatsapp").prop("checked", $(this).val().trim() !== "");
-    });
+    });*/
 
     $("#btnSendInvoice").click(function () {
         const email = $("#chkEmail").is(":checked") ? $("#sendEmail").val().trim() : "";
@@ -754,9 +755,10 @@ $(function () {
                     //resetForm();
                     $('#btnSaveInvoice').prop('disabled', true);
                     invoiceModal.hide();
-                } else {
+                } 
+                else {
                     Swal.fire({
-                        icon: 'error',
+                        icon: 'info',
                         title: 'Failed',
                         text: res.message || 'Failed to save invoice'
                     });
@@ -1824,6 +1826,7 @@ function recalcRow(row) {
     row.find('.total').val(total.toFixed(2));
     recalcAll();
 }
+
 function recalcAll() {
 
     let subTotal = 0;
@@ -1834,13 +1837,13 @@ function recalcAll() {
     const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
 
     let rows = $('#invoiceItemsBody tr');
-
     // ✅ Step 1: Sum totals
     rows.each(function () {
         const row = $(this);
 
         let total = parseFloat(row.find('.total').val()) || 0;
         let taxable = parseFloat(row.find('.taxable').val()) || 0;
+
         let cgst = parseFloat(row.find('.cgst').val()) || 0;
         let sgst = parseFloat(row.find('.sgst').val()) || 0;
         let igst = parseFloat(row.find('.igst').val()) || 0;
@@ -2071,9 +2074,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
             //$('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
 
             $('#invoiceItemsBody').empty();
-
             if (data.ItemsJson && data.ItemsJson.length > 0) {
-
                 data.ItemsJson.forEach(item => {
 
                     const taxable = parseFloat(item.Taxable) || 0;
@@ -2164,9 +2165,10 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                         </tr>
                         `;
 
-                    $('#invoiceItemsBody').append(row);
+                    const $row = $(row);
+                    $('#invoiceItemsBody').append($row);
+                    $row.find('.calc:last').trigger('change');
                 });
-
                 updateRowSequence();
                 recalcAll();
             } else {
@@ -2765,7 +2767,7 @@ function renderTable(data, totals) {
                        data-bookingid="${row.BookingId}"
                        data-invoiceno=""
                        data-proformano="${row.ProformaInvoiceNo}" disabled>
-                    <i class="fa fa-paper-plane me-1"></i>Coming Soon
+                    <i class="fa fa-paper-plane me-1"></i>
                 </button>`
                         : '-'
             },
@@ -2875,7 +2877,7 @@ function renderTable(data, totals) {
                                    data-invoiceno="${row.InvoiceNo}"
                                    data-gstinvoiceno="${row.GSTInvoiceNo}"
                                    data-proformano="">
-                                <i class="fa fa-paper-plane me-1"></i>Coming Soon
+                                <i class="fa fa-paper-plane me-1"></i>
                             </button>`
                         : '-'
             },

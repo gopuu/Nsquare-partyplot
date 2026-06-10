@@ -18,6 +18,23 @@ $(document).ready(function () {
     loadFeedbackForm();
 });
 
+function handleApiSuccess(msg = "Saved successfully!") {
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: msg,
+        showConfirmButton: false,
+        timer: 800,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+}
+
+
 /* ================= LOAD FORM ================= */
 function loadFeedbackForm() {
     $.get("/api/Feedback/GetFeedbackFormData", function (res) {
