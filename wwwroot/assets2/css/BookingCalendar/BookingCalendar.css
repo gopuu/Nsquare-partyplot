@@ -1,4 +1,96 @@
-﻿/* ================= INVOICE ITEMS TABLE ================= */
+﻿/* ====== NOTES - BOOKING VIEW-- START =====*/
+.booking-note-category {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.booking-note-category-header {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.booking-note-subcategory {
+    padding: 10px 15px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.booking-note-options {
+    margin-top: 6px;
+}
+
+.booking-note-badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.booking-note-remarks {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #6c757d;
+}
+/* ====== NOTES - BOOKING VIEW-- END =====*/
+
+/* ====== NOTES - BOOKING INPUT-- START =====*/
+.note-category-card {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.note-category-header {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-category-body {
+    display: none;
+    padding: 15px;
+    background: #fff;
+}
+
+.note-subcategory {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.note-subcategory:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.note-options {
+    margin-top: 10px;
+}
+
+.note-options .form-check {
+    margin-bottom: 8px;
+}
+
+.note-remarks {
+    margin-top: 10px;
+}
+
+.rotate-icon {
+    transition: .2s;
+}
+
+.rotate-icon.open {
+    transform: rotate(180deg);
+}
+/* ====== NOTES -- END =====*/
+
+/* ================= INVOICE ITEMS TABLE ================= */
 .invoice-items-table {
     table-layout: fixed; /* 🔑 prevents column jumping */
     width: 100%;

@@ -40,68 +40,6 @@ const toolbarOptions = [
     [{ list: 'ordered' }, { list: 'bullet' }]
 ];
 
-// Store editors
-const editors = {};
-let notesData = null; // store once
-
-// Toggle logic
-
-$(document).on("click", ".toggle-editor", function () {
-    const targetId = $(this).data("target");
-    const box = $("#box_" + targetId);
-
-    if (box.hasClass("d-none")) {
-        box.removeClass("d-none");
-        // Init if not exists
-        if (!editors[targetId]) {
-            editors[targetId] = new Quill("#" + targetId, {
-                theme: "snow",
-                modules: { toolbar: toolbarOptions }
-            });
-        }
-
-        // ✅ ALWAYS SET DATA (important fix)
-        let value = "";
-
-        if (notesData) {
-            switch (targetId) {
-                case "OtherCharges_customerEditor":
-                    value = notesData.OtherCharges_BookingNoteForCustomer;
-                    break;
-                case "OtherCharges_internalEditor":
-                    value = notesData.OtherCharges_InternalOfficeNote;
-                    break;
-                case "Notes_FoodBeverage_customerEditor":
-                    value = notesData.Notes_FoodBeverage;
-                    break;
-                case "Notes_EventTiming_customerEditor":
-                    value = notesData.Notes_EventTiming;
-                    break;
-                case "Notes_DecorationSetup_customerEditor":
-                    value = notesData.Notes_DecorationSetup;
-                    break;
-                case "Notes_TechnicalService_customerEditor":
-                    value = notesData.Notes_TechnicalService;
-                    break;
-                case "Notes_GuestCustom_customerEditor":
-                    value = notesData.Notes_GuestCustom;
-                    break;
-                case "Notes_FinancialInternal_internalEditor":
-                    value = notesData.Notes_FinancialInternal;
-                    break;
-            }
-        }
-
-        editors[targetId].root.innerHTML = value || "";
-    }
-    else {
-        box.addClass("d-none");
-        // ❌ Do NOT clear here (important)
-        // otherwise edit mode loses data
-    }
-});
-
-//< !--Booking Note - text Editor-- - END---->
 
 // Optional: Auto-correct minute/hour inputs
 
@@ -5864,6 +5802,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                         ? data.OtherCharges_BookingNoteForCustomer
                         : "— No customer booking notes available —"
                     );
+                    //NOTES -RENDER
+                    const notes = data.JSON_Notes ?? [];
+                    renderBookingNotes(notes);
+                    $('#toggleBookingNotes').prop('checked', false);
+                    $('#bookingNotesContainer').hide();
+
                     $("#VendorWorkOrder_Count").text(data.VendorWorkOrder_Count);
 
                     //Booking Details
@@ -6011,8 +5955,6 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#OtherCharges_ProjectorScreen_Amount").val(data.OtherCharges_ProjectorScreen_Amount);
                     $("#OtherCharges_ProjectorScreen_GST").val(data.OtherCharges_ProjectorScreen_GST);
 
-                    notesData = data; // store once
-
                     //payment summary
                     $("#paymentSummary_TaxableAmount").text(formatAmount(data.PaymentSummary_TaxableAmount));
                     $("#paymentSummary_CGST").text(formatAmount(data.PaymentSummary_CGST));
@@ -6039,6 +5981,22 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#PaymentDetails_ChequeDate").val(data.PaymentDetails_ChequeDate);
                     $("#PaymentDetails_DueDate").val(data.Payment_DueDate);
                     $("#PaymentDetails_PaymentNote").val(data.Payment_Note);
+
+                    $("#OtherCharges_customerNote").val(data.OtherCharges_BookingNoteForCustomer || '');
+                    $("#OtherCharges_internalNote").val(data.OtherCharges_InternalOfficeNote || '');
+
+                    $("#Notes_FoodBeverage").val(data.Notes_FoodBeverage || '');
+                    $("#Notes_EventTiming").val(data.Notes_EventTiming || '');
+                    $("#Notes_DecorationSetup").val(data.Notes_DecorationSetup || '');
+                    $("#Notes_TechnicalService").val(data.Notes_TechnicalService || '');
+                    $("#Notes_GuestCustom").val(data.Notes_GuestCustom || '');
+                    $("#Notes_FinancialInternal").val(data.Notes_FinancialInternal || '');
+
+                    //NOTES -for edit
+                    const notes = data.JSON_Notes ?? [];
+                    if (notes.length > 0) {
+                        loadBookingNotes(notes);
+                    }                    
 
                     $("#BookingType").val(data.Booking_TypeId ?? "");
                     $("#AgentCheck").prop("checked", data.Booking_IsAgent);
@@ -6087,6 +6045,168 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+// ================================
+// Load Notes Data (Edit Mode)
+// ================================
+function loadBookingNotes(notesData) {
+
+    if (!notesData?.length)
+        return;
+
+    // Clear existing selections
+    $('.note-option').prop('checked', false);
+    $('.note-dropdown').val('');
+    $('.note-text-value').val('');
+    $('.note-remarks').val('');
+
+    notesData.forEach(item => {
+
+        // Remarks
+        $(`.note-remarks[data-subcategoryid="${item.SubCategoryId}"]`)
+            .val(item.Remarks || '');
+
+        // Value
+        $(`.note-text-value[data-subcategoryid="${item.SubCategoryId}"]`)
+            .val(item.Value || '');
+
+        // Option
+        if (item.OptionId) {
+
+            // Checkbox / Radio
+            $(`.note-option[data-optionid="${item.OptionId}"]`)
+                .prop('checked', true);
+
+            // Dropdown
+            $(`.note-dropdown[data-subcategoryid="${item.SubCategoryId}"]`)
+                .val(item.OptionId);
+        }
+    });
+}
+function renderBookingNotes(notes) {
+
+    const container = $('#bookingNotesContainer');
+
+    container.empty();
+
+    if (!notes?.length) {
+
+        container.html(`
+            <div class="alert alert-light text-muted mb-0">
+                No booking notes available.
+            </div>
+        `);
+
+        return;
+    }
+
+    let grouped = {};
+
+    notes.forEach(note => {
+
+        const key = note.CategoryId;
+
+        if (!grouped[key]) {
+
+            grouped[key] = {
+                CategoryName: note.CategoryName,
+                Items: []
+            };
+        }
+
+        grouped[key].Items.push(note);
+    });
+
+    let html = '';
+
+    Object.values(grouped).forEach(category => {
+
+        html += `
+        <div class="card mb-3 shadow-sm">
+
+            <div class="card-header fw-bold bg-light">
+                ${category.CategoryName}
+            </div>
+
+            <div class="card-body">
+        `;
+
+        let subGroups = {};
+
+        category.Items.forEach(item => {
+
+            const key = item.SubCategoryId;
+
+            if (!subGroups[key]) {
+
+                subGroups[key] = {
+                    SubCategoryName: item.SubCategoryName,
+                    Remarks: item.Remarks,
+                    Value: item.Value,
+                    Options: []
+                };
+            }
+
+            if (item.OptionName) {
+                subGroups[key].Options.push(item.OptionName);
+            }
+        });
+
+        Object.values(subGroups).forEach(sub => {
+
+            html += `
+                <div class="mb-3">
+
+                    <div class="fw-semibold text-primary">
+                        ${sub.SubCategoryName}
+                    </div>
+            `;
+
+            if (sub.Options.length) {
+
+                html += `
+                    <div class="mt-1">
+                        ${sub.Options.map(o =>
+                            `<span class="badge bg-primary me-1">${o}</span>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+
+            if (sub.Value) {
+
+                html += `
+                    <div class="mt-2">
+                        <strong>Value:</strong>
+                        ${sub.Value}
+                    </div>
+                `;
+            }
+
+            if (sub.Remarks) {
+
+                html += `
+                    <div class="mt-1 text-muted">
+                        <strong>Remarks:</strong>
+                        ${sub.Remarks}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        });
+
+        html += `
+            </div>
+        </div>`;
+    });
+
+    container.html(html);
+}
+
+$('#toggleBookingNotes').on('change', function () {
+    $('#bookingNotesContainer').stop(true, true).slideToggle(this.checked);
+});
+
 //Bookimg Summary - Package DATA -- START ------------------
 function renderFoodPackages(packages) {
     let html_services = "";
@@ -6549,6 +6669,239 @@ function getCleanHtml(editor) {
 
     return html;
 }
+
+loadBookingNotesMaster();
+function loadBookingNotesMaster() {
+    $.ajax({
+        url: '/api/BookingCalendar/GetBookingCalendar_NotesMaster',
+        type: 'GET',
+        success: function (response) {
+
+            console.log("Notes Master Response:", response);
+
+            if (!response || response.status !== 'Success') {
+                console.error("Invalid response");
+                return;
+            }
+
+            renderNotes(response.data || []);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Notes Master Data");
+            console.error(xhr);
+        }
+    });
+}
+
+function renderNotes(categories) {
+    let html = '';
+    (categories || []).forEach(category => {
+        html += `
+            <div class="note-category-card mb-3">
+                <div class="note-category-header d-flex justify-content-between align-items-center"
+                     data-categoryid="${category.CategoryId}">
+                    <span class="fw-bold">${category.Name}</span>
+                    <i class="fa fa-chevron-down rotate-icon"></i>
+                </div>
+                <div class="note-category-body p-3">
+        `;
+
+        (category.SubCategories || []).forEach(sub => {
+            html += `
+                <div class="note-subcategory mb-4" data-categoryid="${category.CategoryId}"
+                     data-subcategoryid="${sub.SubCategoryId}">
+                    <h6 class="fw-bold mb-2">
+                        ${sub.Name}
+                    </h6>
+            `;
+
+            //------------------------------------------
+            // MultiSelect => Checkbox
+            //------------------------------------------
+            if (sub.InputType === "MultiSelect") {
+                html += `<div class="row g-2 note-options">`;
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input note-option"
+                                    type="checkbox"
+                                    data-categoryid="${category.CategoryId}"
+                                    data-subcategoryid="${sub.SubCategoryId}"
+                                    data-optionid="${option.SubCategoryOptionId}">
+
+                                <label class="form-check-label">
+                                    ${option.OptionName}
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            //------------------------------------------
+            // Select => Radio
+            //------------------------------------------
+            else if (sub.InputType === "Select") {
+                html += `<div class="row g-2 note-options">`;
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input note-option"
+                                    type="radio"
+                                    name="radio_${sub.SubCategoryId}"
+                                    data-categoryid="${category.CategoryId}"
+                                    data-subcategoryid="${sub.SubCategoryId}"
+                                    data-optionid="${option.SubCategoryOptionId}">
+
+                                <label class="form-check-label">
+                                    ${option.OptionName}
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            //------------------------------------------
+            // Dropdown
+            //------------------------------------------
+            else if (sub.InputType === "Dropdown") {
+                html += `
+                    <select class="form-select note-dropdown"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                        <option value="">
+                            Select
+                        </option>
+                `;
+
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <option value="${option.SubCategoryOptionId}">
+                            ${option.OptionName}
+                        </option>
+                    `;
+                });
+                html += `
+                    </select>
+                `;
+            }
+
+            //------------------------------------------
+            // Text
+            //------------------------------------------
+            else if (sub.InputType === "Text") {
+
+                html += `
+                    <input
+                        type="text"
+                        class="form-control note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Number
+            //------------------------------------------
+            else if (sub.InputType === "Number") {
+
+                html += `
+                    <input
+                        type="number"
+                        class="form-control note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Date
+            //------------------------------------------
+            else if (sub.InputType === "Date") {
+
+                html += `
+                    <input
+                        type="date"
+                        class="form-control note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Time
+            //------------------------------------------
+            else if (sub.InputType === "Time") {
+
+                html += `
+                    <input
+                        type="time"
+                        class="form-control note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Boolean
+            //------------------------------------------
+            else if (sub.InputType === "Boolean") {
+
+                html += `
+                    <div class="form-check form-switch">
+
+                        <input
+                            class="form-check-input note-boolean"
+                            type="checkbox"
+                            data-categoryid="${category.CategoryId}"
+                            data-subcategoryid="${sub.SubCategoryId}">
+
+                    </div>
+                `;
+            }
+
+            //------------------------------------------
+            // Remarks
+            //------------------------------------------
+
+            html += `
+                <div class="mt-2">
+
+                    <textarea
+                        class="form-control note-remarks"
+                        rows="2"
+                        placeholder="Remarks"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}"></textarea>
+
+                </div>
+
+            </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    $('#notesContainer').html(html);
+}
+
+$(document).on('click', '.note-category-header', function () {
+    const body = $(this).next('.note-category-body');
+    body.slideToggle();
+    $(this).find('.rotate-icon').toggleClass('open');
+});
+
 function saveBooking() {
     if (!validateBookingForm()) {
         return;
@@ -6559,15 +6912,15 @@ function saveBooking() {
     let userId = parseInt(sessionStorage.getItem('userId') ? sessionStorage.getItem('userId') : 0);
 
     // ✅ Use existing editors (DO NOT re-init)
-    var customerNote = getCleanHtml(editors["OtherCharges_customerEditor"]);
-    var internalNote = getCleanHtml(editors["OtherCharges_internalEditor"]);
+    var customerNote = $("#OtherCharges_customerNote").val().trim();
+    var internalNote = $("#OtherCharges_internalNote").val().trim();
 
-    var notes_FoodBeverage = getCleanHtml(editors["Notes_FoodBeverage_customerEditor"]);
-    var notes_EventTiming = getCleanHtml(editors["Notes_EventTiming_customerEditor"]);
-    var notes_DecorationSetup = getCleanHtml(editors["Notes_DecorationSetup_customerEditor"]);
-    var notes_TechnicalService = getCleanHtml(editors["Notes_TechnicalService_customerEditor"]);
-    var notes_GuestCustom = getCleanHtml(editors["Notes_GuestCustom_customerEditor"]);
-    var notes_FinancialInternal = getCleanHtml(editors["Notes_FinancialInternal_internalEditor"]);
+    var notes_FoodBeverage = $("#Notes_FoodBeverage").val().trim();
+    var notes_EventTiming = $("#Notes_EventTiming").val().trim();
+    var notes_DecorationSetup = $("#Notes_DecorationSetup").val().trim();
+    var notes_TechnicalService = $("#Notes_TechnicalService").val().trim();
+    var notes_GuestCustom = $("#Notes_GuestCustom").val().trim();
+    var notes_FinancialInternal = $("#Notes_FinancialInternal").val().trim();
 
 
     // 🔹 1. Collect Booking Data
@@ -6666,6 +7019,46 @@ function saveBooking() {
     });
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
+
+    //NOTES
+    let notes = [];
+    $('.note-subcategory').each(function () {
+        const categoryId = $(this).data('categoryid');
+        const subCategoryId = $(this).data('subcategoryid');
+        const remarks = $(this).find('.note-remarks').val();
+
+        //------------------------------------
+        // Selected Options
+        //------------------------------------
+        let selectedOptions = [];
+        $(this).find('.note-option:checked').each(function () {
+            selectedOptions.push({
+                OptionId: $(this).data('optionid')
+            });
+        });
+        //------------------------------------
+        // Dropdown
+        //------------------------------------
+        let dropdownValue = $(this).find('.note-dropdown').val();
+        if (dropdownValue) {
+            selectedOptions.push({
+                OptionId: dropdownValue
+            });
+        }
+        //------------------------------------
+        // Text
+        //------------------------------------
+        let value = $(this).find('.note-text-value').val();
+        notes.push({
+            CategoryId: categoryId,
+            SubCategoryId: subCategoryId,
+            Value: value,
+            Remarks: remarks,
+            Options: selectedOptions
+        });
+
+    });
+    bookingData.JSON_Notes = notes;
 
     console.log("Final Booking JSON:", bookingData);
 
@@ -6885,28 +7278,8 @@ function resetBooking() {
     else {
         $stateDropdown.val("0").trigger("change");
     }
-
-    //Clear editors notes
-    resetAllEditors();
-
+ 
     $("#btnBook").prop("disabled", false);
-}
-
-// Reset all editors safely
-function resetAllEditors() {
-
-    // 1. Clear all initialized editors
-    Object.keys(editors).forEach(key => {
-        if (editors[key]) {
-            editors[key].setContents([]);
-        }
-    });
-
-    // 2. Hide all editor boxes
-    $(".editor-box").addClass("d-none");
-
-    // 3. (Optional) Reset stored data
-    notesData = null;
 }
 
 function resetFoodPackages() {

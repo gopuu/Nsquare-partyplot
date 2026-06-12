@@ -1317,33 +1317,41 @@ function renderBoard() {
 
                                     <span class="fw-bold text-white small flex-shrink-0"
                                           title="Enquiry Date">
-                                        <i class="fa fa-user-plus me-1"></i>
+                                        <i class="fa fa-question-circle me-1"></i>
                                         ${deal.EnquiryDate_Format1}
                                     </span>
                                 </div>
 
                                 <!-- CARD BODY -->
                                 <div class="card-body p-2">
-                                    <!-- Row 1 : Deal Name + Event Date -->
+                                    <!-- Row 1 : Deal Name -->
                                     <div class="d-flex justify-content-between align-items-center mb-1 small">
                                         <span class="fw-bold text-muted text-truncate me-2">
                                             ${deal.EnquiryDealName}
                                         </span>
 
+                                        <span class="fw-bold text-warning flex-shrink-0 fs-9">
+                                            <i class="fa fa-users me-1"></i>
+                                            ${deal.Pax}
+                                        </span>
+                                    </div>
+
+                                    <!-- Row 2 : Amount + Event Date -->
+                                    <div class="d-flex justify-content-between align-items-center small">
                                         <span class="text-muted flex-shrink-0" title="Event Date">
                                             <i class="fa fa-calendar-check me-1"></i>
                                             ${deal.EventDate_Format1}
                                         </span>
-                                    </div>
 
-                                    <!-- Row 2 : Time + Amount -->
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span class="fw-bold text-dark flex-shrink-0 fs-9">
+                                        <span class="fw-bold text-warning flex-shrink-0 fs-9">
                                             ₹${formatINR(deal.Amount)}
                                         </span>
+                                    </div>
 
+                                    <!-- Row 3 : PAX + Time -->
+                                    <div class="d-flex justify-content-between align-items-center small">
                                         <span class="text-muted">
-                                            <i class="fa fa-clock"></i> ${deal.EventStartTime} - ${deal.EventEndTime}
+                                            <i class="fa fa-clock"></i> ${deal.EventStartTime}-${deal.EventEndTime}
                                         </span>
                                     </div>
                                 </div>

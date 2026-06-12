@@ -156,6 +156,9 @@ namespace ERPAdmin.ApiControllers
                         booking.Notes_GuestCustom = dr["Notes_GuestCustom"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_GuestCustom"]);
                         booking.Notes_FinancialInternal = dr["Notes_FinancialInternal"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FinancialInternal"]);
 
+                        booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
+                        booking.JSON_Notes = JsonConvert.DeserializeObject<List<GetNotes>>(Convert.ToString(dr["NotesJSON"]));
+
                         booking.PaymentSummary_TaxableAmount = dr["PaymentSummary_TaxableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_TaxableAmount"]);
                         booking.PaymentSummary_CGST = dr["PaymentSummary_CGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_CGST"]);
                         booking.PaymentSummary_SGST = dr["PaymentSummary_SGST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_SGST"]);
@@ -171,7 +174,6 @@ namespace ERPAdmin.ApiControllers
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
                         booking.Booked_By_EmpName = dr["Booked_By_EmpName"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_By_EmpName"]);
                         booking.Booked_On = dr["Booked_On"] == DBNull.Value ? "" : Convert.ToString(dr["Booked_On"]);
-                        booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
                         booking.VendorWorkOrder_Count = dr["VendorWorkOrder_Count"] == DBNull.Value ? 0 : Convert.ToInt64(dr["VendorWorkOrder_Count"]);
 
                         booking.ReachedUs = dr["ReachedUs"] == DBNull.Value ? "" : Convert.ToString(dr["ReachedUs"]);
@@ -297,7 +299,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@PaymentSummary_BookingDiscount_Total", model.PaymentSummary_BookingDiscount_Total ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@PaymentSummary_PayableAmount", model.PaymentSummary_PayableAmount ?? (object)DBNull.Value);
 
-                    //cmd.Parameters.AddWithValue("@JSON_FoodPackage", model.JSON_FoodPackage ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@JSON_Notes",
+                        model.JSON_Notes != null ? JsonConvert.SerializeObject(model.JSON_Notes) : (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@JSON_FoodPackage",
                         model.JSON_FoodPackage != null ? JsonConvert.SerializeObject(model.JSON_FoodPackage) : (object)DBNull.Value);
 
@@ -697,5 +700,300 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        // Bookings Notes - MASTER DATA
+        [HttpGet]
+        [Route("GetBookingCalendar_NotesMaster")]
+        public IActionResult GetBookingCalendar_NotesMaster()
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<BookingNoteCategoryModel_Master> list = new();
+
+            string connString = string.Empty;
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out connString,
+                        out string domain,
+                        out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using SqlConnection con = new SqlConnection(connString);
+                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NotesMaster", con);
+
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                con.Open();
+
+                DataSet ds = new DataSet();
+
+                using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                {
+                    da.Fill(ds);
+                }
+
+                if (ds.Tables.Count < 3)
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid data returned from database.";
+                    return BadRequest(apiResponse);
+                }
+
+                DataTable categories = ds.Tables[0];
+                DataTable subCategories = ds.Tables[1];
+                DataTable options = ds.Tables[2];
+
+                // Build lookup for options
+                var optionLookup = options.AsEnumerable()
+                    .GroupBy(x => Convert.ToInt64(x["SubCategoryId"]))
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // Build lookup for sub categories
+                var subCategoryLookup = subCategories.AsEnumerable()
+                    .GroupBy(x => Convert.ToInt64(x["CategoryId"]))
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                foreach (DataRow categoryRow in categories.Rows)
+                {
+                    long categoryId = Convert.ToInt64(categoryRow["CategoryId"]);
+
+                    var category = new BookingNoteCategoryModel_Master
+                    {
+                        CategoryId = categoryId,
+                        Name = Convert.ToString(categoryRow["Name"]),
+                        SortOrder = Convert.ToInt32(categoryRow["SortOrder"]),
+                        SubCategories = new List<BookingNoteSubCategoryModel_Master>()
+                    };
+
+                    if (subCategoryLookup.TryGetValue(categoryId, out var subCategoryRows))
+                    {
+                        foreach (var subCategoryRow in subCategoryRows)
+                        {
+                            long subCategoryId = Convert.ToInt64(subCategoryRow["SubCategoryId"]);
+
+                            var subCategory = new BookingNoteSubCategoryModel_Master
+                            {
+                                SubCategoryId = subCategoryId,
+                                CategoryId = Convert.ToInt64(subCategoryRow["CategoryId"]),
+                                Name = Convert.ToString(subCategoryRow["Name"]),
+                                InputType = Convert.ToString(subCategoryRow["InputType"]),
+                                SortOrder = Convert.ToInt32(subCategoryRow["SortOrder"]),
+                                Options = new List<BookingNoteOptionModel_Master>()
+                            };
+
+                            if (optionLookup.TryGetValue(subCategoryId, out var optionRows))
+                            {
+                                foreach (var optionRow in optionRows)
+                                {
+                                    subCategory.Options.Add(new BookingNoteOptionModel_Master
+                                    {
+                                        SubCategoryOptionId = Convert.ToInt64(optionRow["SubCategoryOptionId"]),
+                                        SubCategoryId = Convert.ToInt64(optionRow["SubCategoryId"]),
+                                        OptionName = Convert.ToString(optionRow["OptionName"]),
+                                        SortOrder = Convert.ToInt32(optionRow["SortOrder"])
+                                    });
+                                }
+                            }
+
+                            category.SubCategories.Add(subCategory);
+                        }
+                    }
+
+                    list.Add(category);
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Notes master fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+        /*
+        #region NOTES DATA - Category, SubDategory, Options
+        // Bookings Notes Category        
+        [HttpPost]
+        [Route("GetBookingCalendar_NoteCategory")]
+        private IActionResult GetBookingCalendar_NoteCategory([FromBody] GetBookingCalendar_NoteCategoryRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<BookingCalendar_NoteCategoryModel> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using SqlConnection con = new SqlConnection(connString);
+                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteCategory", con);
+
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+
+                con.Open();
+
+                DataTable dt = new DataTable();
+                dt.Load(cmd.ExecuteReader());
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(new BookingCalendar_NoteCategoryModel
+                    {
+                        Id = Convert.ToInt64(dr["Id"]),
+                        Name = Convert.ToString(dr["Name"]),
+                        SortOrder = Convert.ToInt32(dr["SortOrder"]),
+                        IsActive = Convert.ToBoolean(dr["IsActive"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Categories fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        // Bookings Notes Sub-Category
+        [HttpPost]
+        [Route("GetBookingCalendar_NoteSubCategory")]
+        private IActionResult GetBookingCalendar_NoteSubCategory([FromBody] GetBookingCalendar_NoteSubCategoryRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<BookingCalendar_NoteSubCategoryModel> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using SqlConnection con = new SqlConnection(connString);
+                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteSubCategory", con);
+
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
+
+                con.Open();
+
+                DataTable dt = new DataTable();
+                dt.Load(cmd.ExecuteReader());
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(new BookingCalendar_NoteSubCategoryModel
+                    {
+                        Id = Convert.ToInt64(dr["Id"]),
+                        CategoryId = Convert.ToInt64(dr["CategoryId"]),
+                        CategoryName = Convert.ToString(dr["CategoryName"]),
+                        Name = Convert.ToString(dr["Name"]),
+                        InputType = Convert.ToString(dr["InputType"]),
+                        SortOrder = Convert.ToInt32(dr["SortOrder"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Sub categories fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        // Bookings Notes Sub-Category - OPTIONS
+        [HttpPost]
+        [Route("GetBookingCalendar_NoteOption")]
+        private IActionResult GetBookingCalendar_NoteOption([FromBody] GetBookingCalendar_NoteOptionRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            List<BookingCalendar_NoteOptionModel> list = new();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using SqlConnection con = new SqlConnection(connString);
+                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteOption", con);
+
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
+                cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
+
+                con.Open();
+
+                DataTable dt = new DataTable();
+                dt.Load(cmd.ExecuteReader());
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(new BookingCalendar_NoteOptionModel
+                    {
+                        Id = Convert.ToInt64(dr["Id"]),
+                        SubCategoryId = Convert.ToInt64(dr["SubCategoryId"]),
+                        SubCategoryName = Convert.ToString(dr["SubCategoryName"]),
+                        OptionName = Convert.ToString(dr["OptionName"]),
+                        SortOrder = Convert.ToInt32(dr["SortOrder"])
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Options fetched successfully.";
+                apiResponse.data = list;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+        #endregion
+        */
     }
 }

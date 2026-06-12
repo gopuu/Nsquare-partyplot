@@ -1,5 +1,55 @@
 ﻿namespace ERPAdmin.Models
 {
+    /*
+    #region Booking Notes
+    //request
+    public class GetBookingCalendar_NoteCategoryRequest
+    {
+        public long Id { get; set; }
+    }
+    //request
+    public class GetBookingCalendar_NoteSubCategoryRequest
+    {
+        public long Id { get; set; }
+        public long CategoryId { get; set; }
+    }
+    //request
+    public class GetBookingCalendar_NoteOptionRequest
+    {
+        public long Id { get; set; }
+        public long SubCategoryId { get; set; }
+    }
+
+    //response
+    public class BookingCalendar_NoteCategoryModel
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+    }
+    //response
+    public class BookingCalendar_NoteSubCategoryModel
+    {
+        public long Id { get; set; }
+        public long CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public string Name { get; set; }
+        public string InputType { get; set; }
+        public int SortOrder { get; set; }
+    }
+    //response
+    public class BookingCalendar_NoteOptionModel
+    {
+        public long Id { get; set; }
+        public long SubCategoryId { get; set; }
+        public string SubCategoryName { get; set; }
+        public string OptionName { get; set; }
+        public int SortOrder { get; set; }
+    }
+    #endregion
+    */
+
     public class CustomerInvoiceReportRequest : BaseClass
     {
         public long BookingId { get; set; }          // CustomerInvoice.Id
@@ -216,10 +266,8 @@
         public decimal? PaymentSummary_BookingDiscount_Type_Amount { get; set; }
         public decimal? PaymentSummary_BookingDiscount_Total { get; set; }
         public decimal? PaymentSummary_PayableAmount { get; set; }
-
-        //public string? JSON_FoodPackage { get; set; }
         public List<FoodPackage>? JSON_FoodPackage { get; set; }
-
+        public List<BookingCalendarNoteItem>? JSON_Notes { get; set; }
     }
     public class FoodPackage
     {
@@ -254,7 +302,47 @@
 
     }
 
+    public class BookingCalendarNoteItem
+    {
+        public long? CategoryId { get; set; } = 0;
+        public long? SubCategoryId { get; set; } = 0;
+        public long? OptionId { get; set; } = 0;
+        public string? Value { get; set; } = string.Empty;
+        public string? Remarks { get; set; } = string.Empty;
+    }
 
+    //GET MODEL MASTER -NOTES
+    public class BookingNoteMasterResponse
+    {
+        public List<BookingNoteCategoryModel_Master> Categories { get; set; }
+    }
+    public class BookingNoteCategoryModel_Master
+    {
+        public long CategoryId { get; set; }
+        public string Name { get; set; }
+        public int SortOrder { get; set; }
+
+        public List<BookingNoteSubCategoryModel_Master> SubCategories { get; set; }
+    }
+
+    public class BookingNoteSubCategoryModel_Master
+    {
+        public long SubCategoryId { get; set; }
+        public long CategoryId { get; set; }
+        public string Name { get; set; }
+        public string InputType { get; set; }
+        public int SortOrder { get; set; }
+
+        public List<BookingNoteOptionModel_Master> Options { get; set; }
+    }
+
+    public class BookingNoteOptionModel_Master
+    {
+        public long SubCategoryOptionId { get; set; }
+        public long SubCategoryId { get; set; }
+        public string OptionName { get; set; }
+        public int SortOrder { get; set; }
+    }
     //GET ALL
     public class BookingModel
     {
@@ -345,6 +433,7 @@
         public string? Booked_By_EmpName { get; set; }
         public string? Booked_On { get; set; }
         public List<GetFoodPackage>? JSON_FoodPackage { get; set; }
+        public List<GetNotes>? JSON_Notes { get; set; }
         public long? VendorWorkOrder_Count { get; set; }
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
@@ -408,9 +497,17 @@
         public float? AddOn_Total { get; set; } = null;
     }
 
-
-
-
+    public class GetNotes
+    {
+        public long? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
+        public long? SubCategoryId { get; set; }
+        public string? SubCategoryName { get; set; }
+        public long? OptionId { get; set; }
+        public string? OptionName { get; set; }
+        public string? Value { get; set; }
+        public string? Remarks { get; set; }
+    }
     public class GetPackage_MenuAndFoodItemsListRequest
     {
         public long? Package_Id { get; set; } = null;
