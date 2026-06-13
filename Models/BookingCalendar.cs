@@ -304,13 +304,17 @@
 
     public class BookingCalendarNoteItem
     {
-        public long? CategoryId { get; set; } = 0;
-        public long? SubCategoryId { get; set; } = 0;
-        public long? OptionId { get; set; } = 0;
-        public string? Value { get; set; } = string.Empty;
-        public string? Remarks { get; set; } = string.Empty;
+        public long? CategoryId { get; set; }
+        public long? SubCategoryId { get; set; }
+        public string? Value { get; set; }
+        public string? Remarks { get; set; }
+        public List<BookingCalendarNoteOption>? Options { get; set; }
     }
 
+    public class BookingCalendarNoteOption
+    {
+        public long? OptionId { get; set; }
+    }
     //GET MODEL MASTER -NOTES
     public class BookingNoteMasterResponse
     {
@@ -501,12 +505,19 @@
     {
         public long? CategoryId { get; set; }
         public string? CategoryName { get; set; }
+
         public long? SubCategoryId { get; set; }
         public string? SubCategoryName { get; set; }
-        public long? OptionId { get; set; }
-        public string? OptionName { get; set; }
+
         public string? Value { get; set; }
         public string? Remarks { get; set; }
+
+        public List<GetNoteOption>? Options { get; set; }
+    }
+    public class GetNoteOption
+    {
+        public long? OptionId { get; set; }
+        public string? OptionName { get; set; }
     }
     public class GetPackage_MenuAndFoodItemsListRequest
     {

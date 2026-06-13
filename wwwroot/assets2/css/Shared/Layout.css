@@ -84,6 +84,21 @@
     max-width: 98%; /* or 1320px */
     --bs-modal-width: 98%;
 }
+/* Extra Extra Large Modal */
+.modal-xxl-80 {
+    max-width: 80%; /* or 1320px */
+    --bs-modal-width: 80%;
+}
+/* Extra Extra Large Modal */
+.modal-xxl-85 {
+    max-width: 85%; /* or 1320px */
+    --bs-modal-width: 85%;
+}
+/* Extra Extra Large Modal */
+.modal-xxl-90 {
+    max-width: 90%; /* or 1320px */
+    --bs-modal-width: 90%;
+}
 
 
 /*MASTER color - start*/

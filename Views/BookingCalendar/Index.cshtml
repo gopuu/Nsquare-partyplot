@@ -96,7 +96,7 @@
 
 <!-- Booking Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xxl-85 modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary py-1">
                 <h5 class="modal-title text-white" id="title_bookingModal">Booking Details</h5>
@@ -353,7 +353,7 @@
 
                             <!-- Row 2 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-10">
+                                <div class="col-6">
                                     <label class="small">Decoraton</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
@@ -367,11 +367,8 @@
                                         <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_Decoration_GST" value="0" disabled>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Row 3 -->
-                            <div class="row g-2 mb-1">
-                                <div class="col-10">
+                                <div class="col-6">
                                     <label class="small">Room Charges</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
@@ -387,9 +384,9 @@
                                 </div>
                             </div>
 
-                            <!-- Row 4 -->
+                            <!-- Row 3 -->
                             <div class="row g-2 mb-1">
-                                <div class="col-10">
+                                <div class="col-6">
                                     <label class="small">Sound System</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
@@ -403,11 +400,8 @@
                                         <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_SoundSystem_GST" value="0" disabled>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Row 5 -->
-                            <div class="row g-2 mb-1">
-                                <div class="col-10">
+                                <div class="col-6">
                                     <label class="small">Projector & Screen</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
@@ -422,6 +416,7 @@
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
                         <!-- Payment Summary -->
@@ -490,17 +485,22 @@
                                     <select class="form-select form-select-sm" id="PaymentDetails_AccountId"></select>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label>Paid Time</label>
                                     <input type="time" class="form-control form-control-sm" id="PaymentDetails_PaidTime">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <label>Amount</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
                                         <input type="number" min="0" class="form-control form-control-sm" value="0" id="PaymentDetails_Amount">
                                     </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label>Due Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_DueDate" value="">
                                 </div>
 
                                 <div class="col-md-6 d-none">
@@ -521,11 +521,6 @@
                                 <div class="col-md-6 d-none">
                                     <label>Cheque Date</label>
                                     <input type="date" class="form-control form-control-sm" id="PaymentDetails_ChequeDate" value="">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label>Due Date</label>
-                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_DueDate" value="">
                                 </div>
 
                                 <div class="col-12">

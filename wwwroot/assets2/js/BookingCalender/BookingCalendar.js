@@ -5764,14 +5764,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data;
-                //console.log("Booking List:",data);
+                console.log("Booking List:",data);
                 if (actionMode === "fullData") {
                     //console.log("fullData - Booking API Response:", data);
                     fetchHallDetails(data);
                 }
                 else if (actionMode === "singleData") {
                     resetBooking();
-                    data = data[0];
+                    data = data[0]; 
                     //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
@@ -6049,14 +6049,15 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 // Load Notes Data (Edit Mode)
 // ================================
 function loadBookingNotes(notesData) {
-
+    console.log("notesData Edit:", notesData);
     if (!notesData?.length)
         return;
 
-    // Clear existing selections
     $('.note-option').prop('checked', false);
     $('.note-dropdown').val('');
     $('.note-text-value').val('');
+    $('.note-time-value').val('');
+    $('.note-boolean').prop('checked', false);
     $('.note-remarks').val('');
 
     notesData.forEach(item => {
@@ -6065,61 +6066,59 @@ function loadBookingNotes(notesData) {
         $(`.note-remarks[data-subcategoryid="${item.SubCategoryId}"]`)
             .val(item.Remarks || '');
 
-        // Value
+        // Text / Number / Date
         $(`.note-text-value[data-subcategoryid="${item.SubCategoryId}"]`)
             .val(item.Value || '');
 
-        // Option
-        if (item.OptionId) {
+        // Time
+        $(`.note-time-value[data-subcategoryid="${item.SubCategoryId}"]`)
+            .val(item.Value || '');
 
-            // Checkbox / Radio
-            $(`.note-option[data-optionid="${item.OptionId}"]`)
+        // Boolean
+        if ((item.Value || '').toLowerCase() === 'true') {
+            $(`.note-boolean[data-subcategoryid="${item.SubCategoryId}"]`)
+                .prop('checked', true);
+        }
+
+        // Options
+        (item.Options || []).forEach(opt => {
+
+            $(`.note-option[data-optionid="${opt.OptionId}"]`)
                 .prop('checked', true);
 
-            // Dropdown
             $(`.note-dropdown[data-subcategoryid="${item.SubCategoryId}"]`)
-                .val(item.OptionId);
-        }
+                .val(opt.OptionId);
+        });
     });
 }
+
 function renderBookingNotes(notes) {
-
+    console.log("render info notes:", notes);
     const container = $('#bookingNotesContainer');
-
     container.empty();
-
     if (!notes?.length) {
-
         container.html(`
             <div class="alert alert-light text-muted mb-0">
                 No booking notes available.
             </div>
         `);
-
         return;
     }
 
     let grouped = {};
-
     notes.forEach(note => {
-
         const key = note.CategoryId;
-
         if (!grouped[key]) {
-
             grouped[key] = {
                 CategoryName: note.CategoryName,
                 Items: []
             };
         }
-
         grouped[key].Items.push(note);
     });
 
     let html = '';
-
     Object.values(grouped).forEach(category => {
-
         html += `
         <div class="card mb-3 shadow-sm">
 
@@ -6133,66 +6132,64 @@ function renderBookingNotes(notes) {
         let subGroups = {};
 
         category.Items.forEach(item => {
-
             const key = item.SubCategoryId;
-
             if (!subGroups[key]) {
-
                 subGroups[key] = {
                     SubCategoryName: item.SubCategoryName,
-                    Remarks: item.Remarks,
-                    Value: item.Value,
+                    Remarks: item.Remarks || '',
+                    Value: item.Value || '',
                     Options: []
                 };
             }
-
-            if (item.OptionName) {
-                subGroups[key].Options.push(item.OptionName);
+            else {
+                subGroups[key].Remarks = subGroups[key].Remarks || item.Remarks;
+                subGroups[key].Value = subGroups[key].Value || item.Value;
             }
+
+            (item.Options || []).forEach(opt => {
+                if (opt.OptionName) {
+                    subGroups[key].Options.push(opt.OptionName);
+                }
+            });
         });
 
         Object.values(subGroups).forEach(sub => {
-
+            const optionText = sub.Options.join(', ');
             html += `
-                <div class="mb-3">
+                <div class="booking-note-row">
 
-                    <div class="fw-semibold text-primary">
+                    <div class="booking-note-name">
                         ${sub.SubCategoryName}
                     </div>
+
+                    <div class="booking-note-value">
             `;
 
             if (sub.Options.length) {
-
-                html += `
-                    <div class="mt-1">
-                        ${sub.Options.map(o =>
-                            `<span class="badge bg-primary me-1">${o}</span>`
-                        ).join('')}
-                    </div>
-                `;
+                html += sub.Options.map(o =>
+                    `<span class="badge rounded-pill bg-primary-subtle text-primary border">${o}</span>`
+                ).join(' ');
             }
-
-            if (sub.Value) {
-
+            else if (sub.Value) {
                 html += `
-                    <div class="mt-2">
-                        <strong>Value:</strong>
+                    <span class="badge rounded-pill bg-secondary-subtle text-dark border">
                         ${sub.Value}
-                    </div>
+                    </span>
                 `;
             }
-
-            if (sub.Remarks) {
-
-                html += `
-                    <div class="mt-1 text-muted">
-                        <strong>Remarks:</strong>
-                        ${sub.Remarks}
-                    </div>
-                `;
+            else {
+                html += `<span class="text-muted">-</span>`;
             }
 
-            html += `</div>`;
+            html += `
+                    </div>
+
+                    <div class="booking-note-remarks">
+                        ${sub.Remarks || ''}
+                    </div>
+
+                </div>
+            `;
         });
 
         html += `
@@ -6676,64 +6673,67 @@ function loadBookingNotesMaster() {
         url: '/api/BookingCalendar/GetBookingCalendar_NotesMaster',
         type: 'GET',
         success: function (response) {
-
             console.log("Notes Master Response:", response);
-
             if (!response || response.status !== 'Success') {
                 console.error("Invalid response");
                 return;
             }
-
-            renderNotes(response.data || []);
+            renderNotesMaster(response.data || []);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Failed to load Notes Master Data");
-            console.error(xhr);
         }
     });
 }
 
-function renderNotes(categories) {
+function renderNotesMaster(categories) {
     let html = '';
     (categories || []).forEach(category => {
         html += `
-            <div class="note-category-card mb-3">
-                <div class="note-category-header d-flex justify-content-between align-items-center"
-                     data-categoryid="${category.CategoryId}">
+            <div class="note-category-card mb-2">
+
+                <div class="note-category-header d-flex justify-content-between align-items-center cursor-pointer" data-categoryid="${category.CategoryId}">
                     <span class="fw-bold">${category.Name}</span>
                     <i class="fa fa-chevron-down rotate-icon"></i>
                 </div>
-                <div class="note-category-body p-3">
+
+                <div class="note-category-body p-3 border-top">
         `;
 
         (category.SubCategories || []).forEach(sub => {
             html += `
-                <div class="note-subcategory mb-4" data-categoryid="${category.CategoryId}"
+                <div class="note-subcategory row align-items-center mb-1"
+                     data-categoryid="${category.CategoryId}"
                      data-subcategoryid="${sub.SubCategoryId}">
-                    <h6 class="fw-bold mb-2">
-                        ${sub.Name}
-                    </h6>
+
+                    <div class="col-md-3">
+                        <label class="fw-semibold text-secondary mb-0">
+                            ${sub.Name}
+                        </label>
+                    </div>
+
+                    <div class="col-md-3">
             `;
 
             //------------------------------------------
-            // MultiSelect => Checkbox
+            // MultiSelect
             //------------------------------------------
+
             if (sub.InputType === "MultiSelect") {
-                html += `<div class="row g-2 note-options">`;
+                html += `<div class="d-flex flex-wrap gap-3">`;
                 (sub.Options || []).forEach(option => {
                     html += `
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input note-option"
-                                    type="checkbox"
-                                    data-categoryid="${category.CategoryId}"
-                                    data-subcategoryid="${sub.SubCategoryId}"
-                                    data-optionid="${option.SubCategoryOptionId}">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input note-option"
+                                type="checkbox"
+                                data-categoryid="${category.CategoryId}"
+                                data-subcategoryid="${sub.SubCategoryId}"
+                                data-optionid="${option.SubCategoryOptionId}">
 
-                                <label class="form-check-label">
-                                    ${option.OptionName}
-                                </label>
-                            </div>
+                            <label class="form-check-label">
+                                ${option.OptionName}
+                            </label>
                         </div>
                     `;
                 });
@@ -6742,26 +6742,24 @@ function renderNotes(categories) {
             }
 
             //------------------------------------------
-            // Select => Radio
+            // Select
             //------------------------------------------
             else if (sub.InputType === "Select") {
-                html += `<div class="row g-2 note-options">`;
+                html += `<div class="d-flex flex-wrap gap-3">`;
                 (sub.Options || []).forEach(option => {
                     html += `
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input note-option"
-                                    type="radio"
-                                    name="radio_${sub.SubCategoryId}"
-                                    data-categoryid="${category.CategoryId}"
-                                    data-subcategoryid="${sub.SubCategoryId}"
-                                    data-optionid="${option.SubCategoryOptionId}">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input note-option"
+                                type="radio"
+                                name="radio_${sub.SubCategoryId}"
+                                data-categoryid="${category.CategoryId}"
+                                data-subcategoryid="${sub.SubCategoryId}"
+                                data-optionid="${option.SubCategoryOptionId}">
 
-                                <label class="form-check-label">
-                                    ${option.OptionName}
-                                </label>
-                            </div>
+                            <label class="form-check-label">
+                                ${option.OptionName}
+                            </label>
                         </div>
                     `;
                 });
@@ -6773,14 +6771,12 @@ function renderNotes(categories) {
             //------------------------------------------
             else if (sub.InputType === "Dropdown") {
                 html += `
-                    <select class="form-select note-dropdown"
+                    <select class="form-select form-select-sm note-dropdown"
                         data-categoryid="${category.CategoryId}"
                         data-subcategoryid="${sub.SubCategoryId}">
-                        <option value="">
-                            Select
-                        </option>
-                `;
 
+                        <option value="">Select</option>
+                `;
                 (sub.Options || []).forEach(option => {
                     html += `
                         <option value="${option.SubCategoryOptionId}">
@@ -6788,20 +6784,17 @@ function renderNotes(categories) {
                         </option>
                     `;
                 });
-                html += `
-                    </select>
-                `;
+                html += `</select>`;
             }
 
             //------------------------------------------
             // Text
             //------------------------------------------
             else if (sub.InputType === "Text") {
-
                 html += `
                     <input
                         type="text"
-                        class="form-control note-text-value"
+                        class="form-control form-control-sm note-text-value"
                         data-categoryid="${category.CategoryId}"
                         data-subcategoryid="${sub.SubCategoryId}">
                 `;
@@ -6811,11 +6804,10 @@ function renderNotes(categories) {
             // Number
             //------------------------------------------
             else if (sub.InputType === "Number") {
-
                 html += `
                     <input
                         type="number"
-                        class="form-control note-text-value"
+                        class="form-control form-control-sm note-text-value"
                         data-categoryid="${category.CategoryId}"
                         data-subcategoryid="${sub.SubCategoryId}">
                 `;
@@ -6825,11 +6817,10 @@ function renderNotes(categories) {
             // Date
             //------------------------------------------
             else if (sub.InputType === "Date") {
-
                 html += `
                     <input
                         type="date"
-                        class="form-control note-text-value"
+                        class="form-control form-control-sm note-text-value"
                         data-categoryid="${category.CategoryId}"
                         data-subcategoryid="${sub.SubCategoryId}">
                 `;
@@ -6839,13 +6830,13 @@ function renderNotes(categories) {
             // Time
             //------------------------------------------
             else if (sub.InputType === "Time") {
-
                 html += `
-                    <input
-                        type="time"
-                        class="form-control note-text-value"
+                    <select
+                        class="form-select form-select-sm note-time-value"
                         data-categoryid="${category.CategoryId}"
                         data-subcategoryid="${sub.SubCategoryId}">
+                        <option value="">Select Time</option>
+                    </select>
                 `;
             }
 
@@ -6853,37 +6844,30 @@ function renderNotes(categories) {
             // Boolean
             //------------------------------------------
             else if (sub.InputType === "Boolean") {
-
                 html += `
                     <div class="form-check form-switch">
-
                         <input
                             class="form-check-input note-boolean"
                             type="checkbox"
                             data-categoryid="${category.CategoryId}"
                             data-subcategoryid="${sub.SubCategoryId}">
-
                     </div>
                 `;
             }
 
             //------------------------------------------
-            // Remarks
+            // Close Input Column
             //------------------------------------------
-
             html += `
-                <div class="mt-2">
-
-                    <textarea
-                        class="form-control note-remarks"
-                        rows="2"
-                        placeholder="Remarks"
-                        data-categoryid="${category.CategoryId}"
-                        data-subcategoryid="${sub.SubCategoryId}"></textarea>
-
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text"
+                            class="form-control form-control-sm note-remarks"
+                            placeholder="Remarks"
+                            data-categoryid="${category.CategoryId}"
+                            data-subcategoryid="${sub.SubCategoryId}">
+                    </div>
                 </div>
-
-            </div>
             `;
         });
 
@@ -6894,11 +6878,15 @@ function renderNotes(categories) {
     });
 
     $('#notesContainer').html(html);
+
+    $('#notesContainer .note-time-value').each(function () {
+        fillTimeDropdown(this, 5);
+    });
 }
 
 $(document).on('click', '.note-category-header', function () {
     const body = $(this).next('.note-category-body');
-    body.slideToggle();
+    body.slideToggle(100);
     $(this).find('.rotate-icon').toggleClass('open');
 });
 
@@ -7025,7 +7013,7 @@ function saveBooking() {
     $('.note-subcategory').each(function () {
         const categoryId = $(this).data('categoryid');
         const subCategoryId = $(this).data('subcategoryid');
-        const remarks = $(this).find('.note-remarks').val();
+        const remarks = $(this).find('.note-remarks').val()?.trim() || '';
 
         //------------------------------------
         // Selected Options
@@ -7045,10 +7033,35 @@ function saveBooking() {
                 OptionId: dropdownValue
             });
         }
+
         //------------------------------------
         // Text
         //------------------------------------
-        let value = $(this).find('.note-text-value').val();
+        let value = '';
+
+        // Text / Number / Date
+        const textValue = $(this).find('.note-text-value').val();
+        if (textValue !== undefined && textValue !== null && textValue !== '') {
+            value = textValue.toString().trim();
+        }
+
+        // Time
+        const timeValue = $(this).find('.note-time-value').val();
+        if (timeValue) {
+            value = timeValue;
+        }
+
+        // Boolean
+        const booleanControl = $(this).find('.note-boolean');
+        if (booleanControl.length > 0) {
+            value = booleanControl.is(':checked') ? 'true' : '';
+        }
+
+        // Skip if nothing entered
+        if (remarks === '' && value === '' && selectedOptions.length === 0) {
+            return;
+        }
+
         notes.push({
             CategoryId: categoryId,
             SubCategoryId: subCategoryId,

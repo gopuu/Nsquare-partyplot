@@ -1,80 +1,53 @@
 ﻿/* ====== NOTES - BOOKING VIEW-- START =====*/
-.booking-note-category {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
+.booking-note-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f3f3;
 }
 
-.booking-note-category-header {
-    background: #f8f9fa;
-    padding: 10px 15px;
+    .booking-note-row:last-child {
+        border-bottom: none;
+    }
+
+.booking-note-name {
+    width: 240px;
     font-weight: 600;
     color: #495057;
+    flex-shrink: 0;
 }
 
-.booking-note-subcategory {
-    padding: 10px 15px;
-    border-top: 1px solid #f1f1f1;
-}
-
-.booking-note-options {
-    margin-top: 6px;
-}
-
-.booking-note-badge {
-    margin-right: 5px;
-    margin-bottom: 5px;
+.booking-note-value {
+    width: 260px;
+    flex-shrink: 0;
 }
 
 .booking-note-remarks {
-    margin-top: 8px;
-    font-size: 13px;
+    flex: 1;
     color: #6c757d;
+    font-size: 13px;
+}
+
+.booking-note-value .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    margin-right: 4px;
 }
 /* ====== NOTES - BOOKING VIEW-- END =====*/
 
 /* ====== NOTES - BOOKING INPUT-- START =====*/
 .note-category-card {
-    border: 1px solid #dee2e6;
+    background: #eaedf1;
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
     margin-bottom: 15px;
     overflow: hidden;
 }
 
-.note-category-header {
-    background: #f8f9fa;
-    padding: 12px 15px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.note-category-body {
-    display: none;
-    padding: 15px;
-    background: #fff;
-}
-
-.note-subcategory {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-
-.note-subcategory:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-
 .note-options {
     margin-top: 10px;
-}
-
-.note-options .form-check {
-    margin-bottom: 8px;
 }
 
 .note-remarks {
@@ -87,6 +60,36 @@
 
 .rotate-icon.open {
     transform: rotate(180deg);
+}
+
+.note-subcategory {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f1f1;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+.note-subcategory:hover {
+    background: #eef6ff;
+    border-left: 4px solid #0d6efd;
+}
+.note-subcategory:last-child {
+    border-bottom: none;
+}
+
+.note-category-header {
+    padding: 12px 15px;
+}
+
+.note-category-body {
+    padding: 15px;
+}
+
+.note-subcategory .form-check {
+    margin-bottom: 0;
+}
+
+.note-subcategory .form-switch {
+    padding-top: 4px;
 }
 /* ====== NOTES -- END =====*/
 
