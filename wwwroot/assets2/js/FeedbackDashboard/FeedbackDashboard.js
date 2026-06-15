@@ -5,7 +5,6 @@ $(document).ready(function () {
     loadRatingBreakdown("thismonth");
     loadRatingsOverTime("thismonth");
     loadFeedbackDashboard("thismonth");
-    loadDashboardEventInsights();
 
     //Widget count hover
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -388,43 +387,6 @@ function loadFeedbackDashboard(monthDuration = "thismonth") {
         },
         error: function (xhr, status, err) {
             handleApiError(xhr, status, err, "Failed to Load Host-Visitors")
-        }
-    });
-}
-
-function loadDashboardEventInsights() {
-    $.ajax({
-        url: '/api/FeedbackDashboard/GetDashboardEventInsights',
-        type: 'POST',
-        success: function (response) {
-
-            console.log("API response:", response);
-            if (response.status === "Success" && response.data) {
-
-                let d = response.data;
-
-                /* ---------- Card 1 ---------- */
-                $('#insightTitle1').text(d.AvgbillingText);
-                $('#totalRevenue').text('₹' + d.AvgbillingValue);
-                $('#totalVisits').text(d.AvgbillingValue_PAX); // example static
-
-                /* ---------- Card 2 ---------- */
-                $('#RevenueText').text(d.RevenueDistributionText);
-                $('#customerPercentValue').text(d.RevenueDistribution_CustomerValue + '%');
-                $('#revenuePercent').text(d.RevenueDistribution_TotalValue + '%');
-
-                /* ---------- Card 3 ---------- */
-                $('#avgordertext').text(d.CorporateEventText);
-                $('#avgOrderValueAmount').text('₹' + d.CorporateEventValue);
-                $('#avgItems').text(d.CorporateEventValue_Count); // static example
-
-                /* ---------- Card 4 ---------- */
-                $('#customervisittext').text(d.FamilyeventbillingText);
-                $('#visitFrequencyValue').text('₹' + d.Familyeventbillingvalue);
-            }
-        },
-        error: function (err) {
-            console.error("Error loading dashboard insights", err);
         }
     });
 }

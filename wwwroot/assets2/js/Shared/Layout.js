@@ -29,7 +29,7 @@ AppSignalR.subscribeWallet(function (data) {
     }
 });
 
-function fillTimeDropdown(dropdownId = '#time', interval = 5) {
+function fillTimeDropdown(dropdownId = '#time', interval = 5, isValueIn24=true) {
     const dropdown = $(dropdownId);
     dropdown.empty();
     dropdown.append(`<option value="">Select Time</option>`);
@@ -37,45 +37,33 @@ function fillTimeDropdown(dropdownId = '#time', interval = 5) {
     // Generate 24 Hours
     //------------------------------------------
     for (let hour24 = 0; hour24 < 24; hour24++) {
-
         for (let minute = 0; minute < 60; minute += interval) {
-
             //------------------------------------------
             // Value (24 Hour Format)
             //------------------------------------------
-            const hh =
-                hour24.toString().padStart(2, '0');
-
-            const mm =
-                minute.toString().padStart(2, '0');
-
-            const value24 =
-                `${hh}:${mm}`;
+            const hh = hour24.toString().padStart(2, '0');
+            const mm = minute.toString().padStart(2, '0');
+            const value24 = `${hh}:${mm}`;
 
             //------------------------------------------
             // Text (12 Hour Format)
             //------------------------------------------
-            const period =
-                hour24 >= 12 ? 'PM' : 'AM';
-
-            let hour12 =
-                hour24 % 12;
-
+            const period = hour24 >= 12 ? 'PM' : 'AM';
+            let hour12 = hour24 % 12;
             if (hour12 === 0) {
                 hour12 = 12;
             }
-
-            const text12 =
-                `${hour12}:${mm} ${period}`;
+            const text12 = `${hour12}:${mm} ${period}`;
 
             //------------------------------------------
             // Append Option
             //------------------------------------------
-            dropdown.append(`
-                <option value="${value24}">
-                    ${text12}
-                </option>
-            `);
+            if(isValueIn24){
+                dropdown.append(`<option value="${value24}">${text12}</option>`);
+            }
+            else{
+                dropdown.append(`<option value="${text12}">${text12}</option>`);
+            }
         }
     }
 }
@@ -266,11 +254,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Get logo from sessionStorage
+    /*
     const logo = sessionStorage.getItem('companylogo');
     // Set to img
     if (logo) {
         $(".infinitylogo_img").attr("src", logo);
-    }
+    }*/
 
     //settings
     // initial fetch

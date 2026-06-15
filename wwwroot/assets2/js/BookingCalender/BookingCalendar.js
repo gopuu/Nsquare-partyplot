@@ -5805,7 +5805,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //NOTES -RENDER
                     const notes = data.JSON_Notes ?? [];
                     renderBookingNotes(notes);
-                    $('#toggleBookingNotes').prop('checked', false);
+                    $('#toggleBookingNotes').prop('checked', false); //.trigger("change");
                     $('#bookingNotesContainer').hide();
 
                     $("#VendorWorkOrder_Count").text(data.VendorWorkOrder_Count);
@@ -6157,11 +6157,7 @@ function renderBookingNotes(notes) {
             const optionText = sub.Options.join(', ');
             html += `
                 <div class="booking-note-row">
-
-                    <div class="booking-note-name">
-                        ${sub.SubCategoryName}
-                    </div>
-
+                    <div class="booking-note-name">${sub.SubCategoryName}</div>
                     <div class="booking-note-value">
             `;
 
@@ -6170,10 +6166,18 @@ function renderBookingNotes(notes) {
                     `<span class="badge rounded-pill bg-primary-subtle text-primary border">${o}</span>`
                 ).join(' ');
             }
-            else if (sub.Value) {
+            else if (sub.Value !== null && sub.Value !== undefined && sub.Value !== '') {
+
+                let displayValue = sub.Value;
+
+                if (String(sub.Value).toLowerCase() === 'true')
+                    displayValue = 'YES';
+                else if (String(sub.Value).toLowerCase() === 'false')
+                    displayValue = 'NO';
+
                 html += `
                     <span class="badge rounded-pill bg-secondary-subtle text-dark border">
-                        ${sub.Value}
+                        ${displayValue}
                     </span>
                 `;
             }
@@ -6201,6 +6205,9 @@ function renderBookingNotes(notes) {
 }
 
 $('#toggleBookingNotes').on('change', function () {
+    const isVisible = this.checked;
+    $(this).next('label').text(isVisible ? 'Hide Notes' : 'Show Notes');
+
     $('#bookingNotesContainer').stop(true, true).slideToggle(this.checked);
 });
 
@@ -6880,7 +6887,7 @@ function renderNotesMaster(categories) {
     $('#notesContainer').html(html);
 
     $('#notesContainer .note-time-value').each(function () {
-        fillTimeDropdown(this, 5);
+        fillTimeDropdown(this, 5, false);
     });
 }
 
