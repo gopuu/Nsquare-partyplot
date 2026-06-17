@@ -31,7 +31,7 @@ namespace ERPAdmin.ApiControllers
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
-
+        // DATA
         [HttpPost]
         [Route("GetDailySalesGrid")]
         public IActionResult GetDailySalesGrid([FromBody] DailySalesGridRequest request)
@@ -67,41 +67,52 @@ namespace ERPAdmin.ApiControllers
                 /* =========================
                    RESULT SET 1 : GRID
                 ========================= */
-
                 while (dr.Read())
                 {
                     rows.Add(new DailySalesGridModel
                     {
                         SrNo = Convert.ToInt64(dr["SrNo"]),
-                        InvoiceDate = dr["InvoiceDate"]?.ToString(),
-                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
 
-                        TotalInvoices = Convert.ToInt32(dr["NoOfInvoicesGenerated"]),
-                        GrossSales = Convert.ToDecimal(dr["GrossSales"]),
-                        Taxes = Convert.ToDecimal(dr["Taxes"]),
-                        NetSales = Convert.ToDecimal(dr["NetSales"]),
+                        InvoiceDate = Convert.ToString(dr["InvoiceDate"]),
+                        InvoiceDate_Format = Convert.ToString(dr["InvoiceDate_Format"]),
+
+                        Qty = Convert.ToInt32(dr["Qty"]),
+
+                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        Discount = Convert.ToDecimal(dr["Discount"]),
+                        NetAmount = Convert.ToDecimal(dr["NetAmount"]),
+                        TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
+                        TaxAmount = Convert.ToDecimal(dr["TaxAmount"]),
+
+                        InvoiceAmount = Convert.ToDecimal(dr["InvoiceAmount"]),
 
                         PaymentAmount = Convert.ToDecimal(dr["PaymentAmount"]),
-                        PaymentMode = dr["PaymentMode"]?.ToString(),
+                        PaymentMode = Convert.ToString(dr["PaymentMode"]),
 
-                        DuePayments = Convert.ToDecimal(dr["DuePayments"])
+                        DuePayment = Convert.ToDecimal(dr["DuePayment"])
                     });
                 }
 
                 /* =========================
                    RESULT SET 2 : TOTALS
                 ========================= */
-
                 if (dr.NextResult() && dr.Read())
                 {
                     totals = new DailySalesTotalsModel
                     {
-                        TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
-                        GrossSales = Convert.ToDecimal(dr["TotalGrossSales"]),
-                        Taxes = Convert.ToDecimal(dr["TotalTaxes"]),
-                        NetSales = Convert.ToDecimal(dr["TotalNetSales"]),
-                        TotalPayments = Convert.ToDecimal(dr["TotalPayments"]),
-                        DuePayments = Convert.ToDecimal(dr["TotalDuePayments"])
+                        TotalQty = Convert.ToInt32(dr["TotalQty"]),
+
+                        TotalGrossAmount = Convert.ToDecimal(dr["TotalGrossAmount"]),
+                        TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
+                        TotalNetAmount = Convert.ToDecimal(dr["TotalNetAmount"]),
+                        TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
+                        TotalTaxAmount = Convert.ToDecimal(dr["TotalTaxAmount"]),
+
+                        TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+
+                        TotalPaymentAmount = Convert.ToDecimal(dr["TotalPaymentAmount"]),
+
+                        TotalDuePayment = Convert.ToDecimal(dr["TotalDuePayment"])
                     };
                 }
 
@@ -126,6 +137,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DETAILS DATA
         [HttpPost]
         [Route("GetDailySalesDateDetails")]
         public IActionResult GetDailySalesDateDetails([FromBody] DailySalesDateDetailsRequest request)
@@ -154,39 +166,59 @@ namespace ERPAdmin.ApiControllers
                 /* =========================
                    RESULT SET 1 : DETAILS
                 ========================= */
-
                 while (dr.Read())
                 {
                     Rows.Add(new DailySalesDateDetailsModel
                     {
                         SrNo = Convert.ToInt64(dr["SrNo"]),
-                        InvoiceNo = dr["InvoiceNo"]?.ToString(),
-                        InvoiceDate = dr["InvoiceDate"]?.ToString(),
-                        InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
-                        ClientName = dr["ClientName"]?.ToString(),
+
+                        InvoiceNo = Convert.ToString(dr["InvoiceNo"]),
+
+                        InvoiceDate = Convert.ToString(dr["InvoiceDate"]),
+                        InvoiceDate_Format = Convert.ToString(dr["InvoiceDate_Format"]),
+
+                        BookingId = Convert.ToInt64(dr["BookingId"]),
+
+                        ClientName = Convert.ToString(dr["ClientName"]),
+
                         GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
-                        Taxes = Convert.ToDecimal(dr["Taxes"]),
+                        Discount = Convert.ToDecimal(dr["Discount"]),
+
                         NetAmount = Convert.ToDecimal(dr["NetAmount"]),
-                        PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
-                        DueAmount = Convert.ToDecimal(dr["DueAmount"]),
-                        PaymentModes = dr["PaymentModes"]?.ToString()
+                        TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
+
+                        TaxAmount = Convert.ToDecimal(dr["TaxAmount"]),
+
+                        InvoiceAmount = Convert.ToDecimal(dr["InvoiceAmount"]),
+
+                        PaymentAmount = Convert.ToDecimal(dr["PaymentAmount"]),
+                        DuePayment = Convert.ToDecimal(dr["DuePayment"]),
+
+                        PaymentModes = Convert.ToString(dr["PaymentModes"])
                     });
                 }
 
                 /* =========================
                    RESULT SET 2 : TOTALS
                 ========================= */
-
                 if (dr.NextResult() && dr.Read())
                 {
                     Totals = new DailySalesDateDetailsTotalsModel
                     {
                         TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
-                        Taxes = Convert.ToDecimal(dr["Taxes"]),
-                        NetAmount = Convert.ToDecimal(dr["NetAmount"]),
-                        PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
-                        DueAmount = Convert.ToDecimal(dr["DueAmount"])
+
+                        TotalGrossAmount = Convert.ToDecimal(dr["TotalGrossAmount"]),
+                        TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
+
+                        TotalNetAmount = Convert.ToDecimal(dr["TotalNetAmount"]),
+                        TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
+
+                        TotalTaxAmount = Convert.ToDecimal(dr["TotalTaxAmount"]),
+
+                        TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+
+                        TotalPaymentAmount = Convert.ToDecimal(dr["TotalPaymentAmount"]),
+                        TotalDuePayment = Convert.ToDecimal(dr["TotalDuePayment"])
                     };
                 }
 
@@ -211,6 +243,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DATA
         [HttpPost]
         [Route("DownloadDailySalesReport_Pdf")]
         public IActionResult DownloadDailySalesReport_Pdf([FromBody] DailySalesReportRequest request)
@@ -421,16 +454,17 @@ namespace ERPAdmin.ApiControllers
                 {
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        int align = Element.ALIGN_RIGHT;
-
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Sales", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Taxes", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Net Sales", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Payment Amount", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Due Payments", StringComparison.OrdinalIgnoreCase);
+                            colName.Equals("Gross Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Net Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Taxable Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Tax Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Invoice Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Payment Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Due Payment", StringComparison.OrdinalIgnoreCase);
 
                         string value = row[col]?.ToString() ?? "-";
 
@@ -440,17 +474,19 @@ namespace ERPAdmin.ApiControllers
                             value = "₹ " + amount.ToString("N2");
                         }
 
-                        string colNameLower = colName.ToLower();
+                        int align = Element.ALIGN_LEFT;
 
-                        if (colNameLower == "sr. no." ||
-                            colNameLower == "date" ||
-                            colNameLower == "no of invoice generated")
+                        if (
+                            colName.Equals("Sr. No.", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Date", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Qty", StringComparison.OrdinalIgnoreCase)
+                        )
                         {
                             align = Element.ALIGN_CENTER;
                         }
-                        else if (colNameLower == "payment mode")
+                        else if (isAmountColumn)
                         {
-                            align = Element.ALIGN_LEFT;
+                            align = Element.ALIGN_RIGHT;
                         }
 
                         table.AddCell(
@@ -467,70 +503,88 @@ namespace ERPAdmin.ApiControllers
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-
                     Font totalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        int align = Element.ALIGN_RIGHT;
-
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn = false;
                         string value = "";
+                        int align = Element.ALIGN_LEFT;
 
                         switch (colName)
                         {
-                            case "No of Invoice Generated":
-                                value = Convert.ToDecimal(totalRow["TotalInvoices"]).ToString("N0");
+                            case "Qty":
+                                value = Convert.ToDecimal(totalRow["TotalQty"]).ToString("N0");
+                                align = Element.ALIGN_CENTER;
                                 break;
 
-                            case "Gross Sales":
-                                value = "₹ " + Convert.ToDecimal(totalRow["GrossSales"]).ToString("N2");
+                            case "Gross Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Taxes":
-                                value = "₹ " + Convert.ToDecimal(totalRow["Taxes"]).ToString("N2");
+                            case "Discount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Net Sales":
-                                value = "₹ " + Convert.ToDecimal(totalRow["NetSales"]).ToString("N2");
+                            case "Net Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalNetAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Payment Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalPayments"]).ToString("N2");
+                            case "Taxable Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Due Payments":
-                                value = "₹ " + Convert.ToDecimal(totalRow["DuePayments"]).ToString("N2");
+                            case "Tax Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Invoice Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Payment Amt":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalPaymentAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Due Payment":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDuePayment"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
                             default:
                                 value = col.Ordinal == 0 ? "TOTAL" : "";
+                                if (value == "TOTAL")
+                                    align = Element.ALIGN_CENTER;
                                 break;
                         }
 
-                        if (colName == "No of Invoice Generated" || value == "TOTAL")
-                        {
-                            align = Element.ALIGN_CENTER;
-                        }
+                        if (isAmountColumn)
+                            align = Element.ALIGN_RIGHT;
 
-                        table.AddCell(new PdfPCell(
-                            new Phrase(
-                                value,
-                                isAmountColumn ? AmtFontBold : totalFont))
-                        {
-                            HorizontalAlignment = align,
-                            BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220),
-                            BorderWidth = 0.5f
-                        });
+                        table.AddCell(
+                            new PdfPCell(
+                                new Phrase(
+                                    value,
+                                    isAmountColumn ? AmtFontBold : totalFont
+                                )
+                            )
+                            {
+                                HorizontalAlignment = align,
+                                BackgroundColor = new BaseColor(240, 240, 240),
+                                Padding = 6,
+                                BorderColor = new BaseColor(220, 220, 220),
+                                BorderWidth = 0.5f
+                            }
+                        );
                     }
                 }
 
@@ -628,7 +682,7 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // TOTAL ROW
-
+                // TOTAL ROW
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -637,22 +691,81 @@ namespace ERPAdmin.ApiControllers
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
 
-                        string value = columnName switch
+                        string value = "";
+
+                        switch (columnName)
                         {
-                            "No of Invoice Generated" => totalRow["TotalInvoices"].ToString(),
-                            "Gross Sales" => totalRow["GrossSales"].ToString(),
-                            "Taxes" => totalRow["Taxes"].ToString(),
-                            "Net Sales" => totalRow["NetSales"].ToString(),
-                            "Due Payments" => totalRow["DuePayments"].ToString(),
-                            _ => i == 0 ? "TOTAL" : ""
-                        };
+                            case "Qty":
+                                value = Convert.ToDecimal(totalRow["TotalQty"]).ToString("N0");
+                                break;
+
+                            case "Gross Amt":
+                                value = Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                                break;
+
+                            case "Discount":
+                                value = Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2");
+                                break;
+
+                            case "Net Amt":
+                                value = Convert.ToDecimal(totalRow["TotalNetAmount"]).ToString("N2");
+                                break;
+
+                            case "Taxable Amt":
+                                value = Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2");
+                                break;
+
+                            case "Tax Amt":
+                                value = Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2");
+                                break;
+
+                            case "Invoice Amt":
+                                value = Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2");
+                                break;
+
+                            case "Payment Amt":
+                                value = Convert.ToDecimal(totalRow["TotalPaymentAmount"]).ToString("N2");
+                                break;
+
+                            case "Due Payment":
+                                value = Convert.ToDecimal(totalRow["TotalDuePayment"]).ToString("N2");
+                                break;
+
+                            default:
+                                value = i == 0 ? "TOTAL" : "";
+                                break;
+                        }
 
                         var cell = worksheet.Cell(row, i + 1);
 
                         cell.Value = value;
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+                        if (
+                            columnName == "Qty" ||
+                            columnName == "Sr. No." ||
+                            columnName == "Date"
+                        )
+                        {
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+                        else if (
+                            columnName == "Gross Amt" ||
+                            columnName == "Discount" ||
+                            columnName == "Net Amt" ||
+                            columnName == "Taxable Amt" ||
+                            columnName == "Tax Amt" ||
+                            columnName == "Invoice Amt" ||
+                            columnName == "Payment Amt" ||
+                            columnName == "Due Payment"
+                        )
+                        {
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
                     }
+
+                    row++;
                 }
 
                 worksheet.Columns().AdjustToContents();
@@ -683,6 +796,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DETAILS DATA
         [HttpPost]
         [Route("DownloadDailySalesDateDetailsReport_Pdf")]
         public IActionResult DownloadDailySalesDateDetailsReport_Pdf([FromBody] DailySalesDateDetailsRequest request)
@@ -896,10 +1010,13 @@ namespace ERPAdmin.ApiControllers
 
                         bool isAmountColumn =
                             colName.Equals("Gross Amount", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Taxes", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Paid Amount", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Due Amount", StringComparison.OrdinalIgnoreCase);
+                            colName.Equals("Taxable Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Tax Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Invoice Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Payment Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Due Payment", StringComparison.OrdinalIgnoreCase);
 
                         string value = row[col]?.ToString() ?? "-";
 
@@ -933,8 +1050,7 @@ namespace ERPAdmin.ApiControllers
                         );
                     }
                 }
-
-                // TOTAL ROW
+                //TOTALS
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -956,27 +1072,42 @@ namespace ERPAdmin.ApiControllers
                         switch (colName)
                         {
                             case "Gross Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["GrossAmount"]).ToString("N2");
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Taxes":
-                                value = "₹ " + Convert.ToDecimal(totalRow["Taxes"]).ToString("N2");
+                            case "Discount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
                             case "Net Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["NetAmount"]).ToString("N2");
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalNetAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Paid Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["PaidAmount"]).ToString("N2");
+                            case "Taxable Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
-                            case "Due Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["DueAmount"]).ToString("N2");
+                            case "Tax Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Invoice Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Payment Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalPaymentAmount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Due Payment":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDuePayment"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -1089,6 +1220,7 @@ namespace ERPAdmin.ApiControllers
                     row++;
                 }
 
+                //TOTALS
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -1099,10 +1231,17 @@ namespace ERPAdmin.ApiControllers
 
                         string value = colName switch
                         {
-                            "Gross Amount" => totalRow["GrossAmount"].ToString(),
-                            "Taxes" => totalRow["Taxes"].ToString(),
-                            "Net Amount" => totalRow["NetAmount"].ToString(),
-                            "Due Amount" => totalRow["DueAmount"].ToString(),
+                            "Qty" => totalRow["TotalInvoices"].ToString(),
+                            "Gross Amount" => totalRow["TotalGrossAmount"].ToString(),
+                            "Discount" => totalRow["TotalDiscount"].ToString(),
+                            "Net Amount" => totalRow["TotalNetAmount"].ToString(),
+
+                            "Taxable Amount" => totalRow["TotalTaxableAmount"].ToString(),
+                            "Tax Amount" => totalRow["TotalTaxAmount"].ToString(),
+                            "Invoice Amount" => totalRow["TotalInvoiceAmount"].ToString(),
+                            "Payment Amount" => totalRow["TotalPaymentAmount"].ToString(),
+
+                            "Due Payment" => totalRow["TotalDuePayment"].ToString(),
                             _ => i == 0 ? "TOTAL" : ""
                         };
 
@@ -1111,6 +1250,8 @@ namespace ERPAdmin.ApiControllers
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
                     }
+
+                    row++;
                 }
 
                 ws.Columns().AdjustToContents();

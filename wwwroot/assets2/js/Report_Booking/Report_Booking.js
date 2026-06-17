@@ -1,23 +1,31 @@
 ﻿const REPORT_COLUMNS = [
 
-    { key: "SrNo", label: "SrNo.", visible: true },
+    { key: "BRN", label: "BRN", visible: true },
+
     { key: "Client_Name", label: "Client Name", visible: true },
     { key: "Client_Contact", label: "Contact", visible: true },
-    { key: "Client_Email", label: "Email", visible: true },
 
     { key: "EventDate", label: "Event Date", visible: true },
-    { key: "EventTypeName", label: "Event", visible: true },
-    { key: "EventSubTypeName", label: "Sub-Event", visible: true },
+    { key: "EventType", label: "Event Type", visible: true },
     { key: "HallName", label: "Hall Name", visible: true },
 
     { key: "Pax", label: "Pax", visible: true },
     { key: "Package", label: "Package", visible: true },
+
     { key: "DealAmount", label: "Deal Amount", visible: true },
 
-    { key: "TotalAmount", label: "Total Amount", visible: true },
+    { key: "GrossAmount", label: "Gross Total", visible: true },
+
     { key: "Discount", label: "Discount", visible: true },
-    { key: "Tax", label: "Tax", visible: true },
+
+    { key: "NetAmount", label: "Net Total", visible: true },
+
+    { key: "TaxableAmount", label: "Taxable Amount", visible: true },
+
+    { key: "Tax", label: "Tax Amount", visible: true },
+
     { key: "InvoiceAmount", label: "Invoice Amount", visible: true },
+
     { key: "InvoiceNo", label: "Invoice No", visible: true }
 ];
 
@@ -246,9 +254,16 @@ function renderBookingTable(data) {
         scrollCollapse: false,     // shrink if less rows
 
         columns: [
-            { data: "BookingId", name: "BookingId", title: "#BRN" },
+            { data: "BRN", name: "BRN", title: "#BRN" },
+
             { data: "Client_Name", name: "Client_Name", title: "Client Name" },
-            { data: "Client_Contact", name: "Client_Contact", title: "Contact", className: "text-center" },
+
+            {
+                data: "Client_Contact",
+                name: "Client_Contact",
+                title: "Contact",
+                className: "text-center"
+            },
 
             {
                 data: null,
@@ -257,91 +272,118 @@ function renderBookingTable(data) {
                 className: "text-center",
                 render: function (data, type, row) {
 
-                    const invoiceNo = row.InvoiceNo;
-                    const gstInvoiceNo = row.GSTInvoiceNo;
+                    if (row.InvoiceNo && row.InvoiceNo > 0)
+                        return row.InvoiceNo;
 
-                    // Prefer InvoiceNo if valid
-                    if (invoiceNo !== null && invoiceNo !== undefined && invoiceNo !== 0) {
-                        return invoiceNo;
-                    }
+                    if (row.GSTInvoiceNo)
+                        return row.GSTInvoiceNo;
 
-                    // Fallback to GSTInvoiceNo if valid
-                    if (gstInvoiceNo !== null && gstInvoiceNo !== undefined && gstInvoiceNo !== "") {
-                        return gstInvoiceNo;
-                    }
-
-                    // Final fallback
                     return "-";
                 }
             },
 
             {
-                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
-                title: 'Event Date',
-                name: 'EventDate',
+                data: "EventDate",
+                name: "EventDate",
+                title: "Event Date",
                 render: function (data, type, row) {
 
-                    if (type === 'display') {
-                        return row.EventDate_Format; // show formatted
-                    }
+                    if (type === "display")
+                        return row.EventDate_Format;
 
-                    return data; // use raw date for sorting
+                    return data;
                 }
             },
 
             { data: "EventDisplay", name: "EventDisplay", title: "Event" },
+
             { data: "HallName", name: "HallName", title: "Hall Name" },
 
-            { data: "Pax", name: "Pax", title: "Pax", className: "text-center" },
+            {
+                data: "Pax",
+                name: "Pax",
+                title: "Pax",
+                className: "text-center"
+            },
 
             { data: "Package", name: "Package", title: "Package" },
 
             {
                 data: "DealAmount",
                 name: "DealAmount",
-                title: "Deal Amount (Booking Amt)",
+                title: "Deal Amount",
                 className: "text-end",
-                width: "120px",
                 render: d => formatINR2(d)
             },
+
+            {
+                data: "GrossAmount",
+                name: "GrossAmount",
+                title: "Gross Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "Discount",
+                name: "Discount",
+                title: "Discount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "NetAmount",
+                name: "NetAmount",
+                title: "Net Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxableAmount",
+                name: "TaxableAmount",
+                title: "Taxable Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxAmount",
+                name: "TaxAmount",
+                title: "Tax Amount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
             {
                 data: "InvoiceAmount",
                 name: "InvoiceAmount",
-                title: "Gross Sales (Invoice Amt)",
-                className: "text-end",
-                width: "120px",
+                title: "Invoice Amount",
+                className: "text-end fw-bold",
                 render: d => formatINR2(d)
-            },
-
-            { data: "Tax", name: "Tax", title: "Tax", className: "text-end", render: d => formatINR2(d) },
-
-            { data: "Discount", name: "Discount", title: "Discount", className: "text-end", render: d => formatINR2(d) },
-
-            { data: "TotalAmount", name: "TotalAmount", title: "Net Sales", className: "text-end", render: d => formatINR2(d) },
+            }
         ],
 
-        footerCallback: function (row, data, start, end, display) {
+        footerCallback: function () {
             const api = this.api();
-            function sumByField(field) {
-                return api
-                    .column(`${field}:name`)
-                    .data()
-                    .reduce((a, b) => (parseFloat(a) || 0) + (parseFloat(b) || 0), 0);
-            }
+            const sumByField = (field) =>
+                api.column(`${field}:name`).data().reduce(
+                    (a, b) => (parseFloat(a) || 0) + (parseFloat(b) || 0),
+                    0
+                );
 
-            const pax = sumByField('Pax');
-            const invoice = sumByField('InvoiceAmount');
-            const deal = sumByField('DealAmount');
-            const discount = sumByField('Discount');
-            const tax = sumByField('Tax');
-            const total = sumByField('TotalAmount');
+            $(api.column('Pax:name').footer()).html(sumByField('Pax'));
+            $(api.column('DealAmount:name').footer()).html(formatINR2(sumByField('DealAmount')));
 
-            $(api.column('Pax:name').footer()).html(pax);
-            $(api.column('DealAmount:name').footer()).html(formatINR2(deal));
-            $(api.column('InvoiceAmount:name').footer()).html(formatINR2(invoice));
-            $(api.column('Tax:name').footer()).html(formatINR2(tax));
-            $(api.column('Discount:name').footer()).html(formatINR2(discount));
-            $(api.column('TotalAmount:name').footer()).html(formatINR2(total));
+            $(api.column('GrossAmount:name').footer()).html(formatINR2(sumByField('GrossAmount')));
+            $(api.column('Discount:name').footer()).html(formatINR2(sumByField('Discount')));
+
+            $(api.column('NetAmount:name').footer()).html(formatINR2(sumByField('NetAmount')));
+            $(api.column('TaxableAmount:name').footer()).html(formatINR2(sumByField('TaxableAmount')));
+
+            $(api.column('TaxAmount:name').footer()).html(formatINR2(sumByField('TaxAmount')));
+            $(api.column('InvoiceAmount:name').footer()).html(formatINR2(sumByField('InvoiceAmount')));
         },
 
         initComplete: function () {

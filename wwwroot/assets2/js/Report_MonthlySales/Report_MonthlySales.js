@@ -1,13 +1,21 @@
 ﻿const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No", visible: true },
     { key: "MonthName", label: "Month", visible: true },
-    { key: "InvoiceCount", label: "Invoice Generated", visible: true },
-    { key: "GrossSales", label: "Gross Sales", visible: true },
-    { key: "Taxes", label: "Taxes", visible: true },
-    { key: "NetSales", label: "Net Sales", visible: true },
-    { key: "PaidAmount", label: "Paid Amount", visible: true },
-    { key: "PaymentMode", label: "Payment Mode", visible: true }
+    { key: "InvoiceGeneratedCount", label: "Total Invoice Generated", visible: true },
+
+    { key: "GrossAmount", label: "Gross Sale", visible: true },
+    { key: "Discount", label: "Discount", visible: true },
+
+    { key: "NetAmount", label: "Net Sale", visible: true },
+    { key: "TaxableAmount", label: "Taxable Amt.", visible: true },
+
+    { key: "TaxAmount", label: "Tax Amt.", visible: true },
+    { key: "InvoiceAmount", label: "Invoice Amt.", visible: true },
+
+    { key: "PaymentAmount", label: "Payment Amt.", visible: true },
+    { key: "DuePayment", label: "Due Payment", visible: true }
 ];
+
 const DETAILREPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No", visible: true },
     { key: "InvoiceNo", label: "Invoice No", visible: true },
@@ -291,7 +299,6 @@ function renderMonthlySalesTable(data, totals) {
     }
 
     $("#tableMain table").DataTable({
-
         data: data,
         responsive: true,
         pageLength: 25,
@@ -305,7 +312,11 @@ function renderMonthlySalesTable(data, totals) {
 
         columns: [
 
-            { data: "SrNo", title: "#" },
+            {
+                data: "SrNo",
+                title: "#",
+                className: "text-center"
+            },
 
             {
                 data: "MonthName",
@@ -322,54 +333,65 @@ function renderMonthlySalesTable(data, totals) {
 
             {
                 data: "InvoiceGeneratedCount",
-                title: "Total Invoices",
+                title: "Total Invoice Generated",
                 className: "text-center"
             },
 
             {
-                data: "GrossSales",
-                title: "Gross Sales",
+                data: "GrossAmount",
+                title: "Gross Sale",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "Taxes",
-                title: "Taxes",
+                data: "Discount",
+                title: "Discount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "NetSales",
-                title: "Net Sales",
+                data: "NetAmount",
+                title: "Net Sale",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "PaidAmount",
-                title: "Paid Amount",
+                data: "TaxableAmount",
+                title: "Taxable Amt.",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "PaymentMode",
-                title: "Payment Mode",
-                className: "text-center",
-                render: function (data, type, row) {
-                    if (!data) return "";
+                data: "TaxAmount",
+                title: "Tax Amt.",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
 
-                    if (data.length > 10) {
-                        return `<span data-bs-toggle="tooltip" title="${data}">
-                        ${data.substring(0, 10)}...
-                    </span>`;
-                    }
-                    return data;
-                }
+            {
+                data: "InvoiceAmount",
+                title: "Invoice Amt.",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "PaymentAmount",
+                title: "Payment Amt.",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "DuePayment",
+                title: "Due Payment",
+                className: "text-end",
+                render: d => formatINR2(d)
             }
-
         ],
 
         footerCallback: function () {
@@ -380,16 +402,41 @@ function renderMonthlySalesTable(data, totals) {
 
             $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
-            $(api.column(2).footer()).html(`<strong>${totals.TotalInvoices}</strong>`);
+            $(api.column(2).footer()).html(
+                `<strong>${totals.TotalInvoices}</strong>`
+            );
 
-            $(api.column(3).footer()).html(`<strong>${formatINR2(totals.GrossSales)}</strong>`);
+            $(api.column(3).footer()).html(
+                `<strong>${formatINR2(totals.TotalGrossAmount)}</strong>`
+            );
 
-            $(api.column(4).footer()).html(`<strong>${formatINR2(totals.Taxes)}</strong>`);
+            $(api.column(4).footer()).html(
+                `<strong>${formatINR2(totals.TotalDiscount)}</strong>`
+            );
 
-            $(api.column(5).footer()).html(`<strong>${formatINR2(totals.NetSales)}</strong>`);
+            $(api.column(5).footer()).html(
+                `<strong>${formatINR2(totals.TotalNetAmount)}</strong>`
+            );
 
-            $(api.column(6).footer()).html(`<strong>${formatINR2(totals.TotalPayments)}</strong>`);
+            $(api.column(6).footer()).html(
+                `<strong>${formatINR2(totals.TotalTaxableAmount)}</strong>`
+            );
 
+            $(api.column(7).footer()).html(
+                `<strong>${formatINR2(totals.TotalTaxAmount)}</strong>`
+            );
+
+            $(api.column(8).footer()).html(
+                `<strong>${formatINR2(totals.TotalInvoiceAmount)}</strong>`
+            );
+
+            $(api.column(9).footer()).html(
+                `<strong>${formatINR2(totals.TotalPaymentAmount)}</strong>`
+            );
+
+            $(api.column(10).footer()).html(
+                `<strong>${formatINR2(totals.TotalDuePayment)}</strong>`
+            );
         },
 
         initComplete: function () {
@@ -451,6 +498,7 @@ function renderMonthlySalesDetailsTable(rows, totals) {
         destroy: true,
 
         columns: [
+
             {
                 data: "SrNo",
                 width: "50px"
@@ -458,30 +506,24 @@ function renderMonthlySalesDetailsTable(rows, totals) {
 
             {
                 data: "BookingId",
-                width: "120px",
-                class: "text-center",
-                render: function (data, type, row) {
-                    if (!data) return "";
-                    return `#${data}`;
+                width: "100px",
+                className: "text-center",
+                render: function (data) {
+                    return data ? `#${data}` : "";
                 }
             },
 
             {
-                data: null,
+                data: "InvoiceNo2",
                 width: "120px",
-                class: "text-center",
-                render: function (data, type, row) {
-                    const invoice = row.GSTInvoiceNo || row.InvoiceNo;
-                    if (!invoice) return "";
-                    return `${invoice}`;
-                }
+                className: "text-center"
             },
 
             {
                 data: "InvoiceDate_Format",
                 title: "Invoice Date",
                 width: "120px",
-                class: "text-center",
+                className: "text-center"
             },
 
             {
@@ -496,13 +538,31 @@ function renderMonthlySalesDetailsTable(rows, totals) {
             },
 
             {
-                data: "Taxes",
+                data: "Discount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
                 data: "NetAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxableAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "InvoiceAmount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -523,21 +583,21 @@ function renderMonthlySalesDetailsTable(rows, totals) {
                 data: "PaymentModes",
                 title: "Payment Mode",
                 className: "text-center",
-                render: function (data, type, row) {
+                render: function (data) {
+
                     if (!data) return "";
 
-                    if (data.length > 10) {
+                    if (data.length > 15) {
                         return `<span data-bs-toggle="tooltip" title="${data}">
-                        ${data.substring(0, 10)}...
-                    </span>`;
+                                    ${data.substring(0, 15)}...
+                                </span>`;
                     }
+
                     return data;
                 }
             }
 
         ],
-
-        /* ───────── Footer Totals ───────── */
 
         footerCallback: function () {
 
@@ -545,13 +605,23 @@ function renderMonthlySalesDetailsTable(rows, totals) {
 
             const api = this.api();
 
-            $(api.column(0).footer()).html("TOTAL");
+            $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(formatINR2(totals.GrossAmount));
-            $(api.column(6).footer()).html(formatINR2(totals.Taxes));
-            $(api.column(7).footer()).html(formatINR2(totals.NetAmount));
-            $(api.column(8).footer()).html(formatINR2(totals.PaidAmount));
-            $(api.column(9).footer()).html(formatINR2(totals.DueAmount));
+            $(api.column(5).footer()).html(`<strong>${formatINR2(totals.GrossAmount)}</strong>`);
+
+            $(api.column(6).footer()).html(`<strong>${formatINR2(totals.Discount)}</strong>`);
+
+            $(api.column(7).footer()).html(`<strong>${formatINR2(totals.NetAmount)}</strong>`);
+
+            $(api.column(8).footer()).html(`<strong>${formatINR2(totals.TaxableAmount)}</strong>`);
+
+            $(api.column(9).footer()).html(`<strong>${formatINR2(totals.TaxAmount)}</strong>`);
+
+            $(api.column(10).footer()).html(`<strong>${formatINR2(totals.InvoiceAmount)}</strong>`);
+
+            $(api.column(11).footer()).html(`<strong>${formatINR2(totals.PaidAmount)}</strong>`);
+
+            $(api.column(12).footer()).html(`<strong>${formatINR2(totals.DueAmount)}</strong>`);
         }
 
     });

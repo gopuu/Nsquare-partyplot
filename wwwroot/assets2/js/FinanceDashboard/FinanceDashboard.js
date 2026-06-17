@@ -293,7 +293,6 @@
 
             ActionBy: Number(sessionStorage.getItem("userId") || 0),
             
-
         };
         console.log("SAVE PAYLOAD:", payload);
         $.ajax({
@@ -453,13 +452,12 @@
 
         const payload = {
             Id: Number($("#incomeTransactionId").val() || 0),
-            AccountId: Number($("#ddlAccount_Income").val()),
             CategoryId: Number($("#ddlIncomeCategory").val()),
-
             SubCategoryId: $("#ddlSubCategory_Income").val()
                 ? Number($("#ddlSubCategory_Income").val())
                 : 0,
 
+            AccountId: Number($("#ddlAccount_Income").val()),
             Amount: parseFloat($("#txtAmount_Income").val()),
             TransactionDate: $("#txtTransactionDate_Income").val(),
 
@@ -957,6 +955,7 @@ function fetchTransactions(payload = {}) {
         }
     });
 }
+
 function renderTransactions(data, totals) {
     console.log("render data:", data);
     console.log("totals:", totals);

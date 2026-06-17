@@ -342,7 +342,6 @@ namespace ERPAdmin.ApiControllers
                 };
 
                 DataTable debitDt = await ExecuteSP(connString, "Wallet_Debit_WhatsApp", debitParams);
-
                 if (debitDt.Rows.Count == 0 || debitDt.Rows[0]["Status"].ToString() != "1")
                 {
                     return Ok(new apiResponse

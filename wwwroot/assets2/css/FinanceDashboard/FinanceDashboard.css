@@ -9,3 +9,8 @@
     font-size: 11px;
     border-radius: 20px;
 }
+.dataTables_wrapper,
+.dataTables_scroll,
+.dataTables_scrollBody {
+    overflow: visible !important;
+}

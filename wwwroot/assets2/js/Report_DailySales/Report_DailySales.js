@@ -1,25 +1,40 @@
 ﻿const REPORT_COLUMNS = [
-    { key: "SrNo", label: "Sr No", visible: true },
+    { key: "SrNo", label: "Sr. No.", visible: true },
     { key: "Date", label: "Date", visible: true },
-    { key: "TotalInvoices", label: "Total No of Invoice", visible: true },
-    { key: "GrossSales", label: "Gross Sales", visible: true },
-    { key: "Taxes", label: "Taxes", visible: true },
-    { key: "NetSales", label: "Net Sales", visible: true },
-    { key: "PaymentAmount", label: "Paid Amount", visible: true },
-    { key: "PaymentMode", label: "Payment Mode", visible: true },
-    { key: "DuePayments", label: "Due", visible: true }
+
+    { key: "Qty", label: "Qty", visible: true },
+
+    { key: "GrossAmount", label: "Gross Amt", visible: true },
+    { key: "Discount", label: "Discount", visible: true },
+    { key: "NetAmount", label: "Net Amt", visible: true },
+
+    { key: "TaxableAmount", label: "Taxable Amt", visible: true },
+    { key: "TaxAmount", label: "Tax Amt", visible: true },
+
+    { key: "InvoiceAmount", label: "Invoice Amt", visible: true },
+
+    { key: "PaymentAmount", label: "Payment Amt", visible: true },
+    { key: "DuePayment", label: "Due Payment", visible: true }
 ];
+
 const DETAILREPORT_COLUMNS = [
-    { key: "SrNo", label: "Sr No", visible: true },
+    { key: "SrNo", label: "Sr. No.", visible: true },
+
     { key: "InvoiceNo", label: "Invoice No", visible: true },
     { key: "InvoiceDate", label: "Invoice Date", visible: true },
     { key: "BookingId", label: "Booking ID", visible: true },
     { key: "ClientName", label: "Client Name", visible: true },
+
     { key: "GrossAmount", label: "Gross Amount", visible: true },
-    { key: "Taxes", label: "Taxes", visible: true },
+    { key: "Discount", label: "Discount", visible: true },
     { key: "NetAmount", label: "Net Amount", visible: true },
-    { key: "PaidAmount", label: "Paid Amount", visible: true },
-    { key: "DueAmount", label: "Due Amount", visible: true },
+    { key: "TaxableAmount", label: "Taxable Amount", visible: true },
+
+    { key: "TaxAmount", label: "Tax Amount", visible: true },
+    { key: "InvoiceAmount", label: "Invoice Amount", visible: true },
+    { key: "PaymentAmount", label: "Payment Amt", visible: true },
+    { key: "DuePayment", label: "Due Payment", visible: true },
+
     { key: "PaymentModes", label: "Payment Mode", visible: true }
 ];
 
@@ -258,85 +273,107 @@ function renderDailySalesTable(data, totals) {
         scrollX: true,            // horizontal scroll if needed
 
         columns: [
-            { data: "SrNo", title: "#" },
+            {
+                data: "SrNo",
+                title: "#",
+                className: "text-center"
+            },
 
             {
                 data: "InvoiceDate",
-                title: "Invoice Date",
+                title: "Date",
+                className: "text-center",
                 render: function (data, type, row) {
 
-                    if (type === 'display') {
-                        return `<a href="javascript:void(0)" 
-                            class="daily-sales-date"
-                            data-date="${row.InvoiceDate}">
-                            ${row.InvoiceDate_Format}
-                        </a>`;
+                    if (type === "display") {
+                        return `
+                            <a href="javascript:void(0)"
+                               class="daily-sales-date"
+                               data-date="${row.InvoiceDate}">
+                                ${row.InvoiceDate_Format}
+                            </a>`;
                     }
 
-                    // for sorting, filtering → return raw date
                     return data;
                 }
             },
 
             {
-                data: "TotalInvoices",
-                title: "Invoices",
-                className: "text-center"
+                data: "Qty",
+                title: "Qty",
+                className: "text-center",
+                render: function (data, type, row) {
+
+                    if (type === "display") {
+                        return `
+                            <a href="javascript:void(0)"
+                               class="daily-sales-date"
+                               data-date="${row.InvoiceDate}">
+                                ${row.Qty}
+                            </a>`;
+                    }
+
+                    return data;
+                }
+
             },
 
             {
-                data: "GrossSales",
-                title: "Gross Sales",
+                data: "GrossAmount",
+                title: "Gross Amt",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "Taxes",
-                title: "Taxes",
+                data: "Discount",
+                title: "Discount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "NetSales",
-                title: "Net Sales",
+                data: "NetAmount",
+                title: "Net Amt",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxableAmount",
+                title: "Taxable Amt",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxAmount",
+                title: "Tax Amt",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "InvoiceAmount",
+                title: "Invoice Amt",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
                 data: "PaymentAmount",
-                title: "Payment Amount",
+                title: "Payment Amt",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "PaymentMode",
-                title: "Payment Mode",
-                className: "text-center",
-                render: function (data, type, row) {
-                    if (!data) return "";
-
-                    if (data.length > 10) {
-                        return `<span data-bs-toggle="tooltip" title="${data}">
-                        ${data.substring(0, 10)}...
-                    </span>`;
-                    }
-                    return data;
-                }
-            },
-
-            {
-                data: "DuePayments",
-                title: "Due Payments",
+                data: "DuePayment",
+                title: "Due Payment",
                 className: "text-end",
                 render: d => formatINR2(d)
             }
         ],
-
-        /* ── Footer totals ── */
 
         footerCallback: function () {
 
@@ -346,18 +383,31 @@ function renderDailySalesTable(data, totals) {
             const api = this.api();
 
             $(api.column(0).footer()).html("<strong>TOTAL</strong>");
-            $(api.column(2).footer()).html(`<strong>${totals.TotalInvoices ?? ""}</strong>`);
-            $(api.column(3).footer()).html(`<strong>${fmt(totals.GrossSales)}</strong>`);
-            $(api.column(4).footer()).html(`<strong>${fmt(totals.Taxes)}</strong>`);
-            $(api.column(5).footer()).html(`<strong>${fmt(totals.NetSales)}</strong>`);
-            $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalPayments)}</strong>`);
-            $(api.column(8).footer()).html(`<strong>${fmt(totals.DuePayments)}</strong>`);
-        },        
+
+            $(api.column(2).footer()).html(`<strong>${totals.TotalQty ?? 0}</strong>`);
+
+            $(api.column(3).footer()).html(`<strong>${fmt(totals.TotalGrossAmount)}</strong>`);
+
+            $(api.column(4).footer()).html(`<strong>${fmt(totals.TotalDiscount)}</strong>`);
+
+            $(api.column(5).footer()).html(`<strong>${fmt(totals.TotalNetAmount)}</strong>`);
+
+            $(api.column(6).footer()).html(`<strong>${fmt(totals.TotalTaxableAmount)}</strong>`);
+
+            $(api.column(7).footer()).html(`<strong>${fmt(totals.TotalTaxAmount)}</strong>`);
+
+            $(api.column(8).footer()).html(`<strong>${fmt(totals.TotalInvoiceAmount)}</strong>`);
+
+            $(api.column(9).footer()).html(`<strong>${fmt(totals.TotalPaymentAmount)}</strong>`);
+
+            $(api.column(10).footer()).html(`<strong>${fmt(totals.TotalDuePayment)}</strong>`);
+        },
+
         initComplete: function () {
             $(this.api().table().header())
                 .find('th')
                 .addClass('bg-warning-subtle text-dark');
-        },
+        }
     });
 }
 
@@ -506,6 +556,7 @@ function loadDailySalesDateDetails(invoiceDate) {
                 Swal.fire("Error", res.message, "error");
                 return;
             }
+            console.log("res details data:", res.data);
             renderDailySalesDetailsTable(res.data.Rows, res.data.Totals);
             // show after render
             //$("#tblDailySalesDetails").css("visibility", "visible");
@@ -519,8 +570,8 @@ function loadDailySalesDateDetails(invoiceDate) {
     });
 
 }
-function renderDailySalesDetailsTable(rows, totals) {
 
+function renderDailySalesDetailsTable(rows, totals) {
     const table = $("#tblDailySalesDetails");
 
     if ($.fn.DataTable.isDataTable(table)) {
@@ -540,22 +591,25 @@ function renderDailySalesDetailsTable(rows, totals) {
         //deferRender: true,
 
         columns: [
-            { data: "SrNo", width: "50px" },
+            { data: "SrNo", width: "40px", class:"text-center" },
 
-            { data: "InvoiceNo", width: "120px" },
+            { data: "InvoiceNo", width: "60px", class:"text-center" },
 
             {
-                data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
-                title: 'Invoice Date',
-                name: 'InvoiceDate',
-                width: "120px",
+                data: "InvoiceDate",
+                title: "Invoice Date",
+                name: "InvoiceDate",
+                width: "90px",
+                class:"text-center",
                 render: function (data, type, row) {
-                    if (type === 'display') {
-                        return row.InvoiceDate_Format; // show formatted
+                    if (type === "display") {
+                        return row.InvoiceDate_Format;
                     }
-                    return data; // use raw date for sorting
+                    return data;
                 }
             },
+
+            { data: "BookingId", title:"BRN", width: "60px", class:"text-center" },
 
             { data: "ClientName", width: "200px" },
 
@@ -566,7 +620,7 @@ function renderDailySalesDetailsTable(rows, totals) {
             },
 
             {
-                data: "Taxes",
+                data: "Discount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -578,13 +632,31 @@ function renderDailySalesDetailsTable(rows, totals) {
             },
 
             {
-                data: "PaidAmount",
+                data: "TaxableAmount",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
 
             {
-                data: "DueAmount",
+                data: "TaxAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "InvoiceAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "PaymentAmount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "DuePayment",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -593,19 +665,20 @@ function renderDailySalesDetailsTable(rows, totals) {
                 data: "PaymentModes",
                 title: "Payment Mode",
                 className: "text-center",
-                render: function (data, type, row) {
+                render: function (data) {
+
                     if (!data) return "";
 
                     if (data.length > 15) {
                         return `<span data-bs-toggle="tooltip" title="${data}">
-                        ${data.substring(0, 15)}...
-                    </span>`;
+                                    ${data.substring(0, 15)}...
+                                </span>`;
                     }
+
                     return data;
                 }
             }
-
-        ],    
+        ],
 
         footerCallback: function () {
 
@@ -613,13 +686,16 @@ function renderDailySalesDetailsTable(rows, totals) {
 
             const api = this.api();
 
-            $(api.column(4).footer()).html(formatINR2(totals.GrossAmount));
-            $(api.column(5).footer()).html(formatINR2(totals.Taxes));
-            $(api.column(6).footer()).html(formatINR2(totals.NetAmount));
-            $(api.column(7).footer()).html(formatINR2(totals.PaidAmount));
-            $(api.column(8).footer()).html(formatINR2(totals.DueAmount));
+            $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
-            $(api.column(0).footer()).html("TOTAL");
+            $(api.column(5).footer()).html(formatINR2(totals.TotalGrossAmount));
+            $(api.column(6).footer()).html(formatINR2(totals.TotalDiscount));
+            $(api.column(7).footer()).html(formatINR2(totals.TotalNetAmount));
+            $(api.column(8).footer()).html(formatINR2(totals.TotalTaxableAmount));
+            $(api.column(9).footer()).html(formatINR2(totals.TotalTaxAmount));
+            $(api.column(10).footer()).html(formatINR2(totals.TotalInvoiceAmount));
+            $(api.column(11).footer()).html(formatINR2(totals.TotalPaymentAmount));
+            $(api.column(12).footer()).html(formatINR2(totals.TotalDuePayment));
         }
     });
 }

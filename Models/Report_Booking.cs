@@ -1,32 +1,38 @@
 ﻿namespace ERPAdmin.Models
 {
 
+    //GRID RESPONSE
     public class BookingReportGridModel
     {
-        public long SrNo { get; set; }
+        public long BRN { get; set; }
+
         public string? EventDate { get; set; }
         public string? EventDate_Format { get; set; }
+
         public string? EventTypeName { get; set; }
         public string? EventSubTypeName { get; set; }
         public string? EventDisplay { get; set; }
-        public string? HallName { get; set; }
-        public int Pax { get; set; }
-        public string? Package { get; set; }
-        public decimal DealAmount { get; set; }
-        public decimal Discount { get; set; }
-        public decimal Tax { get; set; }
-        public decimal InvoiceAmount { get; set; }
-        public decimal TotalAmount { get; set; }
 
-        // Hidden fields if needed
-        public long BookingId { get; set; }
+        public string? HallName { get; set; }
+
+        public int Pax { get; set; }
+
+        public string? Package { get; set; }
+
+        public decimal DealAmount { get; set; }
+        public decimal GrossAmount { get; set; }
+        public decimal Discount { get; set; }
+        public decimal NetAmount { get; set; }
+        public decimal TaxableAmount { get; set; }
+        public decimal TaxAmount { get; set; }
+        public decimal InvoiceAmount { get; set; }
+
         public string? Client_Name { get; set; }
         public string? Client_Contact { get; set; }
-        public string? Client_Email { get; set; }
+
         public long? InvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
     }
-
     public class BookingReportRequest : BaseClass
     {
         public string? NameEmailContactNo { get; set; } = string.Empty;
