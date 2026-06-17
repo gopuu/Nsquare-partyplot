@@ -1,7 +1,7 @@
 ﻿const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr No", visible: true },
     { key: "MonthName", label: "Month", visible: true },
-    { key: "InvoiceGeneratedCount", label: "Total Invoice Generated", visible: true },
+    { key: "InvoiceCount", label: "Total Invoice Generated", visible: true },
 
     { key: "GrossAmount", label: "Gross Sale", visible: true },
     { key: "Discount", label: "Discount", visible: true },
@@ -322,7 +322,6 @@ function renderMonthlySalesTable(data, totals) {
                 data: "MonthName",
                 title: "Month",
                 render: function (data, type, row) {
-
                     return `<a href="javascript:void(0)"
                             class="monthly-sales-month"
                             data-month="${row.MonthId}">
@@ -334,7 +333,15 @@ function renderMonthlySalesTable(data, totals) {
             {
                 data: "InvoiceGeneratedCount",
                 title: "Total Invoice Generated",
-                className: "text-center"
+                className: "text-center",
+                width: "70px",
+                render: function (data, type, row) {
+                    return `<a href="javascript:void(0)"
+                            class="monthly-sales-month"
+                            data-month="${row.MonthId}">
+                            ${data}
+                        </a>`;
+                }
             },
 
             {
@@ -500,13 +507,12 @@ function renderMonthlySalesDetailsTable(rows, totals) {
         columns: [
 
             {
-                data: "SrNo",
-                width: "50px"
+                data: "SrNo"
             },
 
             {
                 data: "BookingId",
-                width: "100px",
+                title: "BRN",
                 className: "text-center",
                 render: function (data) {
                     return data ? `#${data}` : "";
@@ -515,14 +521,12 @@ function renderMonthlySalesDetailsTable(rows, totals) {
 
             {
                 data: "InvoiceNo2",
-                width: "120px",
                 className: "text-center"
             },
 
             {
                 data: "InvoiceDate_Format",
                 title: "Invoice Date",
-                width: "120px",
                 className: "text-center"
             },
 
@@ -584,15 +588,12 @@ function renderMonthlySalesDetailsTable(rows, totals) {
                 title: "Payment Mode",
                 className: "text-center",
                 render: function (data) {
-
                     if (!data) return "";
-
                     if (data.length > 15) {
                         return `<span data-bs-toggle="tooltip" title="${data}">
                                     ${data.substring(0, 15)}...
                                 </span>`;
                     }
-
                     return data;
                 }
             }
@@ -600,32 +601,22 @@ function renderMonthlySalesDetailsTable(rows, totals) {
         ],
 
         footerCallback: function () {
-
             if (!totals) return;
-
             const api = this.api();
-
             $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
             $(api.column(5).footer()).html(`<strong>${formatINR2(totals.GrossAmount)}</strong>`);
-
             $(api.column(6).footer()).html(`<strong>${formatINR2(totals.Discount)}</strong>`);
-
             $(api.column(7).footer()).html(`<strong>${formatINR2(totals.NetAmount)}</strong>`);
 
             $(api.column(8).footer()).html(`<strong>${formatINR2(totals.TaxableAmount)}</strong>`);
-
             $(api.column(9).footer()).html(`<strong>${formatINR2(totals.TaxAmount)}</strong>`);
-
             $(api.column(10).footer()).html(`<strong>${formatINR2(totals.InvoiceAmount)}</strong>`);
 
             $(api.column(11).footer()).html(`<strong>${formatINR2(totals.PaidAmount)}</strong>`);
-
             $(api.column(12).footer()).html(`<strong>${formatINR2(totals.DueAmount)}</strong>`);
         }
-
     });
-
 }
 
 function ViewMonthlySalesReport(actionName) {
@@ -642,7 +633,7 @@ function ViewMonthlySalesReport(actionName) {
         WithHeader: withHeader,
         ActionBy: userId
     };
-
+    //console.log("payload:", payload);
     const url = actionName === "downloadExcel"
         ? "/api/Report_MonthlySales/DownloadMonthlySalesReport_Excel"
         : "/api/Report_MonthlySales/DownloadMonthlySalesReport_Pdf";

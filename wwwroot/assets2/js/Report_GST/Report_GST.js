@@ -7,12 +7,19 @@ const REPORT_COLUMNS = [
     { key: "Name", label: "Customer Name" },
     { key: "GSTIN", label: "GSTIN" },
     { key: "EventType", label: "Event Type" },
-    { key: "SubTotal", label: "Sub Total" },
+
+    { key: "GrossSale", label: "Gross Sale" },
+    { key: "Discount", label: "Discount" },
+    { key: "NetSale", label: "Net Sale" },
+    { key: "TaxableAmount", label: "Taxable Amount" },
+
     { key: "CGST", label: "CGST" },
     { key: "SGST", label: "SGST" },
     { key: "IGST", label: "IGST" },
-    { key: "TotalTax", label: "Total GST" },
-    { key: "TotalInvoiceAmount", label: "Invoice Amount" },
+
+    { key: "TaxAmount", label: "Tax Amount" },
+    { key: "InvoiceAmount", label: "Invoice Amount" },
+
     { key: "PaymentMode", label: "Payment Mode" },
     { key: "PaidAmount", label: "Paid Amount" },
     { key: "DueAmount", label: "Due Amount" }
@@ -269,66 +276,99 @@ function renderGSTSalesTable(data, totals) {
                 title: "Inv.No.",
                 className: "text-center nowrap-col"
             },
+
             {
-                data: 'InvoiceDate', // actual date (ISO format from backend: yyyy-MM-dd)
-                title: 'Invoice Date',
-                name: 'InvoiceDate',
+                data: "InvoiceDate",
+                title: "Invoice Date",
+                name: "InvoiceDate",
+                width: "40px",
                 render: function (data, type, row) {
-                    if (type === 'display') {
-                        return row.InvoiceDate_Format; // show formatted
+                    if (type === "display") {
+                        return row.InvoiceDate_Format;
                     }
-                    return data; // use raw date for sorting
+                    return data;
                 }
             },
 
             {
                 data: "Name",
                 title: "Customer Name",
-                className: "wrap-col"
+                //className: "wrap-col",
+                width: "40px"
             },
+
             {
                 data: "GSTIN",
                 title: "GSTIN",
                 className: "nowrap-col"
             },
+
             {
                 data: "EventType",
                 title: "Event Type",
-                className: "wrap-col"
+                //className: "wrap-col",
+                width: "40px"
             },
+
             {
-                data: "SubTotal",
-                title: "Sub Total",
+                data: "GrossSale",
+                title: "Gross Sale",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
+            {
+                data: "Discount",
+                title: "Discount",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "NetSale",
+                title: "Net Sale",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
+            {
+                data: "TaxableAmount",
+                title: "Taxable Amt.",
+                className: "text-end",
+                render: d => formatINR2(d)
+            },
+
             {
                 data: "CGST",
                 title: "CGST",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
                 data: "SGST",
                 title: "SGST",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
                 data: "IGST",
                 title: "IGST",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
-                data: "TotalTax",
-                title: "Total GST",
+                data: "TaxAmount",
+                title: "Tax Amt.",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
+
             {
-                data: "TotalInvoiceAmount",
-                title: "Invoice Amount",
+                data: "InvoiceAmount",
+                title: "Invoice Amt.",
                 className: "text-end text-primary",
                 render: d => formatINR2(d)
             },
@@ -337,11 +377,13 @@ function renderGSTSalesTable(data, totals) {
                 data: null,
                 title: "Invoice",
                 className: "text-center",
-                render: function (data, type, row) {
+                render: function (data) {
+
                     if (!data) return "";
+
                     return `
                         <button class="btn btn-xs btn-view-invoice btn-outline-danger"
-                                data-invoiceno="${data.InvoiceNo}" 
+                                data-invoiceno="${data.InvoiceNo}"
                                 data-bookingid="${data.BookingId}">
                             <i class="fa fa-download me-1"></i>
                         </button>
@@ -352,14 +394,17 @@ function renderGSTSalesTable(data, totals) {
             {
                 data: "PaymentMode",
                 title: "Payment Mode",
-                className: "wrap-col"
+                //className: "wrap-col"
+                width: "40px"
             },
+
             {
                 data: "PaidAmount",
                 title: "Paid Amount",
                 className: "text-end text-success nowrap-col",
                 render: d => formatINR2(d)
             },
+
             {
                 data: "DueAmount",
                 title: "Due Amount",
@@ -367,8 +412,6 @@ function renderGSTSalesTable(data, totals) {
                 render: d => formatINR2(d)
             }
         ],
-
-        /* ───── Footer Totals ───── */
 
         footerCallback: function () {
 
@@ -379,16 +422,27 @@ function renderGSTSalesTable(data, totals) {
 
             $(api.column(0).footer()).html("<strong class='fs-9'>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSubTotal)}</strong>`);
-            $(api.column(6).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalCGST)}</strong>`);
-            $(api.column(7).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSGST)}</strong>`);
-            $(api.column(8).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalIGST)}</strong>`);
+            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalGrossSale)}</strong>`);
 
-            $(api.column(9).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalTax)}</strong>`);
-            $(api.column(10).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalInvoiceAmount)}</strong>`);
+            $(api.column(6).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDiscount)}</strong>`);
 
-            $(api.column(13).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalPaidAmount)}</strong>`);
-            $(api.column(14).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDueAmount)}</strong>`);
+            $(api.column(7).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalNetSale)}</strong>`);
+
+            $(api.column(8).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalTaxableAmount)}</strong>`);
+
+            $(api.column(9).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalCGST)}</strong>`);
+
+            $(api.column(10).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSGST)}</strong>`);
+
+            $(api.column(11).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalIGST)}</strong>`);
+
+            $(api.column(12).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalTaxAmount)}</strong>`);
+
+            $(api.column(13).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalInvoiceAmount)}</strong>`);
+
+            $(api.column(16).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalPaidAmount)}</strong>`);
+
+            $(api.column(17).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDueAmount)}</strong>`);
         },
 
         language: {

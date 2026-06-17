@@ -356,9 +356,9 @@ namespace ERPAdmin.ApiControllers
                 Document document = null;
                 if (dsReport.Tables[2].Columns.Count > 7)
                 {
-                    //document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
-                    document = new Document(PageSize.A4, 16, 16, topMargin, 50);
-                    isA4size = true; // false;
+                    document = new Document(PageSize.A4.Rotate(), 16, 16, topMargin, 50);
+                    //document = new Document(PageSize.A4, 16, 16, topMargin, 50);
+                    isA4size = false;
                 }
                 else
                 {
@@ -488,8 +488,7 @@ namespace ERPAdmin.ApiControllers
                         }
 
                         string colNameLower = colName.ToLower();
-
-                        if (colNameLower == "sr. no." ||
+                        if (colNameLower == "#" ||
                             colNameLower == "month" ||
                             colNameLower == "total invoice generated")
                         {

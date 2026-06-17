@@ -69,44 +69,66 @@ namespace ERPAdmin.ApiControllers
                     rows.Add(new GSTSalesGridModel
                     {
                         InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
-                        GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]),
-                        DisplayInvoiceNo = Convert.ToString(dr["DisplayInvoiceNo"]),
-                        BookingId = Convert.ToInt64(dr["BookingId"]),
+                        GSTInvoiceNo = dr["GSTInvoiceNo"]?.ToString(),
+                        DisplayInvoiceNo = dr["DisplayInvoiceNo"]?.ToString(),
+
+                        BookingId = dr["BookingId"] == DBNull.Value
+                            ? null
+                            : Convert.ToInt64(dr["BookingId"]),
+
                         InvoiceDate = dr["InvoiceDate"]?.ToString(),
                         InvoiceDate_Format = dr["InvoiceDate_Format"]?.ToString(),
+
                         Name = dr["Name"]?.ToString(),
                         GSTIN = dr["GSTIN"]?.ToString(),
                         EventType = dr["EventType"]?.ToString(),
-                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
-                        SGST = Convert.ToDecimal(dr["SGST"]),
+
+                        GrossSale = Convert.ToDecimal(dr["GrossSale"]),
+                        Discount = Convert.ToDecimal(dr["Discount"]),
+                        NetSale = Convert.ToDecimal(dr["NetSale"]),
+                        TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
+
                         CGST = Convert.ToDecimal(dr["CGST"]),
+                        SGST = Convert.ToDecimal(dr["SGST"]),
                         IGST = Convert.ToDecimal(dr["IGST"]),
-                        TotalTax = Convert.ToDecimal(dr["TotalTax"]),
-                        TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+
+                        TaxAmount = Convert.ToDecimal(dr["TaxAmount"]),
+                        InvoiceAmount = Convert.ToDecimal(dr["InvoiceAmount"]),
+
                         PaymentMode = dr["PaymentMode"]?.ToString(),
+
                         PaidAmount = Convert.ToDecimal(dr["PaidAmount"]),
                         DueAmount = Convert.ToDecimal(dr["DueAmount"])
                     });
                 }
 
-                // NOTE: Report_GetGSTSales_GRID SP currently returns only one result set (grid).
-                // If you add a totals result set to the SP later, uncomment the block below:
-                //
                 if (dr.NextResult() && dr.Read())
                 {
                     totals = new GSTSalesTotalsModel
                     {
-                        TotalSubTotal = Convert.ToDecimal(dr["TotalSubTotal"]),
+                        TotalGrossSale = Convert.ToDecimal(dr["TotalGrossSale"]),
+
+                        TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
+
+                        TotalNetSale = Convert.ToDecimal(dr["TotalNetSale"]),
+
+                        TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
+
                         TotalCGST = Convert.ToDecimal(dr["TotalCGST"]),
+
                         TotalSGST = Convert.ToDecimal(dr["TotalSGST"]),
+
                         TotalIGST = Convert.ToDecimal(dr["TotalIGST"]),
-                        TotalTax = Convert.ToDecimal(dr["TotalTax"]),
+
+                        TotalTaxAmount = Convert.ToDecimal(dr["TotalTaxAmount"]),
+
                         TotalInvoiceAmount = Convert.ToDecimal(dr["TotalInvoiceAmount"]),
+
                         TotalPaidAmount = Convert.ToDecimal(dr["TotalPaidAmount"]),
+
                         TotalDueAmount = Convert.ToDecimal(dr["TotalDueAmount"])
                     };
                 }
-
                 response.status = "Success";
                 response.message = "GST sales grid fetched successfully";
                 response.data = new { rows, totals };
@@ -338,11 +360,14 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Sub Total", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Gross Sale", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Net Sale", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Taxable Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("CGST", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("SGST", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("IGST", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Total GST", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("Tax Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Invoice Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Paid Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Due Amount", StringComparison.OrdinalIgnoreCase);
@@ -393,8 +418,23 @@ namespace ERPAdmin.ApiControllers
 
                         switch (col.ColumnName)
                         {
-                            case "Sub Total":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotal"]).ToString("N2");
+                            case "Gross Sale":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossSale"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Discount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Net Sale":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalNetSale"]).ToString("N2");
+                                isAmountColumn = true;
+                                break;
+
+                            case "Taxable Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -413,8 +453,8 @@ namespace ERPAdmin.ApiControllers
                                 isAmountColumn = true;
                                 break;
 
-                            case "Total GST":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTax"]).ToString("N2");
+                            case "Tax Amount":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -560,18 +600,33 @@ namespace ERPAdmin.ApiControllers
 
                         string? value = columnName switch
                         {
-                            "Sub Total" => totalRow["TotalSubTotal"].ToString(),
+                            "Gross Sale" => totalRow["TotalGrossSale"].ToString(),
+
+                            "Discount" => totalRow["TotalDiscount"].ToString(),
+
+                            "Net Sale" => totalRow["TotalNetSale"].ToString(),
+
+                            "Taxable Amount" => totalRow["TotalTaxableAmount"].ToString(),
+
                             "CGST" => totalRow["TotalCGST"].ToString(),
+
                             "SGST" => totalRow["TotalSGST"].ToString(),
+
                             "IGST" => totalRow["TotalIGST"].ToString(),
-                            "Total GST" => totalRow["TotalTax"].ToString(),
+
+                            "Tax Amount" => totalRow["TotalTaxAmount"].ToString(),
+
                             "Invoice Amount" => totalRow["TotalInvoiceAmount"].ToString(),
+
                             "Paid Amount" => totalRow["TotalPaidAmount"].ToString(),
+
                             "Due Amount" => totalRow["TotalDueAmount"].ToString(),
+
                             _ => i == 0 ? "TOTAL" : ""
                         };
 
                         var cell = worksheet.Cell(row, i + 1);
+
                         cell.Value = value;
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
