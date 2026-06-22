@@ -147,4 +147,53 @@
         public long? ActionBy { get; set; }
     }
 
+    #region follow up remiander
+    //GET
+    public class GetFollowUpReminderStatusRequest
+    {
+        public long EnquiryId { get; set; }
+    }
+
+    public class FollowUpReminderStatusResponse
+    {
+        public byte FollowUpStage { get; set; }
+
+        public bool Enable1st { get; set; }
+        public bool Enable2nd { get; set; }
+        public bool Enable3rd { get; set; }
+
+        public bool Is1stSent { get; set; }
+        public bool Is2ndSent { get; set; }
+        public bool Is3rdSent { get; set; }
+    }
+
+    public class FollowUpReminderHistoryResponse
+    {
+        public long Id { get; set; }
+        public string? EventTitle { get; set; }
+        public byte FollowUpStage { get; set; }
+
+        public string? LastModifiedOn { get; set; }
+        public string? LastModifiedBy { get; set; }
+    }
+
+    public class FollowUpReminderDataResponse
+    {
+        public FollowUpReminderStatusResponse Status { get; set; }
+        public List<FollowUpReminderHistoryResponse>? History { get; set; }
+    }
+
+    //SAVE
+    public class SaveFollowUpReminderRequest : BaseClass
+    {
+        public long EnquiryId { get; set; }
+        public byte FollowUpNo { get; set; }
+    }
+    public class SaveFollowUpReminderResponse
+    {
+        public string WhatsappStatus { get; set; }
+        public byte FollowUpStage { get; set; }
+        public int AffectedRows { get; set; }
+    }
+    #endregion
 }

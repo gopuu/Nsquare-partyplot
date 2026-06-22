@@ -5648,3 +5648,143 @@ function updateHallRentGST() {
 
 
 //BOOKING CALENDAR DESIGN - END ----------------------------------------------------------------------
+
+//FOLLOW UP REMAIDNER - START --------------------------------------------------------------------
+function loadFollowUpReminder(eventId, enquiryId) {
+    var payload = {
+        enquiryId: enquiryId
+    };
+
+    $.ajax({
+        url: "/api/EnquiryFollowup/GetFollowUpReminderStatus",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+            if (response.status !== "Success")
+                return;
+
+            const status = response.data.Status;
+            const history = response.data.History;
+            bindReminderSwitches(status);
+            bindReminderHistory(history);
+        },
+        error: function (status, error, api) {
+            handleApiError(status, error, api, "Unable to load reminder data.");
+        }
+    });
+}
+
+function bindReminderSwitches(status) {
+    $('#switchReminder1')
+        .prop('checked', status.Is1stSent)
+        .prop('disabled', !status.Enable1st);
+
+    $('#switchReminder2')
+        .prop('checked', status.Is2ndSent)
+        .prop('disabled', !status.Enable2nd);
+
+    $('#switchReminder3')
+        .prop('checked', status.Is3rdSent)
+        .prop('disabled', !status.Enable3rd);
+}
+
+function bindReminderHistory(history) {
+    let tbody = $('#reminderHistoryBody');
+    tbody.empty();
+    if (!history || history.length === 0) {
+        $('#reminderHistoryContainer').hide();
+        return;
+    }
+
+    $('#reminderHistoryContainer').show();
+    $.each(history, function (index, item) {
+        let reminderText = '';
+        switch (item.FollowUpStage) {
+            case 1: reminderText = '1st Reminder'; break;
+            case 2: reminderText = '2nd Reminder'; break;
+            case 3: reminderText = '3rd Reminder'; break;
+        }
+        tbody.append(`
+            <tr>
+                <td>${index + 1}</td>
+                <td>${reminderText}</td>
+                <td>${item.LastModifiedOn}</td>
+                <td>${item.LastModifiedBy}</td>
+            </tr>
+        `);
+    });
+}
+
+$(document).on('change', '.reminderToggle', function () {
+    const $switch = $(this);
+    if (!$switch.is(':checked'))
+    {
+        $switch.prop('checked', true);
+        return;
+    }
+
+    let followUpNo = Number($switch.data('followup'));
+    let actionBy = Number(sessionStorage.getItem("userId") ?? 0);
+
+    let payload = {
+        enquiryId: Number($('#hfEnquiryDealId').val()),
+        followUpNo: followUpNo,
+        actionBy: actionBy
+    };
+
+    $switch.prop('disabled', true);
+
+    $.ajax({
+        url: "api/EnquiryFollowup/SaveFollowUpReminder",
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+
+        success: function (response) {
+            console.log("response:", response);
+            if (response.status !== "Success") {
+                $switch.prop('checked', false);
+                $switch.prop('disabled', false);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: response.message || 'Reminder sending failed.'
+                });
+                return;
+            }
+
+            let whatsappStatus = response.data?.whatsappStatus || "Success";
+            if (whatsappStatus !== "Success") {
+                $switch.prop('checked', false);
+                $switch.prop('disabled', false);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: response.message || 'WhatsApp sending failed.'
+                });
+                return;
+            }
+
+            handleApiSuccess(`Follow-up Reminder ${followUpNo} sent successfully.`);
+            loadFollowUpReminder(Number($('#hfEnquiryDealId').val()));
+        },
+        error: function (xhr, status, error) {
+            $switch.prop('checked', false);
+            $switch.prop('disabled', false);
+
+            handleApiError(
+                status,
+                error,
+                xhr,
+                "Unable to save reminder."
+            );
+        }
+    });
+});
+
+//FOLLOW UP REMAIDNER - END ----------------------------------------------------------------------
+

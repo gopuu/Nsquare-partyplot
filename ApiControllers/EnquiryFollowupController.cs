@@ -22,10 +22,14 @@ namespace ERPAdmin.ApiControllers
         private string connString = string.Empty;
         private readonly ImageUploadService _imageUploadService;
         private readonly string domainUrl;
+        private readonly WhatsAppService _whatsAppService;
 
-        public EnquiryFollowupController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ImageUploadService imageUploadService) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        public EnquiryFollowupController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, 
+            ImageUploadService imageUploadService, WhatsAppService whatsAppService) 
+            : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             _imageUploadService = imageUploadService;
+            _whatsAppService = whatsAppService;
             //_configuration = configuration;
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
@@ -227,6 +231,217 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        #region FOLLOW REMAINDER
+        [HttpPost]
+        [Route("GetFollowUpReminderStatus")]
+        public IActionResult GetFollowUpReminderStatus([FromBody] GetFollowUpReminderStatusRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(
+                        ControllerContext,
+                        Request,
+                        out string connString,
+                        out string domain,
+                        out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                FollowUpReminderStatusResponse status = null;
+                List<FollowUpReminderHistoryResponse> history = new();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetFollowUpReminderStatus", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@EnquiryId", request.EnquiryId);
+
+                    con.Open();
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        // Resultset 1 : Status
+                        if (dr.Read())
+                        {
+                            status = new FollowUpReminderStatusResponse
+                            {
+                                FollowUpStage = Convert.ToByte(dr["FollowUpStage"]),
+
+                                Enable1st = Convert.ToBoolean(dr["Enable1st"]),
+                                Enable2nd = Convert.ToBoolean(dr["Enable2nd"]),
+                                Enable3rd = Convert.ToBoolean(dr["Enable3rd"]),
+
+                                Is1stSent = Convert.ToBoolean(dr["Is1stSent"]),
+                                Is2ndSent = Convert.ToBoolean(dr["Is2ndSent"]),
+                                Is3rdSent = Convert.ToBoolean(dr["Is3rdSent"])
+                            };
+                        }
+
+                        // Resultset 2 : History
+                        if (dr.NextResult())
+                        {
+                            while (dr.Read())
+                            {
+                                history.Add(new FollowUpReminderHistoryResponse
+                                {
+                                    Id = Convert.ToInt64(dr["Id"]),
+                                    EventTitle = Convert.ToString(dr["EventTitle"]),
+                                    FollowUpStage = Convert.ToByte(dr["FollowUpStage"]),
+                                    LastModifiedOn = Convert.ToString(dr["LastModifiedOn"]),
+                                    LastModifiedBy = Convert.ToString(dr["LastModifiedBy"])
+                                });
+                            }
+                        }
+                    }
+                }
+
+                apiResponse.data = new FollowUpReminderDataResponse
+                {
+                    Status = status,
+                    History = history
+                };
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Follow-up reminder status fetched successfully.";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("SaveFollowUpReminder")]
+        public async Task<IActionResult> SaveFollowUpReminder([FromBody] SaveFollowUpReminderRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            long followUpReminderId = 0;
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString,
+                        out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                SaveFollowUpReminderResponse response = new();
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SaveFollowUpReminder", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@EnquiryId", SqlDbType.BigInt).Value = request.EnquiryId;
+                    cmd.Parameters.Add("@FollowUpNo", SqlDbType.TinyInt).Value = request.FollowUpNo;
+                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = request.ActionBy;
+
+                    con.Open();
+
+                    string whatsapp_name = "", whatsapp_bName = "", whatsapp_eventName = "", whatsapp_orgName = "",
+                        whatsapp_client_contactno = "", templateName = "", whatsapp_closeGreeting = "";
+                    int companyId = 0;
+                    bool isSendMsg = false;
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            followUpReminderId = Convert.ToInt64(dr["FollowUpReminderId"]);
+                            response.FollowUpStage = Convert.ToByte(dr["FollowUpStage"]);
+                            response.AffectedRows = Convert.ToInt32(dr["AffectedRows"]);
+
+                            whatsapp_name = dr["Name"]?.ToString() ?? "";
+                            whatsapp_bName = dr["BName"]?.ToString() ?? "";
+                            whatsapp_eventName = dr["EventName"]?.ToString() ?? "";
+                            whatsapp_orgName = dr["OrgName"]?.ToString() ?? "";
+                            whatsapp_closeGreeting = dr["ClosingGreeting"]?.ToString() ?? "";
+
+                            whatsapp_client_contactno = dr["ContactNo"]?.ToString() ?? "";
+                            companyId = dr["CompanyId"] != DBNull.Value ? Convert.ToInt32(dr["CompanyId"]) : 0;
+                            templateName = dr["TempName"]?.ToString() ?? "";
+                            isSendMsg = dr["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(dr["IsSendMsg"]) : false;
+                        }
+                    }
+
+                    //NOTIFY 8 SEND WHATSAPP - FOLLOW UP REMAINDER
+                    if (followUpReminderId > 0 && isSendMsg)
+                    {
+                        List<string> variables = new List<string>
+                        {
+                            whatsapp_name,
+                            whatsapp_bName,
+                            whatsapp_eventName,
+                            whatsapp_orgName
+                        };
+                        if (request.FollowUpNo == 2 || request.FollowUpNo == 3)
+                        {
+                            variables.Add(whatsapp_closeGreeting);
+                        }
+
+                        var whatsappResult =
+                            await _whatsAppService.SendTemplateWhatsAppCommon(
+                                companyId: companyId,
+                                mobileNo: whatsapp_client_contactno,
+                                templateName: templateName,
+                                variables: variables,
+                                actionBy: request.ActionBy,
+                                isPromotional: false,
+                                domainUrl: domainUrl
+                            );
+
+                        if (whatsappResult.status == "Success")
+                        {
+                            // Save FollowUpReminder
+                            response.WhatsappStatus = whatsappResult.status;
+                        }
+                        else
+                        {
+                            // Show Error
+                            response.WhatsappStatus = whatsappResult.status; // "Failed";
+
+                            using SqlConnection rollbackCon = new SqlConnection(connString);
+                            using SqlCommand rollbackCmd = new SqlCommand("RollbackFollowUpReminder", rollbackCon);
+                            rollbackCmd.CommandType = CommandType.StoredProcedure;
+                            rollbackCmd.Parameters.Add("@FollowUpReminderId", SqlDbType.BigInt).Value = followUpReminderId;
+
+                            await rollbackCon.OpenAsync();
+                            await rollbackCmd.ExecuteNonQueryAsync();
+
+                            apiResponse.status = "Error";
+                            apiResponse.message = $"WhatsApp sending failed.";
+                            apiResponse.data = response;
+                            return Ok(apiResponse);
+                        }
+                    }
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = $"Follow-up {request.FollowUpNo} saved successfully.";
+                apiResponse.data = response;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+        #endregion
+
+        #region MASTER API
         [HttpGet]
         [Route("GetEnquiryFollowUp_Types")]
         public IActionResult GetEnquiryFollowUp_Types()
@@ -517,7 +732,7 @@ namespace ERPAdmin.ApiControllers
             return StatusCode(500, apiResponse);
         }
     }
-
+        #endregion
 
     }
 }

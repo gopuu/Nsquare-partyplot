@@ -295,7 +295,7 @@ function renderBookingTable(data) {
                 }
             },
 
-            { data: "EventDisplay", name: "EventDisplay", title: "Event" },
+            { data: "EventDisplay", name: "EventDisplay", title: "Event", width: "100px" },
 
             { data: "HallName", name: "HallName", title: "Hall Name" },
 
