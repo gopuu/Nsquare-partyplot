@@ -356,7 +356,6 @@ namespace ERPAdmin.ApiControllers
 
                 // 🔥 STEP 2: SEND WHATSAPP
                 string sendStatus = await SendWhatsAppMessage(request);
-
                 if (sendStatus != "Success")
                 {
                     // 🔥 STEP 3: REFUND IF FAILED
@@ -390,7 +389,7 @@ namespace ERPAdmin.ApiControllers
                 return Ok(new apiResponse
                 {
                     status = sendStatus, //"Success",
-                    message = "WhatsApp sent successfully",
+                    message = (sendStatus == "Success") ? "WhatsApp msg sent successfully" : "WhatsApp msg sending failed",
                     data = new
                     {
                         Balance = balance,
