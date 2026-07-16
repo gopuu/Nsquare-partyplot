@@ -12,7 +12,7 @@
     overflow: hidden; /* 🔥 important for clipping */
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    z-index: 9999;
+    z-index: 1030;
 }
 
 .feedback-icon {

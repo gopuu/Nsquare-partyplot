@@ -43,30 +43,7 @@ const toolbarOptions = [
 
 // Optional: Auto-correct minute/hour inputs
 
-// <!-- Time format  --START- Include Flatpickr CSS & JS -->
-
-function fixTimeInput(idHour, idMinute) {
-    const hour = document.getElementById(idHour);
-    const minute = document.getElementById(idMinute);
-
-    hour.addEventListener('input', () => {
-        if (hour.value > 12) hour.value = 12;
-        if (hour.value < 1) hour.value = 1;
-    });
-
-    minute.addEventListener('input', () => {
-        if (minute.value > 59) minute.value = 59;
-        if (minute.value < 0) minute.value = 0;
-    });
-}
-
-fixTimeInput('startHour', 'startMinute');
-fixTimeInput('endHour', 'endMinute');
-
-//<!-- Time format  --END- Include Flatpickr CSS & JS -->
-
 // <!--Reschedule-->
-
 function to24Hour(hour, minute, ampm) {
     hour = parseInt(hour, 10);
     minute = parseInt(minute || 0, 10);
@@ -76,6 +53,7 @@ function to24Hour(hour, minute, ampm) {
 
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 }
+
 $("#btnSaveReschedule").on("click", function () {
 
     const bookingId = Number($("#reschedule_BookingId").val());
@@ -2713,7 +2691,7 @@ function attachShiftClickListeners() {
                         .data("shiftid", b.ShiftCode);
 
                     $("#banquetDropdown").val(hallid);
-
+                    console.log("setShiftTime 1");
                     setShiftTime(b.ShiftCode);
 
                     $("#fromDate").val(dateiso).prop("disabled", true);
@@ -2803,6 +2781,8 @@ function attachShiftClickListeners() {
                     .data("shiftid", shift);
 
                 $("#banquetDropdown").val(hallid);
+
+                console.log("setShiftTime 2");
                 setShiftTime(shift);
                 $("#PaymentDetails_DueDate").val('');
 
@@ -2830,24 +2810,37 @@ function attachShiftClickListeners() {
     });
 }
 
-function setShiftTime(shiftAbbr) {
-    //console.log("shiftTimes:", shiftTimes);
-    const times = shiftTimes[shiftAbbr];
-    if (!times) return; // invalid shift — do nothing
+function convertTo24Hour(time12h) {
+    if (!time12h) return "";
 
-    // Parse start time
-    const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-    $("#startHour").val(startH);
-    $("#startMinute").val(startM);
-    $("#startAMPM").val(startAMPM);
+    const match = time12h.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return "";
 
-    // Parse end time
-    const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-    $("#endHour").val(endH);
-    $("#endMinute").val(endM);
-    $("#endAMPM").val(endAMPM);
+    let [, hour, minute, ampm] = match;
+
+    hour = parseInt(hour, 10);
+
+    if (ampm.toUpperCase() === "AM") {
+        if (hour === 12) hour = 0;
+    } else {
+        if (hour !== 12) hour += 12;
+    }
+
+    return `${hour.toString().padStart(2, "0")}:${minute}`;
 }
 
+function setShiftTime(shiftAbbr) {
+    console.log("shiftTimes:", shiftTimes, ", shiftAbbr:", shiftAbbr);
+
+    const times = shiftTimes[shiftAbbr];
+    if (!times) return;
+
+    //$("#eventStart").val(convertTo24Hour(times.start));
+    //$("#eventEnd").val(convertTo24Hour(times.end));
+
+    $("#eventStart").val(times.start);
+    $("#eventEnd").val(times.end);
+}
 // Call this function after rendering board or table
 /* here1
 renderBoard = (() => {
@@ -6604,15 +6597,29 @@ function validateBookingForm() {
         isValid = false;
     }
 
-    if (!$("#startHour").val() || !$("#startMinute").val()) {
-        showFieldError($("#startHour"), "Please select start time");
+    // (8) Start Time
+    const eventStart = $("#eventStart");
+    const eventStartErr = eventStart.nextAll('.error-msg').first();
+
+    if (eventStart.val() === "") {
+        eventStartErr.removeClass("d-none");
         isValid = false;
+    } else {
+        eventStartErr.addClass("d-none");
     }
 
-    if (!$("#endHour").val() || !$("#endMinute").val()) {
-        showFieldError($("#endHour"), "Please select end time");
+
+    // (9) End Time
+    const eventEnd = $("#eventEnd");
+    const eventEndErr = eventEnd.nextAll('.error-msg').first();
+
+    if (eventEnd.val() === "") {
+        eventEndErr.removeClass("d-none");
         isValid = false;
+    } else {
+        eventEndErr.addClass("d-none");
     }
+
 
     if (!$("#clientName").val().trim()) {
         showFieldError($("#clientName"), "Please enter client name");
@@ -6931,8 +6938,8 @@ function saveBooking() {
         TillDate: $("#toDate").val(),
 
         //Time
-        StartTime: `${$("#startHour").val()}:${$("#startMinute").val()} ${$("#startAMPM").val()}`,
-        EndTime: `${$("#endHour").val()}:${$("#endMinute").val()} ${$("#endAMPM").val()}`,
+        StartTime: $("#eventStart").val(),
+        EndTime: $("#eventEnd").val(),
 
         // Client Info
         Client_EnquiryId: parseInt($("#clientEnquiryDropdown").val() || 0),
@@ -7240,6 +7247,9 @@ function resetBooking() {
         .data("eventdate", null)      // clear stored date
         .data("shiftid", null);       // clear stored shift
 
+    $("#eventStart").val("");
+    $("#eventEnd").val("");
+    
     // Reset any special fields
     $("#gstSwitch").prop("checked", false);
     $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
@@ -8142,7 +8152,7 @@ function loadSlotDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("response SlotMaster:", response);
+            console.log("response SlotMaster:", response);
             const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
             const $abbrContainer = $("#slotAbbreviations");
 
@@ -8182,8 +8192,8 @@ function loadSlotDropdown() {
                 shiftMap[code] = s.Name;
                 // Dynamic time mapping
                 shiftTimes[code] = {
-                    start: s.StartTime2 || s.StartTime,
-                    end: s.EndTime2 || s.EndTime
+                    start: (s.StartTimeHH + ":" + s.StartTimeMM + " " + s.StartTimeAMPM) || s.StartTime2 || s.StartTime,
+                    end: (s.EndTimeHH + ":" + s.EndTimeMM + " " + s.EndTimeAMPM) || s.EndTime2 || s.EndTime
                 };
 
             });
@@ -8228,3 +8238,275 @@ $(document).on("change", "#reschedule_SlotId", function () {
     }
 });
 // Vendor Work Order Modal -- END --------------------
+
+
+//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->
+/* --------------------- 🕒 START TIME --------------------- */
+const input = document.getElementById('eventStart');
+const picker = document.getElementById('clockPicker');
+const hourDisplay = document.getElementById('hourDisplay');
+const minuteDisplay = document.getElementById('minuteDisplay');
+const hourHand = document.getElementById('hourHand');
+const minuteHand = document.getElementById('minuteHand');
+const amBtn = document.getElementById('amBtn');
+const pmBtn = document.getElementById('pmBtn');
+const setBtn = document.getElementById('setTimeBtn');
+
+let hour = 12;
+let minute = 0;
+let ampm = 'AM';
+let mode = 'hour';
+
+// Toggle picker visibility
+input.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent document click handler
+    initializePicker(input.value);
+    picker.classList.toggle('d-none');
+});
+
+// Initialize picker when opening
+function initializePicker(value) {
+    let time = value.trim();
+    if (!time) time = "12:00 AM"; // Default if empty
+
+    const [timePart, modifier] = time.split(" ");
+    let [h, m] = timePart.split(":").map(Number);
+
+    ampm = modifier || 'AM';
+    hour = h;
+    minute = m;
+
+    hourDisplay.textContent = hour.toString().padStart(2, '0');
+    minuteDisplay.textContent = minute.toString().padStart(2, '0');
+    hourHand.style.transform = `rotate(${hour * 30}deg)`;
+    minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+
+    if (ampm === 'AM') {
+        amBtn.classList.add('active');
+        pmBtn.classList.remove('active');
+    } else {
+        pmBtn.classList.add('active');
+        amBtn.classList.remove('active');
+    }
+
+    setMode('hour');
+}
+
+// Switch between hour/minute mode
+hourDisplay.addEventListener('click', () => setMode('hour'));
+minuteDisplay.addEventListener('click', () => setMode('minute'));
+
+function setMode(m) {
+    mode = m;
+
+    if (mode === 'hour') {
+        hourDisplay.classList.add('active-text');
+        minuteDisplay.classList.remove('active-text');
+        minuteDisplay.classList.add('inactive-text');
+        hourDisplay.classList.remove('inactive-text');
+        hourHand.classList.add('active-hand');
+        minuteHand.classList.remove('active-hand');
+    } else {
+        minuteDisplay.classList.add('active-text');
+        hourDisplay.classList.remove('active-text');
+        hourDisplay.classList.add('inactive-text');
+        minuteDisplay.classList.remove('inactive-text');
+        minuteHand.classList.add('active-hand');
+        hourHand.classList.remove('active-hand');
+    }
+}
+
+function hidePickerSlowly(picker) {
+    picker.classList.add('picker-transition'); // ensure transition enabled
+
+    // Start fade-out
+    picker.classList.add('picker-hide');
+
+    // After animation ends, fully hide
+    setTimeout(() => {
+        picker.classList.add('d-none');
+        picker.classList.remove('picker-hide');
+    }, 300); // match CSS duration
+}
+
+function showPicker(picker) {
+    picker.classList.remove('d-none');
+    picker.classList.add('picker-transition');
+
+    // Start from hidden state
+    picker.classList.add('picker-hide');
+
+    // Fade-in after reflow
+    requestAnimationFrame(() => {
+        picker.classList.remove('picker-hide');
+    });
+}
+
+// Handle number click
+picker.querySelectorAll('.clock-number').forEach(num => {
+    num.addEventListener('click', () => {
+        const value = parseInt(num.textContent);
+        if (mode === 'hour') {
+            hour = value;
+            hourDisplay.textContent = value.toString().padStart(2, '0');
+            hourHand.style.transform = `rotate(${value * 30}deg)`;
+        } else {
+            minute = (value % 12) * 5;
+            minuteDisplay.textContent = minute.toString().padStart(2, '0');
+            minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+        }
+    });
+});
+
+// AM/PM toggle
+amBtn.addEventListener('click', () => {
+    ampm = 'AM';
+    amBtn.classList.add('active');
+    pmBtn.classList.remove('active');
+});
+
+pmBtn.addEventListener('click', () => {
+    ampm = 'PM';
+    pmBtn.classList.add('active');
+    amBtn.classList.remove('active');
+});
+
+// Set time here1
+function setTimeStart() {
+    input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm} `;
+    //picker.classList.add('d-none');
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    hidePickerSlowly(picker);
+}
+setBtn.addEventListener('click', setTimeStart);
+
+// 🔹 Outside click handler
+document.addEventListener('click', (e) => {
+    if (!picker.contains(e.target) && e.target !== input) {
+        if (!picker.classList.contains('d-none')) {
+            setTimeStart(); // auto save selected time
+        }
+    }
+});
+
+setMode('hour');
+
+
+/* --------------------- 🕓 END TIME --------------------- */
+const inputEnd = document.getElementById('eventEnd');
+const pickerEnd = document.getElementById('clockPickerEnd');
+const hourDisplayEnd = document.getElementById('hourDisplayEnd');
+const minuteDisplayEnd = document.getElementById('minuteDisplayEnd');
+const hourHandEnd = document.getElementById('hourHandEnd');
+const minuteHandEnd = document.getElementById('minuteHandEnd');
+const amBtnEnd = document.getElementById('amBtnEnd');
+const pmBtnEnd = document.getElementById('pmBtnEnd');
+const setBtnEnd = document.getElementById('setTimeBtnEnd');
+
+let hourEnd = 12;
+let minuteEnd = 0;
+let ampmEnd = 'AM';
+let modeEnd = 'hour';
+
+inputEnd.addEventListener('click', (e) => {
+    e.stopPropagation();
+    initializePickerEnd(inputEnd.value);
+    pickerEnd.classList.toggle('d-none');
+});
+
+function initializePickerEnd(value) {
+    let time = value.trim();
+    if (!time) time = "12:00 AM";
+
+    const [timePart, modifier] = time.split(" ");
+    let [h, m] = timePart.split(":").map(Number);
+
+    ampmEnd = modifier || 'AM';
+    hourEnd = h;
+    minuteEnd = m;
+
+    hourDisplayEnd.textContent = hourEnd.toString().padStart(2, '0');
+    minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
+    hourHandEnd.style.transform = `rotate(${hourEnd * 30}deg)`;
+    minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
+
+    if (ampmEnd === 'AM') {
+        amBtnEnd.classList.add('active');
+        pmBtnEnd.classList.remove('active');
+    } else {
+        pmBtnEnd.classList.add('active');
+        amBtnEnd.classList.remove('active');
+    }
+
+    setModeEnd('hour');
+}
+
+hourDisplayEnd.addEventListener('click', () => setModeEnd('hour'));
+minuteDisplayEnd.addEventListener('click', () => setModeEnd('minute'));
+
+function setModeEnd(m) {
+    modeEnd = m;
+
+    if (modeEnd === 'hour') {
+        hourDisplayEnd.classList.add('active-text');
+        minuteDisplayEnd.classList.remove('active-text');
+        minuteDisplayEnd.classList.add('inactive-text');
+        hourDisplayEnd.classList.remove('inactive-text');
+        hourHandEnd.classList.add('active-hand');
+        minuteHandEnd.classList.remove('active-hand');
+    } else {
+        minuteDisplayEnd.classList.add('active-text');
+        hourDisplayEnd.classList.remove('active-text');
+        hourDisplayEnd.classList.add('inactive-text');
+        minuteDisplayEnd.classList.remove('inactive-text');
+        minuteHandEnd.classList.add('active-hand');
+        hourHandEnd.classList.remove('active-hand');
+    }
+}
+
+pickerEnd.querySelectorAll('.clock-number').forEach(num => {
+    num.addEventListener('click', () => {
+        const value = parseInt(num.textContent);
+        if (modeEnd === 'hour') {
+            hourEnd = value;
+            hourDisplayEnd.textContent = value.toString().padStart(2, '0');
+            hourHandEnd.style.transform = `rotate(${value * 30}deg)`;
+        } else {
+            minuteEnd = (value % 12) * 5;
+            minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
+            minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
+        }
+    });
+});
+
+amBtnEnd.addEventListener('click', () => {
+    ampmEnd = 'AM';
+    amBtnEnd.classList.add('active');
+    pmBtnEnd.classList.remove('active');
+});
+
+pmBtnEnd.addEventListener('click', () => {
+    ampmEnd = 'PM';
+    pmBtnEnd.classList.add('active');
+    amBtnEnd.classList.remove('active');
+});
+
+// Set time
+function setTimeEnd() {
+    inputEnd.value = `${hourDisplayEnd.textContent}:${minuteDisplayEnd.textContent} ${ampmEnd} `;
+    inputEnd.dispatchEvent(new Event("change", { bubbles: true }));
+    pickerEnd.classList.add('d-none');
+}
+setBtnEnd.addEventListener('click', setTimeEnd);
+
+// 🔹 Outside click handler
+document.addEventListener('click', (e) => {
+    if (!pickerEnd.contains(e.target) && e.target !== inputEnd) {
+        if (!pickerEnd.classList.contains('d-none')) {
+            setTimeEnd();
+        }
+    }
+});
+
+setModeEnd('hour');
+//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->

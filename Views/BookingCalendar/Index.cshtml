@@ -2,6 +2,8 @@
     ViewData["Title"] = "Booking Calendar";
     Layout = "_Layout";
 }
+<link href="/assets2/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
+<script src="/assets2/vendors/flatpickr/flatpickr.min.js"></script>
 
 <link href="/assets2/css/dataTables.bootstrap5.min.css" rel="stylesheet" /> 
 <link href="/assets2/css/bootstrap.min.css" rel="stylesheet">
@@ -147,32 +149,100 @@
                             <input type="date" class="form-control form-control-sm" id="toDate">
                             <div class="text-danger small mt-1 error-msg d-none">Please select to date</div>
                         </div>
-                        <!-- Function Start Time -->
-                        <div class="col-md-3">
-                            <label class="form-label">Function Start Time <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-1">
-                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;">
-                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;">
-                                <select class="form-select form-select-sm" id="startAMPM" style="width: 100px;">
-                                    <option value="AM">AM</option>
-                                    <option value="PM">PM</option>
-                                </select>
+
+                        <!-- START TIME FIELD -->
+                        <div class="col-md-2 position-relative">
+                            <label for="eventStart" class="form-label">
+                                Start Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="eventStart" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select start time</div>
+
+                            <!-- CLOCK PICKER -->
+                            <div id="clockPicker" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                                <div class="text-center mb-3">
+                                    <span id="hourDisplay" class="fw-bold fs-3 text-primary clickable">12</span>
+                                    <span class="fs-3 text-dark">:</span>
+                                    <span id="minuteDisplay" class="fw-bold fs-3 text-dark clickable">00</span>
+                                </div>
+
+                                <!-- AM/PM toggle -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <button type="button" id="amBtn" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                    <button type="button" id="pmBtn" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                    <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                </div>
+
+                                <!-- Clock face -->
+                                <div class="clock-face mx-auto mb-3">
+                                    <div class="clock-hand hour-hand" id="hourHand"></div>
+                                    <div class="clock-hand minute-hand" id="minuteHand"></div>
+                                    <div class="center-dot"></div>
+
+                                    <!-- Hour numbers -->
+                                    <div class="clock-number" style="--i:1;">1</div>
+                                    <div class="clock-number" style="--i:2;">2</div>
+                                    <div class="clock-number" style="--i:3;">3</div>
+                                    <div class="clock-number" style="--i:4;">4</div>
+                                    <div class="clock-number" style="--i:5;">5</div>
+                                    <div class="clock-number" style="--i:6;">6</div>
+                                    <div class="clock-number" style="--i:7;">7</div>
+                                    <div class="clock-number" style="--i:8;">8</div>
+                                    <div class="clock-number" style="--i:9;">9</div>
+                                    <div class="clock-number" style="--i:10;">10</div>
+                                    <div class="clock-number" style="--i:11;">11</div>
+                                    <div class="clock-number" style="--i:12;">12</div>
+                                </div>
                             </div>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select from time</div>
                         </div>
-                        <!-- Function End Time -->
-                        <div class="col-md-3">
-                            <label class="form-label">Function End Time <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-1">
-                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;">
-                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;">
-                                <select class="form-select form-select-sm" id="endAMPM" style="width: 100px;">
-                                    <option value="AM">AM</option>
-                                    <option value="PM">PM</option>
-                                </select>
+
+                        <!-- END TIME FIELD -->
+                        <div class="col-md-2 position-relative">
+                            <label for="eventEnd" class="form-label">
+                                End Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="eventEnd" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select end time</div>
+
+                            <!-- CLOCK PICKER -->
+                            <div id="clockPickerEnd" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                                <div class="text-center mb-3">
+                                    <span id="hourDisplayEnd" class="fw-bold fs-3 text-primary clickable">12</span>
+                                    <span class="fs-3 text-dark">:</span>
+                                    <span id="minuteDisplayEnd" class="fw-bold fs-3 text-dark clickable">00</span>
+                                </div>
+
+                                <!-- AM/PM toggle -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <button id="amBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                    <button id="pmBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                    <button id="setTimeBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                </div>
+
+                                <!-- Clock face -->
+                                <div class="clock-face mx-auto mb-3">
+                                    <div class="clock-hand hour-hand" id="hourHandEnd"></div>
+                                    <div class="clock-hand minute-hand" id="minuteHandEnd"></div>
+                                    <div class="center-dot"></div>
+
+                                    <!-- Hour numbers -->
+                                    <div class="clock-number" style="--i:1;">1</div>
+                                    <div class="clock-number" style="--i:2;">2</div>
+                                    <div class="clock-number" style="--i:3;">3</div>
+                                    <div class="clock-number" style="--i:4;">4</div>
+                                    <div class="clock-number" style="--i:5;">5</div>
+                                    <div class="clock-number" style="--i:6;">6</div>
+                                    <div class="clock-number" style="--i:7;">7</div>
+                                    <div class="clock-number" style="--i:8;">8</div>
+                                    <div class="clock-number" style="--i:9;">9</div>
+                                    <div class="clock-number" style="--i:10;">10</div>
+                                    <div class="clock-number" style="--i:11;">11</div>
+                                    <div class="clock-number" style="--i:12;">12</div>
+                                </div>
                             </div>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select to time</div>
                         </div>
+
+
                         <div id="slotStatusMsg" class="alert py-1 mt-2 d-none"></div>
                         <div id="slotStatusWarning" class="alert py-1 mt-1 d-none fs-9"></div>
 

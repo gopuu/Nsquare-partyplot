@@ -1290,14 +1290,6 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // NOTES
-                string noteCustomer = Get("OtherCharges_BookingNoteForCustomer");
-                string noteInternal = Get("OtherCharges_InternalOfficeNote");
-                string notesFood = Get("Notes_FoodBeverage");
-                string notesTiming = Get("Notes_EventTiming");
-                string notesDecoration = Get("Notes_DecorationSetup");
-                string notesTechnical = Get("Notes_TechnicalService");
-                string notesGuest = Get("Notes_GuestCustom");
-                string notesFinancial = Get("Notes_FinancialInternal");
                 string tnc = Get("tnc");
                 #endregion
 
@@ -1652,40 +1644,82 @@ namespace ERPAdmin.ApiControllers
                 lineBottom.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER, FixedHeight = 1, BackgroundColor = BaseColor.LIGHT_GRAY });
                 document.Add(lineBottom);
 
-                void AddNoteHtml(iTextParagraph container, string title, string htmlData)
-                {
-                    // Title (bold)
-                    container.Add(new Chunk(title + "\n", labelFontBoldLeft));
-                    string clean = htmlData ?? "";
+                //BOOKING NOTES
+                string notesJson = row["NotesJSON"]?.ToString() ?? "[]";
+                List<BookingNotePdf> notes = JsonConvert.DeserializeObject<List<BookingNotePdf>>(notesJson) ?? new List<BookingNotePdf>();
 
-                    if (!string.IsNullOrWhiteSpace(clean) &&
-                        clean != "<p><br></p>" &&
-                        clean != "<p></p>")
-                    {
-                        using (StringReader sr = new StringReader(clean))
-                        {
-                            var elements = HTMLWorker.ParseToList(sr, null);
-                            foreach (var el in elements)
-                            {
-                                container.Add(el);
-                            }
-                        }
-                    }
-
-                    container.Add(Chunk.NEWLINE);
-                }
+                bool hasPrintedNotes = false;
 
                 iTextParagraph notesPara = new iTextParagraph();
-                notesPara.SpacingBefore = 10;
+                notesPara.SpacingBefore = 10f;
 
-                AddNoteHtml(notesPara, "Customer Note:", noteCustomer);
-                AddNoteHtml(notesPara, "Internal Office Note:", noteInternal);
-                AddNoteHtml(notesPara, "Food & Beverage Notes:", notesFood);
-                AddNoteHtml(notesPara, "Event Timing Notes:", notesTiming);
-                AddNoteHtml(notesPara, "Decoration Setup Notes:", notesDecoration);
-                AddNoteHtml(notesPara, "Technical Service Notes:", notesTechnical);
-                AddNoteHtml(notesPara, "Guest Custom Notes:", notesGuest);
-                AddNoteHtml(notesPara, "Financial Internal Notes:", notesFinancial);
+                if (notes != null && notes.Any())
+                {
+                    foreach (var category in notes.GroupBy(x => x.CategoryName ?? "Others"))
+                    {
+                        bool categoryHasData = false;
+                        iTextParagraph categoryPara = new iTextParagraph();
+
+                        categoryPara.Add(new Chunk((category.Key ?? "Others") + "\n", labelFontBoldLeft));
+
+                        foreach (var item in category)
+                        {
+                            string value = "";
+
+                            // Selected Options
+                            if (item.Options != null && item.Options.Any())
+                            {
+                                value = string.Join(", ",
+                                    item.Options
+                                        .Where(x => !string.IsNullOrWhiteSpace(x.OptionName))
+                                        .Select(x => x.OptionName));
+                            }
+
+                            // Value
+                            if (string.IsNullOrWhiteSpace(value) &&
+                                !string.IsNullOrWhiteSpace(item.Value))
+                            {
+                                value = item.Value;
+                            }
+
+                            // Remarks
+                            if (string.IsNullOrWhiteSpace(value) &&
+                                !string.IsNullOrWhiteSpace(item.Remarks))
+                            {
+                                value = item.Remarks;
+                            }
+
+                            if (string.IsNullOrWhiteSpace(value))
+                                continue;
+
+                            categoryHasData = true;
+                            hasPrintedNotes = true;
+
+                            categoryPara.Add(new Chunk("• ", labelFontBoldLeft));
+                            categoryPara.Add(new Chunk((item.SubCategoryName ?? "-") + ": ", labelFontBoldLeft));
+                            categoryPara.Add(new Chunk(value, labelFontLeft));
+
+                            if (!string.IsNullOrWhiteSpace(item.Remarks) &&
+                                !string.Equals(item.Remarks, value, StringComparison.Ordinal))
+                            {
+                                categoryPara.Add(new Chunk(" (" + item.Remarks + ")", labelFontLeft));
+                            }
+
+                            categoryPara.Add(Chunk.NEWLINE);
+                        }
+
+                        if (categoryHasData)
+                        {
+                            categoryPara.Add(Chunk.NEWLINE);
+                            notesPara.Add(categoryPara);
+                        }
+                    }
+                }
+
+                if (!hasPrintedNotes)
+                {
+                    notesPara.Add(new Chunk("No booking notes available.", labelFontLeft));
+                }
 
                 document.Add(notesPara);
 

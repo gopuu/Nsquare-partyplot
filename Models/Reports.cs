@@ -86,4 +86,26 @@
     }
     #endregion
 
+
+    #region BOOKING NOTES
+    public class BookingNotePdf
+    {
+        public long CategoryId { get; set; }
+        public string CategoryName { get; set; }
+
+        public long SubCategoryId { get; set; }
+        public string SubCategoryName { get; set; }
+
+        public string Value { get; set; }
+        public string Remarks { get; set; }
+
+        public List<BookingNoteOptionPdf> Options { get; set; }
+    }
+
+    public class BookingNoteOptionPdf
+    {
+        public long OptionId { get; set; }
+        public string OptionName { get; set; }
+    }
+    #endregion
 }
