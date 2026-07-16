@@ -443,11 +443,11 @@ namespace ERPAdmin.ApiControllers
                         name = request.TemplateName,
                         components = new object[]
                         {
-                    new
-                    {
-                        type = "body",
-                        parameters = parametersList
-                    }
+                            new
+                            {
+                                type = "body",
+                                parameters = parametersList
+                            }
                         }
                     }
                 };

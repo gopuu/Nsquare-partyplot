@@ -2,7 +2,7 @@
     background: linear-gradient(135deg, #fff7e6 0%, #ffe8b3 100%);
     color: #000;
     border-radius: 12px;
-    padding: 25px;
+    padding: 20px;
 }
 
 .wallet-balance {
@@ -13,4 +13,39 @@
 .wallet-label {
     font-size: 14px;
     opacity: 0.8;
+}
+
+.recharge-container {
+    border-radius: 14px;
+    padding: 18px 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+
+.recharge-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 15px;
+}
+
+.recharge-buttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.recharge-buttons form {
+    margin: 0;
+}
+
+.recharge-buttons iframe {
+    border-radius: 10px !important;
+}
+
+@media(max-width:768px) {
+
+    .recharge-buttons {
+        justify-content: center;
+    }
 }

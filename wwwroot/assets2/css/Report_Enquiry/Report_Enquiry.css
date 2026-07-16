@@ -1,0 +1,55 @@
+﻿#tableMain table {
+    font-size: 10px;
+}
+
+    #tableMain table tfoot {
+        font-size: 13px;
+    }
+
+    #tableMain table th,
+    #tableMain table td {
+        padding: 4px 6px;
+    }
+
+/* DataTable scroll alignment fix */
+
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table,
+.dataTables_scrollBody table,
+.dataTables_scrollHead table,
+.dataTables_scrollFoot table {
+    width: 100% !important;
+    table-layout: auto !important;
+}
+
+.dataTables_scrollBody {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+/* Footer alignment fix */
+.dataTables_scrollFoot {
+    overflow: hidden !important;
+}
+
+.dataTables_scrollFootInner {
+    width: 100% !important;
+}
+
+    .dataTables_scrollFootInner table {
+        width: 100% !important;
+        margin-top: 0 !important;
+    }
+
+table.dataTable {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+    /* Prevent zoom width mismatch */
+    table.dataTable td,
+    table.dataTable th {
+        white-space: normal !important;
+        word-break: break-word;
+        vertical-align: middle;
+    }

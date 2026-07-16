@@ -2,7 +2,8 @@
 // 🔷 Init
 $(document).ready(function () {
     fetchLedger();
-    initRecharge();
+    //initRecharge();
+    $('#rechargeNote').text('Recharge balance may take up to 24 hours to reflect in your account.');
 
     AppSignalR.subscribeWallet(function (data) {
         //console.log("Wallet Updated (ledger):", data);

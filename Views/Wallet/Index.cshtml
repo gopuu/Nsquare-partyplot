@@ -29,18 +29,29 @@
     <div class="row g-2">
 
         <!-- Wallet Balance -->
-        <div class="col-12">
+        <div class="col-12 ">
             <div class="wallet-card d-flex justify-content-between align-items-center">
                 <div>
                     <div class="wallet-label text-dark">Wallet Balance</div>
                     <div class="wallet-balance walletBal2" id="walletBalance">₹0.00</div>
                 </div>
 
-                <div>
-                    <button class="btn btn-warning" id="btnRecharge">
+                <div class="recharge-container">
+                    <button class="btn btn-warning d-none" id="btnRecharge">
                         <i class="fa fa-bolt"></i> Recharge
                     </button>
-                    <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9OiyBq5s5lL4K" async> </script> </form>
+
+                    <div class="recharge-title text-warning">Quick Recharge
+                        <div id="rechargeNote" class="small text-muted fw-normal mt-1 fst-italic"></div>
+                    </div>
+                    <div class="recharge-buttons">
+                        @* <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9OiyBq5s5lL4K" async> </script> </form> *@
+                        <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9PpQSlo8NqAst" async> </script> </form>
+                        <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9PuXnPqLHLR0S" async> </script> </form>
+                        <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9Px7sXQ8JLcBj" async> </script> </form>
+                        <form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_T9Q0cKlatZ1EVt" async> </script> </form>
+                    </div>
+
                 </div>
             </div>
         </div>

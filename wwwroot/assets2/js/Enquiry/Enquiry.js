@@ -112,6 +112,13 @@ function openQuotation(enquiryDealId, action = "add", isleadlost=false, isleadbo
                 $("#quotationModal .modal-title").text("Add Quotation");
                 $("#quotation_action").val("add");
                 $("#quotationModal").modal("show");
+                
+                if(isleadbooked || isleadlost){
+                    $("#quotation_btnSaveQuotation").addClass("d-none");                
+                }
+                else{
+                    $("#quotation_btnSaveQuotation").removeClass("d-none");                                
+                }
             }
 
             /* ================= CASE 2: ONE QUOTATION ================= */
@@ -1189,6 +1196,11 @@ function sortDeals() {
                     valueA = Number(a.Pax || 0);
                     valueB = Number(b.Pax || 0);
                     break;
+
+                case "EnquiryID":
+                    valueA = Number(a.EnquiryDealId || 0);
+                    valueB = Number(b.EnquiryDealId || 0);
+                    break;
             }
 
             if (valueA < valueB)
@@ -1207,12 +1219,12 @@ function sortDeals() {
 function refreshSortUI() {
 
     // Reset all links
-    $('#sortEventDate, #sortAmount, #sortPax')
+    $('#sortEventDate, #sortAmount, #sortPax, #sortEnquiryID')
         .removeClass('text-warning fw-bold')
         .addClass('text-dark');
 
     // Reset all icons
-    $('#sortEventDate_icon, #sortAmount_icon, #sortPax_icon')
+    $('#sortEventDate_icon, #sortAmount_icon, #sortPax_icon, #sortEnquiryID_icon')
         .removeClass('fa-sort-up fa-sort-down text-warning')
         .addClass('fa-sort');
 
@@ -1235,10 +1247,14 @@ function refreshSortUI() {
             $link = $('#sortPax');
             $icon = $('#sortPax_icon');
             break;
+
+        case 'EnquiryID':
+            $link = $('#sortEnquiryID');
+            $icon = $('#sortEnquiryID_icon');
+            break;
     }
 
-    $link
-        .removeClass('text-dark')
+    $link.removeClass('text-dark')
         .addClass('text-warning fw-bold');
 
     $icon.removeClass('fa-sort');
@@ -1277,6 +1293,16 @@ $('#sortPax').click(function () {
         currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
     else {
         currentSortField = "Pax";
+        currentSortDirection = "desc";
+    }
+    sortDeals();
+});
+
+$('#sortEnquiryID').click(function () {
+    if (currentSortField === "EnquiryID")
+        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+    else {
+        currentSortField = "EnquiryID";
         currentSortDirection = "desc";
     }
     sortDeals();
@@ -1358,9 +1384,6 @@ function renderBoard() {
                             </div>
 
                             <!--Follow-up Row-->
-                        ${ hideFollowUp
-                        ? ""
-                        : `
                             <div class="card-footer py-1 px-2 d-flex align-items-center text-primary fw-semibold">
                                 <div class="d-flex align-items-center flex-nowrap w-100 justify-content-between small-text">
 
@@ -1382,8 +1405,6 @@ function renderBoard() {
 
                                 </div>
                             </div>
-                        `
-                        }                            
                         </div>
                     `;
             });
