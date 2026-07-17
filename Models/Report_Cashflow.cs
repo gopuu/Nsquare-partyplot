@@ -17,6 +17,7 @@
         public string SourceName { get; set; }
         public string ReceiverName { get; set; }
         public string PaymentModeName { get; set; }
+        public string Notes { get; set; }
 
         public decimal Amount { get; set; }
     }

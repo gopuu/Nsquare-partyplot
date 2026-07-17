@@ -525,6 +525,188 @@
                             </div>
                             <!---------- Comparative Insights - END ---------->
 
+                            <!---------- Smart Insights - START---------->
+                            <div class="row py-2">
+                                <div class="col-12">
+
+                                    <div class="card">
+
+                                        <!-- Header -->
+                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
+
+                                            <h5 class="mb-0"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                title="AI-powered insights showing booking trends and revenue performance.">
+                                                <i class="fa-solid fa-lightbulb text-warning me-2"></i>
+                                                Smart Insights
+                                            </h5>
+
+                                            <div class="d-flex align-items-center gap-2">
+
+                                                <label class="fw-semibold mb-0">Year:</label>
+
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                            type="button"
+                                                            id="insightYearBtn"
+                                                            data-bs-toggle="dropdown">
+                                                        Select Year
+                                                    </button>
+
+                                                    <ul class="dropdown-menu dropdown-menu-end"
+                                                        id="ddlInsightYear">
+                                                    </ul>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Body -->
+                                        <div class="card-body">
+
+                                            <div class="row g-3">
+
+                                                <!-- Peak Booking -->
+                                                <div class="col-xl-3 col-md-6">
+
+                                                    <div class="insight-card insight-success">
+
+                                                        <div class="insight-header">
+
+                                                            <span>
+                                                                <i class="fa-solid fa-arrow-trend-up me-2"></i>
+                                                                Peak Booking
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div id="peakBookingList"></div>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Low Booking -->
+                                                <div class="col-xl-3 col-md-6">
+
+                                                    <div class="insight-card insight-danger">
+
+                                                        <div class="insight-header">
+
+                                                            <span>
+                                                                <i class="fa-solid fa-arrow-trend-down me-2"></i>
+                                                                Low Booking
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div id="lowBookingList"></div>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Highest Revenue -->
+                                                <div class="col-xl-3 col-md-6">
+
+                                                    <div class="insight-card insight-primary">
+
+                                                        <div class="insight-header">
+
+                                                            <span>
+                                                                <i class="fa-solid fa-indian-rupee-sign me-2"></i>
+                                                                Highest Revenue
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div id="highRevenueList"></div>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Lowest Revenue -->
+                                                <div class="col-xl-3 col-md-6">
+
+                                                    <div class="insight-card insight-warning">
+
+                                                        <div class="insight-header">
+
+                                                            <span>
+                                                                <i class="fa-solid fa-coins me-2"></i>
+                                                                Lowest Revenue
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div id="lowRevenueList"></div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!---------- Smart Insights - END ---------->
+
+                            <!---------- Hall Occupancy - START ---------->
+                            <div class="row py-2">
+                                <div class="col-5">
+
+                                    <div class="card">
+
+                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
+
+                                            <h5 class="mb-0"
+                                                data-bs-toggle="tooltip"
+                                                title="Monthly hall occupancy based on booked slots vs available slots.">
+                                                <i class="fa-solid fa-chart-column me-2 text-primary"></i>
+                                                Hall Occupancy Rate
+                                            </h5>
+
+                                            <div class="d-flex align-items-center gap-2">
+
+                                                <span class="fw-semibold">Month:</span>
+
+                                                <input type="month"
+                                                       class="form-control form-control-sm"
+                                                       id="txtOccupancyMonth"
+                                                       style="width:170px;" />
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="mb-3 text-end">
+                                                <span class="badge bg-primary fs-7">
+                                                    Overall Occupancy :
+                                                    <span id="lblOverallOccupancy">0%</span>
+                                                </span>
+                                            </div>
+
+                                            <div id="hallOccupancyContainer"></div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!---------- Hall Occupancy - END ---------->
+
+
+
                         </div>
                     </div>
                 </div>

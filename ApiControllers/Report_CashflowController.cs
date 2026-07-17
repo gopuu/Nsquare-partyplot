@@ -96,6 +96,7 @@ namespace ERPAdmin.ApiControllers
                         SourceName = row["SourceName"]?.ToString() ?? "-",
                         ReceiverName = row["ReceiverName"]?.ToString() ?? "-",
                         PaymentModeName = row["PaymentModeName"]?.ToString() ?? "-",
+                        Notes = row["Notes"]?.ToString() ?? "-",
 
                         Amount = row["Amount"] != DBNull.Value ? Convert.ToDecimal(row["Amount"]) : 0
                     });
@@ -354,9 +355,10 @@ namespace ERPAdmin.ApiControllers
                     28f,  // Description
                     12f,  // Voucher
                     14f,  // Invoice
-                    16f,  // Source
-                    16f,  // Receiver
-                    12f,  // PaymentMode
+                    12f,  // Source
+                    12f,  // Receiver
+                    10f,  // PaymentMode
+                    12f,  // Notes
                     12f   // Amount
                 };
 
@@ -442,19 +444,12 @@ namespace ERPAdmin.ApiControllers
 
                     BaseColor summaryHeaderBg = new BaseColor(33, 37, 41);
 
-                    Font summaryHeaderFont = new Font(
-                        Font.FontFamily.HELVETICA,
-                        10,
-                        Font.BOLD,
-                        BaseColor.WHITE);
+                    Font summaryHeaderFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
 
-                    Font summaryLabelFont = new Font(
-                        Font.FontFamily.HELVETICA,
-                        9);
+                    Font summaryLabelFont = new Font(Font.FontFamily.HELVETICA, 9);
 
                     // Header
-                    PdfPCell hCell = new PdfPCell(
-                        new Phrase("CASHFLOW SUMMARY", summaryHeaderFont))
+                    PdfPCell hCell = new PdfPCell(new Phrase("CASHFLOW SUMMARY", summaryHeaderFont))
                     {
                         Colspan = 2,
                         BackgroundColor = summaryHeaderBg,

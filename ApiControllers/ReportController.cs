@@ -1290,6 +1290,8 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // NOTES
+                string otherCharges_BookingNoteForCustomer = Get("OtherCharges_BookingNoteForCustomer");
+                string otherCharges_InternalOfficeNote = Get("OtherCharges_InternalOfficeNote");
                 string tnc = Get("tnc");
                 #endregion
 
@@ -1722,6 +1724,20 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 document.Add(notesPara);
+
+                if (!string.IsNullOrWhiteSpace(otherCharges_BookingNoteForCustomer))
+                {
+                    document.Add(new Paragraph("Booking Note For Customer :", boldFont));
+                    document.Add(new Paragraph(otherCharges_BookingNoteForCustomer, normalFont));
+                    document.Add(new Paragraph(" ")); // Optional spacing
+                }
+
+                if (!string.IsNullOrWhiteSpace(otherCharges_InternalOfficeNote))
+                {
+                    document.Add(new Paragraph("Internal Office Note :", boldFont));
+                    document.Add(new Paragraph(otherCharges_InternalOfficeNote, normalFont));
+                    document.Add(new Paragraph(" ")); // Optional spacing
+                }
 
                 document.Close();
 

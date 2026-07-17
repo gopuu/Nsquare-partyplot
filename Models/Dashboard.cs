@@ -1,5 +1,54 @@
 ﻿namespace ERPAdmin.Models
 {
+    #region Hall Occupancy Rate
+    public class DashboardHallOccupancyRateRequest
+    {
+        public string YearMonth { get; set; } = "";
+    }
+    public class DashboardHallOccupancyRateResponse
+    {
+        public decimal OverallOccupancyRate { get; set; }
+        public List<DashboardHallOccupancyRate> Halls { get; set; } = new();
+    }
+    public class DashboardHallOccupancyRate
+    {
+        public long HallId { get; set; }
+        public string HallName { get; set; } = "";
+        public int BookedSlots { get; set; }
+        public int TotalSlots { get; set; }
+        public decimal OccupancyRate { get; set; }
+        public string ColorCode { get; set; } = "";
+        public string Meaning { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+    #endregion
+
+    #region SmartInsights
+    public class DashboardSmartInsightsRequest
+    {
+        public int Year { get; set; }
+    }
+    public class DashboardSmartInsights
+    {
+        public List<DashboardMonthCount> PeakBookingMonths { get; set; } = new();
+        public List<DashboardMonthCount> LowBookingMonths { get; set; } = new();
+        public List<DashboardMonthCount> HighestRevenueMonths { get; set; } = new();
+        public List<DashboardMonthCount> LowestRevenueMonths { get; set; } = new();
+    }
+
+    public class DashboardMonthCount
+    {
+        public int MonthNo { get; set; }
+        public string MonthName { get; set; } = "";
+        public decimal Value { get; set; }
+
+        public decimal CorporateValue { get; set; }
+        public decimal FamilyValue { get; set; }
+
+        public string Summary { get; set; } = "";
+    }    
+    #endregion
+
     #region GetLeadSourceStatistics
     public class LeadSourceStatisticsRequest
     {

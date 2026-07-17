@@ -1340,8 +1340,8 @@ async function renderBoard(bookingData = null) {
     //console.log("renderBoard selectedYear:", selectedYear, ", selectedMonth:", selectedMonth);
     cacheddays = await generatedays(selectedYear, selectedMonth);
 
-    console.log("renderBoard bookingData:", bookingData);
-    console.log("renderBoard cacheddays:", cacheddays);
+    //console.log("renderBoard bookingData:", bookingData);
+    //console.log("renderBoard cacheddays:", cacheddays);
 
     // Pre-generate shift data per resource per day
     cachedShiftData = {};
@@ -5884,7 +5884,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                 else if (actionMode === "editData") {
                     resetBooking();
                     data = data[0];
-                    //console.log("editData - Booking API Response:", data);
+                    console.log("editData - Booking API Response:", data);
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
@@ -5897,8 +5897,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#banquetDropdown").val(data.BanquetId);
                     $("#fromDate").val(data.FromDate);
                     $("#toDate").val(data.TillDate);
-                    setTimeFrom24Hr(data.StartTime, "startHour", "startMinute", "startAMPM");
-                    setTimeFrom24Hr(data.EndTime, "endHour", "endMinute", "endAMPM");
+
+                    $("#eventStart").val(data.StartTime_Full);
+                    $("#eventEnd").val(data.EndTime_Full);
 
                     $("#clientEnquiryDropdown").val(data.Client_EnquiryId);
                     $("#clientName").val(data.Client_Name);
@@ -6938,8 +6939,8 @@ function saveBooking() {
         TillDate: $("#toDate").val(),
 
         //Time
-        StartTime: $("#eventStart").val(),
-        EndTime: $("#eventEnd").val(),
+        StartTime: $("#eventStart").val().trim(),
+        EndTime: $("#eventEnd").val().trim(),
 
         // Client Info
         Client_EnquiryId: parseInt($("#clientEnquiryDropdown").val() || 0),

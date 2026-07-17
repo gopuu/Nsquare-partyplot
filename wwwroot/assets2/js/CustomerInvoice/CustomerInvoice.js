@@ -747,7 +747,7 @@ $(function () {
             contentType: 'application/json',
             data: JSON.stringify(request),
             success: function (res) {
-
+                console.log("save res:", res);
                 if (res.status === 'Success') {
                     handleApiSuccess('Invoice saved successfully');
                     fetchData();

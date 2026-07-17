@@ -1,4 +1,139 @@
-﻿.chart-scroll-wrapper {
+﻿/*HALL OCCUPANCY RATE --START */
+.occupancy-card {
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 15px;
+    transition: .2s;
+}
+
+.occupancy-card:hover {
+    box-shadow: 0 0.4rem 1rem rgba(0,0,0,.08);
+}
+
+.occupancy-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.occupancy-bar {
+    height: 12px;
+    background: #ececec;
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.occupancy-fill {
+    height: 100%;
+    border-radius: 50px;
+    transition: width .5s;
+}
+
+.occupancy-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.occupancy-status {
+    font-weight: 600;
+}
+
+.occupancy-slots {
+    color: #6c757d;
+}
+/*HALL OCCUPANCY RATE --END*/
+
+/*SMART INSIGHTS --START */
+.insight-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+    transition: .25s;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08);
+}
+
+.insight-header {
+    color: #fff;
+    font-weight: 600;
+    padding: 10px 15px;
+    font-size: 15px;
+}
+
+.insight-success .insight-header {
+    background: #198754;
+}
+
+.insight-danger .insight-header {
+    background: #dc3545;
+}
+
+.insight-primary .insight-header {
+    background: #0d6efd;
+}
+
+.insight-warning .insight-header {
+    background: #fd7e14;
+}
+
+.insight-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.insight-row:last-child {
+    border-bottom: none;
+}
+
+.insight-month {
+    width: 42px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: 1.6rem;
+}
+
+.insight-bar-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.insight-bar {
+    flex: 1;
+    height: 10px;
+    background: #edf2f7;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.insight-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg,#0d6efd,#66b2ff);
+    border-radius: 20px;
+    transition: width .4s ease;
+}
+
+.insight-value {
+    min-width: 70px;
+    text-align: right;
+    font-weight: 600;
+}
+
+.insight-row .text-muted {
+    font-size: 12px;
+}
+/*SMART INSIGHTS --END */
+
+.chart-scroll-wrapper {
     height: 400px;
     overflow-y: auto;
     overflow-x: hidden;

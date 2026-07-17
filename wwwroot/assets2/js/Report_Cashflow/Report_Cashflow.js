@@ -220,6 +220,22 @@ function renderCashflowTable(data, summary) {
             { data: "SourceName", className: "text-center", title: "Source" },
             { data: "ReceiverName", className: "text-center", title: "Receiver" },
             { data: "PaymentModeName", className: "text-center", title: "Payment Mode" },
+            {
+                data: "Notes",
+                title: "Notes",
+                className: "text-center",
+                render: function (data, type, row) {
+                    if (!data) return "";
+
+                    if (data.length > 10) {
+                        return `<span class="custom-tooltip-notes" title="${$('<div>').text(data).html()}">
+                                    ${data.substring(0, 10)}...
+                                </span>`;
+                    }
+
+                    return data;
+                }
+            },
 
             {
                 data: "Amount",
@@ -244,7 +260,7 @@ function renderCashflowTable(data, summary) {
             if (!summary) return;
 
             const footer = `
-                <th colspan="10" class="text-end">TOTAL</th>
+                <th colspan="11" class="text-end">TOTAL</th>
                 <th class="text-end">
                     <div class="text-success">▲ ${formatINR2(summary.TotalInflow)}</div>
                     <div class="text-danger">▼ ${formatINR2(summary.TotalOutflow)}</div>

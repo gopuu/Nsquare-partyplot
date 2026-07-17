@@ -328,7 +328,31 @@ document.addEventListener("DOMContentLoaded", function () {
             mainLink.setAttribute('href', onlySubLink);
         }
     });
-    
+    //MEGA-MENU
+    // Prevent Bootstrap default dropdown behavior for Masters
+    $('.modules-parent > .dropdown-toggle').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $menu = $(this).next('.modules-mega-menu');
+
+        // Close other open mega menus
+        $('.modules-mega-menu').not($menu).removeClass('show');
+
+        // Toggle current
+        $menu.toggleClass('show');
+    });
+
+    // Close when clicking outside
+    $(document).on('click', function () {
+        $('.modules-mega-menu').removeClass('show');
+    });
+
+    // Don't close when clicking inside menu
+    $('.modules-mega-menu').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     //All In One Link -- START
     feather.replace();
 

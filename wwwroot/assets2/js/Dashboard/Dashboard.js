@@ -14,6 +14,17 @@ $(document).ready(function () {
     loadLeadLostChart("thismonth");
     loadYearDropdown(); //Overall Bookings Statistics - loadOverallBookingsStatistics();
 
+    // Hall Occupancy Rate -- START
+    let today = new Date();
+    let month = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, '0');
+
+    $("#txtOccupancyMonth").val(month);
+    loadHallOccupancyRate();
+    $("#txtOccupancyMonth").change(function () {
+        loadHallOccupancyRate();
+    });
+    // Hall Occupancy Rate -- END
+
     //8 Top Revenue Events -------------- START ------------------------
     let selectedRevenueDuration = "thismonth";
     loadTopRevenueEvents(selectedRevenueDuration);
@@ -47,7 +58,6 @@ $(document).ready(function () {
         loadYearDropdown(); //Overall Bookings Statistics - loadOverallBookingsStatistics();
         $("#yearDropdown").text(currentYear);
     });
-
 
     //Lead SOurce
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -995,6 +1005,7 @@ function loadYearDropdown() {
             if (response.status === "Success" && response.data.length > 0) {
 
                 let html = "";
+                let html2 = "";
                 let currentYear = new Date().getFullYear();
                 let selectedYearId = null;
                 let selectedYearName = null;
@@ -1017,14 +1028,26 @@ function loadYearDropdown() {
                                ${item.YearName}
                             </a>
                         </li>`;
+
+                    html2 += `
+                        <li>
+                            <a class="dropdown-item year-option2 ${isCurrentYear ? 'active' : ''}"
+                               href="#"
+                               data-id="${item.Id}"
+                               data-year="${item.YearName}">
+                               ${item.YearName}
+                            </a>
+                        </li>`;
                 });
 
                 $("#yearDropdownMenu").html(html);
+                $("#ddlInsightYear").html(html2);
 
                 // 🔥 Set default dropdown text
                 if (selectedYearId) {
-                    $("#yearDropdown").text(currentYear);
+                    $("#yearDropdown, #insightYearBtn").text(currentYear);
                     loadOverallBookingsStatistics(selectedYearId, selectedYearName);
+                    loadSmartInsights();
                 }
             }
         },
@@ -1050,12 +1073,27 @@ $(document).on("click", ".year-option", function (e) {
     loadOverallBookingsStatistics(selectedYearId, yearText);
 });
 
+$(document).on("click", ".year-option2", function (e) {
+    e.preventDefault();
+
+    $(".year-option2").removeClass("active");
+    $(this).addClass("active");
+
+    const selectedYearId = $(this).data("id");
+    const yearText = $(this).data("year");
+
+    $("#insightYearBtn").text(yearText);
+
+    console.log("Selected YearId:", selectedYearId);
+    loadSmartInsights();
+});
+
 let bookingBarChart;
 function loadOverallBookingsStatistics(yearId, yearName) {
     var payload = {
         YearId: yearId
     };
-    console.log("payload stats:", payload);
+    //console.log("payload stats:", payload);
 
     $.ajax({
         url: '/api/Dashboard/Dashboard_GetOverallBookingsStatistics',
@@ -1674,6 +1712,159 @@ $(document).on("click", "#btnSummary", function () {
     console.log("Summary icon clicked ✔");
 });
 //UnUsed ----------- END --------------------
+
+//SMART INSIGHTS ----------- START --------------------
+function loadSmartInsights() {
+    var payload = {
+        Year: $("#insightYearBtn").text()
+    };
+    console.log("smart payload:", payload);
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardSmartInsights",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("smart res:", res);
+
+            renderInsight("#peakBookingList", res.data.PeakBookingMonths, false);
+            renderInsight("#lowBookingList", res.data.LowBookingMonths, false);
+
+            renderInsight("#highRevenueList", res.data.HighestRevenueMonths, true);
+            renderInsight("#lowRevenueList", res.data.LowestRevenueMonths, true);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Unable to load Smart Insights.");
+        }
+    });
+}
+
+function renderInsight(container, list, isCurrency) {
+
+    // No data
+    if (!list || list.length === 0) {
+        $(container).html(`
+            <div class="text-muted py-4 ms-4">
+                <i class="fa-regular fa-folder-open fs-3 d-block mb-2"></i>
+                No data available.
+            </div>
+        `);
+        return;
+    }
+
+    let html = "";
+
+    // Maximum value for proportional width
+    const maxValue = Math.max(...list.map(x => Number(x.Value)), 1);
+
+    $.each(list, function (_, item) {
+
+        const percentage = ((Number(item.Value) / maxValue) * 100).toFixed(1);
+
+        html += `
+            <div class="insight-row">
+
+                <div class="insight-month">
+                    ${item.MonthName}
+                </div>
+
+                <div class="insight-bar-wrapper">
+
+                    <div class="insight-bar">
+                        <div class="insight-bar-fill" style="width:${percentage}%"></div>
+                    </div>
+
+                    <span class="insight-value me-4">
+                        ${isCurrency ? formatINR2(item.Value) : Number(item.Value)}
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="small text-muted ps-5 mb-2 ms-6">
+                ${item.Summary}
+            </div>
+        `;
+    });
+
+    $(container).html(html);
+}
+//SMART INSIGHTS ----------- END --------------------
+
+//Hall Occupancy Rate ----------- START ------------------
+function loadHallOccupancyRate() {
+    var payload = {
+        YearMonth: $("#txtOccupancyMonth").val()
+    };
+    console.log("hallOccupancy payload:", payload);
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardHallOccupancyRate",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("hallOccupancy res:", res);
+
+            $("#lblOverallOccupancy").text(res.data.OverallOccupancyRate + "%");
+            renderHallOccupancy(res.data.Halls);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Unable to load Hall Occupancy.");
+        }
+    });
+}
+function renderHallOccupancy(list) {
+
+    if (!list || list.length == 0) {
+        $("#hallOccupancyContainer").html(`
+            <div class="text-center text-muted py-5">
+                No occupancy data available.
+            </div>
+        `);
+        return;
+    }
+
+    let html = "";
+    $.each(list, function (_, item) {
+        html += `
+        <div class="occupancy-card">
+            <div class="occupancy-title">
+                <div>
+                    <strong>${item.HallName}</strong>
+                    <span class="badge ms-2" style="background:${item.ColorCode}">
+                        ${item.Status}
+                    </span>
+                </div>
+                <div class="fw-bold">
+                    ${item.OccupancyRate}%
+                </div>
+            </div>
+
+            <div class="occupancy-bar">
+                <div class="occupancy-fill"
+                     style="width:${item.OccupancyRate}%; background:${item.ColorCode};">
+                </div>
+            </div>
+
+            <div class="occupancy-footer">
+                <div>
+                    <span class="occupancy-status">
+                        ${item.Meaning}
+                    </span>
+                </div>
+                <div class="occupancy-slots">
+                    ${item.BookedSlots} / ${item.TotalSlots} Slots
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    $("#hallOccupancyContainer").html(html);
+}
+//Hall Occupancy Rate ----------- END --------------------
 
 
 

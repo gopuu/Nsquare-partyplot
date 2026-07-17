@@ -102,7 +102,6 @@
 
 
 /*MASTER color - start*/
-
 .master_link .dropdown-link span {
     width: 200px;
     height: 20px;
@@ -114,15 +113,12 @@
     height: 10px;
     flex-shrink: 0;
 }
-
 .master_link .asset_masterMenu span {
     color: #0d6efd; /* Bootstrap Primary Blue */
 }
-
 .master_link .emergency_masterMenu span {
     color: #d35825; /* Bootstrap Primary red */
 }
-
 .master_link .finance_masterMenu span {
     color: #198754; /* Bootstrap Success Green */
 }
@@ -135,11 +131,9 @@
 .master_link .general_masterMenu span {
     color: #fd7e14; /* Bootstrap Orange */
 }
-
 .master_link .dropdown-link:hover span {
     transform: translateX(2px);
 }
-
 .master_link .dropdown-link {
     position: relative;
     display: flex;
@@ -147,13 +141,11 @@
     gap: 8px;
     white-space: nowrap;
 }
-
 .master_link .dropdown-link svg {
-        width: 18px;
-        height: 18px;
-        vertical-align: middle;
-    }
-
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+}
 .master_link .menu-text {
     display: inline-block;
     width: 250px;
@@ -161,12 +153,10 @@
     word-break: break-word; /* ✅ break long words if needed */
     line-height: 1.2;
 }
-
 .master_link .dropdown-link {
     padding-left: 10px !important; /* reduce default bootstrap spacing */
     position: relative;
 }
-
 .master_link .dropdown-link::before {
     content: "";
     display: none;  /* ❌ remove old behavior */
@@ -179,12 +169,9 @@
     transition: height 0.2s ease;
     transform: translateY(-50%);
 }
-
-/*.master_link .dropdown-link:hover {
+.master_link .dropdown-link:hover {
     box-shadow: inset 3px 0 0 currentColor;*/ /* ✅ clean left bar */
-/*}*/
-
-
+}
 .master_link .dropdown-link:hover::before {
     height: 60%;
 }
@@ -195,27 +182,21 @@
 .finance_masterMenu:hover {
     background-color: rgba(25, 135, 84, 0.08);
 }
-
 .staff_masterMenu:hover {
     background-color: rgba(111, 66, 193, 0.08);
 }
-
 .asset_masterMenu:hover {
     background-color: rgba(13, 110, 253, 0.08);
 }
-
 .inventory_masterMenu:hover {
     background-color: rgba(108, 117, 125, 0.08);
 }
-
 .general_masterMenu:hover {
     background-color: rgba(253, 126, 20, 0.08);
 }
-
 .inventory_masterMenu {
     position: relative;
 }
-
 .inventory_masterMenu::before {
     content: "";
     position: absolute;
@@ -226,12 +207,10 @@
     background-color: #6c757d;
     border-radius: 2px;
 }
-
 .master_link > .dropdown-toggle::before,
 .master_link > .dropdown-toggle::after {
     display: none !important;
 }
-
 /*MASTER color - end*/
 
 /*All-In-One Link*/
@@ -252,13 +231,10 @@
     z-index: 1030;
     box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
-
-
 #allInOneFab svg {
         width: 22px;
         height: 22px;
     }
-
 /* Small modal */
 .aio-modal {
     position: fixed;
@@ -275,7 +251,6 @@
     transform-origin: bottom right;
     animation: scaleIn 0.15s ease-out;
 }
-
 @keyframes scaleIn {
     from {
         transform: scale(0.95);
@@ -287,7 +262,6 @@
         opacity: 1;
     }
 }
-
 /*All-In-One Link*/
 
 .btn-action-xs {
@@ -301,10 +275,9 @@
     font-size: 10px !important; /* reduce font size */
     line-height: 1 !important;
 }
-
-    .btn-action-xs i {
-        font-size: 12px !important; /* shrink icon */
-    }
+.btn-action-xs i {
+    font-size: 12px !important; /* shrink icon */
+}
 /* Reduce top & bottom padding for all table cells */
 #tableMain table.dataTable tbody td,
 #tableMain table.dataTable thead th {
@@ -332,18 +305,14 @@
     left: 100%;
     margin-left: .1rem;
 }*/
-
 .infinitylogo_img {
     height: 70px;
     width: 100%;
 }
-
-
 /* parent fix */
 .modules-parent {
     position: relative;
 }
-
 /* Modules mega menu → LEFT open */
 .modules-parent .modules-mega-menu {
     top: 0 !important;
@@ -351,13 +320,14 @@
     left: auto !important;
     width: 950px; /* adjust as needed */
     transform: none !important;
-    margin-right: 12px;
+    margin-right: 10px;
 }
-
-/* keep menu open while hovering inside */
-/*.modules-parent .modules-parent:hover > .dropdown-menu {
+.modules-mega-menu {
+    display: none;
+}
+.modules-mega-menu.show {
     display: block;
-}*/
+}
 
 /* style */
 .modules-parent .dropdown-item-group {

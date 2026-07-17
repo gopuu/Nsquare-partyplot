@@ -315,10 +315,7 @@ function renderProfitLossStatement(data) {
                         ${formatINR2(Math.abs(netPL))}
                     </div>
 
-                    <div class="
-                        pl-summary-footer
-                        ${isProfit ? 'text-success' : 'text-danger'}
-                    ">
+                    <div class=" pl-summary-footer ${isProfit ? 'text-success' : 'text-danger'}">
                         ${isProfit ? 'Net Profit' : 'Net Loss'}
                     </div>
 
@@ -337,38 +334,35 @@ function renderProfitLossStatement(data) {
             </div>
 
             <div class="table-responsive">
-
                 <table class="table table-hover align-middle mb-0">
-
                     <thead class="table-light">
                         <tr>
                             <th style="width:70px;">#</th>
                             <th>Description</th>
-                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-2">Amount</th>
                         </tr>
                     </thead>
 
                     <tbody>`;
 
-    revenue.forEach((r, i) => {
+                    revenue.forEach((r, i) => {
+                        html += `
+                            <tr>
+                                <td class="text-muted text-center ps-2">
+                                    ${i + 1}
+                                </td>
 
-        html += `
-            <tr>
-                <td class="text-muted">
-                    ${i + 1}
-                </td>
+                                <td>
+                                    ${toTitleCase(r.Description)}
+                                </td>
 
-                <td>
-                    ${toTitleCase(r.Description)}
-                </td>
+                                <td class="text-end fw-semibold pe-2">
+                                    ${formatINR2(r.Amount)}
+                                </td>
+                            </tr>`;
+                    });
 
-                <td class="text-end fw-semibold">
-                    ${formatINR2(r.Amount)}
-                </td>
-            </tr>`;
-    });
-
-    html += `
+                    html += `
                     </tbody>
 
                     <tfoot class="table-success">
@@ -405,31 +399,30 @@ function renderProfitLossStatement(data) {
                         <tr>
                             <th style="width:70px;">#</th>
                             <th>Description</th>
-                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-2">Amount</th>
                         </tr>
                     </thead>
 
                     <tbody>`;
 
-    cogs.forEach((c, i) => {
+                    cogs.forEach((c, i) => {
+                        html += `
+                            <tr>
+                                <td class="text-muted text-center ps-2">
+                                    ${i + 1}
+                                </td>
 
-        html += `
-            <tr>
-                <td class="text-muted">
-                    ${i + 1}
-                </td>
+                                <td>
+                                    ${toTitleCase(c.Description)}
+                                </td>
 
-                <td>
-                    ${toTitleCase(c.Description)}
-                </td>
+                                <td class="text-end fw-semibold pe-2">
+                                    ${formatINR2(c.Amount)}
+                                </td>
+                            </tr>`;
+                    });
 
-                <td class="text-end fw-semibold">
-                    ${formatINR2(c.Amount)}
-                </td>
-            </tr>`;
-    });
-
-    html += `
+                    html += `
                     </tbody>
 
                     <tfoot class="table-warning">
@@ -475,40 +468,37 @@ function renderProfitLossStatement(data) {
             </div>
 
             <div class="table-responsive">
-
                 <table class="table table-hover align-middle mb-0">
 
                     <thead class="table-light">
                         <tr>
                             <th style="width:70px;">#</th>
                             <th>Description</th>
-                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-2">Amount</th>
                         </tr>
                     </thead>
 
                     <tbody>`;
 
-    expenses.forEach((e, i) => {
+                    expenses.forEach((e, i) => {
+                        html += `
+                            <tr>
+                                <td class="text-muted text-center ps-2">
+                                    ${i + 1}
+                                </td>
 
-        html += `
-            <tr>
-                <td class="text-muted">
-                    ${i + 1}
-                </td>
+                                <td>
+                                    ${toTitleCase(e.Description)}
+                                </td>
 
-                <td>
-                    ${toTitleCase(e.Description)}
-                </td>
+                                <td class="text-end fw-semibold pe-2">
+                                    ${formatINR2(e.Amount)}
+                                </td>
+                            </tr>`;
+                    });
 
-                <td class="text-end fw-semibold">
-                    ${formatINR2(e.Amount)}
-                </td>
-            </tr>`;
-    });
-
-    html += `
+                    html += `
                     </tbody>
-
                     <tfoot class="table-danger">
                         <tr>
                             <th colspan="2">
@@ -527,17 +517,10 @@ function renderProfitLossStatement(data) {
 
 
         <!-- FINAL NET P&L -->
-        <div class="
-            card border-0 shadow-lg
-            ${isProfit ? 'bg-success-subtle' : 'bg-danger-subtle'}
-        ">
-
+        <div class="card border-0 shadow-lg ${isProfit ? 'bg-success-subtle' : 'bg-danger-subtle'}">
             <div class="card-body py-4">
-
                 <div class="row align-items-center">
-
                     <div class="col-md-6">
-
                         <div class="small text-muted mb-1">
                             Final Result
                         </div>
@@ -548,11 +531,7 @@ function renderProfitLossStatement(data) {
                     </div>
 
                     <div class="col-md-6 text-md-end">
-
-                        <div class="
-                            fw-bold display-6
-                            ${isProfit ? 'text-success' : 'text-danger'}
-                        ">
+                        <div class="fw-bold display-6 ${isProfit ? 'text-success' : 'text-danger'}">
                             ${formatINR2(Math.abs(netPL))}
                         </div>
                     </div>

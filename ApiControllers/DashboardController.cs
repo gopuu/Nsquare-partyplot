@@ -813,5 +813,185 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        // 9 Smart Insights
+        [HttpPost]
+        [Route("GetDashboardSmartInsights")]
+        public IActionResult GetDashboardSmartInsights(DashboardSmartInsightsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardSmartInsights result = new DashboardSmartInsights();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_GetSmartInsights", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Year", request.Year);
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        // Output 1 : Peak Booking Months
+                        while (reader.Read())
+                        {
+                            result.PeakBookingMonths.Add(new DashboardMonthCount()
+                            {
+                                MonthNo = Convert.ToInt32(reader["MonthNo"]),
+                                MonthName = reader["MonthName"].ToString(),
+                                Value = Convert.ToDecimal(reader["BookingCount"]),
+                                CorporateValue = Convert.ToDecimal(reader["CorporateCount"]),
+                                FamilyValue = Convert.ToDecimal(reader["FamilyCount"]),
+                                Summary = reader["BookingSummary"].ToString()
+                            });
+                        }
+
+                        // Output 2 : Low Booking Months
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                            {
+                                result.LowBookingMonths.Add(new DashboardMonthCount()
+                                {
+                                    MonthNo = Convert.ToInt32(reader["MonthNo"]),
+                                    MonthName = reader["MonthName"].ToString(),
+                                    Value = Convert.ToDecimal(reader["BookingCount"]),
+                                    CorporateValue = Convert.ToDecimal(reader["CorporateCount"]),
+                                    FamilyValue = Convert.ToDecimal(reader["FamilyCount"]),
+                                    Summary = reader["BookingSummary"].ToString()
+                                });
+                            }
+                        }
+
+                        // Output 3 : Highest Revenue
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                            {
+                                result.HighestRevenueMonths.Add(new DashboardMonthCount()
+                                {
+                                    MonthNo = Convert.ToInt32(reader["MonthNo"]),
+                                    MonthName = reader["MonthName"].ToString(),
+                                    Value = Convert.ToDecimal(reader["Revenue"]),
+                                    CorporateValue = Convert.ToDecimal(reader["CorporateRevenue"]),
+                                    FamilyValue = Convert.ToDecimal(reader["FamilyRevenue"]),
+                                    Summary = reader["RevenueSummary"].ToString()
+                                });
+                            }
+                        }
+
+                        // Output 4 : Lowest Revenue
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                            {
+                                result.LowestRevenueMonths.Add(new DashboardMonthCount()
+                                {
+                                    MonthNo = Convert.ToInt32(reader["MonthNo"]),
+                                    MonthName = reader["MonthName"].ToString(),
+                                    Value = Convert.ToDecimal(reader["Revenue"]),
+                                    CorporateValue = Convert.ToDecimal(reader["CorporateRevenue"]),
+                                    FamilyValue = Convert.ToDecimal(reader["FamilyRevenue"]),
+                                    Summary = reader["RevenueSummary"].ToString()
+                                });
+                            }
+                        }
+                    }
+
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Dashboard smart insights fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        //10 Hall Occupancy Rate
+        [HttpPost]
+        [Route("GetDashboardHallOccupancyRate")]
+        public IActionResult GetDashboardHallOccupancyRate(DashboardHallOccupancyRateRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            DashboardHallOccupancyRateResponse result = new DashboardHallOccupancyRateResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                { return errorResult!; }
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    SqlCommand cmd = new SqlCommand("Dashboard_HallOccupancyRate", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@YearMonth", request.YearMonth);
+
+                    con.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        // Result Set 1 : Hall Occupancy
+                        while (reader.Read())
+                        {
+                            result.Halls.Add(new DashboardHallOccupancyRate()
+                            {
+                                HallId = Convert.ToInt64(reader["HallId"]),
+                                HallName = reader["HallName"].ToString(),
+
+                                BookedSlots = Convert.ToInt32(reader["BookedSlots"]),
+                                TotalSlots = Convert.ToInt32(reader["TotalSlots"]),
+
+                                OccupancyRate = Convert.ToDecimal(reader["OccupancyRate"]),
+
+                                ColorCode = reader["ColorCode"].ToString(),
+                                Meaning = reader["Meaning"].ToString(),
+                                Status = reader["Status"].ToString()
+                            });
+                        }
+
+                        // Result Set 2 : Overall Occupancy
+                        if (reader.NextResult() && reader.Read())
+                        {
+                            result.OverallOccupancyRate = Convert.ToDecimal(reader["OverallOccupancyRate"]);
+                        }
+                    }
+
+                    con.Close();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "Hall occupancy rate fetched successfully.";
+                apiResponse.data = result;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
+                return StatusCode(500, apiResponse);
+            }
+        }
     }
 }
