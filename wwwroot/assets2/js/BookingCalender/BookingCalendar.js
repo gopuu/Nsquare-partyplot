@@ -291,6 +291,51 @@ function loadStateList() {
 }
 //State - dropdown -- END ------------------------
 
+//City - dropdown -- START ------------------------
+function loadCityList(selectedCityId = 0) {
+    var payload = {
+        Id: 0,
+        StateId: 0
+    }
+    $.ajax({
+        url: "/api/City/GetCityList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            const ddl = $("#Guest_CityId");
+            ddl.empty();
+            ddl.append('<option value="">Select City</option>');
+            $.each(res.data, function (i, city) {
+
+                ddl.append(`
+                    <option value="${city.Id}">
+                        ${city.Name} (${city.StateName})
+                    </option>
+                `);
+
+            });
+
+            if (selectedCityId > 0) {
+                ddl.val(selectedCityId);
+            }
+
+            ddl.trigger("change");
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Load City Error");
+        }
+    });
+}
+//City - dropdown -- END ------------------------
+
+
 //Event - dropdown -- START ----------------------
 function loadEventTypeList() {
     $.ajax({
@@ -2907,6 +2952,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadLeadSourceList();
     loadEnquiryList();
     loadStateList();
+    loadCityList();
     loadEventTypeList();
     loadSubEventList();
     loadFoodPackageList();
@@ -2927,6 +2973,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const menuModal = document.getElementById('menuModal');
     //const bookingReportModal_inDOM = document.getElementById('bookingReportModal');
     const paymentModal = document.getElementById('paymentModal');
+    const guestModal = document.getElementById('guestModal');
     const bookingRescheduleModal = document.getElementById('bookingRescheduleModal');
     const foodwestageModal = document.getElementById('foodWastageModal');
     const vendorWorkOrderModal = document.getElementById('vendorWorkOrderModal');
@@ -2984,6 +3031,30 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     paymentModal.addEventListener('hidden.bs.modal', function () {
+        //console.log("paymentModal HIDE");
+        // Show booking modal visually again (no reset, same position)
+        bookingReportModal_inDOM.classList.add("show");
+        bookingReportModal_inDOM.style.display = "block";
+
+        // Show backdrop again
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "block";
+    });
+    //hide/show PAYMENT MODAL ----- END --------------------------
+
+    //hide/show GUEST MODAL ----- START --------------------------
+    guestModal.addEventListener('show.bs.modal', function () {
+        //console.log("paymentModal SHOW");
+        // Just hide visually (do not destroy modal state)
+        bookingReportModal_inDOM.classList.remove("show");
+        bookingReportModal_inDOM.style.display = "none";
+
+        // Also hide backdrop manually
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.style.display = "none";
+    });
+
+    guestModal.addEventListener('hidden.bs.modal', function () {
         //console.log("paymentModal HIDE");
         // Show booking modal visually again (no reset, same position)
         bookingReportModal_inDOM.classList.add("show");
@@ -3723,6 +3794,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const due = parseFloat($('#paymentDueBalance').val()) || 0;
         const half = (due / 2).toFixed(2);
         $('#paymentAmount').val(half);
+    });
+
+    // Open Guest modal safely
+    document.getElementById('btnGuestDirectory').addEventListener('click', function () {
+        const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
+        const clientName = $(this).data('name');
+        const contactNo = $(this).data('contact');
+        const eventName = $(this).data('event');
+
+        $("#guestModal").modal("show");
+        
+        console.log("👥 Enter Guest Details clicked - Booking ID:", bookingId);
+        resetGuestModal();
+
+        $("#guest_summary_bookingId").text("#" + bookingId || "-");
+        $("#guest_summary_client").text(clientName);
+        $("#guest_summary_event").text(eventName);
+
+        //loadGuestList(bookingId);
     });
 
     // 📢 Request Feedback
@@ -5779,9 +5869,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_clientName").text(c_name);
                     $("#bookingReport_clientContact").text(c_contact);
 
-                    $("#btnRequestFeedback, #btnEnterPayment").attr("data-name", c_name);
-                    $("#btnRequestFeedback, #btnEnterPayment").attr("data-contact", c_contact);
-                    $("#btnEnterPayment").attr("data-event", c_event);
+                    $("#btnRequestFeedback, #btnEnterPayment, #btnGuestDirectory").attr("data-name", c_name);
+                    $("#btnRequestFeedback, #btnEnterPayment, #btnGuestDirectory").attr("data-contact", c_contact);
+                    $("#btnEnterPayment, #btnGuestDirectory").attr("data-event", c_event);
 
                     $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                     $("#bookingReport_clientEmail").text(data.Client_Email || "—");
@@ -8239,6 +8329,321 @@ $(document).on("change", "#reschedule_SlotId", function () {
     }
 });
 // Vendor Work Order Modal -- END --------------------
+
+// Guest Modal -- START ------------------
+function resetGuestModal() {
+
+    // Reset form
+    $("#guestForm")[0].reset();
+
+    // Hidden fields
+    $("#Guest_Id").val(0);
+    $("#Guest_BookingId").val(0);
+
+    // Dropdowns
+    $("#Guest_CityId").val("").trigger("change");
+
+    // Booking Summary
+    $("#guest_summary_bookingId").text("-");
+    $("#guest_summary_client").text("-");
+    $("#guest_summary_event").text("-");
+
+    // Guest Count
+    $("#guestCount").text("0 Guests");
+
+    // Guest List
+    $("#tblGuestList").html(`
+        <tr>
+            <td colspan="8" class="text-center text-muted py-3">
+                No Guest Found
+            </td>
+        </tr>
+    `);
+
+    // Remove validation styles (if using Bootstrap validation)
+    $("#guestForm").find(".is-valid, .is-invalid").removeClass("is-valid is-invalid");
+
+    // Remove validation messages
+    $("#guestForm").find(".invalid-feedback").text("");
+
+    // Focus first field
+    $("#Guest_Name").focus();
+}
+
+function loadGuestList(bookingId) {
+    const payload = {
+        Id: 0,
+        BookingId: bookingId
+    };
+    console.log("GuestList payload:", payload);
+
+    $.ajax({
+        url: "/api/BookingCalendar_Guest/GetBookingCalendar_Guest",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("GuestList res:", res);
+
+            if (res?.status === "Success") {
+                $("#guestCount").text(`${res.data.length} Guest${res.data.length !== 1 ? "s" : ""}`);
+                renderGuestTable(res.data || []);
+            }
+            else {
+                Swal.fire("Error", res?.message || "Failed to fetch guest list!", "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Guest List Error");
+        }
+    });
+}
+
+// ----------------- RENDER TABLE -----------------
+function renderGuestTable(data) {
+    if ($.fn.dataTable && $.fn.dataTable.isDataTable("#tblGuestList")) {
+        $("#tblGuestList").DataTable().destroy();
+    }
+
+    $("#tblGuestList").empty();
+
+    data.forEach((item, i) => item.srno = i + 1);
+
+    $("#tblGuestList").DataTable({
+        data: data,
+        autoWidth: false,
+        columns: [
+            {
+                data: "srno",
+                title: "#",
+                className: "text-center",
+                width: "40px"
+            },
+
+            {
+                data: "Name",
+                title: "Guest Name"
+            },
+
+            {
+                data: "MobileNo",
+                title: "Mobile"
+            },
+
+            {
+                data: "WhatsappContact",
+                title: "WhatsApp"
+            },
+
+            {
+                data: "Email",
+                title: "Email"
+            },
+
+            {
+                data: "CityName",
+                title: "City"
+            },
+
+            {
+                data: "DobDisplay",
+                title: "DOB",
+                className: "text-center"
+            },
+
+            {
+                data: "AnniversaryDateDisplay",
+                title: "Anniversary",
+                className: "text-center"
+            },
+
+            {
+                data: null,
+                title: "Action",
+                className: "text-center",
+                orderable: false,
+                width: "100px",
+                render: function (row) {
+                    return `
+                        <button class="btn btn-sm btn-outline-primary btn-edit-guest"
+                                data-id="${row.Id}"
+                                title="Edit">
+                            <i class="fa fa-edit"></i>
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-danger btn-delete-guest"
+                                data-id="${row.Id}"
+                                title="Delete">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+
+        pageLength: 5,
+        ordering: true,
+        searching: false,
+        language: {
+            emptyTable: "No Guest Found"
+        }
+    });
+}
+
+$(document).on("click", "#btnSaveGuest", function () {
+
+    const userId = parseInt(sessionStorage.getItem('userId') || 0);
+    const bookingId = parseInt($("#Guest_BookingId").val()) || 0
+    const payload = {
+        Id: parseInt($("#Guest_Id").val()) || 0,
+        Name: $("#Guest_Name").val().trim(),
+        MobileNo: $("#Guest_MobileNo").val().trim(),
+        WhatsappContact: $("#Guest_WhatsappContact").val().trim(),
+        Email: $("#Guest_Email").val().trim(),
+        Address: $("#Guest_Address").val().trim(),
+        CityId: parseInt($("#Guest_CityId").val()) || 0,
+        Dob: $("#Guest_Dob").val(),
+        AnniversaryDate: $("#Guest_AnniversaryDate").val(),
+        BookingId: bookingId,
+        ActionBy: userId
+    };
+
+    if (payload.Name === "") {
+        Swal.fire("Validation", "Please enter Guest Name.", "warning");
+        $("#Guest_Name").focus();
+        return;
+    }
+
+    $.ajax({
+        url: "/api/BookingCalendar_Guest/SaveBookingCalendar_Guest",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            if (res.status === "Success") {
+                handleApiSuccess("Saved!");
+
+                resetGuestModal();
+                $("#Guest_BookingId").val(bookingId);
+                loadGuestList(bookingId);
+                $("#Guest_Name").focus();
+            }
+            else {
+                Swal.fire("Error", res.message, "error");
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Save Guest Error");
+        }
+    });
+
+});
+
+$(document).on("click", ".btn-edit-guest", function () {
+
+    const id = $(this).data("id");
+    var payload = {
+        Id: id,
+        BookingId: 0
+    }
+    console.log("guest edit payload:", payload);
+
+    resetGuestModal();
+    $.ajax({
+        url: "/api/BookingCalendar_Guest/GetBookingCalendar_Guest",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("guest edit res:", res);
+
+            if (res?.status !== "Success") {
+                Swal.fire("Error", res?.message || "Unable to fetch guest details.", "error");
+                return;
+            }
+
+            if (!res.data || res.data.length === 0) {
+                Swal.fire("Error", "Guest not found.", "error");
+                return;
+            }
+
+            const guest = res.data[0];
+
+            $("#Guest_Id").val(guest.Id);
+            $("#Guest_BookingId").val(guest.BookingId);
+
+            $("#Guest_Name").val(guest.Name);
+            $("#Guest_MobileNo").val(guest.MobileNo);
+            $("#Guest_WhatsappContact").val(guest.WhatsappContact);
+            $("#Guest_Email").val(guest.Email);
+            $("#Guest_Address").val(guest.Address);
+
+            $("#Guest_CityId").val(guest.CityId).trigger("change");
+
+            $("#Guest_Dob").val(guest.Dob);
+            $("#Guest_AnniversaryDate").val(guest.AnniversaryDate);
+
+            // Scroll to top of form
+            $(".modal-body").animate({
+                scrollTop: 0
+            }, 200);
+
+            $("#Guest_Name").focus();
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Guest Details Error");
+        }
+    });
+
+});
+
+$(document).on("click", ".btn-delete-guest", function () {
+
+    const id = $(this).data("id");
+
+    Swal.fire({
+        title: "Delete Guest?",
+        text: "This guest will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete"
+    }).then((result) => {
+
+        if (!result.isConfirmed)
+            return;
+
+        const userId = parseInt(sessionStorage.getItem('userId') || 0);
+        var payload = {
+            Id: id,
+            ActionBy: userId
+        }
+
+        $.ajax({
+            url: "/api/BookingCalendar_Guest/DeleteBookingCalendar_Guest",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res) {
+
+                if (res.status === "Success") {
+                    handleApiSuccess("Deleted !!");
+                    loadGuestList($("#Guest_BookingId").val());
+                }
+                else {
+                    Swal.fire("Error", res.message, "error");
+                }
+
+            },
+            error: function (xhr, status, error) {
+                handleApiError(xhr, status, error, "Delete Guest Error");
+            }
+        });
+    });
+});
+// Guest Modal -- END --------------------
 
 
 //<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->

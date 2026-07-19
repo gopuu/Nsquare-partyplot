@@ -3389,9 +3389,11 @@ document.addEventListener("DOMContentLoaded", function () {
                                 "border": "1px solid #e5780b",
                             })
                             .html(res.data.WarningMessage);
+                        $("#slotStatusWarning_div").removeClass("d-none");
                     }
                     else {
                         warningBox.addClass("d-none");
+                        $("#slotStatusWarning_div").addClass("d-none");
                     }
                 }
             },

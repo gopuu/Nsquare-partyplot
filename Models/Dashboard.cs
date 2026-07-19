@@ -1,5 +1,59 @@
 ﻿namespace ERPAdmin.Models
 {
+    #region REVENUE-EXPENSE-P&L
+    public class DashboardRevenueExpensePNLRequest
+    {
+        public int Year { get; set; }
+    }
+    public class DashboardRevenueExpensePNL
+    {
+        public int MonthNo { get; set; }
+        public string MonthName { get; set; } = "";
+        public decimal Revenue { get; set; }
+        public decimal Expense { get; set; }
+        public decimal ProfitLoss { get; set; }
+    }
+    #endregion
+
+    #region EXPENSE ANALYSIS
+    public class DashboardExpenseAnalysisRequest
+    {
+        public string YearMonth { get; set; } = "";
+    }
+    public class DashboardExpenseAnalysis
+    {
+        public long CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public decimal TotalAmount { get; set; }
+        public decimal Rate { get; set; }
+    }
+    #endregion
+
+    #region Enquiry to Booking Conversion
+    public class DashboardEnquiryToBookingConversionRequest
+    {
+        public string YearMonth { get; set; } = "";
+    }
+    public class DashboardEnquiryToBookingConversionResponse
+    {
+        public int TotalEnquiries { get; set; }
+        public int TotalBookings { get; set; }
+        public decimal ConversionRate { get; set; }
+        public string ColorCode { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string Meaning { get; set; } = "";
+        public List<DashboardLeadSourceConversion> LeadSources { get; set; } = new();
+    }
+    public class DashboardLeadSourceConversion
+    {
+        public long LeadSourceId { get; set; }
+        public string LeadSourceName { get; set; } = "";
+        public int TotalEnquiries { get; set; }
+        public int TotalBookings { get; set; }
+        public decimal ConversionRate { get; set; }
+    }
+    #endregion
+
     #region Hall Occupancy Rate
     public class DashboardHallOccupancyRateRequest
     {

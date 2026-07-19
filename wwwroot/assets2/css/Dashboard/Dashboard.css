@@ -1,4 +1,39 @@
-﻿/*HALL OCCUPANCY RATE --START */
+﻿/*Expense Analysis --START */
+.expense-analysis-list {
+    max-height: 318px; /* Approximately 4 items */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+/* Nice scrollbar */
+.expense-analysis-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.expense-analysis-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.expense-analysis-list::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+/*Expense Analysis --END*/
+
+/*Enquiry to Booking Conversion --START */
+#conversionProgress {
+    transition: width .5s ease;
+}
+#tblLeadSourceBody td {
+    vertical-align: middle;
+}
+.ratio-badge {
+    min-width: 70px;
+}
+/*Enquiry to Booking Conversion --END */
+
+/*HALL OCCUPANCY RATE --START */
 .occupancy-card {
     border: 1px solid #e9ecef;
     border-radius: 10px;

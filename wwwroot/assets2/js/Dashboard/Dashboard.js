@@ -25,6 +25,22 @@ $(document).ready(function () {
     });
     // Hall Occupancy Rate -- END
 
+    // Enquiry to Booking Conversion -- START
+    $("#txtEnquiryToBookingConversionMonth").val(month);
+    loadEnquiryConversion();
+    $("#txtEnquiryToBookingConversionMonth").change(function(){
+        loadEnquiryConversion();
+    });
+    // Enquiry to Booking Conversion -- END
+
+    // Expense Analysis -- START
+    $("#txtExpenseAnalysisMonth").val(month);
+    loadExpenseAnalysis();
+    $("#txtExpenseAnalysisMonth").change(function () {
+        loadExpenseAnalysis();
+    });
+    // Expense Analysis -- END
+
     //8 Top Revenue Events -------------- START ------------------------
     let selectedRevenueDuration = "thismonth";
     loadTopRevenueEvents(selectedRevenueDuration);
@@ -42,6 +58,7 @@ $(document).ready(function () {
 
         $("#RevenueChartFilter").text($(this).text());
         loadTopRevenueEvents(selectedRevenueDuration);
+
     });
     //8 Top Revenue Events -------------- END ------------------------
 
@@ -57,6 +74,11 @@ $(document).ready(function () {
 
         loadYearDropdown(); //Overall Bookings Statistics - loadOverallBookingsStatistics();
         $("#yearDropdown").text(currentYear);
+
+        loadHallOccupancyRate();
+        loadEnquiryConversion();
+        loadExpenseAnalysis();
+        loadRevenueExpensePNL();
     });
 
     //Lead SOurce
@@ -1006,6 +1028,8 @@ function loadYearDropdown() {
 
                 let html = "";
                 let html2 = "";
+                let html3 = "";
+
                 let currentYear = new Date().getFullYear();
                 let selectedYearId = null;
                 let selectedYearName = null;
@@ -1038,16 +1062,28 @@ function loadYearDropdown() {
                                ${item.YearName}
                             </a>
                         </li>`;
+
+                    html3 += `
+                        <li>
+                            <a class="dropdown-item year-option3 ${isCurrentYear ? 'active' : ''}"
+                               href="#"
+                               data-id="${item.Id}"
+                               data-year="${item.YearName}">
+                               ${item.YearName}
+                            </a>
+                        </li>`;
                 });
 
                 $("#yearDropdownMenu").html(html);
                 $("#ddlInsightYear").html(html2);
+                $("#ddlRevenueExpenseYear").html(html3);
 
                 // 🔥 Set default dropdown text
                 if (selectedYearId) {
-                    $("#yearDropdown, #insightYearBtn").text(currentYear);
+                    $("#yearDropdown, #insightYearBtn, #revenueExpenseYearBtn").text(currentYear);
                     loadOverallBookingsStatistics(selectedYearId, selectedYearName);
                     loadSmartInsights();
+                    loadRevenueExpensePNL();
                 }
             }
         },
@@ -1068,8 +1104,7 @@ $(document).on("click", ".year-option", function (e) {
 
     $("#yearDropdown").text(yearText);
 
-    console.log("Selected YearId:", selectedYearId);
-
+    console.log("Selected YearId:", selectedYearId, " Year:", yearText);
     loadOverallBookingsStatistics(selectedYearId, yearText);
 });
 
@@ -1084,8 +1119,23 @@ $(document).on("click", ".year-option2", function (e) {
 
     $("#insightYearBtn").text(yearText);
 
-    console.log("Selected YearId:", selectedYearId);
+    console.log("Selected YearId:", selectedYearId, " Year:", yearText);
     loadSmartInsights();
+});
+
+$(document).on("click", ".year-option3", function (e) {
+    e.preventDefault();
+
+    $(".year-option3").removeClass("active");
+    $(this).addClass("active");
+
+    const selectedYearId = $(this).data("id");
+    const yearText = $(this).data("year");
+
+    $("#revenueExpenseYearBtn").text(yearText);
+
+    console.log("Selected YearId:", selectedYearId, " Year:", yearText);
+    loadRevenueExpensePNL();
 });
 
 let bookingBarChart;
@@ -1718,7 +1768,7 @@ function loadSmartInsights() {
     var payload = {
         Year: $("#insightYearBtn").text()
     };
-    console.log("smart payload:", payload);
+    //console.log("smart payload:", payload);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardSmartInsights",
@@ -1726,7 +1776,7 @@ function loadSmartInsights() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("smart res:", res);
+            //console.log("smart res:", res);
 
             renderInsight("#peakBookingList", res.data.PeakBookingMonths, false);
             renderInsight("#lowBookingList", res.data.LowBookingMonths, false);
@@ -1798,7 +1848,7 @@ function loadHallOccupancyRate() {
     var payload = {
         YearMonth: $("#txtOccupancyMonth").val()
     };
-    console.log("hallOccupancy payload:", payload);
+    //console.log("hallOccupancy payload:", payload);
 
     $.ajax({
         url: "/api/Dashboard/GetDashboardHallOccupancyRate",
@@ -1806,7 +1856,7 @@ function loadHallOccupancyRate() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("hallOccupancy res:", res);
+            //console.log("hallOccupancy res:", res);
 
             $("#lblOverallOccupancy").text(res.data.OverallOccupancyRate + "%");
             renderHallOccupancy(res.data.Halls);
@@ -1865,6 +1915,366 @@ function renderHallOccupancy(list) {
     $("#hallOccupancyContainer").html(html);
 }
 //Hall Occupancy Rate ----------- END --------------------
+
+//Enquiry to Booking Conversion ----------- START ------------------
+function loadEnquiryConversion() {
+    var payload = {
+        YearMonth: $("#txtEnquiryToBookingConversionMonth").val(),
+    };
+    //console.log("EnquiryConversion payload:", payload);
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardEnquiryToBookingConversion",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("EnquiryConversion res:", res);
+
+            bindConversionSummary(res.data);
+            bindLeadSource(res.data.LeadSources, res.data.ColorCode);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Unable to load conversion data.");
+        }
+    });
+}
+function bindConversionSummary(data) {
+    $("#lblConversionRate").text(data.ConversionRate + "%");
+    $("#lblTotalEnquiries").text(data.TotalEnquiries);
+    $("#lblTotalBookings").text(data.TotalBookings);
+    $("#lblMeaning").text(data.Meaning);
+
+    $("#lblConversionStatus").text(data.Status)
+        .css({
+            background: data.ColorCode,
+            color: "#fff"
+        });
+
+    $("#conversionProgress")
+        .css({
+            width: data.ConversionRate + "%",
+            background: data.ColorCode
+        });
+
+}
+function bindLeadSource(list, colorCode) {
+    if (!list || list.length == 0) {
+        $("#tblLeadSourceBody").html(`
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">
+                    No Data Available
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    let html = "";
+    $.each(list, function(i,item){
+        html += `
+
+        <tr>
+            <td>${item.LeadSourceName}</td>
+            <td class="text-center">${item.TotalEnquiries}</td>
+            <td class="text-center">${item.TotalBookings}</td>
+
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1" style="height:8px;">
+                        <div class="progress-bar"
+                            style="width:${item.ConversionRate}%;
+                            background:${colorCode};">
+                        </div>
+                    </div>
+                    <small class="ms-2 fw-bold">
+                        ${item.ConversionRate}%
+                    </small>
+                </div>
+            </td>
+        </tr>
+        `;
+    });
+    $("#tblLeadSourceBody").html(html);
+}
+//Enquiry to Booking Conversion ----------- END --------------------
+
+//EXPENSE ANAYSIS ----------- START ------------------
+let expenseAnalysisChart = null;
+let expenseAnalysisData = [];
+let expenseSortOrder = ""; // DESC = Z→A, ASC = A→Z
+
+function loadExpenseAnalysis() {
+    var payload = {
+        YearMonth: $("#txtExpenseAnalysisMonth").val()
+    };
+    //console.log("ExpenseAnalysis payload:", payload);
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardExpenseAnalysis",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            //console.log("ExpenseAnalysis res:", res);
+            expenseAnalysisData = res.data || [];
+            //renderExpenseAnalysis();
+            bindExpenseAnalysis(res.data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fail to load Expense Analysis data");
+        }
+    });
+}
+
+$("#btnExpenseSort").click(function () {
+    expenseSortOrder = expenseSortOrder === "ASC" ? "DESC" : "ASC";
+    $(this)
+        .attr("title", expenseSortOrder === "ASC" ? "Sort: A → Z" : "Sort: Z → A")
+        .html(
+            expenseSortOrder === "ASC"
+                ? '<i class="fa-solid fa-arrow-down-a-z"></i>'
+                : '<i class="fa-solid fa-arrow-down-z-a"></i>'
+        );
+
+    renderExpenseAnalysis();
+});
+
+function renderExpenseAnalysis() {
+
+    let list = [...expenseAnalysisData];
+
+    if (expenseSortOrder === "ASC") {
+        list.sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
+    }
+    else if (expenseSortOrder === "DESC") {
+        list.sort((a, b) => b.CategoryName.localeCompare(a.CategoryName));
+    }
+
+    bindExpenseAnalysis(list);
+}
+
+function bindExpenseAnalysis(list) {
+
+    if (!list || list.length === 0) {
+        $("#tblExpenseAnalysis").html(`
+            <div class="text-center text-muted py-5">
+                No Expense Data Available
+            </div>
+        `);
+        if (expenseAnalysisChart)
+            expenseAnalysisChart.destroy();
+        return;
+    }
+
+    const labels = [];
+    const amounts = [];
+    const colors = [];
+
+    const palette = [
+        "#0d6efd",
+        "#198754",
+        "#ffc107",
+        "#dc3545",
+        "#6610f2",
+        "#fd7e14",
+        "#20c997",
+        "#6c757d",
+        "#0dcaf0",
+        "#e83e8c"
+    ];
+
+    let html = "";
+    $.each(list, function (i, item) {
+        labels.push(item.CategoryName);
+        amounts.push(item.TotalAmount);
+        colors.push(palette[i % palette.length]);
+
+        html += `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="fw-semibold text-truncate pe-2">
+                    ${item.CategoryName}
+                </div>
+
+                <div class="text-end">
+                    <span class="fw-bold text-danger">${formatINR2(item.TotalAmount)}</span>
+                    <small class="text-muted ms-1">(${item.Rate}%)</small>
+                </div>
+            </div>
+
+            <div class="progress" style="height:12px;border-radius:20px;background:#e9edf5;">
+                <div class="progress-bar" role="progressbar"
+                    style="width:${item.Rate}%;
+                        background:${colors[i]};
+                        border-radius:20px;"
+                    aria-valuenow="${item.Rate}"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                </div>
+            </div>
+
+        </div>`;
+    });
+
+    $("#tblExpenseAnalysis").html(html);
+    drawExpenseAnalysisChart(labels, amounts, colors);
+}
+
+function drawExpenseAnalysisChart(labels, data, colors) {
+
+    if (expenseAnalysisChart)
+        expenseAnalysisChart.destroy();
+
+    const ctx = document
+        .getElementById("expenseAnalysisChart")
+        .getContext("2d");
+
+    expenseAnalysisChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }
+            ]
+        },
+
+        options: {
+            maintainAspectRatio: false,
+            cutout: "65%",
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.label + " : " + formatINR2(context.raw);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+//EXPENSE ANAYSIS ----------- END ------------------
+
+//REVENUE-EXPENSE-P&L ----------- START ----------------
+let revenueExpensePNLChart = null;
+function loadRevenueExpensePNL() {
+    var payload = {
+        Year: $("#revenueExpenseYearBtn").text()
+    };
+    console.log("RevenueExpensePNL payload:", payload);
+
+    $.ajax({
+        url: "/api/Dashboard/GetDashboardRevenueExpensePNL",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("RevenueExpensePNL res:", res);
+            bindRevenueExpensePNL(res.data);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Revenue vs Expense chart.");
+        }
+    });
+}
+
+function bindRevenueExpensePNL(list) {
+
+    const months = [];
+    const revenue = [];
+    const expense = [];
+    const pnl = [];
+
+    $.each(list, function (i, item) {
+        months.push(item.MonthName);
+        revenue.push(item.Revenue);
+        expense.push(item.Expense);
+        pnl.push(item.ProfitLoss);
+    });
+
+    drawRevenueExpensePNLChart(months, revenue, expense, pnl);
+}
+
+function drawRevenueExpensePNLChart(labels, revenue, expense, pnl) {
+    console.log("Revenue:", revenue);
+    console.log("Expense:", expense);
+    console.log("P&L:", pnl);
+
+    if (revenueExpensePNLChart)
+        revenueExpensePNLChart.destroy();
+
+    const ctx = document.getElementById("revenueExpensePNLChart").getContext("2d");
+
+    revenueExpensePNLChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Revenue",
+                    data: revenue,
+                    backgroundColor: "#ff7f2a"
+                },
+
+                {
+                    label: "Expense",
+                    data: expense,
+                    backgroundColor: "#ffc107"
+                },
+
+                {
+                    label: "P&L",
+                    data: pnl,
+                    backgroundColor: "#4caf50"
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
+            plugins: {
+                legend: {
+                    position: "bottom"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + " : " + formatINR2(context.raw);
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return formatINR2(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+//REVENUE-EXPENSE-P&L ----------- END ------------------
+
 
 
 

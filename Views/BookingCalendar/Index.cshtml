@@ -1263,6 +1263,10 @@
                         <i class="fa-solid fa-credit-card me-1"></i> Payment
                     </button>
 
+                    <button type="button" class="btn btn-outline-success btn-sm" id="btnGuestDirectory">
+                        <i class="fa-solid fa-users me-1"></i> Guest Directory
+                    </button>
+
                     <button type="button" class="btn btn-outline-success btn-sm" id="btnRequestFeedback">
                         <i class="fa-solid fa-bullhorn me-1"></i> Request Feedback
                     </button>
@@ -2338,7 +2342,6 @@
 
 <!--Enqury count-->
 <div id="enquiryTooltip" class="enquiry-tooltip shadow"></div>
-<!-- paymentModal -- END -->
 
 <!-- foodWastage -- START -->
 <div class="modal fade" id="foodWastageModal" tabindex="-1">
@@ -2452,6 +2455,217 @@
     </div>
 </div>
 <!-- hallBlockModal -- END-->
+
+<!-- Guest Directory MODAL -- START -->
+<div class="modal fade" id="guestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header bg-success text-white py-1">
+                <h5 class="modal-title text-white">
+                    <i class="fa-solid fa-address-book me-2"></i>
+                    Guest Directory
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Booking Summary -->
+                <div class="row g-2 mb-3">
+
+                    <!-- Booking ID -->
+                    <div class="col-md-2">
+                        <div class="border rounded bg-light p-2">
+                            <div class="small text-muted">Booking ID</div>
+                            <div class="fw-semibold" id="guest_summary_bookingId">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Client Name -->
+                    <div class="col-md-5">
+                        <div class="border rounded bg-light p-2">
+                            <div class="small text-muted">Client</div>
+                            <div class="fw-semibold text-truncate"
+                                 id="guest_summary_client">
+                                -
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Event Name -->
+                    <div class="col-md-5">
+                        <div class="border rounded bg-light p-2">
+                            <div class="small text-muted">Event</div>
+                            <div class="fw-semibold text-truncate"
+                                 id="guest_summary_event">
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <form id="guestForm">
+
+                    <input type="hidden" id="Guest_Id">
+                    <input type="hidden" id="Guest_BookingId">
+
+                    <div class="card border-success">
+
+                        <div class="card-header bg-success-subtle py-2">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="fa-solid fa-user-plus me-1"></i>
+                                    Add / Edit Guest
+                                </h6>
+
+                                <div>
+                                    <button type="reset" class="btn btn-outline-secondary btn-sm">Reset</button>
+                                    <button type="button" class="btn btn-success btn-sm" id="btnSaveGuest">Save Guest</button>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row g-2">
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Guest Name <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           id="Guest_Name"
+                                           class="form-control"
+                                           placeholder="Enter Guest Name">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Mobile No</label>
+                                    <input type="text"
+                                           id="Guest_MobileNo"
+                                           maxlength="10"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="text"
+                                           id="Guest_WhatsappContact"
+                                           maxlength="10"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Email</label>
+                                    <input type="email"
+                                           id="Guest_Email"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">City</label>
+                                    <select id="Guest_CityId" class="form-select" style="width:100%;"></select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">DOB</label>
+                                    <input type="date"
+                                           id="Guest_Dob"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Anniversary</label>
+                                    <input type="date"
+                                           id="Guest_AnniversaryDate"
+                                           class="form-control">
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label">Address</label>
+                                    <textarea id="Guest_Address"
+                                              rows="2"
+                                              class="form-control"></textarea>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <hr>
+
+                <!-- Existing Guests -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+
+                    <h6 class="fw-bold text-success mb-0">
+                        Existing Guests
+                    </h6>
+
+                    <span class="badge bg-success"
+                          id="guestCount">
+                        0 Guests
+                    </span>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-bordered table-hover align-middle mb-0">
+
+                        <thead class="table-success">
+
+                            <tr>
+
+                                <th width="40">#</th>
+
+                                <th>Name</th>
+
+                                <th width="120">Mobile</th>
+
+                                <th width="200">Email</th>
+
+                                <th width="120">City</th>
+
+                                <th width="100">DOB</th>
+
+                                <th width="120">Anniversary</th>
+
+                                <th width="90" class="text-center">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tblGuestList">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Guest Directory -- END-->
+
+
 
 <!--Booking Note - text Editor --- START ---->
 <link href="/assets2/css/quill.snow.css" rel="stylesheet">
