@@ -147,7 +147,7 @@ function fetchHallDetails(bookingData, banquetId = 0) {
         contentType: 'application/json',
         data: JSON.stringify({ Id: banquetId }), // Get all halls
         success: function (response) {
-            console.log("Get Hall res:", response);
+            //console.log("Get Hall res:", response);
             if (response.status === "Success" && response.data && response.data.length > 0) {
                 //banquetHallsList = response.data;
                 banquetHallsList = response.data.filter(x => x.IsHallMerged === false);
@@ -292,11 +292,13 @@ function loadStateList() {
 //State - dropdown -- END ------------------------
 
 //City - dropdown -- START ------------------------
-function loadCityList(selectedCityId = 0) {
+let cityList = [];
+function loadCityList() {
     var payload = {
         Id: 0,
         StateId: 0
-    }
+    };
+
     $.ajax({
         url: "/api/City/GetCityList",
         type: "POST",
@@ -309,24 +311,7 @@ function loadCityList(selectedCityId = 0) {
                 return;
             }
 
-            const ddl = $("#Guest_CityId");
-            ddl.empty();
-            ddl.append('<option value="">Select City</option>');
-            $.each(res.data, function (i, city) {
-
-                ddl.append(`
-                    <option value="${city.Id}">
-                        ${city.Name} (${city.StateName})
-                    </option>
-                `);
-
-            });
-
-            if (selectedCityId > 0) {
-                ddl.val(selectedCityId);
-            }
-
-            ddl.trigger("change");
+            cityList = res.data || [];
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Load City Error");
@@ -2736,7 +2721,7 @@ function attachShiftClickListeners() {
                         .data("shiftid", b.ShiftCode);
 
                     $("#banquetDropdown").val(hallid);
-                    console.log("setShiftTime 1");
+                    //console.log("setShiftTime 1");
                     setShiftTime(b.ShiftCode);
 
                     $("#fromDate").val(dateiso).prop("disabled", true);
@@ -2875,7 +2860,7 @@ function convertTo24Hour(time12h) {
 }
 
 function setShiftTime(shiftAbbr) {
-    console.log("shiftTimes:", shiftTimes, ", shiftAbbr:", shiftAbbr);
+    //console.log("shiftTimes:", shiftTimes, ", shiftAbbr:", shiftAbbr);
 
     const times = shiftTimes[shiftAbbr];
     if (!times) return;
@@ -2887,7 +2872,7 @@ function setShiftTime(shiftAbbr) {
     $("#eventEnd").val(times.end);
 }
 // Call this function after rendering board or table
-/* here1
+/*
 renderBoard = (() => {
     const originalRenderBoard = renderBoard;
     return function (...args) {
@@ -3812,7 +3797,10 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#guest_summary_client").text(clientName);
         $("#guest_summary_event").text(eventName);
 
+        //WORK here1
         //loadGuestList(bookingId);
+        loadGuestCityDropdown($("#Guest_CityId"), 0);
+        loadGuestList(bookingId);
     });
 
     // 📢 Request Feedback
@@ -6087,6 +6075,25 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //$("#fromDate, #startHour, #startMinute, #startAMPM, #endHour, #endMinute, #endAMPM, #banquetDropdown").trigger("change");
 
                     //$("#Section_PaymentDetails").hide();
+                    
+                    $("#bookingGuestContainer").empty();
+                    console.log("edit GuestList:", data.GuestList);
+                    if (data.GuestList && data.GuestList.length > 0) {
+                        data.GuestList.forEach(function (guest) {
+                            const row = addGuestRow(guest.CityId);
+
+                            row.find(".guest-name").val(guest.Name || "");
+                            row.find(".guest-mobile").val(guest.MobileNo || "");
+                            row.find(".guest-whatsapp").val(guest.WhatsappContact || "");
+                            row.find(".guest-email").val(guest.Email || "");
+                            row.find(".guest-address").val(guest.Address || "");
+                            row.find(".guest-dob").val(guest.Dob || "");
+                            row.find(".guest-anniversary").val(guest.AnniversaryDate || "");
+                        });
+                    } 
+                    else {
+                        addGuestRow();
+                    }
                 }
                 else if (actionMode === "rescheduleData") {
                     //resetBooking();
@@ -6778,7 +6785,7 @@ function loadBookingNotesMaster() {
         url: '/api/BookingCalendar/GetBookingCalendar_NotesMaster',
         type: 'GET',
         success: function (response) {
-            console.log("Notes Master Response:", response);
+            //console.log("Notes Master Response:", response);
             if (!response || response.status !== 'Success') {
                 console.error("Invalid response");
                 return;
@@ -7178,6 +7185,23 @@ function saveBooking() {
     });
     bookingData.JSON_Notes = notes;
 
+    const guests = [];
+    $("#bookingGuestContainer .guest-row").each(function () {
+        guests.push({
+            Id: 0,
+            Name: $(this).find(".guest-name").val(),
+            MobileNo: $(this).find(".guest-mobile").val(),
+            WhatsappContact: $(this).find(".guest-whatsapp").val(),
+            Email: $(this).find(".guest-email").val(),
+            Address: $(this).find(".guest-address").val(),
+            CityId: parseInt($(this).find(".guest-city").val()) || 0,
+            Dob: $(this).find(".guest-dob").val() || null,
+            AnniversaryDate: $(this).find(".guest-anniversary").val() || null
+        });
+    });
+    //console.log(JSON.stringify(guests));
+    bookingData.JSON_Guests = guests;
+
     console.log("Final Booking JSON:", bookingData);
 
     // 🔹 4. AJAX POST
@@ -7400,6 +7424,10 @@ function resetBooking() {
         $stateDropdown.val("0").trigger("change");
     }
  
+    //guest
+    $("#bookingGuestContainer").empty();
+    addGuestRow();
+
     $("#btnBook").prop("disabled", false);
 }
 
@@ -8243,7 +8271,7 @@ function loadSlotDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            console.log("response SlotMaster:", response);
+            //console.log("response SlotMaster:", response);
             const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
             const $abbrContainer = $("#slotAbbreviations");
 
@@ -8643,6 +8671,156 @@ $(document).on("click", ".btn-delete-guest", function () {
         });
     });
 });
+//FOR BOOKING MODAL - GUEST
+function loadGuestCityDropdown(ddl, selectedCityId = 0) {
+    ddl.empty();
+    ddl.append('<option value="">Select City</option>');
+
+    $.each(cityList, function (i, city) {
+        ddl.append(`
+            <option value="${city.Id}">
+                ${city.Name} (${city.StateName})
+            </option>
+        `);
+    });
+
+    if (selectedCityId > 0) {
+        ddl.val(selectedCityId);
+    }
+
+    //ddl.trigger("change");
+}
+
+function addGuestRow(selectedCityId = 0) {
+    const row = $("#guestRowTemplate").children().first().clone();
+
+    $("#bookingGuestContainer").append(row);
+
+    //row.find(".guest-city").select2({
+        //width: "100%"
+    //});
+
+    loadGuestCityDropdown(row.find(".guest-city"), selectedCityId);
+    updateGuestSrNo();
+    return row;
+}
+
+//ADD GUEST
+addGuestRow();
+$("#btnAddGuestRow").click(function () {
+    addGuestRow();
+});
+//REMOVE GUEST
+$(document).on("click", ".btnRemoveGuestRow", function () {
+    if ($("#bookingGuestContainer .guest-row").length <= 1) {
+        Swal.fire(
+            "Guest Required",
+            "At least one guest is required.",
+            "warning"
+        );
+        return;
+    }
+    $(this).closest(".guest-row").remove();
+    updateGuestSrNo();
+});
+
+//clear-dates
+$(document).on("click", ".btn-clear-dates", function () {
+    const row = $(this).closest(".guest-row"); // or adjust to your row class
+
+    row.find(".guest-dob").val("");
+    row.find(".guest-anniversary").val("");
+});
+//copy - Whatsapp No = Mobile No
+$(document).on("click", ".btn-copy-mobile", function () {
+    const row = $(this).closest(".guest-row"); // or your guest container
+    const mobile = row.find(".guest-mobile").val();
+    row.find(".guest-whatsapp").val(mobile);
+});
+function updateGuestSrNo() {
+    $("#bookingGuestContainer")
+        .children()
+        .each(function (index) {
+            $(this).find(".guest-srno").text("#" + (index + 1));
+        });
+}
+function loadGuestList(bookingId) {
+    var payload = {
+        Id: 0,
+        BookingId: bookingId
+    };
+    console.log("edit guest payload:", payload);
+
+    $.ajax({
+        url: "/api/BookingCalendar/GetBookingCalendar_Guest",
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+            console.log("edit guest res:", res);
+
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            const tbody = $("#tblGuestList");
+            tbody.empty();
+
+            const guests = res.data || [];
+            $("#guestCount").text(`${guests.length} Guest${guests.length != 1 ? "s" : ""}`);
+            if (guests.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-3">
+                            No Guest Found
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            $.each(guests, function (index, guest) {
+
+                tbody.append(`
+                    <tr data-id="${guest.Id}">
+                        <td>${index + 1}</td>
+                        <td>${guest.Name ?? ""}</td>
+                        <td>${guest.MobileNo ?? ""}</td>
+                        <td>${guest.Email ?? ""}</td>
+                        <td>${guest.CityName ?? ""}</td>
+                        <td>${guest.Dob2 ?? ""}</td>
+                        <td>${guest.AnniversaryDate2 ?? ""}</td>
+
+                        <td class="text-center">
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary btnEditGuest"
+                                    data-id="${guest.Id}"
+                                    title="Edit">
+                                <i class="fa fa-edit"></i>
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger btnDeleteGuest"
+                                    data-id="${guest.Id}"
+                                    title="Delete">
+                                <i class="fa fa-trash"></i>
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `);
+            });
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Load Guest List Error");
+        }
+    });
+
+}
 // Guest Modal -- END --------------------
 
 
@@ -8777,7 +8955,7 @@ pmBtn.addEventListener('click', () => {
     amBtn.classList.remove('active');
 });
 
-// Set time here1
+// Set time
 function setTimeStart() {
     input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm} `;
     //picker.classList.add('d-none');

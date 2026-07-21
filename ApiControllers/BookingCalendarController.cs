@@ -11,6 +11,7 @@ using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -186,6 +187,12 @@ namespace ERPAdmin.ApiControllers
                         booking.PaymentTrailList = !string.IsNullOrWhiteSpace(paymentJson)
                             ? JsonConvert.DeserializeObject<List<PaymentTrailModel>>(paymentJson)
                             : new List<PaymentTrailModel>();
+
+                        var guestJson = dr["GuestJSON"] == DBNull.Value ? null : dr["GuestJSON"].ToString();
+                        booking.GuestList = !string.IsNullOrWhiteSpace(guestJson)
+                            ? JsonConvert.DeserializeObject<List<GuestModel>>(guestJson)
+                            : new List<GuestModel>();
+
                         bookings.Add(booking);
                     }
                 }
@@ -301,8 +308,12 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@JSON_Notes",
                         model.JSON_Notes != null ? JsonConvert.SerializeObject(model.JSON_Notes) : (object)DBNull.Value);
+ 
                     cmd.Parameters.AddWithValue("@JSON_FoodPackage",
                         model.JSON_FoodPackage != null ? JsonConvert.SerializeObject(model.JSON_FoodPackage) : (object)DBNull.Value);
+                    
+                    cmd.Parameters.AddWithValue("@JSON_Guests",
+                        model.JSON_Guests != null ? JsonConvert.SerializeObject(model.JSON_Guests) : (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Action_By", model.ActionBy);
 

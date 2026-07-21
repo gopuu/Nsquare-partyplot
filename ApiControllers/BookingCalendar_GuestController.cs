@@ -32,7 +32,7 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetBookingCalendar_Guest([FromBody] GetBookingCalendar_GuestRequest request)
         {
             apiResponse apiResponse = new apiResponse();
-            List<BookingCalendarGuestModel> guests = new List<BookingCalendarGuestModel>();
+            List<BookingCalendar_GuestModel> guests = new List<BookingCalendar_GuestModel>();
 
             try
             {
@@ -57,7 +57,7 @@ namespace ERPAdmin.ApiControllers
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    guests.Add(new BookingCalendarGuestModel
+                    guests.Add(new BookingCalendar_GuestModel
                     {
                         Id = Convert.ToInt64(row["Id"]),
                         Name = Convert.ToString(row["Name"]),

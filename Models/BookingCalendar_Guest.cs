@@ -6,7 +6,7 @@
         public long Id { get; set; }
         public long BookingId { get; set; }
     }
-    public class BookingCalendarGuestModel
+    public class BookingCalendar_GuestModel
     {
         public long Id { get; set; }
         public string Name { get; set; }

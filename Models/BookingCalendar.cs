@@ -268,6 +268,7 @@
         public decimal? PaymentSummary_PayableAmount { get; set; }
         public List<FoodPackage>? JSON_FoodPackage { get; set; }
         public List<BookingCalendarNoteItem>? JSON_Notes { get; set; }
+        public List<BookingCalendarGuestModel>? JSON_Guests { get; set; }
     }
     public class FoodPackage
     {
@@ -315,6 +316,20 @@
     {
         public long? OptionId { get; set; }
     }
+
+    public class BookingCalendarGuestModel
+    {
+        public long Id { get; set; }
+        public string? Name { get; set; }
+        public string? MobileNo { get; set; }
+        public string? WhatsappContact { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public long CityId { get; set; }
+        public string? Dob { get; set; }
+        public string? AnniversaryDate { get; set; }
+    }
+
     //GET MODEL MASTER -NOTES
     public class BookingNoteMasterResponse
     {
@@ -441,9 +456,8 @@
         public long? VendorWorkOrder_Count { get; set; }
         public long? InvoiceNo { get; set; }
         public long? ProformaInvoiceNo { get; set; }
-
         public List<PaymentTrailModel>? PaymentTrailList { get; set; }
-
+        public List<GuestModel>? GuestList { get; set; }
     }
     public class PaymentTrailModel
     {
@@ -519,6 +533,24 @@
         public long? OptionId { get; set; }
         public string? OptionName { get; set; }
     }
+
+    public class GuestModel
+    {
+        public long? Id { get; set; }
+        public string? Name { get; set; }
+        public string? MobileNo { get; set; }
+        public string? WhatsappContact { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public long? CityId { get; set; }
+        public string? CityName { get; set; }
+        public string? Dob { get; set; }
+        public string? Dob2 { get; set; }
+        public string? AnniversaryDate { get; set; }
+        public string? AnniversaryDate2 { get; set; }
+    }
+
+
     public class GetPackage_MenuAndFoodItemsListRequest
     {
         public long? Package_Id { get; set; } = null;

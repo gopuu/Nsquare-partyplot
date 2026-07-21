@@ -4,7 +4,7 @@ $(document).ready(function () {
     loadDashboardWidgetCounts();
     loadUpcomingEventsWidget();
 
-    loadComparativeInsightsChart("last3months");
+    //loadComparativeInsightsChart("last3months"); //hide - not needed
 
     loadBookingEventTypeCount();
     loadBookingSubEventTypeCorporate();
@@ -66,7 +66,7 @@ $(document).ready(function () {
         //console.log("Settings Page Update", data);
         //console.log("page refresh");
         loadDashboardWidgetCounts();
-        loadComparativeInsightsChart("last3months");
+        //loadComparativeInsightsChart("last3months");
 
         loadBookingEventTypeCount();
         loadBookingSubEventTypeCorporate();
@@ -82,9 +82,11 @@ $(document).ready(function () {
     });
 
     //Lead SOurce
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        if (el.id === "hallOccupancyTooltip") {
+            return; // initialize this one later
+        }
+        new bootstrap.Tooltip(el);
     });
 });
 
@@ -1845,6 +1847,7 @@ function renderInsight(container, list, isCurrency) {
 
 //Hall Occupancy Rate ----------- START ------------------
 function loadHallOccupancyRate() {
+    updateOccupancyTooltip();
     var payload = {
         YearMonth: $("#txtOccupancyMonth").val()
     };
@@ -1913,6 +1916,61 @@ function renderHallOccupancy(list) {
         `;
     });
     $("#hallOccupancyContainer").html(html);
+}
+
+function updateOccupancyTooltip() {
+
+    const yearMonth = $("#txtOccupancyMonth").val();
+    if (!yearMonth) return;
+
+    const [year, month] = yearMonth.split('-').map(Number);
+
+    const days = new Date(year, month, 0).getDate();
+    const totalSlots = days * 3;
+
+    const html = `
+        <div class='text-start'>
+            <div class='fw-bold text-primary mb-2'>
+                <i class='fa-solid fa-circle-info me-1'></i>
+                Hall Occupancy Calculation
+            </div>
+
+            <hr class='my-2'>
+
+            <div class='mb-2'>
+                <strong>Available Slots per Day</strong><br>
+                🌅 Morning<br>
+                🌞 Afternoon<br>
+                🌙 Evening
+            </div>
+
+            <div class='alert alert-light border py-2 px-3 mb-2 text-dark'>
+                <strong>Formula</strong><br>
+                ${days} Days × 3 Slots/Day =
+                <span class='text-success fw-bold'>${totalSlots} Total Slots</span>
+            </div>
+
+            <div>
+                <strong>Occupancy (%)</strong><br>
+                <span class='text-primary fw-bold'>
+                    (Booked Slots ÷ ${totalSlots}) × 100
+                </span>
+            </div>
+        </div>`;
+
+    const el = document.getElementById("hallOccupancyTooltip");
+    const tooltip = bootstrap.Tooltip.getInstance(el);
+    if (tooltip) {
+        tooltip.dispose();
+    }
+
+    el.setAttribute("data-bs-title", html);
+
+    new bootstrap.Tooltip(el, {
+        html: true,
+        placement: "top",
+        trigger: "hover focus"
+    });
 }
 //Hall Occupancy Rate ----------- END --------------------
 
