@@ -1,4 +1,31 @@
-﻿/* ====== NOTES - BOOKING VIEW-- START =====*/
+﻿/* ====== GUEST MODAL --START =====*/
+.guest-row-editing {
+    background-color: #fff3cd !important;
+}
+
+.guest-row-editing > td {
+    background-color: #fff3cd !important;
+}
+.guest-search-input {
+    width: 0;
+    opacity: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-width: 0;
+    transition: all 0.25s ease;
+}
+
+.guest-search-wrapper.active .guest-search-input {
+    width: 220px;
+    opacity: 1;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-width: 1px;
+    margin-right: 5px;
+}
+/* ====== GUEST MODAL --ENd =====*/
+
+/* ====== NOTES - BOOKING VIEW-- START =====*/
 .booking-note-row {
     display: flex;
     align-items: center;
@@ -544,14 +571,16 @@ input[readonly] {
 
 /*<!-- CSS Payment Trial Details - Table-- >*/
 /* 🔹 Compact, minimal table design */
-.payment-table {
+.payment-table, 
+#bookingReport_GuestTable {
     font-size: 0.84rem; /* Reduced font size */
     color: #343a40; /* Soft dark text */
     border-color: #dee2e6; /* Subtle borders */
 }
 
 /* 🔹 Table Header */
-.payment-table thead th {
+.payment-table thead th, 
+#bookingReport_GuestTable thead th {
     background-color: #f8f9fa !important;
     font-weight: 600;
     text-transform: uppercase;
@@ -560,14 +589,17 @@ input[readonly] {
 }
 
 /* 🔹 Row hover effect */
-.payment-table tbody tr:hover {
+.payment-table tbody tr:hover, 
+#bookingReport_GuestTable tbody tr:hover {
     background-color: #f9fbff;
     transition: background-color 0.2s ease-in-out;
 }
 
 /* 🔹 Table padding & alignment */
 .payment-table td,
-.payment-table th {
+.payment-table th, 
+#bookingReport_GuestTable td,
+#bookingReport_GuestTable th {
     padding: 0.45rem 0.5rem;
     vertical-align: middle !important;
 }

@@ -3783,7 +3783,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Open Guest modal safely
     document.getElementById('btnGuestDirectory').addEventListener('click', function () {
-        const bookingId = (typeof getBookingId === 'function') ? getBookingId() : null;
+        const bookingId = getBookingId();
         const clientName = $(this).data('name');
         const contactNo = $(this).data('contact');
         const eventName = $(this).data('event');
@@ -5801,6 +5801,68 @@ function fillPaymentTrailTable(paymentList = []) {
     });
 }
 
+// Fill Guest Details dynamically
+function fillGuestTable(guestList = []) {
+    const tbody = $("#bookingReport_GuestBody");
+    // Clear old data
+    tbody.empty();
+
+    // No records
+    if (!guestList || guestList.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8"
+                    class="text-muted small fst-italic text-center">
+                    No guest records found
+                </td>
+            </tr>
+        `);
+
+        return;
+    }
+
+    console.log("guestList:", guestList);
+
+    guestList.forEach((item, index) => {
+
+        tbody.append(`
+            <tr>
+                <td>${index + 1}</td>
+
+                <td class="text-start">
+                    <span class="fw-semibold text-dark">
+                        ${item.Name || "—"}
+                    </span>
+                </td>
+
+                <td>
+                    ${item.WhatsappContact || "—"}
+                </td>
+
+                <td>
+                    ${item.MobileNo || "—"}
+                </td>
+
+                <td class="text-start">
+                    ${item.Email || "—"}
+                </td>
+
+                <td>
+                    ${item.CityName || "—"}
+                </td>
+
+                <td>
+                    ${item.Dob2 || "—"}
+                </td>
+
+                <td>
+                    ${item.AnniversaryDate2 || "—"}
+                </td>
+            </tr>
+        `);
+    });
+}
+
 function setGSTSwitch(isGSTAccepted) {
     const gstSwitch = document.getElementById("gstSwitch");
     const gstText = document.getElementById("gstSwitchText");
@@ -5938,6 +6000,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     //Payment Details Table
                     fillPaymentTrailTable(data.PaymentTrailList);
+
+                    //Guest Details Table
+                    fillGuestTable(data.GuestList);
 
                     // Food Package and Selected Menu
                     const packages = data?.JSON_FoodPackage ?? [];
@@ -8360,16 +8425,7 @@ $(document).on("change", "#reschedule_SlotId", function () {
 
 // Guest Modal -- START ------------------
 function resetGuestModal() {
-
-    // Reset form
-    $("#guestForm")[0].reset();
-
-    // Hidden fields
-    $("#Guest_Id").val(0);
-    $("#Guest_BookingId").val(0);
-
-    // Dropdowns
-    $("#Guest_CityId").val("").trigger("change");
+    resetGuestModal_Form();
 
     // Booking Summary
     $("#guest_summary_bookingId").text("-");
@@ -8387,6 +8443,19 @@ function resetGuestModal() {
             </td>
         </tr>
     `);
+}
+
+function resetGuestModal_Form() {
+
+    // Reset form
+    $("#guestForm")[0].reset();
+
+    // Hidden fields
+    $("#Guest_Id").val(0);
+    $("#Guest_BookingId").val(0);
+
+    // Dropdowns
+    $("#Guest_CityId").val("").trigger("change");
 
     // Remove validation styles (if using Bootstrap validation)
     $("#guestForm").find(".is-valid, .is-invalid").removeClass("is-valid is-invalid");
@@ -8427,79 +8496,78 @@ function loadGuestList(bookingId) {
     });
 }
 
-// ----------------- RENDER TABLE -----------------
 function renderGuestTable(data) {
-    if ($.fn.dataTable && $.fn.dataTable.isDataTable("#tblGuestList")) {
-        $("#tblGuestList").DataTable().destroy();
+
+    // Destroy existing DataTable
+    if ($.fn.DataTable.isDataTable("#guestTable")) {
+        $("#guestTable").DataTable().clear().destroy();
     }
 
-    $("#tblGuestList").empty();
+    // Ensure valid array
+    data = Array.isArray(data) ? data : [];
 
-    data.forEach((item, i) => item.srno = i + 1);
+    console.log("render data:", data);
 
-    $("#tblGuestList").DataTable({
+    $("#guestTable").DataTable({
         data: data,
+        destroy: true,
         autoWidth: false,
+        pageLength: 500,
+        ordering: true,
+        searching: true,
+        //dom: "rtip",
+        lengthChange: false,
+
         columns: [
             {
-                data: "srno",
-                title: "#",
+                data: null,
                 className: "text-center",
-                width: "40px"
+                width: "40px",
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
             },
-
             {
-                data: "Name",
-                title: "Guest Name"
+                data: "Name"
             },
-
             {
-                data: "MobileNo",
-                title: "Mobile"
+                data: "WhatsappContact"
             },
-
             {
-                data: "WhatsappContact",
-                title: "WhatsApp"
+                data: "MobileNo"
             },
-
             {
-                data: "Email",
-                title: "Email"
+                data: "Email"
             },
-
             {
-                data: "CityName",
-                title: "City"
+                data: "CityName"
             },
-
             {
-                data: "DobDisplay",
-                title: "DOB",
+                data: "Dob2",
                 className: "text-center"
             },
-
             {
-                data: "AnniversaryDateDisplay",
-                title: "Anniversary",
+                data: "AnniversaryDate2",
                 className: "text-center"
             },
-
             {
                 data: null,
-                title: "Action",
                 className: "text-center",
                 orderable: false,
-                width: "100px",
-                render: function (row) {
+                searchable: false,
+                width: "90px",
+
+                render: function (data, type, row) {
                     return `
-                        <button class="btn btn-sm btn-outline-primary btn-edit-guest"
+                        <button type="button"
+                                class="btn btn-sm btn-outline-warning btn-edit-guest"
                                 data-id="${row.Id}"
                                 title="Edit">
                             <i class="fa fa-edit"></i>
                         </button>
 
-                        <button class="btn btn-sm btn-outline-danger btn-delete-guest"
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger btn-delete-guest"
                                 data-id="${row.Id}"
                                 title="Delete">
                             <i class="fa fa-trash"></i>
@@ -8509,11 +8577,9 @@ function renderGuestTable(data) {
             }
         ],
 
-        pageLength: 5,
-        ordering: true,
-        searching: false,
         language: {
-            emptyTable: "No Guest Found"
+            emptyTable: "No Guest Found",
+            zeroRecords: "No Guest Found"
         }
     });
 }
@@ -8551,8 +8617,8 @@ $(document).on("click", "#btnSaveGuest", function () {
 
             if (res.status === "Success") {
                 handleApiSuccess("Saved!");
+                resetGuestModal_Form();
 
-                resetGuestModal();
                 $("#Guest_BookingId").val(bookingId);
                 loadGuestList(bookingId);
                 $("#Guest_Name").focus();
@@ -8570,6 +8636,12 @@ $(document).on("click", "#btnSaveGuest", function () {
 
 $(document).on("click", ".btn-edit-guest", function () {
 
+    // Clear previous highlighted row
+    $("#guestTable tbody tr").removeClass("guest-row-editing");
+
+    // Highlight current row
+    $(this).closest("tr").addClass("guest-row-editing");
+
     const id = $(this).data("id");
     var payload = {
         Id: id,
@@ -8577,7 +8649,7 @@ $(document).on("click", ".btn-edit-guest", function () {
     }
     console.log("guest edit payload:", payload);
 
-    resetGuestModal();
+    resetGuestModal_Form();
     $.ajax({
         url: "/api/BookingCalendar_Guest/GetBookingCalendar_Guest",
         type: "POST",
@@ -8671,6 +8743,8 @@ $(document).on("click", ".btn-delete-guest", function () {
         });
     });
 });
+
+
 //FOR BOOKING MODAL - GUEST
 function loadGuestCityDropdown(ddl, selectedCityId = 0) {
     ddl.empty();
@@ -8743,83 +8817,6 @@ function updateGuestSrNo() {
         .each(function (index) {
             $(this).find(".guest-srno").text("#" + (index + 1));
         });
-}
-function loadGuestList(bookingId) {
-    var payload = {
-        Id: 0,
-        BookingId: bookingId
-    };
-    console.log("edit guest payload:", payload);
-
-    $.ajax({
-        url: "/api/BookingCalendar/GetBookingCalendar_Guest",
-        type: "POST",
-        contentType: "application/json",
-        dataType: "json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            console.log("edit guest res:", res);
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const tbody = $("#tblGuestList");
-            tbody.empty();
-
-            const guests = res.data || [];
-            $("#guestCount").text(`${guests.length} Guest${guests.length != 1 ? "s" : ""}`);
-            if (guests.length === 0) {
-                tbody.append(`
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-3">
-                            No Guest Found
-                        </td>
-                    </tr>
-                `);
-                return;
-            }
-
-            $.each(guests, function (index, guest) {
-
-                tbody.append(`
-                    <tr data-id="${guest.Id}">
-                        <td>${index + 1}</td>
-                        <td>${guest.Name ?? ""}</td>
-                        <td>${guest.MobileNo ?? ""}</td>
-                        <td>${guest.Email ?? ""}</td>
-                        <td>${guest.CityName ?? ""}</td>
-                        <td>${guest.Dob2 ?? ""}</td>
-                        <td>${guest.AnniversaryDate2 ?? ""}</td>
-
-                        <td class="text-center">
-
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary btnEditGuest"
-                                    data-id="${guest.Id}"
-                                    title="Edit">
-                                <i class="fa fa-edit"></i>
-                            </button>
-
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-danger btnDeleteGuest"
-                                    data-id="${guest.Id}"
-                                    title="Delete">
-                                <i class="fa fa-trash"></i>
-                            </button>
-
-                        </td>
-
-                    </tr>
-                `);
-            });
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Load Guest List Error");
-        }
-    });
-
 }
 // Guest Modal -- END --------------------
 
