@@ -509,7 +509,7 @@ function ViewGSTSalesReport(actionName) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -526,9 +526,13 @@ function ViewGSTSalesReport(actionName) {
             document.body.removeChild(link);
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             console.error("Download GST Sales Failed", xhr, status, error);
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }

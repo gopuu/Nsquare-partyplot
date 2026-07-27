@@ -557,7 +557,7 @@ function ViewStockReport(actionName) {
         data: JSON.stringify(payload),
         success: function (res) {
             console.log("res:", res);
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -574,9 +574,12 @@ function ViewStockReport(actionName) {
             document.body.removeChild(link);
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             handleApiError(xhr, status, error, "Inventory Report Download Failed");
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+        },
+        complete: function(){
+            hideTempLoader();
         }
     });
 }

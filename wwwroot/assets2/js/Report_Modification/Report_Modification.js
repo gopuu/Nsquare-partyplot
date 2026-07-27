@@ -395,7 +395,7 @@ function ViewModificationReport(actionName) {
         data: JSON.stringify(payload),
         success: function (res) {
 
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -412,8 +412,12 @@ function ViewModificationReport(actionName) {
             document.body.removeChild(link);
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             handleApiError(xhr, status, error, "Download Modification Report Failed");
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }

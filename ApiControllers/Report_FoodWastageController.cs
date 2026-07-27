@@ -300,32 +300,107 @@ namespace ERPAdmin.ApiControllers
 
                 table.HeaderRows = 1;
 
+                // ─────────────────────────────────────────────
+                // GRID ROWS
+                // ─────────────────────────────────────────────
                 foreach (DataRow row in dataTableDB.Rows)
+                {
                     foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    {
+                        string value = row[col] == DBNull.Value
+                            ? "-"
+                            : row[col].ToString();
 
-                // ── Totals ──
+                        int alignment = col.ColumnName switch
+                        {
+                            "Sr. No." => Element.ALIGN_CENTER,
+                            "Event Date" => Element.ALIGN_CENTER,
+                            "Shift" => Element.ALIGN_CENTER,
+                            "Client Name" => Element.ALIGN_LEFT,
+                            "Total Wastage (Kg)" => Element.ALIGN_RIGHT,
+                            _ => Element.ALIGN_LEFT
+                        };
+
+                        // Format wastage value
+                        if (col.ColumnName == "Total Wastage (Kg)")
+                        {
+                            decimal wastage = row[col] == DBNull.Value
+                                ? 0
+                                : Convert.ToDecimal(row[col]);
+
+                            value = $"{wastage:N2} Kg";
+                        }
+
+                        PdfPCell cell = new PdfPCell(new Phrase(value, tdFont))
+                        {
+                            HorizontalAlignment = alignment,
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+
+                            PaddingTop = 5f,
+                            PaddingBottom = 5f,
+                            PaddingLeft = 6f,
+                            PaddingRight = 6f,
+
+                            BorderColor = new BaseColor(220, 220, 220),
+                            BorderWidth = 0.5f
+                        };
+
+                        table.AddCell(cell);
+                    }
+                }
+
+                // ─────────────────────────────────────────────
+                // TOTAL ROW
+                // ─────────────────────────────────────────────
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
-                    Font totalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
+
+                    Font totalFont = new Font(
+                        Font.FontFamily.HELVETICA,
+                        8,
+                        Font.BOLD
+                    );
+
+                    decimal totalWastage = totalRow["TotalWastageKg"] == DBNull.Value
+                        ? 0
+                        : Convert.ToDecimal(totalRow["TotalWastageKg"]);
 
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
-                        string value = col.ColumnName switch
+                        string value = "";
+                        int alignment = Element.ALIGN_LEFT;
+
+                        switch (col.ColumnName)
                         {
-                            "Wastage (Kg)" => $"{totalRow["TotalWastageKg"]} Kg",
-                            _ => col.Ordinal == 0 ? "TOTAL" : ""
+                            case "Sr. No.":
+                                value = "TOTAL";
+                                alignment = Element.ALIGN_CENTER;
+                                break;
+
+                            case "Total Wastage (Kg)":
+                                value = $"{totalWastage:N2} Kg";
+                                alignment = Element.ALIGN_RIGHT;
+                                break;
+                        }
+
+                        PdfPCell cell = new PdfPCell(new Phrase(value, totalFont))
+                        {
+                            HorizontalAlignment = alignment,
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+
+                            BackgroundColor = new BaseColor(240, 240, 240),
+
+                            PaddingTop = 6f,
+                            PaddingBottom = 6f,
+                            PaddingLeft = 6f,
+                            PaddingRight = 6f,
+
+                            BorderColor = new BaseColor(210, 210, 210),
+                            BorderWidth = 0.5f
                         };
 
-                        table.AddCell(new PdfPCell(new Phrase(value, totalFont))
-                        {
-                            HorizontalAlignment = Element.ALIGN_RIGHT,
-                            BackgroundColor = new BaseColor(240, 240, 240),
-                            Padding = 6,
-                            BorderColor = new BaseColor(220, 220, 220), // light gray
-                            BorderWidth = 0.5f
-                        });
+                        table.AddCell(cell);
                     }
                 }
 
@@ -738,11 +813,11 @@ namespace ERPAdmin.ApiControllers
                     PdfPTable infoTable = new PdfPTable(2);
                     infoTable.WidthPercentage = 100;
 
-                    infoTable.AddCell(Utils.CreateInfoCell("Booking ID", r["BookingId"]));
+                    infoTable.AddCell(Utils.CreateInfoCell("Booking ID", "#" + r["BookingId"]));
                     infoTable.AddCell(Utils.CreateInfoCell("Event Date", r["EventDate"]));
 
-                    infoTable.AddCell(Utils.CreateInfoCell("Shift", r["ShiftCode"]));
                     infoTable.AddCell(Utils.CreateInfoCell("Client", r["ClientName"]));
+                    infoTable.AddCell(Utils.CreateInfoCell("Shift", r["ShiftCode"]));
 
                     document.Add(infoTable);
                     document.Add(new Paragraph("\n"));
@@ -765,8 +840,48 @@ namespace ERPAdmin.ApiControllers
                 table.HeaderRows = 1;
 
                 foreach (DataRow row in dataTableDB.Rows)
+                {
                     foreach (DataColumn col in dataTableDB.Columns)
-                        table.AddCell(Utils.CreateBodyCell(row[col]?.ToString() ?? "-", tdFont));
+                    {
+                        string value = row[col] == DBNull.Value
+                            ? "-"
+                            : row[col].ToString();
+
+                        int alignment = col.ColumnName switch
+                        {
+                            "Sr. No." => Element.ALIGN_CENTER,
+                            "Menu Item" => Element.ALIGN_LEFT,
+                            "Wastage (Kg)" => Element.ALIGN_RIGHT,
+                            _ => Element.ALIGN_LEFT
+                        };
+
+                        // Format Wastage
+                        if (col.ColumnName == "Wastage (Kg)")
+                        {
+                            decimal wastage = row[col] == DBNull.Value
+                                ? 0
+                                : Convert.ToDecimal(row[col]);
+
+                            value = $"{wastage:N2} Kg";
+                        }
+
+                        PdfPCell cell = new PdfPCell(new Phrase(value, tdFont))
+                        {
+                            HorizontalAlignment = alignment,
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+
+                            PaddingTop = 5f,
+                            PaddingBottom = 5f,
+                            PaddingLeft = 6f,
+                            PaddingRight = 6f,
+
+                            BorderColor = new BaseColor(220, 220, 220),
+                            BorderWidth = 0.5f
+                        };
+
+                        table.AddCell(cell);
+                    }
+                }
 
                 // ── Totals ──
                 if (totalTableDB.Rows.Count > 0)
@@ -854,34 +969,161 @@ namespace ERPAdmin.ApiControllers
                 DataTable headerTableDB = dsReport.Tables[1];
                 DataTable dataTableDB = dsReport.Tables[2];
                 DataTable totalTableDB = dsReport.Tables[3];
+                DataTable basicInfoTable = dsReport.Tables[4];
+
+                string reportName = dsReport.Tables[0].Rows.Count > 0
+                    ? dsReport.Tables[0].Rows[0]["ReportName"]?.ToString() ?? "Food Wastage Detail"
+                    : "Food Wastage Detail";
 
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Food Wastage Detail");
 
+                int columnCount = dataTableDB.Columns.Count;
+
+
+                // ============================================================
+                // REPORT TITLE
+                // ============================================================
+
+                worksheet.Range(1, 1, 1, columnCount).Merge();
+
+                var titleCell = worksheet.Cell(1, 1);
+                titleCell.Value = reportName.ToUpper();
+                titleCell.Style.Font.Bold = true;
+                titleCell.Style.Font.FontSize = 14;
+                titleCell.Style.Font.FontColor = XLColor.Gray;
+                titleCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                titleCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                worksheet.Row(1).Height = 24;
+
+
+                // ============================================================
+                // BOOKING BASIC INFO
+                // ============================================================
+
+                int currentRow = 3;
+
+                if (basicInfoTable.Rows.Count > 0)
+                {
+                    DataRow r = basicInfoTable.Rows[0];
+
+                    // Row 3
+                    worksheet.Cell(currentRow, 1).Value = "Booking ID";
+                    worksheet.Cell(currentRow, 2).Value = "#" + r["BookingId"]?.ToString();
+
+                    worksheet.Cell(currentRow, 3).Value = "Event Date";
+                    worksheet.Cell(currentRow, 4).Value = r["EventDate"]?.ToString();
+
+                    // Row 4
+                    worksheet.Cell(currentRow + 1, 1).Value = "Client";
+                    worksheet.Cell(currentRow + 1, 2).Value = r["ClientName"]?.ToString();
+
+                    worksheet.Cell(currentRow + 1, 3).Value = "Shift";
+                    worksheet.Cell(currentRow + 1, 4).Value = r["ShiftCode"]?.ToString();
+
+
+                    // Label formatting
+                    foreach (var cell in new[]
+                    {
+                        worksheet.Cell(currentRow, 1),
+                        worksheet.Cell(currentRow, 3),
+                        worksheet.Cell(currentRow + 1, 1),
+                        worksheet.Cell(currentRow + 1, 3)
+                    })
+                    {
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                        cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                    }
+
+
+                    // Border around basic info
+                    var infoRange = worksheet.Range(
+                        currentRow,
+                        1,
+                        currentRow + 1,
+                        4
+                    );
+
+                    infoRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    infoRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                    currentRow += 3; // blank row after basic info
+                }
+
+
+                // ============================================================
+                // TABLE HEADER
+                // ============================================================
+                int headerRow = currentRow;
                 int col = 1;
 
-                // Headers
                 foreach (DataRow hRow in headerTableDB.Rows)
                 {
-                    worksheet.Cell(1, col).Value = hRow["HeaderName"].ToString();
-                    worksheet.Cell(1, col).Style.Font.Bold = true;
-                    worksheet.Cell(1, col).Style.Fill.BackgroundColor = XLColor.LightBlue;
-                    worksheet.Cell(1, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    var cell = worksheet.Cell(headerRow, col);
+
+                    cell.Value = hRow["HeaderName"]?.ToString() ?? "";
+
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                    cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
                     col++;
                 }
 
-                int row = 2;
+                worksheet.Row(headerRow).Height = 20;
 
-                // Data
+
+                // ============================================================
+                // DATA
+                // ============================================================
+                int row = headerRow + 1;
                 foreach (DataRow dr in dataTableDB.Rows)
                 {
                     for (int i = 0; i < dataTableDB.Columns.Count; i++)
-                        worksheet.Cell(row, i + 1).Value = dr[i]?.ToString() ?? "-";
+                    {
+                        DataColumn column = dataTableDB.Columns[i];
+                        var cell = worksheet.Cell(row, i + 1);
+
+                        if (column.ColumnName == "Wastage (Kg)")
+                        {
+                            decimal wastage = dr[i] == DBNull.Value
+                                ? 0
+                                : Convert.ToDecimal(dr[i]);
+
+                            cell.Value = wastage;
+                            cell.Style.NumberFormat.Format = "0.00 \"Kg\"";
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
+                        else
+                        {
+                            cell.Value = dr[i] == DBNull.Value
+                                ? "-"
+                                : dr[i].ToString();
+
+                            cell.Style.Alignment.Horizontal = column.ColumnName switch
+                            {
+                                "Sr. No." => XLAlignmentHorizontalValues.Center,
+                                "Menu Item" => XLAlignmentHorizontalValues.Left,
+                                _ => XLAlignmentHorizontalValues.Left
+                            };
+                        }
+
+                        cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                        cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    }
 
                     row++;
                 }
 
-                // Totals
+
+                // ============================================================
+                // TOTAL
+                // ============================================================
                 if (totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -890,20 +1132,50 @@ namespace ERPAdmin.ApiControllers
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
 
-                        string value = columnName switch
-                        {
-                            "Wastage (Kg)" => totalRow["TotalWastageKg"].ToString(),
-                            _ => i == 0 ? "TOTAL" : ""
-                        };
-
                         var cell = worksheet.Cell(row, i + 1);
-                        cell.Value = value;
+
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                        cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                        if (i == 0)
+                        {
+                            cell.Value = "TOTAL";
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+                        else if (columnName == "Wastage (Kg)")
+                        {
+                            decimal totalWastage =
+                                totalRow["TotalWastageKg"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToDecimal(totalRow["TotalWastageKg"]);
+
+                            cell.Value = totalWastage;
+                            cell.Style.NumberFormat.Format = "0.00 \"Kg\"";
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
+                        else
+                        {
+                            cell.Value = "";
+                        }
                     }
                 }
 
+
+                // ============================================================
+                // FINAL FORMATTING
+                // ============================================================
+
                 worksheet.Columns().AdjustToContents();
+
+                worksheet.SheetView.FreezeRows(headerRow);
+
+                // Optional minimum widths
+                worksheet.Column(1).Width = Math.Max(worksheet.Column(1).Width, 10);
+                worksheet.Column(2).Width = Math.Max(worksheet.Column(2).Width, 25);
+                worksheet.Column(3).Width = Math.Max(worksheet.Column(3).Width, 15);
+
 
                 string folder = Path.Combine(_env.WebRootPath, "reports");
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);

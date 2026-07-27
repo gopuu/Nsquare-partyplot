@@ -930,13 +930,13 @@ function fetchTransactions(payload = {}) {
 
     console.log("API Payload:", finalPayload);
 
+    showTempLoader("fetching Transactions...");
     $.ajax({
         url: "/api/FinanceDashboard/GetIncomeExpenseTransactionList",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(finalPayload),
         beforeSend: function () {
-            showTempLoader("fetching Transactions...");
             $("#tableMain_Transactions table tbody").html("<tr><td class='text-center p-3'>Loading...</td></tr>");
         },
         success: function (res) {
@@ -951,7 +951,8 @@ function fetchTransactions(payload = {}) {
             $("#tableMain_Transactions table").html("<tr><td class='text-danger p-3'>Error loading data</td></tr>");
         },
         complete: function () {
-            Swal.close();
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }
@@ -1262,7 +1263,8 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
             handleApiError(xhr, status, error, "Failed to load subcategory dropdown data");
         },
         complete: function () {
-            Swal.close();
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }
@@ -1431,7 +1433,8 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
             handleApiError(xhr, status, error, "Fail to load Income SubCategory")
         },
         complete: function(){
-            Swal.close();
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }

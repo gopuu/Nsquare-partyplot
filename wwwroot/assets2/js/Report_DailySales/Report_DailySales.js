@@ -440,7 +440,7 @@ function ViewDailySalesReport(actionName) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -461,10 +461,15 @@ function ViewDailySalesReport(actionName) {
             document.body.removeChild(link);
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             console.error("Download Daily Sales Failed", xhr, status, error);
             Swal.fire("Error", "Failed to generate report.", "error");
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
+
     });
 }
 
@@ -723,7 +728,7 @@ function ViewDailySalesDetailsReport(actionName) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
                 return;
@@ -743,9 +748,13 @@ function ViewDailySalesDetailsReport(actionName) {
 
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             Swal.fire("Error", "Failed to generate details report.", "error");
             handleApiError(xhr, status, error, "Failed to generate details report");
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }

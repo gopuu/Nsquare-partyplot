@@ -137,7 +137,9 @@ function generateGUID() {
 }
 
 //WHATSAPP -- END
+let isTempLoaderActive = false;
 function showTempLoader2(title = "Checking Availability") {
+    isTempLoaderActive = true;
     // Show loader before AJAX
     Swal.fire({
         title: title,
@@ -150,6 +152,7 @@ function showTempLoader2(title = "Checking Availability") {
     });
 }
 function showTempLoader(title = "Checking Availability") {
+    isTempLoaderActive = true;
     Swal.fire({
         title: title,
         text: "Please wait...",
@@ -163,6 +166,10 @@ function showTempLoader(title = "Checking Availability") {
             Swal.showLoading();
         }
     });
+}
+function hideTempLoader() {
+    Swal.close();
+    isTempLoaderActive = false;
 }
 
 function handleApiSuccess(msg = "Saved successfully!") {
@@ -528,12 +535,17 @@ function fetchBalance_Layout() {
     });
 }
 
-
 let ajaxActiveCount = 0;
 
 $(document).ajaxStart(function () {
     ajaxActiveCount++;
     //console.log("ajaxActiveCount START:", ajaxActiveCount);
+
+    // Temp Swal loader is already handling loading UI
+    if (isTempLoaderActive) {
+        return;
+    }
+
     showLoader();
 });
 
@@ -541,6 +553,11 @@ $(document).ajaxStop(function () {
     ajaxActiveCount--;
     if (ajaxActiveCount <= 0) {
         ajaxActiveCount = 0;
+
+        // Temp Swal loader is handling loading UI
+        if (isTempLoaderActive) {
+            return;
+        }
         hideLoader();
     }
     //console.log("ajaxActiveCount STOP:", ajaxActiveCount);

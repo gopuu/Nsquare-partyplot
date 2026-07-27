@@ -648,7 +648,7 @@ function ViewMonthlySalesReport(actionName) {
         data: JSON.stringify(payload),
         success: function (res) {
 
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -671,7 +671,11 @@ function ViewMonthlySalesReport(actionName) {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Error fetching monthly report");
-            Swal.close();
+            //Swal.close();
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }
@@ -702,7 +706,7 @@ function ViewMonthlySalesDetailsReport(actionName) {
         data: JSON.stringify(payload),
         success: function (res) {
 
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -725,7 +729,11 @@ function ViewMonthlySalesDetailsReport(actionName) {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Error fetching monthly details report");
-            Swal.close();
+            //Swal.close();
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }

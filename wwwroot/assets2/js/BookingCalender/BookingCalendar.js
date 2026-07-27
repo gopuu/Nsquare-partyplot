@@ -4504,7 +4504,7 @@ document.addEventListener("DOMContentLoaded", function () {
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (res) {
-                Swal.close();
+                //Swal.close();
 
                 let isAvailable = res.data?.IsAvailable === 1;
 
@@ -4538,11 +4538,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 $("#btnBook").prop("disabled", !isAvailable);                
             },
             error: function () {
-                Swal.close();
+                //Swal.close();
                 $("#slotStatusMsg")
                     .removeClass("d-none text-success")
                     .addClass("text-danger")
                     .text("Unable to check slot availability");
+            },
+            complete: function () {
+                hideTempLoader();
             }
         });
 

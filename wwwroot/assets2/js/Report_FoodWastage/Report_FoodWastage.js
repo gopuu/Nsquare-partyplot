@@ -137,7 +137,7 @@ function openFoodWastageDetailModal(bookingId) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -152,6 +152,9 @@ function openFoodWastageDetailModal(bookingId) {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Failed to load details");
+        },
+        complete: function () {
+            hideTempLoader();
         }
     });
 }
@@ -186,6 +189,7 @@ function renderFoodWastageDetailHeader(data) {
     `);
 }
 function renderFoodWastageDetailGrid(items) {
+    console.log("food grid items:", items);
 
     if ($.fn.DataTable.isDataTable("#tblFoodWastageDetail")) {
         $("#tblFoodWastageDetail").DataTable().destroy();
@@ -204,21 +208,6 @@ function renderFoodWastageDetailGrid(items) {
                 data: "SrNo",
                 className: "text-center",
                 width: "60px"
-            },
-
-            {
-                data: 'EventDate', // actual date (ISO format from backend: yyyy-MM-dd)
-                title: 'Event Date',
-                name: 'EventDate',
-                width: "110px",
-                render: function (data, type, row) {
-
-                    if (type === 'display') {
-                        return row.EventDate_Format; // show formatted
-                    }
-
-                    return data; // use raw date for sorting
-                }
             },
 
             {
@@ -285,7 +274,7 @@ function downloadFoodWastageDetailReport(actionName="pdf") {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
                 return;
@@ -308,6 +297,9 @@ function downloadFoodWastageDetailReport(actionName="pdf") {
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error , "Failed to generate detail report");
+        },
+        complete: function () {
+            hideTempLoader();
         }
     });
 }
@@ -433,9 +425,9 @@ function renderFoodWastageTable(data) {
                     const val = parseFloat(data) || 0;
 
                     // ❌ disable click if 0
-                    if (val <= 0) {
+                    /*if (val <= 0) {
                         return `<span class="text-muted">${val.toFixed(2)} kg</span>`;
-                    }
+                    }*/
 
                     return `
                         <span class="text-danger fw-semibold wastage-click"
@@ -513,7 +505,7 @@ function ViewFoodWastageReport(actionName) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
                 return;
@@ -535,6 +527,9 @@ function ViewFoodWastageReport(actionName) {
         },
         error: function (xhr, error, status) {
             handleApiError(xhr, error, status, "Failed to generate summary report.");
+        },
+        complete: function () {
+            hideTempLoader();
         }
     });
 }

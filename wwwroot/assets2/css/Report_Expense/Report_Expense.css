@@ -1,1 +1,12 @@
-﻿
+﻿.expense-amount-link {
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.expense-amount-link:hover {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-underline-offset: 3px;
+}

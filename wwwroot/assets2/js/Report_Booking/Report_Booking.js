@@ -519,7 +519,7 @@ function ViewBookingReport(actionName) {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            Swal.close();
+            //Swal.close();
 
             if (res.status !== "Success") {
                 Swal.fire("Error", res.message, "error");
@@ -543,6 +543,10 @@ function ViewBookingReport(actionName) {
         },
         error: function (xhr, error, status) {
             handleApiError(xhr, error, status, "Failed to download report.");
+        },
+        complete: function(){
+            hideTempLoader();
+            //Swal.close();
         }
     });
 }
