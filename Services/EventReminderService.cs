@@ -5,7 +5,7 @@ using System.Data.SqlClient;
 
 namespace ERPAdmin.Services
 {
-    public class EventReminderService
+    public class EventReminderService 
     {
         private readonly WhatsAppService _whatsAppService;
         private readonly IConfiguration _configuration;
@@ -79,7 +79,7 @@ namespace ERPAdmin.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(" /Services/EventReminderService ProcessReminders(conn, domainUrl): " + ex.Message);
             }
         }
 

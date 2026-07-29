@@ -1,5 +1,16 @@
 ﻿namespace ERPAdmin.Models
 {
+    //All invoice download
+    public class GSTSalesAllInvoiceReportRequest : BaseClass
+    {
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+        public long? InvoiceNo { get; set; }
+        public string? NameEmailContactNo { get; set; }
+        public bool? IsWithGST { get; set; }
+    }
+
     // ── Request Models ──────────────────────────────────────────────
 
     public class GSTSalesGridRequest

@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
+using ERPAdmin.Services;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Http;
@@ -22,10 +23,13 @@ namespace ERPAdmin.ApiControllers
         private readonly string domainUrl;
         private readonly IWebHostEnvironment _env;
         private string connString = string.Empty;
+        private readonly IInvoicePdfService _invoicePdfService;
 
-        public Report_GSTController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor) : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
+        public Report_GSTController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor, IInvoicePdfService invoicePdfService) 
+            : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             _env = env;
+            _invoicePdfService = invoicePdfService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
@@ -653,6 +657,38 @@ namespace ERPAdmin.ApiControllers
             }
             catch (Exception ex)
             {
+                response.status = "Fail";
+                response.message = ex.Message;
+                return Ok(response);
+            }
+        }
+
+        // All Invoices DOWNLOAD
+        [HttpPost]
+        [Route("DownloadGSTSalesDetailReport")]
+        public async Task<IActionResult> DownloadGSTSalesDetailReport([FromBody] GSTSalesAllInvoiceReportRequest request)
+        {
+            apiResponse response = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+                string fileUrl = await _invoicePdfService.GenerateCustomerInvoiceAllPdf(request, connString, domain, domainUrl);
+
+                response.status = "Success";
+                response.message = "GST Sales Detail PDF generated successfully.";
+                response.data = new
+                {
+                    FileUrl = fileUrl
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, "");
                 response.status = "Fail";
                 response.message = ex.Message;
                 return Ok(response);

@@ -440,6 +440,11 @@ function renderGSTSalesTable(data, totals) {
 
             $(api.column(13).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalInvoiceAmount)}</strong>`);
 
+            $(api.column(14).footer()).html(`
+                <button class="btn btn-xs btn-view-invoice btn-outline-danger" onclick='downloadGSTSalesDetailPdf()'>
+                    <i class="fa fa-download me-1"></i>
+                </button>`);
+
             $(api.column(16).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalPaidAmount)}</strong>`);
 
             $(api.column(17).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDueAmount)}</strong>`);
@@ -575,3 +580,27 @@ function updateSelectAllState() {
     const checked = $(".column-checkbox:checked").length;
     $("#chk-select-all").prop("checked", total === checked);
 }
+
+//DOWNLOAD ALL INVOICES
+function downloadGSTSalesDetailPdf() {
+    const userId = parseInt(sessionStorage.getItem("userId")) || 0;
+
+    const payload = {
+        FromDate: $("#fromDate").val() || null,
+        ToDate: $("#toDate").val() || null,
+        FilterDuration: selectedMonthDuration || null,
+        InvoiceNo: $("#txtSearchInvoiceNo").val()?.trim() || null,
+        NameEmailContactNo: $("#txtSearch").val()?.trim() || null,
+        IsWithGST: $("#toggleWithGST").val() === ""
+            ? null
+            : $("#toggleWithGST").val() === "true",
+        ActionBy: userId
+    };
+    console.log("GST Detail PDF Payload:", payload);
+
+    const url=  "/api/Report_GST/DownloadGSTSalesDetailReport";
+    downloadReport(url, payload, loaderMsg = "Generating Invoice..");
+}
+
+
+

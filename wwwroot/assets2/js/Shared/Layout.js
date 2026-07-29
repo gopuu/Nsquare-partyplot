@@ -151,6 +151,7 @@ function showTempLoader2(title = "Checking Availability") {
         }
     });
 }
+
 function showTempLoader(title = "Checking Availability") {
     isTempLoaderActive = true;
     Swal.fire({

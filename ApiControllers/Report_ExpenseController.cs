@@ -53,8 +53,6 @@ namespace ERPAdmin.ApiControllers
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
-                    cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
-                    cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
 
                     con.Open();
 
@@ -179,39 +177,11 @@ namespace ERPAdmin.ApiControllers
                     cmd = new SqlCommand("Report_GetExpenseSummary_PdfExcel",con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
+                    string columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
 
-
-                    cmd.Parameters.AddWithValue(
-                        "@Columns",
-                        columnsJson ?? (object)DBNull.Value
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@Month",
-                        string.IsNullOrWhiteSpace(request.Month)
-                            ? (object)DBNull.Value
-                            : request.Month
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@CategoryId",
-                        request.CategoryId
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@AccountId",
-                        request.AccountId
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@PaymentModeId",
-                        request.PaymentModeId
-                    );
-
-
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -717,48 +687,15 @@ namespace ERPAdmin.ApiControllers
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
-
-                    SqlCommand cmd = new SqlCommand(
-                        "Report_GetExpenseSummary_PdfExcel",
-                        con
-                    );
-
+                    // ── Expense Summary Report ──
+                    SqlCommand cmd = new SqlCommand("Report_GetExpenseSummary_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
+                    string columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
-
-
-                    cmd.Parameters.AddWithValue(
-                        "@Columns",
-                        columnsJson ?? (object)DBNull.Value
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@Month",
-                        string.IsNullOrWhiteSpace(request.Month)
-                            ? (object)DBNull.Value
-                            : request.Month
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@CategoryId",
-                        request.CategoryId
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@AccountId",
-                        request.AccountId
-                    );
-
-                    cmd.Parameters.AddWithValue(
-                        "@PaymentModeId",
-                        request.PaymentModeId
-                    );
-
-
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
 
@@ -1276,17 +1213,12 @@ namespace ERPAdmin.ApiControllers
                         : null;
 
                     cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@VoucherNo", string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
                     cmd.Parameters.AddWithValue("@SubCategoryId", request.SubCategoryId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
-                    cmd.Parameters.AddWithValue("@VoucherNo",
-                        string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }
@@ -1599,14 +1531,11 @@ namespace ERPAdmin.ApiControllers
                         : null;
 
                     cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@VoucherNo", string.IsNullOrEmpty(request.VoucherNo) ? (object)DBNull.Value : request.VoucherNo);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
                     cmd.Parameters.AddWithValue("@SubCategoryId", request.SubCategoryId);
                     cmd.Parameters.AddWithValue("@AccountId", request.AccountId);
                     cmd.Parameters.AddWithValue("@PaymentModeId", request.PaymentModeId);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);

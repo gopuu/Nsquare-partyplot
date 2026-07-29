@@ -1,1 +1,143 @@
-﻿
+﻿.income-amount-link {
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.income-amount-link:hover {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-underline-offset: 3px;
+}
+
+/* =========================================================
+   EXPENSE DETAIL GRID
+========================================================= */
+
+#incomeDetailTableMain {
+    width: 100%;
+}
+
+
+/* DataTable wrapper */
+#incomeDetailTableMain .dataTables_wrapper {
+    width: 100%;
+}
+
+
+/* Actual table */
+#tblIncomeDetail {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+
+/* Header / Body / Footer */
+#tblIncomeDetail th,
+#tblIncomeDetail td {
+    vertical-align: middle;
+    padding: 8px 10px;
+}
+
+
+/* Header */
+#tblIncomeDetail thead th {
+    white-space: normal;
+    line-height: 1.15;
+    vertical-align: middle;
+}
+
+
+/* Footer */
+#tblIncomeDetail tfoot th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+
+/* Sr No */
+#tblIncomeDetail th:nth-child(1),
+#tblIncomeDetail td:nth-child(1) {
+    width: 4%;
+    white-space: nowrap;
+}
+
+
+/* Date */
+#tblIncomeDetail th:nth-child(2),
+#tblIncomeDetail td:nth-child(2) {
+    width: 9%;
+    white-space: nowrap;
+}
+
+
+/* Voucher */
+#tblIncomeDetail th:nth-child(3),
+#tblIncomeDetail td:nth-child(3) {
+    width: 9%;
+    white-space: nowrap;
+}
+
+
+/* Account */
+#tblIncomeDetail th:nth-child(4),
+#tblIncomeDetail td:nth-child(4) {
+    width: 11%;
+}
+
+
+/* Category */
+#tblIncomeDetail th:nth-child(5),
+#tblIncomeDetail td:nth-child(5) {
+    width: 15%;
+}
+
+
+/* Sub Category */
+#tblIncomeDetail th:nth-child(6),
+#tblIncomeDetail td:nth-child(6) {
+    width: 15%;
+}
+
+
+/* Notes */
+#tblIncomeDetail th:nth-child(7),
+#tblIncomeDetail td:nth-child(7) {
+    width: 16%;
+}
+
+
+/* Payment Mode */
+#tblIncomeDetail th:nth-child(8),
+#tblIncomeDetail td:nth-child(8) {
+    width: 11%;
+    white-space: nowrap;
+}
+
+
+/* Amount */
+#tblIncomeDetail th:nth-child(9),
+#tblIncomeDetail td:nth-child(9) {
+    width: 10%;
+    white-space: nowrap;
+}
+
+
+/* Footer total */
+#tblIncomeDetail tfoot th:nth-child(8),
+#tblIncomeDetail tfoot th:nth-child(9) {
+    text-align: right;
+}
+
+
+/* DataTable search */
+#incomeDetailTableMain .dataTables_filter {
+    margin-bottom: 8px;
+}
+
+
+/* Info */
+#incomeDetailTableMain .dataTables_info {
+    padding-top: 12px;
+}

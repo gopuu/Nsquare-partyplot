@@ -14,7 +14,7 @@
 <div class="content">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-warning mb-0">Income Report</h4>
+        <h4 id="incomeReportTitle" class="text-warning mb-0">Income Report</h4>
 
         <div class="d-flex align-items-center gap-2">
 
@@ -66,14 +66,6 @@
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th></th>
-
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-
-                    <th></th>
                 </tr>
             </tfoot>
         </table>
@@ -92,52 +84,13 @@
     <div class="filter-body">
 
         <div class="mb-3">
-            <label class="form-label">Duration</label>
-            <select id="quickRange" class="form-select form-select-sm">
-                <option value="thismonth">This Month</option>
-                <option value="lastmonth">Last Month</option>
-                <option value="last7days">Last 7 days</option>
-                <option value="last30days">Last 30 days</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="last12months">Last 12 Months</option>
-                <option value="customrange">Custom Range</option>
-            </select>
-        </div>
-
-        <div class="row g-2">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">From Date</label>
-                <input type="date" id="fromDate" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">To Date</label>
-                <input type="date" id="toDate" class="form-control form-control-sm">
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Voucher No</label>
-            <input id="voucherNo" class="form-select form-select-sm" placeholder="Voucher No" maxlength="50" />
+            <label class="form-label">Month</label>
+            <input type="month" id="incomeMonth" class="form-control form-control-sm">
         </div>
 
         <div class="mb-3">
             <label class="form-label">Income Category</label>
             <select id="ddlCategory" class="form-select form-select-sm"></select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Income Sub-Category</label>
-            <select id="ddlSubCategory" class="form-select form-select-sm"></select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Account</label>
-            <select id="ddlAccount" class="form-select form-select-sm"></select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Payment Mode</label>
-            <select id="ddlPaymentMode" class="form-select form-select-sm"></select>
         </div>
 
     </div>
@@ -184,11 +137,158 @@
     </div>
 </div>
 
+<!-- INCOME DETAILS -->
+<div class="modal fade" id="incomeDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-warning">
+                <div>
+                    <h5 class="modal-title mb-1 text-white">
+                        Income Detail
+                    </h5>
+
+                    <div class="small text-white">
+                        <span id="detailMonthText">-</span>
+                        <span class="mx-1">•</span>
+                        <span id="detailCategoryText">-</span>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+
+            <!-- BODY -->
+            <div class="modal-body">
+                <!-- FILTERS -->
+                <div class="row g-2 align-items-end mb-3">
+
+                    <!-- Voucher -->
+                    <div class="col">
+                        <label class="form-label small mb-1">Voucher No</label>
+                        <input type="text"
+                               id="txtDetailVoucherNo"
+                               class="form-control form-control-sm"
+                               placeholder="Voucher No"
+                               maxlength="50">
+                    </div>
+
+                    <!-- Sub Category -->
+                    <div class="col">
+                        <label class="form-label small mb-1">Income Sub-Category</label>
+                        <select id="ddlDetailSubCategory"
+                                class="form-select form-select-sm">
+                        </select>
+                    </div>
+
+                    <!-- Account -->
+                    <div class="col">
+                        <label class="form-label small mb-1">Account</label>
+                        <select id="ddlDetailAccount"
+                                class="form-select form-select-sm">
+                        </select>
+                    </div>
+
+                    <!-- Payment Mode -->
+                    <div class="col">
+                        <label class="form-label small mb-1">Payment Mode</label>
+                        <select id="ddlDetailPaymentMode"
+                                class="form-select form-select-sm">
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-auto">
+                        <div class="d-flex gap-1">
+
+                            <button type="button"
+                                    id="btnApplyIncomeDetail"
+                                    class="btn btn-outline-warning btn-sm text-nowrap">
+                                <i class="fas fa-filter me-1"></i>
+                                Apply
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm text-nowrap"
+                                    onclick="ViewIncomeDetailReport('downloadPdf')">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                PDF
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline-success btn-sm text-nowrap"
+                                    onclick="ViewIncomeDetailReport('downloadExcel')">
+                                <i class="fas fa-file-excel me-1"></i>
+                                Excel
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- GRID AREA -->
+                <div id="incomeDetailTableMain">
+
+                    <!-- Data Loader -->
+                    <div id="incomeDetailLoader"
+                         class="text-center py-5 text-muted d-none">
+
+                        <div class="spinner-border spinner-border-sm me-2"
+                             role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+
+                        <span>Fetching Income Details...</span>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="incomeDetailError"
+                         class="alert alert-danger d-none mb-0">
+                        Failed to load income details. Please try again.
+                    </div>
+
+                    <!-- Grid -->
+                    <div id="incomeDetailGrid" class="d-none">
+
+                        <table id="tblIncomeDetail"
+                               class="table table-striped table-bordered w-100">
+
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th class="text-end"></th>
+                                    <th class="text-end"></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script src="~/assets2/js/report_Income/report_Income.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/report_income/report_income.js" asp-append-version="true"></script>
 }
 
 @section Styles {
-    <link href="~/assets2/css/report_Income/report_Income.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/assets2/css/report_income/report_income.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/assets2/css/report_filters/report_filters.css" rel="stylesheet" asp-append-version="true" />
 }

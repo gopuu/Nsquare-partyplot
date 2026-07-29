@@ -57,23 +57,12 @@ namespace ERPAdmin.ApiControllers
         {
             try
             {
-                if (!TryGetConnectionAndDomain(
-                        ControllerContext,
-                        Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
                     return errorResult!;
                 }
 
-                string fileUrl =
-                    await _invoicePdfService.GenerateCustomerInvoicePdf(
-                        request,
-                        connString,
-                        domain,
-                        domainUrl
-                    );
+                string fileUrl = await _invoicePdfService.GenerateCustomerInvoicePdf(request, connString, domain, domainUrl);
 
                 return Ok(new
                 {

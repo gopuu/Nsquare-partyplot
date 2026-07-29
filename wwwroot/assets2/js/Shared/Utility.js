@@ -44,18 +44,11 @@ function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
-
         beforeSend: function () {
-            Swal.fire({
-                title: "Please wait...",
-                text: "Fetching invoice...",
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+            showTempLoader('Fetching invoice...');
         },
-
         success: function (res) {
-            Swal.close();
+            //Swal.close();
             if (res.status === "Success" && res.data && res.data.length > 0) {
                 let fileUrl = res.data[0].UploadInvoiceFile;
                 if (fileUrl) {
@@ -87,10 +80,13 @@ function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
             }
         },
         error: function (xhr, status, err) {
-            Swal.close();
+            //Swal.close();
             handleApiError(xhr, status, err, "Scan Invoice Download Failed");
+       },
+        complete: function () {
+            hideTempLoader();
         }
-    });
+     });
 }
 //PURCHASE INVOICE REPORT MODAL --- END ------------------------
 
@@ -107,7 +103,7 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
             showTempLoader(loaderMsg);
         },
         success: function (res) {
-            Swal.close();
+            ///Swal.close();
             console.log("downloadReport res:", res);
             if (res.status === 'Success' && res.data?.FileUrl) {
                 const link = document.createElement('a');
@@ -126,9 +122,13 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
             }
         },
         error: function (xhr, status, error) {
-            Swal.close();
+            //Swal.close();
             handleApiError(xhr, status, error, "report generation failed");
+        },
+        complete: function () {
+            hideTempLoader();
         }
+        
     });
 }
 //Download Receipt -- END

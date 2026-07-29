@@ -5,8 +5,6 @@
     {
         public string? Month { get; set; }       // yyyy-MM
         public long CategoryId { get; set; } = 0;
-        public long AccountId { get; set; } = 0;
-        public long PaymentModeId { get; set; } = 0;
     }
 
     public class ExpenseSummaryGridModel
@@ -26,8 +24,6 @@
         public string? Month { get; set; }   // yyyy-MM
 
         public long CategoryId { get; set; } = 0;
-        public long AccountId { get; set; } = 0;
-        public long PaymentModeId { get; set; } = 0;
     
         public bool? WithHeader { get; set; }
     }
@@ -50,8 +46,6 @@
         public long SubCategoryId { get; set; } = 0;
         public long AccountId { get; set; } = 0;
         public long PaymentModeId { get; set; } = 0;
-        public string? FromDate { get; set; }
-        public string? ToDate { get; set; }
         public string? Month { get; set; }
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }

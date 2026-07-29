@@ -10,3 +10,136 @@
     text-decoration-color: currentColor;
     text-underline-offset: 3px;
 }
+
+/* =========================================================
+   EXPENSE DETAIL GRID
+========================================================= */
+
+#expenseDetailTableMain {
+    width: 100%;
+}
+
+
+    /* DataTable wrapper */
+    #expenseDetailTableMain .dataTables_wrapper {
+        width: 100%;
+    }
+
+
+/* Actual table */
+#tblExpenseDetail {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+
+    /* Header / Body / Footer */
+    #tblExpenseDetail th,
+    #tblExpenseDetail td {
+        vertical-align: middle;
+        padding: 8px 10px;
+    }
+
+
+    /* Header */
+    #tblExpenseDetail thead th {
+        white-space: normal;
+        line-height: 1.15;
+        vertical-align: middle;
+    }
+
+
+    /* Footer */
+    #tblExpenseDetail tfoot th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+
+    /* Sr No */
+    #tblExpenseDetail th:nth-child(1),
+    #tblExpenseDetail td:nth-child(1) {
+        width: 4%;
+        white-space: nowrap;
+    }
+
+
+    /* Date */
+    #tblExpenseDetail th:nth-child(2),
+    #tblExpenseDetail td:nth-child(2) {
+        width: 9%;
+        white-space: nowrap;
+    }
+
+
+    /* Voucher */
+    #tblExpenseDetail th:nth-child(3),
+    #tblExpenseDetail td:nth-child(3) {
+        width: 9%;
+        white-space: nowrap;
+    }
+
+
+    /* Account */
+    #tblExpenseDetail th:nth-child(4),
+    #tblExpenseDetail td:nth-child(4) {
+        width: 11%;
+    }
+
+
+    /* Category */
+    #tblExpenseDetail th:nth-child(5),
+    #tblExpenseDetail td:nth-child(5) {
+        width: 15%;
+    }
+
+
+    /* Sub Category */
+    #tblExpenseDetail th:nth-child(6),
+    #tblExpenseDetail td:nth-child(6) {
+        width: 15%;
+    }
+
+
+    /* Notes */
+    #tblExpenseDetail th:nth-child(7),
+    #tblExpenseDetail td:nth-child(7) {
+        width: 16%;
+    }
+
+
+    /* Payment Mode */
+    #tblExpenseDetail th:nth-child(8),
+    #tblExpenseDetail td:nth-child(8) {
+        width: 11%;
+        white-space: nowrap;
+    }
+
+
+    /* Amount */
+    #tblExpenseDetail th:nth-child(9),
+    #tblExpenseDetail td:nth-child(9) {
+        width: 10%;
+        white-space: nowrap;
+    }
+
+
+    /* Footer total */
+    #tblExpenseDetail tfoot th:nth-child(8),
+    #tblExpenseDetail tfoot th:nth-child(9) {
+        text-align: right;
+    }
+
+
+/* DataTable search */
+#expenseDetailTableMain .dataTables_filter {
+    margin-bottom: 8px;
+}
+
+
+/* Info */
+#expenseDetailTableMain .dataTables_info {
+    padding-top: 12px;
+}
+
+
