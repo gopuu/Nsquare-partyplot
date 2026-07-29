@@ -1,4 +1,86 @@
-﻿
+﻿/*TEMP LOADER -- START*/
+.temp-loader-container {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 250px;
+    max-width: calc(100vw - 40px);
+}
+
+.temp-loader-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #ffc107;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+}
+
+.temp-loader-spinner {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border: 2px solid #e9ecef;
+    border-top-color: #ffc107;
+    border-radius: 50%;
+    animation: tempLoaderSpin .7s linear infinite;
+}
+
+.temp-loader-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.temp-loader-title {
+    color: #212529;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+}
+
+.temp-loader-text {
+    margin-top: 2px;
+    color: #6c757d;
+    font-size: 10px;
+}
+
+@keyframes tempLoaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.temp-loader-hide {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: .2s ease;
+}
+
+@keyframes tempLoaderIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/*TEMP LOADER -- END*/
+
 /*WALLET -- START*/
 .wallet-mini-box {
     background: #f8f9fa;

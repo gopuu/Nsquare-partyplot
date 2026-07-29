@@ -511,44 +511,9 @@ function ViewBookingReport(actionName) {
         : "/api/Report_Booking/DownloadBookingReport";
     console.log("download payload:", payload);
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            var fileUrl = res.data.FileUrl;
-
-            var link = document.createElement("a");
-            link.href = fileUrl;
-
-            if (actionName === "downloadPDF") {
-                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
-            } else if (actionName === "downloadExcel") {
-                link.download = `Booking_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
-            }
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, error, status) {
-            handleApiError(xhr, error, status, "Failed to download report.");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Booking Excel Report..." : "Generating Booking PDF Report...", 
+        failedMsg = "Failed to generate Booking Report");
 }
 function setCurrentMonthDates() {
     $("#quickRange").val(selectedMonthDuration);

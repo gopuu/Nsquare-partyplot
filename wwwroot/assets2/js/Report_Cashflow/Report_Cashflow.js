@@ -368,41 +368,9 @@ function ViewCashflowReport(actionName) {
         ? "/api/Report_Cashflow/DownloadCashflowReport_Excel"
         : "/api/Report_Cashflow/DownloadCashflowReport_Pdf";
 
-    showTempLoader("Generating Cashflow Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-            const link = document.createElement("a");
-            link.href = res.data.FileUrl;
-            link.download = `Cashflow_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            console.error("Download Cashflow Report Failed", xhr, status, error);
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Cashflow Excel Report..." : "Generating Cashflow PDF Report...", 
+        failedMsg = "Failed to generate Cashflow Report");
 }
 
 /* ═══════════════════════════════════════════════════

@@ -218,7 +218,6 @@ function renderUserRightsTabs(data) {
             </div>
         `);
 
-
     });
 
     attachSelectAllEvents();   // 🔥 IMP: call handler

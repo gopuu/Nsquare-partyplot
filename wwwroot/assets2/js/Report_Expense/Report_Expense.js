@@ -461,41 +461,9 @@ function ViewExpenseReport(actionName) {
         ? "/api/Report_Expense/DownloadExpenseSummaryReport_Excel"
         : "/api/Report_Expense/DownloadExpenseSummaryReport_Pdf";
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-            const link = document.createElement("a");
-            link.href = res.data.FileUrl;
-            link.download = `Expense_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            handleApiError(xhr, status, error, "Download Expense Report Failed");
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Expense Summary Excel Report..." : "Generating Expense Summary PDF Report...", 
+        failedMsg = "Failed to generate Expense Summary Report");
 }
 
 /* ═══════════════════════════════════════════════════
@@ -909,42 +877,9 @@ function ViewExpenseDetailReport(actionName) {
 
     console.log("Expense Detail Report Payload:", payload);
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            console.log("Expense Detail Report Response:", res);
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = isExcel ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-
-            const link = document.createElement("a");
-
-            link.href = res.data.FileUrl;
-            link.download = `Expense_Detail_Report_${ts}.${ext}`;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Download Expense Detail Report Failed");
-        },
-
-        complete: function () {
-            hideTempLoader();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Expense Detail Excel Report..." : "Generating Expense Detail PDF Report...", 
+        failedMsg = "Failed to generate Expense Detail Report");
 }
 // EXPENSE DETAILS -- END
 

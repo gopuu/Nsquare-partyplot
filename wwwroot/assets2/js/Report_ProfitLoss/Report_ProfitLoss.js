@@ -682,41 +682,9 @@ function ViewProfitLossReport(actionName) {
         ? "/api/Report_ProfitLoss/DownloadProfitLossReport_Excel"
         : "/api/Report_ProfitLoss/DownloadProfitLossReport_Pdf";
 
-    showTempLoader("Generating P&L Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-            const link = document.createElement("a");
-            link.href = res.data.FileUrl;
-            link.download = `ProfitLoss_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            handleApiError(xhr, status, error, "Download P&L Report Failed");
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating P&L Excel Report..." : "Generating P&L PDF Report...", 
+        failedMsg = "Failed to generate P&L Report");
 }
 
 

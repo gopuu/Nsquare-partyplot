@@ -638,47 +638,11 @@ function ViewMonthlySalesReport(actionName) {
         ? "/api/Report_MonthlySales/DownloadMonthlySalesReport_Excel"
         : "/api/Report_MonthlySales/DownloadMonthlySalesReport_Pdf";
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const fileUrl = res.data.FileUrl;
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-
-            const link = document.createElement("a");
-            link.href = fileUrl;
-            link.download = `MonthlySales_Report_${ts}.${ext}`;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Error fetching monthly report");
-            //Swal.close();
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Monthly Excel Report..." : "Generating Monthly PDF Report...", 
+        failedMsg = "Failed to generate Monthly Report");
 }
+
 function ViewMonthlySalesDetailsReport(actionName) {
 
     const withHeader = $("#toggleWithHeader").is(":checked");
@@ -695,47 +659,10 @@ function ViewMonthlySalesDetailsReport(actionName) {
         ? "/api/Report_MonthlySales/DownloadMonthlySalesMonthDetailsReport_Excel"
         : "/api/Report_MonthlySales/DownloadMonthlySalesMonthDetailsReport_Pdf";
 
-    showTempLoader("Generating Report...");
-
     console.log("details payload:", payload);
-    $.ajax({
-
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const fileUrl = res.data.FileUrl;
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-
-            const link = document.createElement("a");
-            link.href = fileUrl;
-            link.download = `MonthlySalesDetails_Report_${ts}.${ext}`;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Error fetching monthly details report");
-            //Swal.close();
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Monthly Details Excel Report..." : "Generating Monthly Details PDF Report...", 
+        failedMsg = "Failed to generate Monthly Details Report");
 }
 
 /* ─────────────────────────────────────────────

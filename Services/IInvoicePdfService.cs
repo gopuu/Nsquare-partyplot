@@ -66,7 +66,7 @@ namespace ERPAdmin.Services
 
             using (SqlConnection con = new SqlConnection(connString))
             {
-                con.Open();
+                await con.OpenAsync();
 
                 // 🔹 Company Header
                 SqlCommand cmd = new SqlCommand("Report_PageHeader_GetCompany", con);
@@ -708,22 +708,26 @@ namespace ERPAdmin.Services
 
             string fileName = string.Empty; // $"Invoice_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
+            string filenamePrefix = "";
             if (header.ProformaInvoiceNo > 0)
             {
-                Utils.deleteOldFiles(folder, $"ProformaInvoice*.pdf");
-                fileName = $"ProformaInvoice_{header.ProformaInvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                filenamePrefix = "ProformaInvoice";
+                Utils.deleteOldFiles(folder, $"{filenamePrefix}_*.pdf");
+                fileName = $"{filenamePrefix}_{header.ProformaInvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             }
             else
             {
-                Utils.deleteOldFiles(folder, $"Invoice_*.pdf");
-                fileName = $"Invoice_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                filenamePrefix = "Invoice";
+                Utils.deleteOldFiles(folder, $"{filenamePrefix}_*.pdf");
+                fileName = $"{filenamePrefix}_{header.InvoiceNo}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             }
 
             string filePath = Path.Combine(folder, fileName);
 
             stream.Position = 0;
             using (var fs = new FileStream(filePath, FileMode.Create))
-                stream.CopyTo(fs);
+                await stream.CopyToAsync(fs);
+
 
             return $"{domainUrl}/reports/{fileName}";
         }
@@ -769,11 +773,9 @@ namespace ERPAdmin.Services
             // =============================================
             // COMPANY
             // =============================================
-
             string createdBy = "";
 
             CompanyInfo company = new CompanyInfo();
-
             if (dtCompany.Rows.Count > 0)
             {
                 DataRow row = dtCompany.Rows[0];
@@ -802,189 +804,66 @@ namespace ERPAdmin.Services
             // =============================================
             // PDF
             // =============================================
-
             using MemoryStream stream = new MemoryStream();
-
-            Document doc = new Document(
-                iTextPageSize.A4,
-                28,
-                28,
-                36,
-                50
-            );
-
-            PdfWriter writer = PdfWriter.GetInstance(
-                doc,
-                stream
-            );
-
+            Document doc = new Document(iTextPageSize.A4, 28, 28, 36, 50);
+            PdfWriter writer = PdfWriter.GetInstance(doc, stream);
             writer.CloseStream = false;
             writer.PageEvent = new PageBorder();
-
             doc.Open();
 
             // =============================================
             // FONTS
             // =============================================
+            iTextFont fNormal = FontFactory.GetFont(FontFactory.HELVETICA, 9, iTextFont.NORMAL);
+            iTextFont fBold = FontFactory.GetFont(FontFactory.HELVETICA, 9, iTextFont.BOLD);
+            iTextFont fSmall7 = FontFactory.GetFont(FontFactory.HELVETICA, 7, iTextFont.NORMAL);
+            iTextFont fSmall7Bold = FontFactory.GetFont(FontFactory.HELVETICA, 7, iTextFont.BOLD);
+            iTextFont fSmall = FontFactory.GetFont(FontFactory.HELVETICA, 8, iTextFont.NORMAL);
+            iTextFont fSmallB = FontFactory.GetFont(FontFactory.HELVETICA, 8, iTextFont.BOLD);
+            iTextFont fTitle = FontFactory.GetFont(FontFactory.HELVETICA, 14, iTextFont.BOLD);
 
-            iTextFont fNormal = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                9,
-                iTextFont.NORMAL
-            );
+            string fontPathB = Path.Combine(_env.WebRootPath, "fonts", "arialbd.ttf");
+            BaseFont bfB = BaseFont.CreateFont(fontPathB, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            iTextFont fBoldRupee = new iTextFont(bfB, 8, iTextFont.NORMAL);
+            iTextFont fBoldRupee7 = new iTextFont(bfB, 7, iTextFont.NORMAL);
 
-            iTextFont fBold = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                9,
-                iTextFont.BOLD
-            );
+            string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+            BaseFont bf = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            iTextFont fRupee7 = new iTextFont(bf, 7, iTextFont.NORMAL);
 
-            iTextFont fSmall7 = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                7,
-                iTextFont.NORMAL
-            );
-
-            iTextFont fSmall7Bold = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                7,
-                iTextFont.BOLD
-            );
-
-            iTextFont fSmall = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                8,
-                iTextFont.NORMAL
-            );
-
-            iTextFont fSmallB = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                8,
-                iTextFont.BOLD
-            );
-
-            iTextFont fTitle = FontFactory.GetFont(
-                FontFactory.HELVETICA,
-                14,
-                iTextFont.BOLD
-            );
-
-            string fontPathB = Path.Combine(
-                _env.WebRootPath,
-                "fonts",
-                "arialbd.ttf"
-            );
-
-            BaseFont bfB = BaseFont.CreateFont(
-                fontPathB,
-                BaseFont.IDENTITY_H,
-                BaseFont.EMBEDDED
-            );
-
-            iTextFont fBoldRupee = new iTextFont(
-                bfB,
-                8,
-                iTextFont.NORMAL
-            );
-
-            iTextFont fBoldRupee7 = new iTextFont(
-                bfB,
-                7,
-                iTextFont.NORMAL
-            );
-
-            string fontPath = Path.Combine(
-                _env.WebRootPath,
-                "fonts",
-                "arial.ttf"
-            );
-
-            BaseFont bf = BaseFont.CreateFont(
-                fontPath,
-                BaseFont.IDENTITY_H,
-                BaseFont.EMBEDDED
-            );
-
-            iTextFont fRupee7 = new iTextFont(
-                bf,
-                7,
-                iTextFont.NORMAL
-            );
-
-            BaseColor colGray = new BaseColor(
-                245,
-                245,
-                245
-            );
-
+            BaseColor colGray = new BaseColor(245, 245, 245);
             BaseColor colBorder = BaseColor.LIGHT_GRAY;
 
             // =============================================
             // LOOP ALL INVOICES
             // =============================================
-
-            for (int invoiceIndex = 0;
-                 invoiceIndex < dtInvoices.Rows.Count;
-                 invoiceIndex++)
+            for (int invoiceIndex = 0; invoiceIndex < dtInvoices.Rows.Count; invoiceIndex++)
             {
                 DataRow row = dtInvoices.Rows[invoiceIndex];
 
-                // Add page break between invoices
                 if (invoiceIndex > 0)
-                {
                     doc.NewPage();
-                }
 
                 InvoiceHeader header = new InvoiceHeader
                 {
-                    ProformaInvoiceNo =
-                        row["ProformaInvoiceNo"] != DBNull.Value
-                            ? Convert.ToInt64(row["ProformaInvoiceNo"])
-                            : 0,
-
-                    InvoiceNo =
-                        row["InvoiceNo"]?.ToString() ?? "",
-
-                    Date =
-                        row["InvoiceDate_Format"]?.ToString() ?? "",
-
-                    BookingRef =
-                        row["BookingRef"]?.ToString() ?? "",
-
-                    EventDate =
-                        row["EventDate_Format"]?.ToString() ?? "",
-
-                    EventType =
-                        row["EventType"]?.ToString() ?? "",
-
-                    Hall =
-                        row["Hall"]?.ToString() ?? ""
+                    ProformaInvoiceNo = row["ProformaInvoiceNo"] != DBNull.Value ? Convert.ToInt64(row["ProformaInvoiceNo"]) : 0,
+                    InvoiceNo = row["InvoiceNo"]?.ToString() ?? "",
+                    Date = row["InvoiceDate_Format"]?.ToString() ?? "",
+                    BookingRef = row["BookingRef"]?.ToString() ?? "",
+                    EventDate = row["EventDate_Format"]?.ToString() ?? "",
+                    EventType = row["EventType"]?.ToString() ?? "",
+                    Hall = row["Hall"]?.ToString() ?? ""
                 };
 
                 BillToInfo billTo = new BillToInfo
                 {
-                    Name =
-                        row["CustomerName"]?.ToString() ?? "",
-
-                    Website =
-                        row["Website"]?.ToString() ?? "",
-
-                    Address =
-                        row["Address"]?.ToString() ?? "",
-
-                    Phone =
-                        row["Phone"]?.ToString() ?? "",
-
-                    GSTIN =
-                        row["GSTIN"]?.ToString() ?? "",
-
-                    PAN =
-                        row["PAN"]?.ToString() ?? "",
-
-                    IsInterState =
-                        row["IsInterState"] == DBNull.Value
-                            ? (bool?)null
-                            : Convert.ToBoolean(row["IsInterState"])
+                    Name = row["CustomerName"]?.ToString() ?? "",
+                    Website = row["Website"]?.ToString() ?? "",
+                    Address = row["Address"]?.ToString() ?? "",
+                    Phone = row["Phone"]?.ToString() ?? "",
+                    GSTIN = row["GSTIN"]?.ToString() ?? "",
+                    PAN = row["PAN"]?.ToString() ?? "",
+                    IsInterState = row["IsInterState"] == DBNull.Value ? (bool?)null : Convert.ToBoolean(row["IsInterState"])
                 };
 
                 InvoiceTotals totals = new InvoiceTotals
@@ -999,49 +878,16 @@ namespace ERPAdmin.Services
                     RoundOff = GetDecimal(row, "RoundOff"),
                     TotalAdvance = GetDecimal(row, "TotalAdvance"),
                     Balance = GetDecimal(row, "Balance"),
-                    AmountInWords =
-                        row["AmountInWords"]?.ToString() ?? ""
+                    AmountInWords = row["AmountInWords"]?.ToString() ?? ""
                 };
 
                 List<InvoiceItem> items = new List<InvoiceItem>();
-
-                string json =
-                    row["JSON_Items"]?.ToString() ?? "";
+                string json = row["JSON_Items"]?.ToString() ?? "";
 
                 if (!string.IsNullOrWhiteSpace(json))
-                {
-                    items =
-                        JsonConvert.DeserializeObject<List<InvoiceItem>>(
-                            json
-                        )
-                        ?? new List<InvoiceItem>();
-                }
+                    items = JsonConvert.DeserializeObject<List<InvoiceItem>>(json) ?? new List<InvoiceItem>();
 
-                // =============================================
-                // ADD THIS INVOICE TO SAME DOCUMENT
-                // =============================================
-
-                AddGSTInvoiceToDocument(
-                    doc,
-                    company,
-                    createdBy,
-                    header,
-                    billTo,
-                    totals,
-                    items,
-                    domain,
-                    fBold,
-                    fSmall7,
-                    fSmall7Bold,
-                    fSmall,
-                    fSmallB,
-                    fTitle,
-                    fBoldRupee,
-                    fBoldRupee7,
-                    fRupee7,
-                    colGray,
-                    colBorder
-                );
+                AddGSTInvoiceToDocument(doc, company, createdBy, header, billTo, totals, items, domain, fBold, fSmall7, fSmall7Bold, fSmall, fSmallB, fTitle, fBoldRupee, fBoldRupee7, fRupee7, colGray, colBorder);
             }
 
             doc.Close();
@@ -1049,38 +895,21 @@ namespace ERPAdmin.Services
             // =============================================
             // SAVE ONE PDF
             // =============================================
-
-            string folder = Path.Combine(
-                _env.WebRootPath,
-                "reports"
-            );
+            string folder = Path.Combine(_env.WebRootPath, "reports");
 
             if (!Directory.Exists(folder))
-            {
                 Directory.CreateDirectory(folder);
-            }
 
-            Utils.deleteOldFiles(
-                folder,
-                "GST_Sales_Detail_*.pdf"
-            );
+            string filenamePrefix = "AllInvoices";
+            Utils.deleteOldFiles(folder, $"{filenamePrefix}_*.pdf");
 
-            string fileName =
-                $"GST_Sales_Detail_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-
-            string filePath = Path.Combine(
-                folder,
-                fileName
-            );
+            string fileName = $"{filenamePrefix}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+            string filePath = Path.Combine(folder, fileName);
 
             stream.Position = 0;
 
-            using (FileStream fs = new FileStream(
-                filePath,
-                FileMode.Create))
-            {
+            using (FileStream fs = new FileStream(filePath, FileMode.Create))
                 await stream.CopyToAsync(fs);
-            }
 
             return $"{domainUrl}/reports/{fileName}";
         }
@@ -1597,5 +1426,6 @@ namespace ERPAdmin.Services
 
 
         }
+
     }
 }

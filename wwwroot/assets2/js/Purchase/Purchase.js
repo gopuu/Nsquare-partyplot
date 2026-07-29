@@ -1077,7 +1077,9 @@ function ViewPurchaseInvoiceReport(actionName) {
         ? "/api/Purchase/DownloadPurchaseList_GRID_Excel"
         : "/api/Purchase/DownloadPurchaseList_GRID_Pdf";
 
-    downloadReport(url, payload, loaderMsg = "Generating Report..");
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Purchase Excel Report..." : "Generating Purchase PDF Report...", 
+        failedMsg = "Failed to generate Purchase Report");
 }
 
 

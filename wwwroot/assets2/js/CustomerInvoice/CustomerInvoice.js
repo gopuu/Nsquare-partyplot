@@ -236,7 +236,9 @@ function ViewCustomerInvoiceReport(actionName) {
         ? "/api/CustomerInvoice/DownloadCustomerInvoiceReport_Excel"
         : "/api/CustomerInvoice/DownloadCustomerInvoiceReport_Pdf";
 
-    downloadReport(url, payload, loaderMsg = "Generating Invoice..");
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Invoice Excel Report..." : "Generating Invoice PDF Report...", 
+        failedMsg = "Failed to generate Invoice Report");
 }
 
 
@@ -2780,7 +2782,7 @@ function renderTable(data, totals) {
                 render: row =>
                     !hasValidNo(row.ProformaInvoiceNo)
                         ? '-'
-                        : `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-proforma"
+                        : `<i class="fa fa-download me-1 text-danger fs-8 btn-pdf-proforma"
                                role="button"
                                data-bookingid="${row.BookingId}"
                                data-proformano="${row.ProformaInvoiceNo}">
@@ -2889,7 +2891,7 @@ function renderTable(data, totals) {
                 className: 'text-center',
                 render: row =>
                     hasValidNo(row.InvoiceNo) || row.GSTInvoiceNo
-                        ? `<i class="fa fa-file-pdf text-danger fs-8 btn-pdf-invoice"
+                        ? `<i class="fa fa-download me-1 text-danger fs-8 btn-pdf-invoice"
                                role="button"
                                data-bookingid="${row.BookingId}"
                                data-invoiceno="${row.InvoiceNo}"

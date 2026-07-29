@@ -169,7 +169,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "FeedbackDetail" ? "active" : "")" href="/FeedbackDetail">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="star"></span>Feedback Details
+                                        <span class="me-2 uil text-warning" data-feather="star"></span>Feedback Details
                                     </div>
                                 </a>
                             </li>
@@ -224,7 +224,7 @@
                                    href="/PurchaseTransactions">
                                     <div class="dropdown-item-wrapper">
                                         <span class="me-2 uil" data-feather="credit-card"></span>
-                                        Purchase Transactions
+                                        Purchase Payments
                                     </div>
                                 </a>
                             </li>
@@ -265,7 +265,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "Reports" ? "active" : "")" href="/Report_Enquiry">
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-magnifying-glass me-2"></i> Enquiry Report
+                                        <i class="fa-solid fa-magnifying-glass me-2 text-primary"></i> Enquiry Report
                                     </div>
                                 </a>
                             </li>
@@ -274,7 +274,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "Reports" ? "active" : "")" href="/Report_Booking">
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-calendar-check me-2"></i> Booking Report
+                                        <i class="fa-solid fa-calendar-check me-2 text-success"></i> Booking Report
                                     </div>
                                 </a>
                             </li>
@@ -290,8 +290,7 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <i class="fa-solid fa-chart-column me-2"></i>
-                                            Revenue Report
+                                            <i class="fa-solid fa-chart-column me-2"></i>Revenue Report
                                         </span>
                                     </div>
 
@@ -321,7 +320,7 @@
                             <li>
                                 <a class="dropdown-item" href="/Report_GST">
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-receipt me-2"></i> GST Report
+                                        <i class="fa-solid fa-receipt me-2 text-warning"></i> &nbsp;GST Report
                                     </div>
                                 </a>
                             </li>
@@ -330,7 +329,7 @@
                             <li>
                                 <a class="dropdown-item" href="/Report_RevenueLoss">
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-arrow-down-wide-short me-2"></i> Revenue Loss Report
+                                        <i class="fa-solid fa-arrow-down-wide-short me-2 text-danger"></i> Revenue Loss Report
                                     </div>
                                 </a>
                             </li>
@@ -348,7 +347,7 @@
                             <li>
                                 <a class="dropdown-item" href="/Report_FoodWastage">
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-trash-can me-2"></i> Food Wastage Report
+                                        <i class="fa-solid fa-trash-can me-2"></i> &nbsp;Food Wastage Report
                                     </div>
                                 </a>
                             </li>
@@ -439,8 +438,7 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <span class="me-2" data-feather="briefcase"></span>
-                                            Duty Management
+                                            <span class="me-2" data-feather="briefcase"></span>Duty Management
                                         </span>
                                     </div>
 
@@ -479,8 +477,7 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <span class="me-2" data-feather="clipboard"></span>
-                                            Task Management
+                                            <span class="me-2" data-feather="clipboard"></span>Task Management
                                         </span>
                                     </div>
 
@@ -580,8 +577,7 @@
                                     <div class="dropdown-item-wrapper">
                                         <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
                                         <span>
-                                            <span class="me-2" data-feather="briefcase"></span>
-                                            Asset Management
+                                            <span class="me-2" data-feather="briefcase"></span>Asset Management
                                         </span>
                                     </div>
 
@@ -1654,6 +1650,8 @@
 
     <script src="~/assets2/js/Shared/Layout.js" asp-append-version="true"></script>
     <script src="~/assets2/js/shared/jsforbothlayout.js" asp-append-version="true"></script>
+    <script src="~/assets2/js/Shared/Utility.js" asp-append-version="true"></script>
+
     <script>
         /*
         document.querySelectorAll('.modules-parent').forEach(item => {

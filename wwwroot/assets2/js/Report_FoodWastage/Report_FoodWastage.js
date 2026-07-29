@@ -259,49 +259,13 @@ function downloadFoodWastageDetailReport(actionName="pdf") {
         WithHeader: $("#toggleWithHeader").prop("checked")
     };
 
-    let apiUrl = "";
-    if (actionName === "downloadPDF")
-        apiUrl = "/api/Report_FoodWastage/DownloadFoodWastageDetailReport_Pdf";
+    const url = actionName === "downloadExcel"
+        ? "/api/Report_FoodWastage/DownloadFoodWastageDetailReport_Excel"
+        : "/api/Report_FoodWastage/DownloadFoodWastageDetailReport_Pdf";
 
-    if (actionName === "downloadExcel")
-        apiUrl = "/api/Report_FoodWastage/DownloadFoodWastageDetailReport_Excel";
-
-    showTempLoader("Generating Report..");
-
-    $.ajax({
-        url: apiUrl,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-            var fileUrl = res.data.FileUrl;
-
-            var link = document.createElement("a");
-            link.href = fileUrl;
-
-            if (actionName === "downloadPDF") {
-                link.download = `FoodWastageDetail_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
-            }
-            else if (actionName === "downloadExcel") {
-                link.download = `FoodWastageDetail_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
-            }
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error , "Failed to generate detail report");
-        },
-        complete: function () {
-            hideTempLoader();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating FoodWastage Detail Excel Report..." : "Generating FoodWastage Detail PDF Report...", 
+        failedMsg = "Failed to generate FoodWastage Detail Report");
 }
 
 
@@ -489,49 +453,13 @@ function ViewFoodWastageReport(actionName) {
         FilterDuration: selectedMonthDuration
     };
 
-    let apiUrl = "";
+    const url = actionName === "downloadExcel"
+        ? "/api/Report_FoodWastage/DownloadFoodWastageReport_Excel"
+        : "/api/Report_FoodWastage/DownloadFoodWastageReport_Pdf";
 
-    if (actionName === "downloadPDF")
-        apiUrl = "/api/Report_FoodWastage/DownloadFoodWastageReport_Pdf";
-
-    if (actionName === "downloadExcel")
-        apiUrl = "/api/Report_FoodWastage/DownloadFoodWastageReport_Excel";
-
-    showTempLoader("Generating Report..");
-
-    $.ajax({
-        url: apiUrl,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-            var fileUrl = res.data.FileUrl;
-
-            var link = document.createElement("a");
-            link.href = fileUrl;
-
-            if (actionName === "downloadPDF") {
-                link.download = `FoodWastage_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.pdf`;
-            } else if (actionName === "downloadExcel") {
-                link.download = `FoodWastage_Report_${new Date().toISOString().replace(/[:.-]/g, "")}.xlsx`;
-            }
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, error, status) {
-            handleApiError(xhr, error, status, "Failed to generate summary report.");
-        },
-        complete: function () {
-            hideTempLoader();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating FoodWastage Excel Report..." : "Generating FoodWastage PDF Report...", 
+        failedMsg = "Failed to generate FoodWastage Report");
 }
 
 /* ═══════════════════════════════════════════════════

@@ -651,9 +651,9 @@ namespace ERPAdmin.ApiControllers
                 row += 2;
 
                 /* ========================= EXTRACT DATA ========================= */
-                var dt = dsReport.Tables[0];
-                var dtSummary = dsReport.Tables[1];
-                var dtNet = dsReport.Tables[2];
+                var dt = dsReport.Tables[1];
+                var dtSummary = dsReport.Tables[2];
+                var dtNet = dsReport.Tables[3];
 
                 var revenue = dt.AsEnumerable().Where(x => x["Type"].ToString() == "Revenue").ToList();
                 var cogs = dt.AsEnumerable().Where(x => x["Type"].ToString() == "COGS").ToList();

@@ -468,41 +468,9 @@ function ViewPurchaseReport(actionName) {
         ? "/api/Report_Purchase/DownloadPurchaseReport_Excel"
         : "/api/Report_Purchase/DownloadPurchaseReport";
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-            const link = document.createElement("a");
-            link.href = res.data.FileUrl;
-            link.download = `Purchase_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            console.error("Download Purchase Report Failed", xhr, status, error);
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating Purchase Excel Report..." : "Generating Purchase PDF Report...", 
+        failedMsg = "Failed to generate Purchase Report");
 }
 
 /* ═══════════════════════════════════════════════════

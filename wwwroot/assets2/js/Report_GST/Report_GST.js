@@ -441,7 +441,7 @@ function renderGSTSalesTable(data, totals) {
             $(api.column(13).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalInvoiceAmount)}</strong>`);
 
             $(api.column(14).footer()).html(`
-                <button class="btn btn-xs btn-view-invoice btn-outline-danger" onclick='downloadGSTSalesDetailPdf()'>
+                <button class="btn btn-xs btn-outline-danger" onclick='downloadGSTSalesDetailPdf()'>
                     <i class="fa fa-download me-1"></i>
                 </button>`);
 
@@ -506,40 +506,9 @@ function ViewGSTSalesReport(actionName) {
         return $(this).attr("onclick")?.includes(actionName);
     });
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-            const link = document.createElement("a");
-            link.href = res.data.FileUrl;
-            link.download = `GSTSales_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            console.error("Download GST Sales Failed", xhr, status, error);
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating GST Excel Report..." : "Generating GST PDF Report...", 
+        failedMsg = "Failed to generate GST Report");
 }
 
 /* ═══════════════════════════════════════════════════
@@ -599,7 +568,10 @@ function downloadGSTSalesDetailPdf() {
     console.log("GST Detail PDF Payload:", payload);
 
     const url=  "/api/Report_GST/DownloadGSTSalesDetailReport";
-    downloadReport(url, payload, loaderMsg = "Generating Invoice..");
+    const actionName=  "downloadPdf";
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating GST Detail Excel Report..." : "Generating GST Detail PDF Report...", 
+        failedMsg = "Failed to generate GST Detail Report");
 }
 
 

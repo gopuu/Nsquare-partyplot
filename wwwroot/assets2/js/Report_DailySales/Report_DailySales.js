@@ -432,45 +432,9 @@ function ViewDailySalesReport(actionName) {
         ? "/api/Report_DailySales/DownloadDailySalesReport_Excel"
         : "/api/Report_DailySales/DownloadDailySalesReport_Pdf";
 
-    showTempLoader("Generating Report...");
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
-
-            const fileUrl = res.data.FileUrl;
-            console.log("fileUrl:", fileUrl);
-
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
-
-            const link = document.createElement("a");
-            link.href = fileUrl;
-            link.download = `DailySales_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            console.error("Download Daily Sales Failed", xhr, status, error);
-            Swal.fire("Error", "Failed to generate report.", "error");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-
-    });
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating DailySales Excel Report..." : "Generating DailySales PDF Report...", 
+        failedMsg = "Failed to generate DailySales Report");
 }
 
 /* ─────────────────────────────────────────────
@@ -719,43 +683,11 @@ function ViewDailySalesDetailsReport(actionName) {
     const url = actionName === "downloadPDF"
         ? "/api/Report_DailySales/DownloadDailySalesDateDetailsReport_Pdf"
         : "/api/Report_DailySales/DownloadDailySalesDateDetailsReport_Excel";
-
-    showTempLoader("Generating Report...");
     console.log("payload details:", payload);
-    $.ajax({
-        url: url,
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function (res) {
-            //Swal.close();
-            if (res.status !== "Success") {
-                Swal.fire("Error", res.message, "error");
-                return;
-            }
 
-            const fileUrl = res.data.FileUrl;
-            console.log("details fileUrl:", fileUrl);
-            const ext = actionName === "downloadExcel" ? "xlsx" : "pdf";
-            const ts = new Date().toISOString().replace(/[:.-]/g, "");
+    downloadReport(url, payload, 
+        loaderMsg = actionName === "downloadExcel" ? "Generating DailySales Detail Excel Report..." : "Generating DailySales Detail PDF Report...", 
+        failedMsg = "Failed to generate DailySales Detail Report");
 
-            const link = document.createElement("a");
-            link.href = fileUrl;
-            link.download = `DailySales_Report_${ts}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        },
-        error: function (xhr, status, error) {
-            //Swal.close();
-            Swal.fire("Error", "Failed to generate details report.", "error");
-            handleApiError(xhr, status, error, "Failed to generate details report");
-        },
-        complete: function(){
-            hideTempLoader();
-            //Swal.close();
-        }
-    });
 }
 //Details modal - END

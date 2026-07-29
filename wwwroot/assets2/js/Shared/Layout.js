@@ -152,7 +152,7 @@ function showTempLoader2(title = "Checking Availability") {
     });
 }
 
-function showTempLoader(title = "Checking Availability") {
+function showTempLoader3(title = "Checking Availability") {
     isTempLoaderActive = true;
     Swal.fire({
         title: title,
@@ -168,10 +168,79 @@ function showTempLoader(title = "Checking Availability") {
         }
     });
 }
-function hideTempLoader() {
+function showTempLoader(title = "Checking Availability") {
+    isTempLoaderActive = true;
+
+    Swal.fire({
+        html: `
+            <div class="temp-loader-content">
+                <div class="temp-loader-spinner"></div>
+                <div>
+                    <div class="temp-loader-title">${title}</div>
+                    <div class="temp-loader-text">Please wait...</div>
+                </div>
+            </div>
+        `,
+        position: "bottom-end",
+        toast: true,
+        width: "280px",
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        backdrop: false,
+        customClass: {
+            popup: "temp-loader-popup"
+        }
+    });
+}
+
+function hideTempLoader1() {
     Swal.close();
     isTempLoaderActive = false;
 }
+
+//LOADER FOR DOWNLOADS
+let tempLoaderCounter = 0;
+
+function showTempLoader(title = "Generating Report...") {
+    isTempLoaderActive = true;
+
+    tempLoaderCounter++;
+
+    const loaderId = `tempLoader_${tempLoaderCounter}`;
+
+    if (!$("#tempLoaderContainer").length) {
+        $("body").append(`<div id="tempLoaderContainer" class="temp-loader-container"></div>`);
+    }
+
+    $("#tempLoaderContainer").append(`
+        <div id="${loaderId}" class="temp-loader-item">
+            <div class="temp-loader-spinner"></div>
+            <div class="temp-loader-info">
+                <div class="temp-loader-title">${title}</div>
+                <div class="temp-loader-text">Please wait...</div>
+            </div>
+        </div>
+    `);
+
+    return loaderId;
+}
+
+function hideTempLoader(loaderId) {
+    isTempLoaderActive = false;
+
+    const $loader = $(`#${loaderId}`);
+
+    $loader.addClass("temp-loader-hide");
+
+    setTimeout(function () {
+        $loader.remove();
+
+        if (!$("#tempLoaderContainer").children().length)
+            $("#tempLoaderContainer").remove();
+    }, 200);
+}
+
 
 function handleApiSuccess(msg = "Saved successfully!") {
     Swal.fire({

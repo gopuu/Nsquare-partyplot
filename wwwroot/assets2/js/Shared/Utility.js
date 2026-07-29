@@ -1,7 +1,7 @@
 ﻿//CUSTOMER INVOICE REPORT MODAL --- START ------------------------
 function generateInvoicePdf(payload) {
     var url = "/api/Report/DownloadCustomerInvoiceReport";
-    downloadReport(url, payload, loaderMsg = "Generating Invoice..");
+    downloadReport(url, payload, loaderMsg = "Generating Invoice PDF..", failedMsg = "Failed to Generating Invoice PDF..");
 }
 //CUSTOMER INVOICE REPORT MODAL --- END ------------------------
 
@@ -38,70 +38,26 @@ function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
         Id: purchaseId,
         InvoiceNo: invoiceNo ? invoiceNo.toString() : ""
     };
+    let url= "/api/Purchase/GetPurchaseList";
 
-    $.ajax({
-        url: "/api/Purchase/GetPurchaseList",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        beforeSend: function () {
-            showTempLoader('Fetching invoice...');
-        },
-        success: function (res) {
-            //Swal.close();
-            if (res.status === "Success" && res.data && res.data.length > 0) {
-                let fileUrl = res.data[0].UploadInvoiceFile;
-                if (fileUrl) {
-                    // ✅ Open file in new tab
-                    //window.open(fileUrl, "_blank");
-                    const link = document.createElement('a');
-                    link.href = fileUrl;
-                    link.download = '';   // force download
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+    showTempLoader("Generating Report...");
+    downloadReport(url, payload, loaderMsg = "Fetching Scanned Invoice..", failedMsg = "Failed to fetch Scanned Invoice");
 
-                }
-                else {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Not Available",
-                        text: "Scanned invoice not uploaded"
-                    });
-                }
-
-            }
-            else {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: res.message || "No data found"
-                });
-            }
-        },
-        error: function (xhr, status, err) {
-            //Swal.close();
-            handleApiError(xhr, status, err, "Scan Invoice Download Failed");
-       },
-        complete: function () {
-            hideTempLoader();
-        }
-     });
 }
 //PURCHASE INVOICE REPORT MODAL --- END ------------------------
 
 //Download Receipt -- START
-function downloadReport(url, payload, loaderMsg="Generating Report..") {
+function downloadReport(url, payload, loaderMsg="Generating Report..", failedMsg = "Failed to generate report") {
     console.log("receipt payload:", payload);
+
+    //showTempLoader("Generating Report...");
+    const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({
         url: url,
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(payload),
-        beforeSend: function () {
-            showTempLoader(loaderMsg);
-        },
         success: function (res) {
             ///Swal.close();
             console.log("downloadReport res:", res);
@@ -117,7 +73,7 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
                 Swal.fire({
                     icon: 'info',
                     title: 'Failed',
-                    text: res.message || 'Failed to generate report'
+                    text: res.message || failedMsg
                 });
             }
         },
@@ -126,7 +82,7 @@ function downloadReport(url, payload, loaderMsg="Generating Report..") {
             handleApiError(xhr, status, error, "report generation failed");
         },
         complete: function () {
-            hideTempLoader();
+            hideTempLoader(loaderId);
         }
         
     });
