@@ -1,4 +1,11 @@
-﻿
+﻿// PERMISSION CHECK
+function checkPermission(type) {
+    let allowed = (sessionStorage.getItem(type) || localStorage.getItem(type)) === "true";
+    if (!allowed) Swal.fire("Access Denied", "Permission Required", "error");
+    return allowed;
+}
+
+
 const walletToast = Swal.mixin({
     toast: true,
     position: "top-end", // 👉 top-right
@@ -255,6 +262,26 @@ function handleApiSuccess(msg = "Saved successfully!") {
             toast.addEventListener('mouseenter', Swal.stopTimer);
             toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
+    });
+}
+
+/* =========================================================
+   FILE -> BASE64
+========================================================= */
+function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+
+        reader.onload = function () {
+            const base64 = reader.result.split(",")[1];
+            resolve(base64);
+        };
+
+        reader.onerror = function () {
+            reject(reader.error);
+        };
+
+        reader.readAsDataURL(file);
     });
 }
 

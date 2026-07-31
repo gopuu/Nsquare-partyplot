@@ -45,6 +45,9 @@ namespace ERPAdmin.Helper
                 .Replace('+', '-')
                 .Replace('/', '_');
         }
+
+
+
         public static PdfPCell CreateHeaderCell(string text, Font font, BaseColor bgColor)
         {
             return new PdfPCell(new Phrase(text, font))

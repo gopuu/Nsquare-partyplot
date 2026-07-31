@@ -136,7 +136,6 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-
         // POST: api/<UserRightsController>
         [Route("GetUserRightsList_ForLayout")]
         [HttpPost]
@@ -205,6 +204,137 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return Ok(apiResponse);
+            }
+        }
+
+        [Route("GetUserRightsList_InfinityGrowth_SOP")]
+        [HttpPost]
+        public IActionResult GetUserRightsList_InfinityGrowth_SOP([FromBody] InfinityGrowth_SOPEmployeeAccessRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                DataSet ds = new DataSet();
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetUserRightsList_InfinityGrowth_SOP", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@EmployeeId", request.EmployeeId);
+
+                    conn.Open();
+
+                    using SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                    adapter.Fill(ds);
+                }
+
+                if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                {
+                    List<InfinityGrowth_SOPEmployeeAccessRightModel> rights = new List<InfinityGrowth_SOPEmployeeAccessRightModel>();
+
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        InfinityGrowth_SOPEmployeeAccessRightModel right = new InfinityGrowth_SOPEmployeeAccessRightModel();
+
+                        right.DocumentId = dr["DocumentId"] != DBNull.Value ? Convert.ToInt64(dr["DocumentId"]) : 0;
+                        right.DocumentName = dr["DocumentName"] != DBNull.Value ? Convert.ToString(dr["DocumentName"]) ?? "" : "";
+                        right.CategoryId = dr["CategoryId"] != DBNull.Value ? Convert.ToInt64(dr["CategoryId"]) : 0;
+                        right.CategoryName = dr["CategoryName"] != DBNull.Value ? Convert.ToString(dr["CategoryName"]) ?? "" : "";
+                        right.ParentCategoryId = dr["ParentCategoryId"] != DBNull.Value ? Convert.ToInt64(dr["ParentCategoryId"]) : 0;
+                        right.EmployeeId = dr["EmployeeId"] != DBNull.Value ? Convert.ToInt64(dr["EmployeeId"]) : 0;
+                        right.AccessRightId = dr["AccessRightId"] != DBNull.Value ? Convert.ToInt64(dr["AccessRightId"]) : 0;
+                        right.CanView = dr["CanView"] != DBNull.Value && Convert.ToBoolean(dr["CanView"]);
+
+                        rights.Add(right);
+                    }
+
+                    apiResponse.data = rights;
+                    apiResponse.message = "SOP employee access rights fetched successfully!";
+                }
+                else
+                {
+                    apiResponse.data = new List<InfinityGrowth_SOPEmployeeAccessRightModel>();
+                    apiResponse.message = "No SOP documents found!";
+                }
+
+                apiResponse.status = "Success";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, "");
+
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+
+                return Ok(apiResponse);
+            }
+        }
+
+        [Route("SaveUserRights_InfinityGrowth_SOP")]
+        [HttpPost]
+        public IActionResult SaveUserRights_InfinityGrowth_SOP([FromBody] SaveInfinityGrowth_SOPRightsRequest request)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                if (request.StaffId <= 0)
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "Invalid StaffId.";
+                    return BadRequest(apiResponse);
+                }
+
+                if (request.SOPRights == null || request.SOPRights.Count == 0)
+                {
+                    apiResponse.status = "Error";
+                    apiResponse.message = "No SOP rights found.";
+                    return BadRequest(apiResponse);
+                }
+
+                foreach (SaveInfinityGrowth_SOPEmployeeAccessRightModel item in request.SOPRights)
+                {
+                    item.EmployeeId = request.StaffId;
+                }
+
+                string jsonData = JsonConvert.SerializeObject(request.SOPRights);
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SaveUserRights_InfinityGrowth_SOP", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@JsonData", SqlDbType.NVarChar, -1).Value = jsonData;
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "SOP access rights saved successfully!";
+                apiResponse.data = null;
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, "");
+
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
+                return StatusCode(500, apiResponse);
             }
         }
 

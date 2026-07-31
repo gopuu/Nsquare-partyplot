@@ -119,77 +119,142 @@ namespace ERPAdmin.ApiControllers
         [Route("SaveCompanyInvoiceSetup")]
         public IActionResult SaveCompanyInvoiceSetup([FromBody] SaveInvoiceSetupRequest model)
         {
-            var apiResponse = new apiResponse();
+            apiResponse apiResponse = new apiResponse();
+
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
+                #region FILE VALIDATION
+
+                if (!string.IsNullOrWhiteSpace(model.CompanyLogo))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            model.CompanyLogo,
+                            new[] { ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"Company logo: {ex.Message}"
+                        });
+                    }
+                }
+
+                #endregion
+
+                long rowId = 0;
                 string latestImagePath = string.Empty;
+
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("SaveCompanyInvoiceSetup", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)model.Id ?? 0;
-                    cmd.Parameters.Add("@gst_invoice_start_no", SqlDbType.BigInt).Value = (object?)model.GstInvoiceStartNo ?? 0;
-                    cmd.Parameters.Add("@gst_invoice_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.GstInvoicePrefix ?? string.Empty;
-                    cmd.Parameters.Add("@proforma_invoice_start_no", SqlDbType.BigInt).Value = (object?)model.ProformaInvoiceStartNo ?? 0;
-                    cmd.Parameters.Add("@proforma_invoice_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.ProformaInvoicePrefix ?? string.Empty;
-
-                    cmd.Parameters.Add("@receipt_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.ReceiptPrefix ?? string.Empty;
-                    cmd.Parameters.Add("@print_logo_prospectus", SqlDbType.Bit).Value = model.PrintLogoProspectus;
-                    cmd.Parameters.Add("@print_logo_quotation", SqlDbType.Bit).Value = model.PrintLogoQuotation;
-                    cmd.Parameters.Add("@print_logo_receipt", SqlDbType.Bit).Value = model.PrintLogoReceipt;
-                    cmd.Parameters.Add("@include_fy_invoice_no", SqlDbType.Bit).Value = model.IncludeFyInvoiceNo;
-
-                    cmd.Parameters.Add("@use_custom_receipt_no", SqlDbType.Bit).Value = model.UseCustomReceiptNo;
-                    cmd.Parameters.Add("@custom_receipt_start_no", SqlDbType.BigInt).Value = (object?)model.CustomReceiptStartNo ?? 0;
-                    cmd.Parameters.Add("@print_fp_payment_trail", SqlDbType.Bit).Value = model.PrintFpPaymentTrail;
-                    cmd.Parameters.Add("@signatory_label", SqlDbType.BigInt).Value = (object?)model.SignatoryLabel ?? 0;
-                    cmd.Parameters.Add("@print_bank_details", SqlDbType.Bit).Value = model.PrintBankDetails;
-
-                    cmd.Parameters.Add("@bank_name", SqlDbType.NVarChar, 100).Value = (object?)model.BankName ?? string.Empty;
-                    cmd.Parameters.Add("@account_no", SqlDbType.NVarChar, 50).Value = (object?)model.AccountNo ?? string.Empty;
-                    cmd.Parameters.Add("@branch_details", SqlDbType.NVarChar, 100).Value = (object?)model.BranchDetails ?? string.Empty;
-                    cmd.Parameters.Add("@ifsc_code", SqlDbType.NVarChar, 20).Value = (object?)model.IFSCCode ?? string.Empty;
-                    cmd.Parameters.Add("@upi_id", SqlDbType.NVarChar, 100).Value = (object?)model.UpiId ?? string.Empty;
-
-                    cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? 0;
-
                     con.Open();
-                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                    //photo upload
-                    if (model.CompanyLogo != string.Empty && model.CompanyLogo != null)
+
+                    #region SAVE INVOICE SETUP
+
+                    using (SqlCommand cmd = new SqlCommand("SaveCompanyInvoiceSetup", con))
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.CompanyLogo);
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        string folderPath = $"/org/{domain}/CompanyInvoice_CompanyLogo_Image"; // Updated to include domain
-                        _imageUploadService.DeleteImages(folderPath, rowid.ToString());
-                        model.CompanyLogo = _imageUploadService.UploadImage(model.CompanyLogo, folderPath, rowid.ToString(), imgType);
+                        cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)model.Id ?? 0;
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("SaveCompanyInvoiceLogo", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = rowid;
-                        cmd2.Parameters.Add("@company_logo", SqlDbType.NVarChar, -1).Value = model.CompanyLogo; // Kept max for nvarchar(max)
-                        cmd2.ExecuteNonQuery();
+                        cmd.Parameters.Add("@gst_invoice_start_no", SqlDbType.BigInt).Value = (object?)model.GstInvoiceStartNo ?? 0;
+                        cmd.Parameters.Add("@gst_invoice_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.GstInvoicePrefix ?? string.Empty;
 
-                        latestImagePath = domainUrl + $"/uploads/org/{domain}/CompanyInvoice_CompanyLogo_Image/" + model.CompanyLogo;
+                        cmd.Parameters.Add("@proforma_invoice_start_no", SqlDbType.BigInt).Value = (object?)model.ProformaInvoiceStartNo ?? 0;
+                        cmd.Parameters.Add("@proforma_invoice_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.ProformaInvoicePrefix ?? string.Empty;
+
+                        cmd.Parameters.Add("@receipt_prefix", SqlDbType.NVarChar, 50).Value = (object?)model.ReceiptPrefix ?? string.Empty;
+
+                        cmd.Parameters.Add("@print_logo_prospectus", SqlDbType.Bit).Value = model.PrintLogoProspectus;
+                        cmd.Parameters.Add("@print_logo_quotation", SqlDbType.Bit).Value = model.PrintLogoQuotation;
+                        cmd.Parameters.Add("@print_logo_receipt", SqlDbType.Bit).Value = model.PrintLogoReceipt;
+                        cmd.Parameters.Add("@include_fy_invoice_no", SqlDbType.Bit).Value = model.IncludeFyInvoiceNo;
+
+                        cmd.Parameters.Add("@use_custom_receipt_no", SqlDbType.Bit).Value = model.UseCustomReceiptNo;
+                        cmd.Parameters.Add("@custom_receipt_start_no", SqlDbType.BigInt).Value = (object?)model.CustomReceiptStartNo ?? 0;
+
+                        cmd.Parameters.Add("@print_fp_payment_trail", SqlDbType.Bit).Value = model.PrintFpPaymentTrail;
+                        cmd.Parameters.Add("@signatory_label", SqlDbType.BigInt).Value = (object?)model.SignatoryLabel ?? 0;
+                        cmd.Parameters.Add("@print_bank_details", SqlDbType.Bit).Value = model.PrintBankDetails;
+
+                        cmd.Parameters.Add("@bank_name", SqlDbType.NVarChar, 100).Value = (object?)model.BankName ?? string.Empty;
+                        cmd.Parameters.Add("@account_no", SqlDbType.NVarChar, 50).Value = (object?)model.AccountNo ?? string.Empty;
+                        cmd.Parameters.Add("@branch_details", SqlDbType.NVarChar, 100).Value = (object?)model.BranchDetails ?? string.Empty;
+                        cmd.Parameters.Add("@ifsc_code", SqlDbType.NVarChar, 20).Value = (object?)model.IFSCCode ?? string.Empty;
+                        cmd.Parameters.Add("@upi_id", SqlDbType.NVarChar, 100).Value = (object?)model.UpiId ?? string.Empty;
+
+                        cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? 0;
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
                     }
-                    con.Close();
+
+                    #endregion
+
+                    #region COMPANY LOGO UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.CompanyLogo))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.CompanyLogo);
+                        string folderPath = $"org/{domain}/CompanyInvoice_CompanyLogo_Image/";
+                        string filePrefix = rowId.ToString();
+
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.CompanyLogo,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("SaveCompanyInvoiceLogo", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@id", SqlDbType.BigInt).Value = rowId;
+                            fileCmd.Parameters.Add("@company_logo", SqlDbType.NVarChar, -1).Value = fileName;
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.CompanyLogo = fileName;
+
+                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/CompanyInvoice_CompanyLogo_Image/{fileName}";
+                    }
+
+                    #endregion
                 }
 
                 apiResponse.status = "Success";
-                apiResponse.message = model.Id == null ? "Invoice setup created successfully." : "Invoice setup updated successfully.";
-                apiResponse.data = new { companylogo = latestImagePath} ;
+                apiResponse.message = (model.Id ?? 0) > 0
+                    ? "Invoice setup updated successfully."
+                    : "Invoice setup created successfully.";
+
+                apiResponse.data = new
+                {
+                    Id = rowId,
+                    CompanyLogo = latestImagePath
+                };
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

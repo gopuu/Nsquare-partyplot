@@ -1,0 +1,208 @@
+﻿@{
+    ViewData["Title"] = "Infinity Drive";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid page-content">
+
+    <div class="card shadow-sm">
+
+        <!-- HEADER -->
+        <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2 px-3">
+            <h5 class="mb-0 text-white">
+                <i class="fas fa-folder-open me-2"></i>
+                Infinity Drive
+            </h5>
+
+            <button type="button" class="btn btn-outline-light btn-sm text-white" onclick="openFileModal()">
+                <i class="fas fa-plus me-1"></i>
+                Add Document
+            </button>
+        </div>
+
+        <div class="card-body">
+
+            <!-- FILTER -->
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Folder</label>
+                    <select id="ddlFilterCategory" class="form-select form-select-sm">
+                        <option value="0">All Folders</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Search</label>
+                    <input type="text"
+                           id="txtSearchDocument"
+                           class="form-control form-control-sm"
+                           placeholder="Search document...">
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width:60px;">#</th>
+                            <th>Document Name</th>
+                            <th>Folder</th>
+                            <th class="text-center" style="width:90px;">Order</th>
+                            <th class="text-center" style="width:100px;">File</th>
+                            <th class="text-center" style="width:120px;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="documentTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- =====================================================
+     ADD / EDIT DOCUMENT MODAL
+===================================================== -->
+<div class="modal fade" id="fileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning py-2">
+                <h6 class="modal-title text-white" id="fileModalTitle">
+                    Add Document
+                </h6>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="txtFileId" value="0">
+
+                <!-- FOLDER -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Folder <span class="text-danger">*</span>
+                    </label>
+
+                    <select id="ddlFileCategory"
+                            class="form-select form-select-sm">
+                        <option value="">-- Select Folder --</option>
+                    </select>
+                </div>
+
+                <!-- DOCUMENT NAME -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Document Name <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="txtDocumentName"
+                           class="form-control form-control-sm"
+                           maxlength="200"
+                           placeholder="Enter document name">
+                </div>
+
+                <!-- SORT ORDER -->
+                <div class="mb-3">
+                    <label class="form-label">Sort Order</label>
+
+                    <input type="number"
+                           id="txtSortOrder"
+                           class="form-control form-control-sm"
+                           value="0"
+                           min="0">
+                </div>
+
+                <!-- FILE -->
+                <div class="mb-2">
+                    <label class="form-label d-flex align-items-center gap-2 fs-6">
+                        <span class="fw-semibold fs-9">
+                            File <span id="fileRequiredStar" class="text-danger">*</span>
+                        </span>
+
+                        <span class="badge bg-light text-secondary border fw-normal px-2 py-1"
+                              style="font-size: 12px;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            PDF, JPG, PNG • Max 1 MB
+                        </span>
+                    </label>
+
+                    <input type="file"
+                           id="documentFile"
+                           class="form-control mt-1"
+                           accept=".pdf,.jpg,.jpeg,.png">
+
+                    <small class="text-muted">Select a PDF or image file to upload.</small>
+                </div>
+
+                <!-- EXISTING FILE -->
+                <div id="existingFileBox"
+                     class="border rounded p-2 bg-light mt-3 d-none">
+
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+
+                        <div class="text-truncate">
+                            <i class="fas fa-paperclip me-1 text-secondary"></i>
+                            <span id="existingFileName">Existing file</span>
+                        </div>
+
+                        <a id="existingFileLink"
+                           href="#"
+                           target="_blank"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer py-2">
+
+                <button type="button"
+                        class="btn btn-light btn-sm"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="btn btn-warning btn-sm text-white"
+                        id="btnSaveDocument"
+                        onclick="saveDocument()">
+
+                    <i class="fas fa-save me-1"></i>
+                    Save
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/assets2/js/InfinityDrive/InfinityDrive.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+    <link href="~/assets2/css/InfinityDrive/InfinityDrive.css" rel="stylesheet" asp-append-version="true" />
+}
+

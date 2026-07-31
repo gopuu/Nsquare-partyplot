@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "Infinity Drive Master";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid page-content">
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-warning d-flex justify-content-between align-items-center py-2 px-3">
+            <div>
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-folder-open me-2"></i>Infinity Drive
+                </h5>
+            </div>
+
+            <button type="button" class="btn btn-outline-light btn-sm" onclick="openFolderModal()">
+                <i class="fas fa-folder-plus me-1"></i>Add Folder
+            </button>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-5 col-lg-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+
+                        <input type="text"
+                               id="txtFolderSearch"
+                               class="form-control"
+                               placeholder="Search folders...">
+                    </div>
+                </div>
+
+                <div class="col-md-auto">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="getFolders()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="folderLoader" class="text-center py-5 d-none">
+                <div class="spinner-border spinner-border-sm text-warning"></div>
+                <span class="ms-2 text-muted">Loading folders...</span>
+            </div>
+
+            <div id="folderTableContainer" class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0" id="tblFolders">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width:60px;">#</th>
+                            <th>Folder Name</th>
+                            <th>Parent Folder</th>
+                            <th class="text-center" style="width:100px;">Sort Order</th>
+                            <th class="text-center" style="width:120px;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="folderTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="folderEmptyState" class="text-center py-5 d-none">
+                <i class="far fa-folder-open fa-3x text-muted mb-3"></i>
+                <h6 class="text-muted mb-1">No folders found</h6>
+                <small class="text-muted">Create a folder to organize your documents.</small>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     ADD / EDIT FOLDER MODAL
+═══════════════════════════════════════════════════ -->
+<div class="modal fade" id="folderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning py-2">
+                <h6 class="modal-title text-white" id="folderModalTitle">
+                    <i class="fas fa-folder-plus me-2"></i>Add Folder
+                </h6>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnFolderId" value="0">
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Folder Name <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="txtFolderName"
+                           class="form-control"
+                           maxlength="200"
+                           placeholder="Enter folder name">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Parent Folder</label>
+
+                    <select id="ddlParentFolder" class="form-select">
+                        <option value="0">-- Root Folder --</option>
+                    </select>
+
+                    <small class="text-muted">
+                        Keep Root Folder if this is a main folder.
+                    </small>
+                </div>
+
+                <div class="mb-0">
+                    <label class="form-label">Sort Order</label>
+
+                    <input type="number"
+                           id="txtSortOrder"
+                           class="form-control"
+                           value="0"
+                           min="0">
+                </div>
+
+            </div>
+
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+
+                <button type="button" class="btn btn-warning btn-sm px-3" id="btnSaveFolder" onclick="saveFolder()">
+                    <i class="fas fa-save me-1"></i>Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/assets2/js/InfinityDrive_Master/InfinityDrive_Master.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+    <link href="~/assets2/css/InfinityDrive_Master/InfinityDrive_Master.css" rel="stylesheet" asp-append-version="true" />
+}

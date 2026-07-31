@@ -1,0 +1,33 @@
+﻿.page-content {
+    padding-top: 90px !important;
+}
+/* Compact file/action buttons */
+.infinity-file-btn {
+    width: 32px;
+    height: 30px;
+    padding: 0;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+.infinity-file-btn i {
+    font-size: 12px;
+}
+
+/* Compact No File badge */
+.infinity-no-file {
+    font-size: 11px;
+    padding: 4px 7px;
+    font-weight: 500;
+}
+
+/* Reduce gap between action buttons */
+.infinity-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}

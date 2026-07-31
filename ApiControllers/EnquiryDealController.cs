@@ -133,7 +133,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveEnquiryDeal", con)) // You need to create this SP
@@ -162,7 +162,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
                     cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
+                    cmd.Parameters.AddWithValue("@UserAgent", userAgent);
 
                     con.Open();
                     long newId = 0;
@@ -549,80 +549,123 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveEnquiryDeal_forDragNDrop", con)) // You need to create this SP
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@EnquiryDealId", SqlDbType.BigInt).Value = model.EnquiryDealId;
-                    cmd.Parameters.Add("@ProcessId", SqlDbType.BigInt).Value = model.ProcessId;
-                    cmd.Parameters.Add("@FollowUpDate", SqlDbType.NVarChar).Value = model.FollowUpDate;
-                    cmd.Parameters.Add("@FileUploadName", SqlDbType.NVarChar).Value = DBNull.Value; //model.FileUpload;
-                    cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar).Value = model.Remarks;
-                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+                #region FILE VALIDATION
 
+                if (!string.IsNullOrWhiteSpace(model.FileUpload))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            model.FileUpload,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"File upload: {ex.Message}"
+                        });
+                    }
+                }
+
+                #endregion
+
+                long enquiryDealProcessingId = 0;
+                long bookingId = 0;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
                     con.Open();
 
-                    long enquiryDealProcessingId = 0;
-                    long bookingId = 0;
+                    #region SAVE ENQUIRY DEAL PROCESSING
 
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    using (SqlCommand cmd = new SqlCommand("SaveEnquiryDeal_forDragNDrop", con))
                     {
-                        if (reader.Read())
-                        {
-                            enquiryDealProcessingId =
-                                reader["EnquiryDealProcessing_Id"] != DBNull.Value
-                                ? Convert.ToInt64(reader["EnquiryDealProcessing_Id"])
-                                : 0;
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                            bookingId =
-                                reader["BookingId"] != DBNull.Value
-                                ? Convert.ToInt64(reader["BookingId"])
-                                : 0;
+                        cmd.Parameters.Add("@EnquiryDealId", SqlDbType.BigInt).Value = model.EnquiryDealId;
+                        cmd.Parameters.Add("@ProcessId", SqlDbType.BigInt).Value = model.ProcessId;
+                        cmd.Parameters.Add("@FollowUpDate", SqlDbType.NVarChar).Value = (object?)model.FollowUpDate ?? DBNull.Value;
+                        cmd.Parameters.Add("@FileUploadName", SqlDbType.NVarChar).Value = DBNull.Value;
+                        cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar).Value = (object?)model.Remarks ?? DBNull.Value;
+                        cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                enquiryDealProcessingId = reader["EnquiryDealProcessing_Id"] != DBNull.Value
+                                    ? Convert.ToInt64(reader["EnquiryDealProcessing_Id"])
+                                    : 0;
+
+                                bookingId = reader["BookingId"] != DBNull.Value
+                                    ? Convert.ToInt64(reader["BookingId"])
+                                    : 0;
+                            }
                         }
                     }
 
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.FileUpload != string.Empty && model.FileUpload != null)
+                    #endregion
+
+                    #region FILE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.FileUpload))
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
+                        string folderPath = $"org/{domain}/Booking_Processing/EnquiryDealId_{model.EnquiryDealId}/";
+                        string filePrefix = $"EnquiryDealsProcessingId_{enquiryDealProcessingId}";
 
-                        string folderPath = $"/org/{domain}/Booking_Processing/EnquiryDealId_{model.EnquiryDealId}"; // Updated to include domain
-                        string fileName = $"EnquiryDealsProcessingId_{enquiryDealProcessingId}";
-                        _imageUploadService.DeleteImages(folderPath, fileName);
-                        model.FileUpload = _imageUploadService.UploadImage(model.FileUpload, folderPath, fileName, imgType);
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("SaveEnquiryDeal_forDragNDrop_FileUpload", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = enquiryDealProcessingId;
-                        cmd2.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = model.FileUpload; // Kept max for nvarchar(max)
-                        cmd2.ExecuteNonQuery();
+                        string fileName = _imageUploadService.UploadImage(
+                            model.FileUpload,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
 
-                        latestImagePath = domainUrl + $"/uploads/org/{domain}/Booking_Processing/" + model.FileUpload;
+                        using (SqlCommand fileCmd = new SqlCommand("SaveEnquiryDeal_forDragNDrop_FileUpload", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@id", SqlDbType.BigInt).Value = enquiryDealProcessingId;
+                            fileCmd.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = fileName;
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.FileUpload = fileName;
                     }
 
-                    con.Close();
-
-                    apiResponse.data = new
-                    {
-                        EnquiryDealProcessingId = enquiryDealProcessingId,
-                        BookingId = bookingId
-                    };
-                    apiResponse.message = "EnquiryDeal Moved Successfully!";
-                    apiResponse.status = "Success";
-                    return Ok(apiResponse);
+                    #endregion
                 }
+
+                apiResponse.status = "Success";
+                apiResponse.message = "EnquiryDeal Moved Successfully!";
+
+                apiResponse.data = new
+                {
+                    EnquiryDealProcessingId = enquiryDealProcessingId,
+                    BookingId = bookingId
+                };
+
+                return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

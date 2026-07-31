@@ -121,75 +121,128 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                { return errorResult!; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveEnquiryFollowUp", con))
+                #region FILE VALIDATION
+
+                if (!string.IsNullOrWhiteSpace(model.FileUpload))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@FollowUpId", SqlDbType.BigInt).Value = model.FollowUpId > 0 ? model.FollowUpId : 0;
-                    cmd.Parameters.Add("@EnquiryId", SqlDbType.BigInt).Value = model.EnquiryId;
-                    cmd.Parameters.Add("@FollowUpTypeId", SqlDbType.BigInt).Value = model.FollowUpTypeId;
-                    cmd.Parameters.Add("@FollowUpLeadLostReasonCategoryId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonCategoryId;
-                    cmd.Parameters.Add("@FollowUpLeadLostReasonId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonId;
-
-                    cmd.Parameters.Add("@FollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.FollowUpDateTime ?? "";
-                    cmd.Parameters.Add("@NextFollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.NextFollowUpDateTime ?? "";
-
-                    cmd.Parameters.Add("@StatusId", SqlDbType.BigInt).Value = model.StatusId;
-                    cmd.Parameters.Add("@MoodId", SqlDbType.BigInt).Value = model.MoodId;
-                    cmd.Parameters.Add("@ProbabilityId", SqlDbType.BigInt).Value = model.ProbabilityId ?? (object)DBNull.Value;
-                    cmd.Parameters.Add("@OutcomeId", SqlDbType.BigInt).Value = model.OutcomeId ?? (object)DBNull.Value;
-
-                    cmd.Parameters.Add("@DiscussionNotes", SqlDbType.NVarChar).Value = (object)model.DiscussionNotes ?? DBNull.Value;
-                    cmd.Parameters.Add("@InternalRemarks", SqlDbType.NVarChar).Value = (object)model.InternalRemarks ?? DBNull.Value;
-                    cmd.Parameters.Add("@CustomerRemarks", SqlDbType.NVarChar).Value = (object)model.CustomerRemarks ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@AssignedTo", SqlDbType.BigInt).Value = model.AssignedTo;
-                    cmd.Parameters.Add("@IsClosed", SqlDbType.Bit).Value = model.IsClosed;
-                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
-
-                    con.Open();
-                    long followUpId = Convert.ToInt64(cmd.ExecuteScalar());
-
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.FileUpload != string.Empty && model.FileUpload != null)
+                    try
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
-
-                        string folderPath = $"/uploads/org/{domain}/EnquiryFollowUp/EnquiryDealId_{model.EnquiryId}"; // Updated to include domain
-                        string fileName = $"FollowUpId_{followUpId}";
-                        _imageUploadService.DeleteImages(folderPath, fileName);
-                        model.FileUpload = _imageUploadService.UploadImage(model.FileUpload, folderPath, fileName, imgType);
-
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("SaveEnquiryFollowUp_FileUpload", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@id", SqlDbType.BigInt).Value = followUpId;
-                        cmd2.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = model.FileUpload; // Kept max for nvarchar(max)
-                        cmd2.ExecuteNonQuery();
-
-                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/EnquiryFollowUp/EnquiryDealId_{model.EnquiryId}/{model.FileUpload}";
+                        _imageUploadService.ValidateBase64File(
+                            model.FileUpload,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
                     }
-                    con.Close();
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"Follow-up file: {ex.Message}"
+                        });
+                    }
                 }
 
+                #endregion
+
+                long followUpId = 0;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    #region SAVE ENQUIRY FOLLOW-UP
+
+                    using (SqlCommand cmd = new SqlCommand("SaveEnquiryFollowUp", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("@FollowUpId", SqlDbType.BigInt).Value = model.FollowUpId > 0 ? model.FollowUpId : 0;
+                        cmd.Parameters.Add("@EnquiryId", SqlDbType.BigInt).Value = model.EnquiryId;
+                        cmd.Parameters.Add("@FollowUpTypeId", SqlDbType.BigInt).Value = model.FollowUpTypeId;
+                        cmd.Parameters.Add("@FollowUpLeadLostReasonCategoryId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonCategoryId;
+                        cmd.Parameters.Add("@FollowUpLeadLostReasonId", SqlDbType.BigInt).Value = model.FollowUpLeadLostReasonId;
+
+                        cmd.Parameters.Add("@FollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.FollowUpDateTime ?? "";
+                        cmd.Parameters.Add("@NextFollowUpDateTime", SqlDbType.NVarChar, 30).Value = model.NextFollowUpDateTime ?? "";
+
+                        cmd.Parameters.Add("@StatusId", SqlDbType.BigInt).Value = model.StatusId;
+                        cmd.Parameters.Add("@MoodId", SqlDbType.BigInt).Value = model.MoodId;
+                        cmd.Parameters.Add("@ProbabilityId", SqlDbType.BigInt).Value = (object?)model.ProbabilityId ?? DBNull.Value;
+                        cmd.Parameters.Add("@OutcomeId", SqlDbType.BigInt).Value = (object?)model.OutcomeId ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@DiscussionNotes", SqlDbType.NVarChar).Value = (object?)model.DiscussionNotes ?? DBNull.Value;
+                        cmd.Parameters.Add("@InternalRemarks", SqlDbType.NVarChar).Value = (object?)model.InternalRemarks ?? DBNull.Value;
+                        cmd.Parameters.Add("@CustomerRemarks", SqlDbType.NVarChar).Value = (object?)model.CustomerRemarks ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@AssignedTo", SqlDbType.BigInt).Value = model.AssignedTo;
+                        cmd.Parameters.Add("@IsClosed", SqlDbType.Bit).Value = model.IsClosed;
+                        cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+
+                        followUpId = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+
+                    #endregion
+
+                    #region FILE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.FileUpload))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.FileUpload);
+
+                        // Don't include "/uploads/" here.
+                        // UploadImage() already saves inside wwwroot/uploads.
+                        string folderPath = $"org/{domain}/EnquiryFollowUp/EnquiryDealId_{model.EnquiryId}/";
+                        string filePrefix = $"FollowUpId_{followUpId}";
+
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.FileUpload,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("SaveEnquiryFollowUp_FileUpload", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+                            fileCmd.Parameters.Add("@id", SqlDbType.BigInt).Value = followUpId;
+                            fileCmd.Parameters.Add("@fileUploadName", SqlDbType.NVarChar, -1).Value = fileName;
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.FileUpload = fileName;
+                    }
+
+                    #endregion
+                }
+
+                apiResponse.status = "Success";
                 apiResponse.message = model.FollowUpId > 0
                     ? "Follow-up updated successfully!"
                     : "Follow-up inserted successfully!";
 
-                apiResponse.status = "Success";
+                apiResponse.data = new
+                {
+                    FollowUpId = followUpId
+                };
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

@@ -141,7 +141,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
 
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
                 long rowId = 0;
                 using (SqlConnection con = new SqlConnection(connString))
@@ -160,7 +160,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
                     cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
+                    cmd.Parameters.AddWithValue("@UserAgent", userAgent);
 
                     con.Open();
                     rowId = Convert.ToInt64(cmd.ExecuteScalar());

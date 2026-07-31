@@ -229,7 +229,7 @@ namespace ERPAdmin.ApiControllers
                 long bookingId = 0, paymentId = 0;
 
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveBookingCalendar", con))
@@ -318,7 +318,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Action_By", model.ActionBy);
 
                     cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
+                    cmd.Parameters.AddWithValue("@UserAgent", userAgent);
 
                     // 🔹 Execute SP
                     con.Open();

@@ -1,0 +1,144 @@
+﻿@{
+    ViewData["Title"] = "Infinity Growth";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid page-content">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-white py-3 px-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="mb-1 fw-semibold text-white">
+                        <i class="fas fa-book-open me-2"></i>
+                        Infinity Growth
+                    </h5>
+                    <small class="opacity-75">SOPs, manuals, checklists and staff training documents</small>
+                </div>
+
+                <span class="badge bg-white text-warning px-3 py-2">
+                    <i class="fas fa-eye me-1"></i>
+                    View Only
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body p-3">
+            <div id="sopLoader" class="text-center py-5">
+                <div class="spinner-border text-warning mb-3" role="status"></div>
+                <div class="text-muted">Loading documents...</div>
+            </div>
+
+            <div id="sopNoData" class="text-center py-5 d-none">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <h6 class="mb-1">No documents available</h6>
+                <small class="text-muted">You currently don't have access to any SOP documents.</small>
+            </div>
+
+            <div id="sopContent" class="d-none"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sopViewerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+
+            <div class="modal-header bg-dark text-white py-2 px-3">
+
+                <div class="d-flex align-items-center overflow-hidden">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+
+                    <div class="overflow-hidden">
+                        <h6 id="sopViewerTitle" class="mb-0 text-truncate text-white">Document</h6>
+                        <small class="text-white-50">Read-only document viewer</small>
+                    </div>
+                </div>
+
+                <!-- PDF CONTROLS -->
+                <div class="d-flex align-items-center gap-1 ms-auto me-3 d-none">
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm"
+                            onclick="zoomOutSOP()"
+                            title="Zoom Out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+
+                    <span id="sopZoomLabel"
+                          class="text-white text-center small px-2"
+                          style="min-width:55px;">
+                        100%
+                    </span>
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm"
+                            onclick="zoomInSOP()"
+                            title="Zoom In">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm ms-2"
+                            onclick="fitWidthSOP()"
+                            title="Fit Width">
+                        <i class="fas fa-arrows-alt-h"></i>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-light btn-sm"
+                            onclick="fitPageSOP()"
+                            title="Fit Page">
+                        <i class="fas fa-expand"></i>
+                    </button>
+
+                </div>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body p-0 position-relative bg-secondary">
+
+                <div id="sopPdfLoader" class="sop-pdf-loader">
+                    <div class="spinner-border text-warning" role="status"></div>
+                    <span class="ms-2">Opening document...</span>
+                </div>
+
+                <iframe id="sopPdfViewer"
+                        class="sop-pdf-viewer"
+                        title="SOP Document">
+                </iframe>
+
+            </div>
+
+            <div class="modal-footer py-1 px-3 justify-content-between">
+
+                <small class="text-muted">
+                    <i class="fas fa-lock me-1"></i>
+                    Internal document • View only
+                </small>
+
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/assets2/js/InfinityGrowth/InfinityGrowth.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+    <link href="~/assets2/css/InfinityGrowth/InfinityGrowth.css" rel="stylesheet" asp-append-version="true" />
+}
+

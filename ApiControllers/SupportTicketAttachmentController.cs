@@ -79,7 +79,6 @@ namespace ERPAdmin.ApiControllers
             return Ok(response); // ✅ ALWAYS 200
         }
 
-
         [HttpPost]
         [Route("SaveSupportTicketAttachment")]
         public IActionResult SaveSupportTicketAttachment([FromBody] SaveSupportTicketAttachmentRequest model)
@@ -88,44 +87,87 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string conn, out string domain, out IActionResult error))
-                    return Ok(error);
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string conn, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
-                long attachmentId = 0;
+                #region VALIDATION
+
+                if (model.Id == 0 && string.IsNullOrWhiteSpace(model.FilePath))
+                    return BadRequest(new apiResponse { status = "Error", message = "Please select an attachment." });
+
+                if (!string.IsNullOrWhiteSpace(model.FilePath))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            model.FilePath,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = ex.Message
+                        });
+                    }
+                }
+
+                #endregion
+
+                long attachmentId;
 
                 using (SqlConnection con = new SqlConnection(conn))
-                using (SqlCommand cmd = new SqlCommand("SaveSupportTicketAttachment", con))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Id", model.Id);
-                    cmd.Parameters.AddWithValue("@TicketId", model.TicketId);
-                    cmd.Parameters.AddWithValue("@FileName", model.FileName);
-                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
-
                     con.Open();
-                    attachmentId = Convert.ToInt64(cmd.ExecuteScalar());
 
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.FilePath != string.Empty && model.FilePath != null)
+                    #region SAVE ATTACHMENT
+
+                    using (SqlCommand cmd = new SqlCommand("SaveSupportTicketAttachment", con))
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.FilePath);
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        string folderPath = $"org/{domain}/SupportTicket/Ticket_{model.TicketId}/"; // Updated to include domain
-                        _imageUploadService.DeleteImages(folderPath, $"Ticket_{attachmentId.ToString()}");
-                        model.FilePath = _imageUploadService.UploadImage(model.FilePath, folderPath, $"Ticket_{attachmentId.ToString()}", imgType);
+                        cmd.Parameters.AddWithValue("@Id", model.Id);
+                        cmd.Parameters.AddWithValue("@TicketId", model.TicketId);
+                        cmd.Parameters.AddWithValue("@FileName", (object?)model.FileName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = attachmentId;
-                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.FilePath; 
-                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "SupportTicketAttachment";
-                        cmd2.ExecuteNonQuery();
-
-                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/SupportTicket/Ticket_{model.TicketId}/{model.FilePath}";
+                        attachmentId = Convert.ToInt64(cmd.ExecuteScalar());
                     }
+
+                    #endregion
+
+                    #region FILE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.FilePath))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.FilePath);
+                        string folderPath = $"org/{domain}/SupportTicket/Ticket_{model.TicketId}/";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            $"Ticket_{attachmentId}"
+                        );
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.FilePath,
+                            folderPath,
+                            $"Ticket_{attachmentId}",
+                            fileType
+                        );
+
+                        using SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con);
+                        fileCmd.CommandType = CommandType.StoredProcedure;
+                        fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = attachmentId;
+                        fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
+                        fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "SupportTicketAttachment";
+
+                        fileCmd.ExecuteNonQuery();
+                    }
+
+                    #endregion
                 }
 
                 response.status = "Success";
@@ -133,17 +175,19 @@ namespace ERPAdmin.ApiControllers
                     ? "Attachment updated successfully!"
                     : "Attachment uploaded successfully!";
                 response.data = new { AttachmentId = attachmentId };
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 response.status = "Error";
                 response.message = ex.Message;
+
+                return Ok(response); // Keep your existing ALWAYS 200 behavior
             }
-
-            return Ok(response); // ✅ ALWAYS 200
         }
-
 
         [HttpPost]
         [Route("DeleteSupportTicketAttachment")]

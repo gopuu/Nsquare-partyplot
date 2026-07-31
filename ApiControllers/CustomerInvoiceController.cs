@@ -790,7 +790,7 @@ namespace ERPAdmin.ApiControllers
 
                 long invoiceId=0;
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
                 using (SqlConnection con = new SqlConnection(connString))
                 using (SqlCommand cmd = new SqlCommand("SaveCustomerInvoice", con))
@@ -858,7 +858,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
 
                     cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
+                    cmd.Parameters.AddWithValue("@UserAgent", userAgent);
 
                     con.Open();
                     //invoiceId = Convert.ToInt64(cmd.ExecuteScalar());

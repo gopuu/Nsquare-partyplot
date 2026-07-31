@@ -1,0 +1,61 @@
+﻿.page-content {
+    padding-top: 90px !important;
+}
+
+#tblFolders {
+    font-size: 13px;
+}
+
+#tblFolders thead th {
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+#tblFolders tbody td {
+    vertical-align: middle;
+}
+
+#tblFolders tbody tr {
+    transition: background-color .15s ease;
+}
+
+#tblFolders .fa-folder {
+    font-size: 17px;
+}
+
+#txtFolderSearch {
+    box-shadow: none;
+}
+
+    #txtFolderSearch:focus {
+        border-color: #ffc107;
+    }
+
+#folderModal .modal-content {
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#folderModal .form-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+#folderModal .form-control,
+#folderModal .form-select {
+    font-size: 13px;
+}
+
+#folderEmptyState .fa-folder-open {
+    opacity: .45;
+}
+
+@media (max-width: 767px) {
+    #tblFolders {
+        min-width: 650px;
+    }
+}

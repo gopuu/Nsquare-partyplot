@@ -291,119 +291,174 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                { return errorResult!; }
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
 
-                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                #region FILE VALIDATION
+
+                if (!string.IsNullOrWhiteSpace(model.UploadInvoiceFile))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            model.UploadInvoiceFile,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"Invoice file: {ex.Message}"
+                        });
+                    }
+                }
+
+                #endregion
+
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+                long rowId;
 
                 using (SqlConnection conn = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SavePurchase", conn))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
-
-                    cmd.Parameters.Add("@PurchaseFrom", SqlDbType.BigInt).Value = (object)model.PurchaseFrom ?? DBNull.Value;
-                    cmd.Parameters.Add("@SupplierId", SqlDbType.BigInt).Value = model.SupplierId;
-                    cmd.Parameters.Add("@InvoiceDate", SqlDbType.NVarChar).Value = model.InvoiceDate;
-                    cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar).Value = (object)model.InvoiceNo ?? DBNull.Value;
-                    cmd.Parameters.Add("@PONo", SqlDbType.NVarChar).Value = (object)model.PONo ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@DiscountType", SqlDbType.BigInt).Value = (object)model.DiscountType ?? DBNull.Value;
-                    cmd.Parameters.Add("@TotalDiscountInInvoice", SqlDbType.Decimal).Value = model.TotalDiscountInInvoice;
-                    cmd.Parameters.Add("@DiscountPercentage", SqlDbType.Decimal).Value = model.DiscountPercentage;
-                    cmd.Parameters.Add("@DetermineWhenTaxApplicable", SqlDbType.BigInt).Value = (object)model.DetermineWhenTaxApplicable ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@SubTotal_TotalDiscount_Amount", SqlDbType.Decimal).Value = model.SubTotal_TotalDiscount_Amount;
-                    cmd.Parameters.Add("@SubTotal_OtherCharges_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherCharges_Amount;
-                    cmd.Parameters.Add("@SubTotal_OtherTaxes_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherTaxes_Amount;
-
-                    cmd.Parameters.Add("@DeliveryChargeIncludedInInvoice", SqlDbType.Decimal).Value = model.DeliveryChargeIncludedInInvoice;
-                    cmd.Parameters.Add("@DeliveryCharge_CGST", SqlDbType.Decimal).Value = model.DeliveryCharge_CGST;
-                    cmd.Parameters.Add("@DeliveryCharge_SGST", SqlDbType.Decimal).Value = model.DeliveryCharge_SGST;
-
-                    cmd.Parameters.Add("@TCS_Percent", SqlDbType.Decimal).Value = model.TCS_Percent;
-                    cmd.Parameters.Add("@TDS_Percent", SqlDbType.Decimal).Value = model.TDS_Percent;
-
-                    cmd.Parameters.Add("@GrandTotal_Amount", SqlDbType.Decimal).Value = model.GrandTotal_Amount;
-                    cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object)model.PaymentType ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@PaymentAccountId", SqlDbType.BigInt).Value = (object)model.PaymentAccountId ?? DBNull.Value;
-                    cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object)model.PaymentDate ?? DBNull.Value;
-                    var pPaid = cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal);
-                    pPaid.Precision = 18;
-                    pPaid.Scale = 2;
-                    pPaid.Value = (object)model.PaidAmount ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@PaymentModeId", SqlDbType.BigInt).Value = (object)model.PaymentModeId ?? DBNull.Value;
-                    cmd.Parameters.Add("@PaymentRefNo", SqlDbType.NVarChar).Value = (object)model.PaymentRefNo ?? DBNull.Value;
-                    cmd.Parameters.Add("@PaymentRemarks", SqlDbType.NVarChar).Value = (object)model.PaymentRemarks ?? DBNull.Value;
-                    cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar).Value = (object)model.ChequeBank ?? DBNull.Value;
-                    cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar).Value = (object)model.ChequeNo ?? DBNull.Value;
-                    cmd.Parameters.Add("@ChequeDate", SqlDbType.NVarChar).Value = (object)model.ChequeDate ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@IsUpdateInventoryStock", SqlDbType.Bit).Value = model.IsUpdateInventoryStock;
-
-                    var itemsJson = model.JSON_PurchaseItems != null
-                        ? Newtonsoft.Json.JsonConvert.SerializeObject(model.JSON_PurchaseItems)
-                        : null;
-                    cmd.Parameters.Add("@JSON_PurchaseItems", SqlDbType.NVarChar)
-                        .Value = (object)itemsJson ?? DBNull.Value;
-
-                    cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = model.IsActive;
-                    cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
-
-                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
-
                     conn.Open();
 
-                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.UploadInvoiceFile != string.Empty && model.UploadInvoiceFile != null)
+                    #region SAVE PURCHASE
+
+                    using (SqlCommand cmd = new SqlCommand("SavePurchase", conn))
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.UploadInvoiceFile);
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        //string imgType = ".jpg";
-                        //get filename with fileType
-                        //model.UploadInvoiceFile = _imageUploadService.UploadImage(model.UploadInvoiceFile, "employeePic", rowid.ToString(), imgType);
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
 
-                        string folderPath = $"org/{domain}/purchaseDocuments/"; // Updated to include domain
-                        _imageUploadService.DeleteImages(folderPath, $"Invoice_PurchaseId_{rowid.ToString()}");
-                        //model.Logo = _imageUploadService.UploadImage(model.Logo, folderPath, rowid.ToString(), imgType);
-                        model.UploadInvoiceFile = _imageUploadService.UploadImage(model.UploadInvoiceFile, folderPath, $"Invoice_PurchaseId_{rowid.ToString()}", imgType);
+                        cmd.Parameters.Add("@PurchaseFrom", SqlDbType.BigInt).Value = (object?)model.PurchaseFrom ?? DBNull.Value;
+                        cmd.Parameters.Add("@SupplierId", SqlDbType.BigInt).Value = model.SupplierId;
+                        cmd.Parameters.Add("@InvoiceDate", SqlDbType.NVarChar).Value = (object?)model.InvoiceDate ?? DBNull.Value;
+                        cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar).Value = (object?)model.InvoiceNo ?? DBNull.Value;
+                        cmd.Parameters.Add("@PONo", SqlDbType.NVarChar).Value = (object?)model.PONo ?? DBNull.Value;
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", conn);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
-                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.UploadInvoiceFile; // Kept max for nvarchar(max)
-                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "Purchase";
-                        cmd2.ExecuteNonQuery();
+                        cmd.Parameters.Add("@DiscountType", SqlDbType.BigInt).Value = (object?)model.DiscountType ?? DBNull.Value;
+                        cmd.Parameters.Add("@TotalDiscountInInvoice", SqlDbType.Decimal).Value = model.TotalDiscountInInvoice;
+                        cmd.Parameters.Add("@DiscountPercentage", SqlDbType.Decimal).Value = model.DiscountPercentage;
+                        cmd.Parameters.Add("@DetermineWhenTaxApplicable", SqlDbType.BigInt).Value = (object?)model.DetermineWhenTaxApplicable ?? DBNull.Value;
 
-                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/purchaseDocuments/{model.UploadInvoiceFile}";
+                        cmd.Parameters.Add("@SubTotal_TotalDiscount_Amount", SqlDbType.Decimal).Value = model.SubTotal_TotalDiscount_Amount;
+                        cmd.Parameters.Add("@SubTotal_OtherCharges_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherCharges_Amount;
+                        cmd.Parameters.Add("@SubTotal_OtherTaxes_Amount", SqlDbType.Decimal).Value = model.SubTotal_OtherTaxes_Amount;
+
+                        cmd.Parameters.Add("@DeliveryChargeIncludedInInvoice", SqlDbType.Decimal).Value = model.DeliveryChargeIncludedInInvoice;
+                        cmd.Parameters.Add("@DeliveryCharge_CGST", SqlDbType.Decimal).Value = model.DeliveryCharge_CGST;
+                        cmd.Parameters.Add("@DeliveryCharge_SGST", SqlDbType.Decimal).Value = model.DeliveryCharge_SGST;
+
+                        cmd.Parameters.Add("@TCS_Percent", SqlDbType.Decimal).Value = model.TCS_Percent;
+                        cmd.Parameters.Add("@TDS_Percent", SqlDbType.Decimal).Value = model.TDS_Percent;
+
+                        cmd.Parameters.Add("@GrandTotal_Amount", SqlDbType.Decimal).Value = model.GrandTotal_Amount;
+                        cmd.Parameters.Add("@PaymentType", SqlDbType.BigInt).Value = (object?)model.PaymentType ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@PaymentAccountId", SqlDbType.BigInt).Value = (object?)model.PaymentAccountId ?? DBNull.Value;
+                        cmd.Parameters.Add("@PaymentDate", SqlDbType.NVarChar).Value = (object?)model.PaymentDate ?? DBNull.Value;
+
+                        SqlParameter pPaid = cmd.Parameters.Add("@PaidAmount", SqlDbType.Decimal);
+                        pPaid.Precision = 18;
+                        pPaid.Scale = 2;
+                        pPaid.Value = (object?)model.PaidAmount ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@PaymentModeId", SqlDbType.BigInt).Value = (object?)model.PaymentModeId ?? DBNull.Value;
+                        cmd.Parameters.Add("@PaymentRefNo", SqlDbType.NVarChar).Value = (object?)model.PaymentRefNo ?? DBNull.Value;
+                        cmd.Parameters.Add("@PaymentRemarks", SqlDbType.NVarChar).Value = (object?)model.PaymentRemarks ?? DBNull.Value;
+                        cmd.Parameters.Add("@ChequeBank", SqlDbType.VarChar).Value = (object?)model.ChequeBank ?? DBNull.Value;
+                        cmd.Parameters.Add("@ChequeNo", SqlDbType.VarChar).Value = (object?)model.ChequeNo ?? DBNull.Value;
+                        cmd.Parameters.Add("@ChequeDate", SqlDbType.NVarChar).Value = (object?)model.ChequeDate ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@IsUpdateInventoryStock", SqlDbType.Bit).Value = model.IsUpdateInventoryStock;
+
+                        string? itemsJson = model.JSON_PurchaseItems != null
+                            ? Newtonsoft.Json.JsonConvert.SerializeObject(model.JSON_PurchaseItems)
+                            : null;
+
+                        cmd.Parameters.Add("@JSON_PurchaseItems", SqlDbType.NVarChar).Value =
+                            (object?)itemsJson ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = model.IsActive;
+                        cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
+
+                        cmd.Parameters.Add("@IPAddress", SqlDbType.NVarChar).Value =
+                            string.IsNullOrWhiteSpace(ipAddress) ? DBNull.Value : ipAddress;
+
+                        cmd.Parameters.Add("@UserAgent", SqlDbType.NVarChar).Value =
+                            string.IsNullOrWhiteSpace(userAgent) ? DBNull.Value : userAgent;
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
                     }
 
-                    apiResponse.message = "Purchase Saved!";
-                    apiResponse.data = new { PurchaseId = rowid };
-                    apiResponse.status = "Success";
-                    // 🔔 Notify only on SUCCESS
-                    if (apiResponse.status == "Success")
+                    #endregion
+
+                    #region INVOICE FILE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.UploadInvoiceFile))
                     {
-                        await _purchaseHub.Clients.All.SendAsync("OnPurchaseChanged");
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.UploadInvoiceFile);
+                        string folderPath = $"org/{domain}/purchaseDocuments/";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            $"Invoice_PurchaseId_{rowId}"
+                        );
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.UploadInvoiceFile,
+                            folderPath,
+                            $"Invoice_PurchaseId_{rowId}",
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", conn))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
+                            fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
+                            fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "Purchase";
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.UploadInvoiceFile = fileName;
                     }
 
-                    return Ok(apiResponse);
+                    #endregion
                 }
+
+                apiResponse.status = "Success";
+                apiResponse.message = model.Id > 0
+                    ? "Purchase updated successfully!"
+                    : "Purchase saved successfully!";
+
+                apiResponse.data = new
+                {
+                    PurchaseId = rowId
+                };
+
+                #region SIGNALR NOTIFICATION
+
+                await _purchaseHub.Clients.All.SendAsync("OnPurchaseChanged");
+
+                #endregion
+
+                return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
 
-                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
                 apiResponse.data = null;
 
                 return StatusCode(500, apiResponse);

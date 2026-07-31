@@ -155,83 +155,120 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveCompanyFoodPackage([FromBody] List<SaveCompanyFoodPackageRequest> modelList)
         {
             apiResponse apiResponse = new apiResponse();
+
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
                     return errorResult!;
+
+                #region VALIDATION
+
+                if (modelList == null || !modelList.Any())
+                    return BadRequest(new apiResponse { status = "Error", message = "No food package data found." });
+
+                foreach (var model in modelList)
+                {
+                    if (!string.IsNullOrWhiteSpace(model.MenuImagePath))
+                    {
+                        try
+                        {
+                            _imageUploadService.ValidateBase64File(
+                                model.MenuImagePath,
+                                new[] { ".jpg", ".jpeg", ".png" },
+                                1
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(new apiResponse
+                            {
+                                status = "Error",
+                                message = $"{model.PackageName}: {ex.Message}"
+                            });
+                        }
+                    }
                 }
+
+                #endregion
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
-                    foreach (var model in modelList) 
-                    { 
-                        SqlCommand cmd = new SqlCommand("SaveCompanyFoodPackage", con);
-                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@package_type", SqlDbType.NVarChar, 20).Value = string.IsNullOrEmpty(model.PackageType) ? (object)DBNull.Value : model.PackageType;
-                        cmd.Parameters.Add("@package_name", SqlDbType.NVarChar, 200).Value = model.PackageName ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@rate_per_person", SqlDbType.Decimal).Value = model.RatePerPerson;
-                        cmd.Parameters.Add("@menu_image_path", SqlDbType.NVarChar, 500).Value = (object)DBNull.Value; // : model.MenuImagePath;
-                        cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = model.ActionBy;
-                        //cmd.Parameters.Add("@inclusionList", SqlDbType.NVarChar).Value = model.InclusionList;
+                    foreach (var model in modelList)
+                    {
+                        long rowId;
 
-                        // ✅ Serialize InclusionList to JSON string
-                        var inclusionJson = (model.InclusionList != null && model.InclusionList.Any())
-                            ? Newtonsoft.Json.JsonConvert.SerializeObject(model.InclusionList)
-                            : null;
-                        cmd.Parameters.Add("@inclusionList", SqlDbType.NVarChar).Value =
-                            string.IsNullOrEmpty(inclusionJson) ? (object)DBNull.Value : inclusionJson;
+                        #region SAVE FOOD PACKAGE
 
-                        //cmd.ExecuteNonQuery();
-                        Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                        // ✅ Handle single image (MenuImagePath)
-                        if (!string.IsNullOrEmpty(model.MenuImagePath))
+                        using (SqlCommand cmd = new SqlCommand("SaveCompanyFoodPackage", con))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+
+                            cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id ?? (object)DBNull.Value;
+                            cmd.Parameters.Add("@package_type", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(model.PackageType) ? DBNull.Value : model.PackageType;
+                            cmd.Parameters.Add("@package_name", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(model.PackageName) ? DBNull.Value : model.PackageName;
+                            cmd.Parameters.Add("@rate_per_person", SqlDbType.Decimal).Value = model.RatePerPerson;
+                            cmd.Parameters.Add("@menu_image_path", SqlDbType.NVarChar, 500).Value = DBNull.Value;
+                            cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = model.ActionBy;
+
+                            string? inclusionJson = model.InclusionList != null && model.InclusionList.Any()
+                                ? JsonConvert.SerializeObject(model.InclusionList)
+                                : null;
+
+                            cmd.Parameters.Add("@inclusionList", SqlDbType.NVarChar, -1).Value =
+                                string.IsNullOrWhiteSpace(inclusionJson) ? DBNull.Value : inclusionJson;
+
+                            rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                        }
+
+                        #endregion
+
+                        #region MENU IMAGE UPLOAD
+
+                        if (!string.IsNullOrWhiteSpace(model.MenuImagePath))
                         {
                             string fileType = _imageUploadService.GetFileTypeFromBase64(model.MenuImagePath);
-                            string folderPath = $"/org/{domain}/Company_FoodItem_Package_Images"; // You can rename folder if needed
+                            string folderPath = $"org/{domain}/Company_FoodItem_Package_Images/";
 
-                            // Delete old image before uploading new one
-                            _imageUploadService.DeleteImages(folderPath, rowid.ToString() + "_foodItemPackage");
+                            _imageUploadService.DeleteImages(
+                                folderPath,
+                                $"{rowId}_foodItemPackage"
+                            );
 
-                            // Upload new image
                             string uploadedFileName = _imageUploadService.UploadImage(
                                 model.MenuImagePath,
                                 folderPath,
-                                rowid.ToString() + "_foodItemPackage",
+                                $"{rowId}_foodItemPackage",
                                 fileType
                             );
 
-                            // Save uploaded file name back to model
-                            model.MenuImagePath = uploadedFileName;
-
-
-                            // Update all media paths in database using the stored procedure
                             using (SqlCommand mediaCmd = new SqlCommand("SaveCompanyFoodPackageImage", con))
                             {
                                 mediaCmd.CommandType = CommandType.StoredProcedure;
-                                mediaCmd.Parameters.Add("@id", SqlDbType.BigInt).Value = rowid;
-                                mediaCmd.Parameters.Add("@menu_image_path", SqlDbType.VarChar, 500).Value = (object)model.MenuImagePath ?? DBNull.Value;
+                                mediaCmd.Parameters.Add("@id", SqlDbType.BigInt).Value = rowId;
+                                mediaCmd.Parameters.Add("@menu_image_path", SqlDbType.VarChar, 500).Value = uploadedFileName;
 
                                 mediaCmd.ExecuteNonQuery();
                             }
                         }
+
+                        #endregion
                     }
-                    con.Close();
                 }
 
-                apiResponse.message = "Food package saved successfully!";
                 apiResponse.status = "Success";
-                return Ok(apiResponse); //return Ok(apiResponse);
+                apiResponse.message = "Food package saved successfully!";
+
+                return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
 
-                apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+
                 return StatusCode(500, apiResponse);
             }
         }

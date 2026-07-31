@@ -1,0 +1,199 @@
+﻿.page-content {
+    padding-top: 90px !important;
+}
+
+.sop-pdf-viewer {
+    width: 100%;
+    height: calc(100vh - 105px);
+    border: 0;
+    display: block;
+    background: #525659;
+}
+
+#sopViewerModal .modal-header .btn {
+    width: 34px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#sopZoomLabel {
+    font-size: 12px;
+    user-select: none;
+}
+
+.sop-section {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.sop-section-header {
+    width: 100%;
+    border: 0;
+    background: #f8f9fa;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background .2s ease;
+}
+
+    .sop-section-header:hover {
+        background: #f1f3f5;
+    }
+
+.sop-folder-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 7px;
+    background: #fff3cd;
+    color: #f0ad00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 11px;
+    font-size: 17px;
+}
+
+.sop-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.sop-chevron {
+    color: #6c757d;
+    transition: transform .2s ease;
+}
+
+.sop-section-header[aria-expanded="true"] .sop-chevron {
+    transform: rotate(180deg);
+}
+
+.sop-section-body {
+    padding: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.sop-category-block + .sop-category-block {
+    margin-top: 16px;
+}
+
+.sop-subcategory-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    padding-left: 2px;
+}
+
+    .sop-subcategory-title i {
+        color: #f0ad00;
+    }
+
+.sop-document-card {
+    width: 100%;
+    min-height: 68px;
+    border: 1px solid #e4e7eb;
+    border-radius: 7px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    padding: 10px 12px;
+    transition: all .15s ease;
+}
+
+    .sop-document-card:hover {
+        border-color: #ffc107;
+        background: #fffdf5;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+    }
+
+.sop-document-icon {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    background: #fff0f0;
+    color: #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    margin-right: 11px;
+}
+
+.sop-document-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sop-document-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sop-document-meta {
+    font-size: 11px;
+    color: #6c757d;
+    margin-top: 3px;
+}
+
+.sop-document-action {
+    color: #adb5bd;
+    font-size: 12px;
+    padding-left: 8px;
+}
+
+.sop-document-card:hover .sop-document-action {
+    color: #f0ad00;
+}
+
+.sop-pdf-viewer {
+    width: 100%;
+    height: calc(100vh - 105px);
+    border: 0;
+    display: block;
+    background: #525659;
+}
+
+.sop-pdf-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+#sopViewerModal .modal-body {
+    overflow: hidden;
+}
+
+#sopViewerModal .modal-footer {
+    min-height: 38px;
+}
+
+@media (max-width: 767.98px) {
+    .sop-document-title {
+        white-space: normal;
+    }
+
+    .sop-pdf-viewer {
+        height: calc(100vh - 110px);
+    }
+}

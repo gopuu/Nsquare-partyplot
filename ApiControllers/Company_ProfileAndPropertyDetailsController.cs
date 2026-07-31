@@ -166,72 +166,129 @@ namespace ERPAdmin.ApiControllers
         [Route("SaveCompanyProfile")]
         public IActionResult SaveCompanyProfile([FromBody] SaveCompanyProfileRequest model)
         {
-            var apiResponse = new apiResponse();
+            apiResponse apiResponse = new apiResponse();
+
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
+
+                #region FILE VALIDATION
+
+                if (!string.IsNullOrWhiteSpace(model.CompanyPanCardUpload))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            model.CompanyPanCardUpload,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"PAN Card file: {ex.Message}"
+                        });
+                    }
+                }
+
+                #endregion
+
+                long rowId = 0;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("SaveCompanyProfile", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
-                    cmd.Parameters.Add("@CompanyName", SqlDbType.NVarChar, 200).Value = model.CompanyName;
-                    cmd.Parameters.Add("@BanquetType", SqlDbType.BigInt).Value = model.BanquetType;
-                    cmd.Parameters.Add("@CompanyState", SqlDbType.BigInt).Value = model.CompanyState;
-                    cmd.Parameters.Add("@CompanyCity", SqlDbType.NVarChar, 200).Value = model.CompanyCity;
-                    cmd.Parameters.Add("@CompanyEmail", SqlDbType.NVarChar, 200).Value = model.CompanyEmail;
-                    cmd.Parameters.Add("@CompanyAddress", SqlDbType.NVarChar, 240).Value = model.CompanyAddress;
-                    cmd.Parameters.Add("@CompanyPanNo", SqlDbType.NVarChar, 10).Value = model.CompanyPanNo;
-                    cmd.Parameters.Add("@CompanyMobile", SqlDbType.NVarChar, 10).Value = model.CompanyMobile;
-                    cmd.Parameters.Add("@ReviewUrl", SqlDbType.NVarChar, -1).Value = model.ReviewUrl;
-                    cmd.Parameters.Add("@AcceptGST", SqlDbType.Bit).Value = model.AcceptGST;
-                    cmd.Parameters.Add("@GSTIN", SqlDbType.NVarChar, 15).Value = model.GSTIN;
-                    cmd.Parameters.Add("@VATNumber", SqlDbType.NVarChar, 15).Value = model.VATNumber;
-                    cmd.Parameters.Add("@QuotationsWithTax", SqlDbType.Bit).Value = model.QuotationsWithTax;
-                    cmd.Parameters.Add("@MultipleFoodGST", SqlDbType.Bit).Value = model.MultipleFoodGST;
-                    cmd.Parameters.Add("@PrintCustomerDetails", SqlDbType.Bit).Value = model.PrintCustomerDetails;
-                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
-
                     con.Open();
-                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.CompanyPanCardUpload != string.Empty && model.CompanyPanCardUpload != null)
+
+                    #region SAVE COMPANY PROFILE
+
+                    using (SqlCommand cmd = new SqlCommand("SaveCompanyProfile", con))
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.CompanyPanCardUpload);
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        //string folderPath = $"/org/{domain}/CompanyProfile_PanCard_Image"; // Updated to include domain
-                        string folderPath = Path.Combine("org", domain, "CompanyProfile_PanCard_Image");
-                        _imageUploadService.DeleteImages(folderPath, rowid.ToString());
-                        model.CompanyPanCardUpload = _imageUploadService.UploadImage(model.CompanyPanCardUpload, folderPath, rowid.ToString(), imgType);
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
+                        cmd.Parameters.Add("@CompanyName", SqlDbType.NVarChar, 200).Value = (object?)model.CompanyName ?? DBNull.Value;
+                        cmd.Parameters.Add("@BanquetType", SqlDbType.BigInt).Value = model.BanquetType;
+                        cmd.Parameters.Add("@CompanyState", SqlDbType.BigInt).Value = model.CompanyState;
+                        cmd.Parameters.Add("@CompanyCity", SqlDbType.NVarChar, 200).Value = (object?)model.CompanyCity ?? DBNull.Value;
+                        cmd.Parameters.Add("@CompanyEmail", SqlDbType.NVarChar, 200).Value = (object?)model.CompanyEmail ?? DBNull.Value;
+                        cmd.Parameters.Add("@CompanyAddress", SqlDbType.NVarChar, 240).Value = (object?)model.CompanyAddress ?? DBNull.Value;
+                        cmd.Parameters.Add("@CompanyPanNo", SqlDbType.NVarChar, 10).Value = (object?)model.CompanyPanNo ?? DBNull.Value;
+                        cmd.Parameters.Add("@CompanyMobile", SqlDbType.NVarChar, 10).Value = (object?)model.CompanyMobile ?? DBNull.Value;
+                        cmd.Parameters.Add("@ReviewUrl", SqlDbType.NVarChar, -1).Value = (object?)model.ReviewUrl ?? DBNull.Value;
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("SaveCompanyPanCardUpload", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
-                        cmd2.Parameters.Add("@CompanyPanCardUpload", SqlDbType.NVarChar, -1).Value = model.CompanyPanCardUpload; // Kept max for nvarchar(max)
-                        cmd2.ExecuteNonQuery();
+                        cmd.Parameters.Add("@AcceptGST", SqlDbType.Bit).Value = model.AcceptGST;
+                        cmd.Parameters.Add("@GSTIN", SqlDbType.NVarChar, 15).Value = (object?)model.GSTIN ?? DBNull.Value;
+                        cmd.Parameters.Add("@VATNumber", SqlDbType.NVarChar, 15).Value = (object?)model.VATNumber ?? DBNull.Value;
 
-                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/CompanyProfile_PanCard_Image/{model.CompanyPanCardUpload}";
+                        cmd.Parameters.Add("@QuotationsWithTax", SqlDbType.Bit).Value = model.QuotationsWithTax;
+                        cmd.Parameters.Add("@MultipleFoodGST", SqlDbType.Bit).Value = model.MultipleFoodGST;
+                        cmd.Parameters.Add("@PrintCustomerDetails", SqlDbType.Bit).Value = model.PrintCustomerDetails;
+
+                        cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
                     }
 
-                    con.Close();
+                    #endregion
+
+                    #region PAN CARD UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.CompanyPanCardUpload))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.CompanyPanCardUpload);
+                        string folderPath = $"org/{domain}/CompanyProfile_PanCard_Image/";
+                        string filePrefix = $"Company_{rowId}_PanCard";
+
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.CompanyPanCardUpload,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("SaveCompanyPanCardUpload", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
+                            fileCmd.Parameters.Add("@CompanyPanCardUpload", SqlDbType.NVarChar, -1).Value = fileName;
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.CompanyPanCardUpload = fileName;
+                    }
+
+                    #endregion
                 }
 
                 apiResponse.status = "Success";
-                apiResponse.message = "Company Profile Data Saved!"; // model.Id == 0 ? "Company profile added successfully." : "Company profile updated successfully.";
-                apiResponse.data = null;
+                apiResponse.message = model.Id > 0
+                    ? "Company profile updated successfully!"
+                    : "Company profile added successfully!";
+
+                apiResponse.data = new
+                {
+                    CompanyId = rowId
+                };
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

@@ -216,135 +216,483 @@ namespace ERPAdmin.ApiControllers
         [Route("SaveCompanyHallDetails")]
         public IActionResult SaveCompanyHallDetails([FromBody] SaveCompanyHallDetailsRequest model)
         {
-            var apiResponse = new apiResponse();
+            apiResponse apiResponse = new apiResponse();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(
+                    ControllerContext,
+                    Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
+                {
                     return errorResult!;
+                }
+
+                #region IMAGE VALIDATION
+
+                string[] allowedImageTypes =
+                {
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".webp"
+                };
+
+                // Validate all uploaded images BEFORE saving anything to DB
+                var imagesToValidate = new[]
+                {
+                    new { Name = "Image 1", Data = model.Image1 },
+                    new { Name = "Image 2", Data = model.Image2 },
+                    new { Name = "Image 3", Data = model.Image3 },
+                    new { Name = "Image 4", Data = model.Image4 },
+                    new { Name = "Image 5", Data = model.Image5 }
+                };
+
+                foreach (var image in imagesToValidate)
+                {
+                    if (!string.IsNullOrWhiteSpace(image.Data))
+                    {
+                        try
+                        {
+                            _imageUploadService.ValidateBase64File(
+                                image.Data,
+                                allowedImageTypes,
+                                1 // Max 1 MB
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(new apiResponse
+                            {
+                                status = "Error",
+                                message = $"{image.Name}: {ex.Message}"
+                            });
+                        }
+                    }
+                }
+
+                #endregion
+
+
+                long rowId = 0;
 
                 using (SqlConnection con = new SqlConnection(connString))
                 {
-                    SqlCommand cmd = new SqlCommand("SaveCompanyHallDetails", con);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
-                    cmd.Parameters.Add("@HallName", SqlDbType.VarChar, 255).Value = model.HallName;
-                    cmd.Parameters.Add("@CapacityRange", SqlDbType.BigInt).Value = model.CapacityRange;
-                    cmd.Parameters.Add("@RentPerDay", SqlDbType.Decimal).Value = model.RentPerDay;
-                    cmd.Parameters.Add("@IsPartitioned", SqlDbType.Bit).Value = model.IsPartitioned;
-                    cmd.Parameters.Add("@Video360Link", SqlDbType.VarChar, 500).Value = (object?)model.Video360Link ?? DBNull.Value;
-                    cmd.Parameters.Add("@PromoVideo1", SqlDbType.VarChar, 500).Value = (object?)model.PromoVideo1 ?? DBNull.Value;
-                    cmd.Parameters.Add("@PromoVideo2", SqlDbType.VarChar, 500).Value = (object?)model.PromoVideo2 ?? DBNull.Value;
-                    cmd.Parameters.Add("@Image1", SqlDbType.VarChar, 500).Value = DBNull.Value; //(object?)model.Image1 ?? DBNull.Value;
-                    cmd.Parameters.Add("@Image2", SqlDbType.VarChar, 500).Value = DBNull.Value; //(object?)model.Image2 ?? DBNull.Value;
-                    cmd.Parameters.Add("@Image3", SqlDbType.VarChar, 500).Value = DBNull.Value; //(object?)model.Image3 ?? DBNull.Value;
-                    cmd.Parameters.Add("@Image4", SqlDbType.VarChar, 500).Value = DBNull.Value; //(object?)model.Image4 ?? DBNull.Value;
-                    cmd.Parameters.Add("@Image5", SqlDbType.VarChar, 500).Value = DBNull.Value; //(object?)model.Image5 ?? DBNull.Value;
-                    cmd.Parameters.Add("@GoodFor_GrandWedding", SqlDbType.Bit).Value = model.GoodFor_GrandWedding;
-                    cmd.Parameters.Add("@GoodFor_Weddings", SqlDbType.Bit).Value = model.GoodFor_Weddings;
-                    cmd.Parameters.Add("@GoodFor_BirthdayParty", SqlDbType.Bit).Value = model.GoodFor_BirthdayParty;
-                    cmd.Parameters.Add("@GoodFor_Engagement", SqlDbType.Bit).Value = model.GoodFor_Engagement;
-                    cmd.Parameters.Add("@GoodFor_FamilyFunctions", SqlDbType.Bit).Value = model.GoodFor_FamilyFunctions;
-                    cmd.Parameters.Add("@GoodFor_Communion", SqlDbType.Bit).Value = model.GoodFor_Communion;
-                    cmd.Parameters.Add("@GoodFor_BoardMeetings", SqlDbType.Bit).Value = model.GoodFor_BoardMeetings;
-                    cmd.Parameters.Add("@GoodFor_ProductLaunch", SqlDbType.Bit).Value = model.GoodFor_ProductLaunch;
-                    cmd.Parameters.Add("@GoodFor_OfficialEvent", SqlDbType.Bit).Value = model.GoodFor_OfficialEvent;
-                    cmd.Parameters.Add("@Seating_Cluster", SqlDbType.Bit).Value = model.Seating_Cluster;
-                    cmd.Parameters.Add("@Seating_Theatre", SqlDbType.Bit).Value = model.Seating_Theatre;
-                    cmd.Parameters.Add("@Seating_UShape", SqlDbType.Bit).Value = model.Seating_UShape;
-                    cmd.Parameters.Add("@Seating_HollowSquare", SqlDbType.Bit).Value = model.Seating_HollowSquare;
-                    cmd.Parameters.Add("@Seating_Boardroom", SqlDbType.Bit).Value = model.Seating_Boardroom;
-                    cmd.Parameters.Add("@Seating_DanceFloor", SqlDbType.Bit).Value = model.Seating_DanceFloor;
-                    cmd.Parameters.Add("@Amenity_ChangingRoom", SqlDbType.Bit).Value = model.Amenity_ChangingRoom;
-                    cmd.Parameters.Add("@Amenity_AirCondition", SqlDbType.Bit).Value = model.Amenity_AirCondition;
-                    cmd.Parameters.Add("@Amenity_CoupleChairs", SqlDbType.Bit).Value = model.Amenity_CoupleChairs;
-                    cmd.Parameters.Add("@Amenity_Sofa", SqlDbType.Bit).Value = model.Amenity_Sofa;
-                    cmd.Parameters.Add("@Amenity_MusicSystem", SqlDbType.Bit).Value = model.Amenity_MusicSystem;
-                    cmd.Parameters.Add("@Amenity_Mic", SqlDbType.Bit).Value = model.Amenity_Mic;
-                    cmd.Parameters.Add("@Amenity_Podium", SqlDbType.Bit).Value = model.Amenity_Podium;
-                    cmd.Parameters.Add("@Amenity_Lights", SqlDbType.Bit).Value = model.Amenity_Lights;
-                    cmd.Parameters.Add("@Amenity_FalseCeiling", SqlDbType.Bit).Value = model.Amenity_FalseCeiling;
-                    cmd.Parameters.Add("@Amenity_Fans", SqlDbType.Bit).Value = model.Amenity_Fans;
-                    cmd.Parameters.Add("@Amenity_Cloakroom", SqlDbType.Bit).Value = model.Amenity_Cloakroom;
-                    cmd.Parameters.Add("@Amenity_Lockers", SqlDbType.Bit).Value = model.Amenity_Lockers;
-                    cmd.Parameters.Add("@Amenity_Projectors", SqlDbType.Bit).Value = model.Amenity_Projectors;
-                    cmd.Parameters.Add("@Amenity_WiFi", SqlDbType.Bit).Value = model.Amenity_WiFi;
-                    cmd.Parameters.Add("@Amenity_Stage", SqlDbType.Bit).Value = model.Amenity_Stage;
-                    cmd.Parameters.Add("@Amenity_WashRoom", SqlDbType.Bit).Value = model.Amenity_WashRoom;
-                    cmd.Parameters.Add("@Amenity_PlasmaScreen", SqlDbType.Bit).Value = model.Amenity_PlasmaScreen;
-                    cmd.Parameters.Add("@Amenity_PowerBackup", SqlDbType.Bit).Value = model.Amenity_PowerBackup;
-                    cmd.Parameters.Add("@Amenity_BoardroomSetup", SqlDbType.Bit).Value = model.Amenity_BoardroomSetup;
-                    cmd.Parameters.Add("@Amenity_WallClock", SqlDbType.Bit).Value = model.Amenity_WallClock;
-                    cmd.Parameters.Add("@Amenity_ShoeRack", SqlDbType.Bit).Value = model.Amenity_ShoeRack;
-                    cmd.Parameters.Add("@Amenity_RedCarpet", SqlDbType.Bit).Value = model.Amenity_RedCarpet;
-                    cmd.Parameters.Add("@Is_Blocked", SqlDbType.Bit).Value = model.Is_Blocked;
-
-                    cmd.Parameters.Add("@CapacityWithPartition_Id", SqlDbType.Int).Value = model.CapacityWithPartition_Id ?? (object)DBNull.Value;
-                    cmd.Parameters.Add("@RentWithPartition", SqlDbType.Decimal).Value = model.RentWithPartition ?? (object)DBNull.Value;
-                    cmd.Parameters.Add("@IsHallMerged", SqlDbType.Bit).Value = model.IsHallMerged;
-
-                    string? mergeHallJson = (model.MergeHall_JSON != null && model.MergeHall_JSON.Any())
-                            ? JsonConvert.SerializeObject(model.MergeHall_JSON)
-                            : null;
-
-                    cmd.Parameters.Add("@MergeHall_JSON", SqlDbType.NVarChar).Value =
-                        string.IsNullOrWhiteSpace(mergeHallJson)
-                            ? (object)DBNull.Value
-                            : mergeHallJson;
-
-                    cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
-
                     con.Open();
-                    //cmd.ExecuteNonQuery();
-                    // First execute the main command to get rowid
-                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
 
-                    // Handle images (Image1 through Image5)
-                    for (int i = 1; i <= 5; i++)
+                    #region SAVE HALL DETAILS
+
+                    using (SqlCommand cmd = new SqlCommand("SaveCompanyHallDetails", con))
                     {
-                        string imageProperty = $"Image{i}";
-                        var imageValue = (string)model.GetType().GetProperty(imageProperty).GetValue(model);
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        if (!string.IsNullOrEmpty(imageValue))
-                        {
-                            string fileType = _imageUploadService.GetFileTypeFromBase64(imageValue);
-                            string folderPath = $"/org/{domain}/Company_HallRentAndDetails_Images"; // Updated to include domain
-                            //string folderName = "/Company_HallRentAndDetails_Images";
-                            _imageUploadService.DeleteImages(folderPath, rowid.ToString() + "_img" + i);
-                            string uploadedFileName = _imageUploadService.UploadImage(imageValue, folderPath, rowid.ToString() + "_img" + i, fileType);
-                            model.GetType().GetProperty(imageProperty).SetValue(model, uploadedFileName);
-                        }
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.Id;
+
+                        cmd.Parameters.Add("@HallName", SqlDbType.VarChar, 255).Value =
+                            (object?)model.HallName ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@CapacityRange", SqlDbType.BigInt).Value =
+                            model.CapacityRange;
+
+                        cmd.Parameters.Add("@RentPerDay", SqlDbType.Decimal).Value =
+                            model.RentPerDay;
+
+                        cmd.Parameters.Add("@IsPartitioned", SqlDbType.Bit).Value =
+                            model.IsPartitioned;
+
+                        cmd.Parameters.Add("@Video360Link", SqlDbType.VarChar, 500).Value =
+                            (object?)model.Video360Link ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@PromoVideo1", SqlDbType.VarChar, 500).Value =
+                            (object?)model.PromoVideo1 ?? DBNull.Value;
+
+                        cmd.Parameters.Add("@PromoVideo2", SqlDbType.VarChar, 500).Value =
+                            (object?)model.PromoVideo2 ?? DBNull.Value;
+
+
+                        // Images are uploaded after row is saved
+                        cmd.Parameters.Add("@Image1", SqlDbType.VarChar, 500).Value = DBNull.Value;
+                        cmd.Parameters.Add("@Image2", SqlDbType.VarChar, 500).Value = DBNull.Value;
+                        cmd.Parameters.Add("@Image3", SqlDbType.VarChar, 500).Value = DBNull.Value;
+                        cmd.Parameters.Add("@Image4", SqlDbType.VarChar, 500).Value = DBNull.Value;
+                        cmd.Parameters.Add("@Image5", SqlDbType.VarChar, 500).Value = DBNull.Value;
+
+
+                        #region GOOD FOR
+
+                        cmd.Parameters.Add("@GoodFor_GrandWedding", SqlDbType.Bit).Value =
+                            model.GoodFor_GrandWedding;
+
+                        cmd.Parameters.Add("@GoodFor_Weddings", SqlDbType.Bit).Value =
+                            model.GoodFor_Weddings;
+
+                        cmd.Parameters.Add("@GoodFor_BirthdayParty", SqlDbType.Bit).Value =
+                            model.GoodFor_BirthdayParty;
+
+                        cmd.Parameters.Add("@GoodFor_Engagement", SqlDbType.Bit).Value =
+                            model.GoodFor_Engagement;
+
+                        cmd.Parameters.Add("@GoodFor_FamilyFunctions", SqlDbType.Bit).Value =
+                            model.GoodFor_FamilyFunctions;
+
+                        cmd.Parameters.Add("@GoodFor_Communion", SqlDbType.Bit).Value =
+                            model.GoodFor_Communion;
+
+                        cmd.Parameters.Add("@GoodFor_BoardMeetings", SqlDbType.Bit).Value =
+                            model.GoodFor_BoardMeetings;
+
+                        cmd.Parameters.Add("@GoodFor_ProductLaunch", SqlDbType.Bit).Value =
+                            model.GoodFor_ProductLaunch;
+
+                        cmd.Parameters.Add("@GoodFor_OfficialEvent", SqlDbType.Bit).Value =
+                            model.GoodFor_OfficialEvent;
+
+                        #endregion
+
+
+                        #region SEATING
+
+                        cmd.Parameters.Add("@Seating_Cluster", SqlDbType.Bit).Value =
+                            model.Seating_Cluster;
+
+                        cmd.Parameters.Add("@Seating_Theatre", SqlDbType.Bit).Value =
+                            model.Seating_Theatre;
+
+                        cmd.Parameters.Add("@Seating_UShape", SqlDbType.Bit).Value =
+                            model.Seating_UShape;
+
+                        cmd.Parameters.Add("@Seating_HollowSquare", SqlDbType.Bit).Value =
+                            model.Seating_HollowSquare;
+
+                        cmd.Parameters.Add("@Seating_Boardroom", SqlDbType.Bit).Value =
+                            model.Seating_Boardroom;
+
+                        cmd.Parameters.Add("@Seating_DanceFloor", SqlDbType.Bit).Value =
+                            model.Seating_DanceFloor;
+
+                        #endregion
+
+
+                        #region AMENITIES
+
+                        cmd.Parameters.Add("@Amenity_ChangingRoom", SqlDbType.Bit).Value =
+                            model.Amenity_ChangingRoom;
+
+                        cmd.Parameters.Add("@Amenity_AirCondition", SqlDbType.Bit).Value =
+                            model.Amenity_AirCondition;
+
+                        cmd.Parameters.Add("@Amenity_CoupleChairs", SqlDbType.Bit).Value =
+                            model.Amenity_CoupleChairs;
+
+                        cmd.Parameters.Add("@Amenity_Sofa", SqlDbType.Bit).Value =
+                            model.Amenity_Sofa;
+
+                        cmd.Parameters.Add("@Amenity_MusicSystem", SqlDbType.Bit).Value =
+                            model.Amenity_MusicSystem;
+
+                        cmd.Parameters.Add("@Amenity_Mic", SqlDbType.Bit).Value =
+                            model.Amenity_Mic;
+
+                        cmd.Parameters.Add("@Amenity_Podium", SqlDbType.Bit).Value =
+                            model.Amenity_Podium;
+
+                        cmd.Parameters.Add("@Amenity_Lights", SqlDbType.Bit).Value =
+                            model.Amenity_Lights;
+
+                        cmd.Parameters.Add("@Amenity_FalseCeiling", SqlDbType.Bit).Value =
+                            model.Amenity_FalseCeiling;
+
+                        cmd.Parameters.Add("@Amenity_Fans", SqlDbType.Bit).Value =
+                            model.Amenity_Fans;
+
+                        cmd.Parameters.Add("@Amenity_Cloakroom", SqlDbType.Bit).Value =
+                            model.Amenity_Cloakroom;
+
+                        cmd.Parameters.Add("@Amenity_Lockers", SqlDbType.Bit).Value =
+                            model.Amenity_Lockers;
+
+                        cmd.Parameters.Add("@Amenity_Projectors", SqlDbType.Bit).Value =
+                            model.Amenity_Projectors;
+
+                        cmd.Parameters.Add("@Amenity_WiFi", SqlDbType.Bit).Value =
+                            model.Amenity_WiFi;
+
+                        cmd.Parameters.Add("@Amenity_Stage", SqlDbType.Bit).Value =
+                            model.Amenity_Stage;
+
+                        cmd.Parameters.Add("@Amenity_WashRoom", SqlDbType.Bit).Value =
+                            model.Amenity_WashRoom;
+
+                        cmd.Parameters.Add("@Amenity_PlasmaScreen", SqlDbType.Bit).Value =
+                            model.Amenity_PlasmaScreen;
+
+                        cmd.Parameters.Add("@Amenity_PowerBackup", SqlDbType.Bit).Value =
+                            model.Amenity_PowerBackup;
+
+                        cmd.Parameters.Add("@Amenity_BoardroomSetup", SqlDbType.Bit).Value =
+                            model.Amenity_BoardroomSetup;
+
+                        cmd.Parameters.Add("@Amenity_WallClock", SqlDbType.Bit).Value =
+                            model.Amenity_WallClock;
+
+                        cmd.Parameters.Add("@Amenity_ShoeRack", SqlDbType.Bit).Value =
+                            model.Amenity_ShoeRack;
+
+                        cmd.Parameters.Add("@Amenity_RedCarpet", SqlDbType.Bit).Value =
+                            model.Amenity_RedCarpet;
+
+                        #endregion
+
+
+                        cmd.Parameters.Add("@Is_Blocked", SqlDbType.Bit).Value =
+                            model.Is_Blocked;
+
+                        cmd.Parameters.Add("@CapacityWithPartition_Id", SqlDbType.Int).Value =
+                            model.CapacityWithPartition_Id ?? (object)DBNull.Value;
+
+                        cmd.Parameters.Add("@RentWithPartition", SqlDbType.Decimal).Value =
+                            model.RentWithPartition ?? (object)DBNull.Value;
+
+                        cmd.Parameters.Add("@IsHallMerged", SqlDbType.Bit).Value =
+                            model.IsHallMerged;
+
+
+                        string? mergeHallJson =
+                            model.MergeHall_JSON != null &&
+                            model.MergeHall_JSON.Any()
+                                ? JsonConvert.SerializeObject(model.MergeHall_JSON)
+                                : null;
+
+                        cmd.Parameters.Add("@MergeHall_JSON", SqlDbType.NVarChar).Value =
+                            string.IsNullOrWhiteSpace(mergeHallJson)
+                                ? DBNull.Value
+                                : mergeHallJson;
+
+
+                        cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value =
+                            model.ActionBy;
+
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
                     }
 
-                    // Update all media paths in database using the stored procedure
-                    using (SqlCommand mediaCmd = new SqlCommand("SaveCompanyHallDetailsMedia", con))
+                    #endregion
+
+
+                    #region IMAGE UPLOAD
+
+                    string folderPath =
+                        $"org/{domain}/Company_HallRentAndDetails_Images/";
+
+                    string? uploadedImage1 = null;
+                    string? uploadedImage2 = null;
+                    string? uploadedImage3 = null;
+                    string? uploadedImage4 = null;
+                    string? uploadedImage5 = null;
+
+
+                    // ==========================
+                    // IMAGE 1
+                    // ==========================
+
+                    if (!string.IsNullOrWhiteSpace(model.Image1))
+                    {
+                        string fileType =
+                            _imageUploadService.GetFileTypeFromBase64(model.Image1);
+
+                        string filePrefix = $"{rowId}_img1";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            filePrefix
+                        );
+
+                        uploadedImage1 =
+                            _imageUploadService.UploadImage(
+                                model.Image1,
+                                folderPath,
+                                filePrefix,
+                                fileType
+                            );
+                    }
+
+
+                    // ==========================
+                    // IMAGE 2
+                    // ==========================
+
+                    if (!string.IsNullOrWhiteSpace(model.Image2))
+                    {
+                        string fileType =
+                            _imageUploadService.GetFileTypeFromBase64(model.Image2);
+
+                        string filePrefix = $"{rowId}_img2";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            filePrefix
+                        );
+
+                        uploadedImage2 =
+                            _imageUploadService.UploadImage(
+                                model.Image2,
+                                folderPath,
+                                filePrefix,
+                                fileType
+                            );
+                    }
+
+
+                    // ==========================
+                    // IMAGE 3
+                    // ==========================
+
+                    if (!string.IsNullOrWhiteSpace(model.Image3))
+                    {
+                        string fileType =
+                            _imageUploadService.GetFileTypeFromBase64(model.Image3);
+
+                        string filePrefix = $"{rowId}_img3";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            filePrefix
+                        );
+
+                        uploadedImage3 =
+                            _imageUploadService.UploadImage(
+                                model.Image3,
+                                folderPath,
+                                filePrefix,
+                                fileType
+                            );
+                    }
+
+
+                    // ==========================
+                    // IMAGE 4
+                    // ==========================
+
+                    if (!string.IsNullOrWhiteSpace(model.Image4))
+                    {
+                        string fileType =
+                            _imageUploadService.GetFileTypeFromBase64(model.Image4);
+
+                        string filePrefix = $"{rowId}_img4";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            filePrefix
+                        );
+
+                        uploadedImage4 =
+                            _imageUploadService.UploadImage(
+                                model.Image4,
+                                folderPath,
+                                filePrefix,
+                                fileType
+                            );
+                    }
+
+
+                    // ==========================
+                    // IMAGE 5
+                    // ==========================
+
+                    if (!string.IsNullOrWhiteSpace(model.Image5))
+                    {
+                        string fileType =
+                            _imageUploadService.GetFileTypeFromBase64(model.Image5);
+
+                        string filePrefix = $"{rowId}_img5";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            filePrefix
+                        );
+
+                        uploadedImage5 =
+                            _imageUploadService.UploadImage(
+                                model.Image5,
+                                folderPath,
+                                filePrefix,
+                                fileType
+                            );
+                    }
+
+                    #endregion
+
+
+                    #region UPDATE MEDIA
+
+                    /*
+                     * IMPORTANT:
+                     *
+                     * Send NULL for images where no NEW image was uploaded.
+                     *
+                     * SaveCompanyHallDetailsMedia should preserve the existing
+                     * DB image when the corresponding parameter is NULL.
+                     */
+
+                    using (SqlCommand mediaCmd =
+                           new SqlCommand("SaveCompanyHallDetailsMedia", con))
                     {
                         mediaCmd.CommandType = CommandType.StoredProcedure;
-                        mediaCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
-                        mediaCmd.Parameters.Add("@Image1", SqlDbType.VarChar, 500).Value = (object)model.Image1 ?? DBNull.Value;
-                        mediaCmd.Parameters.Add("@Image2", SqlDbType.VarChar, 500).Value = (object)model.Image2 ?? DBNull.Value;
-                        mediaCmd.Parameters.Add("@Image3", SqlDbType.VarChar, 500).Value = (object)model.Image3 ?? DBNull.Value;
-                        mediaCmd.Parameters.Add("@Image4", SqlDbType.VarChar, 500).Value = (object)model.Image4 ?? DBNull.Value;
-                        mediaCmd.Parameters.Add("@Image5", SqlDbType.VarChar, 500).Value = (object)model.Image5 ?? DBNull.Value;
+
+                        mediaCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value =
+                            rowId;
+
+                        mediaCmd.Parameters.Add("@Image1", SqlDbType.VarChar, 500).Value =
+                            (object?)uploadedImage1 ?? DBNull.Value;
+
+                        mediaCmd.Parameters.Add("@Image2", SqlDbType.VarChar, 500).Value =
+                            (object?)uploadedImage2 ?? DBNull.Value;
+
+                        mediaCmd.Parameters.Add("@Image3", SqlDbType.VarChar, 500).Value =
+                            (object?)uploadedImage3 ?? DBNull.Value;
+
+                        mediaCmd.Parameters.Add("@Image4", SqlDbType.VarChar, 500).Value =
+                            (object?)uploadedImage4 ?? DBNull.Value;
+
+                        mediaCmd.Parameters.Add("@Image5", SqlDbType.VarChar, 500).Value =
+                            (object?)uploadedImage5 ?? DBNull.Value;
 
                         mediaCmd.ExecuteNonQuery();
                     }
 
-                    con.Close();
+                    #endregion
                 }
 
+
                 apiResponse.status = "Success";
-                apiResponse.message = model.Id == 0 ? "Hall details inserted successfully." : "Hall details updated successfully.";
-                apiResponse.data = null;
+
+                apiResponse.message =
+                    model.Id == 0
+                        ? "Hall details inserted successfully."
+                        : "Hall details updated successfully.";
+
+                apiResponse.data = new
+                {
+                    HallId = rowId
+                };
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                ErrorLogger.LogException(
+                    ex,
+                    ControllerContext,
+                    Request,
+                    null
+                );
+
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

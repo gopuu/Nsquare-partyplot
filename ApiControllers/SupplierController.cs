@@ -109,75 +109,105 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveSupplier([FromBody] SaveSupplier request)
         {
             apiResponse apiResponse = new apiResponse();
+
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                { return errorResult!; }
+                    return errorResult!;
+
+                #region VALIDATION
+
+                if (string.IsNullOrWhiteSpace(request.Name))
+                    return BadRequest(new apiResponse { status = "Error", message = "Supplier name is required." });
+
+                if (!string.IsNullOrWhiteSpace(request.Documents))
+                {
+                    try
+                    {
+                        _imageUploadService.ValidateBase64File(
+                            request.Documents,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = ex.Message
+                        });
+                    }
+                }
+
+                #endregion
 
                 using (SqlConnection conn = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveSupplier", conn))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Id", request.Id);
-                    cmd.Parameters.AddWithValue("@Name", request.Name);
-                    cmd.Parameters.AddWithValue("@CompanyName", (object?)request.CompanyName ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Phone", (object?)request.Phone ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@GSTNo", (object?)request.GSTNo ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@RegisterAddress", (object?)request.RegisterAddress ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@RegisterStateId", (object?)request.RegisterStateId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@RegisterCity", (object?)request.RegisterCity ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@RegisterPincode", (object?)request.RegisterPincode ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@ShippingAddress", (object?)request.ShippingAddress ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@FSSAI_LicNo", (object?)request.FSSAI_LicNo ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@PAN_No", (object?)request.PAN_No ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@MSME_No", (object?)request.MSME_No ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@TAN_No", (object?)request.TAN_No ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@CIN_No", (object?)request.CIN_No ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@TCS_Percent", (object?)request.TCS_Percent ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@SupplierType", (object?)request.SupplierType ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@Documents", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IsActive", request.IsActive);
-                    cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
-
                     conn.Open();
 
-                    Int64 rowid = Convert.ToInt64(cmd.ExecuteScalar());
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (request.Documents != string.Empty && request.Documents != null)
+                    long rowid;
+
+                    using (SqlCommand cmd = new SqlCommand("SaveSupplier", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@Id", request.Id);
+                        cmd.Parameters.AddWithValue("@Name", request.Name);
+                        cmd.Parameters.AddWithValue("@CompanyName", (object?)request.CompanyName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Phone", (object?)request.Phone ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@GSTNo", (object?)request.GSTNo ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@RegisterAddress", (object?)request.RegisterAddress ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RegisterStateId", (object?)request.RegisterStateId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RegisterCity", (object?)request.RegisterCity ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RegisterPincode", (object?)request.RegisterPincode ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@ShippingAddress", (object?)request.ShippingAddress ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@FSSAI_LicNo", (object?)request.FSSAI_LicNo ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@PAN_No", (object?)request.PAN_No ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@MSME_No", (object?)request.MSME_No ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@TAN_No", (object?)request.TAN_No ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@CIN_No", (object?)request.CIN_No ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@TCS_Percent", (object?)request.TCS_Percent ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@SupplierType", (object?)request.SupplierType ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@Documents", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@IsActive", request.IsActive);
+                        cmd.Parameters.AddWithValue("@ActionBy", request.ActionBy);
+
+                        rowid = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(request.Documents))
                     {
                         string imgType = _imageUploadService.GetFileTypeFromBase64(request.Documents);
+                        string folderPath = $"org/{domain}/supplierDocuments/";
 
-                        //string imgType = ".jpg";
-                        //get filename with fileType
-                        //request.Documents = _imageUploadService.UploadImage(request.Documents, "employeePic", rowid.ToString(), imgType);
-
-                        string folderPath = $"org/{domain}/supplierDocuments"; // Updated to include domain
                         _imageUploadService.DeleteImages(folderPath, rowid.ToString());
-                        //model.Logo = _imageUploadService.UploadImage(model.Logo, folderPath, rowid.ToString(), imgType);
-                        request.Documents = _imageUploadService.UploadImage(request.Documents, folderPath, rowid.ToString(), imgType);
 
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", conn);
+                        string fileName = _imageUploadService.UploadImage(
+                            request.Documents,
+                            folderPath,
+                            rowid.ToString(),
+                            imgType
+                        );
+
+                        using SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", conn);
                         cmd2.CommandType = CommandType.StoredProcedure;
                         cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
-                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = request.Documents;
+                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
                         cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "SupplierMaster";
                         cmd2.ExecuteNonQuery();
-
-                        latestImagePath = domainUrl + "/uploads/org/" + domain + "/supplierDocuments/" + request.Documents;
                     }
 
                     apiResponse.status = "Success";
                     apiResponse.message = "Supplier saved successfully!";
                     apiResponse.data = new { SupplierId = rowid };
+
                     return Ok(apiResponse);
                 }
             }

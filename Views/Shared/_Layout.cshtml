@@ -561,7 +561,7 @@
                             <li>
                                 <a class="dropdown-item @(currentController == "Company" ? "active" : "")" href="/Company">
                                     <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="briefcase"></span>Company
+                                        <span class="me-2 uil" data-feather="home"></span>Company
                                     </div>
                                 </a>
                             </li>
@@ -667,6 +667,11 @@
                                                 <a class="dropdown-link general_masterMenu" href="/StatusMaster">
                                                     <span class="me-2" data-feather="toggle-left"></span>
                                                     <span class="menu-text">Status Master</span>
+                                                </a>
+
+                                                <a class="dropdown-link general_masterMenu" href="/InfinityDrive_Master">
+                                                    <span class="me-2" data-feather="hard-drive"></span>
+                                                    <span class="menu-text">Infinity Drive Master</span>
                                                 </a>
                                             </div>
 
@@ -889,6 +894,46 @@
                                 </ul>
                             </li>
 
+                            <!--Infinity Center-->
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "InfinityCenter" ? "active" : "")"
+                                   id="settingsMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="me-2 uil" data-feather="grid"></span>Infinity Center
+                                        </span>
+                                    </div>
+                                </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="dropdown-item" href="/InfinityDrive">
+                                            <div class="dropdown-item-wrapper">
+                                                <!-- Infinity Drive -->
+                                                <span class="me-2" data-feather="hard-drive"></span>
+                                                Infinity Drive
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/InfinityGrowth">
+                                            <div class="dropdown-item-wrapper">
+                                                <!-- Infinity Growth -->
+                                                <span class="me-2" data-feather="trending-up"></span>
+                                                Infinity Growth
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
 
                             <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
@@ -898,6 +943,8 @@
                                     </div>
                                 </a>
                             </li>
+
+
                         </ul>
                     </li>
                 </ul>

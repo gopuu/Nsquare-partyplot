@@ -18,8 +18,10 @@ namespace ERPAdmin.Services
         // =====================================================
         // MAIN PROCESS
         // =====================================================
+        long cnt = 0;
         public async Task ProcessReminders(string connString, string domainUrl)
         {
+            cnt++;
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -79,7 +81,7 @@ namespace ERPAdmin.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(" /Services/EventReminderService ProcessReminders(conn, domainUrl): " + ex.Message);
+                Console.WriteLine("/Services/EventReminderService ProcessReminders(conn, domainUrl): " + ex.Message + ", cnt:" + cnt);
             }
         }
 

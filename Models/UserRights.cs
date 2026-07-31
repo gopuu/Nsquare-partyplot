@@ -1,5 +1,37 @@
 ﻿namespace ERPAdmin.Models
 {
+    //SOP Rights
+    public class InfinityGrowth_SOPEmployeeAccessRequest
+    {
+        public long EmployeeId { get; set; }
+    }
+    public class InfinityGrowth_SOPEmployeeAccessRightModel
+    {
+        public long DocumentId { get; set; }
+        public string DocumentName { get; set; } = "";
+        public long CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public long ParentCategoryId { get; set; }
+        public long EmployeeId { get; set; }
+        public long AccessRightId { get; set; }
+        public bool CanView { get; set; }
+    }
+    public class SaveInfinityGrowth_SOPRightsRequest
+    {
+        public long StaffId { get; set; }
+        public List<SaveInfinityGrowth_SOPEmployeeAccessRightModel> SOPRights { get; set; } 
+            = new List<SaveInfinityGrowth_SOPEmployeeAccessRightModel>();
+    }
+
+    public class SaveInfinityGrowth_SOPEmployeeAccessRightModel
+    {
+        public long EmployeeId { get; set; }
+        public long DocumentId { get; set; }
+        public bool CanView { get; set; }
+    }
+
+
+    //Use Rights
     public class GetUserRightsRequest
     {
         public long StaffId { get; set; }

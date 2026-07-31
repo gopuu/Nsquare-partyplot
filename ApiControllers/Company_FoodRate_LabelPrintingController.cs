@@ -243,7 +243,6 @@ public class SaveCompanyFoodRateLabelPrintingRequest : BaseClass
     public long? Id { get; set; }
     public string? FontName { get; set; }
     public int? FontSize { get; set; }
-    //public string? PreviewImagePath { get; set; }
     public string? PlaqueSizeInches { get; set; }
     public string? PlaqueSizeCm { get; set; }
     public string? PlaqueSizeMm { get; set; }

@@ -117,77 +117,129 @@ namespace ERPAdmin.ApiControllers
         public IActionResult SaveIncomeTransaction([FromBody] SaveIncomeTransactionRequest model)
         {
             apiResponse apiResponse = new apiResponse();
+
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                if (!TryGetConnectionAndDomain(ControllerContext, Request,
+                    out string connString, out string domain, out IActionResult? errorResult))
                     return errorResult!;
 
-                long rowid = 0;
-                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                string deviceInfo = HttpContext.Request.Headers.UserAgent.ToString();
+                #region FILE VALIDATION
 
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveIncomeTransaction", con))
+                if (!string.IsNullOrWhiteSpace(model.BillFile))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Id", model.Id);
-                    cmd.Parameters.AddWithValue("@AccountId", model.AccountId);
-                    cmd.Parameters.AddWithValue("@CategoryId", model.CategoryId);
-                    cmd.Parameters.AddWithValue("@SubCategoryId", (object)model.SubCategoryId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Amount", model.Amount);
-                    cmd.Parameters.AddWithValue("@TransactionDate", model.TransactionDate);
-                    cmd.Parameters.AddWithValue("@PaymentModeId", (object)model.PaymentModeId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@TransactionId", (object)model.TransactionId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes", (object)model.Notes ?? DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@VoucherNo", (object)model.VoucherNo ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ChequeBank", (object)model.ChequeBank ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ChequeNo", (object)model.ChequeNo ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ChequeDate", (object)model.ChequeDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
-
-                    cmd.Parameters.AddWithValue("@IPAddress", ipAddress);
-                    cmd.Parameters.AddWithValue("@DeviceInfo", deviceInfo);
-
-                    con.Open();
-                    rowid = Convert.ToInt64(cmd.ExecuteScalar());
-
-                    string latestImagePath = string.Empty;
-                    //photo upload
-                    if (model.BillFile != string.Empty && model.BillFile != null)
+                    try
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.BillFile);
-
-                        string folderPath = $"org/{domain}/IncomeTransactions/"; // Updated to include domain
-                        string fileName = $"Income_VN_{model.VoucherNo}_TxnId_{rowid.ToString()}";
-
-                        _imageUploadService.DeleteImages(folderPath, $"{fileName}");
-                        model.BillFile = _imageUploadService.UploadImage(model.BillFile, folderPath, fileName, imgType);
-
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowid;
-                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.BillFile; // Kept max for nvarchar(max)
-                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "IncomeTransactions";
-                        cmd2.ExecuteNonQuery();
-
-                        latestImagePath = $"{domainUrl}/uploads/{folderPath}/{model.BillFile}";
+                        _imageUploadService.ValidateBase64File(
+                            model.BillFile,
+                            new[] { ".pdf", ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = $"Bill file: {ex.Message}"
+                        });
                     }
                 }
 
+                #endregion
+
+                long rowId = 0;
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+                string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    #region SAVE INCOME TRANSACTION
+
+                    using (SqlCommand cmd = new SqlCommand("SaveIncomeTransaction", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@Id", model.Id);
+                        cmd.Parameters.AddWithValue("@AccountId", model.AccountId);
+                        cmd.Parameters.AddWithValue("@CategoryId", model.CategoryId);
+                        cmd.Parameters.AddWithValue("@SubCategoryId", (object?)model.SubCategoryId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Amount", model.Amount);
+                        cmd.Parameters.AddWithValue("@TransactionDate", model.TransactionDate);
+                        cmd.Parameters.AddWithValue("@PaymentModeId", (object?)model.PaymentModeId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@TransactionId", (object?)model.TransactionId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Notes", (object?)model.Notes ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@VoucherNo", (object?)model.VoucherNo ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ChequeBank", (object?)model.ChequeBank ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ChequeNo", (object?)model.ChequeNo ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ChequeDate", (object?)model.ChequeDate ?? DBNull.Value);
+
+                        cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+                        cmd.Parameters.AddWithValue("@IPAddress", string.IsNullOrWhiteSpace(ipAddress) ? DBNull.Value : ipAddress);
+                        cmd.Parameters.AddWithValue("@UserAgent", string.IsNullOrWhiteSpace(userAgent) ? DBNull.Value : userAgent);
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+
+                    #endregion
+
+                    #region BILL FILE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.BillFile))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.BillFile);
+                        string folderPath = $"org/{domain}/IncomeTransactions/";
+                        string filePrefix = $"Income_VN_{model.VoucherNo}_TxnId_{rowId}";
+
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.BillFile,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
+                            fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
+                            fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "IncomeTransactions";
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+
+                        model.BillFile = fileName;
+                    }
+
+                    #endregion
+                }
+
                 apiResponse.status = "Success";
-                apiResponse.message = model.Id > 0 ? "Income transaction updated successfully!" : "Income transaction inserted successfully!";
-                apiResponse.data = new { IncomeId = rowid };
+                apiResponse.message = model.Id > 0
+                    ? "Income transaction updated successfully!"
+                    : "Income transaction inserted successfully!";
+
+                apiResponse.data = new
+                {
+                    IncomeId = rowId
+                };
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

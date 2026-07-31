@@ -35,58 +35,100 @@ namespace ERPAdmin.ApiControllers
             try
             {
                 if (!TryGetConnectionAndDomain(
-                        ControllerContext,
-                        Request,
-                        out string connString,
-                        out string domain,
-                        out IActionResult? errorResult))
-                {
+                    ControllerContext,
+                    Request,
+                    out string connString,
+                    out string domain,
+                    out IActionResult? errorResult))
                     return errorResult!;
-                }
 
-                long rowId = 0;
+                #region VALIDATION
 
-                using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("SaveAllInOneMaster", con))
+                if (!string.IsNullOrWhiteSpace(model.Image))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Id", model.Id);
-                    cmd.Parameters.AddWithValue("@Title", model.Title);
-                    cmd.Parameters.AddWithValue("@Action_By", model.Action_By);
-                    cmd.Parameters.AddWithValue("@Link", model.Link);
-
-                    con.Open();
-                    rowId = Convert.ToInt64(cmd.ExecuteScalar());
-                    string latestImagePath = string.Empty;
-
-                    //photo upload
-                    if (model.Image != string.Empty && model.Image != null)
+                    try
                     {
-                        string imgType = _imageUploadService.GetFileTypeFromBase64(model.Image);
-                        string folderPath = $"org/{domain}/AllInOne/"; // Updated to include domain
-                        _imageUploadService.DeleteImages(folderPath, $"Id_{rowId.ToString()}");
-                        model.Image = _imageUploadService.UploadImage(model.Image, folderPath, $"Id_{rowId.ToString()}", imgType);
-
-                        //update table
-                        SqlCommand cmd2 = new SqlCommand("Save_DocumentFile", con);
-                        cmd2.CommandType = CommandType.StoredProcedure;
-                        cmd2.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
-                        cmd2.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = model.Image; 
-                        cmd2.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "AllInOne_Master";
-                        cmd2.ExecuteNonQuery();
-                        latestImagePath = $"{domainUrl}/uploads/org/{domain}/AllInOne/{model.Image}";
+                        _imageUploadService.ValidateBase64File(
+                            model.Image,
+                            new[] { ".jpg", ".jpeg", ".png" },
+                            1
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new apiResponse
+                        {
+                            status = "Error",
+                            message = ex.Message
+                        });
                     }
                 }
 
+                #endregion
+
+                long rowId;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                {
+                    con.Open();
+
+                    #region SAVE MASTER
+
+                    using (SqlCommand cmd = new SqlCommand("SaveAllInOneMaster", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@Id", model.Id);
+                        cmd.Parameters.AddWithValue("@Title", (object?)model.Title ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Action_By", model.Action_By);
+                        cmd.Parameters.AddWithValue("@Link", (object?)model.Link ?? DBNull.Value);
+
+                        rowId = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+
+                    #endregion
+
+                    #region IMAGE UPLOAD
+
+                    if (!string.IsNullOrWhiteSpace(model.Image))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.Image);
+                        string folderPath = $"org/{domain}/AllInOne/";
+
+                        _imageUploadService.DeleteImages(
+                            folderPath,
+                            $"Id_{rowId}"
+                        );
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.Image,
+                            folderPath,
+                            $"Id_{rowId}",
+                            fileType
+                        );
+
+                        using SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con);
+                        fileCmd.CommandType = CommandType.StoredProcedure;
+
+                        fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = rowId;
+                        fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
+                        fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "AllInOne_Master";
+
+                        fileCmd.ExecuteNonQuery();
+                    }
+
+                    #endregion
+                }
+
                 apiResponse.status = "Success";
-                apiResponse.message = model.Id > 0  ? "Record updated successfully!" : "Record added successfully!";
+                apiResponse.message = model.Id > 0
+                    ? "Record updated successfully!"
+                    : "Record added successfully!";
 
                 apiResponse.data = new SaveAllInOneMasterRequest
                 {
                     Id = rowId
                 };
-
 
                 return Ok(apiResponse);
             }
@@ -96,6 +138,7 @@ namespace ERPAdmin.ApiControllers
 
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
+
                 return StatusCode(500, apiResponse);
             }
         }

@@ -37,9 +37,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="PrivateFiles\InfinityGrowth\GrowthManual\" />
-		<Folder Include="PrivateFiles\InfinityGrowth\StaffTrainingAndInstructions\" />
-		<Folder Include="PrivateFiles\InfinityGrowth\Checklists\" />
 		<Folder Include="Reports\" />
 		<Content Remove="Views\Inquiry\Index2.cshtml" />
 		<Folder Include="wwwroot\assets2\Uploads\CompanyPic\" />

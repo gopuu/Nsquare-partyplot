@@ -35,33 +35,6 @@ namespace ERPAdmin.ApiControllers
             //string masterConnString = _configuration.GetConnectionString("ERPAdminDB_Master") ?? string.Empty;
             //_connClass = new ConnClass(httpContextAccessor, masterConnString);
         }
-        private void UploadAndSaveImage(string image, string folderPath, string fileNamePrefix, string storedProcedureName, string columnName, SqlConnection con, long rowid)
-        {
-            if (!string.IsNullOrEmpty(image))
-            {
-                // Check file extension
-                string imgType = _imageUploadService.GetFileTypeFromBase64(image);
-
-                // Generate file name and timestamp
-                string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                string fileName = $"{fileNamePrefix}_{timestamp}";
-
-                // Delete existing images for the given row ID
-                _imageUploadService.DeleteImages(folderPath, rowid.ToString());
-
-                // Upload new image
-                image = _imageUploadService.UploadImage(image, folderPath, fileName, imgType);
-
-                // Update table in database
-                using (SqlCommand cmd = new SqlCommand(storedProcedureName, con))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@Company_Id", SqlDbType.BigInt).Value = rowid;
-                    cmd.Parameters.Add($"@{columnName}", SqlDbType.NVarChar, -1).Value = image;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
 
     }
 }

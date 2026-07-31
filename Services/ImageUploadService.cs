@@ -20,52 +20,28 @@ namespace ERPAdmin.Services
         }
         public string UploadImage(string base64image, string folderName, string fileName, string fileType)
         {
-            //Restrict Extensions
-            var allowedTypes = new[] { ".jpg", ".jpeg", ".png", ".webp", ".pdf" };
-            if (!allowedTypes.Contains(fileType.ToLower()))
-            {
-                throw new Exception("Invalid file type.");
-            }
-            folderName = folderName?.TrimStart('/', '\\');
-            // Define the folder path where the image will be saved
-            //string uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
+            if (string.IsNullOrWhiteSpace(base64image))
+                return "";
+
+            folderName = folderName?.TrimStart('/', '\\') ?? "";
             string uploadFolder = Path.Combine(_env.WebRootPath, "uploads", folderName);
-            // Ensure the directory exists
+
             if (!Directory.Exists(uploadFolder))
-            {
                 Directory.CreateDirectory(uploadFolder);
-            }
 
-            if (!string.IsNullOrEmpty(base64image))
-            {
-                try
-                {
-                    // Decode the base64 string
-                    byte[] imageBytes = Convert.FromBase64String(base64image);
+            string base64Data = base64image.Contains(",")
+                ? base64image.Substring(base64image.IndexOf(',') + 1)
+                : base64image;
 
-                    // Generate a unique file name
-                    //string fileName = Guid.NewGuid().ToString() + ".jpg"; // You can change the extension as needed (e.g., .png)
-                    //fileName = fileName + fileType; // You can change the extension as needed (e.g., .png)
-                    fileName = fileName + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + fileType;
+            byte[] fileBytes = Convert.FromBase64String(base64Data);
 
-                    // Define the full file path
-                    string filePath = Path.Combine(uploadFolder, fileName);
+            fileName = $"{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}{fileType}";
 
-                    // Save the image to the path
-                    System.IO.File.WriteAllBytes(filePath, imageBytes);
+            string filePath = Path.Combine(uploadFolder, fileName);
 
-                    // Optionally, return the file path or URL to the saved image
-                    //string imageUrl = $"uploads/{folderName}/{fileName}";
-                    //string imageUrl = $"{fileName}";
-                    return fileName;
-                }
-                catch (Exception ex)
-                {
-                    return ex.Message;
-                    //Console.WriteLine($"An error occurred while saving the image: {ex.Message}");
-                }
-            }
-            return "";
+            System.IO.File.WriteAllBytes(filePath, fileBytes);
+
+            return fileName;
         }
 
         public string GetImage(string foldername, string filename)
@@ -131,7 +107,7 @@ namespace ERPAdmin.Services
         }
 
 
-        public string GetFileTypeFromBase64(string base64StringOfFile)
+        public string GetFileTypeFromBase64_OLD_31july26(string base64StringOfFile)
         {
             string fileType = ".jpg"; // Default file type
 
@@ -181,37 +157,6 @@ namespace ERPAdmin.Services
             return fileType;
         }
 
-        public string GetFileTypeFromBase64_OLD(string base64StringOfFile)
-        {
-            string imgType = ".jpg"; //default
-            if (!string.IsNullOrEmpty(base64StringOfFile))
-            {
-                // Extract MIME type if Base64 includes it
-                Match match = Regex.Match(base64StringOfFile, @"data:image/(?<type>[a-zA-Z]+);base64,", RegexOptions.IgnoreCase);
-
-                if (match.Success)
-                {
-                    imgType = "." + match.Groups["type"].Value; // Extract file extension
-                }
-                else
-                {
-                    // If MIME type is not present, decode and check magic numbers (optional)
-                    byte[] bytes = Convert.FromBase64String(base64StringOfFile.Contains(",") ? base64StringOfFile.Split(',')[1] : base64StringOfFile);
-
-                    // Check file signature (magic bytes)
-                    if (bytes.Length > 4)
-                    {
-                        imgType = bytes[0] == 0xFF && bytes[1] == 0xD8 ? ".jpg" :
-                                  bytes[0] == 0x89 && bytes[1] == 0x50 ? ".png" :
-                                  bytes[0] == 0x47 && bytes[1] == 0x49 ? ".gif" :
-                                  bytes[0] == 0x42 && bytes[1] == 0x4D ? ".bmp" :
-                                  ".jpg"; // Default fallback
-                    }
-                }
-            }
-            return imgType;
-        }
-
         public void DeleteImages(string folderPath, string fileNamePrefix)
         {
             folderPath = folderPath?.TrimStart('/', '\\');
@@ -226,6 +171,128 @@ namespace ERPAdmin.Services
                     File.Delete(file); // Delete each file
                 }
             }
+        }
+
+        public void ValidateBase64File(string base64File, string[] allowedTypes, int maxSizeMB = 1)
+        {
+            if (string.IsNullOrWhiteSpace(base64File))
+                throw new Exception("File data is empty.");
+
+            if (allowedTypes == null || allowedTypes.Length == 0)
+                throw new Exception("Allowed file types are not configured.");
+
+            string base64Data = base64File.Contains(",")
+                ? base64File.Substring(base64File.IndexOf(',') + 1)
+                : base64File;
+
+            byte[] fileBytes;
+
+            try
+            {
+                fileBytes = Convert.FromBase64String(base64Data);
+            }
+            catch (FormatException)
+            {
+                throw new Exception("Invalid file data.");
+            }
+
+            if (fileBytes.Length == 0)
+                throw new Exception("File is empty.");
+
+            long maxBytes = maxSizeMB * 1024L * 1024L;
+
+            if (fileBytes.Length > maxBytes)
+                throw new Exception($"File size must not exceed {maxSizeMB} MB.");
+
+            string actualFileType = GetFileTypeFromBytes(fileBytes);
+
+            string[] normalizedAllowedTypes = allowedTypes
+                .Select(x => x.StartsWith(".") ? x.ToLowerInvariant() : "." + x.ToLowerInvariant())
+                .ToArray();
+
+            if (!normalizedAllowedTypes.Contains(actualFileType))
+                throw new Exception($"Invalid file type. Allowed types: {string.Join(", ", normalizedAllowedTypes)}");
+        }
+
+        public string GetFileTypeFromBase64(string base64File)
+        {
+            if (string.IsNullOrWhiteSpace(base64File))
+                throw new Exception("File data is empty.");
+
+            string base64Data = base64File.Contains(",")
+                ? base64File.Substring(base64File.IndexOf(',') + 1)
+                : base64File;
+
+            try
+            {
+                byte[] bytes = Convert.FromBase64String(base64Data);
+                return GetFileTypeFromBytes(bytes);
+            }
+            catch (FormatException)
+            {
+                throw new Exception("Invalid file data.");
+            }
+        }
+
+        private string GetFileTypeFromBytes(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length < 4)
+                throw new Exception("Invalid or unsupported file.");
+
+            // PDF: %PDF
+            if (bytes.Length >= 4 &&
+                bytes[0] == 0x25 &&
+                bytes[1] == 0x50 &&
+                bytes[2] == 0x44 &&
+                bytes[3] == 0x46)
+                return ".pdf";
+
+            // JPG/JPEG: FF D8 FF
+            if (bytes.Length >= 3 &&
+                bytes[0] == 0xFF &&
+                bytes[1] == 0xD8 &&
+                bytes[2] == 0xFF)
+                return ".jpg";
+
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            if (bytes.Length >= 8 &&
+                bytes[0] == 0x89 &&
+                bytes[1] == 0x50 &&
+                bytes[2] == 0x4E &&
+                bytes[3] == 0x47 &&
+                bytes[4] == 0x0D &&
+                bytes[5] == 0x0A &&
+                bytes[6] == 0x1A &&
+                bytes[7] == 0x0A)
+                return ".png";
+
+            // GIF
+            if (bytes.Length >= 6 &&
+                bytes[0] == 0x47 &&
+                bytes[1] == 0x49 &&
+                bytes[2] == 0x46 &&
+                bytes[3] == 0x38)
+                return ".gif";
+
+            // BMP
+            if (bytes.Length >= 2 &&
+                bytes[0] == 0x42 &&
+                bytes[1] == 0x4D)
+                return ".bmp";
+
+            // WEBP: RIFF....WEBP
+            if (bytes.Length >= 12 &&
+                bytes[0] == 0x52 &&
+                bytes[1] == 0x49 &&
+                bytes[2] == 0x46 &&
+                bytes[3] == 0x46 &&
+                bytes[8] == 0x57 &&
+                bytes[9] == 0x45 &&
+                bytes[10] == 0x42 &&
+                bytes[11] == 0x50)
+                return ".webp";
+
+            throw new Exception("Unsupported or invalid file type.");
         }
 
     }
