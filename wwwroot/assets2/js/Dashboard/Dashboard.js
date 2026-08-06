@@ -820,20 +820,23 @@ function renderCorporateSubTypeChart(labels, values, percents) {
     // Destroy old chart if exists
     if (eventPieChart) eventPieChart.destroy();
 
+    const colors = [
+        '#1abc9c', '#3498db', '#9b59b6', '#e67e22',
+        '#e74c3c', '#95a5a6', '#f1c40f', '#34495e',
+        '#2ecc71', '#e84393', '#16a085', '#8e44ad',
+        '#ff7675', '#00b894', '#fd79a8', '#0984e3',
+        '#6c5ce7', '#d63031', '#e17055', '#636e72'
+    ];
+
+    const backgroundColors = labels.map((_, i) => colors[i % colors.length]);
+
     eventPieChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: labels,
             datasets: [{
                 data: values,
-                backgroundColor: [
-                    '#1abc9c',   // teal
-                    '#3498db',   // blue
-                    '#9b59b6',   // purple
-                    '#e67e22',   // orange
-                    '#e74c3c',   // red
-                    '#95a5a6'    // gray
-                ],
+                backgroundColor: backgroundColors,
                 borderWidth: 1
             }]
         },
@@ -841,16 +844,7 @@ function renderCorporateSubTypeChart(labels, values, percents) {
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'right',
-                    labels: {
-                        generateLabels(chart) {
-                            const data = chart.data;
-                            return data.labels.map((label, i) => ({
-                                text: wrapText(`${label} (${percents[i]})`, 20), // wrap at 20 chars
-                                fillStyle: data.datasets[0].backgroundColor[i]
-                            }));
-                        }
-                    }
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
@@ -871,6 +865,36 @@ function renderCorporateSubTypeChart(labels, values, percents) {
             }
         },
         plugins: [ChartDataLabels] // make sure you include plugin
+    });
+
+    const legend = $("#legend_CorporateSubEvent");
+    legend.empty();
+
+    labels.forEach((label, i) => {
+
+        legend.append(`
+            <div class="legend-item_CorporateSubEvent">
+
+                <span class="legend-color_CorporateSubEvent"
+                    style="background:${backgroundColors[i]}">
+                </span>
+
+                <div class="legend-content_CorporateSubEvent">
+
+                    <div class="legend-title_CorporateSubEvent"
+                         title="${label}">
+                        ${label}
+                    </div>
+
+                    <span class="legend-percent_CorporateSubEvent">
+                        ${percents[i]}
+                    </span>
+
+                </div>
+
+            </div>
+        `);
+
     });
 }
 
@@ -1810,38 +1834,45 @@ function renderInsight(container, list, isCurrency) {
     // Maximum value for proportional width
     const maxValue = Math.max(...list.map(x => Number(x.Value)), 1);
 
-    $.each(list, function (_, item) {
+    $.each(list, function (index, item) {
 
         const percentage = ((Number(item.Value) / maxValue) * 100).toFixed(1);
+        const rowClass = index % 2 === 0 ? "insight-row-odd" : "insight-row-even";
 
         html += `
-            <div class="insight-row">
+            <div class="${rowClass}" style="padding:8px 10px; border-radius:6px; style="border:1px solid red"">
 
-                <div class="insight-month">
-                    ${item.MonthName}
-                </div>
+                <div class="insight-row">
 
-                <div class="insight-bar-wrapper">
-
-                    <div class="insight-bar">
-                        <div class="insight-bar-fill" style="width:${percentage}%"></div>
+                    <div class="insight-month">
+                        ${item.MonthName}
                     </div>
 
-                    <span class="insight-value me-4">
-                        ${isCurrency ? formatINR2(item.Value) : Number(item.Value)}
-                    </span>
+                    <div class="insight-bar-wrapper">
 
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" style="width:${percentage}%"></div>
+                        </div>
+
+                        <span class="insight-value me-4 ${isCurrency ? 'ps-2' : ''}"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="${item.Summary}">
+                            ${isCurrency ? formatINR2(item.Value) : Number(item.Value)}
+                        </span>
+
+                    </div>
                 </div>
 
-            </div>
-
-            <div class="small text-muted ps-5 mb-2 ms-6">
-                ${item.Summary}
             </div>
         `;
     });
 
     $(container).html(html);
+
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el);
+    });
 }
 //SMART INSIGHTS ----------- END --------------------
 
@@ -1975,6 +2006,12 @@ function updateOccupancyTooltip() {
 //Hall Occupancy Rate ----------- END --------------------
 
 //Enquiry to Booking Conversion ----------- START ------------------
+let leadSourceData = [];
+let leadSourceColor = "#198754";
+
+let leadSortColumn = "";
+let leadSortOrder = "ASC";
+
 function loadEnquiryConversion() {
     var payload = {
         YearMonth: $("#txtEnquiryToBookingConversionMonth").val(),
@@ -1988,9 +2025,13 @@ function loadEnquiryConversion() {
         data: JSON.stringify(payload),
         success: function (res) {
             //console.log("EnquiryConversion res:", res);
+            leadSourceData = res.data.LeadSources;
+            leadSourceColor = res.data.ColorCode;
+
+            renderLeadSource();
 
             bindConversionSummary(res.data);
-            bindLeadSource(res.data.LeadSources, res.data.ColorCode);
+            //bindLeadSource(res.data.LeadSources, res.data.ColorCode);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Unable to load conversion data.");
@@ -2002,12 +2043,39 @@ function bindConversionSummary(data) {
     $("#lblTotalEnquiries").text(data.TotalEnquiries);
     $("#lblTotalBookings").text(data.TotalBookings);
     $("#lblMeaning").text(data.Meaning);
+    
+    const badge = $("#conversionStatusBadge");
+    const icon = $("#conversionStatusIcon");
 
-    $("#lblConversionStatus").text(data.Status)
-        .css({
-            background: data.ColorCode,
-            color: "#fff"
-        });
+    badge.removeClass("status-excellent status-good status-average status-poor");
+
+    //$("#lblConversionStatus").text(data.Status);
+    const statusText = data.Status;
+    $("#lblConversionStatus").text(statusText); //.css("font-size", statusText.length > 10 ? "14px" : "18px");
+    console.log("Status:", data.Status);
+
+    switch (data.Status) {
+
+        case "Excellent":
+            badge.addClass("status-excellent");
+            $("#conversionStatusIcon").replaceWith('<i id="conversionStatusIcon" class="fa-solid fa-fw fa-trophy"></i>');
+            break;
+
+        case "Good":
+            badge.addClass("status-good");
+            $("#conversionStatusIcon").replaceWith('<i id="conversionStatusIcon" class="fa-solid fa-fw fa-thumbs-up"></i>');
+            break;
+
+        case "Average":
+            badge.addClass("status-average");
+            $("#conversionStatusIcon").replaceWith('<i id="conversionStatusIcon" class="fa-solid fa-fw fa-chart-column"></i>');
+            break;
+
+        default:
+            badge.addClass("status-poor");
+            $("#conversionStatusIcon").replaceWith('<i id="conversionStatusIcon" class="fa-solid fa-fw fa-triangle-exclamation"></i>');
+            break;
+    }
 
     $("#conversionProgress")
         .css({
@@ -2016,6 +2084,42 @@ function bindConversionSummary(data) {
         });
 
 }
+
+function renderLeadSource() {
+
+    let list = [...leadSourceData];
+
+    if (leadSortColumn !== "") {
+
+        list.sort(function (a, b) {
+
+            let result = 0;
+
+            switch (leadSortColumn) {
+
+                case "LeadSourceName":
+                    result = a.LeadSourceName.localeCompare(b.LeadSourceName);
+                    break;
+
+                case "TotalEnquiries":
+                    result = a.TotalEnquiries - b.TotalEnquiries;
+                    break;
+
+                case "TotalBookings":
+                    result = a.TotalBookings - b.TotalBookings;
+                    break;
+            }
+
+            return leadSortOrder === "ASC"
+                ? result
+                : -result;
+
+        });
+    }
+    bindLeadSource(list, leadSourceColor);
+    updateLeadSortIcons();
+}
+
 function bindLeadSource(list, colorCode) {
     if (!list || list.length == 0) {
         $("#tblLeadSourceBody").html(`
@@ -2054,13 +2158,53 @@ function bindLeadSource(list, colorCode) {
         `;
     });
     $("#tblLeadSourceBody").html(html);
+
+    $(".lead-source-table").toggleClass("overflow-auto", list.length > 5);
 }
+function updateLeadSortIcons() {
+
+    $(".sortable i")
+        .removeClass("fa-sort-up fa-sort-down")
+        .addClass("fa-sort");
+
+    if (leadSortColumn === "")
+        return;
+
+    const icon = $(`.sortable[data-sort='${leadSortColumn}'] i`);
+
+    icon.removeClass("fa-sort");
+
+    if (leadSortOrder === "ASC")
+        icon.addClass("fa-sort-up");
+    else
+        icon.addClass("fa-sort-down");
+}
+$(document).on("click", ".sortable", function () {
+
+    const column = $(this).data("sort");
+
+    if (leadSortColumn === column) {
+        leadSortOrder = leadSortOrder === "ASC"
+            ? "DESC"
+            : "ASC";
+    }
+    else {
+        leadSortColumn = column;
+        leadSortOrder = "ASC";
+    }
+
+    renderLeadSource();
+
+});
 //Enquiry to Booking Conversion ----------- END --------------------
 
 //EXPENSE ANAYSIS ----------- START ------------------
 let expenseAnalysisChart = null;
 let expenseAnalysisData = [];
 let expenseSortOrder = ""; // DESC = Z→A, ASC = A→Z
+
+let expenseAmountSort = "";
+let expenseGrandTotal = 0;
 
 function loadExpenseAnalysis() {
     var payload = {
@@ -2074,10 +2218,10 @@ function loadExpenseAnalysis() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            //console.log("ExpenseAnalysis res:", res);
-            expenseAnalysisData = res.data || [];
-            //renderExpenseAnalysis();
-            bindExpenseAnalysis(res.data);
+            expenseAnalysisData = res.data.ExpenseList || [];
+            expenseGrandTotal = res.data.GrandTotal || 0;
+
+            bindExpenseAnalysis(expenseAnalysisData, expenseGrandTotal);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Fail to load Expense Analysis data");
@@ -2085,14 +2229,46 @@ function loadExpenseAnalysis() {
     });
 }
 
+//CATEGORY SORTING
 $("#btnExpenseSort").click(function () {
+    expenseAmountSort = "";
+    $("#btnExpenseAmountSort")
+        .attr("title", "Sort Amount : High → Low")
+        .html('<i class="fa-solid fa-arrow-down-9-1"></i>');
+
     expenseSortOrder = expenseSortOrder === "ASC" ? "DESC" : "ASC";
+
     $(this)
         .attr("title", expenseSortOrder === "ASC" ? "Sort: A → Z" : "Sort: Z → A")
         .html(
             expenseSortOrder === "ASC"
                 ? '<i class="fa-solid fa-arrow-down-a-z"></i>'
                 : '<i class="fa-solid fa-arrow-down-z-a"></i>'
+        );
+
+    renderExpenseAnalysis();
+});
+
+$("#btnExpenseAmountSort").click(function () {
+
+    expenseSortOrder = "";
+
+    $("#btnExpenseSort")
+        .attr("title", "Sort Category : A → Z")
+        .html('<i class="fa-solid fa-arrow-down-a-z"></i>');
+
+    expenseAmountSort =
+        expenseAmountSort === "DESC" ? "ASC" : "DESC";
+
+    $(this)
+        .attr("title",
+            expenseAmountSort === "DESC"
+                ? "Sort Amount : High → Low"
+                : "Sort Amount : Low → High")
+        .html(
+            expenseAmountSort === "DESC"
+                ? '<i class="fa-solid fa-arrow-down-9-1"></i>'
+                : '<i class="fa-solid fa-arrow-up-1-9"></i>'
         );
 
     renderExpenseAnalysis();
@@ -2109,10 +2285,17 @@ function renderExpenseAnalysis() {
         list.sort((a, b) => b.CategoryName.localeCompare(a.CategoryName));
     }
 
-    bindExpenseAnalysis(list);
+    if (expenseAmountSort === "DESC") {
+        list.sort((a, b) => b.TotalAmount - a.TotalAmount);
+    }
+    else if (expenseAmountSort === "ASC") {
+        list.sort((a, b) => a.TotalAmount - b.TotalAmount);
+    }
+
+    bindExpenseAnalysis(list, expenseGrandTotal);
 }
 
-function bindExpenseAnalysis(list) {
+function bindExpenseAnalysis(list, grandTotal) {
 
     if (!list || list.length === 0) {
         $("#tblExpenseAnalysis").html(`
@@ -2176,31 +2359,70 @@ function bindExpenseAnalysis(list) {
     });
 
     $("#tblExpenseAnalysis").html(html);
-    drawExpenseAnalysisChart(labels, amounts, colors);
+    drawExpenseAnalysisChart(labels, amounts, colors, grandTotal);
 }
 
-function drawExpenseAnalysisChart(labels, data, colors) {
+function drawExpenseAnalysisChart(labels, data, colors, grandTotal) {
 
     if (expenseAnalysisChart)
         expenseAnalysisChart.destroy();
 
-    const ctx = document
-        .getElementById("expenseAnalysisChart")
-        .getContext("2d");
+    const centerTextPlugin = {
+        id: 'centerText',
+        afterDraw(chart) {
+
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+
+            if (!meta.data.length) return;
+
+            const x = Math.round(meta.data[0].x);
+            const y = Math.round(meta.data[0].y);
+
+            ctx.save();
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Title
+            ctx.fillStyle = "#6c757d";
+            ctx.font = "600 13px Segoe UI";
+            ctx.fillText("Total Expenses", x, y - 12);
+
+            // Amount
+            const amount = formatINR2(grandTotal);
+            let fontSize = 22;
+
+            if (grandTotal >= 10000000) {          // >= 1 Crore
+                fontSize = 16;
+            }
+            else if (grandTotal >= 1000000) {      // >= 10 Lakhs
+                fontSize = 18;
+            }
+            else if (grandTotal >= 100000) {       // >= 1 Lakh
+                fontSize = 20;
+            }
+
+            ctx.fillStyle = "#212529";
+            ctx.font = `700 ${fontSize}px Arial`;
+            ctx.fillText(amount, x, y + 12);
+
+            ctx.restore();
+        }
+    };
+
+    const ctx = document.getElementById("expenseAnalysisChart").getContext("2d");
 
     expenseAnalysisChart = new Chart(ctx, {
         type: "doughnut",
         data: {
             labels: labels,
-            datasets: [
-                {
-                    data: data,
-                    backgroundColor: colors,
-                    borderWidth: 1
-                }
-            ]
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 1
+            }]
         },
-
         options: {
             maintainAspectRatio: false,
             cutout: "65%",
@@ -2216,9 +2438,12 @@ function drawExpenseAnalysisChart(labels, data, colors) {
                     }
                 }
             }
-        }
+        },
+        plugins: [centerTextPlugin]
     });
 }
+
+
 //EXPENSE ANAYSIS ----------- END ------------------
 
 //REVENUE-EXPENSE-P&L ----------- START ----------------

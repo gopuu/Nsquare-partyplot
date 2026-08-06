@@ -1,4 +1,59 @@
-﻿/*Expense Analysis --START */
+﻿/* Corporate SubEvent -- START */
+.legend_CorporateSubEvent {
+    height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+.legend-item_CorporateSubEvent {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
+    gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px solid #eceff3;
+    box-sizing: border-box;
+}
+
+.legend-color_CorporateSubEvent {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin-top: 3px;
+    border-radius: 3px;
+}
+
+.legend-content_CorporateSubEvent {
+    flex: 1;
+    min-width: 0; /* IMPORTANT */
+    overflow: hidden;
+}
+
+.legend-title_CorporateSubEvent {
+    display: block;
+    width: 100%;
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.legend-percent_CorporateSubEvent {
+    display: block;
+    margin-top: 3px;
+    text-align: left;
+    font-size: 13px;
+    color: #6c757d;
+}
+/* Corporate SubEvent -- END */
+
+
+/*Expense Analysis --START */
 .expense-analysis-list {
     max-height: 318px; /* Approximately 4 items */
     overflow-y: auto;
@@ -22,6 +77,23 @@
 /*Expense Analysis --END*/
 
 /*Enquiry to Booking Conversion --START */
+.lead-source-table {
+    max-height: 235px; /* ≈ 5 rows */
+    overflow-y: auto;
+}
+.sortable-lead div {
+    white-space: nowrap;
+}
+
+.sortable-lead i {
+    font-size: 12px;
+}
+.lead-source-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #343a40;
+}
 #conversionProgress {
     transition: width .5s ease;
 }
@@ -30,6 +102,58 @@
 }
 .ratio-badge {
     min-width: 70px;
+}
+.conversion-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 210px; /* keeps all statuses on one line */
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap; /* never wrap */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: .25s;
+    border: 1px solid transparent;
+}
+
+.conversion-status i {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-excellent {
+    background: #d1fae5;
+    color: #047857;
+    border-color: #6ee7b7;
+}
+
+.status-good {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+}
+
+.status-average {
+    background: #fff4d6;
+    color: #c27c00;
+    border-color: #ffd666;
+}
+
+.status-poor {
+    background: #fdeaea;
+    color: #cf1322;
+    border-color: #ffa39e;
 }
 /*Enquiry to Booking Conversion --END */
 
@@ -82,6 +206,16 @@
 /*HALL OCCUPANCY RATE --END*/
 
 /*SMART INSIGHTS --START */
+.insight-row-even {
+    background-color: #fffde7; /* Very light yellow */
+    margin-bottom: 6px;
+}
+
+.insight-row-odd {
+    background-color: #ffffff;
+    margin-bottom: 6px;
+}
+
 .insight-card {
     background: #fff;
     border: 1px solid #e9ecef;
@@ -165,6 +299,34 @@
 
 .insight-row .text-muted {
     font-size: 12px;
+}
+
+.insight-success {
+    --insight-color1: #198754;
+    --insight-color2: #3cb878;
+}
+
+.insight-danger {
+    --insight-color1: #dc3545;
+    --insight-color2: #ef6b78;
+}
+
+.insight-primary {
+    --insight-color1: #0d6efd;
+    --insight-color2: #66b2ff;
+}
+
+.insight-warning {
+    --insight-color1: #fd7e14;
+    --insight-color2: #ffb366;
+}
+
+.insight-header {
+    background: var(--insight-color1);
+}
+
+.insight-bar-fill {
+    background: linear-gradient(90deg, var(--insight-color1), var(--insight-color2));
 }
 /*SMART INSIGHTS --END */
 

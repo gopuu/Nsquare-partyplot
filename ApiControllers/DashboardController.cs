@@ -1076,6 +1076,7 @@ namespace ERPAdmin.ApiControllers
         {
             apiResponse apiResponse = new apiResponse();
             List<DashboardExpenseAnalysis> result = new List<DashboardExpenseAnalysis>();
+            decimal grandTotal = 0;
 
             try
             {
@@ -1103,6 +1104,14 @@ namespace ERPAdmin.ApiControllers
                                 Rate = Convert.ToDecimal(reader["Rate"])
                             });
                         }
+
+                        if (reader.NextResult())
+                        {
+                            if (reader.Read())
+                            {
+                                grandTotal = Convert.ToDecimal(reader["GrandTotal"]);
+                            }
+                        }
                     }
 
                     con.Close();
@@ -1110,7 +1119,11 @@ namespace ERPAdmin.ApiControllers
 
                 apiResponse.status = "Success";
                 apiResponse.message = "Expense analysis fetched successfully.";
-                apiResponse.data = result;
+                apiResponse.data = new
+                {
+                    ExpenseList = result,
+                    GrandTotal = grandTotal
+                };
 
                 return Ok(apiResponse);
             }
