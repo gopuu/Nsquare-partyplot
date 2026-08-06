@@ -930,7 +930,8 @@ function fetchTransactions(payload = {}) {
 
     console.log("API Payload:", finalPayload);
 
-    showTempLoader("fetching Transactions...");
+    const loaderId = showTempLoader("fetching Transactions...");
+
     $.ajax({
         url: "/api/FinanceDashboard/GetIncomeExpenseTransactionList",
         type: "POST",
@@ -951,8 +952,7 @@ function fetchTransactions(payload = {}) {
             $("#tableMain_Transactions table").html("<tr><td class='text-danger p-3'>Error loading data</td></tr>");
         },
         complete: function () {
-            hideTempLoader();
-            //Swal.close();
+            hideTempLoader(loaderId);
         }
     });
 }
@@ -1230,6 +1230,8 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
     //    $("#ddlSubCategory_Expense").empty().append('<option value="">-- Select SubCategory --</option>');
     //    return;
     //}
+    var loaderMsg = "fetching Expense SubCategory..";
+    const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({
         url: "/api/ExpenseSubCategory/GetExpenseSubCategoryList",
@@ -1237,7 +1239,6 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
         beforeSend: function () {
-            showTempLoader("fetching Expense Sub-Category...");
         },
         success: function (response) {
             let dropdown = $("#ddlSubCategory_Expense, #filter_expense_subcategory");
@@ -1263,7 +1264,7 @@ function loadExpenseSubCategoryDropdown(categoryId = 0, selectedId = "") {
             handleApiError(xhr, status, error, "Failed to load subcategory dropdown data");
         },
         complete: function () {
-            hideTempLoader();
+            hideTempLoader(loaderId);
             //Swal.close();
         }
     });
@@ -1393,19 +1394,20 @@ function loadIncomeCategoryDropdown(selectedId = "") {
         }
     });
 }
+
 function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
     //if (!categoryId) {
     //    $("#ddlSubCategory_Income").empty().append('<option value="">-- Select SubCategory --</option>');
     //    return;
     //}
+    var loaderMsg = "fetching Income SubCategory list..";
+    const loaderId = showTempLoader(loaderMsg);
     $.ajax({
         url: "/api/IncomeSubCategory/GetIncomeSubCategoryList",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0, CategoryId: categoryId }),
-        beforeSend: function () {
-            showTempLoader("fetching Income Sub-Category...");
-        },
+        beforeSend: function () {},
         success: function (response) {
             console.log("GetIncomeSubCategoryList response:", response);
             let dropdown = $("#ddlSubCategory_Income, #filter_income_subcategory");
@@ -1433,7 +1435,7 @@ function loadIncomeSubCategoryDropdown(categoryId = 0, selectedId = "") {
             handleApiError(xhr, status, error, "Fail to load Income SubCategory")
         },
         complete: function(){
-            hideTempLoader();
+            hideTempLoader(loaderId);
             //Swal.close();
         }
     });

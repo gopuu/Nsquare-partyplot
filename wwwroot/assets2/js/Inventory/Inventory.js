@@ -548,7 +548,8 @@ function ViewStockReport(actionName) {
         ? "/api/Inventory/DownloadStockReport_Excel"
         : "/api/Inventory/DownloadStockReport_Pdf";
 
-    showTempLoader("Generating Report...");
+    var loaderMsg = "Generating Report...";
+    const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({
         url: url,
@@ -576,10 +577,10 @@ function ViewStockReport(actionName) {
         error: function (xhr, status, error) {
             //Swal.close();
             handleApiError(xhr, status, error, "Inventory Report Download Failed");
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+            //Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         },
         complete: function(){
-            hideTempLoader();
+            hideTempLoader(loaderId);
         }
     });
 }

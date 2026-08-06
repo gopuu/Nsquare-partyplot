@@ -49,8 +49,6 @@ function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
 //Download Receipt -- START
 function downloadReport(url, payload, loaderMsg="Generating Report..", failedMsg = "Failed to generate report") {
     console.log("receipt payload:", payload);
-
-    //showTempLoader("Generating Report...");
     const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({

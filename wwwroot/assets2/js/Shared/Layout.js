@@ -145,66 +145,6 @@ function generateGUID() {
 
 //WHATSAPP -- END
 let isTempLoaderActive = false;
-function showTempLoader2(title = "Checking Availability") {
-    isTempLoaderActive = true;
-    // Show loader before AJAX
-    Swal.fire({
-        title: title,
-        text: "Please wait...",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-}
-
-function showTempLoader3(title = "Checking Availability") {
-    isTempLoaderActive = true;
-    Swal.fire({
-        title: title,
-        text: "Please wait...",
-        position: 'bottom-end',   // 🔥 bottom-right
-        toast: true,              // makes it compact
-        showConfirmButton: false,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        backdrop: false,          // remove screen overlay
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-}
-function showTempLoader(title = "Checking Availability") {
-    isTempLoaderActive = true;
-
-    Swal.fire({
-        html: `
-            <div class="temp-loader-content">
-                <div class="temp-loader-spinner"></div>
-                <div>
-                    <div class="temp-loader-title">${title}</div>
-                    <div class="temp-loader-text">Please wait...</div>
-                </div>
-            </div>
-        `,
-        position: "bottom-end",
-        toast: true,
-        width: "280px",
-        showConfirmButton: false,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        backdrop: false,
-        customClass: {
-            popup: "temp-loader-popup"
-        }
-    });
-}
-
-function hideTempLoader1() {
-    Swal.close();
-    isTempLoaderActive = false;
-}
 
 //LOADER FOR DOWNLOADS
 let tempLoaderCounter = 0;

@@ -4494,7 +4494,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         //console.log("CHECKING SLOT:", payload);
 
-        showTempLoader("Checking Availability");
+        var loaderMsg = "Checking Availability..";
+        const loaderId = showTempLoader(loaderMsg);
 
         $("#btnBook").prop("disabled", true);
 
@@ -4545,7 +4546,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     .text("Unable to check slot availability");
             },
             complete: function () {
-                hideTempLoader();
+                hideTempLoader(loaderId);
             }
         });
 

@@ -683,7 +683,8 @@ function ViewFundTransferReport(actionName) {
         ? "/api/FundTransfer/DownloadFundTransferReport_Excel"
         : "/api/FundTransfer/DownloadFundTransferReport_Pdf";
 
-    showTempLoader("Generating Report...");
+    var loaderMsg = "Generating Report...";
+    const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({
         url: url,
@@ -714,7 +715,7 @@ function ViewFundTransferReport(actionName) {
             Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         },
         complete: function(){
-            hideTempLoader();
+            hideTempLoader(loaderId);
         }
     });
 }

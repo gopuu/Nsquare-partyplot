@@ -129,7 +129,8 @@ function openFoodWastageDetailModal(bookingId) {
         BookingId: bookingId
     };
 
-    showTempLoader("Fetching data..");
+    var loaderMsg = "Fetching data...";
+    const loaderId = showTempLoader(loaderMsg);
 
     $.ajax({
         url: "/api/Report_FoodWastage/Report_GetFoodWastageDetail_GRID",
@@ -154,7 +155,7 @@ function openFoodWastageDetailModal(bookingId) {
             handleApiError(xhr, status, error, "Failed to load details");
         },
         complete: function () {
-            hideTempLoader();
+            hideTempLoader(loaderId);
         }
     });
 }
