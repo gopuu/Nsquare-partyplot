@@ -47,4 +47,10 @@
 		<None Include="Views\Company\Index.cshtml" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Content Include="InfinityERP_PrivateFiles\**\*"
+			   CopyToOutputDirectory="PreserveNewest"
+			   CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>	
+	
 </Project>

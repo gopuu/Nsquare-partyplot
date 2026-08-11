@@ -140,6 +140,24 @@ namespace ERPAdmin.ApiControllers
                 string rootFullPath = Path.GetFullPath(rootPath);
                 string filePath = Path.GetFullPath(Path.Combine(rootFullPath, document.RelativeFilePath));
 
+                //for server path
+                ErrorLogger.LogException(
+                    new Exception(
+                        $"SOP DEBUG\n" +
+                        $"ContentRootPath: {_env.ContentRootPath}\n" +
+                        $"Configured RootPath: {_configuration["SOPSettings:RootPath"]}\n" +
+                        $"RootPath: {rootPath}\n" +
+                        $"RootFullPath: {rootFullPath}\n" +
+                        $"RelativeFilePath: {document.RelativeFilePath}\n" +
+                        $"Final FilePath: {filePath}\n" +
+                        $"Directory Exists: {Directory.Exists(rootFullPath)}\n" +
+                        $"File Exists: {System.IO.File.Exists(filePath)}"
+                    ),
+                    ControllerContext,
+                    Request,
+                    ""
+                );
+
                 if (!filePath.StartsWith(rootFullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                     return Forbid();
 
