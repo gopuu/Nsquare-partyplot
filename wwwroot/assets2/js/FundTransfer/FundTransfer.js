@@ -712,7 +712,7 @@ function ViewFundTransferReport(actionName) {
         error: function (xhr, status, error) {
             //Swal.close();
             handleApiError(xhr, status, error, "Download FundTransfer Report Failed");
-            Swal.fire("Error", "Failed to generate report. Please try again.", "error");
+            //Swal.fire("Error", "Failed to generate report. Please try again.", "error");
         },
         complete: function(){
             hideTempLoader(loaderId);

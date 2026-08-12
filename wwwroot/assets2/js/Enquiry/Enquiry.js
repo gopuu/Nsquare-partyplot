@@ -3357,7 +3357,10 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         console.log("READY TO CALL API", payload);
-        showTempLoader('Checking Availability');
+
+        var loaderMsg = "Checking Availability";
+        const loaderId = showTempLoader(loaderMsg);
+
         $.ajax({
             url: "/api/EnquiryDeal/CheckBookingSlotAvailability",
             type: "POST",
@@ -3403,6 +3406,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     .removeClass("d-none text-success")
                     .addClass("text-danger")
                     .text("Unable to check slot availability");
+            },
+            complete: function () {
+                hideTempLoader(loaderId);
             }
         });
     });
