@@ -54,7 +54,6 @@
     public class IncomeReportGridRequest
     {
         public string? Month { get; set; } // yyyy-MM
-
         public string? VoucherNo { get; set; }
 
         public long CategoryId { get; set; } = 0;

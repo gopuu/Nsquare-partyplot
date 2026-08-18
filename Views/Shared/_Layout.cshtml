@@ -353,21 +353,101 @@
                             </li>
 
                             <!--Report_Expense-->
-                            <li>
-                                <a class="dropdown-item" href="/Report_Expense">
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "Report_Expense" ? "active" : "")"
+                                   id="ExpenseReportMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-arrow-trend-down me-2 text-danger"></i> Expense Report
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+
+                                        <span>
+                                            <span class="me-2 uil text-danger" data-feather="trending-down"></span>
+                                            Expense Report
+                                        </span>
                                     </div>
                                 </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <!-- Expense Summary Report -->
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Report_Expense_Summary" ? "active" : "")"
+                                           href="/Report_Expense_Summary">
+
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2 text-danger" data-feather="bar-chart-2"></span>
+                                                Summary Report
+                                            </div>
+
+                                        </a>
+                                    </li>
+
+                                    <!-- Expense Detail Report -->
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Report_Expense_Details" ? "active" : "")"
+                                           href="/Report_Expense_Details">
+
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2 text-danger" data-feather="file-text"></span>
+                                                Detail Report
+                                            </div>
+
+                                        </a>
+                                    </li>
+
+                                </ul>
                             </li>
 
                             <!--Report_Income-->
-                            <li>
-                                <a class="dropdown-item" href="/Report_Income">
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "Report_Income" ? "active" : "")"
+                                   id="incomeReportMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
                                     <div class="dropdown-item-wrapper">
-                                        <i class="fa-solid fa-arrow-trend-up me-2 text-success"></i> Income Report
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+
+                                        <span>
+                                            <span class="me-2 uil text-success" data-feather="trending-up"></span>
+                                            Income Report
+                                        </span>
                                     </div>
                                 </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <!-- Income Summary Report -->
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Report_Income_Summary" ? "active" : "")"
+                                           href="/Report_Income_Summary">
+
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2 text-success" data-feather="bar-chart-2"></span>
+                                                Summary Report
+                                            </div>
+
+                                        </a>
+                                    </li>
+
+                                    <!-- Income Detail Report -->
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Report_Income_Details" ? "active" : "")"
+                                           href="/Report_Income_Details">
+
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2 text-success" data-feather="file-text"></span>
+                                                Detail Report
+                                            </div>
+
+                                        </a>
+                                    </li>
+
+                                </ul>
                             </li>
 
                             <!--Report_ProfitLoss-->
@@ -523,27 +603,6 @@
                             <span class="uil fs-8 me-2 uil-setting"></span>Settings
                         </a>
                         <ul class="dropdown-menu navbar-dropdown-caret">
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "Settings" ? "active" : "")" href="/Settings">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="settings"></span>General Settings
-                                    </div>
-                                </a>
-                            </li>
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "Documents" ? "active" : "")" href="/Documents">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="folder"></span>Documents
-                                    </div>
-                                </a>
-                            </li>
-                            <li class="d-none">
-                                <a class="dropdown-item @(currentController == "InfinityCentre" ? "active" : "")" href="/InfinityCentre">
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="me-2 uil" data-feather="book-open"></span>Tips & Tutorials
-                                    </div>
-                                </a>
-                            </li>
                             <li>
                                 <a class="dropdown-item @(currentController == "UserRights" ? "active" : "")" href="/UserRights">
                                     <div class="dropdown-item-wrapper">
@@ -617,6 +676,45 @@
                                             <div class="dropdown-item-wrapper">
                                                 <span class="me-2" data-feather="tool"></span>
                                                 Asset Repair
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+
+                            <!--Configuration-->
+                            <li class="dropdown dropdown-inside">
+                                <a class="dropdown-item dropdown-toggle @(currentController == "Configuration" ? "active" : "")"
+                                   id="settingsMenu"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
+                                        <span>
+                                            <span class="me-2 uil" data-feather="settings"></span>Configuration
+                                        </span>
+                                    </div>
+                                </a>
+
+                                <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="dropdown-item" href="/Settings">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="file-text"></span>
+                                                General Settings
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="/NotificationTemplate">
+                                            <div class="dropdown-item-wrapper">
+                                                <span class="me-2" data-feather="tool"></span>
+                                                Manage Notifications
                                             </div>
                                         </a>
                                     </li>
@@ -855,86 +953,6 @@
                                 </ul>
                             </li>
 
-                            <!--Settings-->
-                            <li class="dropdown dropdown-inside">
-                                <a class="dropdown-item dropdown-toggle @(currentController == "Settings" ? "active" : "")"
-                                   id="settingsMenu"
-                                   href="#"
-                                   data-bs-toggle="dropdown"
-                                   data-bs-auto-close="outside">
-
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
-                                        <span>
-                                            <span class="me-2 uil" data-feather="settings"></span>Settings
-                                        </span>
-                                    </div>
-                                </a>
-
-                                <ul class="dropdown-menu">
-
-                                    <li>
-                                        <a class="dropdown-item" href="/Settings">
-                                            <div class="dropdown-item-wrapper">
-                                                <span class="me-2" data-feather="file-text"></span>
-                                                General Settings
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" href="/NotificationTemplate">
-                                            <div class="dropdown-item-wrapper">
-                                                <span class="me-2" data-feather="tool"></span>
-                                                Manage Notifications
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </li>
-
-                            <!--Infinity Center-->
-                            <li class="dropdown dropdown-inside">
-                                <a class="dropdown-item dropdown-toggle @(currentController == "InfinityCenter" ? "active" : "")"
-                                   id="settingsMenu"
-                                   href="#"
-                                   data-bs-toggle="dropdown"
-                                   data-bs-auto-close="outside">
-
-                                    <div class="dropdown-item-wrapper">
-                                        <span class="uil fs-8 uil-angle-right lh-1 dropdown-indicator-icon"></span>
-                                        <span>
-                                            <span class="me-2 uil" data-feather="grid"></span>Infinity Center
-                                        </span>
-                                    </div>
-                                </a>
-
-                                <ul class="dropdown-menu">
-
-                                    <li>
-                                        <a class="dropdown-item" href="/InfinityDrive">
-                                            <div class="dropdown-item-wrapper">
-                                                <!-- Infinity Drive -->
-                                                <span class="me-2" data-feather="hard-drive"></span>
-                                                Infinity Drive
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" href="/InfinityGrowth">
-                                            <div class="dropdown-item-wrapper">
-                                                <!-- Infinity Growth -->
-                                                <span class="me-2" data-feather="trending-up"></span>
-                                                Infinity Growth
-                                            </div>
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </li>
-
                             <li>
                                 <a class="dropdown-item @(currentController == "SupportTicket" ? "active" : "")" href="/SupportTicket">
                                     <div class="dropdown-item-wrapper">
@@ -944,9 +962,46 @@
                                 </a>
                             </li>
 
+                        </ul>
+                    </li>
+
+                    <!-- Infinity Center -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle lh-1 text-dark" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                            <span class="uil fs-8 me-2 uil-grid"></span>Infinity Center
+                        </a>
+
+                        <ul class="dropdown-menu navbar-dropdown-caret">
+
+                            <!-- Infinity Drive -->
+                            <li>
+                                <a class="dropdown-item @(currentController == "InfinityDrive" ? "active" : "")"
+                                   href="/InfinityDrive">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2" data-feather="hard-drive"></span>
+                                        Infinity Drive
+                                    </div>
+
+                                </a>
+                            </li>
+
+                            <!-- Infinity Growth -->
+                            <li>
+                                <a class="dropdown-item @(currentController == "InfinityGrowth" ? "active" : "")"
+                                   href="/InfinityGrowth">
+
+                                    <div class="dropdown-item-wrapper">
+                                        <span class="me-2" data-feather="trending-up"></span>
+                                        Infinity Growth
+                                    </div>
+
+                                </a>
+                            </li>
 
                         </ul>
                     </li>
+
                 </ul>
             </div>
             <ul class="navbar-nav navbar-nav-icons flex-row">

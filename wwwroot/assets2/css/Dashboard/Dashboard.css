@@ -1,6 +1,62 @@
-﻿/* Corporate SubEvent -- START */
+﻿/* Family SubEvent -- START */
+
+.legend_FamilySubEvent {
+    height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+.legend-item_FamilySubEvent {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
+    gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px solid #eceff3;
+    box-sizing: border-box;
+}
+
+.legend-color_FamilySubEvent {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin-top: 3px;
+    border-radius: 3px;
+}
+
+.legend-content_FamilySubEvent {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.legend-title_FamilySubEvent {
+    display: block;
+    width: 100%;
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.legend-percent_FamilySubEvent {
+    /*display: block;
+    margin-top: 3px;*/
+    text-align: left;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+/* Family SubEvent -- END */
+
+/* Corporate SubEvent -- START */
 .legend_CorporateSubEvent {
-    height: 320px;
+    height: 260px;
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 8px;
@@ -44,8 +100,8 @@
 }
 
 .legend-percent_CorporateSubEvent {
-    display: block;
-    margin-top: 3px;
+    /*display: block;
+    margin-top: 3px;*/
     text-align: left;
     font-size: 13px;
     color: #6c757d;
@@ -445,7 +501,7 @@ position: relative;
 }
 
 /* Text */
-    .label {
+.label {
     font-size: 14px;
     color: #1f1f1f;
     margin-bottom: 4px;

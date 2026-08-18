@@ -102,6 +102,7 @@
         public string? IconUrl { get; set; }
         public int DisplayOrder { get; set; }
         public string? HiddenMessage { get; set; }
+        public string? NextStepTitle { get; set; }
     }
     public class FeedbackStepModel
     {

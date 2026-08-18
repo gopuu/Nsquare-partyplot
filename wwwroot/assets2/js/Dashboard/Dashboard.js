@@ -881,14 +881,13 @@ function renderCorporateSubTypeChart(labels, values, percents) {
 
                 <div class="legend-content_CorporateSubEvent">
 
-                    <div class="legend-title_CorporateSubEvent"
-                         title="${label}">
+                    <div class="legend-title_CorporateSubEvent" title="${label}">
+                        <span class="legend-percent_CorporateSubEvent">
+                            ${percents[i]}
+                        </span>
                         ${label}
                     </div>
 
-                    <span class="legend-percent_CorporateSubEvent">
-                        ${percents[i]}
-                    </span>
 
                 </div>
 
@@ -967,59 +966,147 @@ function loadBookingSubEventTypeFamilyFunction(monthDuration = "thismonth", from
     });
 }
 let salesPieChart; // global chart instance
+
 function renderFamilySubTypeChart(labels, values, percents) {
+
     const ctx = document.getElementById('salesPie');
 
-    if (salesPieChart) salesPieChart.destroy(); // destroy old chart
+    // Destroy previous chart
+    if (salesPieChart) {
+        salesPieChart.destroy();
+    }
+
+    const colors = [
+        '#0d6efd',
+        '#20c997',
+        '#ffc107',
+        '#fd7e14',
+        '#6c757d',
+        '#6f42c1',
+        '#dc3545',
+        '#198754',
+        '#0dcaf0',
+        '#d63384',
+        '#6610f2',
+        '#212529',
+        '#adb5bd',
+        '#1982c4',
+        '#8ac926',
+        '#ff595e',
+        '#ffca3a',
+        '#6a4c93',
+        '#00b894',
+        '#0984e3'
+    ];
+
+    const backgroundColors = labels.map(
+        (_, i) => colors[i % colors.length]
+    );
 
     salesPieChart = new Chart(ctx, {
+
         type: 'doughnut',
+
         data: {
             labels: labels,
+
             datasets: [{
                 data: values,
-                backgroundColor: [
-                    '#0d6efd',   // Bootstrap Blue
-                    '#20c997',   // Teal
-                    '#ffc107',   // Yellow
-                    '#fd7e14',   // Orange
-                    '#6c757d'    // Gray
-                ],
-                borderWidth: 2
+                backgroundColor: backgroundColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
+
         options: {
-            cutout: '65%',
+
             responsive: true,
+
+            maintainAspectRatio: true,
+
+            cutout: '65%',
+
             plugins: {
+
+                // Hide default Chart.js legend
                 legend: {
-                    position: 'right',
-                    labels: {
-                        generateLabels(chart) {
-                            const data = chart.data;
-                            return data.labels.map((label, i) => ({
-                                text: wrapText(`${label} (${percents[i]})`, 20), // wrap at 20 chars
-                                fillStyle: data.datasets[0].backgroundColor[i]
-                            }));
-                        }
-                    }
+                    display: false
                 },
+
                 tooltip: {
+
                     callbacks: {
+
                         label: function (context) {
+
                             const i = context.dataIndex;
+
                             return `${labels[i]}: ${values[i]} (${percents[i]})`;
                         }
                     }
                 },
+
+                // Percentage inside doughnut
                 datalabels: {
-                    display: false
+
+                    color: '#fff',
+
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+
+                    formatter: function (value, context) {
+
+                        return percents[context.dataIndex];
+                    }
                 }
             }
         },
-        plugins: [ChartDataLabels]
+
+        plugins: [
+            ChartDataLabels
+        ]
+    });
+
+
+    // -----------------------------------------
+    // Custom Legend
+    // -----------------------------------------
+
+    const legend = $("#legend_FamilySubEvent");
+
+    legend.empty();
+
+    labels.forEach((label, i) => {
+
+        legend.append(`
+
+            <div class="legend-item_FamilySubEvent">
+
+                <span class="legend-color_FamilySubEvent"
+                      style="background:${backgroundColors[i]}">
+                </span>
+
+                <div class="legend-content_FamilySubEvent">
+
+                    <div class="legend-title_FamilySubEvent" title="${label}">
+                        <span class="legend-percent_FamilySubEvent">
+                            ${percents[i]}
+                        </span>
+                        ${label}
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        `);
+
     });
 }
+
 // 🔹 Dropdown click event
 $(".chart-filter-salepie .dropdown-item").on("click", function (e) {
     e.preventDefault();

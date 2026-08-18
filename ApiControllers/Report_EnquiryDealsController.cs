@@ -157,9 +157,7 @@ namespace ERPAdmin.ApiControllers
                     cmd = new SqlCommand("Report_GetEnquiryDeals_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    string columnsJson = request.Columns != null
-                        ? JsonConvert.SerializeObject(request.Columns)
-                        : null;
+                    string columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
 
                     cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@EnquiryFromDate", string.IsNullOrEmpty(request.EnquiryFromDate) ? (object)DBNull.Value : request.EnquiryFromDate);

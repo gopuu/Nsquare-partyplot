@@ -191,6 +191,8 @@
                                 <!---------- Corporate Event vs Family Events ----------->
                                 <div class="col-md-4 text-center">
                                     <div class="chart-box position-relative">
+                                        <!-- label -->
+                                        <div class="chart-label">Corporate vs Family Events</div>
                                         <!-- small dropdown -->
                                         <div class="dropdown chart-filter-pie">
                                             <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
@@ -217,11 +219,6 @@
 
                                         <!-- chart -->
                                         <canvas id="jobPie" class="mt-3"></canvas>
-
-                                        <!-- label -->
-                                        <div class="chart-label">
-                                            Corporate vs Family Events
-                                        </div>
                                     </div>
                                 </div>
 
@@ -261,20 +258,22 @@
                                             </div>
 
                                             <div class="col-md-7">
-                                                <div id="legend_CorporateSubEvent"
-                                                     class="legend_CorporateSubEvent">
-                                                </div>
+                                                <div id="legend_CorporateSubEvent" class="legend_CorporateSubEvent"></div>
                                             </div>
 
                                         </div>
                                     </div>
                                 </div>
 
-                                <!---------- Family & Subtype of Event - END ---------->
+                                <!---------- Family & Subtype of Event ---------->
                                 <div class="col-md-4 text-center">
                                     <div class="chart-box position-relative">
+
+                                        <div class="chart-label">Family & Sub-Events</div>
+
                                         <!-- small dropdown -->
                                         <div class="dropdown chart-filter-salepie">
+
                                             <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
                                                     type="button"
                                                     id="salepieChartFilter"
@@ -284,23 +283,103 @@
                                             </button>
 
                                             <ul class="dropdown-menu py-2" aria-labelledby="sortByDropdown">
-                                                <li><a class="dropdown-item sort-option py-1" data-value="yesterday" href="#">Yesterday</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last7days" href="#">Last 7 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last30days" href="#">Last 30 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="lastmonth" href="#">Last Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last12months" href="#">Last 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1 active" href="#" data-value="thismonth">This Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next3month">Next 3 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next6month">Next 6 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next12month">Next 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="overall">Overall</a></li>
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       data-value="yesterday" href="#">
+                                                        Yesterday
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       data-value="last7days" href="#">
+                                                        Last 7 days
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       data-value="last30days" href="#">
+                                                        Last 30 days
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       data-value="lastmonth" href="#">
+                                                        Last Month
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       data-value="last12months" href="#">
+                                                        Last 12 Months
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1 active"
+                                                       href="#"
+                                                       data-value="thismonth">
+                                                        This Month
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       href="#"
+                                                       data-value="next3month">
+                                                        Next 3 Months
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       href="#"
+                                                       data-value="next6month">
+                                                        Next 6 Months
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       href="#"
+                                                       data-value="next12month">
+                                                        Next 12 Months
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item sort-option py-1"
+                                                       href="#"
+                                                       data-value="overall">
+                                                        Overall
+                                                    </a>
+                                                </li>
                                             </ul>
                                         </div>
-                                        <canvas id="salesPie" class="mt-3"></canvas>
-                                        <div class="chart-label">Family & Sub-Events </div>
+
+                                        <div class="row mt-2">
+
+                                            <!-- Doughnut -->
+                                            <div class="col-md-6">
+                                                <canvas id="salesPie"></canvas>
+                                            </div>
+
+                                            <!-- Custom Legend -->
+                                            <div class="col-md-6">
+                                                <div id="legend_FamilySubEvent"
+                                                     class="legend_FamilySubEvent">
+                                                </div>
+                                            </div>
+
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
+                                <!---------- Family & Subtype of Event - END ---------->
                             <!---------- Corporate Event vs Family Events / Corporate & Sub type of Event / Family & Subtype of Event - END ---------->
 
                             <!--Overall Bookings Statistics & Lead Source --- START -->

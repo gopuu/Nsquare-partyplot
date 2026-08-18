@@ -39,76 +39,137 @@ function handleApiSuccess(msg = "Saved successfully!") {
 function loadFeedbackForm() {
     $.get("/api/Feedback/GetFeedbackFormData", function (res) {
         console.log("res:", res);
-        steps = res.data.sort((a, b) => a.StepOrder - b.StepOrder);
+        steps = res.data.sort(
+            (a, b) => a.StepOrder - b.StepOrder
+        );
+
         console.log("res steps:", steps);
+
         currentStepIndex = 0;
         feedbackResponses = {};
+
         renderStep();
     });
 }
 
+
 /* ================= RENDER STEP ================= */
 function renderStep() {
+
     const step = steps[currentStepIndex];
 
+    if (!step) {
+        return;
+    }
+
     $("#stepTitle").text(step.StepTitle);
+
     $("#stepsContainer").empty();
 
-    step.HasTextBox ? renderTextBox(step) : renderOptions(step);
-    //updateNavButtons();
+    if (step.HasTextBox) {
+        renderTextBox(step);
+    }
+    else {
+        renderOptions(step);
+    }
 }
+
+
+/* ================= MOVE TO NEXT STEP ================= */
 function moveToNextStep() {
     if (currentStepIndex === steps.length - 1) {
         submitFeedback();
+        return;
     }
-    else {
-        currentStepIndex++;
-        renderStep();
+    currentStepIndex++;
+    renderStep();
+}
+
+
+/* ================= UPDATE NEXT STEP TITLE ================= */
+function updateNextStepTitle(nextStepTitle) {
+
+    if (!nextStepTitle) {
+        return;
+    }
+
+    const nextStepIndex = currentStepIndex + 1;
+    if (nextStepIndex < steps.length) {
+        steps[nextStepIndex].StepTitle = nextStepTitle;
+        console.log("Next Step Title Updated:", steps[nextStepIndex].StepTitle);
     }
 }
 
+
 /* ================= OPTIONS ================= */
 function renderOptions(step) {
-    //const container = $('<div class="option-grid"></div>');
-    const container = $('<div class="d-flex justify-content-center gap-4 flex-nowrap option-row"></div>');
 
+    const container = $('<div class="d-flex justify-content-center gap-4 flex-nowrap option-row"></div>');
     step.Options.forEach(opt => {
         const card = $(`
-                    <div class="option-card" data-id="${opt.OptionId}">
-                        <img src="${encodeURI(opt.IconUrl)}">
-                        <div class="option-text">${opt.OptionName}</div>
-                    </div>
-                `);
+            <div class="option-card" data-id="${opt.OptionId}">
+                <img src="${encodeURI(opt.IconUrl)}">
+                <div class="option-text">${opt.OptionName}</div>
+            </div>
+        `);
+
 
         card.on("click", function () {
 
+            /* =========================================
+               SINGLE SELECT
+            ========================================= */
             if (!step.IsMultiSelect) {
                 container.find(".option-card").removeClass("active");
                 feedbackResponses[step.StepId] = [];
             }
-
             $(this).toggleClass("active");
 
-            const selected = container.find(".option-card.active")
+            /* =========================================
+               GET SELECTED OPTIONS
+            ========================================= */
+            const selected = container
+                .find(".option-card.active")
                 .map((_, el) => $(el).data("id"))
                 .get();
 
             feedbackResponses[step.StepId] = selected;
 
-            const isSingleSelect = !step.IsMultiSelect;
 
-            // ================= SINGLE SELECT =================
+            /* =========================================
+               NEXT STEP TITLE
+               
+               Example:
+               Good / Very Good
+                    ↓
+               What did you like?
+
+               Poor / Very Poor
+                    ↓
+               What didn't you like?
+            ========================================= */
+            if (!step.IsMultiSelect && opt.NextStepTitle) {
+                updateNextStepTitle(opt.NextStepTitle);
+            }
+
+            const isSingleSelect = !step.IsMultiSelect;
+            /* =========================================
+               SINGLE SELECT
+            ========================================= */
             if (isSingleSelect) {
                 setTimeout(() => {
                     moveToNextStep();
-                }, 300);
+                }, 700);
             }
-            // ================= MULTI SELECT =================
+
+            /* =========================================
+               MULTI SELECT
+            ========================================= */
             else {
-                // Remove old timer if exists
+                // Remove old timer
                 clearInterval(window.multiSelectTimer);
 
-                // Remove old countdown UI
+                // Remove old countdown
                 $("#multiSelectCountdown").remove();
 
                 let seconds = 3;
@@ -124,64 +185,54 @@ function renderOptions(step) {
                 window.multiSelectTimer = setInterval(() => {
                     seconds--;
                     $("#multiSelectCountdown").text(`Moving next in ${seconds}...`);
+
                     if (seconds <= 0) {
                         clearInterval(window.multiSelectTimer);
-                        moveToNextStep();
-                    }
+                        moveToNextStep();                    }
                 }, 1000);
             }
 
+            /* =========================================
+               HIDDEN MESSAGE
+            ========================================= */
             $("#hiddenMessage").remove();
-            if (opt.HiddenMessage) {
 
+            if (opt.HiddenMessage) {
                 let hintClass = "neutral";
+                let icon = "fa-face-meh";
 
                 if (opt.DisplayOrder <= 2) {
                     hintClass = "positive";
+                    icon = "fa-heart";
                 }
                 else if (opt.DisplayOrder >= 4) {
                     hintClass = "negative";
+                    icon = "fa-face-sad-tear";
                 }
-                let icon = "fa-heart";
-                if (hintClass === "negative") icon = "fa-face-sad-tear";
-                if (hintClass === "neutral") icon = "fa-face-meh";
+
 
                 $("#stepsContainer").append(`
-                            <div id="hiddenMessage" class="feedback-hint ${hintClass} mt-4">
-                                <i class="fa-solid ${icon}"></i>
-                                <span>${opt.HiddenMessage}</span>
-                            </div>
-                        `);
+                    <div id="hiddenMessage" class="feedback-hint ${hintClass} mt-4">
+                        <i class="fa-solid ${icon}"></i>
+                        <span>${opt.HiddenMessage}</span>
+                    </div>
+                `);
             }
-
+            console.log("Selected Option:", opt);
             console.log("feedbackResponses:", feedbackResponses);
         });
-
         container.append(card);
     });
-
     $("#stepsContainer").append(container);
 }
 
+
 /* ================= TEXTBOX ================= */
-function renderTextBox2(step) {
-    const textarea = $(`<textarea class="form-control" rows="4"
-                placeholder="Enter your feedback"></textarea>`);
-
-    textarea.on("input", function () {
-        feedbackResponses[step.StepId] = $(this).val();
-    });
-
-    $("#stepsContainer").append(textarea);
-}
 function renderTextBox(step) {
 
     const wrapper = $(`
         <div class="text-center">
-            <textarea class="form-control mb-3"
-                      rows="4"
-                      placeholder="Enter your feedback"></textarea>
-
+            <textarea class="form-control mb-3" rows="4" placeholder="Enter your feedback"></textarea>
             <button class="btn btn-primary px-4" id="btnSubmitFeedback">
                 Submit Feedback
             </button>
@@ -193,11 +244,8 @@ function renderTextBox(step) {
     });
 
     wrapper.find("#btnSubmitFeedback").on("click", function () {
-
         submitFeedback();
-
     });
-
     $("#stepsContainer").append(wrapper);
 }
 

@@ -159,7 +159,7 @@ function renderFiles() {
     if (!files.length) {
         tbody.html(`
             <tr>
-                <td colspan="6" class="py-4">
+                <td colspan="5" class="py-4">
                     <div class="d-flex align-items-center gap-2 text-muted ps-4">
                         <i class="fas fa-folder-open fa-lg"></i>
                         <span>No documents found</span>
@@ -197,10 +197,6 @@ function renderFiles() {
                 <td>
                     <i class="fas fa-folder text-warning me-1"></i>
                     ${escapeHtml(file.CategoryName || "-")}
-                </td>
-
-                <td class="text-center">
-                    ${file.SortOrder || 0}
                 </td>
 
                 <td class="text-center">

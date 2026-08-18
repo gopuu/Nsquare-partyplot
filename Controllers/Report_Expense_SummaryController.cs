@@ -2,7 +2,7 @@
 
 namespace ERPAdmin.Controllers
 {
-    public class Report_ExpenseController : Controller
+    public class Report_Expense_SummaryController : Controller
     {
         public IActionResult Index()
         {

@@ -149,7 +149,7 @@ let isTempLoaderActive = false;
 //LOADER FOR DOWNLOADS
 let tempLoaderCounter = 0;
 
-function showTempLoader(title = "Generating Report...") {
+function showTempLoader_old_18aug26(title = "Generating Report...") {
     isTempLoaderActive = true;
 
     tempLoaderCounter++;
@@ -172,6 +172,42 @@ function showTempLoader(title = "Generating Report...") {
 
     return loaderId;
 }
+function showTempLoader(title = "Generating Report...") {
+
+    isTempLoaderActive = true;
+
+    tempLoaderCounter++;
+
+    const loaderId = `tempLoader_${tempLoaderCounter}`;
+
+    if (!$("#tempLoaderContainer").length) {
+        $("body").append(`
+            <div id="tempLoaderContainer" class="temp-loader-container"></div>
+        `);
+    }
+
+    $("#tempLoaderContainer").append(`
+        <div id="${loaderId}" class="temp-loader-item">
+
+            <div class="temp-loader-spinner"></div>
+
+            <div class="temp-loader-info">
+
+                <div class="temp-loader-title">
+                    ${title}
+                </div>
+
+                <div class="temp-loader-text">
+                    Please wait... 0%
+                </div>
+
+            </div>
+
+        </div>
+    `);
+
+    return loaderId;
+}
 
 function hideTempLoader(loaderId) {
     isTempLoaderActive = false;
@@ -188,6 +224,18 @@ function hideTempLoader(loaderId) {
     }, 200);
 }
 
+function updateTempLoader(loaderId, percentage) {
+
+    const loader = $("#" + loaderId);
+
+    if (!loader.length) {
+        return;
+    }
+
+    loader.find(".temp-loader-text").text(
+        `Please wait... ${percentage}%`
+    );
+}
 
 function handleApiSuccess(msg = "Saved successfully!") {
     Swal.fire({

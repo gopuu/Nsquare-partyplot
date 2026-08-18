@@ -47,7 +47,7 @@ function downloadPurchaseScannedInvoice(purchaseId = 0, invoiceNo = null) {
 //PURCHASE INVOICE REPORT MODAL --- END ------------------------
 
 //Download Receipt -- START
-function downloadReport(url, payload, loaderMsg="Generating Report..", failedMsg = "Failed to generate report") {
+function downloadReport_old_18aug26(url, payload, loaderMsg="Generating Report..", failedMsg = "Failed to generate report") {
     console.log("receipt payload:", payload);
     const loaderId = showTempLoader(loaderMsg);
 
@@ -83,6 +83,93 @@ function downloadReport(url, payload, loaderMsg="Generating Report..", failedMsg
             hideTempLoader(loaderId);
         }
         
+    });
+}
+
+function downloadReport(url, payload,
+    loaderMsg = "Generating Report...",
+    failedMsg = "Failed to generate report"
+) {
+
+    console.log("report payload:", payload);
+
+    const loaderId = showTempLoader(loaderMsg);
+
+    let progress = 0;
+
+    // Simulated progress
+    const progressTimer = setInterval(function () {
+
+        if (progress < 90) {
+            progress += 10;
+        }
+        else if (progress < 99) {
+            progress += 1;
+        }
+
+        updateTempLoader(loaderId, progress);
+
+    }, 500);
+
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+
+        success: function (res) {
+
+            console.log("downloadReport res:", res);
+
+            clearInterval(progressTimer);
+
+            if (res.status === "Success" && res.data?.FileUrl) {
+
+                // Final completion
+                updateTempLoader(loaderId, 100);
+
+                const link = document.createElement("a");
+
+                link.href = res.data.FileUrl;
+                link.download = "";
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            }
+            else {
+
+                Swal.fire({
+                    icon: "info",
+                    title: "Failed",
+                    text: res.message || failedMsg
+                });
+            }
+        },
+
+        error: function (xhr, status, error) {
+
+            clearInterval(progressTimer);
+
+            handleApiError(
+                xhr,
+                status,
+                error,
+                "Report generation failed"
+            );
+        },
+
+        complete: function () {
+
+            clearInterval(progressTimer);
+
+            // Keep 100% visible briefly before removing
+            setTimeout(function () {
+                hideTempLoader(loaderId);
+            }, 500);
+        }
     });
 }
 //Download Receipt -- END

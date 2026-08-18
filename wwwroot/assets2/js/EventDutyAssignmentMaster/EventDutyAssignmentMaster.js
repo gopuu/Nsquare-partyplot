@@ -22,17 +22,32 @@
 
     $("#btnSaveDuty").on("click", function () {
         let dutyId = parseInt($("#DutyId").val()) || 0;
+
         // --- VALIDATION ---
         if (!$("#ddlBookingId").val()) {
-            toastr.error("Please select event");
+            Swal.fire({
+                icon: "warning",
+                title: "Event Required",
+                text: "Please select event."
+            });
             return;
         }
+
         if (!$("#ddlStaff").val()) {
-            toastr.error("Please select staff");
+            Swal.fire({
+                icon: "warning",
+                title: "Staff Required",
+                text: "Please select staff."
+            });
             return;
         }
+
         if (!$("#ddlDutyRole").val()) {
-            toastr.error("Please select duty role");
+            Swal.fire({
+                icon: "warning",
+                title: "Duty Role Required",
+                text: "Please select duty role."
+            });
             return;
         }
         let payload = {
@@ -41,6 +56,8 @@
             StaffId: $("#ddlStaff").val(),
             DutyRoleId: $("#ddlDutyRole").val(),
             StatusId: $("#ddlStatus").val() || null,
+            DutyStartDate: $("#DutyStartDate").val() || null,
+            DutyEndDate: $("#DutyEndDate").val() || null,
             DutyStartTime: $("#DutyStartTime").val() || null,
             DutyEndTime: $("#DutyEndTime").val() || null,
             Remarks: $("#Remarks").val() || null,
@@ -92,6 +109,16 @@
             DutyRoleId: row.DutyRoleId,
             StatusId: row.StatusId
         });
+
+        // Duty Start Date
+        if (row.DutyStartDate) {
+            $("#DutyStartDate").val(row.DutyStartDate);
+        }
+
+        // Duty End Date
+        if (row.DutyEndDate) {
+            $("#DutyEndDate").val(row.DutyEndDate);
+        }
 
         // Duty Start Time
         if (row.DutyStartTime) {
@@ -223,12 +250,17 @@ function loadBookingDropdown() {
 function resetDutyForm() {
     $("#DutyId").val(0);
 
+    $("#ddlBookingId").val("");
     $("#ddlStaff").val("");
     $("#ddlDutyRole").val("");
     $("#ddlStatus").val("");
 
+    $("#DutyStartDate").val("");
+    $("#DutyEndDate").val("");
+
     $("#DutyStartTime").val("");
     $("#DutyEndTime").val("");
+
     $("#Remarks").val("");
 }
 
@@ -329,16 +361,36 @@ function renderDutyTable(data) {
             { data: "EventName", title: "Event" },
             { data: "StaffName", title: "Staff" },
             { data: "RoleName", title: "Duty Role" },
+
             {
-                data: "DutyStartTime",
+                data: "DutyStartDate2",
+                title: "Start Date",
+                render: function (data) {
+                    return data || "-";
+                }
+            },
+            {
+                data: "DutyEndDate2",
+                title: "End Date",
+                render: function (data) {
+                    return data || "-";
+                }
+            },
+            {
+                data: "DutyStartTime2",
                 title: "Start Time",
-                render: d => formatTime12Hour(d)
+                render: function (data) {
+                    return data || "-";
+                }
             },
             {
-                data: "DutyEndTime",
+                data: "DutyEndTime2",
                 title: "End Time",
-                render: d => formatTime12Hour(d)
+                render: function (data) {
+                    return data || "-";
+                }
             },
+
             { data: "Remarks", title: "Remarks" },
             { data: "StatusName", title: "Status" },
             {
@@ -364,19 +416,3 @@ function renderDutyTable(data) {
 
     });
 }
-
-function formatTime12Hour(timeString) {
-    if (!timeString) return "";
-
-    // Split hours, minutes, seconds
-    let [hour, minute] = timeString.split(":");
-
-    hour = parseInt(hour, 10);
-    let ampm = hour >= 12 ? "PM" : "AM";
-
-    hour = hour % 12;
-    if (hour === 0) hour = 12; // 0 => 12 AM/PM
-
-    return `${hour}:${minute} ${ampm}`;
-}
-

@@ -57,8 +57,14 @@ public class EventDutyAssignmentController : MasterController
                     StaffId = Convert.ToInt64(row["StaffId"]),
                     DutyRoleId = Convert.ToInt64(row["DutyRoleId"]),
 
-                    DutyStartTime = row["DutyStartTime"] == DBNull.Value ? null : Convert.ToString(row["DutyStartTime"]),
-                    DutyEndTime = row["DutyEndTime"] == DBNull.Value ? null : Convert.ToString(row["DutyEndTime"]),
+                    DutyStartDate = row["DutyStartDate"] == DBNull.Value ? null : Convert.ToString(row["DutyStartDate"]),
+                    DutyStartDate2 = row["DutyStartDate2"] == DBNull.Value ? null : Convert.ToString(row["DutyStartDate2"]),
+                    DutyEndDate = row["DutyEndDate"] == DBNull.Value ? null : Convert.ToString(row["DutyEndDate"]),
+                    DutyEndDate2 = row["DutyEndDate2"] == DBNull.Value ? null : Convert.ToString(row["DutyEndDate2"]),
+                    DutyStartTime = row["DutyStartTime2"] == DBNull.Value ? null : Convert.ToString(row["DutyStartTime2"]),
+                    DutyStartTime2 = row["DutyStartTime2"] == DBNull.Value ? null : Convert.ToString(row["DutyStartTime2"]),
+                    DutyEndTime = row["DutyEndTime2"] == DBNull.Value ? null : Convert.ToString(row["DutyEndTime2"]),
+                    DutyEndTime2 = row["DutyEndTime2"] == DBNull.Value ? null : Convert.ToString(row["DutyEndTime2"]),
 
                     Remarks = Convert.ToString(row["Remarks"]),
                     StaffName = Convert.ToString(row["StaffName"]),
@@ -111,6 +117,9 @@ public class EventDutyAssignmentController : MasterController
                 cmd.Parameters.AddWithValue("@StaffId", model.StaffId);
                 cmd.Parameters.AddWithValue("@DutyRoleId", model.DutyRoleId);
 
+                cmd.Parameters.AddWithValue("@DutyStartDate", (object)model.DutyStartDate ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DutyEndDate", (object)model.DutyEndDate ?? DBNull.Value);
+
                 cmd.Parameters.AddWithValue("@DutyStartTime", (object)model.DutyStartTime ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@DutyEndTime", (object)model.DutyEndTime ?? DBNull.Value);
 
@@ -139,8 +148,6 @@ public class EventDutyAssignmentController : MasterController
             return StatusCode(500, apiResponse);
         }
     }
-
-
 
     // ===========================
     // 3. DELETE EVENT DUTY ASSIGNMENT

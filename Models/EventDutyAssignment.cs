@@ -28,6 +28,9 @@
         public long StaffId { get; set; }
         public long DutyRoleId { get; set; }
 
+        public string? DutyStartDate { get; set; }
+        public string? DutyEndDate { get; set; }
+
         public string? DutyStartTime { get; set; }
         public string? DutyEndTime { get; set; }
 
@@ -50,8 +53,15 @@
         public long StaffId { get; set; }
         public long DutyRoleId { get; set; }
 
+        public string? DutyStartDate { get; set; }
+        public string? DutyEndDate { get; set; }
+        public string? DutyStartDate2 { get; set; }
+        public string? DutyEndDate2 { get; set; }
+
         public string? DutyStartTime { get; set; }
         public string? DutyEndTime { get; set; }
+        public string? DutyStartTime2 { get; set; }
+        public string? DutyEndTime2 { get; set; }
 
         public string? Remarks { get; set; }
         public string? StaffName { get; set; }
