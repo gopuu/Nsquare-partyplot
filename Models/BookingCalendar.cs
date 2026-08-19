@@ -208,7 +208,8 @@
         public string? StartTime { get; set; }
         public string? EndTime { get; set; }
 
-        public long? Client_EnquiryId { get; set; }
+        public long? Client_EnquiryId { get; set; } = 0;
+        public long? ClientMaster_Id { get; set; } = 0;
         public string? Client_Name { get; set; }
         public string? Client_Address { get; set; }
         public string? Client_Email { get; set; }
@@ -386,7 +387,8 @@
         public string? StartTime_Full { get; set; }
         public string? EndTime { get; set; }
         public string? EndTime_Full { get; set; }
-        public long? Client_EnquiryId { get; set; }
+        public long? Client_EnquiryId { get; set; } = 0;
+        public long? ClientMaster_Id { get; set; } = 0;
         public string? Client_Name { get; set; }
         public string? Client_Address { get; set; }
         public string? Client_Email { get; set; }

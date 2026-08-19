@@ -211,11 +211,13 @@ function loadLeadSourceList(selectedId = null) {
 //Lead reference - dropdown -- END ------------------------
 
 //Enquiry Client - dropdown -- START ----------------------
-function loadEnquiryList() {
+function loadClientMasterList() {
     //showLoader();
     $.ajax({
-        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
-        type: "GET",
+        url: "/api/ClientMaster/GetClientMasterList",
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: 0 }), // Get all halls
         success: function (response) {
             //console.log("enquiry list response:", response);
             if (response.status === "Success") {
@@ -224,18 +226,18 @@ function loadEnquiryList() {
                 $.each(response.data, function (index, item) {
                     options += `
                                <option
-                                   value="${item.ClientEnquiryId}"
-                                   data-name="${item.ClientName || ''}"
-                                   data-email="${item.ClientEmail || ''}"
-                                   data-address="${item.ClientAddress || ''}"
-                                   data-contact="${item.ClientContact || ''}"
-                                   data-gstin="${item.ClientGSTIN || ''}"
-                                   data-stateid="${item.ClientStateId || ''}"
-                               >${item.ClientName} (${item.ClientContact})</option>`;
+                                   value="${item.Id}"
+                                   data-name="${item.Name || ''}"
+                                   data-email="${item.Email || ''}"
+                                   data-address="${item.Address || ''}"
+                                   data-contact="${item.Contact || ''}"
+                                   data-gstin="${item.GSTIN || ''}"
+                                   data-stateid="${item.StateId || ''}"
+                               >${item.Name} (${item.Contact})</option>`;
                 });
-                $("#clientEnquiryDropdown").html(options);
+                $("#clientMasterDropdown").html(options);
 
-                $("#clientEnquiryDropdown").on("change", function () {
+                $("#clientMasterDropdown").on("change", function () {
                     const selected = $(this).find(":selected");
 
                     $("#clientName").val(selected.data("name") || "");
@@ -243,8 +245,9 @@ function loadEnquiryList() {
                     $("#clientAddress").val(selected.data("address") || "");
                     $("#clientContact").val(selected.data("contact") || "");
                 });
-            } else {
-                $("#clientEnquiryDropdown").html(`<option value="0">No Enquiry Client Found</option>`);
+            } 
+            else {
+                $("#clientMasterDropdown").html(`<option value="0">No Client Found</option>`);
             }
         },
         error: function (xhr, status, error) {
@@ -2935,7 +2938,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //loadBookingCalendar();
     //loadPaymentHistory(bookingId);
     loadLeadSourceList();
-    loadEnquiryList();
+    loadClientMasterList();
     loadStateList();
     loadCityList();
     loadEventTypeList();
@@ -6048,7 +6051,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#eventStart").val(data.StartTime_Full);
                     $("#eventEnd").val(data.EndTime_Full);
 
-                    $("#clientEnquiryDropdown").val(data.Client_EnquiryId);
+                    if (data.ClientMaster_Id > 0) {
+                        $("#clientMasterDropdown").val(data.ClientMaster_Id);
+                    }
                     $("#clientName").val(data.Client_Name);
                     $("#clientAddress").val(data.Client_Address);
                     $("#clientEmail").val(data.Client_Email);
@@ -7109,7 +7114,8 @@ function saveBooking() {
         EndTime: $("#eventEnd").val().trim(),
 
         // Client Info
-        Client_EnquiryId: parseInt($("#clientEnquiryDropdown").val() || 0),
+        Client_EnquiryId: 0,
+        ClientMaster_Id: parseInt($("#clientMasterDropdown").val() || 0),
         Client_Name: $("#clientName").val(),
         Client_Email: $("#clientEmail").val(),
         Client_Address: $("#clientAddress").val(),
@@ -7326,14 +7332,14 @@ function saveBooking() {
                         else {
                             resetBooking();
                             loadBookingCalendar();
-                            loadEnquiryList();
+                            loadClientMasterList();
                         }
                     });
                 }
                 else {
                     resetBooking();
                     loadBookingCalendar();
-                    loadEnquiryList();
+                    loadClientMasterList();
                     //CLOSE MODAL
                     //bookingModal.hide();
                     $("#bookingModal").modal("hide");

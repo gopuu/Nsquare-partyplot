@@ -106,6 +106,7 @@ namespace ERPAdmin.ApiControllers
                         booking.EndTime_Full = dr["EndTime_Full"] == DBNull.Value ? "" : Convert.ToString(dr["EndTime_Full"]);
 
                         booking.Client_EnquiryId = dr["Client_EnquiryId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Client_EnquiryId"]);
+                        booking.ClientMaster_Id = dr["ClientMaster_Id"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ClientMaster_Id"]);
                         booking.Client_Name = dr["Client_Name"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Name"]);
                         booking.Client_Address = dr["Client_Address"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Address"]);
                         booking.Client_Email = dr["Client_Email"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Email"]);
@@ -249,6 +250,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@EndTime", model.EndTime ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Client_EnquiryId", model.Client_EnquiryId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ClientMaster_Id", model.ClientMaster_Id ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_Name", model.Client_Name ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_Address", model.Client_Address ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_Email", model.Client_Email ?? (object)DBNull.Value);
@@ -834,177 +836,5 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
-        /*
-        #region NOTES DATA - Category, SubDategory, Options
-        // Bookings Notes Category        
-        [HttpPost]
-        [Route("GetBookingCalendar_NoteCategory")]
-        private IActionResult GetBookingCalendar_NoteCategory([FromBody] GetBookingCalendar_NoteCategoryRequest request)
-        {
-            apiResponse apiResponse = new apiResponse();
-            List<BookingCalendar_NoteCategoryModel> list = new();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteCategory", con);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
-
-                con.Open();
-
-                DataTable dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    list.Add(new BookingCalendar_NoteCategoryModel
-                    {
-                        Id = Convert.ToInt64(dr["Id"]),
-                        Name = Convert.ToString(dr["Name"]),
-                        SortOrder = Convert.ToInt32(dr["SortOrder"]),
-                        IsActive = Convert.ToBoolean(dr["IsActive"])
-                    });
-                }
-
-                apiResponse.status = "Success";
-                apiResponse.message = "Categories fetched successfully.";
-                apiResponse.data = list;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
-
-                apiResponse.status = "Error";
-                apiResponse.message = ex.Message;
-
-                return StatusCode(500, apiResponse);
-            }
-        }
-
-        // Bookings Notes Sub-Category
-        [HttpPost]
-        [Route("GetBookingCalendar_NoteSubCategory")]
-        private IActionResult GetBookingCalendar_NoteSubCategory([FromBody] GetBookingCalendar_NoteSubCategoryRequest request)
-        {
-            apiResponse apiResponse = new apiResponse();
-            List<BookingCalendar_NoteSubCategoryModel> list = new();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteSubCategory", con);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
-                cmd.Parameters.Add("@CategoryId", SqlDbType.BigInt).Value = request.CategoryId;
-
-                con.Open();
-
-                DataTable dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    list.Add(new BookingCalendar_NoteSubCategoryModel
-                    {
-                        Id = Convert.ToInt64(dr["Id"]),
-                        CategoryId = Convert.ToInt64(dr["CategoryId"]),
-                        CategoryName = Convert.ToString(dr["CategoryName"]),
-                        Name = Convert.ToString(dr["Name"]),
-                        InputType = Convert.ToString(dr["InputType"]),
-                        SortOrder = Convert.ToInt32(dr["SortOrder"])
-                    });
-                }
-
-                apiResponse.status = "Success";
-                apiResponse.message = "Sub categories fetched successfully.";
-                apiResponse.data = list;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
-
-                apiResponse.status = "Error";
-                apiResponse.message = ex.Message;
-
-                return StatusCode(500, apiResponse);
-            }
-        }
-
-        // Bookings Notes Sub-Category - OPTIONS
-        [HttpPost]
-        [Route("GetBookingCalendar_NoteOption")]
-        private IActionResult GetBookingCalendar_NoteOption([FromBody] GetBookingCalendar_NoteOptionRequest request)
-        {
-            apiResponse apiResponse = new apiResponse();
-            List<BookingCalendar_NoteOptionModel> list = new();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                using SqlConnection con = new SqlConnection(connString);
-                using SqlCommand cmd = new SqlCommand("GetBookingCalendar_NoteOption", con);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = request.Id;
-                cmd.Parameters.Add("@SubCategoryId", SqlDbType.BigInt).Value = request.SubCategoryId;
-
-                con.Open();
-
-                DataTable dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    list.Add(new BookingCalendar_NoteOptionModel
-                    {
-                        Id = Convert.ToInt64(dr["Id"]),
-                        SubCategoryId = Convert.ToInt64(dr["SubCategoryId"]),
-                        SubCategoryName = Convert.ToString(dr["SubCategoryName"]),
-                        OptionName = Convert.ToString(dr["OptionName"]),
-                        SortOrder = Convert.ToInt32(dr["SortOrder"])
-                    });
-                }
-
-                apiResponse.status = "Success";
-                apiResponse.message = "Options fetched successfully.";
-                apiResponse.data = list;
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, null);
-
-                apiResponse.status = "Error";
-                apiResponse.message = ex.Message;
-
-                return StatusCode(500, apiResponse);
-            }
-        }
-        #endregion
-        */
     }
 }
