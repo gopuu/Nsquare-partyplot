@@ -5,6 +5,7 @@ using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.Services;
 using Humanizer;
+using iTextSharp.text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -177,7 +178,7 @@ namespace ERPAdmin.ApiControllers
                     string endAMPM = "";
 
                     string whatsapp_name = "", whatsapp_bName = "", whatsapp_orgMobile = "", whatsapp_orgName = "", 
-                        whatsapp_client_contactno = "", templateName = "";
+                        whatsapp_client_contactno = "", templateName = "", msgTemplate="";
                     int companyId = 0;
                     bool isSendMsg = false;
 
@@ -207,6 +208,7 @@ namespace ERPAdmin.ApiControllers
                             whatsapp_client_contactno = model.Contact ?? "";
                             companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
                             templateName = reader["TempName"]?.ToString() ?? "";
+                            msgTemplate = reader["MsgTemplate"]?.ToString() ?? "";
                             isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
                     }
@@ -230,7 +232,8 @@ namespace ERPAdmin.ApiControllers
                             variables: variables,
                             actionBy: model.ActionBy,
                             isPromotional: false,
-                            domainUrl: domainUrl
+                            domainUrl: domainUrl,
+                            msgTemplate: msgTemplate
                         );
                     }
 

@@ -1,6 +1,6 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Office.Word;
-using DocumentFormat.OpenXml.Office2016.Excel;
+//using DocumentFormat.OpenXml.Office.Word;
+//using DocumentFormat.OpenXml.Office2016.Excel;
 using ERPAdmin.Helper;
 using ERPAdmin.Models;
 using ERPAdmin.PDF;
@@ -126,16 +126,11 @@ namespace ERPAdmin.ApiControllers
                         ? JsonConvert.SerializeObject(request.Columns)
                         : null;
 
-                    cmd.Parameters.AddWithValue("@Columns",
-                        columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@SupplierId",
-                        request.SupplierId == 0 ? 0 : request.SupplierId);
-                    cmd.Parameters.AddWithValue("@FromDate",
-                        string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate",
-                        string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration",
-                        string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId == 0 ? 0 : request.SupplierId);
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
                 }

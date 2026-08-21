@@ -3887,10 +3887,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        try {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        const originalBorder = btn.style.border;
 
-            const btn = this;
-            btn.disabled = true;
+        try {
             const userId = parseInt(sessionStorage.getItem('userId') || 0);
 
             const payload = {
@@ -3902,6 +3903,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             console.log("Payload:", payload);
 
+            //btn.disabled = true;
+            btn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Sending...
+            `;
+            btn.style.border = 'none';
+
             const response = await fetch("/api/Feedback/SendFeedback", {
                 method: "POST",
                 headers: {
@@ -3911,7 +3919,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             const result = await response.json();
             console.log("API Result:", result);
-            btn.disabled = true;
+
             if (result.status === "Success") {
                 handleApiSuccess(result.message);
                 $("#feedbackModal").modal("hide");
@@ -3928,7 +3936,10 @@ document.addEventListener("DOMContentLoaded", function () {
             handleApiError(null, "error", err, "Failed to send feedback request");
         }
         finally {
-            btn.disabled = false;
+            // Always restore button, whether success or error
+            //btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            btn.style.border = originalBorder;
         }
 
     });

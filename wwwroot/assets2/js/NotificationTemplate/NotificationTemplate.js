@@ -46,7 +46,7 @@ function renderTable(data) {
     if (!data || data.length === 0) {
         $('#tableMain tbody').html(`
             <tr>
-                <td colspan="6" class="text-center fw-bold text-danger">
+                <td colspan="7" class="text-center fw-bold text-danger">
                     No Data Found !!
                 </td>
             </tr>
@@ -127,16 +127,125 @@ function renderTable(data) {
                         </button>
                     `;
                 }
-            }
+            },
 
+            {
+                data: null,
+                title: 'Message Sample / Template',
+                orderable: false,
+                className: 'text-start align-middle',
+                width: "100px",
+                createdCell: function (td) {
+                    $(td).css({
+                        //'width': '500px',
+                        //'max-width': '500px',
+                        'padding': '6px 10px',
+                        'vertical-align': 'middle'
+                    });
+                },
+
+                render: function (data, type, row) {
+
+                    const template = row.MsgTemplate || '-';
+                    const sample = row.MsgSample || '-';
+
+                    const safeTemplate = $('<div>').text(template).html();
+                    const safeSample = $('<div>').text(sample).html();
+
+                    return `
+                        <div class="message-preview"
+                             data-template="${safeTemplate}"
+                             data-sample="${safeSample}">
+
+                            <div class="message-row message-template">
+                                <span class="message-label">
+                                    <i class="fa fa-code"></i>
+                                </span>
+
+                                <span class="message-text">
+                                    ${safeTemplate}
+                                </span>
+                            </div>
+
+                            <div class="message-row message-sample">
+                                <span class="message-label">
+                                    <i class="fa fa-comment-dots"></i>
+                                </span>
+
+                                <span class="message-text">
+                                    ${safeSample}
+                                </span>
+                            </div>
+
+                        </div>
+                    `;
+                }
+            }
         ],
 
         stateSave: false,
         pageLength: 100,
         ordering: true,
+        //autoWidth: false,
         searching: true,
         lengthChange: false,
-        pagingType: "full_numbers"
+        pagingType: "full_numbers",
+
+        drawCallback: function () {
+
+            document.querySelectorAll('.message-preview').forEach(function (element) {
+                // Remove existing instance if DataTable redraws
+                const existing = bootstrap.Popover.getInstance(element);
+
+                if (existing) {
+                    existing.dispose();
+                }
+
+                new bootstrap.Popover(element, {
+                    trigger: 'hover focus',
+                    placement: 'top',
+                    html: true,
+                    customClass: 'message-popover',
+                    container: 'body',
+
+                    content: function () {
+
+                        const template = element.getAttribute('data-template') || '-';
+                        const sample = element.getAttribute('data-sample') || '-';
+
+                        return `
+                            <div class="message-popover-section">
+
+                                <div class="message-popover-label">
+                                    <i class="fa fa-code me-1"></i>
+                                    Template
+                                </div>
+
+                                <div class="message-popover-text">
+                                    ${template}
+                                </div>
+
+                            </div>
+
+                            <div class="message-popover-divider"></div>
+
+                            <div class="message-popover-section">
+
+                                <div class="message-popover-label">
+                                    <i class="fa fa-comment-dots me-1"></i>
+                                    Sample
+                                </div>
+
+                                <div class="message-popover-text">
+                                    ${sample}
+                                </div>
+
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
     });
 
 }

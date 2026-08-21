@@ -58,7 +58,9 @@ namespace ERPAdmin.ApiControllers
                         model.EventId = dr["EventId"] != DBNull.Value ? Convert.ToInt64(dr["EventId"]) : 0;
                         model.IsSendMsg = dr["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(dr["IsSendMsg"]) : false;
                         model.HasReminders = dr["HasReminders"] != DBNull.Value ? Convert.ToBoolean(dr["HasReminders"]) : false;
-
+                        model.MsgTemplate = Convert.ToString(dr["MsgTemplate"]);
+                        model.MsgSample = Convert.ToString(dr["MsgSample"]);
+ 
                         templates.Add(model);
                     }
                 }

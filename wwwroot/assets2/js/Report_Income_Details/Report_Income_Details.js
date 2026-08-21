@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadCategoryDropdown();
     loadSubCategoryDropdown();
 
+    setCurrentMonthDates();
     resetGrid(); //loadIncomeDetailsGrid();
     loadColumnCheckboxes();
 
@@ -38,9 +39,16 @@ document.addEventListener("DOMContentLoaded", function () {
         var categoryId = $(this).val();
         loadSubCategoryDropdown(categoryId);
     });
-    $("#ddlDetailAccount, #ddlDetailSubCategory, #ddlDetailPaymentMode").on("input change", function () {
+    $("#fromDate, #toDate, #ddlDetailAccount, #ddlDetailSubCategory, #ddlDetailPaymentMode").on("input change", function () {
+        // If user manually edits date → switch dropdown to custom
+        if ($("#quickRange").val() !== "customrange") {
+            $("#quickRange").val("customrange");
+            // Optional: update variable also
+            selectedMonthDuration = "customrange";
+        }
         loadIncomeDetailsGrid();
     });
+
     $(document).on("keydown", "#txtDetailVoucherNo", function (e) {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -48,6 +56,61 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    /* ── Quick range ── */
+    $("#quickRange").on("change", function () {
+
+        const newFilter = $(this).val();
+        if (selectedMonthDuration === newFilter) return;
+        selectedMonthDuration = newFilter;
+
+        if (selectedMonthDuration === "customrange") return;
+
+        const today = new Date();
+        let fromDate, toDate;
+
+        switch (selectedMonthDuration) {
+            case "thismonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+            case "lastmonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case "thisyear":
+                fromDate = new Date(today.getFullYear(), 0, 1);
+                toDate = new Date(today.getFullYear(), 11, 31);
+                break;
+            case "lastyear":
+                fromDate = new Date(today.getFullYear() - 1, 0, 1);
+                toDate = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+            case "last7days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 6);
+                toDate = today;
+                break;
+            case "last30days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 29);
+                toDate = today;
+                break;
+            case "yesterday":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 1);
+                toDate = new Date(fromDate);
+                break;
+            case "last12months":
+                fromDate = new Date(today);
+                fromDate.setMonth(today.getMonth() - 12);
+                toDate = today;
+                break;
+        }
+
+        $("#fromDate").val(formatDate2(fromDate));
+        $("#toDate").val(formatDate2(toDate));
+        loadIncomeDetailsGrid();
+    });
 
     /* ── Filter panel ── */
     $("#filterPanel").on("click", function (e) { e.stopPropagation(); });
@@ -69,6 +132,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // RESET FILTER
     // ─────────────────────────────────────────────
     $("#btnResetFilter").on("click", function () {
+        $("#quickRange").val("thismonth");
+        selectedMonthDuration = "thismonth";
+        setCurrentMonthDates();
+
         resetGrid();
     });
 
@@ -116,10 +183,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function resetGrid(){
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    // Reset month to current month
-    $("#incomeMonth").val(currentMonth);
 
     // Reset filters
     $("#ddlDetailCategory").val("0").trigger("change");
@@ -252,9 +315,18 @@ function loadPaymentModeDropdown(selectedId = 0) {
 ═══════════════════════════════════════════════════ */
 function loadIncomeDetailsGrid() {
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
+
         VoucherNo: $("#txtDetailVoucherNo").val()?.trim() || null,
-        Month: $("#incomeMonth").val() || null, // yyyy-MM
         CategoryId: parseInt($("#ddlDetailCategory").val()) || 0,
         SubCategoryId: parseInt($("#ddlDetailSubCategory").val()) || 0,
         AccountId: parseInt($("#ddlDetailAccount").val()) || 0,
@@ -566,6 +638,14 @@ function renderIncomeDetailTable(rows, totals) {
 /* ═══════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════ */
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
+}
+
 function loadColumnCheckboxes() {
     let html = "";
     REPORT_COLUMNS.forEach(col => {
@@ -611,9 +691,18 @@ function ViewIncomeReport(actionName) {
     const withHeader = $("#toggleWithHeader").is(":checked");
     const userId = parseInt(sessionStorage.getItem("userId")) || 0;
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
+
         VoucherNo: $("#txtDetailVoucherNo").val()?.trim() || null,
-        Month: $("#incomeMonth").val() || null, // yyyy-MM
 
         CategoryId: parseInt($("#ddlDetailCategory").val()) || 0,
         SubCategoryId: parseInt($("#ddlDetailSubCategory").val()) || 0,

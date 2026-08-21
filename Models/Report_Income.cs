@@ -53,7 +53,9 @@
 
     public class IncomeReportGridRequest
     {
-        public string? Month { get; set; } // yyyy-MM
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
         public string? VoucherNo { get; set; }
 
         public long CategoryId { get; set; } = 0;
@@ -105,7 +107,9 @@
 
     public class IncomeReportRequest : BaseClass
     {
-        public string? Month { get; set; } // yyyy-MM
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
 
         public string? VoucherNo { get; set; }
 

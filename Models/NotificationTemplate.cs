@@ -9,6 +9,8 @@
         public long EventId { get; set; }
         public bool IsSendMsg { get; set; }
         public bool HasReminders { get; set; }
+        public string? MsgTemplate { get; set; }
+        public string? MsgSample { get; set; }
     }
     public class SaveNotification_TemplateParameterList
     {

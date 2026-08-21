@@ -1,7 +1,9 @@
 ﻿using ERPAdmin.Helper;
 using ERPAdmin.Models;
+using iTextSharp.text;
 using Newtonsoft.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ERPAdmin.Services
 {
@@ -15,7 +17,8 @@ namespace ERPAdmin.Services
             List<string> variables,
             long actionBy,
             bool isPromotional = false,
-            string domainUrl = "")
+            string domainUrl = "",
+            string msgTemplate = "")
         {
             try
             {
@@ -30,13 +33,15 @@ namespace ERPAdmin.Services
                     IsPromotional = isPromotional,
                     ActionBy = actionBy,
                     TemplateName = templateName,
-                    Message = string.Join("&", variables)
+                    Message = string.Join("&", variables),
+                    MsgTemplate = msgTemplate,
+                    MsgSample = BuildWhatsAppMessage(msgTemplate, variables)
                 };
 
                 using (HttpClient client = new HttpClient())
                 {
                     string apiUrl = $"{domainUrl}api/Wallet/SendWhatsApp";
-                    apiUrl = $"http://localhost:6168/api/Wallet/SendWhatsApp";
+                    //apiUrl = $"http://localhost:6168/api/Wallet/SendWhatsApp";
 
                     StringContent content = new StringContent(
                         JsonConvert.SerializeObject(request),
@@ -65,43 +70,28 @@ namespace ERPAdmin.Services
             }
         }
 
-
-        private async Task SendTemplateWhatsAppCommon_OLD(long companyId, string mobileNo, string templateName, List<string> variables, 
-            long actionBy, bool isPromotional = false, string domainUrl = "")
+        private string BuildWhatsAppMessage(string template, List<string> variables)
         {
-            try
+            if (string.IsNullOrWhiteSpace(template))
+                return "";
+
+            string message = template;
+
+            var matches = Regex.Matches(template, @"\{([^}]+)\}");
+
+            for (int i = 0; i < matches.Count && i < variables.Count; i++)
             {
-                WhatsAppSendRequest request = new WhatsAppSendRequest
-                {
-                    CompanyId = companyId,
-                    MobileNo = $"91{mobileNo}",
-                    MessageType = "TEMPLATE",
-                    MessageCount = 1,
-                    ReferenceId = Guid.NewGuid().ToString(),
-                    TemplateId = null,
-                    IsPromotional = isPromotional,
-                    ActionBy = actionBy,
-                    TemplateName = templateName,
-                    Message = string.Join("&", variables)
-                };
+                string placeholder = matches[i].Value;
 
-                using (HttpClient client = new HttpClient())
-                {
-                    string apiUrl = $"{domainUrl}api/Wallet/SendWhatsApp";
-
-                    StringContent content = new StringContent(
-                        JsonConvert.SerializeObject(request),
-                        Encoding.UTF8,
-                        "application/json"
-                    );
-                    //apiUrl = $"http://localhost:6168/api/Wallet/SendWhatsApp";
-                    await client.PostAsync(apiUrl, content);
-                }
+                message = message.Replace(
+                    placeholder,
+                    variables[i] ?? ""
+                );
             }
-            catch
-            {
 
-            }
+            return message;
         }
+
+
     }
 }

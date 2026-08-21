@@ -354,10 +354,61 @@ namespace ERPAdmin.ApiControllers
                 decimal deductedAmount = Convert.ToDecimal(debitDt.Rows[0]["DeductedAmount"]);
                 decimal balance = Convert.ToDecimal(debitDt.Rows[0]["Balance"]);
 
-                // 🔥 STEP 2: SEND WHATSAPP
-                string sendStatus = await SendWhatsAppMessage(request);
-                if (sendStatus != "Success")
+                //Whatsapp Msg log-1
+                string messageLogId = "";
+                var logParams = new List<SqlParameter>
                 {
+                    new SqlParameter("@CompanyId", request.CompanyId),
+                    new SqlParameter("@ReferenceId", request.ReferenceId),
+                    new SqlParameter("@MobileNo", request.MobileNo),
+                    new SqlParameter("@MessageType", request.MessageType),
+                    new SqlParameter("@TemplateId", (object?)request.TemplateId ?? DBNull.Value),
+                    new SqlParameter("@TemplateName", (object?)request.TemplateName ?? DBNull.Value),
+                    new SqlParameter("@MsgTemplate", (object?)request.MsgTemplate ?? DBNull.Value),
+                    new SqlParameter("@VariablesJson", JsonConvert.SerializeObject(request.Message.Split('&'))),
+                    new SqlParameter("@MsgSample", (object?)request.MsgSample ?? DBNull.Value),
+                    new SqlParameter("@Status", "Pending"),
+                    new SqlParameter("@IsPromotional", request.IsPromotional),
+                    new SqlParameter("@WalletAmount", deductedAmount),
+                    new SqlParameter("@ActionBy", request.ActionBy)
+                };
+
+                DataTable logDt = await ExecuteSP(connString, "WhatsApp_MessageLog_Insert", logParams);
+
+                if (logDt.Rows.Count > 0)
+                {
+                    messageLogId = logDt.Rows[0]["Id"].ToString();
+                }
+
+                // 🔥 STEP 2: SEND WHATSAPP
+                apiResponse sendStatus = await SendWhatsAppMessage(request);
+
+                //Whatsapp Msg log-2 UPDATE - IF SUCCESS
+                if (string.Equals(sendStatus.status, "Success", StringComparison.OrdinalIgnoreCase))
+                {
+                    var updateParams = new List<SqlParameter>
+                    {
+                        new SqlParameter("@Id", messageLogId),
+                        new SqlParameter("@Status", "Sent"),
+                        new SqlParameter("@ProviderMessageId", (object?)sendStatus.data?.ToString() ?? DBNull.Value),
+                        new SqlParameter("@ProviderResponse", (object?)sendStatus.message ?? DBNull.Value)
+                    };
+                    await ExecuteSP(connString, "WhatsApp_MessageLog_Update", updateParams);
+                }
+
+                // FAIL & REFUND
+                if (!string.Equals(sendStatus.status, "Success", StringComparison.OrdinalIgnoreCase))
+                {
+                    //Whatsapp Msg log-3 UPDATE - IF FAILED- update STATUS=FAILED
+                    var failUpdateParams = new List<SqlParameter>
+                    {
+                        new SqlParameter("@Id", messageLogId),
+                        new SqlParameter("@Status", "Failed"),
+                        new SqlParameter("@ProviderResponse", (object?)sendStatus.message ?? DBNull.Value),
+                        new SqlParameter("@ErrorMessage", (object?)sendStatus.message ?? DBNull.Value)
+                    };
+                    await ExecuteSP(connString, "WhatsApp_MessageLog_Update", failUpdateParams);
+
                     // 🔥 STEP 3: REFUND IF FAILED
                     var refundParams = new List<SqlParameter>
                     {
@@ -366,13 +417,22 @@ namespace ERPAdmin.ApiControllers
                         new SqlParameter("@RefundReferenceId", Guid.NewGuid().ToString()),
                         new SqlParameter("@ActionBy", request.ActionBy)
                     };
-
                     await ExecuteSP(connString, "Wallet_Refund_WhatsApp", refundParams);
+
+                    //Whatsapp Msg log-3 UPDATE - IF FAILED- update STATUS=REFUNDED
+                    var refundUpdateParams = new List<SqlParameter>
+                    {
+                        new SqlParameter("@Id", messageLogId),
+                        new SqlParameter("@Status", "Refunded"),
+                        new SqlParameter("@RefundAmount", deductedAmount),
+                        new SqlParameter("@ErrorMessage", (object?)sendStatus.message ?? DBNull.Value)
+                    };
+                    await ExecuteSP(connString, "WhatsApp_MessageLog_Update", refundUpdateParams);
 
                     return Ok(new apiResponse
                     {
                         status = "Error",
-                        message = "WhatsApp send failed. Amount refunded."
+                        message = $"WhatsApp send failed: {sendStatus.message}. Charges refunded."
                     });
                 }
 
@@ -388,8 +448,8 @@ namespace ERPAdmin.ApiControllers
                 
                 return Ok(new apiResponse
                 {
-                    status = sendStatus, //"Success",
-                    message = (sendStatus == "Success") ? "WhatsApp msg sent successfully" : "WhatsApp msg sending failed",
+                    status = sendStatus.message, //"Success",
+                    message = (sendStatus.status == "Success") ? "WhatsApp msg sent successfully" : $"WhatsApp msg sending failed: {sendStatus.message}",
                     data = new
                     {
                         Balance = balance,
@@ -409,12 +469,18 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
-        private async Task<string> SendWhatsAppMessage(WhatsAppSendRequest request)
+        private async Task<apiResponse> SendWhatsAppMessage(WhatsAppSendRequest request)
         {
             try
             {
                 if (request.MobileNo.Length != 12)
-                    return "Fail";
+                {
+                    return new apiResponse
+                    {
+                        status = "Error",
+                        message = "Invalid mobile number."
+                    };
+                }
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
@@ -468,17 +534,66 @@ namespace ERPAdmin.ApiControllers
                     HttpResponseMessage response = await client.PostAsync(apiUrl, content);
                     string responseString = await response.Content.ReadAsStringAsync();
 
-                    if (!response.IsSuccessStatusCode)
-                        return "Fail";
+                    // Try to parse API response
+                    WhatsAppApiResponse? apiResult = null;
 
-                    return "Success";
+                    try
+                    {
+                        apiResult = JsonConvert.DeserializeObject<WhatsAppApiResponse>(responseString);
+                    }
+                    catch
+                    {
+                        // Ignore JSON parsing error
+                    }
+
+                    // HTTP error
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string errorMessage =
+                            apiResult?.Error ??
+                            responseString ??
+                            response.ReasonPhrase ??
+                            "WhatsApp API request failed.";
+
+                        return new apiResponse
+                        {
+                            status = "Error",
+                            message = errorMessage
+                        };
+                    }
+
+                    // API returned success:false
+                    if (apiResult != null && !apiResult.Success)
+                    {
+                        return new apiResponse
+                        {
+                            status = "Error",
+                            message = apiResult.Error ?? "WhatsApp message failed."
+                        };
+                    }
+
+                    // Success
+                    return new apiResponse
+                    {
+                        status = "Success",
+                        message = "Message sent successfully.",
+                        data = new
+                        {
+                            MessageId = apiResult?.Messages?.FirstOrDefault()?.Id
+                        }
+                    };
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                return "Fail";
+                return new apiResponse
+                {
+                    status = "Error",
+                    message = ex.Message
+                };
             }
         }
+
         #endregion
 
         [HttpPost]

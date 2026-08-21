@@ -180,7 +180,7 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_url = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
-                           whatsapp_client_contactno = "", templateName = "";
+                           whatsapp_client_contactno = "", templateName = "", msgTemplate = "";
 
                     int companyId = 0;
 
@@ -202,6 +202,8 @@ namespace ERPAdmin.ApiControllers
                             companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
 
                             templateName = reader["TempName"]?.ToString() ?? "";
+                            msgTemplate = reader["MsgTemplate"]?.ToString() ?? "";
+
                             isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
                     }
@@ -230,7 +232,7 @@ namespace ERPAdmin.ApiControllers
                             whatsapp_orgName
                         };
 
-                        await _whatsAppService.SendTemplateWhatsAppCommon(
+                        /*await _whatsAppService.SendTemplateWhatsAppCommon(
                             companyId: companyId,
                             mobileNo: whatsapp_client_contactno,
                             templateName: templateName,
@@ -238,9 +240,39 @@ namespace ERPAdmin.ApiControllers
                             actionBy: request.ActionBy,
                             isPromotional: false,
                             domainUrl: domainUrl
-                        );
-                    }
+                        );*/
 
+                        var whatsappResponse = await _whatsAppService.SendTemplateWhatsAppCommon(
+                            companyId: companyId,
+                            mobileNo: whatsapp_client_contactno,
+                            templateName: templateName,
+                            variables: variables,
+                            actionBy: request.ActionBy,
+                            isPromotional: false,
+                            domainUrl: domainUrl,
+                            msgTemplate: msgTemplate
+                        );
+
+                        // If WhatsApp API failed, return its response
+                        if (whatsappResponse == null ||
+                            !string.Equals(whatsappResponse.status, "Success", StringComparison.OrdinalIgnoreCase))
+                        {
+                            whatsappResponse ??= new apiResponse
+                            {
+                                status = "Error",
+                                message = "WhatsApp service returned an empty response."
+                            };
+
+                            // Keep InvoiceId in error response as well
+                            whatsappResponse.data = new
+                            {
+                                InvoiceId = invoiceId
+                            };
+
+                            return Ok(whatsappResponse);
+                        }
+
+                    }
                 }
 
                 apiResponse.status = "Success";

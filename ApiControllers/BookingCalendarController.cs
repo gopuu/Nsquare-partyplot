@@ -326,7 +326,7 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
-                        whatsapp_client_contactno = "", templateName = "";
+                        whatsapp_client_contactno = "", templateName = "", msgTemplate = "";
                     int companyId = 0;
                     bool isSendMsg = false;
 
@@ -345,6 +345,7 @@ namespace ERPAdmin.ApiControllers
                             whatsapp_client_contactno = model.Client_Contact ?? "";
                             companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
                             templateName = reader["TempName"]?.ToString() ?? "";
+                            msgTemplate = reader["MsgTemplate"]?.ToString() ?? "";
                             isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                         }
                     }
@@ -368,7 +369,8 @@ namespace ERPAdmin.ApiControllers
                             variables: variables,
                             actionBy: model.ActionBy,
                             isPromotional: false,
-                            domainUrl: domainUrl
+                            domainUrl: domainUrl,
+                            msgTemplate: msgTemplate
                         );
                     }
 

@@ -399,7 +399,7 @@ namespace ERPAdmin.ApiControllers
                     con.Open();
 
                     string whatsapp_name = "", whatsapp_bName = "", whatsapp_eventName = "", whatsapp_orgName = "",
-                        whatsapp_client_contactno = "", templateName = "", whatsapp_closeGreeting = "";
+                        whatsapp_client_contactno = "", templateName = "", whatsapp_closeGreeting = "", msgTemplate = "";
                     int companyId = 0;
                     bool isSendMsg = false;
 
@@ -420,6 +420,7 @@ namespace ERPAdmin.ApiControllers
                             whatsapp_client_contactno = dr["ContactNo"]?.ToString() ?? "";
                             companyId = dr["CompanyId"] != DBNull.Value ? Convert.ToInt32(dr["CompanyId"]) : 0;
                             templateName = dr["TempName"]?.ToString() ?? "";
+                            msgTemplate = dr["MsgTemplate"]?.ToString() ?? "";
                             isSendMsg = dr["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(dr["IsSendMsg"]) : false;
                         }
                     }
@@ -447,7 +448,8 @@ namespace ERPAdmin.ApiControllers
                                 variables: variables,
                                 actionBy: request.ActionBy,
                                 isPromotional: false,
-                                domainUrl: domainUrl
+                                domainUrl: domainUrl,
+                                msgTemplate: msgTemplate
                             );
 
                         if (whatsappResult.status == "Success")

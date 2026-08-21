@@ -25,14 +25,15 @@ namespace ERPAdmin.ApiControllers
         private string connString = string.Empty;
         private readonly string domainUrl;
         private string httpProtocols = string.Empty;
+        private readonly IWebHostEnvironment _env;
 
-        public UserController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public UserController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
         {
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
             httpProtocols = $"{request?.Scheme}://";
-
+            _env = env;
         }
 
         [HttpPost]
@@ -149,6 +150,11 @@ namespace ERPAdmin.ApiControllers
 
                         var token = tokenHandler.CreateToken(tokenDescriptor);
                         userDetail.token = tokenHandler.WriteToken(token);
+
+                        // ── DELETE FILES - till 1hr before ──
+                        string folder = Path.Combine(_env.WebRootPath, "reports");
+                        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                        Utils.deleteOldFiles(folder, "*.*");
 
                         apiResponse.status = "Success";
                         apiResponse.message = "Login success.";

@@ -32,21 +32,27 @@
 
     public class ExpenseReportGridRequest
     {
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+
         public long CategoryId { get; set; } = 0;
         public long SubCategoryId { get; set; } = 0;
         public long AccountId { get; set; } = 0;
         public long PaymentModeId { get; set; } = 0;
-        public string? Month { get; set; }
         public string? VoucherNo { get; set; }
     }
 
     public class ExpenseReportRequest : BaseClass
     {
+        public string? FromDate { get; set; }
+        public string? ToDate { get; set; }
+        public string? FilterDuration { get; set; }
+
         public long CategoryId { get; set; } = 0;
         public long SubCategoryId { get; set; } = 0;
         public long AccountId { get; set; } = 0;
         public long PaymentModeId { get; set; } = 0;
-        public string? Month { get; set; }
         public List<string>? Columns { get; set; }
         public bool? WithHeader { get; set; }
         public string? VoucherNo { get; set; }

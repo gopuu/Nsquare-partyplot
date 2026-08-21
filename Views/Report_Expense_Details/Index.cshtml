@@ -92,10 +92,30 @@
 
     <div class="filter-body">
 
-        <!-- MONTH -->
+        <!--DURATION-->
         <div class="mb-3">
-            <label class="form-label">Month</label>
-            <input type="month" id="expenseMonth" class="form-control form-control-sm">
+            <label class="form-label">Duration</label>
+            <select id="quickRange" class="form-select form-select-sm">
+                <option value="thismonth">This Month</option>
+                <option value="lastmonth">Last Month</option>
+                <option value="days">Last 7 days</option>
+                <option value="lastdays">Last 30 days</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="last12months">Last 12 Months</option>
+                <option value="customrange">Custom Range</option>
+            </select>
+        </div>
+
+        <!--DATE RANGE-->
+        <div class="row g-2">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">From Date</label>
+                <input type="date" id="fromDate" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">To Date</label>
+                <input type="date" id="toDate" class="form-control form-control-sm">
+            </div>
         </div>
 
         <!-- Voucher -->

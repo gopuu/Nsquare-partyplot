@@ -1,4 +1,6 @@
-﻿namespace ERPAdmin.Models
+﻿using Newtonsoft.Json;
+
+namespace ERPAdmin.Models
 {
     #region DTO Models (Request / Response)
     public class WalletRequest_Balance 
@@ -72,6 +74,10 @@
     #region WHATSAPP
     public class WhatsAppSendRequest
     {
+
+        public string MsgTemplate { get; set; }
+        public string MsgSample { get; set; }
+
         public long CompanyId { get; set; }
         public string MobileNo { get; set; }
         public string MessageType { get; set; }   // TEXT / TEMPLATE
@@ -85,7 +91,49 @@
         public string TemplateName { get; set; }
         public string Message { get; set; } // param1&param2 format
     }
+    public class WhatsAppApiResponse_OLD
+    {
+        public bool Success { get; set; }
+        public string Error { get; set; }
+    }
 
+    public class WhatsAppApiResponse
+    {
+        [JsonProperty("messaging_product")]
+        public string MessagingProduct { get; set; }
+
+
+        [JsonProperty("contacts")]
+        public List<WhatsAppContact> Contacts { get; set; }
+
+
+        [JsonProperty("messages")]
+        public List<WhatsAppMessage> Messages { get; set; }
+
+
+        [JsonProperty("success")]
+        public bool Success { get; set; }
+
+
+        [JsonProperty("error")]
+        public string Error { get; set; }
+    }
+
+    public class WhatsAppContact
+    {
+        [JsonProperty("input")]
+        public string Input { get; set; }
+
+
+        [JsonProperty("wa_id")]
+        public string WaId { get; set; }
+    }
+
+    public class WhatsAppMessage
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+    }
     #endregion
 
 }
