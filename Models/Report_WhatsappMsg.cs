@@ -32,7 +32,6 @@
         public long CompanyId { get; set; }
 
         public string MobileNo { get; set; }
-        public string TemplateName { get; set; }
         public string MsgTemplate { get; set; }
         public string VariablesJson { get; set; }
         public string MsgSample { get; set; }
@@ -51,6 +50,7 @@
         public decimal DeductedAmount { get; set; }
         public decimal RefundAmount { get; set; }
 
+        public string CreatedAt { get; set; }
         public string SentAt { get; set; }
         public string FailedAt { get; set; }
         public string RefundedAt { get; set; }
@@ -58,6 +58,13 @@
         public string ActionByName { get; set; }
 
         public string TempName_Title { get; set; }
+    }
+
+    public class WhatsAppMessageLogReportSummaryModel
+    {
+        public int TotalRows { get; set; }
+        public decimal TotalDeductedAmount { get; set; }
+        public decimal TotalRefundAmount { get; set; }
     }
     #endregion
 

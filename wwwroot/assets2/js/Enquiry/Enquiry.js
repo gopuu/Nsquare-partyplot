@@ -1,4 +1,34 @@
-﻿//QUOTATION - START ------------------------------------------------------------------------------------------
+﻿function setShiftTime_enq(shiftAbbr = null, dealData = null) {
+    console.log("setShiftTime_enq():", shiftAbbr);
+    if (shiftAbbr == null) {
+        const times = shiftTimes[shiftAbbr];
+        if (!times) return; // invalid shift — do nothing
+
+        // Parse start time
+        const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+        $("#startHour").val(startH);
+        $("#startMinute").val(startM);
+        $("#startAMPM").val(startAMPM);
+
+        // Parse end time
+        const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
+        $("#endHour").val(endH);
+        $("#endMinute").val(endM);
+        $("#endAMPM").val(endAMPM);
+    }
+    else {
+        $("#startHour").val(dealData.StartHH);
+        $("#startMinute").val(dealData.StartMM);
+        $("#startAMPM").val(dealData.StartAMPM);
+
+        $("#endHour").val(dealData.EndHH);
+        $("#endMinute").val(dealData.EndMM);
+        $("#endAMPM").val(dealData.EndAMPM);
+    }
+
+}
+
+//QUOTATION - START ------------------------------------------------------------------------------------------
 function resetQuotationForm() {
 
     // ===== Basic =====
@@ -1845,7 +1875,7 @@ function enableDragDrop() {
             const toProcessId = parseInt(column.dataset.processid);
             const isConfirmed = column.dataset.isconfirmed === "true";
             const isLost = column.dataset.islost === "true";
-
+            console.log("isConfirmed:", isConfirmed, ", isLost:", isLost, ", toProcessId:", toProcessId);
             //const toProcessId = parseInt(
             //    zone.closest(".process-column").dataset.processid
             //);
@@ -1860,7 +1890,6 @@ function enableDragDrop() {
 
                 // 🎯 If dropped in Confirmed column
                 if (isConfirmed) {
-                    moveOn();
                     console.log("Booked");
                     resetBooking();
                     //Fetch Lead-Deal Data
@@ -1889,6 +1918,7 @@ function enableDragDrop() {
                     const hallid = dealData.HallId;
                     const booking_subEventDropdown = dealData.EventSubTypeId;
 
+                    //console.log("bookingId:", bookingId);
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
@@ -1899,8 +1929,16 @@ function enableDragDrop() {
                     $("#clientEnquiryDropdown").val(dealData.EnquiryDealId).trigger("change");
 
                     $("#booking_pax").val(dealData.Pax);
+                    //console.log("booking_pax:", dealData.Pax);
 
-                    setShiftTime(null, dealData);
+                    console.log("A - Before setShiftTime_enq");
+                    console.log("shift:", shift);
+                    console.log("dealData:", dealData);
+
+                    setShiftTime_enq(shift, dealData);
+
+                    console.log("B - After setShiftTime_enq");
+
                     $("#PaymentDetails_DueDate").val('');
 
                     $("#fromDate").val(dateiso); //.prop("disabled", true);
@@ -1909,6 +1947,9 @@ function enableDragDrop() {
                     $("#booking_subEventDropdown").val(booking_subEventDropdown);
 
                     $("#title_bookingModal").text("Add Booking Details");
+                    console.log("open booking modal");
+
+                    moveOn();
                     $("#bookingModal").modal("show");
 
                     return;
@@ -2852,7 +2893,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         $("#booking_pax").val(enquiryData.Pax);
 
-                        setShiftTime(null, response.data);
+                        setShiftTime_enq(null, response.data);
                         $("#PaymentDetails_DueDate").val('');
                         console.log("ib-dateiso:", dateiso);
                         $("#fromDate").val(dateiso); //.prop("disabled", true);
@@ -4342,6 +4383,8 @@ function validateBookingForm() {
 }
 
 function saveBooking() {
+    console.log("saveBooking called");
+
     if (!validateBookingForm()) {
         return;
     }
@@ -4552,34 +4595,6 @@ function setGSTSwitch(isGSTAccepted) {
     }
 }
 
-function setShiftTime(shiftAbbr = null, dealData = null) {
-    if (exactTime == null) {
-        const times = shiftTimes[shiftAbbr];
-        if (!times) return; // invalid shift — do nothing
-
-        // Parse start time
-        const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-        $("#startHour").val(startH);
-        $("#startMinute").val(startM);
-        $("#startAMPM").val(startAMPM);
-
-        // Parse end time
-        const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-        $("#endHour").val(endH);
-        $("#endMinute").val(endM);
-        $("#endAMPM").val(endAMPM);
-    }
-    else {
-        $("#startHour").val(dealData.StartHH);
-        $("#startMinute").val(dealData.StartMM);
-        $("#startAMPM").val(dealData.StartAMPM);
-
-        $("#endHour").val(dealData.EndHH);
-        $("#endMinute").val(dealData.EndMM);
-        $("#endAMPM").val(dealData.EndAMPM);
-    }
-
-}
 
 //Enquiry Client - dropdown -- START ----------------------
 function loadEnquiryList() {

@@ -3,28 +3,17 @@
 ═══════════════════════════════════════════════════ */
 const REPORT_COLUMNS = [
     { key: "SrNo", label: "Sr. No." },
-    { key: "Date", label: "Date" },
-    { key: "Time", label: "Time" },
     { key: "MobileNo", label: "Mobile No" },
     { key: "TemplateName", label: "Template" },
-    { key: "TemplateTitle", label: "Template Title" },
-    { key: "MsgTemplate", label: "Message Template" },
-    { key: "Variables", label: "Variables" },
     { key: "MsgSample", label: "Message" },
     { key: "Status", label: "Status" },
-    { key: "MessageType", label: "Message Type" },
-    { key: "IsPromotional", label: "Promotional" },
-    { key: "ReferenceId", label: "Reference ID" },
-    { key: "ProviderMessageId", label: "Provider Message ID" },
     { key: "ErrorMessage", label: "Error" },
     { key: "DeductedAmount", label: "Amount" },
     { key: "RefundAmount", label: "Refund" },
-    { key: "NetAmount", label: "Net Amount" },
     { key: "SentAt", label: "Sent At" },
     { key: "FailedAt", label: "Failed At" },
-    { key: "RefundedAt", label: "Refunded At" },
     { key: "ActionBy", label: "Action By" },
-    { key: "CompanyId", label: "Company ID" }
+    { key: "ReferenceId", label: "Reference ID" }
 ];
 let selectedColumns = REPORT_COLUMNS.map(c => c.key);
 
@@ -44,6 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadColumnCheckboxes();
 
     $("#quickRange").on("change", function () {
+        console.log("quickRange triggered");
 
         let newFilter = $(this).val();
 
@@ -86,8 +76,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        $("#enquiryFromDate").val(formatDate2(fromDate));
-        $("#enquiryToDate").val(formatDate2(toDate));
+        $("#fromDate").val(formatDate2(fromDate));
+        $("#toDate").val(formatDate2(toDate));
 
         loadWhatsappGrid();
     });    
@@ -102,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         loadWhatsappGrid();
     });
+
     $(document).on("keydown", "#whatsappMobileNo, #whatsappSearch", function (e) {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -131,7 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#btnResetFilter").on("click", function () {
         resetGrid();
     });
-
 
     /* ── With Header ── */
     const saved = sessionStorage.getItem(HEADER_KEY);
@@ -171,11 +161,13 @@ function resetGrid() {
     const now = new Date();
 
     // Reset duration
-    $("#quickRange").val("thismonth").trigger("change");
+    $("#quickRange").val("thismonth");
 
     // Reset date range
-    $("#fromDate").val("");
-    $("#toDate").val("");
+    const fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(fromDate));
+    $("#toDate").val(formatDate2(toDate));
 
     // Reset status
     $("#whatsappStatus").val("").trigger("change");
@@ -255,7 +247,7 @@ function loadWhatsappGrid() {
         Status: $("#whatsappStatus").val() || null,
         CompanyId: 0,
         MobileNo: $("#whatsappMobileNo").val() || null,
-        TemplateName: $("#ddlWhatsappTemplate").val() || null,
+        EventId: $("#ddlWhatsappTemplate").val() || null,
         Search: $("#whatsappSearch").val() || null
     };
 
@@ -269,18 +261,26 @@ function loadWhatsappGrid() {
     console.log("WhatsApp Message Log Payload:", payload);
 
     $.ajax({
-        url: "/api/Report_WhatsappMsg/GetWhatsAppMessageLogReportGrid",
+        url: "/api/Report_WhatsappMsg/Report_WhatsApp_MessageLog_GRID",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(payload),
 
         success: function (res) {
 
+            console.log("WhatsApp Message Log res:", res);
+
             if (res.status !== "Success") {
                 $("#tableMain").html("");
                 Swal.fire("Error", res.message, "error");
                 return;
             }
+
+            const rows = res.data?.rows || [];
+            const summary = res.data?.summary || {};
+
+            console.log("WhatsApp Message Log Rows:", rows);
+            console.log("WhatsApp Message Log Summary:", summary);
 
             $("#tableMain").html(`
                 <table id="tblWhatsappMessageLog"
@@ -291,8 +291,15 @@ function loadWhatsappGrid() {
                             <th></th>
                             <th></th>
                             <th></th>
+
                             <th></th>
                             <th></th>
+                            <th></th>
+                            <th></th>
+
+                            <th></th>
+                            <th></th>
+
                             <th></th>
                             <th></th>
                             <th></th>
@@ -302,18 +309,11 @@ function loadWhatsappGrid() {
                 </table>
             `);
 
-            renderWhatsappMessageLogTable(res.data || []);
+            renderWhatsappMessageLogTable(rows, summary);
         },
 
         error: function (xhr, status, error) {
-
-            handleApiError(
-                xhr,
-                status,
-                error,
-                "Fetch WhatsApp Message Log Failed"
-            );
-
+            handleApiError(xhr, status, error, "Fetch WhatsApp Message Log Failed");
             $("#tableMain").html(`
                 <div class="alert alert-danger">
                     Failed to load WhatsApp message logs. Please try again.
@@ -323,22 +323,27 @@ function loadWhatsappGrid() {
     });
 }
 
-function renderWhatsappMessageLogTable(rows) {
+function renderWhatsappMessageLogTable(rows, summary) {
 
     if ($.fn.DataTable.isDataTable("#tblWhatsappMessageLog")) {
         $("#tblWhatsappMessageLog").DataTable().clear().destroy();
     }
 
-    console.log("WhatsApp Message Log Rows:", rows);
+    rows = rows || [];
+    summary = summary || {};
+
+    const totalRows = parseInt(summary.TotalRows) || 0;
+    const totalDeductedAmount = parseFloat(summary.TotalDeductedAmount) || 0;
+    const totalRefundAmount = parseFloat(summary.TotalRefundAmount) || 0;
 
     $("#tblWhatsappMessageLog").DataTable({
 
         data: rows,
 
+        autoWidth: false,
         responsive: false,
 
         paging: true,
-
         pageLength: 25,
 
         lengthMenu: [
@@ -356,60 +361,60 @@ function renderWhatsappMessageLogTable(rows) {
 
         columns: [
 
-            // ID
+            // 0 - ID
             {
                 data: "Id",
                 title: "#",
-                width: "60px",
+                width: "50px",
                 className: "text-center",
+
                 render: function (data) {
                     return data || "-";
                 }
             },
 
-            // Mobile
+            // 1 - Mobile No.
             {
                 data: "MobileNo",
                 title: "Mobile No.",
-                width: "130px",
+                width: "140px",
                 className: "text-start",
+
                 render: function (data) {
                     return data || "-";
                 }
             },
 
-            // Template
+            // 2 - Template
             {
                 data: "TempName_Title",
                 title: "Template",
-                width: "180px",
+                width: "130px",
                 className: "text-start",
                 render: function (data, type, row) {
-
-                    const title = data || row.TemplateName || "-";
-
+                    const title = data || "-";
                     return `
                         <div class="fw-semibold text-dark">
                             ${$("<div>").text(title).html()}
-                        </div>
-                        <div class="small text-muted">
-                            ${$("<div>").text(row.TemplateName || "").html()}
                         </div>
                     `;
                 }
             },
 
-            // Message
+            // 3 - Message
             {
                 data: null,
                 title: "Message",
-                width: "350px",
-                className: "text-start align-middle",
+                width: "240px",
+                className: "text-start align-middle message-column",
 
                 createdCell: function (td) {
                     $(td).css({
                         "padding": "6px 10px",
-                        "vertical-align": "middle"
+                        "vertical-align": "middle",
+                        "width": "240px",
+                        "min-width": "240px",
+                        "max-width": "240px"
                     });
                 },
 
@@ -431,43 +436,21 @@ function renderWhatsappMessageLogTable(rows) {
                              data-bs-content="
                                 <div class='message-popover-section'>
                                     <div class='message-popover-label'>
-                                        <i class='fa fa-code me-1'></i> Template
+                                        <i class='fa fa-comment-dots me-1'></i> Whatsapp Message
                                     </div>
-                                    <div class='message-popover-text'>
-                                        ${safeTemplate}
-                                    </div>
-                                </div>
 
-                                <div class='message-popover-divider'></div>
-
-                                <div class='message-popover-section'>
-                                    <div class='message-popover-label'>
-                                        <i class='fa fa-comment-dots me-1'></i> Sample
-                                    </div>
                                     <div class='message-popover-text'>
                                         ${safeSample}
                                     </div>
                                 </div>
                              ">
 
-                            <div class="message-row message-template">
-                                <span class="message-label">
-                                    <i class="fa fa-code"></i>
-                                </span>
-
-                                <span class="message-text"
-                                      title="${safeTemplate}">
-                                    ${safeTemplate}
-                                </span>
-                            </div>
-
                             <div class="message-row message-sample">
                                 <span class="message-label">
                                     <i class="fa fa-comment-dots"></i>
                                 </span>
 
-                                <span class="message-text"
-                                      title="${safeSample}">
+                                <span class="message-text" title="${safeSample}">
                                     ${safeSample}
                                 </span>
                             </div>
@@ -477,12 +460,13 @@ function renderWhatsappMessageLogTable(rows) {
                 }
             },
 
-            // Status
+            // 4 - Status
             {
                 data: "Status",
                 title: "Status",
                 width: "100px",
                 className: "text-center",
+
                 render: function (data) {
 
                     const status = (data || "").toLowerCase();
@@ -511,6 +495,14 @@ function renderWhatsappMessageLogTable(rows) {
                         `;
                     }
 
+                    if (status === "refunded") {
+                        return `
+                            <span class="badge bg-light text-dark border px-2 py-1">
+                                Refunded
+                            </span>
+                        `;
+                    }
+
                     return `
                         <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
                             ${$("<div>").text(data || "-").html()}
@@ -519,18 +511,35 @@ function renderWhatsappMessageLogTable(rows) {
                 }
             },
 
-            // Amount
+            // 5 - ErrorMessage
+            {
+                data: "ErrorMessage",
+                title: "Error Message",
+                width: "160px",
+                className: "text-start",
+
+                render: function (data) {
+                    return data || "-";
+                }
+            },
+
+            // 5 - Deducted
             {
                 data: "DeductedAmount",
                 title: "Deducted",
                 width: "110px",
                 className: "text-end",
+
                 render: function (data, type) {
 
                     const amount = parseFloat(data) || 0;
 
                     if (type === "sort" || type === "type") {
                         return amount;
+                    }
+
+                    if (amount <= 0) {
+                        return `<span class="text-muted">-</span>`;
                     }
 
                     return `
@@ -541,12 +550,13 @@ function renderWhatsappMessageLogTable(rows) {
                 }
             },
 
-            // Refund
+            // 6 - Refund
             {
                 data: "RefundAmount",
                 title: "Refund",
                 width: "110px",
                 className: "text-end",
+
                 render: function (data, type) {
 
                     const amount = parseFloat(data) || 0;
@@ -567,36 +577,49 @@ function renderWhatsappMessageLogTable(rows) {
                 }
             },
 
-            // Date
+            // 7 - Sent At
             {
                 data: "SentAt",
                 title: "Sent At",
                 width: "150px",
                 className: "text-center",
+
                 render: function (data) {
-                    return data && data !== "-"
-                        ? data
-                        : "-";
+                    return data && data !== "-" ? data : "-";
                 }
             },
 
-            // Action By
+            // 8 - Failed At
+            {
+                data: "FailedAt",
+                title: "Failed At",
+                width: "150px",
+                className: "text-center",
+
+                render: function (data) {
+                    return data && data !== "-" ? data : "-";
+                }
+            },
+
+            // 10 - Action By
             {
                 data: "ActionByName",
                 title: "Action By",
                 width: "140px",
                 className: "text-start",
+
                 render: function (data) {
                     return data || "-";
                 }
             },
 
-            // Reference
+            // 11 - Reference ID
             {
                 data: "ReferenceId",
-                title: "Reference",
-                width: "180px",
+                title: "ReferenceID",
+                width: "200px",
                 className: "text-start",
+
                 render: function (data) {
 
                     if (!data || data === "-") {
@@ -621,36 +644,23 @@ function renderWhatsappMessageLogTable(rows) {
         },
 
         footerCallback: function (tfoot) {
-
-            const api = this.api();
             const $cells = $(tfoot).find("th");
-
+            /* Clear all footer cells */
             $cells.html("");
 
-            $cells.eq(0).html(
-                `<strong>${rows.length}</strong>`
-            );
+            /* 0 - Total Rows */
+            $cells.eq(0).html(`<strong>${totalRows}</strong>`);
 
-            $cells.eq(3).html(
-                `<strong>Total</strong>`
-            );
+            /* 3 - Total Label */
+            $cells.eq(3).html(`<strong>Total</strong>`);
 
-            const totalDeducted = rows.reduce(function (sum, row) {
-                return sum + (parseFloat(row.DeductedAmount) || 0);
-            }, 0);
+            /* 5 - Total Deducted */
+            $cells.eq(6).html(`<strong class="text-danger">${formatINR2(totalDeductedAmount)}</strong>`);
 
-            const totalRefund = rows.reduce(function (sum, row) {
-                return sum + (parseFloat(row.RefundAmount) || 0);
-            }, 0);
+            /* 6 - Total Refund */
+            $cells.eq(7).html(`<strong class="text-success">${formatINR2(totalRefundAmount)}</strong>`);
 
-            $cells.eq(5).html(
-                `<strong class="text-danger">${formatINR2(totalDeducted)}</strong>`
-            );
-
-            $cells.eq(6).html(
-                `<strong class="text-success">${formatINR2(totalRefund)}</strong>`
-            );
-
+            /* Alignment */
             $cells.addClass("align-middle");
         },
 
@@ -658,11 +668,12 @@ function renderWhatsappMessageLogTable(rows) {
 
             const api = this.api();
 
+            /* Header styling */
             $(api.table().header())
                 .find("th")
                 .addClass("bg-warning-subtle text-dark");
 
-            // Initialize Bootstrap popovers
+            /* Initialize Bootstrap popovers */
             $(api.table().body())
                 .find('[data-bs-toggle="popover"]')
                 .each(function () {
@@ -672,8 +683,12 @@ function renderWhatsappMessageLogTable(rows) {
 
         drawCallback: function () {
 
-            // Reinitialize popovers after pagination / redraw
-            $('[data-bs-toggle="popover"]')
+            /*
+             * Reinitialize popovers after
+             * pagination / redraw
+             */
+            $(this.api().table().body())
+                .find('[data-bs-toggle="popover"]')
                 .each(function () {
 
                     if (!bootstrap.Popover.getInstance(this)) {
@@ -709,8 +724,8 @@ function ViewWhatsappReport(actionName) {
     };
 
     const url = actionName === "downloadExcel"
-        ? "/api/Report_WhatsappMsg/DownloadWhatsappMsgReport_Excel"
-        : "/api/Report_WhatsappMsg/DownloadWhatsappMsgReport_Pdf";
+        ? "/api/Report_WhatsappMsg/Report_WhatsApp_MessageLog_Excel"
+        : "/api/Report_WhatsappMsg/Report_WhatsApp_MessageLog_Pdf";
 
     downloadReport(url, payload, 
         loaderMsg = actionName === "downloadExcel" ? "Generating Whatsapp Msg Excel Report..." : "Generating Whatsapp Msg PDF Report...", 

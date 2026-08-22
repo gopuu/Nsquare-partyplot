@@ -31,23 +31,19 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("GetWhatsAppMessageLogReportGrid")]
-        public IActionResult GetWhatsAppMessageLogReportGrid([FromBody] WhatsAppMessageLogReportGridRequest request)
+        [Route("Report_WhatsApp_MessageLog_GRID")]
+        public IActionResult Report_WhatsApp_MessageLog_GRID([FromBody] WhatsAppMessageLogReportGridRequest request)
         {
             apiResponse apiResponse = new apiResponse();
             List<WhatsAppMessageLogReportGridModel> rows = new List<WhatsAppMessageLogReportGridModel>();
+            WhatsAppMessageLogReportSummaryModel summary = new WhatsAppMessageLogReportSummaryModel();
 
             try
             {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                DataTable dt = new DataTable();
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult)) { return errorResult!; }
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("WhatsApp_MessageLog_GetReport_GRID", con))
+                using (SqlCommand cmd = new SqlCommand("Report_WhatsApp_MessageLog_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
@@ -61,42 +57,67 @@ namespace ERPAdmin.ApiControllers
 
                     con.Open();
 
-                    using SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    da.Fill(dt);
-                }
+                    using SqlDataReader reader = cmd.ExecuteReader();
 
-                foreach (DataRow row in dt.Rows)
-                {
-                    rows.Add(new WhatsAppMessageLogReportGridModel
+                    /* =====================================================
+                       1. GRID RESULT SET
+                       ===================================================== */
+
+                    while (reader.Read())
                     {
-                        Id = row["Id"] != DBNull.Value ? Convert.ToInt64(row["Id"]) : 0,
-                        CompanyId = row["CompanyId"] != DBNull.Value ? Convert.ToInt64(row["CompanyId"]) : 0,
-                        MobileNo = row["MobileNo"] != DBNull.Value ? Convert.ToString(row["MobileNo"]) : "-",
-                        TemplateName = row["TemplateName"] != DBNull.Value ? Convert.ToString(row["TemplateName"]) : "-",
-                        MsgTemplate = row["MsgTemplate"] != DBNull.Value ? Convert.ToString(row["MsgTemplate"]) : "-",
-                        VariablesJson = row["VariablesJson"] != DBNull.Value ? Convert.ToString(row["VariablesJson"]) : "-",
-                        MsgSample = row["MsgSample"] != DBNull.Value ? Convert.ToString(row["MsgSample"]) : "-",
-                        Status = row["Status"] != DBNull.Value ? Convert.ToString(row["Status"]) : "-",
-                        ProviderMessageId = row["ProviderMessageId"] != DBNull.Value ? Convert.ToString(row["ProviderMessageId"]) : "-",
-                        ProviderResponse = row["ProviderResponse"] != DBNull.Value ? Convert.ToString(row["ProviderResponse"]) : "-",
-                        ErrorMessage = row["ErrorMessage"] != DBNull.Value ? Convert.ToString(row["ErrorMessage"]) : "-",
-                        ReferenceId = row["ReferenceId"] != DBNull.Value ? Convert.ToString(row["ReferenceId"]) : "-",
-                        MessageType = row["MessageType"] != DBNull.Value ? Convert.ToString(row["MessageType"]) : "-",
-                        IsPromotional = row["IsPromotional"] != DBNull.Value && Convert.ToBoolean(row["IsPromotional"]),
-                        DeductedAmount = row["DeductedAmount"] != DBNull.Value ? Convert.ToDecimal(row["DeductedAmount"]) : 0,
-                        RefundAmount = row["RefundAmount"] != DBNull.Value ? Convert.ToDecimal(row["RefundAmount"]) : 0,
+                        rows.Add(new WhatsAppMessageLogReportGridModel
+                        {
+                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt64(reader["Id"]) : 0,
+                            CompanyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt64(reader["CompanyId"]) : 0,
+                            
+                            MobileNo = reader["MobileNo"] != DBNull.Value ? Convert.ToString(reader["MobileNo"]) : "-",
+                            MsgTemplate = reader["MsgTemplate"] != DBNull.Value ? Convert.ToString(reader["MsgTemplate"]) : "-",
+                            VariablesJson = reader["VariablesJson"] != DBNull.Value ? Convert.ToString(reader["VariablesJson"]) : "-",
+                            MsgSample = reader["MsgSample"] != DBNull.Value ? Convert.ToString(reader["MsgSample"]) : "-",
+                            
+                            Status = reader["Status"] != DBNull.Value ? Convert.ToString(reader["Status"]) : "-",
+                            
+                            ProviderMessageId = reader["ProviderMessageId"] != DBNull.Value ? Convert.ToString(reader["ProviderMessageId"]) : "-",
+                            ProviderResponse = reader["ProviderResponse"] != DBNull.Value ? Convert.ToString(reader["ProviderResponse"]) : "-",
+                            
+                            ErrorMessage = reader["ErrorMessage"] != DBNull.Value ? Convert.ToString(reader["ErrorMessage"]) : "-",
+                            
+                            ReferenceId = reader["ReferenceId"] != DBNull.Value ? Convert.ToString(reader["ReferenceId"]) : "-",
+                            MessageType = reader["MessageType"] != DBNull.Value ? Convert.ToString(reader["MessageType"]) : "-",
+                            IsPromotional = reader["IsPromotional"] != DBNull.Value && Convert.ToBoolean(reader["IsPromotional"]),
+                            
+                            DeductedAmount = reader["DeductedAmount"] != DBNull.Value ? Convert.ToDecimal(reader["DeductedAmount"]) : 0,
+                            RefundAmount = reader["RefundAmount"] != DBNull.Value ? Convert.ToDecimal(reader["RefundAmount"]) : 0,
+                            
+                            CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToString(reader["CreatedAt"]) : "-",
+                            SentAt = reader["SentAt"] != DBNull.Value ? Convert.ToString(reader["SentAt"]) : "-",
+                            FailedAt = reader["FailedAt"] != DBNull.Value ? Convert.ToString(reader["FailedAt"]) : "-",
+                            RefundedAt = reader["RefundedAt"] != DBNull.Value ? Convert.ToString(reader["RefundedAt"]) : "-",
+                            
+                            ActionByName = reader["ActionByName"] != DBNull.Value ? Convert.ToString(reader["ActionByName"]) : "-",
+                            
+                            TempName_Title = reader["TempName_Title"] != DBNull.Value ? Convert.ToString(reader["TempName_Title"]) : "-"
+                        });
+                    }
 
-                        SentAt = row["SentAt"] != DBNull.Value ? Convert.ToString(row["SentAt"]) : "-",
-                        FailedAt = row["FailedAt"] != DBNull.Value ? Convert.ToString(row["FailedAt"]) : "-",
-                        RefundedAt = row["RefundedAt"] != DBNull.Value ? Convert.ToString(row["RefundedAt"]) : "-",
-                        ActionByName = row["ActionByName"] != DBNull.Value ? Convert.ToString(row["ActionByName"]) : "-",
-                        TempName_Title = row["TempName_Title"] != DBNull.Value ? Convert.ToString(row["TempName_Title"]) : "-",
-                    });
+                    /* =====================================================
+                       2. SUMMARY RESULT SET
+                       ===================================================== */
+
+                    if (reader.NextResult())
+                    {
+                        if (reader.Read())
+                        {
+                            summary.TotalRows = reader["TotalRows"] != DBNull.Value ? Convert.ToInt32(reader["TotalRows"]) : 0;
+                            summary.TotalDeductedAmount = reader["TotalDeductedAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalDeductedAmount"]) : 0;
+                            summary.TotalRefundAmount = reader["TotalRefundAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalRefundAmount"]) : 0;
+                        }
+                    }
                 }
 
                 apiResponse.message = "WhatsApp message log report fetched successfully!";
-                apiResponse.data = rows;
                 apiResponse.status = "Success";
+                apiResponse.data = new { rows = rows, summary = summary };
 
                 return Ok(apiResponse);
             }
@@ -111,8 +132,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadWhatsappMsgReport_Pdf")]
-        public IActionResult DownloadWhatsappMsgReport_Pdf([FromBody] WhatsAppMessageLogReportRequest request)
+        [Route("Report_WhatsApp_MessageLog_Pdf")]
+        public IActionResult Report_WhatsApp_MessageLog_Pdf([FromBody] WhatsAppMessageLogReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -135,7 +156,7 @@ namespace ERPAdmin.ApiControllers
                     new SqlDataAdapter(cmd).Fill(dtCompany);
 
                     // Report
-                    cmd = new SqlCommand("WhatsApp_MessageLog_GetReport_PdfExcel", con);
+                    cmd = new SqlCommand("Report_WhatsApp_MessageLog_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string columnsJson = request.Columns != null
@@ -147,9 +168,6 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
-                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
                     cmd.Parameters.AddWithValue("@Status", string.IsNullOrEmpty(request.Status) ? (object)DBNull.Value : request.Status);
                     cmd.Parameters.AddWithValue("@CompanyId", request.CompanyId == 0 ? 0 : request.CompanyId);
                     cmd.Parameters.AddWithValue("@MobileNo", string.IsNullOrEmpty(request.MobileNo) ? (object)DBNull.Value : request.MobileNo);
@@ -330,35 +348,30 @@ namespace ERPAdmin.ApiControllers
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
                         string colName = col.ColumnName.Trim();
-
-                        bool isAmountColumn =
-                            colName.Equals("Amount", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Refund", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase);
-
+                        bool isAmountColumn = colName.Equals("Amount", StringComparison.OrdinalIgnoreCase) || colName.Equals("Refund", StringComparison.OrdinalIgnoreCase) || colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase);
                         string value = row[col]?.ToString() ?? "-";
 
-                        if (isAmountColumn &&
-                            decimal.TryParse(value, out decimal amount))
+                        if (isAmountColumn && decimal.TryParse(value, out decimal amount))
                         {
                             value = "₹ " + amount.ToString("N2");
                         }
 
                         int align = isAmountColumn ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT;
 
-                        if (colName.Equals("Sr. No.", StringComparison.OrdinalIgnoreCase) ||
-                            colName.Equals("Date", StringComparison.OrdinalIgnoreCase))
+                        if (
+                                colName.Equals("Sr. No.", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Mobile No", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Template", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Status", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Sent At", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Failed At", StringComparison.OrdinalIgnoreCase)
+                                || colName.Equals("Action By", StringComparison.OrdinalIgnoreCase)
+                            )
                         {
                             align = Element.ALIGN_CENTER;
                         }
 
-                        table.AddCell(
-                            Utils.CreateBodyCell(
-                                value,
-                                isAmountColumn ? AmtFontNormal : tdFont,
-                                align
-                            )
-                        );
+                        table.AddCell(Utils.CreateBodyCell(value, isAmountColumn ? AmtFontNormal : tdFont, align));
                     }
                 }
 
@@ -370,7 +383,6 @@ namespace ERPAdmin.ApiControllers
                     foreach (DataColumn col in dataTableDB.Columns)
                     {
                         string colName = col.ColumnName.Trim();
-
                         bool isAmountColumn = false;
                         string value = "";
 
@@ -392,29 +404,18 @@ namespace ERPAdmin.ApiControllers
                                 break;
 
                             default:
-                                value = col.Ordinal == 0 ? "TOTAL" : "";
+                                value = colName.Equals("Sr. No.", StringComparison.OrdinalIgnoreCase) ? "TOTAL" : "";
                                 break;
                         }
 
-                        int align = isAmountColumn
-                            ? Element.ALIGN_RIGHT
-                            : Element.ALIGN_LEFT;
+                        int align = isAmountColumn ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT;
 
                         if (value == "TOTAL")
                         {
                             align = Element.ALIGN_CENTER;
                         }
 
-                        table.AddCell(new PdfPCell(
-                            new Phrase(
-                                value,
-                                isAmountColumn ? AmtFontBold : totalFont))
-                        {
-                            HorizontalAlignment = align,
-                            BackgroundColor = new BaseColor(240, 240, 240),
-                            BorderColor = BaseColor.LIGHT_GRAY,
-                            Padding = 6
-                        });
+                        table.AddCell(new PdfPCell(new Phrase(value, isAmountColumn ? AmtFontBold : totalFont)) { HorizontalAlignment = align, BackgroundColor = new BaseColor(240, 240, 240), BorderColor = BaseColor.LIGHT_GRAY, Padding = 6 });
                     }
                 }
 
@@ -447,8 +448,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DownloadWhatsappMsgReport_Excel")]
-        public IActionResult DownloadWhatsappMsgReport_Excel([FromBody] WhatsAppMessageLogReportRequest request)
+        [Route("Report_WhatsApp_MessageLog_Excel")]
+        public IActionResult Report_WhatsApp_MessageLog_Excel([FromBody] WhatsAppMessageLogReportRequest request)
         {
             apiResponse response = new apiResponse();
 
@@ -463,7 +464,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     con.Open();
 
-                    SqlCommand cmd = new SqlCommand("WhatsApp_MessageLog_GetReport_PdfExcel", con);
+                    SqlCommand cmd = new SqlCommand("Report_WhatsApp_MessageLog_PdfExcel", con);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     string? columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
@@ -473,9 +474,6 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
                     cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
 
-                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
-                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
-                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
                     cmd.Parameters.AddWithValue("@Status", string.IsNullOrEmpty(request.Status) ? (object)DBNull.Value : request.Status);
                     cmd.Parameters.AddWithValue("@CompanyId", request.CompanyId == 0 ? 0 : request.CompanyId);
                     cmd.Parameters.AddWithValue("@MobileNo", string.IsNullOrEmpty(request.MobileNo) ? (object)DBNull.Value : request.MobileNo);
@@ -578,7 +576,7 @@ namespace ERPAdmin.ApiControllers
                 DataTable dt = new DataTable();
 
                 using (SqlConnection con = new SqlConnection(connString))
-                using (SqlCommand cmd = new SqlCommand("Whatsapp_Template_List", con))
+                using (SqlCommand cmd = new SqlCommand("GetWhatsappTemplateList", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@EventId", model.EventId);

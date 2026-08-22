@@ -549,12 +549,7 @@ namespace ERPAdmin.ApiControllers
                     // HTTP error
                     if (!response.IsSuccessStatusCode)
                     {
-                        string errorMessage =
-                            apiResult?.Error ??
-                            responseString ??
-                            response.ReasonPhrase ??
-                            "WhatsApp API request failed.";
-
+                        string errorMessage = apiResult?.Error ?? responseString ?? response.ReasonPhrase ?? "WhatsApp API request failed.";
                         return new apiResponse
                         {
                             status = "Error",

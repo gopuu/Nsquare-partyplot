@@ -546,7 +546,7 @@ namespace ERPAdmin.ApiControllers
 
         [HttpPost]
         [Route("SaveEnquiryDeal_forDragNDrop")]
-        public IActionResult SaveEnquiryDeal_forDragNDrop([FromBody] SaveEnquiryDeal_forDragNDrop model)
+        public async Task<IActionResult> SaveEnquiryDeal_forDragNDrop([FromBody] SaveEnquiryDeal_forDragNDrop model)
         {
             apiResponse apiResponse = new apiResponse();
 
@@ -600,6 +600,11 @@ namespace ERPAdmin.ApiControllers
                         cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar).Value = (object?)model.Remarks ?? DBNull.Value;
                         cmd.Parameters.Add("@Action_By", SqlDbType.BigInt).Value = model.ActionBy;
 
+                        string whatsapp_name = "", whatsapp_bName = "", whatsapp_EDate = "", whatsapp_orgMobile = "", whatsapp_orgName = "",
+                            whatsapp_client_contactno = "", templateName = "", msgTemplate = "";
+                        int companyId = 0;
+                        bool isSendMsg = false;
+
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
@@ -611,7 +616,42 @@ namespace ERPAdmin.ApiControllers
                                 bookingId = reader["BookingId"] != DBNull.Value
                                     ? Convert.ToInt64(reader["BookingId"])
                                     : 0;
+
+                                whatsapp_name = reader["Name"]?.ToString() ?? "";
+                                whatsapp_bName = reader["BName"]?.ToString() ?? "";
+                                whatsapp_EDate = reader["EDate"]?.ToString() ?? "";
+                                whatsapp_orgMobile = reader["OrgMobile"]?.ToString() ?? "";
+                                whatsapp_orgName = reader["OrgName"]?.ToString() ?? "";
+                                whatsapp_client_contactno = reader["Client_ContactNo"]?.ToString() ?? "";
+                                companyId = reader["CompanyId"] != DBNull.Value ? Convert.ToInt32(reader["CompanyId"]) : 0;
+                                templateName = reader["TempName"]?.ToString() ?? "";
+                                msgTemplate = reader["MsgTemplate"]?.ToString() ?? "";
+                                isSendMsg = reader["IsSendMsg"] != DBNull.Value ? Convert.ToBoolean(reader["IsSendMsg"]) : false;
                             }
+                        }
+
+                        //NOTIFY 2 SEND WHATSAPP - NEW BOOKING CREATED
+                        if (bookingId > 0 && isSendMsg)
+                        {
+                            List<string> variables = new List<string>
+                            {
+                                whatsapp_name,
+                                whatsapp_bName,
+                                whatsapp_EDate,
+                                whatsapp_orgMobile,
+                                whatsapp_orgName
+                            };
+
+                            await _whatsAppService.SendTemplateWhatsAppCommon(
+                                companyId: companyId,
+                                mobileNo: whatsapp_client_contactno,
+                                templateName: templateName,
+                                variables: variables,
+                                actionBy: model.ActionBy,
+                                isPromotional: false,
+                                domainUrl: domainUrl,
+                                msgTemplate: msgTemplate
+                            );
                         }
                     }
 
