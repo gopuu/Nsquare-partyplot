@@ -28,6 +28,15 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedProto;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactLocal", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Add services to the container.
 //builder.Services.AddControllersWithViews();
@@ -110,7 +119,7 @@ builder.Services.AddHttpClient();
 //builder.Services.AddScoped<IWhatsAppService, WhatsAppService>(); // recommended
 
 var app = builder.Build();
-app.UseForwardedHeaders();
+//app.UseForwardedHeaders();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -125,11 +134,6 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ERP API V1");
 });
 
-//SignalR - ✅ Map hubs AFTER Build
-app.MapHub<SettingsHub>("/settingsHub");
-app.MapHub<QuotationHub>("/quotationHub");
-app.MapHub<PurchaseHub>("/purchaseHub");
-app.MapHub<WalletHub>("/walletHub");
 
 // Read custom error settings from appsettings.json
 var config = builder.Configuration;
@@ -145,10 +149,17 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseRouting();
-
+app.UseCors("ReactLocal");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSession();
+
+//SignalR - ✅ Map hubs AFTER Build
+app.MapHub<SettingsHub>("/settingsHub");
+app.MapHub<QuotationHub>("/quotationHub");
+app.MapHub<PurchaseHub>("/purchaseHub");
+app.MapHub<WalletHub>("/walletHub");
 
 app.MapControllerRoute(
     name: "default",
