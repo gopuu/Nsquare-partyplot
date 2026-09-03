@@ -1390,9 +1390,10 @@ namespace ERPAdmin.ApiControllers
                     PdfPTable pkgTable = new PdfPTable(1) { WidthPercentage = 100 };
 
                     // 🔹 Title
+                    string priceText = request.IsWithPrice ? $" (₹{Convert.ToDecimal(pkg.PerPlate):N0}/Plate)" : "";
                     string title2 = packageItems.Count > 1
-                        ? $"FOOD PACKAGE {i}: {pkg.FoodPackageName} (₹{Convert.ToDecimal(pkg.PerPlate):N0}/Plate)"
-                        : $"FOOD PACKAGE: {pkg.FoodPackageName} (₹{Convert.ToDecimal(pkg.PerPlate):N0}/Plate)";
+                        ? $"FOOD PACKAGE {i}: {pkg.FoodPackageName}{priceText}"
+                        : $"FOOD PACKAGE: {pkg.FoodPackageName}{priceText}";
 
                     pkgTable.AddCell(new PdfPCell(new Phrase(title2, fontRupeeBold))
                     {
@@ -1405,8 +1406,13 @@ namespace ERPAdmin.ApiControllers
                     string? paxVal = i == 1 ? pax : pkg.Pax;
 
                     var phrase = new Phrase();
-                    phrase.Add(new Chunk($"PAX: {paxVal} | Total: ", normalFont));
-                    phrase.Add(new Chunk($"₹{Convert.ToDecimal(pkg.TotalCharges):N0}", fontRupeeNormal));
+                    phrase.Add(new Chunk($"PAX: {paxVal}", normalFont));
+
+                    if (request.IsWithPrice)
+                    {
+                        phrase.Add(new Chunk(" | Total: ", normalFont));
+                        phrase.Add(new Chunk($"₹{Convert.ToDecimal(pkg.TotalCharges):N0}", fontRupeeNormal));
+                    }
 
                     pkgTable.AddCell(new PdfPCell(phrase)
                     {
