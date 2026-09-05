@@ -37,8 +37,8 @@ namespace ERPAdmin.ApiControllers
         }
 
         [HttpPost]
-        [Route("DeleteCompanyFoodRateAddonCharge")]
-        public IActionResult DeleteCompanyFoodRateAddonCharge([FromBody] DeleteCompanyFoodRateAddonChargeRequest model)
+        [Route("DeleteCompanyFoodRateAddonCharge_Header")]
+        public IActionResult DeleteCompanyFoodRateAddonCharge_Header([FromBody] DeleteCompanyFoodRateAddonChargeRequest_Header model)
         {
             apiResponse apiResponse = new apiResponse();
             try
@@ -51,7 +51,46 @@ namespace ERPAdmin.ApiControllers
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand("DeleteCompanyFoodRateAddonCharge", conn))
+                    using (SqlCommand cmd = new SqlCommand("DeleteCompanyFoodRateAddonCharge_Header", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id;
+                        cmd.Parameters.Add("@deleted_by", SqlDbType.BigInt).Value = model.ActionBy;
+                        cmd.ExecuteNonQuery();
+                    }
+                    conn.Close();
+                }
+
+                apiResponse.message = "Addon charge deleted successfully!";
+                apiResponse.status = "Success";
+                return Ok(apiResponse); //return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DeleteCompanyFoodRateAddonCharge_Items")]
+        public IActionResult DeleteCompanyFoodRateAddonCharge_Items([FromBody] DeleteCompanyFoodRateAddonChargeRequest_Items model)
+        {
+            apiResponse apiResponse = new apiResponse();
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DeleteCompanyFoodRateAddonCharge_Items", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id;
@@ -188,7 +227,11 @@ namespace ERPAdmin.ApiControllers
     }
 }
 
-public class DeleteCompanyFoodRateAddonChargeRequest : BaseClass
+public class DeleteCompanyFoodRateAddonChargeRequest_Items : BaseClass
+{
+    public long Id { get; set; }
+}
+public class DeleteCompanyFoodRateAddonChargeRequest_Header : BaseClass
 {
     public long Id { get; set; }
 }

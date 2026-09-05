@@ -1081,15 +1081,12 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 //showLoader();
+
                 $.ajax({
                     url: "/api/propertytype/DeletePropertyType/" + id,
                     method: "DELETE",
                     success: function (res) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted',
-                            text: res.message || "Deleted successfully!",
-                        });
+                        handleApiSuccess(res.message || "Deleted!");
                         loadPropertyTypes();
                     },
                     error: function (xhr, status, error) {
@@ -1181,11 +1178,7 @@ $(document).ready(function () {
                     data: JSON.stringify(payload),
                     contentType: "application/json",
                     success: function (res) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted',
-                            text: res.message || "Deleted successfully!",
-                        });
+                        handleApiSuccess(res.message || "Deleted!");    
                         loadMonopolyPreferences();
                     },
                     error: function (xhr, status, error) {
@@ -2247,6 +2240,7 @@ function populateHallTable(halls) {
                     Id: hallId,
                     ActionBy: Number(sessionStorage.getItem('userId') || 0)
                 };
+
                 $.ajax({
                     url: `/api/Company_HallDetails/DeleteCompanyHallDetails`,
                     type: "post",
@@ -2900,6 +2894,7 @@ function deleteFoodItem_Items(button) {
         success: function (data) {
             if (data.status === "Success") {
                 $row.remove();
+                handleApiSuccess(data.message || "Deleted!");    
             }
             else {
                 Swal.fire({
@@ -2933,6 +2928,7 @@ function deleteFoodItem(headerId, btn) {
         data: JSON.stringify(payload),
         success: function (data) {
             if (data.status === "Success") {
+                handleApiSuccess(data.message || "Deleted!");    
                 loadFoodItems();
             }
             else {
@@ -3287,6 +3283,7 @@ function deleteCompanyFoodPackage(id) {
                 ActionBy: Number(sessionStorage.getItem('userId') || 0)
             };
             console.log("requestData delete package:", requestData);
+
             //showLoader();  
             $.ajax({
                 url: '/api/Company_FoodItem_Package/DeleteCompanyFoodPackage', // ✅ adjust route if needed
@@ -3295,7 +3292,7 @@ function deleteCompanyFoodPackage(id) {
                 data: JSON.stringify(requestData),
                 success: function (response) {
                     if (response.status === "Success") {
-                        handleApiSuccess("Deleted");
+                        handleApiSuccess(response.message || "Deleted!");    
                         //$(`#row-${id}`).remove(); // remove row visually
                         loadFoodPackageData();
                     } else {
@@ -3336,26 +3333,28 @@ function toggleHeaderCharges(bodyId, btn) {
     }
 }
 
-function addNewHeader_charges() {
+function addNewHeader_charges(headerDbId) {
     headerCount_charges++;
     const headerId = `header-charge-${headerCount_charges}`;
     const container = document.createElement('div');
     //container.className = 'border rounded mb-3 p-2 bg-light';
-    container.className = 'border rounded mb-3 bg-white shadow-sm';
+    container.className = 'border rounded mb-3 bg-white shadow-sm addon-charge-row-header';
 
     container.innerHTML = `
+
             <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top" 
                 style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
+
                 <div class="d-flex flex-grow-1 align-items-center">
                     <input type="text" class="form-control form-control-sm me-2 addon-charge-header fw-semibold border-0 bg-transparent" placeholder="Header Name (e.g. Service Charge)" />
                 </div>
                 <div>
                     <button class="btn btn-sm btn-outline-primary me-2 toggle-arrow-charges"
                             onclick="toggleHeaderCharges('${headerId}', this)">▼</button>
-                    <button class="btn btn-sm btn-outline-danger border fw-bold"
-                            onclick="this.closest('.border').remove()">X</button>
+                    <button class="btn btn-sm btn-outline-danger border fw-bold here2" onclick="deleteAddonCharge_Header('${headerDbId}', this)">X</button>
                 </div>
             </div>
+
             <div class="mt-2 mb-2 px-2" id="${headerId}">
                 ${generateFoodItemRow_charges()}
                 <div class="mt-2">
@@ -3373,7 +3372,7 @@ function generateFoodItemRow_charges() {
                 <input type="text" class="form-control addon-charge-name" placeholder="Food Item Name" />
                 <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" placeholder="Amount" />
                 <input type="text" class="form-control addon-charge-description ms-2" placeholder="Description (optional)" />
-                <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge(this)">X</button>
+                <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge_Items(this)">X</button>
             </div>
         `;
 }
@@ -3469,11 +3468,12 @@ function loadAddonCharges() {
                     if (!grouped[item.HeaderName]) grouped[item.HeaderName] = [];
                     grouped[item.HeaderName].push(item);
                 });
-
+                console.log("addon grouped:", grouped);
                 let headerIndex = 0;
                 // 🟡 Iterate through each header group
                 Object.keys(grouped).forEach(headerName => {
-                    addNewHeader_charges();
+                    const headerDbId = grouped[headerName][0].HeaderId;
+                    addNewHeader_charges(headerDbId);
 
                     const lastHeader = container.lastElementChild;
                     const headerInput = lastHeader.querySelector('.addon-charge-header');
@@ -3491,7 +3491,7 @@ function loadAddonCharges() {
                                     <input type="text" class="form-control addon-charge-name" value="${charge.ItemName || ''}" placeholder="Charge Name" />
                                     <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" value="${charge.Amount || 0}" placeholder="Amount" />
                                     <input type="text" class="form-control addon-charge-description ms-2" value="${charge.Description || ''}" placeholder="Description" />
-                                    <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge(this)">X</button>
+                                    <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge_Items(this)">X</button>
                                 </div>
                             `);
                     });
@@ -3526,7 +3526,55 @@ function loadAddonCharges() {
     });
 }
 
-function deleteAddonCharge(button) {
+function deleteAddonCharge_Header(id, button) {
+    const row = button.closest('.addon-charge-row-header');
+    //const id = row.querySelector('.addon-charge-headerid')?.value || 0;
+
+    if (!id || id == "0") {
+        row.remove();
+        return;
+    }
+
+    const payload = {
+        Id: Number(id || 0),
+        ActionBy: Number(sessionStorage.getItem("userId") || 0)
+    };
+    console.log("addOn Header delete payload:", payload);
+    //showLoader();
+
+    fetch('/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Header', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            //hideLoader();  // Hide after request completes (success or error)
+            console.log("Delete CompanyFoodRateAddonCharge title res:", data);
+            if (data.status === "Success") {
+                row.remove();
+                handleApiSuccess("Deleted!");
+            } else {
+                //alert("Error: " + data.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: data.message || 'Something went wrong!'
+                });
+            }
+        })
+        .catch(err => {
+            //hideLoader();  // Hide after request completes (success or error)
+            console.error("Delete AddonCharge title error:", err);
+            //alert("Failed to delete addon charge.");
+            Swal.fire({
+                icon: 'error',
+                title: 'failed',
+                text: 'Failed to delete addon charge title!'
+            });
+        });
+}
+function deleteAddonCharge_Items(button) {
     const row = button.closest('.addon-charge-row');
     const id = row.querySelector('.addon-charge-id')?.value || 0;
 
@@ -3541,7 +3589,7 @@ function deleteAddonCharge(button) {
     };
     //showLoader();
 
-    fetch('/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge', {
+    fetch('/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -3552,6 +3600,7 @@ function deleteAddonCharge(button) {
             console.log("DeleteCompanyFoodRateAddonCharge res:", data);
             if (data.status === "Success") {
                 row.remove();
+                handleApiSuccess("Deleted!");
             } else {
                 //alert("Error: " + data.message);
                 Swal.fire({
