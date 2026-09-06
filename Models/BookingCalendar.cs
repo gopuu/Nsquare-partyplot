@@ -493,8 +493,8 @@
         public string? FoodPackageTitleName { get; set; }
         public long? Pax { get; set; }
         public string? FoodPackageDateTime { get; set; }
-        public List<GetFoodPackage_MenuIems>? MenuItemsList { get; set; }
-        public List<GetFoodPackage_AddOns>? AddOnsList { get; set; }
+        public List<GetFoodPackage_MenuIems> MenuItemsList { get; set; } = new();
+        public List<GetFoodPackage_AddOns> AddOnsList { get; set; } = new();
     }
     public class GetFoodPackage_MenuIems
     {
@@ -558,20 +558,23 @@
         public long? Package_Id { get; set; } = null;
     }
 
+    /// PACKAGE MENU
     public class FoodItemModel
     {
         public long? Item_Id { get; set; }
         public string? Item_Name { get; set; }
     }
-
     public class FoodMenuModel
     {
         public long? FoodMenu_Id { get; set; }
         public string? FoodMenu_Name { get; set; }
         public long? Inclusion_Id { get; set; }
         public long? Count_Size { get; set; }
-        public List<FoodItemModel>? FoodItemsList { get; set; }
+
+        public List<FoodItemModel> FoodItemsList { get; set; } = new List<FoodItemModel>();
     }
+
+
     public class PackageReportRequest : BaseClass
     {
         public long BookingId { get; set; }

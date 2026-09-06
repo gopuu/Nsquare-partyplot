@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
         YearId: 0,
         MonthId: 0
     };
-    console.log("GetBookingCalendar requestData:", requestData);
+    console.log("1 GetBookingCalendar requestData:", requestData);
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -68,11 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
         success: function (response) {
             if (response.status === "Success") {
                 var data = response.data[0].JSON_FoodPackage;
-                console.log("JSON_FoodPackage data:", data);
+                console.log("2 JSON_FoodPackage data:", data);
 
                 if (data && data.length > 0) { 
                     FOOD_PACKAGE_DATA = data;
-                    console.log("FOOD_PACKAGE_DATA 1: ", FOOD_PACKAGE_DATA);
+                    console.log("3 FOOD_PACKAGE_DATA 1: ", FOOD_PACKAGE_DATA);
                     //renderFoodLabels(FOOD_PACKAGE_DATA);
                     // Load label setup first
                     loadLabelSetup();
@@ -93,7 +93,7 @@ function loadLabelSetup() {
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-            console.log("company setup res:", res);
+            console.log("4 company setup res:", res);
             if (res.status !== "Success" || !res.data) return;
 
             /*************************************************
@@ -143,7 +143,7 @@ function renderFoodLabels(packages) {
         return;
     }
 
-    console.log("packages:", packages);
+    console.log("5 packages:", packages);
     packages.forEach(pkg => {
 
         const packageCard = document.createElement("div");
@@ -171,9 +171,10 @@ function renderFoodLabels(packages) {
         const content = document.createElement("div");
         content.className = "package-content";
 
+        console.log("6 pkg.MenuItemsList:", pkg.MenuItemsList);
         const groupedItems = {};
         pkg.MenuItemsList
-            .filter(x => x.MenuItem_IsAdded)
+            .filter(x => x.IsChecked)
             .forEach(item => {
                 groupedItems[item.MenuHeader_Name] ??= [];
                 groupedItems[item.MenuHeader_Name].push(item);

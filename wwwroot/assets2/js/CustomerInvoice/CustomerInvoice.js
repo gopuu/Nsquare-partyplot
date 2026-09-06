@@ -2663,7 +2663,19 @@ function renderTable(data, totals) {
                 className: 'text-end',
                 name: 'TotalAmount',
                 width: "80px",
-                render: d => `₹ ${Number(d).toLocaleString('en-IN')}`
+                render: function (data, type, row) {
+                    const amount = Number(data || 0);
+
+                    if (type === 'display') {
+                        return `₹ ${amount.toLocaleString('en-IN')}`;
+                    }
+
+                    if (type === 'filter') {
+                        return `${amount} ${amount.toLocaleString('en-IN')}`;
+                    }
+
+                    return amount;
+                }
             },
             //PaidAmount
             {
@@ -2672,26 +2684,50 @@ function renderTable(data, totals) {
                 className: 'text-end',
                 name: 'PaidAmount',
                 width: "80px",
-                render: function (d) {
-                    let paid = d ?? 0;
+                render: function (d, type, row) {
+                    let paid = Number(d ?? 0);
+                    let formatted = paid.toLocaleString('en-IN');
+
+                    // For DataTable search
+                    if (type === 'filter') {
+                        return `${paid} ${formatted} ₹ ${formatted}`;
+                    }
+
+                    // For sorting
+                    if (type === 'sort' || type === 'type') {
+                        return paid;
+                    }
+
+                    // For display
                     return `
                         <span class="text-success fw-bold">
-                            ₹ ${Number(paid).toLocaleString('en-IN')}
+                            ₹ ${formatted}
                         </span>
                     `;
                 }
             },
+
             //OutstandingAmount
             {
                 data: null,
                 title: 'Outstanding Amt.',
                 className: 'text-end',
                 name: 'OutstandingAmount',
-                render: function (d) {
+                render: function (d, type, row) {
+                    let outstanding = Number(d.OutstandingAmount ?? 0);
+                    let formatted = outstanding.toLocaleString('en-IN');
 
-                    let outstanding = d.OutstandingAmount ?? 0;
-                    let formatted = Number(outstanding).toLocaleString('en-IN');
+                    // For DataTable search
+                    if (type === 'filter') {
+                        return `${outstanding} ${formatted} ₹ ${formatted}`;
+                    }
 
+                    // For sorting
+                    if (type === 'sort' || type === 'type') {
+                        return outstanding;
+                    }
+
+                    // For display
                     if (outstanding > 0) {
                         return `
                             <button class="btn btn-sm btn-action-xss btn-outline-danger btn-outstanding"
@@ -2708,6 +2744,7 @@ function renderTable(data, totals) {
                     return `<span class="text-muted">₹ ${formatted}</span>`;
                 }
             },
+
             //Summary
             {
                 data: null,

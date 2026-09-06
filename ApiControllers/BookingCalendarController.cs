@@ -158,7 +158,17 @@ namespace ERPAdmin.ApiControllers
                         booking.Notes_GuestCustom = dr["Notes_GuestCustom"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_GuestCustom"]);
                         booking.Notes_FinancialInternal = dr["Notes_FinancialInternal"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FinancialInternal"]);
 
-                        booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
+                        //booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
+                        var foodPackageJson = Convert.ToString(dr["FoodPackageJSON"]);
+                        booking.JSON_FoodPackage = string.IsNullOrWhiteSpace(foodPackageJson)
+                            ? new List<GetFoodPackage>()
+                            : JsonConvert.DeserializeObject<List<GetFoodPackage>>(foodPackageJson) ?? new List<GetFoodPackage>();
+                        foreach (var foodPackage in booking.JSON_FoodPackage)
+                        {
+                            foodPackage.MenuItemsList ??= new List<GetFoodPackage_MenuIems>();
+                            foodPackage.AddOnsList ??= new List<GetFoodPackage_AddOns>();
+                        }
+
                         booking.JSON_Notes = JsonConvert.DeserializeObject<List<GetNotes>>(Convert.ToString(dr["NotesJSON"]));
 
                         booking.PaymentSummary_TaxableAmount = dr["PaymentSummary_TaxableAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["PaymentSummary_TaxableAmount"]);
@@ -492,7 +502,6 @@ namespace ERPAdmin.ApiControllers
 
             try
             {
-                // 🔹 Validate and get connection string
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
                 {
                     return errorResult!;
@@ -505,50 +514,56 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.Add("@package_id", SqlDbType.BigInt).Value = request.Package_Id ?? (object)DBNull.Value;
 
                     con.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    DataTable dt = new DataTable();
-                    dt.Load(reader);
-                    con.Close();
 
-                    foreach (DataRow dr in dt.Rows)
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        var menu = new FoodMenuModel
-                        {
-                            FoodMenu_Id = Convert.ToInt64(dr["FoodMenu_Id"]),
-                            FoodMenu_Name = Convert.ToString(dr["FoodMenu_Name"]),
-                            Inclusion_Id = Convert.ToInt64(dr["Inclusion_Id"]),
-                            Count_Size = dr["Count_Size"] == DBNull.Value ? 0 : Convert.ToInt32(dr["Count_Size"]),
-                            FoodItemsList = new List<FoodItemModel>()
-                        };
+                        DataTable dt = new DataTable();
+                        dt.Load(reader);
 
-                        // Parse JSON from SQL
-                        string jsonFoodItems = Convert.ToString(dr["FoodItemsList"]);
-                        if (!string.IsNullOrWhiteSpace(jsonFoodItems))
+                        foreach (DataRow dr in dt.Rows)
                         {
-                            try
+                            var menu = new FoodMenuModel
                             {
-                                menu.FoodItemsList = JsonConvert.DeserializeObject<List<FoodItemModel>>(jsonFoodItems);
-                            }
-                            catch
+                                FoodMenu_Id = dr["FoodMenu_Id"] == DBNull.Value ? null : Convert.ToInt64(dr["FoodMenu_Id"]),
+                                FoodMenu_Name = dr["FoodMenu_Name"] == DBNull.Value ? null : Convert.ToString(dr["FoodMenu_Name"]),
+                                Inclusion_Id = dr["Inclusion_Id"] == DBNull.Value ? null : Convert.ToInt64(dr["Inclusion_Id"]),
+                                Count_Size = dr["Count_Size"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Count_Size"]),
+                                FoodItemsList = new List<FoodItemModel>()
+                            };
+
+                            string jsonFoodItems = dr["FoodItemsList"] == DBNull.Value ? "[]" : Convert.ToString(dr["FoodItemsList"]);
+
+                            if (!string.IsNullOrWhiteSpace(jsonFoodItems))
                             {
-                                menu.FoodItemsList = new List<FoodItemModel>();
+                                try
+                                {
+                                    menu.FoodItemsList = JsonConvert.DeserializeObject<List<FoodItemModel>>(jsonFoodItems) ?? new List<FoodItemModel>();
+                                }
+                                catch
+                                {
+                                    menu.FoodItemsList = new List<FoodItemModel>();
+                                }
                             }
+
+                            menuList.Add(menu);
                         }
-                        menuList.Add(menu);
                     }
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = "Package menu and food items fetched successfully!";
                 apiResponse.data = menuList;
+
                 return Ok(apiResponse);
             }
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 apiResponse.status = "Error";
                 apiResponse.message = ex.Message;
                 apiResponse.data = null;
+
                 return StatusCode(500, apiResponse);
             }
         }

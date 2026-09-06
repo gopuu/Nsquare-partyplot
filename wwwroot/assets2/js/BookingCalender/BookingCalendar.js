@@ -462,7 +462,7 @@ $(document).on("click", ".loadMenuBtn", function () {
 
     //updatePackageCost($row);  // Pass row if needed
     var payload = { Package_Id: Number(selectedPackageId) };
-    //console.log("payload GetPackage_MenuAndFoodItemsList:", payload);
+    console.log("payload GetPackage_MenuAndFoodItemsList:", payload);
 
     $.ajax({
         url: "/api/BookingCalendar/GetPackage_MenuAndFoodItemsList",
@@ -470,7 +470,7 @@ $(document).on("click", ".loadMenuBtn", function () {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-            //console.log("response GetPackage_MenuAndFoodItemsList:", response);
+            console.log("response GetPackage_MenuAndFoodItemsList:", response);
             if (response.status === "Success" && response.data && response.data.length > 0)
             {
                 renderMenuItems(response.data, () => {
