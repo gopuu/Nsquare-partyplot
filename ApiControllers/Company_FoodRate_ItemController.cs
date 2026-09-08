@@ -121,6 +121,7 @@ namespace ERPAdmin.ApiControllers
         public IActionResult GetCompanyFoodItem([FromBody] GetCompanyFoodItemsRequestById model)
         {
             apiResponse apiResponse = new apiResponse();
+
             try
             {
                 if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
@@ -132,65 +133,76 @@ namespace ERPAdmin.ApiControllers
                 Dictionary<string, bool> cuisines = new Dictionary<string, bool>();
 
                 using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetCompanyFoodItems", con))
                 {
-                    SqlCommand cmd = new SqlCommand("GetCompanyFoodItems", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id ?? (object)DBNull.Value;
+
+                    cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = model.Id ?? 0;
 
                     con.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
 
-                    var headersDict = new Dictionary<long, FoodHeaderResponse>();
-
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        long headerId = Convert.ToInt64(reader["Id"]);
-                        string headerName = Convert.ToString(reader["header_name"]);
-                        string itemsJson = Convert.ToString(reader["ItemsJson"]);
+                        // ============================================
+                        // 1️⃣ FIRST RESULT SET: HEADERS + ITEMS
+                        // ============================================
 
-                        if (!headersDict.ContainsKey(headerId))
+                        while (reader.Read())
                         {
-                            headersDict[headerId] = new FoodHeaderResponse
+                            long headerId = Convert.ToInt64(reader["Id"]);
+
+                            string? headerName = reader["header_name"] == DBNull.Value
+                                ? null
+                                : Convert.ToString(reader["header_name"]);
+
+                            string? itemsJson = reader["ItemsJson"] == DBNull.Value
+                                ? null
+                                : Convert.ToString(reader["ItemsJson"]);
+
+                            List<ItemsRequest> items = new List<ItemsRequest>();
+
+                            if (!string.IsNullOrWhiteSpace(itemsJson))
+                            {
+                                items = JsonConvert.DeserializeObject<List<ItemsRequest>>(itemsJson) ?? new List<ItemsRequest>();
+                            }
+
+                            foodItems.Add(new FoodHeaderResponse
                             {
                                 Id = headerId,
                                 HeaderName = headerName,
-                                Items = new List<ItemsRequest>()
-                            };
+                                Items = items
+                            });
                         }
 
-                        if (!string.IsNullOrEmpty(itemsJson))
-                        {
-                            // ✅ Deserialize directly into List<ItemsRequest>
-                            var items = JsonConvert.DeserializeObject<List<ItemsRequest>>(itemsJson);
-                            headersDict[headerId].Items.AddRange(items);
-                        }
-                    }
-                    foodItems = headersDict.Values.ToList();
+                        // ============================================
+                        // 2️⃣ SECOND RESULT SET: CUISINES
+                        // ============================================
 
-                    // ---------- 2nd Result Set : Cuisines ----------
-                    if (reader.NextResult())
-                    {
-                        while (reader.Read())
+                        if (reader.NextResult())
                         {
-                            string name = Convert.ToString(reader["cuisinename"]);
-                            bool isActive = Convert.ToBoolean(reader["isactive"]);
-
-                            if (!string.IsNullOrEmpty(name))
+                            while (reader.Read())
                             {
-                                cuisines[name] = isActive;
+                                string? cuisineName = reader["CuisineName"] == DBNull.Value
+                                    ? null
+                                    : Convert.ToString(reader["CuisineName"]);
+
+                                bool isActive = reader["IsActive"] != DBNull.Value
+                                    && Convert.ToBoolean(reader["IsActive"]);
+
+                                if (!string.IsNullOrWhiteSpace(cuisineName))
+                                {
+                                    cuisines[cuisineName] = isActive;
+                                }
                             }
                         }
                     }
-
-                    reader.Close();
-                    con.Close();
                 }
 
                 apiResponse.status = "Success";
                 apiResponse.message = "Data fetched successfully.";
                 apiResponse.data = new
                 {
-                    FoodItems = foodItems, // headers with child items array
+                    FoodItems = foodItems,
                     Cuisines = cuisines
                 };
 
@@ -199,12 +211,13 @@ namespace ERPAdmin.ApiControllers
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, null);
+
                 apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+
                 return StatusCode(500, apiResponse);
             }
         }
-
 
         [HttpPost]
         [Route("SaveCompanyFoodItems")]
@@ -222,28 +235,35 @@ namespace ERPAdmin.ApiControllers
                 using (SqlConnection con = new SqlConnection(connString))
                 {
                     con.Open();
+
                     int rowsAffected = 0;
 
-                    // 1️⃣ Save All Food Headers + Items (Items passed as JSON)
-                    foreach (var header in model.FoodItems)
+                    // 1️⃣ Save Food Headers + Layer 2 + Layer 3 Items
+                    if (model.FoodItems != null && model.FoodItems.Any())
                     {
-                        // Convert child items list to JSON for SQL
-                        string itemsJson = JsonConvert.SerializeObject(header.Items);
-
-                        using (SqlCommand cmd = new SqlCommand("SaveCompanyFoodItem", con))
+                        foreach (var header in model.FoodItems)
                         {
-                            cmd.CommandType = CommandType.StoredProcedure;
+                            // Convert Layer 2 + Layer 3 items into JSON
+                            string itemsJson = JsonConvert.SerializeObject(header.Items ?? new List<ItemsRequest>());
 
-                            cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)header.Id ?? DBNull.Value;
-                            cmd.Parameters.Add("@header_name", SqlDbType.NVarChar, 200).Value = (object?)header.HeaderName ?? DBNull.Value;
-                            cmd.Parameters.Add("@items_json", SqlDbType.NVarChar, -1).Value = (object?)itemsJson ?? DBNull.Value;
-                            cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? DBNull.Value;
+                            using (SqlCommand cmd = new SqlCommand("SaveCompanyFoodItem", con))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
 
-                            rowsAffected += cmd.ExecuteNonQuery();
+                                cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)header.Id ?? DBNull.Value;
+
+                                cmd.Parameters.Add("@header_name", SqlDbType.NVarChar, 200).Value = (object?)header.HeaderName ?? DBNull.Value;
+
+                                cmd.Parameters.Add("@items_json", SqlDbType.NVarChar, -1).Value = itemsJson;
+
+                                cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? DBNull.Value;
+
+                                rowsAffected += cmd.ExecuteNonQuery();
+                            }
                         }
                     }
 
-                    // 2️⃣ Save Cuisines (unchanged)
+                    // 2️⃣ Save Cuisines
                     if (model.Cuisines != null && model.Cuisines.Any())
                     {
                         foreach (var cuisine in model.Cuisines)
@@ -251,21 +271,27 @@ namespace ERPAdmin.ApiControllers
                             using (SqlCommand cmdCuisine = new SqlCommand("SaveCompanyFoodItem_Cuisines", con))
                             {
                                 cmdCuisine.CommandType = CommandType.StoredProcedure;
+
                                 cmdCuisine.Parameters.Add("@Id", SqlDbType.Int).Value = 0;
+
                                 cmdCuisine.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = cuisine.Key;
+
                                 cmdCuisine.Parameters.Add("@Is_Active", SqlDbType.Bit).Value = cuisine.Value;
 
                                 object result = cmdCuisine.ExecuteScalar();
-                                rowsAffected += Convert.ToInt32(result);
+
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    rowsAffected += Convert.ToInt32(result);
+                                }
                             }
                         }
                     }
 
-                    con.Close();
-
                     apiResponse.message = rowsAffected > 0
                         ? "Food items and cuisines saved successfully!"
                         : "No changes were made.";
+
                     apiResponse.status = rowsAffected > 0 ? "Success" : "Fail";
                 }
 
@@ -274,117 +300,45 @@ namespace ERPAdmin.ApiControllers
             catch (Exception ex)
             {
                 ErrorLogger.LogException(ex, ControllerContext, Request, connString);
+
                 apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
+
                 return StatusCode(500, apiResponse);
             }
         }
 
-        /*
-        [HttpPost]
-        [Route("SaveCompanyFoodItems2")]
-        public IActionResult SaveCompanyFoodItems2([FromBody] SaveCompanyFoodItemsRequest model)
-        {
-            apiResponse apiResponse = new apiResponse();
-
-            try
-            {
-                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
-                {
-                    return errorResult!;
-                }
-
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    con.Open();
-
-                    int rowsAffected = 0;
-
-                    // 1️⃣ Save all FoodItems
-                    foreach (var item in model.FoodItems)
-                    {
-                        using (SqlCommand cmd = new SqlCommand("SaveCompanyFoodItem", con))
-                        {
-                            cmd.CommandType = CommandType.StoredProcedure;
-
-                            cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)item.Id ?? DBNull.Value;
-                            cmd.Parameters.Add("@header_name", SqlDbType.NVarChar, 200).Value = (object?)item.HeaderName ?? DBNull.Value;
-                            cmd.Parameters.Add("@item_name", SqlDbType.NVarChar, 200).Value = (object?)item.ItemName ?? DBNull.Value;
-                            cmd.Parameters.Add("@description", SqlDbType.NVarChar, -1).Value = (object?)item.Description ?? DBNull.Value;
-                            cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? DBNull.Value;
-
-                            rowsAffected += cmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    // 2️⃣ Save Cuisines (once only)
-                    if (model.Cuisines != null && model.Cuisines.Any())
-                    {
-                        foreach (var cuisine in model.Cuisines)
-                        {
-                            using (SqlCommand cmdCuisine = new SqlCommand("SaveCompanyFoodItem_Cuisines", con))
-                            {
-                                cmdCuisine.CommandType = CommandType.StoredProcedure;
-
-                                cmdCuisine.Parameters.Add("@Id", SqlDbType.Int).Value = 0; // new insert
-                                cmdCuisine.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = cuisine.Key;
-                                cmdCuisine.Parameters.Add("@Is_Active", SqlDbType.Bit).Value = cuisine.Value;
-
-                                object result = cmdCuisine.ExecuteScalar();
-                                rowsAffected += Convert.ToInt32(result);
-                            }
-                        }
-                    }
-
-                    con.Close();
-
-                    if (rowsAffected > 0)
-                    {
-                        apiResponse.message = "Food items and cuisines saved successfully!";
-                        apiResponse.status = "Success";
-                    }
-                    else
-                    {
-                        apiResponse.message = "No changes were made.";
-                        apiResponse.status = "Fail";
-                    }
-                }
-
-                return Ok(apiResponse);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogger.LogException(ex, ControllerContext, Request, connString);
-                apiResponse.message = ex.Message;
-                apiResponse.status = "Error";
-                return StatusCode(500, apiResponse);
-            }
-        }
-        */
     }
 }
+//SAVE
 public class SaveCompanyFoodItemsRequest
 {
     public List<FoodItemRequest> FoodItems { get; set; } = new();
     public Dictionary<string, bool> Cuisines { get; set; } = new(); // Common cuisines (once only)
     public long? ActionBy { get; set; }
 }
-
+//LAYER 1
 public class FoodItemRequest
 {
     public long? Id { get; set; }
     public string? HeaderName { get; set; }
     public List<ItemsRequest>? Items { get; set; } = new();
 }
-public class FoodHeaderResponse
-{
-    public long? Id { get; set; }
-    public string? HeaderName { get; set; }
-    public List<ItemsRequest>? Items { get; set; } = new();
-}
+//LAYER 2
 public class ItemsRequest
 {
     public long? ItemId { get; set; }
     public string? ItemName { get; set; }
     public string? Description { get; set; }
+
+    // Layer 3 Children
+    public List<ItemsRequest> Children { get; set; } = new();
+}
+
+//GET
+public class FoodHeaderResponse
+{
+    public long? Id { get; set; }
+    public string? HeaderName { get; set; }
+    public List<ItemsRequest>? Items { get; set; } = new();
 }

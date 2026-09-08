@@ -2648,51 +2648,77 @@ function toggleHeaderItems(headerId, btn) {
 
 function addNewHeader_items(headerDbId = 0) {
     headerCount_items++;
+
     const headerId = `header-item-${headerCount_items}`;
+
     const container = document.createElement('div');
     container.className = 'border rounded mb-3 bg-white shadow-sm';
 
     container.innerHTML = `
-            <input type="hidden" class="food-header-id" value="${headerDbId}" />
+        <input type="hidden" class="food-header-id" value="${headerDbId}" />
 
-            <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top"
-                 style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
-                <div class="d-flex flex-grow-1 align-items-center">
-                    <input type="text" class="form-control form-control-sm me-2 food-item-header fw-semibold border-0 bg-transparent"
-                           placeholder="Header Name (e.g. Welcome Drink)" />
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-primary me-2 toggle-arrow"
-                            onclick="toggleHeaderItems('${headerId}', this)">▼</button>
-                    <button class="btn btn-sm btn-outline-danger border fw-bold" onclick="deleteFoodItem(${headerDbId}, this)">X</button>
-                </div>
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top" style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
+            <div class="d-flex flex-grow-1 align-items-center">
+                <input type="text" class="form-control form-control-sm me-2 food-item-header fw-semibold border-0 bg-transparent" placeholder="Header Name (e.g. Welcome Drink)" />
             </div>
 
-            <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:400px; overflow-y:auto;">
-                ${generateFoodItemRow_items()}
-                <div class="mt-2">
-                    <button class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${headerId}')">+ Add more</button>
-                </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-primary me-2 toggle-arrow" onclick="toggleHeaderItems('${headerId}', this)">▼</button>
+                <button type="button" class="btn btn-sm btn-outline-danger border fw-bold" onclick="deleteFoodItem(${headerDbId}, this)">X</button>
             </div>
-        `;
+        </div>
+
+        <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:400px; overflow-y:auto;">
+            ${generateFoodItemRow_items()}
+
+            <div class="mt-2">
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${headerId}')">+ Add Food Item</button>
+            </div>
+        </div>
+    `;
+
     document.getElementById('foodHeaderContainer_items').appendChild(container);
 }
 
-function generateFoodItemRow_items() {
+function generateFoodItemRow_items(foodItemDbId = 0) {
+    const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     return `
-            <div class="input-group mb-2 food-item-row">
-                <input type="hidden" class="food-item-id" value="0"/>
+        <div class="food-item-wrapper border rounded p-2 mb-2 bg-light">
+            <div class="input-group food-item-row">
+                <input type="hidden" class="food-item-id" value="${foodItemDbId}" />
                 <input type="text" class="form-control food-item-name" placeholder="Food Item Name" />
                 <input type="text" class="form-control food-item-description ms-2" placeholder="Description (optional)" />
-                <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteFoodItem_Items(this)">X</button>
+                <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_items('${foodItemUniqueId}')">+ Child</button>
+                <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodItem_Items(this)">X</button>
             </div>
-        `;
+            <div id="${foodItemUniqueId}" class="food-child-container mt-2 ms-4"></div>
+        </div>
+    `;
 }
 
 function addFoodItem_items(headerId) {
     const container = document.getElementById(headerId);
     const addMoreDiv = container.querySelector('.mt-2:last-child'); // button wrapper
     addMoreDiv.insertAdjacentHTML('beforebegin', generateFoodItemRow_items());
+}
+
+function generateFoodChildItemRow_items(childDbId = 0) {
+    return `
+        <div class="input-group mb-2 food-child-item-row">
+            <input type="hidden" class="food-child-item-id" value="${childDbId}" />
+            <span class="input-group-text">↳</span>
+            <input type="text" class="form-control food-child-item-name" placeholder="Child Item Name" />
+            <input type="text" class="form-control food-child-item-description ms-2" placeholder="Description (optional)" />
+            <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodChildItem_items(this)">X</button>
+        </div>
+    `;
+}
+function addFoodChildItem_items(parentFoodItemId) {
+    const container = document.getElementById(parentFoodItemId);
+    container.insertAdjacentHTML('beforeend', generateFoodChildItemRow_items());
+}
+function deleteFoodChildItem_items(button) {
+    $(button).closest('.food-child-item-row').remove();
 }
 
 function saveFoodItems() {
@@ -2705,37 +2731,68 @@ function saveFoodItems() {
     });
 
     userId = Number(sessionStorage.getItem('userId') || 0);
-    let foodItems = [];
 
     // 🔧 Loop through headers first
+    let foodItems = [];
     $("#foodHeaderContainer_items > .border").each(function () {
-        let headerName = $(this).find(".food-item-header").val();
-        let headerId = $(this).find(".food-header-id").val() || 0; // if you have header id from DB
+        let header = $(this);
+
+        let headerName = header.find(".food-item-header").val();
+        let headerId = header.find(".food-header-id").val() || 0;
 
         let items = [];
 
-        // Get all rows inside this header container
-        $(this).find(".food-item-row").each(function () {
-            let itemId = $(this).find(".food-item-id").val() || 0;
-            let itemName = $(this).find(".food-item-name").val();
-            let description = $(this).find(".food-item-description").val();
+        // 🔹 Get parent food items
+        header.find(".food-item-wrapper").each(function () {
+            let itemWrapper = $(this);
+            let itemRow = itemWrapper.find(".food-item-row").first();
 
-            // Skip empty rows
-            if (!itemName && !description) return;
+            let itemId = itemRow.find(".food-item-id").val() || 0;
+            let itemName = itemRow.find(".food-item-name").val();
+            let description = itemRow.find(".food-item-description").val();
+
+            let children = [];
+
+            // 🔸 Get child items of this parent item
+            itemWrapper.find(".food-child-item-row").each(function () {
+                let childRow = $(this);
+
+                let childId = childRow.find(".food-child-item-id").val() || 0;
+                let childName = childRow.find(".food-child-item-name").val();
+                let childDescription = childRow.find(".food-child-item-description").val();
+
+                // Skip empty child rows
+                if (!childName && !childDescription) return;
+
+                children.push({
+                    ItemId: childId,
+                    ItemName: childName,
+                    Description: childDescription
+                });
+            });
+
+            // Skip completely empty parent rows
+            if (!itemName && !description && children.length === 0) return;
 
             items.push({
-                ItemId: itemId,  // match your C# model property
+                ItemId: itemId,
                 ItemName: itemName,
-                Description: description
+                Description: description,
+                Children: children
             });
         });
 
+        // Skip empty headers if needed
+        if (!headerName && items.length === 0) return;
+
         foodItems.push({
-            Id: headerId,           // header ID (if editing existing)
-            HeaderName: headerName, // header name
-            Items: items            // all items under this header
+            Id: headerId,
+            HeaderName: headerName,
+            Items: items
         });
     });
+
+    console.log(foodItems);
 
     let requestData = {
         FoodItems: foodItems,
@@ -2809,57 +2866,157 @@ function loadFoodItems(itemId = 0) {
                 // ---------- Render food items ----------
                 if (res.data.FoodItems && res.data.FoodItems.length > 0) {
                     const headerContainer = document.getElementById('foodHeaderContainer_items');
-                    headerContainer.innerHTML = ''; 
+
+                    headerContainer.innerHTML = '';
 
                     res.data.FoodItems.forEach((header, index) => {
-                        addNewHeader_items(header.Id);
-                        const lastHeaderContainer = headerContainer.lastElementChild;
-                        // Set header name
-                        lastHeaderContainer.querySelector('.form-control.food-item-header').value = header.HeaderName || '';
 
-                        const itemsDiv = lastHeaderContainer.querySelector('div.mt-2');
+                        // Add Header
+                        addNewHeader_items(header.Id || 0);
+
+                        const lastHeaderContainer = headerContainer.lastElementChild;
+
+                        // Set Header Name
+                        lastHeaderContainer.querySelector('.food-item-header').value = header.HeaderName || '';
+
+                        // Get Item Container
+                        const itemsDiv = lastHeaderContainer.querySelector('[id^="header-item-"]');
+
+                        // Remove default generated item and button
                         itemsDiv.innerHTML = '';
 
-                        // Render items under this header
+                        // ---------- Render Parent Food Items ----------
                         if (header.Items && header.Items.length > 0) {
-                            header.Items.forEach(foodItem => {
-                                itemsDiv.insertAdjacentHTML('beforeend', `
-                                        <div class="input-group mb-2 food-item-row">
-                                            <input type="hidden" class="food-item-id" value="${foodItem.ItemId || 0}">
-                                            <input type="text" class="form-control food-item-name" placeholder="Food Item Name" value="${foodItem.ItemName || ''}">
-                                            <input type="text" class="form-control food-item-description ms-2" placeholder="Description" value="${foodItem.Description || ''}">
-                                            <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteFoodItem_Items(this)">X</button>
-                                        </div>
-                                    `);
-                            });
-                        }
- 
-                        // ✅ Re-append the "+ Add more" button inside the same container
-                        itemsDiv.insertAdjacentHTML('beforeend', `
-                                <div class="mt-2">
-                                    <button class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${itemsDiv.id}')">+ Add more</button>
-                                </div>
-                            `);
 
-                        // Hide all except first
+                            header.Items.forEach(foodItem => {
+
+                                // Generate unique ID for child container
+                                const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+                                // Add Parent Food Item
+                                itemsDiv.insertAdjacentHTML('beforeend', `
+                                    <div class="food-item-wrapper border rounded p-2 mb-2 bg-light">
+
+                                        <div class="input-group food-item-row">
+
+                                            <input type="hidden" class="food-item-id" value="${foodItem.ItemId || 0}" />
+
+                                            <input type="text"
+                                                   class="form-control food-item-name"
+                                                   placeholder="Food Item Name"
+                                                   value="${foodItem.ItemName || ''}" />
+
+                                            <input type="text"
+                                                   class="form-control food-item-description ms-2"
+                                                   placeholder="Description (optional)"
+                                                   value="${foodItem.Description || ''}" />
+
+                                            <button type="button"
+                                                    class="btn btn-outline-primary ms-2"
+                                                    onclick="addFoodChildItem_items('${foodItemUniqueId}')">
+                                                + Child
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-outline-danger ms-2"
+                                                    onclick="deleteFoodItem_Items(this)">
+                                                X
+                                            </button>
+
+                                        </div>
+
+                                        <div id="${foodItemUniqueId}"
+                                             class="food-child-container mt-2 ms-4">
+
+                                        </div>
+
+                                    </div>
+                                `);
+
+                                // Get newly created Child Container
+                                const childContainer = document.getElementById(foodItemUniqueId);
+
+                                // ---------- Render Child Items ----------
+                                if (foodItem.Children && foodItem.Children.length > 0) {
+
+                                    foodItem.Children.forEach(child => {
+
+                                        childContainer.insertAdjacentHTML('beforeend', `
+                                            <div class="input-group mb-2 food-child-item-row">
+
+                                                <input type="hidden"
+                                                       class="food-child-item-id"
+                                                       value="${child.ItemId || 0}" />
+
+                                                <span class="input-group-text">↳</span>
+
+                                                <input type="text"
+                                                       class="form-control food-child-item-name"
+                                                       placeholder="Child Item Name"
+                                                       value="${child.ItemName || ''}" />
+
+                                                <input type="text"
+                                                       class="form-control food-child-item-description ms-2"
+                                                       placeholder="Description (optional)"
+                                                       value="${child.Description || ''}" />
+
+                                                <button type="button"
+                                                        class="btn btn-outline-danger ms-2"
+                                                        onclick="deleteFoodChildItem_items(this)">
+                                                    X
+                                                </button>
+
+                                            </div>
+                                        `);
+
+                                    });
+
+                                }
+
+                            });
+
+                        }
+
+                        // ---------- Add Food Item Button ----------
+                        itemsDiv.insertAdjacentHTML('beforeend', `
+                            <div class="mt-2">
+                                <button type="button"
+                                        class="btn btn-outline-success btn-sm"
+                                        onclick="addFoodItem_items('${itemsDiv.id}')">
+                                    + Add Food Item
+                                </button>
+                            </div>
+                        `);
+
+                        // ---------- Collapse Headers ----------
                         setTimeout(() => {
+
                             const headerId = itemsDiv.id;
-                            const toggleBtn = lastHeaderContainer.querySelector(".toggle-arrow");
+
+                            const toggleBtn = lastHeaderContainer.querySelector('.toggle-arrow');
 
                             if (index === 0) {
-                                // First row → keep open (down arrow)
-                                if (toggleBtn) toggleBtn.textContent = '▼';
-                            } else {
-                                // Others → collapsed (left arrow)
+
+                                // First Header → Open
                                 if (toggleBtn) {
-                                    toggleHeaderItems(headerId, toggleBtn); // collapse animation
+                                    toggleBtn.textContent = '▼';
+                                }
+
+                            } else {
+
+                                // Other Headers → Collapsed
+                                if (toggleBtn) {
+                                    toggleHeaderItems(headerId, toggleBtn);
                                     toggleBtn.textContent = '◀';
                                 }
-                            }
-                        }, 50);
-                    });
 
+                            }
+
+                        }, 50);
+
+                    });
                 }
+
                 inclusionOptions = res.data.FoodItems;
                 loadFoodPackageData();
             } else {
@@ -2872,6 +3029,9 @@ function loadFoodItems(itemId = 0) {
 }
 
 function deleteFoodItem_Items(button) {
+    //REMOVE CHILDRENS
+    $(button).closest('.food-item-wrapper').remove();
+
     const $row = $(button).closest('.food-item-row');
     const id = $row.find('.food-item-id').val() || 0;
     // If not saved in DB → just remove UI row
