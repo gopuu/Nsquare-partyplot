@@ -318,7 +318,10 @@
                                 <!-- Hall Rent (Input, width 2) -->
                                 <div class="col-md-2">
                                     <label class="form-label">Hall Rent</label>
-                                    <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_hallRent">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_hallRent">
+                                    </div>
                                 </div>
 
                                 <!-- GST (Input, width 2) -->
@@ -373,21 +376,30 @@
                                     </div>
 
                                     <!-- Per Plate -->
-                                    <div class="col-md-1">
+                                    <div class="col-md-2">
                                         <label class="form-label">Per Plate</label>
-                                        <input type="number" min="0" class="form-control form-control-sm" placeholder="Per Plate" value="0" id="foodPackage_RatePerPlate">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control form-control-sm" placeholder="Per Plate" value="0" id="foodPackage_RatePerPlate">
+                                        </div>
                                     </div>
 
-                                    <!-- Package Cost -->
+                                    <!-- Package Cost here2-->
                                     <div class="col-md-2">
                                         <label class="form-label">Package Cost</label>
-                                        <input type="number" min="0" class="form-control form-control-sm" placeholder="Package Cost" value="0" id="foodPackage_PackageCost" readonly>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control" placeholder="Package Cost" value="0" id="foodPackage_PackageCost" readonly>
+                                        </div>
                                     </div>
 
                                     <!-- Addons -->
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label class="form-label">Addons</label>
-                                        <input type="number" min="0" class="form-control form-control-sm foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
+                                        </div>
                                     </div>
 
                                     <!-- GST -->
@@ -485,6 +497,67 @@
                                         <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Row 4 -->
+                            <div class="row g-2 mb-1">
+
+                                <!-- Electricity Bill -->
+                                <div class="col-6">
+                                    <label class="small">Electricity Bill</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ElectricityBill_Amount" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ElectricityBill_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
+                                <!-- Generator Charge -->
+                                <div class="col-6">
+                                    <label class="small">Generator Charge</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GeneratorCharge_Amount" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GeneratorCharge_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Row 5 -->
+                            <div class="row g-2 mb-1">
+
+                                <!-- Other Charges -->
+                                <div class="col-6">
+                                    <label class="small">Other Charges</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_Amount" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
                             </div>
 
                         </div>
@@ -610,7 +683,7 @@
                             <div class="row">
 
                                 <!-- Booking Note -->
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label class="form-label fw-bold">Booking Note - Customer</label>
                                     <textarea id="OtherCharges_customerNote"
                                               class="form-control"
@@ -619,12 +692,29 @@
                                 </div>
 
                                 <!-- Internal Office Note -->
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label class="form-label fw-bold">Internal Office Note</label>
                                     <textarea id="OtherCharges_internalNote"
                                               class="form-control"
                                               rows="4"
                                               placeholder="Enter internal office notes"></textarea>
+                                </div>
+
+                                <!-- Booking Reference File -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Booking Reference File</label>
+
+                                    <input type="file"
+                                           id="BookingReferenceFile"
+                                           class="form-control"
+                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+
+                                    <div class="form-text">
+                                        Select booking reference document or image.
+                                    </div>
+
+                                    <!-- Base64 without MIME -->
+                                    <input type="hidden" id="BookingReferenceFile_Base64">
                                 </div>
 
                                 <!-- Food & Beverage Notes -->
@@ -1176,7 +1266,20 @@
                                         <span class="fw-semibold">Projector & Screen</span>
                                         <span>₹<span id="bookingReport_ProjectorScreen">—</span></span>
                                     </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Electricity Bill</span>
+                                        <span>₹<span id="bookingReport_ElectricityBill">—</span></span>
+                                    </div>
 
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Generator Charge</span>
+                                        <span>₹<span id="bookingReport_GeneratorCharge">—</span></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Other Charges</span>
+                                        <span>₹<span id="bookingReport_OtherCharges">—</span></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1353,6 +1456,12 @@
                                     <p class="mb-0">
                                         <strong>Reference:</strong>
                                         <span id="bookingReport_Reference">—</span>
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <p class="mb-0">
+                                        <strong>Reference File Uploaded:</strong>
+                                        <span id="bookingReport_ReferenceImage">—</span>
                                     </p>
                                 </div>
                             </div>

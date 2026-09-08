@@ -56,6 +56,12 @@
                                     + Deal
                                 </button>
 
+                                <!-- Add Booking -->
+                                <button class="btn btn-outline-warning btn-sm fw-bold py-1 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#bookingModal">
+                                    + Booking
+                                </button>
+
                                 <!-- Filters -->
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary btn-sm fw-bold py-1 px-2 dropdown-toggle"
@@ -254,34 +260,33 @@
 
                     <!-- START TIME FIELD -->
                     <div class="col-md-2 position-relative">
-                        <label for="eventStart" class="form-label">
+                        <label for="eventStart_enquiry" class="form-label">
                             Start Time <span class="text-danger">*</span>
                         </label>
-                        <input type="text" id="eventStart" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                        <input type="text" id="eventStart_enquiry" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
                         <div class="text-danger small mt-1 error-msg d-none">Please select start time</div>
 
                         <!-- CLOCK PICKER -->
-                        <div id="clockPicker" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                        <div id="clockPicker_enquiry" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
                             <div class="text-center mb-3">
-                                <span id="hourDisplay" class="fw-bold fs-3 text-primary clickable">12</span>
+                                <span id="hourDisplay_enquiry" class="fw-bold fs-3 text-primary clickable">12</span>
                                 <span class="fs-3 text-dark">:</span>
-                                <span id="minuteDisplay" class="fw-bold fs-3 text-dark clickable">00</span>
+                                <span id="minuteDisplay_enquiry" class="fw-bold fs-3 text-dark clickable">00</span>
                             </div>
 
                             <!-- AM/PM toggle -->
                             <div class="d-flex justify-content-center mb-3">
-                                <button type="button" id="amBtn" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
-                                <button type="button" id="pmBtn" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
-                                <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                <button type="button" id="amBtn_enquiry" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                <button type="button" id="pmBtn_enquiry" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                <button type="button" id="setTimeBtn_enquiry" class="btn btn-outline-primary btn-action-xs">Set Time</button>
                             </div>
 
                             <!-- Clock face -->
                             <div class="clock-face mx-auto mb-3">
-                                <div class="clock-hand hour-hand" id="hourHand"></div>
-                                <div class="clock-hand minute-hand" id="minuteHand"></div>
+                                <div class="clock-hand hour-hand" id="hourHand_enquiry"></div>
+                                <div class="clock-hand minute-hand" id="minuteHand_enquiry"></div>
                                 <div class="center-dot"></div>
 
-                                <!-- Hour numbers -->
                                 <div class="clock-number" style="--i:1;">1</div>
                                 <div class="clock-number" style="--i:2;">2</div>
                                 <div class="clock-number" style="--i:3;">3</div>
@@ -300,34 +305,33 @@
 
                     <!-- END TIME FIELD -->
                     <div class="col-md-2 position-relative">
-                        <label for="eventEnd" class="form-label">
+                        <label for="eventEnd_enquiry" class="form-label">
                             End Time <span class="text-danger">*</span>
                         </label>
-                        <input type="text" id="eventEnd" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                        <input type="text" id="eventEnd_enquiry" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
                         <div class="text-danger small mt-1 error-msg d-none">Please select end time</div>
 
                         <!-- CLOCK PICKER -->
-                        <div id="clockPickerEnd" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                        <div id="clockPickerEnd_enquiry" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
                             <div class="text-center mb-3">
-                                <span id="hourDisplayEnd" class="fw-bold fs-3 text-primary clickable">12</span>
+                                <span id="hourDisplayEnd_enquiry" class="fw-bold fs-3 text-primary clickable">12</span>
                                 <span class="fs-3 text-dark">:</span>
-                                <span id="minuteDisplayEnd" class="fw-bold fs-3 text-dark clickable">00</span>
+                                <span id="minuteDisplayEnd_enquiry" class="fw-bold fs-3 text-dark clickable">00</span>
                             </div>
 
                             <!-- AM/PM toggle -->
                             <div class="d-flex justify-content-center mb-3">
-                                <button id="amBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
-                                <button id="pmBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
-                                <button id="setTimeBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                <button type="button" id="amBtnEnd_enquiry" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                <button type="button" id="pmBtnEnd_enquiry" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                <button type="button" id="setTimeBtnEnd_enquiry" class="btn btn-outline-primary btn-action-xs">Set Time</button>
                             </div>
 
                             <!-- Clock face -->
                             <div class="clock-face mx-auto mb-3">
-                                <div class="clock-hand hour-hand" id="hourHandEnd"></div>
-                                <div class="clock-hand minute-hand" id="minuteHandEnd"></div>
+                                <div class="clock-hand hour-hand" id="hourHandEnd_enquiry"></div>
+                                <div class="clock-hand minute-hand" id="minuteHandEnd_enquiry"></div>
                                 <div class="center-dot"></div>
 
-                                <!-- Hour numbers -->
                                 <div class="clock-number" style="--i:1;">1</div>
                                 <div class="clock-number" style="--i:2;">2</div>
                                 <div class="clock-number" style="--i:3;">3</div>
@@ -995,7 +999,7 @@
 
 <!-- Booking Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xxl-85 modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary py-1">
                 <h5 class="modal-title text-white" id="title_bookingModal">Booking Details</h5>
@@ -1008,13 +1012,13 @@
                         <input type="hidden" id="BookingId" value="0">
                         <!-- Event Date (Left) -->
                         <div class="col-md-6">
-                            <label class="form-label fw-bold fs-8 text-primary"> Event Date:</label>
+                            <label class="form-label fw-bold fs-8 text-primary">Event Date:</label>
                             <span class="text-danger fw-bold" id="label_date_shift" data-eventdate="" data-shiftid="0"></span>
                         </div>
 
                         <!-- GST Toggle (Right) -->
-                        <div class="col-md-6 d-flex justify-content-end align-items-center">
-                            <label class="form-label me-2 mb-0 fs-8 text-primary">Accept GST:</label>
+                        <div class="col-md-6 d-flex justify-content-end align-items-center d-none">
+                            <label class="form-label me-2 mb-0 fs-6 text-primary">Accept GST:</label>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="gstSwitch">
                                 <label class="form-check-label" for="gstSwitch">
@@ -1028,44 +1032,119 @@
                         <!-- Event & Banquet Info -->
                         <!--banquetDropdown-->
                         <div class="col-md-2">
-                            <label class="form-label">Banquets</label>
+                            <label class="form-label">Banquets <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm" id="banquetDropdown">
+                                <option value="0">Full Property</option>
                             </select>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select banquet</div>
                         </div>
                         <!--fromDate-->
                         <div class="col-md-2">
-                            <label class="form-label">From Date</label>
+                            <label class="form-label">From Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control form-control-sm" id="fromDate">
+                            <div class="text-danger small mt-1 error-msg d-none">Please select from date</div>
                         </div>
                         <!--toDate-->
                         <div class="col-md-2">
-                            <label class="form-label">Till Date</label>
+                            <label class="form-label">Till Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control form-control-sm" id="toDate">
+                            <div class="text-danger small mt-1 error-msg d-none">Please select to date</div>
                         </div>
-                        <!-- Function Start Time -->
-                        <div class="col-md-3">
-                            <label class="form-label">Function Start Time</label>
-                            <div class="d-flex gap-1">
-                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="startHour" style="width: 100px;">
-                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="startMinute" style="width: 100px;">
-                                <select class="form-select form-select-sm" id="startAMPM" style="width: 100px;">
-                                    <option value="AM">AM</option>
-                                    <option value="PM">PM</option>
-                                </select>
+
+                        <!-- START TIME FIELD -->
+                        <div class="col-md-2 position-relative">
+                            <label for="eventStart" class="form-label">
+                                Start Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="eventStart" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select start time</div>
+
+                            <!-- CLOCK PICKER -->
+                            <div id="clockPicker" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                                <div class="text-center mb-3">
+                                    <span id="hourDisplay" class="fw-bold fs-3 text-primary clickable">12</span>
+                                    <span class="fs-3 text-dark">:</span>
+                                    <span id="minuteDisplay" class="fw-bold fs-3 text-dark clickable">00</span>
+                                </div>
+
+                                <!-- AM/PM toggle -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <button type="button" id="amBtn" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                    <button type="button" id="pmBtn" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                    <button type="button" id="setTimeBtn" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                </div>
+
+                                <!-- Clock face -->
+                                <div class="clock-face mx-auto mb-3">
+                                    <div class="clock-hand hour-hand" id="hourHand"></div>
+                                    <div class="clock-hand minute-hand" id="minuteHand"></div>
+                                    <div class="center-dot"></div>
+
+                                    <!-- Hour numbers -->
+                                    <div class="clock-number" style="--i:1;">1</div>
+                                    <div class="clock-number" style="--i:2;">2</div>
+                                    <div class="clock-number" style="--i:3;">3</div>
+                                    <div class="clock-number" style="--i:4;">4</div>
+                                    <div class="clock-number" style="--i:5;">5</div>
+                                    <div class="clock-number" style="--i:6;">6</div>
+                                    <div class="clock-number" style="--i:7;">7</div>
+                                    <div class="clock-number" style="--i:8;">8</div>
+                                    <div class="clock-number" style="--i:9;">9</div>
+                                    <div class="clock-number" style="--i:10;">10</div>
+                                    <div class="clock-number" style="--i:11;">11</div>
+                                    <div class="clock-number" style="--i:12;">12</div>
+                                </div>
                             </div>
                         </div>
-                        <!-- Function End Time -->
-                        <div class="col-md-3">
-                            <label class="form-label">Function End Time</label>
-                            <div class="d-flex gap-1">
-                                <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" id="endHour" style="width: 100px;">
-                                <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" id="endMinute" style="width: 100px;">
-                                <select class="form-select form-select-sm" id="endAMPM" style="width: 100px;">
-                                    <option value="AM">AM</option>
-                                    <option value="PM">PM</option>
-                                </select>
+
+                        <!-- END TIME FIELD -->
+                        <div class="col-md-2 position-relative">
+                            <label for="eventEnd" class="form-label">
+                                End Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="eventEnd" class="form-control form-control-sm text-center" placeholder="Select Time" readonly>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select end time</div>
+
+                            <!-- CLOCK PICKER -->
+                            <div id="clockPickerEnd" class="custom-clock-picker shadow-lg rounded-3 p-3 d-none">
+                                <div class="text-center mb-3">
+                                    <span id="hourDisplayEnd" class="fw-bold fs-3 text-primary clickable">12</span>
+                                    <span class="fs-3 text-dark">:</span>
+                                    <span id="minuteDisplayEnd" class="fw-bold fs-3 text-dark clickable">00</span>
+                                </div>
+
+                                <!-- AM/PM toggle -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <button id="amBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2 active">AM</button>
+                                    <button id="pmBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs me-2">PM</button>
+                                    <button id="setTimeBtnEnd" type="button" class="btn btn-outline-primary btn-action-xs">Set Time</button>
+                                </div>
+
+                                <!-- Clock face -->
+                                <div class="clock-face mx-auto mb-3">
+                                    <div class="clock-hand hour-hand" id="hourHandEnd"></div>
+                                    <div class="clock-hand minute-hand" id="minuteHandEnd"></div>
+                                    <div class="center-dot"></div>
+
+                                    <!-- Hour numbers -->
+                                    <div class="clock-number" style="--i:1;">1</div>
+                                    <div class="clock-number" style="--i:2;">2</div>
+                                    <div class="clock-number" style="--i:3;">3</div>
+                                    <div class="clock-number" style="--i:4;">4</div>
+                                    <div class="clock-number" style="--i:5;">5</div>
+                                    <div class="clock-number" style="--i:6;">6</div>
+                                    <div class="clock-number" style="--i:7;">7</div>
+                                    <div class="clock-number" style="--i:8;">8</div>
+                                    <div class="clock-number" style="--i:9;">9</div>
+                                    <div class="clock-number" style="--i:10;">10</div>
+                                    <div class="clock-number" style="--i:11;">11</div>
+                                    <div class="clock-number" style="--i:12;">12</div>
+                                </div>
                             </div>
                         </div>
+
+                        <div id="slotStatusMsg" class="alert py-1 mt-2 d-none"></div>
+                        <div id="slotStatusWarning" class="alert py-1 mt-1 d-none fs-9"></div>
 
                         <!-- Client Info -->
                         <div class="col-md-3">
@@ -1076,8 +1155,9 @@
                         </div>
                         <!-- Client Name-->
                         <div class="col-md-5">
-                            <label class="form-label">Client Name</label>
+                            <label class="form-label">Client Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" placeholder="Enter Client Name" id="clientName">
+                            <div class="text-danger small mt-1 error-msg d-none">Please enter client name</div>
                         </div>
                         <!-- Client Email-->
                         <div class="col-md-4">
@@ -1091,8 +1171,9 @@
                         </div>
                         <!-- Client Contact-->
                         <div class="col-md-3">
-                            <label class="form-label">Contact</label>
+                            <label class="form-label">Contact <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" placeholder="Enter Client Contact" id="clientContact" maxlength="10">
+                            <div class="text-danger small mt-1 error-msg d-none">Please enter client contact no</div>
                         </div>
                         <!-- Client GSTIN-->
                         <div class="col-md-3">
@@ -1113,34 +1194,47 @@
                         <div class="col-12 mb-1">
                             <h6 class="text-primary">Booking Details</h6>
                             <div class="row g-2 align-items-end">
-                                <!-- Event (Dropdown, width 3) -->
+                                <!-- Event (Dropdown, width 3) WORK -->
+                                <div class="col-md-2" id="booking_eventDropdown_div">
+                                    <label class="form-label">Event Type</label>
+                                    <select class="form-select form-select-sm" id="booking_eventDropdown"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">Please select event</div>
+                                </div>
+
+                                <!-- Sub-Event (Dropdown, width 3) -->
                                 <div class="col-md-3">
-                                    <label class="form-label">Event</label>
+                                    <label class="form-label">Sub-Event Type<span class="text-danger">*</span></label>
                                     <select class="form-select form-select-sm" id="booking_subEventDropdown"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">Please select subevent</div>
                                 </div>
 
                                 <!-- Pax (Input, width 2) -->
                                 <div class="col-md-2">
-                                    <label class="form-label">Pax</label>
-                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_pax">
+                                    <label class="form-label">Pax <span class="text-danger">*</span></label>
+                                    <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_pax">
+                                    <div class="text-danger small mt-1 error-msg d-none">Please enter PAX</div>
                                 </div>
 
                                 <!-- Hall Rent (Input, width 2) -->
                                 <div class="col-md-2">
                                     <label class="form-label">Hall Rent</label>
-                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_hallRent">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_hallRent">
+                                    </div>
                                 </div>
 
                                 <!-- GST (Input, width 2) -->
-                                <div class="col-md-2">
+                                <div class="col-md-1 d-none">
                                     <label class="form-label">GST</label>
-                                    <input type="number" class="form-control form-control-sm" value="0" id="booking_gst">
+                                    <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_gst">
                                 </div>
 
                                 <!-- Reference (Dropdown, width 3) -->
                                 <div class="col-md-3">
-                                    <label class="form-label">Reference</label>
+                                    <label class="form-label">Reference <span class="text-danger">*</span></label>
                                     <select class="form-select form-select-sm" id="booking_leadReferenceDropdown"></select>
+                                    <div class="text-danger small mt-1 error-msg d-none">Please select reference type</div>
                                 </div>
                             </div>
                         </div>
@@ -1184,27 +1278,36 @@
                                     </div>
 
                                     <!-- Per Plate -->
-                                    <div class="col-md-1">
+                                    <div class="col-md-2">
                                         <label class="form-label">Per Plate</label>
-                                        <input type="number" class="form-control form-control-sm" placeholder="Per Plate" value="0" id="foodPackage_RatePerPlate">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control form-control-sm" placeholder="Per Plate" value="0" id="foodPackage_RatePerPlate">
+                                        </div>
                                     </div>
 
-                                    <!-- Package Cost -->
+                                    <!-- Package Cost here2-->
                                     <div class="col-md-2">
                                         <label class="form-label">Package Cost</label>
-                                        <input type="number" class="form-control form-control-sm" placeholder="Package Cost" value="0" id="foodPackage_PackageCost" readonly>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control" placeholder="Package Cost" value="0" id="foodPackage_PackageCost" readonly>
+                                        </div>
                                     </div>
 
                                     <!-- Addons -->
-                                    <div class="col-md-1">
+                                    <div class="col-md-2">
                                         <label class="form-label">Addons</label>
-                                        <input type="number" class="form-control form-control-sm foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" min="0" class="form-control foodPackage_Addons" placeholder="Addons" value="0" id="foodPackage_Addons" readonly>
+                                        </div>
                                     </div>
 
                                     <!-- GST -->
-                                    <div class="col-md-2">
+                                    <div class="col-md-2 d-none">
                                         <label class="form-label">GST (5%)</label>
-                                        <input type="number" class="form-control form-control-sm" placeholder="GST" value="0" id="foodPackage_GST" readonly>
+                                        <input type="number" min="0" class="form-control form-control-sm" placeholder="GST" value="0" id="foodPackage_GST" readonly>
                                     </div>
 
                                     <!-- Addons Button + Total -->
@@ -1236,92 +1339,148 @@
                             <div class="row g-2 mb-1">
                                 <div class="col-6">
                                     <label class="small">Decoraton</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_Amount" value="0">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_Decoration_Amount" value="0">
+                                    </div>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_Decoration_GST" value="0" disabled>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_Decoration_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="small">Room Charges</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_RoomCharges_Amount" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_RoomCharges_GST" value="0" disabled>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Row 3 -->
                             <div class="row g-2 mb-1">
                                 <div class="col-6">
-                                    <label class="small">Room Charges</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_Amount" value="0">
+                                    <label class="small">Sound System</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_SoundSystem_Amount" value="0">
+                                    </div>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_RoomCharges_GST" value="0" disabled>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_SoundSystem_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="small">Projector & Screen</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_Amount" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Row 4 -->
                             <div class="row g-2 mb-1">
+
+                                <!-- Electricity Bill -->
                                 <div class="col-6">
-                                    <label class="small">Sound System</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_Amount" value="0">
+                                    <label class="small">Electricity Bill</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ElectricityBill_Amount" value="0">
+                                    </div>
                                 </div>
-                                <div class="col-6">
+
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_SoundSystem_GST" value="0" disabled>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_ElectricityBill_GST" value="0" disabled>
+                                    </div>
                                 </div>
+
+                                <!-- Generator Charge -->
+                                <div class="col-6">
+                                    <label class="small">Generator Charge</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GeneratorCharge_Amount" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-6 d-none">
+                                    <label class="small">GST</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GeneratorCharge_GST" value="0" disabled>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <!-- Row 5 -->
                             <div class="row g-2 mb-1">
+
+                                <!-- Other Charges -->
                                 <div class="col-6">
-                                    <label class="small">Projector & Screen</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_Amount" value="0">
+                                    <label class="small">Other Charges</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_Amount" value="0">
+                                    </div>
                                 </div>
-                                <div class="col-6">
+
+                                <div class="col-6 d-none">
                                     <label class="small">GST</label>
-                                    <input type="number" class="form-control form-control-sm" id="OtherCharges_ProjectorScreen_GST" value="0" disabled>
-                                </div>
-                            </div>
-
-                            <!-- Button to toggle editors -->
-                            <div class="mb-1">
-                                <button type="button" id="OtherCharges_ToggleEditorsBtn" class="btn btn-outline-success btn-sm w-100">
-                                    <i class="fa fa-pen"></i> Booking Note
-                                </button>
-                            </div>
-
-                            <!-- Container for text editors (hidden by default) -->
-                            <div id="OtherCharges_editorsContainer" style="display:none;">
-
-                                <!-- Booking Note - Customer -->
-                                <div class="mb-3">
-                                    <label class="form-label small">Booking Note - Customer <span class="small">(Printed on FP)</span></label>
-                                    <div id="OtherCharges_customerEditor" style="height: 120px;"></div>
-                                </div>
-
-                                <!-- Internal Office Note -->
-                                <div class="mb-3">
-                                    <label class="form-label small">Internal Office Note <span class="small">(Not shared with customer)</span></label>
-                                    <div id="OtherCharges_internalEditor" style="height: 120px;"></div>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" id="OtherCharges_GST" value="0" disabled>
+                                    </div>
                                 </div>
 
                             </div>
+
                         </div>
 
                         <!-- Payment Summary -->
                         <div class="col-md-4 border-start ps-3">
-                            <h6 class="text-primary mb-2 small fw-bold">Payment Summary</h6>
+                            <h6 class="text-primary">Payment Summary</h6>
                             <table class="table table-borderless mb-0 payment-summary-table">
                                 <tr class="fw-bold">
                                     <td>Taxable Amount</td>
                                     <td class="text-end" id="paymentSummary_TaxableAmount">0</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>CGST</td>
                                     <td class="text-end" id="paymentSummary_CGST">0.00</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>SGST</td>
                                     <td class="text-end" id="paymentSummary_SGST">0.00</td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td>IGST</td>
                                     <td class="text-end" id="paymentSummary_IGST">0.00</td>
                                 </tr>
@@ -1329,16 +1488,16 @@
                                     <td>Total</td>
                                     <td class="text-end" id="paymentSummary_Total">0.00</td>
                                 </tr>
-                                <tr id="paymentSummary_BookingAmount_Row">
+                                <tr id="paymentSummary_BookingDiscount_Row">
                                     <td>
-                                        <div class="d-flex align-items-center gap-1">
-                                            Booking Amount
-                                            <select class="form-select form-select-sm" id="paymentSummary_BookingAmount_Type" style="width:500px;">
+                                        <div class="d-flex gap-2">
+                                            Booking Discount
+                                            <select class="form-select form-select-sm" id="paymentSummary_BookingDiscount_Type" style="width: 100px;">
                                                 <option value="1">Flat</option>
                                                 <option value="2">Percent (%)</option>
                                             </select>
 
-                                            <input type="number" class="form-control form-control-sm" value="0" id="paymentSummary_BookingAmount_Amount" style="width:80px;">
+                                            <input type="number" min="0" class="form-control form-control-sm" value="0" id="paymentSummary_BookingDiscount_Amount" style="width:100px;">
                                         </div>
                                     </td>
                                     <td class="text-end" id="paymentSummary_BookingAmount">0</td>
@@ -1355,23 +1514,38 @@
                             <h6 class="text-primary">Payment Details</h6>
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label>Mode</label>
+                                    <label>Payment Mode</label>
                                     <select class="form-select form-select-sm" id="PaymentDetails_Mode"></select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label>Account</label>
+                                    <label class="d-flex align-items-center gap-2">
+                                        Receiver
+                                        <i class="fa fa-info-circle text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="The payment amount will be credited to this selected account. Please choose the correct account carefully.">
+                                        </i>
+                                    </label>
                                     <select class="form-select form-select-sm" id="PaymentDetails_AccountId"></select>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label>Paid Time</label>
                                     <input type="time" class="form-control form-control-sm" id="PaymentDetails_PaidTime">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <label>Amount</label>
-                                    <input type="number" class="form-control form-control-sm" value="0" id="PaymentDetails_Amount">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" min="0" class="form-control form-control-sm" value="0" id="PaymentDetails_Amount">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label>Due Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_DueDate" value="">
                                 </div>
 
                                 <div class="col-md-6 d-none">
@@ -1394,17 +1568,218 @@
                                     <input type="date" class="form-control form-control-sm" id="PaymentDetails_ChequeDate" value="">
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label>Due Date</label>
-                                    <input type="date" class="form-control form-control-sm" id="PaymentDetails_DueDate" value="">
-                                </div>
-
                                 <div class="col-12">
                                     <label>Payment Note</label>
                                     <textarea class="form-control form-control-sm" id="PaymentDetails_PaymentNote"></textarea>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Notes -->
+                        <div class="col-md-12" id="notes1">
+                            <div id="notesContainer"></div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-md-12" id="notes">
+                            <div class="row">
+
+                                <!-- Booking Note -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Booking Note - Customer</label>
+                                    <textarea id="OtherCharges_customerNote"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter customer booking notes"></textarea>
+                                </div>
+
+                                <!-- Internal Office Note -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Internal Office Note</label>
+                                    <textarea id="OtherCharges_internalNote"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter internal office notes"></textarea>
+                                </div>
+
+                                <!-- Booking Reference File -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Booking Reference File</label>
+
+                                    <input type="file"
+                                           id="BookingReferenceFile"
+                                           class="form-control"
+                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+
+                                    <div class="form-text">
+                                        Select booking reference document or image.
+                                    </div>
+
+                                    <!-- Base64 without MIME -->
+                                    <input type="hidden" id="BookingReferenceFile_Base64">
+                                </div>
+
+
+                                <!-- Food & Beverage Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold">Food & Beverage Notes</label>
+                                    <textarea id="Notes_FoodBeverage"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter food & beverage notes"></textarea>
+                                </div>
+
+                                <!-- Event Timing Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold">Event Timing Notes</label>
+                                    <textarea id="Notes_EventTiming"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter event timing notes"></textarea>
+                                </div>
+
+                                <!-- Decoration Setup Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold">Decoration Setup Notes</label>
+                                    <textarea id="Notes_DecorationSetup"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter decoration setup notes"></textarea>
+                                </div>
+
+                                <!-- Technical Service Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold">Technical Service Notes</label>
+                                    <textarea id="Notes_TechnicalService"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter technical service notes"></textarea>
+                                </div>
+
+                                <!-- Guest Custom Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold">Guest Custom Notes</label>
+                                    <textarea id="Notes_GuestCustom"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter guest custom notes"></textarea>
+                                </div>
+
+                                <!-- Financial Internal Notes -->
+                                <div class="col-md-6 mb-3 d-none">
+                                    <label class="form-label fw-bold text-danger">Financial Internal Notes</label>
+                                    <textarea id="Notes_FinancialInternal"
+                                              class="form-control"
+                                              rows="4"
+                                              placeholder="Enter financial internal notes"></textarea>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Guest Details -->
+                        <div class="col-md-12 mt-3" id="Section_GuestDetails">
+                            <div class="card border-success shadow-sm">
+                                <div class="card-header bg-success-subtle py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <h6 class="mb-0 fw-bold text-success">
+                                            <i class="fa-solid fa-users me-2"></i>
+                                            Guest Details
+                                        </h6>
+
+                                        <button type="button" class="btn btn-success btn-sm" id="btnAddGuestRow">
+                                            <i class="fa-solid fa-plus"></i>
+                                            Guest
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card-body p-2">
+                                    <!-- First row will be generated here -->
+                                    <div id="guestRowTemplate" class="d-none">
+                                        <div class="guest-row border rounded p-2 mb-2 bg-light">
+                                            <div class="row g-2 align-items-end">
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label mb-1">
+                                                        Guest Name <span class="guest-srno">#1</span>
+                                                    </label>
+                                                    <input type="text" class="form-control form-control-sm guest-name">
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="form-label mb-1">Mobile</label>
+                                                    <input type="text" maxlength="10" class="form-control form-control-sm guest-mobile">
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="form-label mb-1 d-flex justify-content-between align-items-center">
+                                                        <span>WhatsApp</span>
+                                                        <button type="button"
+                                                                class="btn btn-link btn-sm p-0 btn-copy-mobile"
+                                                                title="Keep WhatsApp number same as Mobile No">
+                                                            <i class="fa-solid fa-copy text-success"></i>
+                                                        </button>
+                                                    </label>
+                                                    <input type="text" maxlength="10" class="form-control form-control-sm guest-whatsapp">
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label class="form-label mb-1">Email</label>
+                                                    <input type="email" class="form-control form-control-sm guest-email">
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 btnRemoveGuestRow">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="form-label mb-1">City</label>
+                                                    <select class="form-select form-select-sm guest-city"></select>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="row align-items-end g-2">
+
+                                                        <div class="col-5">
+                                                            <label class="form-label mb-1">DOB</label>
+                                                            <input type="date" class="form-control form-control-sm guest-dob">
+                                                        </div>
+
+                                                        <div class="col-5">
+                                                            <label class="form-label mb-1">Anniversary</label>
+                                                            <input type="date" class="form-control form-control-sm guest-anniversary">
+                                                        </div>
+
+                                                        <div class="col-2 text-end">
+                                                            <label class="form-label mb-1 d-block">&nbsp;</label>
+                                                            <button type="button"
+                                                                    class="btn btn-outline-secondary btn-sm btn-clear-dates"
+                                                                    title="Clear Dates">
+                                                                <i class="fa-solid fa-eraser"></i>
+                                                            </button>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label mb-1">Address</label>
+                                                    <input type="text" class="form-control form-control-sm guest-address">
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="bookingGuestContainer"></div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </form>
             </div>

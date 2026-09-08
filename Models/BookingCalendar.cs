@@ -238,6 +238,7 @@
         public string? Payment_PaidTime { get; set; }
         public string? Payment_DueDate { get; set; }
         public string? Payment_Note { get; set; }
+        public string? ReferenceImage { get; set; } = "";
 
         public decimal? OtherCharges_Decoration_Amount { get; set; }
         public decimal? OtherCharges_Decoration_GST { get; set; }
@@ -247,6 +248,15 @@
         public decimal? OtherCharges_SoundSystem_GST { get; set; }
         public decimal? OtherCharges_ProjectorScreen_Amount { get; set; }
         public decimal? OtherCharges_ProjectorScreen_GST { get; set; }
+        public decimal? OtherCharges_ElectricityBill_Amount { get; set; }
+        public decimal? OtherCharges_ElectricityBill_GST { get; set; }
+
+        public decimal? OtherCharges_GeneratorCharge_Amount { get; set; }
+        public decimal? OtherCharges_GeneratorCharge_GST { get; set; }
+
+        public decimal? OtherCharges_Amount { get; set; }
+        public decimal? OtherCharges_GST { get; set; }
+
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
 
@@ -427,9 +437,18 @@
         public decimal OtherCharges_SoundSystem_GST { get; set; }
         public decimal OtherCharges_ProjectorScreen_Amount { get; set; }
         public decimal OtherCharges_ProjectorScreen_GST { get; set; }
+        public decimal OtherCharges_ElectricityBill_Amount { get; set; }
+        public decimal OtherCharges_ElectricityBill_GST { get; set; }
+
+        public decimal OtherCharges_GeneratorCharge_Amount { get; set; }
+        public decimal OtherCharges_GeneratorCharge_GST { get; set; }
+
+        public decimal OtherCharges_Amount { get; set; }
+        public decimal OtherCharges_GST { get; set; }
 
         public string? ReachedUs { get; set; }
         public string? Reference { get; set; }
+        public string? ReferenceImage { get; set; }
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
         public string? Notes_FoodBeverage { get; set; }

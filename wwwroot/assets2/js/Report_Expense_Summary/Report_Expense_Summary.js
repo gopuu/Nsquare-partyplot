@@ -19,11 +19,90 @@ const HEADER_KEY = "expensePrintWithHeader";
 ═══════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", function () {
     loadCategoryDropdown();
+    setCurrentMonthDates();
     resetGrid(); //loadExpenseGrid();
     loadColumnCheckboxes();
 
     /* ── Category change → reload sub category ── */
     $("#ddlCategory").on("change", function () {
+        loadExpenseGrid();
+    });
+    $("#fromDate, #toDate").on("change", function () {
+
+        // If user manually edits date → switch dropdown to custom
+        if ($("#quickRange").val() !== "customrange") {
+            $("#quickRange").val("customrange");
+            // Optional: update variable also
+            selectedMonthDuration = "customrange";
+        }
+
+        let dateValue = $(this).val();
+        let errorId = this.id === "fromDate" ? "#fromDateError" : "#toDateError";
+
+        if (!dateValue) {
+            $(errorId).text("Please select a valid date.");
+            return;
+        }
+
+        $(errorId).text("");
+
+        loadExpenseGrid();
+    });
+    /* ── Quick range ── */
+    $("#quickRange").on("change", function () {
+
+        const newFilter = $(this).val();
+        if (selectedMonthDuration === newFilter) return;
+        selectedMonthDuration = newFilter;
+
+        if (selectedMonthDuration === "customrange") {
+            return;
+        }
+
+        const today = new Date();
+        let fromDate, toDate;
+
+        switch (selectedMonthDuration) {
+            case "thismonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+            case "lastmonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case "thisyear":
+                fromDate = new Date(today.getFullYear(), 0, 1);
+                toDate = new Date(today.getFullYear(), 11, 31);
+                break;
+            case "lastyear":
+                fromDate = new Date(today.getFullYear() - 1, 0, 1);
+                toDate = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+            case "last7days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 6);
+                toDate = today;
+                break;
+            case "last30days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 29);
+                toDate = today;
+                break;
+            case "yesterday":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 1);
+                toDate = new Date(fromDate);
+                break;
+            case "last12months":
+                fromDate = new Date(today);
+                fromDate.setMonth(today.getMonth() - 12);
+                toDate = today;
+                break;
+        }
+
+        $("#fromDate").val(formatDate2(fromDate));
+        $("#toDate").val(formatDate2(toDate));
         loadExpenseGrid();
     });
 
@@ -53,10 +132,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // ─────────────────────────────────────────────
     // MONTH CHANGE
     // ─────────────────────────────────────────────
-    $("#expenseMonth").on("change", function () {
-        updateExpenseReportTitle();
+    /*$("#expenseMonth").on("change", function () {
         loadExpenseGrid();
-    });
+    });*/
 
 
     /* ── With Header ── */
@@ -94,48 +172,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function resetGrid(){
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    $("#quickRange").val("thismonth");
+    selectedMonthDuration = "thismonth";
+    setCurrentMonthDates();
+
+    //const now = new Date();
+    //const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     // Reset month to current month
-    $("#expenseMonth").val(currentMonth);
+    //$("#expenseMonth").val(currentMonth);
 
     // Reset filters
     $("#ddlCategory").val("0").trigger("change");
 
-    // Update title
-    updateExpenseReportTitle();
-
     // Reload grid
     loadExpenseGrid();
 }
-
-// ─────────────────────────────────────────────
-// UPDATE REPORT TITLE
-// ─────────────────────────────────────────────
-function updateExpenseReportTitle() {
-    const selectedMonth = $("#expenseMonth").val(); // yyyy-MM
-    if (!selectedMonth) {
-        $("#expenseReportTitle").text("Expense Summary Report");
-        return;
-    }
-
-    const [year, month] = selectedMonth.split("-");
-    const date = new Date(
-        parseInt(year),
-        parseInt(month) - 1,
-        1
-    );
-
-    const monthYear = date.toLocaleString("en-US", {
-        month: "long",
-        year: "numeric"
-    });
-
-    $("#expenseReportTitle").text(
-        `Expense Summary Report - ${monthYear}`
-    );
-}
-
 
 /* ═══════════════════════════════════════════════════
    DROPDOWNS
@@ -164,8 +215,16 @@ function loadCategoryDropdown(selectedId = 0) {
 ═══════════════════════════════════════════════════ */
 function loadExpenseGrid() {
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
-        Month: $("#expenseMonth").val() || null, // yyyy-MM
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
         CategoryId: parseInt($("#ddlCategory").val()) || 0
     };
 
@@ -358,11 +417,19 @@ function renderExpenseSummaryTable(rows, totals) {
 ═══════════════════════════════════════════════════ */
 function ViewExpenseReport(actionName) {
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const withHeader = $("#toggleWithHeader").is(":checked");
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
     const payload = {
-        Month: $("#expenseMonth").val() || null, // yyyy-MM
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
         CategoryId: parseInt($("#ddlCategory").val()) || 0,
 
         WithHeader: withHeader,
@@ -382,6 +449,14 @@ function ViewExpenseReport(actionName) {
 /* ═══════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════ */
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
+}
+
 function loadColumnCheckboxes() {
     let html = "";
     REPORT_COLUMNS.forEach(col => {

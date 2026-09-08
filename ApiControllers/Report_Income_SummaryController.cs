@@ -50,7 +50,11 @@ namespace ERPAdmin.ApiControllers
                 using (SqlCommand cmd = new SqlCommand("Report_GetIncomeSummary_GRID", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    // 🔹 Filters
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    //cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
 
                     con.Open();
@@ -152,7 +156,12 @@ namespace ERPAdmin.ApiControllers
                         : null;
 
                     cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    //cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    // 🔹 Filters
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);
@@ -555,7 +564,11 @@ namespace ERPAdmin.ApiControllers
                     string columnsJson = request.Columns != null ? JsonConvert.SerializeObject(request.Columns) : null;
 
                     cmd.Parameters.AddWithValue("@Columns", columnsJson ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
+                    // 🔹 Filters
+                    cmd.Parameters.AddWithValue("@FromDate", string.IsNullOrEmpty(request.FromDate) ? (object)DBNull.Value : request.FromDate);
+                    cmd.Parameters.AddWithValue("@ToDate", string.IsNullOrEmpty(request.ToDate) ? (object)DBNull.Value : request.ToDate);
+                    cmd.Parameters.AddWithValue("@FilterDuration", string.IsNullOrEmpty(request.FilterDuration) ? (object)DBNull.Value : request.FilterDuration);
+                    //cmd.Parameters.AddWithValue("@Month", string.IsNullOrWhiteSpace(request.Month) ? (object)DBNull.Value : request.Month);
                     cmd.Parameters.AddWithValue("@CategoryId", request.CategoryId);
 
                     new SqlDataAdapter(cmd).Fill(dsReport);

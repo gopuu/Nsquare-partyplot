@@ -27,6 +27,86 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#ddlCategory").on("change", function () {
         loadIncomeGrid();
     });
+    $("#fromDate, #toDate").on("change", function () {
+
+        // If user manually edits date → switch dropdown to custom
+        if ($("#quickRange").val() !== "customrange") {
+            $("#quickRange").val("customrange");
+            // Optional: update variable also
+            selectedMonthDuration = "customrange";
+        }
+
+        let dateValue = $(this).val();
+        let errorId = this.id === "fromDate" ? "#fromDateError" : "#toDateError";
+
+        if (!dateValue) {
+            $(errorId).text("Please select a valid date.");
+            return;
+        }
+
+        $(errorId).text("");
+
+        loadIncomeGrid();
+    });
+
+    /* ── Quick range ── */
+    $("#quickRange").on("change", function () {
+
+        const newFilter = $(this).val();
+        if (selectedMonthDuration === newFilter) return;
+        selectedMonthDuration = newFilter;
+
+        if (selectedMonthDuration === "customrange") {
+            return;
+        }
+
+        const today = new Date();
+        let fromDate, toDate;
+
+        switch (selectedMonthDuration) {
+            case "thismonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+            case "lastmonth":
+                fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case "thisyear":
+                fromDate = new Date(today.getFullYear(), 0, 1);
+                toDate = new Date(today.getFullYear(), 11, 31);
+                break;
+            case "lastyear":
+                fromDate = new Date(today.getFullYear() - 1, 0, 1);
+                toDate = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+            case "last7days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 6);
+                toDate = today;
+                break;
+            case "last30days":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 29);
+                toDate = today;
+                break;
+            case "yesterday":
+                fromDate = new Date(today);
+                fromDate.setDate(today.getDate() - 1);
+                toDate = new Date(fromDate);
+                break;
+            case "last12months":
+                fromDate = new Date(today);
+                fromDate.setMonth(today.getMonth() - 12);
+                toDate = today;
+                break;
+        }
+
+        $("#fromDate").val(formatDate2(fromDate));
+        $("#toDate").val(formatDate2(toDate));
+        loadIncomeGrid();
+    });
+
 
     /* ── Filter panel ── */
     $("#filterPanel").on("click", function (e) { e.stopPropagation(); });
@@ -49,16 +129,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // ─────────────────────────────────────────────
     $("#btnResetFilter").on("click", function () {
         resetGrid();
+        $("#quickRange").val("thismonth");
+        selectedMonthDuration = "thismonth";
+        setCurrentMonthDates();
+        loadIncomeGrid();
     });
 
     // ─────────────────────────────────────────────
     // MONTH CHANGE
     // ─────────────────────────────────────────────
-    $("#incomeMonth").on("change", function () {
-        updateIncomeReportTitle();
+    /*$("#incomeMonth").on("change", function () {
         loadIncomeGrid();
-    });
-
+    });*/
 
     /* ── With Header ── */
     const saved = sessionStorage.getItem(HEADER_KEY);
@@ -95,46 +177,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function resetGrid(){
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    $("#quickRange").val("thismonth");
+    selectedMonthDuration = "thismonth";
+    setCurrentMonthDates();
+
+    //const now = new Date();
+    //const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     // Reset month to current month
-    $("#incomeMonth").val(currentMonth);
+    //$("#incomeMonth").val(currentMonth);
 
     // Reset filters
     $("#ddlCategory").val("0").trigger("change");
 
-    // Update title
-    updateIncomeReportTitle();
-
     // Reload grid
     loadIncomeGrid();
 }
-
-// ─────────────────────────────────────────────
-// UPDATE REPORT TITLE
-// ─────────────────────────────────────────────
-function updateIncomeReportTitle() {
-    const selectedMonth = $("#incomeMonth").val(); // yyyy-MM
-    if (!selectedMonth) {
-        $("#incomeReportTitle").text("Income Summary Report");
-        return;
-    }
-
-    const [year, month] = selectedMonth.split("-");
-    const date = new Date(
-        parseInt(year),
-        parseInt(month) - 1,
-        1
-    );
-
-    const monthYear = date.toLocaleString("en-US", {
-        month: "long",
-        year: "numeric"
-    });
-
-    $("#incomeReportTitle").text(`Income Summary Report - ${monthYear}`);
-}
-
 
 /* ═══════════════════════════════════════════════════
    DROPDOWNS
@@ -163,8 +220,16 @@ function loadCategoryDropdown(selectedId = 0) {
 ═══════════════════════════════════════════════════ */
 function loadIncomeGrid() {
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
-        Month: $("#incomeMonth").val() || null, // yyyy-MM
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
         CategoryId: parseInt($("#ddlCategory").val()) || 0
     };
 
@@ -360,8 +425,16 @@ function ViewIncomeReport(actionName) {
     const withHeader = $("#toggleWithHeader").is(":checked");
     const userId = parseInt(sessionStorage.getItem("userId") || 0);
 
+    // 🔹 Duration
+    const filterDuration = $("#quickRange").val() || null;
+    // 🔹 Dates
+    const fromDate = $("#fromDate").val() || null;
+    const toDate = $("#toDate").val() || null;
+
     const payload = {
-        Month: $("#incomeMonth").val() || null, // yyyy-MM
+        FromDate: fromDate,
+        ToDate: toDate,
+        FilterDuration: filterDuration,
         CategoryId: parseInt($("#ddlCategory").val()) || 0,
 
         WithHeader: withHeader,
@@ -381,6 +454,14 @@ function ViewIncomeReport(actionName) {
 /* ═══════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════ */
+function setCurrentMonthDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $("#fromDate").val(formatDate2(firstDay));
+    $("#toDate").val(formatDate2(lastDay));
+}
+
 function loadColumnCheckboxes() {
     let html = "";
     REPORT_COLUMNS.forEach(col => {

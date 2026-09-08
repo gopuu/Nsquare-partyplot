@@ -28,13 +28,16 @@ namespace ERPAdmin.ApiControllers
         private string connString = string.Empty;
         private readonly IWebHostEnvironment _env;
         private readonly WhatsAppService _whatsAppService;
+        private readonly ImageUploadService _imageUploadService;
 
-        public BookingCalendarController(IConfiguration configuration, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor, WhatsAppService whatsAppService)
+        public BookingCalendarController(IConfiguration configuration, IWebHostEnvironment env,
+            ImageUploadService imageUploadService, IHttpContextAccessor httpContextAccessor, WhatsAppService whatsAppService)
                 : base(configuration, httpContextAccessor) // ✅ Call base controller constructor properly
 
         {
             _env = env;
             _whatsAppService = whatsAppService;
+            _imageUploadService = imageUploadService;
             var request = httpContextAccessor.HttpContext?.Request;
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}";
 
@@ -148,6 +151,16 @@ namespace ERPAdmin.ApiControllers
                         booking.OtherCharges_SoundSystem_GST = dr["OtherCharges_SoundSystem_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_SoundSystem_GST"]);
                         booking.OtherCharges_ProjectorScreen_Amount = dr["OtherCharges_ProjectorScreen_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_ProjectorScreen_Amount"]);
                         booking.OtherCharges_ProjectorScreen_GST = dr["OtherCharges_ProjectorScreen_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_ProjectorScreen_GST"]);
+
+                        booking.OtherCharges_ElectricityBill_Amount = dr["OtherCharges_ElectricityBill_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_ElectricityBill_Amount"]);
+                        booking.OtherCharges_ElectricityBill_GST = dr["OtherCharges_ElectricityBill_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_ElectricityBill_GST"]);
+
+                        booking.OtherCharges_GeneratorCharge_Amount = dr["OtherCharges_GeneratorCharge_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_GeneratorCharge_Amount"]);
+                        booking.OtherCharges_GeneratorCharge_GST = dr["OtherCharges_GeneratorCharge_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_GeneratorCharge_GST"]);
+
+                        booking.OtherCharges_Amount = dr["OtherCharges_Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_Amount"]);
+                        booking.OtherCharges_GST = dr["OtherCharges_GST"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["OtherCharges_GST"]);
+
                         booking.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_BookingNoteForCustomer"]);
                         booking.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_InternalOfficeNote"]);
 
@@ -190,6 +203,7 @@ namespace ERPAdmin.ApiControllers
 
                         booking.ReachedUs = dr["ReachedUs"] == DBNull.Value ? "" : Convert.ToString(dr["ReachedUs"]);
                         booking.Reference = dr["Reference"] == DBNull.Value ? "" : Convert.ToString(dr["Reference"]);
+                        booking.ReferenceImage = $"{domainUrl}/uploads/org/{domain}/BookingCalendar/{Convert.ToString(dr["Reference"])}";
 
                         booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);
@@ -298,6 +312,16 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@OtherCharges_SoundSystem_GST", model.OtherCharges_SoundSystem_GST ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_ProjectorScreen_Amount", model.OtherCharges_ProjectorScreen_Amount ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_ProjectorScreen_GST", model.OtherCharges_ProjectorScreen_GST ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@OtherCharges_ElectricityBill_Amount", model.OtherCharges_ElectricityBill_Amount ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@OtherCharges_ElectricityBill_GST", model.OtherCharges_ElectricityBill_GST ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@OtherCharges_GeneratorCharge_Amount", model.OtherCharges_GeneratorCharge_Amount ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@OtherCharges_GeneratorCharge_GST", model.OtherCharges_GeneratorCharge_GST ?? (object)DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@OtherCharges_Amount", model.OtherCharges_Amount ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@OtherCharges_GST", model.OtherCharges_GST ?? (object)DBNull.Value);
+
                     cmd.Parameters.AddWithValue("@OtherCharges_BookingNoteForCustomer", model.OtherCharges_BookingNoteForCustomer ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_InternalOfficeNote", model.OtherCharges_InternalOfficeNote ?? (object)DBNull.Value);
 
@@ -361,6 +385,7 @@ namespace ERPAdmin.ApiControllers
                     }
 
                     //NOTIFY 2 SEND WHATSAPP - NEW BOOKING CREATED
+                    #region SEND WHATSAPP
                     if (model.BookingId == 0 && isSendMsg)
                     {
                         List<string> variables = new List<string>
@@ -383,7 +408,38 @@ namespace ERPAdmin.ApiControllers
                             msgTemplate: msgTemplate
                         );
                     }
+                    #endregion
 
+                    //Reference Image Upload
+                    #region REFERENCE FILE UPLOAD
+                    if (!string.IsNullOrWhiteSpace(model.ReferenceImage))
+                    {
+                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.ReferenceImage);
+                        string folderPath = $"org/{domain}/BookingCalendar/";
+                        string filePrefix = $"BookingId_{bookingId}";
+
+                        _imageUploadService.DeleteImages(folderPath, filePrefix);
+
+                        string fileName = _imageUploadService.UploadImage(
+                            model.ReferenceImage,
+                            folderPath,
+                            filePrefix,
+                            fileType
+                        );
+
+                        using (SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con))
+                        {
+                            fileCmd.CommandType = CommandType.StoredProcedure;
+
+                            fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = bookingId;
+                            fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
+                            fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "BookingCalendar";
+
+                            fileCmd.ExecuteNonQuery();
+                        }
+                        model.ReferenceImage = fileName;
+                    }
+                    #endregion
 
                 }
 

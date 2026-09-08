@@ -755,6 +755,35 @@ let userId = 0;
 // Sample data (replace later with API fetch)
 let processes = [];
 
+//City - dropdown -- START ------------------------
+let cityList = [];
+function loadCityList() {
+    var payload = {
+        Id: 0,
+        StateId: 0
+    };
+
+    $.ajax({
+        url: "/api/City/GetCityList",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (res) {
+
+            if (res.status !== "Success") {
+                Swal.fire("Error", res.message, "error");
+                return;
+            }
+
+            cityList = res.data || [];
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Load City Error");
+        }
+    });
+}
+//City - dropdown -- END ------------------------
+
 //FOLLOWUP - START ------------------------------------------------------------------------------------------
 function loadFollowUpTypes() {
     $.ajax({
@@ -3618,14 +3647,14 @@ function loadEventTypeList() {
                 });
 
                 $("#eventTypeTable tbody").html(rows);
-                $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal").html(options);
+                $("#eventTypeDropdown,#booking_eventDropdown, #eventTypeDropdown_SubTypeModal").html(options);
                 $("#quotation_eventTypeId").html(options1);
                 //loadEventSubTypeList(eventTypeId);
             } else {
                 $("#eventTypeTable tbody").html(
                     `<tr> <td colspan="3" class="text-center text-danger">No records found</td></tr> `
                 );
-                $("#eventTypeDropdown, #eventTypeDropdown_SubTypeModal, #quotation_eventTypeId").html(`<option value = "0"> No Event Type Found</option> `);
+                $("#eventTypeDropdown, #booking_eventDropdown, #eventTypeDropdown_SubTypeModal, #quotation_eventTypeId").html(`<option value = "0"> No Event Type Found</option> `);
             }
         },
         error: function (xhr, status, error) {
@@ -3633,6 +3662,27 @@ function loadEventTypeList() {
         }
     });
 }
+
+// Event Type dropdown change event
+$(document).on("change", "#booking_eventDropdown", function () {
+    let selectedEventTypeId = $(this).val();
+    loadEventSubTypeList(selectedEventTypeId); // Pass selected EventTypeId
+});
+// When Sub Event changes
+$(document).on("change", "#booking_subEventDropdown", function () {
+    const selectedOption = $(this).find("option:selected");
+    const eventTypeId = selectedOption.data("eventtypeid");
+
+    const eventDropdown = $("#booking_eventDropdown");
+
+    // Auto assign EventType if not selected OR mismatch
+    if (eventTypeId && eventDropdown.val() != eventTypeId) {
+        eventDropdown.val(eventTypeId)
+            //.trigger("change")
+            ;
+    }
+});
+
 
 // Reset Event Type Form
 function resetEventTypeForm() {
@@ -3898,305 +3948,416 @@ function handleFile(file, dz, hb, fi) {
 //initDropzone("attachmentDropzone", "attachment", "attachmentBase64_enquiryMove");
 initDropzone("attachmentDropzone_followUp", "attachment_followUp", "attachmentBase64_followUp");
 
+/* =========================================================
+   CLOCK PICKER REUSABLE FUNCTION
+========================================================= */
 
-//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->
+function initializeClockPicker(config) {
 
-/* --------------------- 🕒 START TIME --------------------- */
-const input = document.getElementById('eventStart');
-const picker = document.getElementById('clockPicker');
-const hourDisplay = document.getElementById('hourDisplay');
-const minuteDisplay = document.getElementById('minuteDisplay');
-const hourHand = document.getElementById('hourHand');
-const minuteHand = document.getElementById('minuteHand');
-const amBtn = document.getElementById('amBtn');
-const pmBtn = document.getElementById('pmBtn');
-const setBtn = document.getElementById('setTimeBtn');
+    const input = document.getElementById(config.inputId);
+    const picker = document.getElementById(config.pickerId);
+    const hourDisplay = document.getElementById(config.hourDisplayId);
+    const minuteDisplay = document.getElementById(config.minuteDisplayId);
+    const hourHand = document.getElementById(config.hourHandId);
+    const minuteHand = document.getElementById(config.minuteHandId);
+    const amBtn = document.getElementById(config.amBtnId);
+    const pmBtn = document.getElementById(config.pmBtnId);
+    const setBtn = document.getElementById(config.setBtnId);
 
-let hour = 12;
-let minute = 0;
-let ampm = 'AM';
-let mode = 'hour';
-
-// Toggle picker visibility
-input.addEventListener('click', (e) => {
-    e.stopPropagation(); // prevent document click handler
-    initializePicker(input.value);
-    picker.classList.toggle('d-none');
-});
-
-// Initialize picker when opening
-function initializePicker(value) {
-    let time = value.trim();
-    if (!time) time = "12:00 AM"; // Default if empty
-
-    const [timePart, modifier] = time.split(" ");
-    let [h, m] = timePart.split(":").map(Number);
-
-    ampm = modifier || 'AM';
-    hour = h;
-    minute = m;
-
-    hourDisplay.textContent = hour.toString().padStart(2, '0');
-    minuteDisplay.textContent = minute.toString().padStart(2, '0');
-    hourHand.style.transform = `rotate(${hour * 30}deg)`;
-    minuteHand.style.transform = `rotate(${minute * 6}deg)`;
-
-    if (ampm === 'AM') {
-        amBtn.classList.add('active');
-        pmBtn.classList.remove('active');
-    } else {
-        pmBtn.classList.add('active');
-        amBtn.classList.remove('active');
+    if (!input || !picker || !hourDisplay || !minuteDisplay || !hourHand || !minuteHand || !amBtn || !pmBtn || !setBtn) {
+        console.warn("Clock picker element not found:", config);
+        return;
     }
 
-    setMode('hour');
-}
+    let hour = 12;
+    let minute = 0;
+    let ampm = "AM";
+    let mode = "hour";
 
-// Switch between hour/minute mode
-hourDisplay.addEventListener('click', () => setMode('hour'));
-minuteDisplay.addEventListener('click', () => setMode('minute'));
 
-function setMode(m) {
-    mode = m;
+    /* =========================================================
+       SHOW / HIDE PICKER
+    ========================================================= */
 
-    if (mode === 'hour') {
-        hourDisplay.classList.add('active-text');
-        minuteDisplay.classList.remove('active-text');
-        minuteDisplay.classList.add('inactive-text');
-        hourDisplay.classList.remove('inactive-text');
-        hourHand.classList.add('active-hand');
-        minuteHand.classList.remove('active-hand');
-    } else {
-        minuteDisplay.classList.add('active-text');
-        hourDisplay.classList.remove('active-text');
-        hourDisplay.classList.add('inactive-text');
-        minuteDisplay.classList.remove('inactive-text');
-        minuteHand.classList.add('active-hand');
-        hourHand.classList.remove('active-hand');
+    function showPicker() {
+
+        picker.classList.remove("d-none");
+
+        picker.classList.add("picker-transition");
+        picker.classList.add("picker-hide");
+
+        requestAnimationFrame(() => {
+            picker.classList.remove("picker-hide");
+        });
     }
-}
 
-function hidePickerSlowly(picker) {
-    picker.classList.add('picker-transition'); // ensure transition enabled
 
-    // Start fade-out
-    picker.classList.add('picker-hide');
+    function hidePicker() {
 
-    // After animation ends, fully hide
-    setTimeout(() => {
-        picker.classList.add('d-none');
-        picker.classList.remove('picker-hide');
-    }, 300); // match CSS duration
-}
+        picker.classList.add("picker-transition");
+        picker.classList.add("picker-hide");
 
-function showPicker(picker) {
-    picker.classList.remove('d-none');
-    picker.classList.add('picker-transition');
+        setTimeout(() => {
+            picker.classList.add("d-none");
+            picker.classList.remove("picker-hide");
+        }, 300);
+    }
 
-    // Start from hidden state
-    picker.classList.add('picker-hide');
 
-    // Fade-in after reflow
-    requestAnimationFrame(() => {
-        picker.classList.remove('picker-hide');
-    });
-}
+    /* =========================================================
+       INITIALIZE TIME
+    ========================================================= */
 
-// Handle number click
-picker.querySelectorAll('.clock-number').forEach(num => {
-    num.addEventListener('click', () => {
-        const value = parseInt(num.textContent);
-        if (mode === 'hour') {
-            hour = value;
-            hourDisplay.textContent = value.toString().padStart(2, '0');
-            hourHand.style.transform = `rotate(${value * 30}deg)`;
+    function initializeTime(value) {
+
+        let time = (value || "").trim();
+
+        if (!time) time = "12:00 AM";
+
+        const parts = time.split(" ");
+
+        const timePart = parts[0] || "12:00";
+        const modifier = parts[1] || "AM";
+
+        let [h, m] = timePart.split(":").map(Number);
+
+        hour = h || 12;
+        minute = m || 0;
+        ampm = modifier;
+
+
+        hourDisplay.textContent = hour.toString().padStart(2, "0");
+        minuteDisplay.textContent = minute.toString().padStart(2, "0");
+
+
+        hourHand.style.transform = `rotate(${(hour % 12) * 30}deg)`;
+        minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+
+
+        if (ampm === "AM") {
+
+            amBtn.classList.add("active");
+            pmBtn.classList.remove("active");
+
         } else {
-            minute = (value % 12) * 5;
-            minuteDisplay.textContent = minute.toString().padStart(2, '0');
-            minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+
+            pmBtn.classList.add("active");
+            amBtn.classList.remove("active");
+
         }
-    });
-});
 
-// AM/PM toggle
-amBtn.addEventListener('click', () => {
-    ampm = 'AM';
-    amBtn.classList.add('active');
-    pmBtn.classList.remove('active');
-});
-
-pmBtn.addEventListener('click', () => {
-    ampm = 'PM';
-    pmBtn.classList.add('active');
-    amBtn.classList.remove('active');
-});
-
-// Set time here1
-function setTimeStart() {
-    input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm} `;
-    //picker.classList.add('d-none');
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    hidePickerSlowly(picker);
-}
-setBtn.addEventListener('click', setTimeStart);
-
-// 🔹 Outside click handler
-document.addEventListener('click', (e) => {
-    if (!picker.contains(e.target) && e.target !== input) {
-        if (!picker.classList.contains('d-none')) {
-            setTimeStart(); // auto save selected time
-        }
-    }
-});
-
-setMode('hour');
-
-
-/* --------------------- 🕓 END TIME --------------------- */
-const inputEnd = document.getElementById('eventEnd');
-const pickerEnd = document.getElementById('clockPickerEnd');
-const hourDisplayEnd = document.getElementById('hourDisplayEnd');
-const minuteDisplayEnd = document.getElementById('minuteDisplayEnd');
-const hourHandEnd = document.getElementById('hourHandEnd');
-const minuteHandEnd = document.getElementById('minuteHandEnd');
-const amBtnEnd = document.getElementById('amBtnEnd');
-const pmBtnEnd = document.getElementById('pmBtnEnd');
-const setBtnEnd = document.getElementById('setTimeBtnEnd');
-
-let hourEnd = 12;
-let minuteEnd = 0;
-let ampmEnd = 'AM';
-let modeEnd = 'hour';
-
-inputEnd.addEventListener('click', (e) => {
-    e.stopPropagation();
-    initializePickerEnd(inputEnd.value);
-    pickerEnd.classList.toggle('d-none');
-});
-
-function initializePickerEnd(value) {
-    let time = value.trim();
-    if (!time) time = "12:00 AM";
-
-    const [timePart, modifier] = time.split(" ");
-    let [h, m] = timePart.split(":").map(Number);
-
-    ampmEnd = modifier || 'AM';
-    hourEnd = h;
-    minuteEnd = m;
-
-    hourDisplayEnd.textContent = hourEnd.toString().padStart(2, '0');
-    minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
-    hourHandEnd.style.transform = `rotate(${hourEnd * 30}deg)`;
-    minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
-
-    if (ampmEnd === 'AM') {
-        amBtnEnd.classList.add('active');
-        pmBtnEnd.classList.remove('active');
-    } else {
-        pmBtnEnd.classList.add('active');
-        amBtnEnd.classList.remove('active');
+        setMode("hour");
     }
 
-    setModeEnd('hour');
-}
 
-hourDisplayEnd.addEventListener('click', () => setModeEnd('hour'));
-minuteDisplayEnd.addEventListener('click', () => setModeEnd('minute'));
+    /* =========================================================
+       HOUR / MINUTE MODE
+    ========================================================= */
 
-function setModeEnd(m) {
-    modeEnd = m;
+    function setMode(selectedMode) {
 
-    if (modeEnd === 'hour') {
-        hourDisplayEnd.classList.add('active-text');
-        minuteDisplayEnd.classList.remove('active-text');
-        minuteDisplayEnd.classList.add('inactive-text');
-        hourDisplayEnd.classList.remove('inactive-text');
-        hourHandEnd.classList.add('active-hand');
-        minuteHandEnd.classList.remove('active-hand');
-    } else {
-        minuteDisplayEnd.classList.add('active-text');
-        hourDisplayEnd.classList.remove('active-text');
-        hourDisplayEnd.classList.add('inactive-text');
-        minuteDisplayEnd.classList.remove('inactive-text');
-        minuteHandEnd.classList.add('active-hand');
-        hourHandEnd.classList.remove('active-hand');
-    }
-}
+        mode = selectedMode;
 
-pickerEnd.querySelectorAll('.clock-number').forEach(num => {
-    num.addEventListener('click', () => {
-        const value = parseInt(num.textContent);
-        if (modeEnd === 'hour') {
-            hourEnd = value;
-            hourDisplayEnd.textContent = value.toString().padStart(2, '0');
-            hourHandEnd.style.transform = `rotate(${value * 30}deg)`;
+        if (mode === "hour") {
+
+            hourDisplay.classList.add("active-text");
+            hourDisplay.classList.remove("inactive-text");
+
+            minuteDisplay.classList.remove("active-text");
+            minuteDisplay.classList.add("inactive-text");
+
+            hourHand.classList.add("active-hand");
+            minuteHand.classList.remove("active-hand");
+
         } else {
-            minuteEnd = (value % 12) * 5;
-            minuteDisplayEnd.textContent = minuteEnd.toString().padStart(2, '0');
-            minuteHandEnd.style.transform = `rotate(${minuteEnd * 6}deg)`;
-        }
-    });
-});
 
-amBtnEnd.addEventListener('click', () => {
-    ampmEnd = 'AM';
-    amBtnEnd.classList.add('active');
-    pmBtnEnd.classList.remove('active');
-});
+            minuteDisplay.classList.add("active-text");
+            minuteDisplay.classList.remove("inactive-text");
 
-pmBtnEnd.addEventListener('click', () => {
-    ampmEnd = 'PM';
-    pmBtnEnd.classList.add('active');
-    amBtnEnd.classList.remove('active');
-});
+            hourDisplay.classList.remove("active-text");
+            hourDisplay.classList.add("inactive-text");
 
-// Set time
-function setTimeEnd() {
-    inputEnd.value = `${hourDisplayEnd.textContent}:${minuteDisplayEnd.textContent} ${ampmEnd} `;
-    inputEnd.dispatchEvent(new Event("change", { bubbles: true }));
-    pickerEnd.classList.add('d-none');
-}
-setBtnEnd.addEventListener('click', setTimeEnd);
+            minuteHand.classList.add("active-hand");
+            hourHand.classList.remove("active-hand");
 
-// 🔹 Outside click handler
-document.addEventListener('click', (e) => {
-    if (!pickerEnd.contains(e.target) && e.target !== inputEnd) {
-        if (!pickerEnd.classList.contains('d-none')) {
-            setTimeEnd();
         }
     }
+
+
+    /* =========================================================
+       INPUT CLICK
+    ========================================================= */
+
+    input.addEventListener("click", function (e) {
+
+        e.stopPropagation();
+
+        initializeTime(input.value);
+
+        if (picker.classList.contains("d-none")) {
+            showPicker();
+        } else {
+            hidePicker();
+        }
+
+    });
+
+
+    /* =========================================================
+       HOUR / MINUTE DISPLAY CLICK
+    ========================================================= */
+
+    hourDisplay.addEventListener("click", function () {
+        setMode("hour");
+    });
+
+
+    minuteDisplay.addEventListener("click", function () {
+        setMode("minute");
+    });
+
+
+    /* =========================================================
+       CLOCK NUMBER CLICK
+    ========================================================= */
+
+    picker.querySelectorAll(".clock-number").forEach(function (num) {
+
+        num.addEventListener("click", function () {
+
+            const value = parseInt(num.textContent);
+
+            if (mode === "hour") {
+
+                hour = value;
+
+                hourDisplay.textContent = value.toString().padStart(2, "0");
+
+                hourHand.style.transform = `rotate(${(value % 12) * 30}deg)`;
+
+            } else {
+
+                minute = (value % 12) * 5;
+
+                minuteDisplay.textContent = minute.toString().padStart(2, "0");
+
+                minuteHand.style.transform = `rotate(${minute * 6}deg)`;
+
+            }
+
+        });
+
+    });
+
+
+    /* =========================================================
+       AM BUTTON
+    ========================================================= */
+
+    amBtn.addEventListener("click", function () {
+
+        ampm = "AM";
+
+        amBtn.classList.add("active");
+        pmBtn.classList.remove("active");
+
+    });
+
+
+    /* =========================================================
+       PM BUTTON
+    ========================================================= */
+
+    pmBtn.addEventListener("click", function () {
+
+        ampm = "PM";
+
+        pmBtn.classList.add("active");
+        amBtn.classList.remove("active");
+
+    });
+
+
+    /* =========================================================
+       SET TIME
+    ========================================================= */
+
+    function setTime() {
+
+        input.value = `${hourDisplay.textContent}:${minuteDisplay.textContent} ${ampm}`;
+
+        input.dispatchEvent(new Event("change", {
+            bubbles: true
+        }));
+
+        hidePicker();
+    }
+
+
+    setBtn.addEventListener("click", setTime);
+
+
+    /* =========================================================
+       OUTSIDE CLICK
+    ========================================================= */
+
+    document.addEventListener("click", function (e) {
+
+        if (!picker.contains(e.target) && e.target !== input) {
+
+            if (!picker.classList.contains("d-none")) {
+                setTime();
+            }
+
+        }
+
+    });
+
+
+    /* =========================================================
+       DEFAULT MODE
+    ========================================================= */
+
+    setMode("hour");
+
+}
+
+
+/* =========================================================
+   🟢 DEAL / ENQUIRY - START TIME
+========================================================= */
+
+initializeClockPicker({
+
+    inputId: "eventStart_enquiry",
+    pickerId: "clockPicker_enquiry",
+
+    hourDisplayId: "hourDisplay_enquiry",
+    minuteDisplayId: "minuteDisplay_enquiry",
+
+    hourHandId: "hourHand_enquiry",
+    minuteHandId: "minuteHand_enquiry",
+
+    amBtnId: "amBtn_enquiry",
+    pmBtnId: "pmBtn_enquiry",
+
+    setBtnId: "setTimeBtn_enquiry"
+
 });
 
-setModeEnd('hour');
-//<!-- Clock Time Design -- Delas -> START TIME & END TIME -- END -->
+
+/* =========================================================
+   🟢 DEAL / ENQUIRY - END TIME
+========================================================= */
+
+initializeClockPicker({
+
+    inputId: "eventEnd_enquiry",
+    pickerId: "clockPickerEnd_enquiry",
+
+    hourDisplayId: "hourDisplayEnd_enquiry",
+    minuteDisplayId: "minuteDisplayEnd_enquiry",
+
+    hourHandId: "hourHandEnd_enquiry",
+    minuteHandId: "minuteHandEnd_enquiry",
+
+    amBtnId: "amBtnEnd_enquiry",
+    pmBtnId: "pmBtnEnd_enquiry",
+
+    setBtnId: "setTimeBtnEnd_enquiry"
+
+});
+
+
+/* =========================================================
+   🔵 BOOKING - START TIME
+========================================================= */
+
+initializeClockPicker({
+
+    inputId: "eventStart",
+    pickerId: "clockPicker",
+
+    hourDisplayId: "hourDisplay",
+    minuteDisplayId: "minuteDisplay",
+
+    hourHandId: "hourHand",
+    minuteHandId: "minuteHand",
+
+    amBtnId: "amBtn",
+    pmBtnId: "pmBtn",
+
+    setBtnId: "setTimeBtn"
+
+});
+
+
+/* =========================================================
+   🔵 BOOKING - END TIME
+========================================================= */
+
+initializeClockPicker({
+
+    inputId: "eventEnd",
+    pickerId: "clockPickerEnd",
+
+    hourDisplayId: "hourDisplayEnd",
+    minuteDisplayId: "minuteDisplayEnd",
+
+    hourHandId: "hourHandEnd",
+    minuteHandId: "minuteHandEnd",
+
+    amBtnId: "amBtnEnd",
+    pmBtnId: "pmBtnEnd",
+
+    setBtnId: "setTimeBtnEnd"
+
+});
+
+
+
 
 //BOOKING CALENDAR DESIGN - START ----------------------------------------------------------------------
+function clearAllErrors() {
+    $(".error-msg").addClass("d-none");
+    $(".form-control, .form-select").removeClass("is-invalid");
+}
+
 function resetBooking() {
+    clearAllErrors();
     // Reset all form fields
     $("#bookingForm").trigger("reset");
+    $("#label_date_shift")
+        .text("")                     // clear visible text
+        .data("eventdate", null)      // clear stored date
+        .data("shiftid", null);       // clear stored shift
+
+    $("#eventStart").val("");
+    $("#eventEnd").val("");
+    
     // Reset any special fields
     $("#gstSwitch").prop("checked", false);
     $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
-    $("#foodPackageContainer .foodPackage_TotalValue").text("0");
+    $("#foodPackageContainer .foodPackage_TotalValue").text("₹ 0");
     $("#addonItemsContainer").empty();
     $("#headerSummaryContainer").empty();
 
-    //SET STATE 
-    const $stateDropdown = $("#clientStateDropdown");
-    // Find option with text "Gujarat"
-    const gujaratOption = $stateDropdown.find("option").filter(function () {
-        return $(this).text().trim().toLowerCase() === "gujarat";
-    });
-    if (gujaratOption.length > 0) {
-        $stateDropdown.val(gujaratOption.val()).trigger("change");
-    }
-    else {
-        $stateDropdown.val("0").trigger("change");
-    }
+    $("#booking_eventDropdown_div").show();
 
     // ✅ Store FULL package array in button as JSON
     $("#btnFoodLabels").data("foodpackage", "");
+
+    $('#foodPackage_PackageDropdown')
+        .removeAttr('data-selected-items')
+        .removeData('selected-items');
+    resetFoodPackages();
+
+    const now = new Date();
+    const paidTime =
+        String(now.getHours()).padStart(2, '0') + ":" +
+        String(now.getMinutes()).padStart(2, '0'); // + ":" +
+        //String(now.getSeconds()).padStart(2, '0');
+    $("#PaymentDetails_PaidTime").val(paidTime);
 
     // Reset amounts to defaults
     //resetOtherCharges(false);
@@ -4219,6 +4380,42 @@ function resetBooking() {
     if (defaultOption.length) {
         $("#PaymentDetails_AccountId").val(defaultOption.val());
     }
+
+    //SET STATE
+    const $stateDropdown = $("#clientStateDropdown");
+    // Find option with text "Gujarat"
+    const gujaratOption = $stateDropdown.find("option").filter(function () {
+        return $(this).text().trim().toLowerCase() === "gujarat";
+    });
+    if (gujaratOption.length > 0) {
+        $stateDropdown.val(gujaratOption.val()).trigger("change");
+    }
+    else {
+        $stateDropdown.val("0").trigger("change");
+    }
+ 
+    //guest
+    $("#bookingGuestContainer").empty();
+    addGuestRow();
+
+    $("#btnBook").prop("disabled", false);
+}
+
+function resetFoodPackages() {
+    // Remove all dynamically added blocks
+    $("#foodPackageContainer .food-block").remove();
+
+    // Reset first (static) row inputs
+    const $firstRow = $("#foodPackageContainer > .food-row");
+
+    $firstRow.find("select").val('0'); //.trigger('change');
+    $firstRow.find("input").val(0);
+    $firstRow.find(".foodPackage_TotalValue").text("₹ 0");
+
+    // Clear stored data (important)
+    $firstRow.find(".foodPackageDropdown").removeData("selected-items");
+    $firstRow.find(".foodPackage_AddOnItems").removeData("selected-addonitems");
+    addonCounter = 1;
 }
 function recalculatePaymentSummary() {
 
@@ -4239,9 +4436,8 @@ function recalculatePaymentSummary() {
 
     // 🔹 Extra Food Rows
     $(".foodPackage_TotalValue").each(function () {
-        let value = parseFloat($(this).text()) || 0;
+        let value = parseFloat($(this).text().replace(/₹|,/g, "").trim()) || 0;
         taxableAmount += value;
-        //console.log("defaultFoodTotal rows:", value);
     });
 
     // 🔹 Other Charges
@@ -4249,14 +4445,18 @@ function recalculatePaymentSummary() {
     let room = parseFloat($("#OtherCharges_RoomCharges_Amount").val()) || 0;
     let sound = parseFloat($("#OtherCharges_SoundSystem_Amount").val()) || 0;
     let projector = parseFloat($("#OtherCharges_ProjectorScreen_Amount").val()) || 0;
+    let electricityBill = parseFloat($("#OtherCharges_ElectricityBill_Amount").val()) || 0;
+    let generatorCharge = parseFloat($("#OtherCharges_GeneratorCharge_Amount").val()) || 0;
+    let otherCharges = parseFloat($("#OtherCharges_Amount").val()) || 0;
 
-    taxableAmount += decoration + room + sound + projector;
+    taxableAmount += decoration + room + sound + projector + electricityBill + generatorCharge + otherCharges;
+
     //console.log("decoration:", decoration);
     //console.log("room:", room);
     //console.log("sound:", sound);
     //console.log("projector:", projector);
 
-    $("#paymentSummary_TaxableAmount").text(taxableAmount.toFixed(2));
+    $("#paymentSummary_TaxableAmount").text("₹ " + formatINR(taxableAmount));
     //console.log("taxableAmount:", taxableAmount);
 
     // 🔹 GST
@@ -4266,40 +4466,118 @@ function recalculatePaymentSummary() {
     let sgst = isGSTEnabled ? totalGST / 2 : 0;
     let igst = 0;
 
-    $("#paymentSummary_CGST").text(cgst.toFixed(2));
-    $("#paymentSummary_SGST").text(sgst.toFixed(2));
-    $("#paymentSummary_IGST").text(igst.toFixed(2));
+    $("#paymentSummary_CGST").text("₹ " + formatINR(cgst));
+    $("#paymentSummary_SGST").text("₹ " + formatINR(sgst));
+    $("#paymentSummary_IGST").text("₹ " + formatINR(igst));
 
     let total = taxableAmount + cgst + sgst + igst;
 
-    $("#paymentSummary_Total").text(total.toFixed(2));
+    $("#paymentSummary_Total").text("₹ " + formatINR(total));
     //console.log("total:", total);
 
     applyBookingDiscount(total);
 }
+
 function applyBookingDiscount(totalAmount) {
 
-    let type = $("#paymentSummary_BookingAmount_Type").val();
-    let enteredValue = parseFloat($("#paymentSummary_BookingAmount_Amount").val()) || 0;
+    let type = $("#paymentSummary_BookingDiscount_Type").val();
+    let enteredValue = parseFloat($("#paymentSummary_BookingDiscount_Amount").val()) || 0;
 
     let bookingDiscount = 0;
 
     if (type == "1") {
         bookingDiscount = enteredValue;
-    }
-    else if (type == "2") {
+    } else if (type == "2") {
         bookingDiscount = (totalAmount * enteredValue) / 100;
     }
 
     if (bookingDiscount > totalAmount)
         bookingDiscount = totalAmount;
 
-    $("#paymentSummary_BookingAmount").text(bookingDiscount.toFixed(2));
+    $("#paymentSummary_BookingAmount").text("₹ " + formatINR(bookingDiscount));
 
     let payableAmount = totalAmount - bookingDiscount;
-
-    $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
+    //console.log("payableAmount:", formatINR(payableAmount));
+    $("#paymentSummary_payableAmount").text("₹ " + formatINR(payableAmount));
 }
+
+
+//GUEST -- START
+//FOR BOOKING MODAL - GUEST
+function loadGuestCityDropdown(ddl, selectedCityId = 0) {
+    ddl.empty();
+    ddl.append('<option value="">Select City</option>');
+
+    $.each(cityList, function (i, city) {
+        ddl.append(`
+            <option value="${city.Id}">
+                ${city.Name} (${city.StateName})
+            </option>
+        `);
+    });
+
+    if (selectedCityId > 0) {
+        ddl.val(selectedCityId);
+    }
+
+    //ddl.trigger("change");
+}
+
+function addGuestRow(selectedCityId = 0) {
+    const row = $("#guestRowTemplate").children().first().clone();
+
+    $("#bookingGuestContainer").append(row);
+
+    //row.find(".guest-city").select2({
+        //width: "100%"
+    //});
+
+    loadGuestCityDropdown(row.find(".guest-city"), selectedCityId);
+    updateGuestSrNo();
+    return row;
+}
+
+//ADD GUEST
+addGuestRow();
+$("#btnAddGuestRow").click(function () {
+    addGuestRow();
+});
+//REMOVE GUEST
+$(document).on("click", ".btnRemoveGuestRow", function () {
+    if ($("#bookingGuestContainer .guest-row").length <= 1) {
+        Swal.fire(
+            "Guest Required",
+            "At least one guest is required.",
+            "warning"
+        );
+        return;
+    }
+    $(this).closest(".guest-row").remove();
+    updateGuestSrNo();
+});
+
+//clear-dates
+$(document).on("click", ".btn-clear-dates", function () {
+    const row = $(this).closest(".guest-row"); // or adjust to your row class
+
+    row.find(".guest-dob").val("");
+    row.find(".guest-anniversary").val("");
+});
+//copy - Whatsapp No = Mobile No
+$(document).on("click", ".btn-copy-mobile", function () {
+    const row = $(this).closest(".guest-row"); // or your guest container
+    const mobile = row.find(".guest-mobile").val();
+    row.find(".guest-whatsapp").val(mobile);
+});
+function updateGuestSrNo() {
+    $("#bookingGuestContainer")
+        .children()
+        .each(function (index) {
+            $(this).find(".guest-srno").text("#" + (index + 1));
+        });
+}
+// Guest Modal -- END --------------------
+//GUEST -- END
 
 //SAVE BOOKING ------ START ------------------------------
 $("#btnBook").on("click", function () { saveBooking(); });
@@ -4382,6 +4660,29 @@ function validateBookingForm() {
     return isValid;
 }
 
+$("#BookingReferenceFile").on("change", function () {
+    const file = this.files[0];
+    if (!file) {
+        $("#BookingReferenceFile_Base64").val("");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const base64WithMime = e.target.result;
+
+        // Remove MIME type
+        // Example:
+        // data:application/pdf;base64,JVBERi0x...
+        // Result:
+        // JVBERi0x...
+        const base64 = base64WithMime.split(",")[1];
+        $("#BookingReferenceFile_Base64").val(base64);
+    };
+    reader.readAsDataURL(file);
+});
+
+
 function saveBooking() {
     console.log("saveBooking called");
 
@@ -4461,19 +4762,32 @@ function saveBooking() {
         OtherCharges_SoundSystem_GST: parseFloat($("#OtherCharges_SoundSystem_GST").val() || 0),
         OtherCharges_ProjectorScreen_Amount: parseFloat($("#OtherCharges_ProjectorScreen_Amount").val() || 0),
         OtherCharges_ProjectorScreen_GST: parseFloat($("#OtherCharges_ProjectorScreen_GST").val() || 0),
+        OtherCharges_ElectricityBill_Amount: parseFloat($("#OtherCharges_ElectricityBill_Amount").val() || 0),
+        OtherCharges_ElectricityBill_GST: parseFloat($("#OtherCharges_ElectricityBill_GST").val() || 0),
+
+        OtherCharges_GeneratorCharge_Amount: parseFloat($("#OtherCharges_GeneratorCharge_Amount").val() || 0),
+        OtherCharges_GeneratorCharge_GST: parseFloat($("#OtherCharges_GeneratorCharge_GST").val() || 0),
+
+        OtherCharges_Amount: parseFloat($("#OtherCharges_Amount").val() || 0),
+        OtherCharges_GST: parseFloat($("#OtherCharges_GST").val() || 0),
+
         OtherCharges_BookingNoteForCustomer: customerNote,
         OtherCharges_InternalOfficeNote: internalNote,
 
         // ✅ Payment Summary
-        PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text() || 0),
-        PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text() || 0),
-        PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text() || 0),
-        PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text() || 0),
-        PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text() || 0),
-        PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingAmount_Type").val() || 0),
-        PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingAmount_Amount").val() || 0),
-        PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text() || 0),
-        PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text() || 0),
+        PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text().replace(/₹|,/g, "").trim()) || 0,
+
+        PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingDiscount_Type").val() || 0),
+        PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingDiscount_Amount").val() || 0),
+
+        PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text().replace(/₹|,/g, "").trim()) || 0,
+
+        ReferenceImage: $("#BookingReferenceFile_Base64").val(),
 
         ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
@@ -4600,8 +4914,10 @@ function setGSTSwitch(isGSTAccepted) {
 function loadEnquiryList() {
     //showLoader();
     $.ajax({
-        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
-        type: "GET",
+        url: "/api/ClientMaster/GetClientMasterList",
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: 0 }), // Get all halls
         success: function (response) {
             //console.log("enquiry list response:", response);
             if (response.status === "Success") {
@@ -4610,14 +4926,14 @@ function loadEnquiryList() {
                 $.each(response.data, function (index, item) {
                     options += `
                                <option
-                                   value="${item.ClientEnquiryId}"
-                                   data-name="${item.ClientName || ''}"
-                                   data-email="${item.ClientEmail || ''}"
-                                   data-address="${item.ClientAddress || ''}"
-                                   data-contact="${item.ClientContact || ''}"
-                                   data-gstin="${item.ClientGSTIN || ''}"
-                                   data-stateid="${item.ClientStateId || ''}"
-                               >${item.ClientName} (${item.ClientContact})</option>`;
+                                   value="${item.Id}"
+                                   data-name="${item.Name || ''}"
+                                   data-email="${item.Email || ''}"
+                                   data-address="${item.Address || ''}"
+                                   data-contact="${item.Contact || ''}"
+                                   data-gstin="${item.GSTIN || ''}"
+                                   data-stateid="${item.StateId || ''}"
+                               >${item.Name} (${item.Contact})</option>`;
                 });
                 $("#clientEnquiryDropdown, #quotation_clientId").html(options);
 
@@ -4859,7 +5175,7 @@ $(document).on("input change", "#paymentSummary_BookingAmount_Type, #paymentSumm
         recalculatePaymentSummary();
     });
 
-$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount",
+$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount, #OtherCharges_ElectricityBill_Amount, #OtherCharges_GeneratorCharge_Amount, #OtherCharges_Amount",
     function () {
         recalculateAllOtherCharges();
         recalculatePaymentSummary();
@@ -4870,6 +5186,9 @@ function recalculateAllOtherCharges() {
     calculateOtherCharge("#OtherCharges_RoomCharges_Amount", "#OtherCharges_RoomCharges_GST");
     calculateOtherCharge("#OtherCharges_SoundSystem_Amount", "#OtherCharges_SoundSystem_GST");
     calculateOtherCharge("#OtherCharges_ProjectorScreen_Amount", "#OtherCharges_ProjectorScreen_GST");
+    calculateOtherCharge("#OtherCharges_ElectricityBill_Amount", "#OtherCharges_ElectricityBill_GST");
+    calculateOtherCharge("#OtherCharges_GeneratorCharge_Amount", "#OtherCharges_GeneratorCharge_GST");
+    calculateOtherCharge("#OtherCharges_Amount", "#OtherCharges_GST");
 }
 
 function calculateOtherCharge(amountSelector, gstSelector) {
@@ -5446,35 +5765,7 @@ function updateAddonButton(selectedItems) {
 //Food Addons ----- /END ------------------------------------------------------------------
 
 //< !--Booking Note - text Editor-- - START---->
-let editorsInitialized = false;
-document.getElementById('OtherCharges_ToggleEditorsBtn').addEventListener('click', function () {
-    const container = document.getElementById('OtherCharges_editorsContainer');
-
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-
-        // Initialize editors only once after showing
-        if (!editorsInitialized) {
-            // Customer editor
-            // window.otherCharges_customerEditor = new Quill('#otherCharges_customerEditor', {
-            //     theme: 'snow',
-            //     modules: { toolbar: toolbarOptions }
-            // });
-
-            // // Internal editor
-            // window.otherCharges_internalEditor = new Quill('#otherCharges_internalEditor', {
-            //     theme: 'snow',
-            //     modules: { toolbar: toolbarOptions }
-            // });
-
-            editorsInitialized = true;
-        }
-
-    }
-    else {
-        container.style.display = 'none';
-    }
-});
+let editorsInitialized = false; //here2
 
 // 1️⃣ Import parchment
 const Parchment = Quill.import('parchment');
@@ -5606,7 +5897,7 @@ function loadPaymentModeDropdown() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            //console.log("payment mode res:", res);
+            console.log("payment mode res:", res);
             const ddl = $("#PaymentDetails_Mode");
             ddl.empty().append('<option value="0">--Select--</option>');
 
@@ -5617,7 +5908,8 @@ function loadPaymentModeDropdown() {
                         ddl.append(`<option value="${pm.Id}">${pm.PaymentModeName}</option>
                         `);
                     });
-            } else {
+            } 
+            else {
                 Swal.fire("Error", res?.message || "Failed to load payment modes!", "error");
             }
         },

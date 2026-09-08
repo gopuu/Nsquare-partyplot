@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function resetGrid(){
     // Reset filters
-    $("#ddlCategory").val("0").trigger("change");
+    $("#ddlDetailCategory").val("0").trigger("change");
 
     // Update title
     updateExpenseReportTitle();
@@ -232,7 +232,8 @@ function loadCategoryDropdown(selectedId = 0) {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-            const dd = $("#ddlCategory");
+            console.log("category res:", res);
+            const dd = $("#ddlDetailCategory");
             dd.empty().append(`<option value="0">-- All --</option>`);
             if (res.status === "Success" && res.data.length > 0) {
                 res.data.forEach(item => {

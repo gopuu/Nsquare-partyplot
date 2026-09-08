@@ -565,7 +565,7 @@ function updatePackageCost() {
 
     let totalCharges = packageCost + gstAmount;
 
-    $("#foodPackage_TotalValue").text(totalCharges.toFixed(2));
+    $("#foodPackage_TotalValue").text("₹ " + totalCharges.toFixed(2));
 
     recalculatePaymentSummary();  // 🔥 IMPORTANT
 }
@@ -582,7 +582,7 @@ $(document).on("input change","#paymentSummary_BookingDiscount_Type, #paymentSum
         recalculatePaymentSummary();
 });
 
-$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount",
+$(document).on("input", "#OtherCharges_Decoration_Amount, #OtherCharges_RoomCharges_Amount, #OtherCharges_SoundSystem_Amount, #OtherCharges_ProjectorScreen_Amount, #OtherCharges_ElectricityBill_Amount, #OtherCharges_GeneratorCharge_Amount, #OtherCharges_Amount",
     function () {
         recalculateAllOtherCharges();
         recalculatePaymentSummary();
@@ -593,6 +593,9 @@ function recalculateAllOtherCharges() {
     calculateOtherCharge("#OtherCharges_RoomCharges_Amount", "#OtherCharges_RoomCharges_GST");
     calculateOtherCharge("#OtherCharges_SoundSystem_Amount", "#OtherCharges_SoundSystem_GST");
     calculateOtherCharge("#OtherCharges_ProjectorScreen_Amount", "#OtherCharges_ProjectorScreen_GST");
+    calculateOtherCharge("#OtherCharges_ElectricityBill_Amount", "#OtherCharges_ElectricityBill_GST");
+    calculateOtherCharge("#OtherCharges_GeneratorCharge_Amount", "#OtherCharges_GeneratorCharge_GST");
+    calculateOtherCharge("#OtherCharges_Amount", "#OtherCharges_GST");
 }
 
 function calculateOtherCharge(amountSelector, gstSelector) {
@@ -629,7 +632,7 @@ function calculateFoodRowTotals(rowElement) {
 
     let total = packageCost + gst;
     //console.log("total:", total, ", packageCost:", packageCost, ", gst:", gst);
-    $(rowElement).find(".foodPackage_TotalValue").text(total.toFixed(2));
+    $(rowElement).find(".foodPackage_TotalValue").text("₹ " + total.toFixed(2));
 
     recalculatePaymentSummary(); // 🔥 IMPORTANT
 }
@@ -818,23 +821,35 @@ addFoodBtn.addEventListener('click', () => {
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">Per Plate</label>
-                    <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Package Cost</label>
-                    <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Addons</label>
-                    <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
+                    </div>
                 </div>
                 <div class="col-md-1 d-none">
                     <label class="form-label">GST</label>
-                    <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
+                    </div>
                 </div>
                 <div class="col-md-4 d-flex align-items-center justify-content-between">
                     <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
-                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">0</span></span>
+                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">₹ 0</span></span>
                 </div>
             </div>
         `;
@@ -1173,7 +1188,7 @@ function updateAddonButton(selectedItems) {
     let total = selectedItems.reduce((sum, item) => sum + item.total, 0);
 
     // Update the button's total value
-    addonButton.next().find(".foodPackage_TotalValue").text(total.toFixed(2));
+    addonButton.next().find(".foodPackage_TotalValue").text("₹ " + formatINR(total));
 
     // Store the selected items for later use
     addonButton.data("selected-addonitems", selectedItems);
@@ -6000,6 +6015,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_RoomCharges").text((data.OtherCharges_RoomCharges_Amount + data.OtherCharges_RoomCharges_GST) || "0");
                     $("#bookingReport_SoundSystem").text((data.OtherCharges_SoundSystem_Amount + data.OtherCharges_SoundSystem_GST) || "0");
                     $("#bookingReport_ProjectorScreen").text((data.OtherCharges_ProjectorScreen_Amount + data.OtherCharges_ProjectorScreen_GST) || "0");
+                    $("#bookingReport_ElectricityBill").text((Number(data.OtherCharges_ElectricityBill_Amount || 0) + Number(data.OtherCharges_ElectricityBill_GST || 0)));
+                    $("#bookingReport_GeneratorCharge").text((Number(data.OtherCharges_GeneratorCharge_Amount || 0) + Number(data.OtherCharges_GeneratorCharge_GST || 0)));
+                    $("#bookingReport_OtherCharges").text((Number(data.OtherCharges_Amount || 0) + Number(data.OtherCharges_GST || 0)));
 
                     // Payment Trail
                     $("#bookingReport_DealAmount").text(data.PaymentSummary_Total || "0");
@@ -6035,6 +6053,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     //console.log("summary data:", data);
                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
                     $("#bookingReport_Reference").text(data?.Reference || "—");
+
+                    $("#bookingReport_ReferenceImage").html(
+                        data?.ReferenceImage
+                            ? `<a href="${data.ReferenceImage}" target="_blank" download class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-download"></i> Download File
+                               </a>`
+                            : "—"
+                    );
 
                     //data.InvoiceNo, data.ProformaInvoiceNo
                     setInvoiceButtons(data);
@@ -6111,6 +6137,15 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#OtherCharges_ProjectorScreen_Amount").val(data.OtherCharges_ProjectorScreen_Amount);
                     $("#OtherCharges_ProjectorScreen_GST").val(data.OtherCharges_ProjectorScreen_GST);
+
+                    $("#OtherCharges_ElectricityBill_Amount").val(data.OtherCharges_ElectricityBill_Amount);
+                    $("#OtherCharges_ElectricityBill_GST").val(data.OtherCharges_ElectricityBill_GST);
+
+                    $("#OtherCharges_GeneratorCharge_Amount").val(data.OtherCharges_GeneratorCharge_Amount);
+                    $("#OtherCharges_GeneratorCharge_GST").val(data.OtherCharges_GeneratorCharge_GST);
+
+                    $("#OtherCharges_Amount").val(data.OtherCharges_Amount);
+                    $("#OtherCharges_GST").val(data.OtherCharges_GST);
 
                     //payment summary
                     $("#paymentSummary_TaxableAmount").text(formatAmount(data.PaymentSummary_TaxableAmount));
@@ -6508,7 +6543,7 @@ function bindStaticFoodRow(pkg) {
     $("#foodPackage_PackageCost").val(pkg.PackageCost ?? 0);
     $("#foodPackage_Addons").val(pkg.Addons ?? 0);
     $("#foodPackage_GST").val(pkg.GST ?? 0);
-    $("#foodPackage_TotalValue").text(pkg.TotalCharges ?? 0);
+    $("#foodPackage_TotalValue").text("₹ " + pkg.TotalCharges ?? 0);
 
     // Addons
     const addOnsList = pkg.AddOnsList || [];
@@ -6587,7 +6622,7 @@ function createFoodBlock() {
                 </div>
                 <div class="col-md-4 d-flex align-items-center justify-content-between">
                     <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
-                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">0</span></span>
+                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">₹ 0</span></span>
                 </div>
             </div>
         `;
@@ -6619,15 +6654,15 @@ function bindDynamicFoodRow($block, pkg) {
         $dropdown.val(pkg.FoodPackageId); //.trigger('change');
     }, 0);
 
-    $row.find(".perPlate").val(pkg.PerPlate ?? 0);
-    $row.find(".packageCost").val(pkg.PackageCost ?? 0);
-    $row.find(".addonsCost").val(pkg.Addons ?? 0);
-    $row.find(".gstCost").val(pkg.GST ?? 0);
-    $row.find(".foodPackage_TotalValue").text(pkg.TotalCharges ?? 0);
+    $row.find(".perPlate").val("₹ " + pkg.PerPlate ?? 0);
+    $row.find(".packageCost").val("₹ " + pkg.PackageCost ?? 0);
+    $row.find(".addonsCost").val("₹ " + pkg.Addons ?? 0);
+    $row.find(".gstCost").val("₹ " + pkg.GST ?? 0);
+    $row.find(".foodPackage_TotalValue").text("₹ " + pkg.TotalCharges ?? 0);
 
     // Addons
     const addOnsList = pkg.AddOnsList || [];
-    console.log(".addOnsList:", addOnsList);
+    //console.log(".addOnsList:", addOnsList);
     const $addonBtn = $row.find(".foodPackage_AddOnItems");
     $addonBtn.data("selected-addonitems", addOnsList);
     updateAddonButton($addonBtn, addOnsList);
@@ -7087,6 +7122,28 @@ $(document).on('click', '.note-category-header', function () {
     $(this).find('.rotate-icon').toggleClass('open');
 });
 
+$("#BookingReferenceFile").on("change", function () {
+    const file = this.files[0];
+    if (!file) {
+        $("#BookingReferenceFile_Base64").val("");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const base64WithMime = e.target.result;
+
+        // Remove MIME type
+        // Example:
+        // data:application/pdf;base64,JVBERi0x...
+        // Result:
+        // JVBERi0x...
+        const base64 = base64WithMime.split(",")[1];
+        $("#BookingReferenceFile_Base64").val(base64);
+    };
+    reader.readAsDataURL(file);
+});
+
 function saveBooking() {
     if (!validateBookingForm()) {
         return;
@@ -7166,6 +7223,15 @@ function saveBooking() {
         OtherCharges_ProjectorScreen_Amount: parseFloat($("#OtherCharges_ProjectorScreen_Amount").val() || 0),
         OtherCharges_ProjectorScreen_GST: parseFloat($("#OtherCharges_ProjectorScreen_GST").val() || 0),
 
+        OtherCharges_ElectricityBill_Amount: parseFloat($("#OtherCharges_ElectricityBill_Amount").val() || 0),
+        OtherCharges_ElectricityBill_GST: parseFloat($("#OtherCharges_ElectricityBill_GST").val() || 0),
+
+        OtherCharges_GeneratorCharge_Amount: parseFloat($("#OtherCharges_GeneratorCharge_Amount").val() || 0),
+        OtherCharges_GeneratorCharge_GST: parseFloat($("#OtherCharges_GeneratorCharge_GST").val() || 0),
+
+        OtherCharges_Amount: parseFloat($("#OtherCharges_Amount").val() || 0),
+        OtherCharges_GST: parseFloat($("#OtherCharges_GST").val() || 0),
+
         OtherCharges_BookingNoteForCustomer: customerNote,
         OtherCharges_InternalOfficeNote: internalNote,
         Notes_FoodBeverage: notes_FoodBeverage,
@@ -7176,16 +7242,19 @@ function saveBooking() {
         Notes_FinancialInternal: notes_FinancialInternal,
 
         // ✅ Payment Summary
-        PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text() || 0),
-        PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text() || 0),
-        PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text() || 0),
-        PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text() || 0),
-        PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text() || 0),
+        PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_CGST: parseFloat($("#paymentSummary_CGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_SGST: parseFloat($("#paymentSummary_SGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_IGST: parseFloat($("#paymentSummary_IGST").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_Total: parseFloat($("#paymentSummary_Total").text().replace(/₹|,/g, "").trim()) || 0,
+
         PaymentSummary_BookingDiscount_Type_Id: parseInt($("#paymentSummary_BookingDiscount_Type").val() || 0),
         PaymentSummary_BookingDiscount_Type_Amount: parseFloat($("#paymentSummary_BookingDiscount_Amount").val() || 0),
-        PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text() || 0),
-        PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text() || 0),
 
+        PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text().replace(/₹|,/g, "").trim()) || 0,
+        PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text().replace(/₹|,/g, "").trim()) || 0,
+
+        ReferenceImage: $("#BookingReferenceFile_Base64").val(),
         ActionBy: userId
     };
 
@@ -7392,7 +7461,7 @@ function buildFoodPackageObject($row, isDynamic, $block = null) {
         PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
         AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
         GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
-        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text() || 0),
+        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
         MenuItems: selectedMenuItems,
         AddOns: selectedAddOnCharges
     };
@@ -7454,7 +7523,7 @@ function resetBooking() {
     // Reset any special fields
     $("#gstSwitch").prop("checked", false);
     $("#gstSwitchText").text("Off").removeClass("text-success").addClass("text-danger");  // Red for OFF
-    $("#foodPackageContainer .foodPackage_TotalValue").text("0");
+    $("#foodPackageContainer .foodPackage_TotalValue").text("₹ 0");
     $("#addonItemsContainer").empty();
     $("#headerSummaryContainer").empty();
 
@@ -7526,7 +7595,7 @@ function resetFoodPackages() {
 
     $firstRow.find("select").val('0'); //.trigger('change');
     $firstRow.find("input").val(0);
-    $firstRow.find(".foodPackage_TotalValue").text("0");
+    $firstRow.find(".foodPackage_TotalValue").text("₹ 0");
 
     // Clear stored data (important)
     $firstRow.find(".foodPackageDropdown").removeData("selected-items");
@@ -7552,9 +7621,8 @@ function recalculatePaymentSummary() {
 
     // 🔹 Extra Food Rows
     $(".foodPackage_TotalValue").each(function () {
-        let value = parseFloat($(this).text()) || 0;
+        let value = parseFloat($(this).text().replace(/₹|,/g, "").trim()) || 0;
         taxableAmount += value;
-        //console.log("defaultFoodTotal rows:", value);
     });
 
     // 🔹 Other Charges
@@ -7562,14 +7630,18 @@ function recalculatePaymentSummary() {
     let room = parseFloat($("#OtherCharges_RoomCharges_Amount").val()) || 0;
     let sound = parseFloat($("#OtherCharges_SoundSystem_Amount").val()) || 0;
     let projector = parseFloat($("#OtherCharges_ProjectorScreen_Amount").val()) || 0;
+    let electricityBill = parseFloat($("#OtherCharges_ElectricityBill_Amount").val()) || 0;
+    let generatorCharge = parseFloat($("#OtherCharges_GeneratorCharge_Amount").val()) || 0;
+    let otherCharges = parseFloat($("#OtherCharges_Amount").val()) || 0;
 
-    taxableAmount += decoration + room + sound + projector;
+    taxableAmount += decoration + room + sound + projector + electricityBill + generatorCharge + otherCharges;
+
     //console.log("decoration:", decoration);
     //console.log("room:", room);
     //console.log("sound:", sound);
     //console.log("projector:", projector);
 
-    $("#paymentSummary_TaxableAmount").text(taxableAmount.toFixed(2));
+    $("#paymentSummary_TaxableAmount").text("₹ " + formatINR(taxableAmount));
     //console.log("taxableAmount:", taxableAmount);
 
     // 🔹 GST
@@ -7579,13 +7651,13 @@ function recalculatePaymentSummary() {
     let sgst = isGSTEnabled ? totalGST / 2 : 0;
     let igst = 0;
 
-    $("#paymentSummary_CGST").text(cgst.toFixed(2));
-    $("#paymentSummary_SGST").text(sgst.toFixed(2));
-    $("#paymentSummary_IGST").text(igst.toFixed(2));
+    $("#paymentSummary_CGST").text("₹ " + formatINR(cgst));
+    $("#paymentSummary_SGST").text("₹ " + formatINR(sgst));
+    $("#paymentSummary_IGST").text("₹ " + formatINR(igst));
 
     let total = taxableAmount + cgst + sgst + igst;
 
-    $("#paymentSummary_Total").text(total.toFixed(2));
+    $("#paymentSummary_Total").text("₹ " + formatINR(total));
     //console.log("total:", total);
 
     applyBookingDiscount(total);
@@ -7607,11 +7679,11 @@ function applyBookingDiscount(totalAmount) {
     if (bookingDiscount > totalAmount)
         bookingDiscount = totalAmount;
 
-    $("#paymentSummary_BookingAmount").text(bookingDiscount.toFixed(2));
+    $("#paymentSummary_BookingAmount").text("₹ " + formatINR(bookingDiscount));
 
     let payableAmount = totalAmount - bookingDiscount;
-
-    $("#paymentSummary_payableAmount").text(payableAmount.toFixed(2));
+    //console.log("payableAmount:", formatINR(payableAmount));
+    $("#paymentSummary_payableAmount").text("₹ " + formatINR(payableAmount));
 }
 
 

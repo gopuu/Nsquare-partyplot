@@ -8,7 +8,10 @@
     ═══════════════════════════════════════════════════ */
     public class IncomeSummaryGridRequest
     {
-        public string? Month { get; set; } // yyyy-MM
+        public string FromDate { get; set; } = "";
+        public string ToDate { get; set; } = "";
+        public string FilterDuration { get; set; } = "";
+        //public string? Month { get; set; } // yyyy-MM
         public long CategoryId { get; set; } = 0;
     }
 
@@ -37,7 +40,10 @@
     ═══════════════════════════════════════════════════ */
     public class IncomeSummaryReportRequest : BaseClass
     {
-        public string? Month { get; set; } // yyyy-MM
+        public string FromDate { get; set; } = "";
+        public string ToDate { get; set; } = "";
+        public string FilterDuration { get; set; } = "";
+        //public string? Month { get; set; } // yyyy-MM
         public long CategoryId { get; set; } = 0;
 
         public List<string>? Columns { get; set; }

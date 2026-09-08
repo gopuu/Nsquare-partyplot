@@ -2318,6 +2318,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         }
     });
 }
+
 //Bookimg Summary - Package DATA -- START ------------------
 function renderFoodPackages(packages) {
     let html_services = "";
@@ -2543,13 +2544,13 @@ function fetchData(isGenerated) {
     const payload = {
         BookingId: 0,
         NameEmailContact: $('#fltSearch').val() || null,
-        SlotId: $('#fltSlot').val() || 0,
+        SlotId: Number($('#fltSlot').val() || 0),
         EventFrom: $('#fltEventFrom').val() || null,
         EventTo: $('#fltEventTo').val() || null,
         BookedFrom: $('#fltBookedFrom').val() || null,
         BookedTill: $('#fltBookedTill').val() || null,
-        SubEventId: $('#fltEvent').val() || 0,
-        PaymentStatusId: $('#fltPaymentStatus').val() || 0,
+        SubEventId: Number($('#fltEvent').val() || 0),
+        PaymentStatusId: Number($('#fltPaymentStatus').val() || 0),
         IsInvoiceGenerated: isInvoiceGenerated,
         IsExclusiveOfGST: isExclusiveOfGST,
         IsInclusiveOfGST: isInclusiveOfGST,
@@ -2624,17 +2625,40 @@ function renderTable(data, totals) {
                 data: null,
                 title: 'Invoice No',
                 name: 'InvoiceNo',
-                render: function (row) {
+                render: function (data, type, row) {
 
                     const invoiceNo = row.FinalInvoiceNo !== null && row.FinalInvoiceNo !== undefined && row.FinalInvoiceNo !== "0"
-                        ? row.FinalInvoiceNo
-                            : null;
+                        ? String(row.FinalInvoiceNo)
+                        : "";
 
-                    if (invoiceNo) {
-                        return `<strong>${invoiceNo}</strong>`;
+                    // Sorting
+                    if (type === "sort" || type === "type") {
+
+                        // Empty / "-" should come first
+                        if (!invoiceNo) {
+                            return "000000";
+                        }
+
+                        // Numeric invoices: 1, 2, 3...
+                        if (/^\d+$/.test(invoiceNo)) {
+                            return "100000" + invoiceNo.padStart(10, "0");
+                        }
+
+                        // GST invoices: A1, A2, A10...
+                        const match = invoiceNo.match(/^([A-Za-z]+)(\d+)$/);
+
+                        if (match) {
+                            const prefix = match[1];
+                            const number = match[2];
+
+                            return "200000" + prefix + number.padStart(10, "0");
+                        }
+
+                        return "300000" + invoiceNo;
                     }
 
-                    return '-';
+                    // Display
+                    return invoiceNo ? `<strong>${invoiceNo}</strong>` : "-";
                 }
             },
 
