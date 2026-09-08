@@ -17,30 +17,6 @@ var proformaInvoiceNo = 0;
 var gstInvoiceNo = 0;
 let invoiceType = null;
 
-//< !--Booking Note - text Editor-- - START---->
-// ✅ Register formats FIRST (only once)
-const Parchment = Quill.import('parchment');
-
-const SizeStyle = new Parchment.Attributor.Style('size', 'font-size', {
-    scope: Parchment.Scope.INLINE,
-    whitelist: ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px']
-});
-Quill.register(SizeStyle, true);
-
-const LineHeightStyle = new Parchment.Attributor.Style('lineheight', 'line-height', {
-    scope: Parchment.Scope.BLOCK,
-    whitelist: ['1.0', '1.2', '1.4', '1.5', '1.6', '2.0', '3.0']
-});
-Quill.register(LineHeightStyle, true);
-
-// Toolbar
-const toolbarOptions = [
-    ['bold', 'italic', 'underline'],
-    [{ size: ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px'] }],
-    [{ list: 'ordered' }, { list: 'bullet' }]
-];
-
-
 // Optional: Auto-correct minute/hour inputs
 
 // <!--Reschedule-->
@@ -577,6 +553,7 @@ $(document).on("input", ".food-block .pax, .food-block .perPlate, .food-block .a
     const row = $(this).closest(".food-block");
     calculateFoodRowTotals(row);
 });
+
 $(document).on("input change","#paymentSummary_BookingDiscount_Type, #paymentSummary_BookingDiscount_Amount",
     function () {
         recalculatePaymentSummary();
@@ -2726,11 +2703,8 @@ function attachShiftClickListeners() {
 
                 // ✅ CASE 1: Only ONE booking → open directly
                 if (count === 1 && matchedBookings.length === 1) {
-
                     const b = matchedBookings[0];
-
                     resetBooking();
-
                     $("#BookingId").val(b.BookingId);
 
                     $("#label_date_shift")
@@ -2962,12 +2936,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     getNextInvoiceNumbers();
 
+    //layout_fetchData_Settings();
     AppSignalR.subscribeSettings((data) => {
         //console.log("Settings Page Update", data);
         //window.location.reload();
         //console.log("page refresh");
         //loadBookingCalendar();
         populateYearDropdown();
+        //layout_fetchData_Settings();
     });
 
     // When Addon Modal is about to open
@@ -4862,10 +4838,10 @@ function recalcRow(row) {
     row.find('.igst').val(igst.toFixed(2));
     row.find('.total').val(total.toFixed(2));
 }
-function recalcAll() {
+function recalcAll(isManualTaxable = false) {
 
     let subTotal = 0;
-    let totalTaxable = 0;
+    let calculatedTaxable = 0;
     let totalGST = 0;
     let totalDiscount = 0;
 
@@ -4873,7 +4849,9 @@ function recalcAll() {
 
     let rows = $('#invoiceModal_invoiceItemsBody tr');
 
-    // ✅ Step 1: Sum totals
+    // ==========================================
+    // Step 1: Sum totals
+    // ==========================================
     rows.each(function () {
         const row = $(this);
 
@@ -4885,36 +4863,91 @@ function recalcAll() {
         let discountamount = parseFloat(row.find('.discountamount').val()) || 0;
 
         subTotal += total;
-        totalTaxable += taxable;
+        calculatedTaxable += taxable;
         totalGST += (cgst + sgst + igst);
         totalDiscount += discountamount;
     });
 
-    // ✅ Step 2: Set fixed subtotal once
-    //if (isInclusiveGST && fixedSubTotal === 0) {
-    //    fixedSubTotal = subTotal;
-    //}
+    // ==========================================
+    // Step 2: Get Total Taxable
+    // ==========================================
+    let totalTaxable;
 
-    // ✅ Step 3: Show totals (NO clamp, NO adjustment)
+    if (isManualTaxable) {
+        totalTaxable = parseFloat($('#invoiceModal_totalTaxable').val()) || 0;
+    } else {
+        totalTaxable = calculatedTaxable;
+        $('#invoiceModal_totalTaxable').val(totalTaxable.toFixed(2));
+    }
+
+    // ==========================================
+    // Step 3: Get Total Non-Taxable
+    // ==========================================
+    const totalNonTaxable = parseFloat($('#invoiceModal_totalNonTaxable').val()) || 0;
+
+    // ==========================================
+    // Step 4: Show totals
+    // ==========================================
     $('#invoiceModal_bookingDiscount').val(totalDiscount.toFixed(2));
     $('#invoiceModal_subTotal').val(subTotal.toFixed(2));
-    $('#invoiceModal_totalTaxable').val(totalTaxable.toFixed(2));
     $('#invoiceModal_totalGST').val(totalGST.toFixed(2));
 
     updateInvoiceTitle(totalGST);
 
-    // ✅ Step 4: Grand total
+    // ==========================================
+    // Step 5: Grand Total
+    // ==========================================
     const discount = parseFloat($('#invoiceModal_bookingDiscount').val()) || 0;
-    const grandTotal = totalTaxable + totalGST - discount;
+
+    const grandTotal = totalTaxable + totalNonTaxable + totalGST - discount;
+
     $('#invoiceModal_grandTotal').val(grandTotal.toFixed(2));
 
+    // ==========================================
+    // Step 6: Round Off
+    // ==========================================
     let roundedTotal = Math.round(grandTotal);
+
     $('#invoiceModal_roundOff').val(roundedTotal.toFixed(2));
 
+    // ==========================================
+    // Step 7: Balance Amount
+    // ==========================================
     const advance = parseFloat($('#invoiceModal_advancePaid').val()) || 0;
+
     $('#invoiceModal_balanceAmount, #invoiceModal_invoicePayment_DueBalance, #invoiceModal_invoicePayment_originalDueAmount')
         .val((roundedTotal - advance).toFixed(2));
 }
+
+
+// ==========================================
+// Total Non-Taxable Change
+// ==========================================
+$(document).on('input change', '#invoiceModal_totalNonTaxable', function () {
+
+    let value = parseFloat($(this).val()) || 0;
+    if (value < 0) {
+        value = 0;
+    }
+
+    $(this).val(value);
+    recalcAll();
+});
+
+
+// ==========================================
+// Total Taxable Change
+// ==========================================
+$(document).on('input change', '#invoiceModal_totalTaxable', function () {
+
+    let value = parseFloat($(this).val()) || 0;
+    if (value < 0) {
+        value = 0;
+    }
+
+    $(this).val(value);
+    recalcAll(true);
+});
 
 let fixedSubTotal = 0;
 function setFixedSubTotal() {
@@ -4945,7 +4978,6 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
     };
     //console.log("payload fetchInvoiceByBookingId:", payload);
     $.ajax({
-
         url: '/api/CustomerInvoice/GetCustomerInvoiceByBookingId', // adjust if needed
         type: 'POST',
         contentType: 'application/json',
@@ -5251,6 +5283,7 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
         SubTotal: parseFloat($('#invoiceModal_subTotal').val()) || 0,
         BookingDiscount: parseFloat($('#invoiceModal_bookingDiscount').val()) || 0,
         TotalTaxableAmount: parseFloat($('#invoiceModal_totalTaxable').val()) || 0,
+        TotalNonTaxableAmount: parseFloat($('#invoiceModal_totalNonTaxable').val()) || 0,
         TotalDiscountAcrossAllServices: 0,     // if not used
         TotalGST: totalGst,
         TotalVAT: 0,
@@ -6176,13 +6209,6 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#OtherCharges_customerNote").val(data.OtherCharges_BookingNoteForCustomer || '');
                     $("#OtherCharges_internalNote").val(data.OtherCharges_InternalOfficeNote || '');
-
-                    $("#Notes_FoodBeverage").val(data.Notes_FoodBeverage || '');
-                    $("#Notes_EventTiming").val(data.Notes_EventTiming || '');
-                    $("#Notes_DecorationSetup").val(data.Notes_DecorationSetup || '');
-                    $("#Notes_TechnicalService").val(data.Notes_TechnicalService || '');
-                    $("#Notes_GuestCustom").val(data.Notes_GuestCustom || '');
-                    $("#Notes_FinancialInternal").val(data.Notes_FinancialInternal || '');
 
                     //NOTES -for edit
                     const notes = data.JSON_Notes ?? [];
@@ -7145,9 +7171,12 @@ $("#BookingReferenceFile").on("change", function () {
 });
 
 function saveBooking() {
+    console.log("saveBooking1");
     if (!validateBookingForm()) {
         return;
     }
+    console.log("saveBooking2");
+
     //const form = $("#bookingForm");
     const $label = $("#label_date_shift");
 
@@ -7157,14 +7186,7 @@ function saveBooking() {
     var customerNote = $("#OtherCharges_customerNote").val().trim();
     var internalNote = $("#OtherCharges_internalNote").val().trim();
 
-    var notes_FoodBeverage = $("#Notes_FoodBeverage").val().trim();
-    var notes_EventTiming = $("#Notes_EventTiming").val().trim();
-    var notes_DecorationSetup = $("#Notes_DecorationSetup").val().trim();
-    var notes_TechnicalService = $("#Notes_TechnicalService").val().trim();
-    var notes_GuestCustom = $("#Notes_GuestCustom").val().trim();
-    var notes_FinancialInternal = $("#Notes_FinancialInternal").val().trim();
-
-
+    console.log("saveBooking3");
     // 🔹 1. Collect Booking Data
     const bookingData = {
         BookingId: parseInt($("#BookingId").val() || 0),
@@ -7234,12 +7256,6 @@ function saveBooking() {
 
         OtherCharges_BookingNoteForCustomer: customerNote,
         OtherCharges_InternalOfficeNote: internalNote,
-        Notes_FoodBeverage: notes_FoodBeverage,
-        Notes_EventTiming: notes_EventTiming,
-        Notes_DecorationSetup: notes_DecorationSetup,
-        Notes_TechnicalService: notes_TechnicalService,
-        Notes_GuestCustom: notes_GuestCustom,
-        Notes_FinancialInternal: notes_FinancialInternal,
 
         // ✅ Payment Summary
         PaymentSummary_TaxableAmount: parseFloat($("#paymentSummary_TaxableAmount").text().replace(/₹|,/g, "").trim()) || 0,
@@ -7257,6 +7273,7 @@ function saveBooking() {
         ReferenceImage: $("#BookingReferenceFile_Base64").val(),
         ActionBy: userId
     };
+    console.log("saveBooking4");
 
     // 🔹 2. Build Food Packages JSON --here
     const foodPackages = [];
@@ -7274,6 +7291,7 @@ function saveBooking() {
     });
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
+    console.log("saveBooking5");
 
     //NOTES
     let notes = [];
@@ -7339,6 +7357,7 @@ function saveBooking() {
 
     });
     bookingData.JSON_Notes = notes;
+    console.log("saveBooking6");
 
     const guests = [];
     $("#bookingGuestContainer .guest-row").each(function () {
@@ -7356,6 +7375,7 @@ function saveBooking() {
     });
     //console.log(JSON.stringify(guests));
     bookingData.JSON_Guests = guests;
+    console.log("saveBooking7");
 
     console.log("Final Booking JSON:", bookingData);
 
@@ -7642,6 +7662,7 @@ function recalculatePaymentSummary() {
     //console.log("projector:", projector);
 
     $("#paymentSummary_TaxableAmount").text("₹ " + formatINR(taxableAmount));
+
     //console.log("taxableAmount:", taxableAmount);
 
     // 🔹 GST

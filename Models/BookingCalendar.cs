@@ -260,14 +260,6 @@
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
 
-        public string? Notes_FoodBeverage { get; set; }
-        public string? Notes_EventTiming { get; set; }
-        public string? Notes_DecorationSetup { get; set; }
-        public string? Notes_TechnicalService { get; set; }
-        public string? Notes_GuestCustom { get; set; }
-        public string? Notes_FinancialInternal { get; set; }
-
-
         public decimal? PaymentSummary_TaxableAmount { get; set; }
         public decimal? PaymentSummary_CGST { get; set; }
         public decimal? PaymentSummary_SGST { get; set; }
@@ -451,13 +443,6 @@
         public string? ReferenceImage { get; set; }
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
-        public string? Notes_FoodBeverage { get; set; }
-        public string? Notes_EventTiming { get; set; }
-        public string? Notes_DecorationSetup { get; set; }
-        public string? Notes_TechnicalService { get; set; }
-        public string? Notes_GuestCustom { get; set; }
-        public string? Notes_FinancialInternal { get; set; }
-
 
         public decimal PaymentSummary_TaxableAmount { get; set; }
         public decimal PaymentSummary_CGST { get; set; }

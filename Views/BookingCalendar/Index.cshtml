@@ -707,7 +707,7 @@
                                     <input type="file"
                                            id="BookingReferenceFile"
                                            class="form-control"
-                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                                           accept=".jpg,.jpeg,.png">
 
                                     <div class="form-text">
                                         Select booking reference document or image.
@@ -715,60 +715,6 @@
 
                                     <!-- Base64 without MIME -->
                                     <input type="hidden" id="BookingReferenceFile_Base64">
-                                </div>
-
-                                <!-- Food & Beverage Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold">Food & Beverage Notes</label>
-                                    <textarea id="Notes_FoodBeverage"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter food & beverage notes"></textarea>
-                                </div>
-
-                                <!-- Event Timing Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold">Event Timing Notes</label>
-                                    <textarea id="Notes_EventTiming"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter event timing notes"></textarea>
-                                </div>
-
-                                <!-- Decoration Setup Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold">Decoration Setup Notes</label>
-                                    <textarea id="Notes_DecorationSetup"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter decoration setup notes"></textarea>
-                                </div>
-
-                                <!-- Technical Service Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold">Technical Service Notes</label>
-                                    <textarea id="Notes_TechnicalService"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter technical service notes"></textarea>
-                                </div>
-
-                                <!-- Guest Custom Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold">Guest Custom Notes</label>
-                                    <textarea id="Notes_GuestCustom"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter guest custom notes"></textarea>
-                                </div>
-
-                                <!-- Financial Internal Notes -->
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label class="form-label fw-bold text-danger">Financial Internal Notes</label>
-                                    <textarea id="Notes_FinancialInternal"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Enter financial internal notes"></textarea>
                                 </div>
 
                             </div>
@@ -800,7 +746,7 @@
 
                                                 <div class="col-md-4">
                                                     <label class="form-label mb-1">
-                                                        Guest Name <span class="guest-srno">#1</span>
+                                                        <span class="guest-srno">#1</span> Guest Name
                                                     </label>
                                                     <input type="text" class="form-control form-control-sm guest-name">
                                                 </div>
@@ -1843,18 +1789,24 @@
                         <div class="totals-box border rounded p-3 bg-light">
 
                             <div class="total-row">
-                                <span>Booking Discount</span>
+                                <span>Total Taxable</span>
                                 <input type="number"
-                                       id="invoiceModal_bookingDiscount"
+                                       id="invoiceModal_totalTaxable"
+                                       class="form-control form-control-sm text-end">
+                            </div>
+
+                            <div class="total-row showLimit_section">
+                                <span>Total Non-Taxable</span>
+                                <input type="number"
+                                       id="invoiceModal_totalNonTaxable"
                                        class="form-control form-control-sm text-end">
                             </div>
 
                             <div class="total-row">
-                                <span>Total Taxable</span>
+                                <span>Booking Discount</span>
                                 <input type="number"
-                                       id="invoiceModal_totalTaxable"
-                                       class="form-control form-control-sm text-end"
-                                       readonly>
+                                       id="invoiceModal_bookingDiscount"
+                                       class="form-control form-control-sm text-end">
                             </div>
 
                             <div class="total-row">
@@ -2928,8 +2880,6 @@
 
 
 <!--Booking Note - text Editor --- START ---->
-<link href="/assets2/css/quill.snow.css" rel="stylesheet">
-<script src="/assets2/js/quill.js"></script>
 <script src="/assets2/js/jquery.dataTables.min.js"></script>
 <script src="/assets2/js/dataTables.bootstrap5.min.js"></script>
 @*<script src="/assets2/js/bootstrap.bundle.min.js"></script>*@

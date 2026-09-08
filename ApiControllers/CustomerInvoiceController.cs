@@ -740,6 +740,7 @@ namespace ERPAdmin.ApiControllers
                                 SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                                 BookingDiscount = Convert.ToDecimal(dr["BookingDiscount"]),
                                 TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
+                                TotalNonTaxableAmount = Convert.ToDecimal(dr["TotalNonTaxableAmount"]),
                                 TotalDiscountAcrossAllServices = Convert.ToDecimal(dr["TotalDiscountAcrossAllServices"]),
                                 TotalGST = Convert.ToDecimal(dr["TotalGST"]),
                                 TotalVAT = Convert.ToDecimal(dr["TotalVAT"]),
@@ -788,7 +789,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
-                long invoiceId=0;
+                long invoiceId=0, GSTinvoiceId=0, normalInvoiceId=0;
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
@@ -843,6 +844,7 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@SubTotal", request.SubTotal);
                     cmd.Parameters.AddWithValue("@BookingDiscount", request.BookingDiscount);
                     cmd.Parameters.AddWithValue("@TotalTaxableAmount", request.TotalTaxableAmount);
+                    cmd.Parameters.AddWithValue("@TotalNonTaxableAmount", request.TotalNonTaxableAmount);
                     cmd.Parameters.AddWithValue("@TotalDiscountAcrossAllServices", request.TotalDiscountAcrossAllServices);
                     cmd.Parameters.AddWithValue("@TotalGST", request.TotalGST);
                     cmd.Parameters.AddWithValue("@TotalVAT", request.TotalVAT);
@@ -876,6 +878,8 @@ namespace ERPAdmin.ApiControllers
                         {
                             //bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
                             invoiceId = reader["CustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["CustomerInvoiceId"]) : 0;
+                            GSTinvoiceId = reader["GSTCustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["GSTCustomerInvoiceId"]) : 0;
+                            normalInvoiceId = reader["NormalCustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["NormalCustomerInvoiceId"]) : 0;
 
                             whatsapp_client_contactno = reader["Client_Contact"]?.ToString() ?? "";
 

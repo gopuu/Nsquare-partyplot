@@ -355,17 +355,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //settings
     // initial fetch
-    //layout_fetchData_Settings();
-
+    layout_fetchData_Settings();
     // realtime admin updates
-    /*
     if (!window._settingsSubscribed) {
         window._settingsSubscribed = true;
         AppSignalR.subscribeSettings(() => {
             layout_fetchData_Settings();
         });
     }
-    */
 
     //LIVE DATE-TIME ------
     // Run immediately
@@ -540,53 +537,68 @@ window.AppSettings = {
 };
 
 function applyShowLimit() {
+    console.log("showLimit_section:", window.AppSettings.showLimit);
 
-    $(".showLimit_section").toggleClass(
-        "d-none",
-        window.AppSettings.showLimit
-    );
+    /*
+    $(".showLimit_section").each(function () {
+        $(this).toggleClass("d-none", window.AppSettings.showLimit);
+    });
+    */
+
+    if (window.AppSettings.showLimit === true) {
+        $(".showLimit_section").addClass("d-none");
+    } 
+    else {
+        $(".showLimit_section").removeClass("d-none");
+    }
 }
 
 function updateShowLimitSetting(settingsData) {
 
-    if (!Array.isArray(settingsData)) return;
+    if (!Array.isArray(settingsData)) {
+        window.AppSettings.showLimit = false;
+        applyShowLimit();
+        return;
+    }
 
     const showLimitItem = settingsData.find(x =>
-        x.Name?.trim().toLowerCase() === "show limit"
+        String(x.Name || "").trim().toLowerCase() === "show limit"
     );
 
+    const value = String(showLimitItem?.Value ?? "").trim().toLowerCase();
+
     window.AppSettings.showLimit =
-        showLimitItem?.Value?.toString().toLowerCase() === "true"
-        || showLimitItem?.Value == "1";
+        value === "true" ||
+        value === "1";
+
+    console.log("Show Limit:", window.AppSettings.showLimit);
+    console.log("Elements:", $(".showLimit_section").length);
 
     applyShowLimit();
 
-    // optional global event
-    $(document).trigger(
-        "showLimitChanged",
-        [window.AppSettings.showLimit]
-    );
+    $(document).trigger("showLimitChanged", [window.AppSettings.showLimit]);
 }
 
 function layout_fetchData_Settings() {
+    console.trace("layout_fetchData_Settings CALLED");
+    const apiUrl = "/api/Settings/GetSettings";
+    console.log("Calling:", apiUrl);
+
     $.ajax({
-        url: "/api/Settings/GetSettings",
+        url: apiUrl,
         method: "POST",
         contentType: "application/json",
+        dataType: "json",
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
-            //data = response; // Store the fetched data
-            console.log("response fetchData. :", response);
-            var data = response.data;
-            //renderTable(data);
-            updateShowLimitSetting(data || []);
+            console.log("Settings SUCCESS:", response);
+            updateShowLimitSetting(response.data);
         },
-        error: function (xhr, statue, error) {
-            handleApiError(xhr, statue, error, "Fetch Settings Failed.");
+        error: function (xhr, status, error) {
+            console.log("Settings FAILED:", xhr, status, error);
         }
     });
 }
-
 
 function fetchBalance_Layout() {
     let companyId = sessionStorage.getItem("companyid") || 1;

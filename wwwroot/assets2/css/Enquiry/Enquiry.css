@@ -1,4 +1,102 @@
-﻿/*FOLLOW UP REMIANDER - START*/
+﻿/* ====== NOTES - BOOKING VIEW-- START =====*/
+.booking-note-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+    .booking-note-row:last-child {
+        border-bottom: none;
+    }
+
+.booking-note-name {
+    width: 240px;
+    font-weight: 600;
+    color: #495057;
+    flex-shrink: 0;
+}
+
+.booking-note-value {
+    width: auto;
+    flex-shrink: 0;
+}
+
+.booking-note-remarks {
+    flex: 1;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.booking-note-value .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    margin-right: 4px;
+}
+/* ====== NOTES - BOOKING VIEW-- END =====*/
+
+/* ====== NOTES - BOOKING INPUT-- START =====*/
+.note-category-card {
+    background: #eaedf1;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.note-options {
+    margin-top: 10px;
+}
+
+.note-remarks {
+    margin-top: 10px;
+}
+
+.rotate-icon {
+    transition: .2s;
+}
+
+    .rotate-icon.open {
+        transform: rotate(180deg);
+    }
+
+.note-subcategory {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f1f1;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+    .note-subcategory:hover {
+        background: #eef6ff;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .note-subcategory:last-child {
+        border-bottom: none;
+    }
+
+.note-category-header {
+    padding: 12px 15px;
+}
+
+.note-category-body {
+    padding: 15px;
+}
+
+.note-subcategory .form-check {
+    margin-bottom: 0;
+}
+
+.note-subcategory .form-switch {
+    padding-top: 4px;
+}
+/* ====== NOTES -- END =====*/
+
+
+/*FOLLOW UP REMIANDER - START*/
 .reminder-card {
     border: 1px solid #dee2e6;
     border-radius: 10px;

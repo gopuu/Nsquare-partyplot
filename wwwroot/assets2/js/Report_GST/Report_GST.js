@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadColumnCheckboxes();
 
     //settings
+    /*
     layout_fetchData_Settings();
     // realtime admin updates
     if (!window._settingsSubscribed) {
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
             layout_fetchData_Settings();
         });
     }
+    */
 
     /* ── Quick range ── */
     $("#quickRange").on("change", function () {

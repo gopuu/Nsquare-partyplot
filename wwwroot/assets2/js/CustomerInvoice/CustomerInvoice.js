@@ -250,7 +250,9 @@ $(function () {
         sessionStorage.removeItem("IsShowTotalSalesList");
     }
 
+    restoreFiltersFromSession();
     fetchData(flag_isGeneratedInvoice);
+
     loadSubEventList();
     loadSlotDropdown();
     getNextInvoiceNumbers();
@@ -263,10 +265,13 @@ $(function () {
     loadAccountDropdown();
     loadPaymentModeDropdown();
 
+    //layout_fetchData_Settings();
     AppSignalR.subscribeSettings((data) => {
         //console.log("Settings Page Update", data);
         window.location.reload();
+        restoreFiltersFromSession();
         fetchData(flag_isGeneratedInvoice);
+        //layout_fetchData_Settings();
     });
 
     //SUMMARY -- START 
@@ -730,6 +735,7 @@ $(function () {
             SubTotal: parseFloat($('#subTotal').val()) || 0,
             BookingDiscount: parseFloat($('#bookingDiscount').val()) || 0,
             TotalTaxableAmount: parseFloat($('#totalTaxable').val()) || 0,
+            TotalNonTaxableAmount: parseFloat($('#totalNonTaxable').val()) || 0,
             TotalDiscountAcrossAllServices: 0,     // if not used
             TotalGST: totalGst,
             TotalVAT: 0,
@@ -1829,17 +1835,20 @@ function recalcRow(row) {
     recalcAll();
 }
 
-function recalcAll() {
+function recalcAll(isManualTaxable = false) {
 
     let subTotal = 0;
-    let totalTaxable = 0;
+    let calculatedTaxable = 0;
     let totalGST = 0;
     let totalDiscount = 0;
 
     const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
 
     let rows = $('#invoiceItemsBody tr');
-    // ✅ Step 1: Sum totals
+
+    // ==========================================
+    // Step 1: Sum invoice item totals
+    // ==========================================
     rows.each(function () {
         const row = $(this);
 
@@ -1849,69 +1858,111 @@ function recalcAll() {
         let cgst = parseFloat(row.find('.cgst').val()) || 0;
         let sgst = parseFloat(row.find('.sgst').val()) || 0;
         let igst = parseFloat(row.find('.igst').val()) || 0;
+
         let discountamount = parseFloat(row.find('.discountamount').val()) || 0;
 
         subTotal += total;
-        totalTaxable += taxable;
+        calculatedTaxable += taxable;
         totalGST += (cgst + sgst + igst);
         totalDiscount += discountamount;
     });
 
-    // ✅ Step 2: Set fixed subtotal once
-    //if (isInclusiveGST && fixedSubTotal === 0) {
-    //    fixedSubTotal = subTotal;
-    //}
+    // ==========================================
+    // Step 2: Get Taxable Amount
+    // ==========================================
+    let totalTaxable;
 
-    // ✅ Step 3: Show totals (NO clamp, NO adjustment)
+    if (isManualTaxable) {
+        totalTaxable = parseFloat($('#totalTaxable').val()) || 0;
+    } else {
+        totalTaxable = calculatedTaxable;
+        $('#totalTaxable').val(totalTaxable.toFixed(2));
+    }
+
+    // ==========================================
+    // Step 3: Get Non-Taxable Amount
+    // ==========================================
+    const totalNonTaxable = parseFloat($('#totalNonTaxable').val()) || 0;
+
+    // ==========================================
+    // Step 4: Set Totals
+    // ==========================================
     $('#bookingDiscount').val(totalDiscount.toFixed(2));
     $('#subTotal').val(subTotal.toFixed(2));
-    $('#totalTaxable').val(totalTaxable.toFixed(2));
     $('#totalGST').val(totalGST.toFixed(2));
 
     updateInvoiceTitle(totalGST);
 
-    // ✅ Step 4: Grand total
-    const discount = parseFloat($('#bookingDiscount').val()) || 0;
-    const grandTotal = totalTaxable + totalGST; // - discount;
+    // ==========================================
+    // Step 5: Grand Total
+    // ==========================================
+    const grandTotal = totalTaxable + totalGST + totalNonTaxable - totalDiscount;
+
     $('#grandTotal').val(grandTotal.toFixed(2));
 
-    let roundedTotal = Math.round(grandTotal);
+    // ==========================================
+    // Step 6: Round Off
+    // ==========================================
+    const roundedTotal = Math.round(grandTotal);
+
     $('#roundOff').val(roundedTotal.toFixed(2));
 
+    // ==========================================
+    // Step 7: Balance
+    // ==========================================
     calculateBalance();
 }
+
+$(document).on('input change', '#totalNonTaxable', function () {
+    let value = parseFloat($(this).val()) || 0;
+    if (value < 0) {
+        value = 0;
+    }
+
+    $(this).val(value);
+    recalcAll();
+});
+$(document).on('input change', '#totalTaxable', function () {
+    let value = parseFloat($(this).val()) || 0;
+    if (value < 0) {
+        value = 0;
+    }
+
+    $(this).val(value);
+    recalcAll(true);
+});
 function calculateBalance() {
     const roundedTotal = parseFloat($('#roundOff').val()) || 0;
     const advance = parseFloat($('#advancePaid').val()) || 0;
 
     const balance = roundedTotal - advance;
 
-    // Show absolute value if overpaid
-    const displayBalance = balance; // < 0 ? Math.abs(balance) : balance;
+    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val(balance.toFixed(2));
 
-    $('#balanceAmount, #invoicePayment_DueBalance, #invoicePayment_originalDueAmount').val(displayBalance.toFixed(2));
-    //$("#invoicePayment_DueBalance").prop("readonly", true);
-
-    // Label handling
     if (balance < 0) {
+
         $("#label_balance")
             .text("Overpaid (Refund Required)")
             .removeClass("text-success")
             .addClass("text-danger");
+
     }
     else if (balance === 0) {
+
         $("#label_balance")
             .text("Settled")
             .removeClass("text-danger")
             .addClass("text-success");
+
     }
     else {
+
         $("#label_balance")
             .text("Balance Due")
             .removeClass("text-danger text-success");
+
     }
 }
-
 
 let fixedSubTotal = 0;
 function setFixedSubTotal() {
@@ -1920,6 +1971,7 @@ function setFixedSubTotal() {
 
 //proforma & invoice -- fetch EDIT -- START
 function fetchInvoiceById(params) {
+    console.log("fetchInvoiceById params:", params);
     $.ajax({
         url: '/api/CustomerInvoice/GetCustomerInvoiceById',
         type: 'POST',
@@ -1928,11 +1980,7 @@ function fetchInvoiceById(params) {
         success: function (res) {
 
             if (res.status !== 'Success' || !res.data) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invoice Not Found',
-                    text: 'Invoice data not found'
-                });
+                handleApiSuccess("Invoice data not found");
                 return;
             }
             const data = res.data;
@@ -1956,6 +2004,7 @@ function fetchInvoiceById(params) {
             $('#subTotal').val(data.SubTotal);
             $('#bookingDiscount').val(data.BookingDiscount);
             $('#totalTaxable').val(data.TotalTaxableAmount);
+            $('#totalNonTaxable').val(data.TotalNonTaxableAmount);
             $('#totalGST').val(data.TotalGST);
             // Call after setting GST
             updateInvoiceTitle(data.TotalGST);
@@ -2519,6 +2568,65 @@ function getNextInvoiceNumbers() {
     });
 }
 
+//SESSIONS -- START
+const BOOKING_FILTER_SESSION_KEY = "bookingGridFilters";
+function saveFiltersToSession(payload) {
+    sessionStorage.setItem(BOOKING_FILTER_SESSION_KEY, JSON.stringify(payload));
+}
+function loadFiltersFromSession() {
+    const savedData = sessionStorage.getItem(BOOKING_FILTER_SESSION_KEY);
+
+    if (!savedData) return null;
+
+    try {
+        return JSON.parse(savedData);
+    } catch (error) {
+        console.error("Failed to parse saved filters:", error);
+        return null;
+    }
+}
+function clearFiltersFromSession() {
+    sessionStorage.removeItem(BOOKING_FILTER_SESSION_KEY);
+}
+function restoreFiltersFromSession() {
+
+    const filters = loadFiltersFromSession();
+
+    if (!filters) {
+        console.log("No saved filters found.");
+        return false;
+    }
+
+    console.log("Restoring filters:", filters);
+
+    $('#fltSearch').val(filters.NameEmailContact || '');
+    $('#fltSlot').val(filters.SlotId || 0);
+    $('#fltEventFrom').val(filters.EventFrom || '');
+    $('#fltEventTo').val(filters.EventTo || '');
+    $('#fltBookedFrom').val(filters.BookedFrom || '');
+    $('#fltBookedTill').val(filters.BookedTill || '');
+    $('#fltEvent').val(filters.SubEventId || 0);
+    $('#fltPaymentStatus').val(filters.PaymentStatusId || 0);
+
+    if (filters.IsInvoiceGenerated === null || filters.IsInvoiceGenerated === undefined) {
+        $('#fltIsInvoiceGenerated').val('');
+    } else {
+        $('#fltIsInvoiceGenerated').val(filters.IsInvoiceGenerated.toString());
+    }
+
+    selectedMonthDuration = filters.FilterDuration || "thismonth";
+    const selectedOption = $('.sort-option[data-value="' + selectedMonthDuration + '"]');
+
+    if (selectedOption.length > 0) {
+        $(".sort-option").removeClass("active");
+        selectedOption.addClass("active");
+        $("#sortByDropdown").text("Filter : " + selectedOption.text().trim());
+    }
+
+    return true;
+}
+//SESSIONS -- END
+
 function fetchData(isGenerated) {
     //console.log("isGenerated:", isGenerated);
     // 🔥 session-based override
@@ -2556,6 +2664,8 @@ function fetchData(isGenerated) {
         IsInclusiveOfGST: isInclusiveOfGST,
         FilterDuration: selectedMonthDuration || null
     };
+    // Save filters in session
+    saveFiltersToSession(payload);
     console.log("GRID payload:", payload);
 
     $.ajax({
@@ -3022,7 +3132,7 @@ function resetForm() {
     $('#invoicePayment_DueBalance').val("0.00").prop('readonly', true);
     $('#advancePaid').val("0.00").attr('readonly', true);
 
-    $('#subTotal, #bookingDiscount, #totalTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
+    $('#subTotal, #bookingDiscount, #totalTaxable, #totalNonTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
 
     $('#invoiceItemsBody').empty();
     $('#btnSaveInvoice').prop('disabled', false);

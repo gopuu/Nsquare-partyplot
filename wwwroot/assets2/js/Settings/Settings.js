@@ -215,8 +215,8 @@ function fetchData() {
             var data = response.data;
             renderTable(data);
         },
-        error: function (xhr, statue, error) {
-            handleApiError(xhr, statue, error, "Fetch Settings Failed");
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Fetch Settings Failed");
         }
     });
 }

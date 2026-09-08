@@ -1,31 +1,14 @@
-﻿function setShiftTime_enq(shiftAbbr = null, dealData = null) {
-    console.log("setShiftTime_enq():", shiftAbbr);
-    if (shiftAbbr == null) {
-        const times = shiftTimes[shiftAbbr];
-        if (!times) return; // invalid shift — do nothing
+﻿function setShiftTime(shiftAbbr) {
+    //console.log("shiftTimes:", shiftTimes, ", shiftAbbr:", shiftAbbr);
 
-        // Parse start time
-        const [startH, startM, startAMPM] = times.start.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-        $("#startHour").val(startH);
-        $("#startMinute").val(startM);
-        $("#startAMPM").val(startAMPM);
+    const times = shiftTimes[shiftAbbr];
+    if (!times) return;
 
-        // Parse end time
-        const [endH, endM, endAMPM] = times.end.match(/(\d+):(\d+)\s*(AM|PM)/).slice(1);
-        $("#endHour").val(endH);
-        $("#endMinute").val(endM);
-        $("#endAMPM").val(endAMPM);
-    }
-    else {
-        $("#startHour").val(dealData.StartHH);
-        $("#startMinute").val(dealData.StartMM);
-        $("#startAMPM").val(dealData.StartAMPM);
+    //$("#eventStart").val(convertTo24Hour(times.start));
+    //$("#eventEnd").val(convertTo24Hour(times.end));
 
-        $("#endHour").val(dealData.EndHH);
-        $("#endMinute").val(dealData.EndMM);
-        $("#endAMPM").val(dealData.EndAMPM);
-    }
-
+    $("#eventStart").val(times.start);
+    $("#eventEnd").val(times.end);
 }
 
 //QUOTATION - START ------------------------------------------------------------------------------------------
@@ -417,7 +400,6 @@ $(document).on("click", ".btn-edit-quotation, .btn-view-quotation", function () 
     });
 });
 function enableQuotationForm() {
-
     $("#quotationModal")
         .find("input, select, textarea, button")
         .prop("disabled", false);
@@ -729,9 +711,12 @@ function loadSlotMaster() {
 
             shiftMap = {};
             shiftTimes = {};
+            shiftNames = [];   // reset
             response.data.forEach(s => {
                 // SLOT ABBREVIATIONS
                 const code = s.Code;
+
+                shiftNames.push(s.Code);
                 // Dynamic full name mapping
                 shiftMap[code] = s.Name;
                 // Dynamic time mapping
@@ -1929,7 +1914,7 @@ function enableDragDrop() {
                         dealData = JSON.parse(draggedCard.dataset.deal);
                         console.log("=== CONFIRMED DEAL DATA ===");
                         // Optional: pretty print
-                        console.table(dealData);
+                        //console.table(dealData);
                     }
                     catch (err) {
                         console.error("Error parsing deal data:", err);
@@ -1942,6 +1927,7 @@ function enableDragDrop() {
                     const dateStr_ISO = dealData.EventDate;
                     const shift = dealData.ShiftCode;
                     const shiftname = dealData.ShiftFullName; // fallback if not found
+
                     const date = dateStr;
                     const dateiso = dateStr_ISO;
                     const hallid = dealData.HallId;
@@ -1951,29 +1937,25 @@ function enableDragDrop() {
                     $("#BookingId").val(bookingId);
                     // 🟢 Update label content & attributes - using jQuery
                     $("#label_date_shift")
-                        .text(`${date}, ${shiftname} Slot`)        // visible text
+                        .text(`${dateStr_Format}, ${shiftname} Slot`)        // visible text
                         .attr("data-eventdate", dateiso)           // yyyy-mm-dd
                         .attr("data-shiftid", shift);              // FD, MO, etc.
                     $("#banquetDropdown").val(hallid);
-                    $("#clientEnquiryDropdown").val(dealData.EnquiryDealId).trigger("change");
+                    $("#clientEnquiryDropdown").val(dealData.EnquiryDealId).trigger("change").prop("disabled", true);
 
                     $("#booking_pax").val(dealData.Pax);
                     //console.log("booking_pax:", dealData.Pax);
 
-                    console.log("A - Before setShiftTime_enq");
-                    console.log("shift:", shift);
                     console.log("dealData:", dealData);
-
-                    setShiftTime_enq(shift, dealData);
-
-                    console.log("B - After setShiftTime_enq");
+                    setShiftTime(dealData.ShiftCode);
+                    //console.log("B - After setShiftTime_enq");
 
                     $("#PaymentDetails_DueDate").val('');
 
                     $("#fromDate").val(dateiso); //.prop("disabled", true);
                     $("#toDate").val(dateiso);
 
-                    $("#booking_subEventDropdown").val(booking_subEventDropdown);
+                    $("#booking_subEventDropdown").val(booking_subEventDropdown).trigger("change");
 
                     $("#title_bookingModal").text("Add Booking Details");
                     console.log("open booking modal");
@@ -2917,17 +2899,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         setTimeout(function () {
                             $("#clientEnquiryDropdown")
                                 .val(response.data.EnquiryDealId)
-                                .trigger("change");
+                                .trigger("change").prop("disabled", true);
                         }, 5000);
 
                         $("#booking_pax").val(enquiryData.Pax);
 
-                        setShiftTime_enq(null, response.data);
+                        setShiftTime(shift);
+
                         $("#PaymentDetails_DueDate").val('');
                         console.log("ib-dateiso:", dateiso);
                         $("#fromDate").val(dateiso); //.prop("disabled", true);
                         $("#toDate").val(dateiso);
-                        $("#booking_subEventDropdown").val(enquiryData.EventSubTypeId);
+                        $("#booking_subEventDropdown").val(enquiryData.EventSubTypeId).trigger("change");
 
                         $("#title_bookingModal").text("Add Booking Details");
                         $("#bookingModal").modal("show");
@@ -4322,7 +4305,6 @@ function clearAllErrors() {
     $(".error-msg").addClass("d-none");
     $(".form-control, .form-select").removeClass("is-invalid");
 }
-
 function resetBooking() {
     clearAllErrors();
     // Reset all form fields
@@ -4361,7 +4343,6 @@ function resetBooking() {
 
     // Reset amounts to defaults
     //resetOtherCharges(false);
-    recalculatePaymentSummary();
     $("#Section_PaymentDetails").show();
     //console.log("Booking form reset completed.");
 
@@ -4394,6 +4375,8 @@ function resetBooking() {
         $stateDropdown.val("0").trigger("change");
     }
  
+    recalculatePaymentSummary();
+
     //guest
     $("#bookingGuestContainer").empty();
     addGuestRow();
@@ -4525,7 +4508,6 @@ function loadGuestCityDropdown(ddl, selectedCityId = 0) {
 
 function addGuestRow(selectedCityId = 0) {
     const row = $("#guestRowTemplate").children().first().clone();
-
     $("#bookingGuestContainer").append(row);
 
     //row.find(".guest-city").select2({
@@ -4660,6 +4642,230 @@ function validateBookingForm() {
     return isValid;
 }
 
+loadBookingNotesMaster();
+function loadBookingNotesMaster() {
+    $.ajax({
+        url: '/api/BookingCalendar/GetBookingCalendar_NotesMaster',
+        type: 'GET',
+        success: function (response) {
+            //console.log("Notes Master Response:", response);
+            if (!response || response.status !== 'Success') {
+                console.error("Invalid response");
+                return;
+            }
+            renderNotesMaster(response.data || []);
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load Notes Master Data");
+        }
+    });
+}
+
+function renderNotesMaster(categories) {
+    let html = '';
+    (categories || []).forEach(category => {
+        html += `
+            <div class="note-category-card mb-2">
+
+                <div class="note-category-header d-flex justify-content-between align-items-center cursor-pointer" data-categoryid="${category.CategoryId}">
+                    <span class="fw-bold">${category.Name}</span>
+                    <i class="fa fa-chevron-down rotate-icon"></i>
+                </div>
+
+                <div class="note-category-body p-3 border-top">
+        `;
+
+        (category.SubCategories || []).forEach(sub => {
+            html += `
+                <div class="note-subcategory row align-items-center mb-1"
+                     data-categoryid="${category.CategoryId}"
+                     data-subcategoryid="${sub.SubCategoryId}">
+
+                    <div class="col-md-3">
+                        <label class="fw-semibold text-secondary mb-0">
+                            ${sub.Name}
+                        </label>
+                    </div>
+
+                    <div class="col-md-3">
+            `;
+
+            //------------------------------------------
+            // MultiSelect
+            //------------------------------------------
+
+            if (sub.InputType === "MultiSelect") {
+                html += `<div class="d-flex flex-wrap gap-3">`;
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <div class="form-check">
+                            <input
+                                class="form-check-input note-option"
+                                type="checkbox"
+                                data-categoryid="${category.CategoryId}"
+                                data-subcategoryid="${sub.SubCategoryId}"
+                                data-optionid="${option.SubCategoryOptionId}">
+
+                            <label class="form-check-label">
+                                ${option.OptionName}
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            //------------------------------------------
+            // Select
+            //------------------------------------------
+            else if (sub.InputType === "Select") {
+                html += `<div class="d-flex flex-wrap gap-3">`;
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <div class="form-check">
+                            <input
+                                class="form-check-input note-option"
+                                type="radio"
+                                name="radio_${sub.SubCategoryId}"
+                                data-categoryid="${category.CategoryId}"
+                                data-subcategoryid="${sub.SubCategoryId}"
+                                data-optionid="${option.SubCategoryOptionId}">
+
+                            <label class="form-check-label">
+                                ${option.OptionName}
+                            </label>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            //------------------------------------------
+            // Dropdown
+            //------------------------------------------
+            else if (sub.InputType === "Dropdown") {
+                html += `
+                    <select class="form-select form-select-sm note-dropdown"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+
+                        <option value="">Select</option>
+                `;
+                (sub.Options || []).forEach(option => {
+                    html += `
+                        <option value="${option.SubCategoryOptionId}">
+                            ${option.OptionName}
+                        </option>
+                    `;
+                });
+                html += `</select>`;
+            }
+
+            //------------------------------------------
+            // Text
+            //------------------------------------------
+            else if (sub.InputType === "Text") {
+                html += `
+                    <input
+                        type="text"
+                        class="form-control form-control-sm note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Number
+            //------------------------------------------
+            else if (sub.InputType === "Number") {
+                html += `
+                    <input
+                        type="number"
+                        class="form-control form-control-sm note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Date
+            //------------------------------------------
+            else if (sub.InputType === "Date") {
+                html += `
+                    <input
+                        type="date"
+                        class="form-control form-control-sm note-text-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                `;
+            }
+
+            //------------------------------------------
+            // Time
+            //------------------------------------------
+            else if (sub.InputType === "Time") {
+                html += `
+                    <select
+                        class="form-select form-select-sm note-time-value"
+                        data-categoryid="${category.CategoryId}"
+                        data-subcategoryid="${sub.SubCategoryId}">
+                        <option value="">Select Time</option>
+                    </select>
+                `;
+            }
+
+            //------------------------------------------
+            // Boolean
+            //------------------------------------------
+            else if (sub.InputType === "Boolean") {
+                html += `
+                    <div class="form-check form-switch">
+                        <input
+                            class="form-check-input note-boolean"
+                            type="checkbox"
+                            data-categoryid="${category.CategoryId}"
+                            data-subcategoryid="${sub.SubCategoryId}">
+                    </div>
+                `;
+            }
+
+            //------------------------------------------
+            // Close Input Column
+            //------------------------------------------
+            html += `
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text"
+                            class="form-control form-control-sm note-remarks"
+                            placeholder="Remarks"
+                            data-categoryid="${category.CategoryId}"
+                            data-subcategoryid="${sub.SubCategoryId}">
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    $('#notesContainer').html(html);
+
+    $('#notesContainer .note-time-value').each(function () {
+        fillTimeDropdown(this, 5, false);
+    });
+}
+
+$(document).on('click', '.note-category-header', function () {
+    const body = $(this).next('.note-category-body');
+    body.slideToggle(100);
+    $(this).find('.rotate-icon').toggleClass('open');
+});
+
+
 $("#BookingReferenceFile").on("change", function () {
     const file = this.files[0];
     if (!file) {
@@ -4682,6 +4888,47 @@ $("#BookingReferenceFile").on("change", function () {
     reader.readAsDataURL(file);
 });
 
+function buildFoodPackageObject($row, isDynamic, $block = null) {
+
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedMenuItems = $dropdown.data("selected-items") || [];
+
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
+
+    const foodPackage = {
+        Id: parseInt($row.find(".package_row_id").val() || 0),
+        PackageId: parseInt($dropdown.val() || 0),
+        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
+        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
+        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
+        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
+        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
+        MenuItems: selectedMenuItems,
+        AddOns: selectedAddOnCharges
+    };
+
+    if (isDynamic && $block) {
+        const name = $block.find('input[placeholder="Addon Food Package Name"]').val() || '';
+        const pax = $block.find('.pax').val() || 0;
+        const date = $block.find('input[type="date"]').val();
+
+        const hour = $block.find('input[placeholder="HH"]').val() || '12';
+        const minute = $block.find('input[placeholder="MM"]').val() || '00';
+        const ampm = $block.find('select').val() || 'AM';
+
+        foodPackage.FoodPackageTitleName = name;
+        foodPackage.Pax = pax;
+        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : '';
+    }
+    else {
+        foodPackage.FoodPackageTitleName = '';
+        foodPackage.Pax = 0;
+        foodPackage.FoodPackageDateTime = '';
+    }
+
+    return foodPackage;
+}
 
 function saveBooking() {
     console.log("saveBooking called");
@@ -4695,16 +4942,8 @@ function saveBooking() {
 
     userId = Number(sessionStorage.getItem('userId')) || 0;
 
-    var quillCustomer = new Quill('#OtherCharges_customerEditor', {
-        theme: 'snow'
-    });
-
-    var quillInternal = new Quill('#OtherCharges_internalEditor', {
-        theme: 'snow'
-    });
-
-    var customerNote = quillCustomer.root.innerHTML;
-    var internalNote = quillInternal.root.innerHTML;
+    var customerNote = $("#OtherCharges_customerNote").val().trim();
+    var internalNote = $("#OtherCharges_internalNote").val().trim();
 
     // 🔹 1. Collect Booking Data
     const bookingData = {
@@ -4791,69 +5030,105 @@ function saveBooking() {
 
         ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
-
     // 🔹 2. Build Food Packages JSON --here
     const foodPackages = [];
-    $(".foodPackageContainer > .food-block, #foodPackageContainer > .food-row").each(function () {
+    // 1. FIRST ROW (static)
+    $("#foodPackageContainer > .food-row").each(function () {
         const $row = $(this);
-
-        // Check if it's a dynamic block (has food-block class) or first row
-        const isDynamicBlock = $row.hasClass('food-block');
-
-        // Get common elements
-        const $dropdown = $row.find(".foodPackageDropdown, #foodPackage_PackageDropdown");
-        const selectedMenuItems = $dropdown.data("selectedItems") || [];
-
-        const $dropdown_AddOns = $row.find(".foodPackage_AddOnItems");
-        const selectedAddOnCharges = $dropdown_AddOns.data("selected-AddOnItems") || [];
-
-        // Create base package object
-        const foodPackage = {
-            Id: parseInt($row.find("package_row_id").val() || 0),
-            PackageId: parseInt($dropdown.val()),
-            PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
-            PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
-            AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
-            GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
-            TotalCharges: parseFloat($row.find(".foodPackage_TotalValue, #foodPackage_TotalValue").text() || 0),
-            MenuItems: selectedMenuItems,
-            AddOns: selectedAddOnCharges
-        };
-
-        // Add additional fields for dynamic blocks
-        if (isDynamicBlock) {
-            //console.log("new row added");
-            const $packageNameInput = $row.find('input[placeholder="Addon Food Package Name"]');
-            const $paxInput = $row.find('input[placeholder="Pax"]');
-            const $dateInput = $row.find('input[type="date"]');
-            const $hourInput = $row.find('input[placeholder="HH"]');
-            const $minuteInput = $row.find('input[placeholder="MM"]');
-            const $ampmSelect = $row.find('select');
-
-            // Construct time string (HH:MM AM/PM)
-            const hour = $hourInput.val() || '12';
-            const minute = $minuteInput.val() || '00';
-            const ampm = $ampmSelect.val() || 'AM';
-            const timeString = `${hour}:${minute} ${ampm}`;
-
-            // Add additional fields
-            foodPackage.FoodPackageTitleName = $packageNameInput.val() || '';
-            foodPackage.Pax = $paxInput.val() || 0;
-            foodPackage.FoodPackageDateTime = $dateInput.val() ? `${$dateInput.val()} ${timeString}` : '';
-        }
-        else {
-            //console.log("static row only");
-            // For first row, set default values for optional fields
-            foodPackage.FoodPackageTitleName = '';
-            foodPackage.Pax = 0;
-            foodPackage.FoodPackageDateTime = '';
-        }
-
-        foodPackages.push(foodPackage);
+        foodPackages.push(buildFoodPackageObject($row, false));
     });
 
+    // 2. DYNAMIC ROWS
+    $("#foodPackageContainer > .food-block").each(function () {
+        const $block = $(this);
+        const $row = $block.find(".food-row"); // important
+        foodPackages.push(buildFoodPackageObject($row, true, $block));
+    });
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
+
+    //NOTES
+    let notes = [];
+    $('.note-subcategory').each(function () {
+        const categoryId = $(this).data('categoryid');
+        const subCategoryId = $(this).data('subcategoryid');
+        const remarks = $(this).find('.note-remarks').val()?.trim() || '';
+
+        //------------------------------------
+        // Selected Options
+        //------------------------------------
+        let selectedOptions = [];
+        $(this).find('.note-option:checked').each(function () {
+            selectedOptions.push({
+                OptionId: $(this).data('optionid')
+            });
+        });
+        //------------------------------------
+        // Dropdown
+        //------------------------------------
+        let dropdownValue = $(this).find('.note-dropdown').val();
+        if (dropdownValue) {
+            selectedOptions.push({
+                OptionId: dropdownValue
+            });
+        }
+
+        //------------------------------------
+        // Text
+        //------------------------------------
+        let value = '';
+
+        // Text / Number / Date
+        const textValue = $(this).find('.note-text-value').val();
+        if (textValue !== undefined && textValue !== null && textValue !== '') {
+            value = textValue.toString().trim();
+        }
+
+        // Time
+        const timeValue = $(this).find('.note-time-value').val();
+        if (timeValue) {
+            value = timeValue;
+        }
+
+        // Boolean
+        const booleanControl = $(this).find('.note-boolean');
+        if (booleanControl.length > 0) {
+            value = booleanControl.is(':checked') ? 'true' : '';
+        }
+
+        // Skip if nothing entered
+        if (remarks === '' && value === '' && selectedOptions.length === 0) {
+            return;
+        }
+
+        notes.push({
+            CategoryId: categoryId,
+            SubCategoryId: subCategoryId,
+            Value: value,
+            Remarks: remarks,
+            Options: selectedOptions
+        });
+
+    });
+    bookingData.JSON_Notes = notes;
+
+    const guests = [];
+    $("#bookingGuestContainer .guest-row").each(function () {
+        guests.push({
+            Id: 0,
+            Name: $(this).find(".guest-name").val(),
+            MobileNo: $(this).find(".guest-mobile").val(),
+            WhatsappContact: $(this).find(".guest-whatsapp").val(),
+            Email: $(this).find(".guest-email").val(),
+            Address: $(this).find(".guest-address").val(),
+            CityId: parseInt($(this).find(".guest-city").val()) || 0,
+            Dob: $(this).find(".guest-dob").val() || null,
+            AnniversaryDate: $(this).find(".guest-anniversary").val() || null
+        });
+    });
+    //console.log(JSON.stringify(guests));
+    bookingData.JSON_Guests = guests;
+
 
     //console.log("Final Booking JSON:", bookingData);
 
@@ -4914,7 +5189,59 @@ function setGSTSwitch(isGSTAccepted) {
 function loadEnquiryList() {
     //showLoader();
     $.ajax({
-        url: "/api/ClientMaster/GetClientMasterList",
+        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
+        type: "GET",
+        success: function (response) {
+            //console.log("enquiry list response:", response);
+            if (response.status === "Success") {
+                let options = `<option value="0">-- Select Client --</option>`; // default option
+                //options += `<option value="0">+ Add New Client</option>`; // default option
+                $.each(response.data, function (index, item) {
+                    options += `
+                               <option
+                                   value="${item.ClientEnquiryId}"
+                                   data-name="${item.ClientName || ''}"
+                                   data-email="${item.ClientEmail || ''}"
+                                   data-address="${item.ClientAddress || ''}"
+                                   data-contact="${item.ClientContact || ''}"
+                                   data-gstin="${item.ClientGSTIN || ''}"
+                                   data-stateid="${item.ClientStateId || ''}"
+                               >${item.ClientName} (${item.ClientContact})</option>`;
+                });
+                $("#clientEnquiryDropdown, #quotation_clientId").html(options);
+
+                $("#clientEnquiryDropdown").on("change", function () {
+                    const selected = $(this).find(":selected");
+
+                    $("#clientName").val(selected.data("name") || "");
+                    $("#clientEmail").val(selected.data("email") || "");
+                    $("#clientAddress").val(selected.data("address") || "");
+                    $("#clientContact").val(selected.data("contact") || "");
+                }); 
+
+                $("#quotation_clientId").on("change", function () {
+                    const selected = $(this).find(":selected");
+
+                    $("#quotation_clientName").val(selected.data("name") || "");
+                    $("#quotation_clientEmail").val(selected.data("email") || "");
+                    $("#quotation_clientAddress").val(selected.data("address") || "");
+                    $("#quotation_clientContact").val(selected.data("contact") || "");
+                }); 
+            }
+            else {
+                $("#clientEnquiryDropdown, #quotation_clientId").html(`<option value="0">No Enquiry Client Found</option>`);
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, 'Failed to load enquiry list');
+        }
+    });
+}
+
+function loadEnquiryList2() {
+    //showLoader();
+    $.ajax({
+        url: "/api/EnquiryDeal/GetEnquiryDealListForDropdown",
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }), // Get all halls
@@ -5170,7 +5497,7 @@ $(document).on("input", ".food-block .pax, .food-block .perPlate, .food-block .a
     calculateFoodRowTotals(row);
 });
 
-$(document).on("input change", "#paymentSummary_BookingAmount_Type, #paymentSummary_BookingAmount_Amount",
+$(document).on("input change", "#paymentSummary_BookingDiscount_Type, #paymentSummary_BookingDiscount_Amount",
     function () {
         recalculatePaymentSummary();
     });
@@ -5763,9 +6090,6 @@ function updateAddonButton(selectedItems) {
     addonButton.data("selected-AddOnItems", selectedItems);
 }
 //Food Addons ----- /END ------------------------------------------------------------------
-
-//< !--Booking Note - text Editor-- - START---->
-let editorsInitialized = false; //here2
 
 // 1️⃣ Import parchment
 const Parchment = Quill.import('parchment');

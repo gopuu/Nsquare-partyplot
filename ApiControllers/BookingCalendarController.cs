@@ -164,13 +164,6 @@ namespace ERPAdmin.ApiControllers
                         booking.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_BookingNoteForCustomer"]);
                         booking.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_InternalOfficeNote"]);
 
-                        booking.Notes_FoodBeverage = dr["Notes_FoodBeverage"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FoodBeverage"]);
-                        booking.Notes_EventTiming = dr["Notes_EventTiming"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_EventTiming"]);
-                        booking.Notes_DecorationSetup = dr["Notes_DecorationSetup"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_DecorationSetup"]);
-                        booking.Notes_TechnicalService = dr["Notes_TechnicalService"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_TechnicalService"]);
-                        booking.Notes_GuestCustom = dr["Notes_GuestCustom"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_GuestCustom"]);
-                        booking.Notes_FinancialInternal = dr["Notes_FinancialInternal"] == DBNull.Value ? "" : Convert.ToString(dr["Notes_FinancialInternal"]);
-
                         //booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
                         var foodPackageJson = Convert.ToString(dr["FoodPackageJSON"]);
                         booking.JSON_FoodPackage = string.IsNullOrWhiteSpace(foodPackageJson)
@@ -203,7 +196,10 @@ namespace ERPAdmin.ApiControllers
 
                         booking.ReachedUs = dr["ReachedUs"] == DBNull.Value ? "" : Convert.ToString(dr["ReachedUs"]);
                         booking.Reference = dr["Reference"] == DBNull.Value ? "" : Convert.ToString(dr["Reference"]);
-                        booking.ReferenceImage = $"{domainUrl}/uploads/org/{domain}/BookingCalendar/{Convert.ToString(dr["Reference"])}";
+
+                        booking.ReferenceImage = dr["ReferenceImage"] != DBNull.Value && !string.IsNullOrWhiteSpace(Convert.ToString(dr["ReferenceImage"]))
+                            ? $"{domainUrl}/uploads/org/{domain}/BookingCalendar/{Convert.ToString(dr["ReferenceImage"])}"
+                            : null;
 
                         booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);
@@ -324,13 +320,6 @@ namespace ERPAdmin.ApiControllers
 
                     cmd.Parameters.AddWithValue("@OtherCharges_BookingNoteForCustomer", model.OtherCharges_BookingNoteForCustomer ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@OtherCharges_InternalOfficeNote", model.OtherCharges_InternalOfficeNote ?? (object)DBNull.Value);
-
-                    cmd.Parameters.AddWithValue("@Notes_FoodBeverage", model.Notes_FoodBeverage ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes_EventTiming", model.Notes_EventTiming ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes_DecorationSetup", model.Notes_DecorationSetup ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes_TechnicalService", model.Notes_TechnicalService ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes_GuestCustom", model.Notes_GuestCustom ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Notes_FinancialInternal", model.Notes_FinancialInternal ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@PaymentSummary_TaxableAmount", model.PaymentSummary_TaxableAmount ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@PaymentSummary_CGST", model.PaymentSummary_CGST ?? (object)DBNull.Value);

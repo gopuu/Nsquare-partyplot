@@ -93,6 +93,7 @@
         public decimal? SubTotal { get; set; }
         public decimal? BookingDiscount { get; set; }
         public decimal? TotalTaxableAmount { get; set; }
+        public decimal? TotalNonTaxableAmount { get; set; } = 0;
         public decimal TotalDiscountAcrossAllServices { get; set; }
         public decimal? TotalGST { get; set; }
         public decimal? TotalVAT { get; set; }
@@ -277,6 +278,7 @@
         public decimal? SubTotal { get; set; }
         public decimal? BookingDiscount { get; set; }
         public decimal? TotalTaxableAmount { get; set; }
+        public decimal? TotalNonTaxableAmount { get; set; } = 0;
         public decimal? TotalDiscountAcrossAllServices { get; set; }
         public decimal? TotalGST { get; set; }
         public decimal? TotalVAT { get; set; }
