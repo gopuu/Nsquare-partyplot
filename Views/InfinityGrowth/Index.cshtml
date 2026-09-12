@@ -3,6 +3,7 @@
     Layout = "_Layout";
 }
 
+
 <div class="container-fluid page-content">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-warning text-white py-3 px-3">
@@ -39,15 +40,16 @@
     </div>
 </div>
 
+<!-- Include PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <div class="modal fade" id="sopViewerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
 
             <div class="modal-header bg-dark text-white py-2 px-3">
-
                 <div class="d-flex align-items-center overflow-hidden">
                     <i class="fas fa-file-pdf text-danger me-2"></i>
-
                     <div class="overflow-hidden">
                         <h6 id="sopViewerTitle" class="mb-0 text-truncate text-white">Document</h6>
                         <small class="text-white-50">Read-only document viewer</small>
@@ -55,79 +57,48 @@
                 </div>
 
                 <!-- PDF CONTROLS -->
-                <div class="d-flex align-items-center gap-1 ms-auto me-3 d-none">
-
-                    <button type="button"
-                            class="btn btn-outline-light btn-sm"
-                            onclick="zoomOutSOP()"
-                            title="Zoom Out">
+                <div class="d-flex align-items-center gap-1 ms-auto me-3">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="zoomOutSOP()" title="Zoom Out">
                         <i class="fas fa-search-minus"></i>
                     </button>
 
-                    <span id="sopZoomLabel"
-                          class="text-white text-center small px-2"
-                          style="min-width:55px;">
+                    <span id="sopZoomLabel" class="text-white text-center small px-2" style="min-width:55px;">
                         100%
                     </span>
 
-                    <button type="button"
-                            class="btn btn-outline-light btn-sm"
-                            onclick="zoomInSOP()"
-                            title="Zoom In">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="zoomInSOP()" title="Zoom In">
                         <i class="fas fa-search-plus"></i>
                     </button>
 
-                    <button type="button"
-                            class="btn btn-outline-light btn-sm ms-2"
-                            onclick="fitWidthSOP()"
-                            title="Fit Width">
+                    <button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="fitWidthSOP()" title="Fit Width">
                         <i class="fas fa-arrows-alt-h"></i>
                     </button>
 
-                    <button type="button"
-                            class="btn btn-outline-light btn-sm"
-                            onclick="fitPageSOP()"
-                            title="Fit Page">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="fitPageSOP()" title="Fit Page">
                         <i class="fas fa-expand"></i>
                     </button>
-
                 </div>
 
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body p-0 position-relative bg-secondary">
-
                 <div id="sopPdfLoader" class="sop-pdf-loader">
                     <div class="spinner-border text-warning" role="status"></div>
                     <span class="ms-2">Opening document...</span>
                 </div>
-
-                <iframe id="sopPdfViewer"
-                        class="sop-pdf-viewer"
-                        title="SOP Document">
-                </iframe>
-
+                <div id="pdfContainer" style="width:100%; height:100vh; overflow:auto;"></div>
             </div>
 
             <div class="modal-footer py-1 px-3 justify-content-between">
-
                 <small class="text-muted">
                     <i class="fas fa-lock me-1"></i>
                     Internal document • View only
                 </small>
-
-                <button type="button"
-                        class="btn btn-outline-secondary btn-sm"
-                        data-bs-dismiss="modal">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>
                     Close
                 </button>
-
             </div>
 
         </div>

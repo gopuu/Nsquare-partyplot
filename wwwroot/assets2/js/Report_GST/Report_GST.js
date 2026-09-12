@@ -188,7 +188,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $(document).on("click", ".btn-view-invoice", function () {
         const bookingId = $(this).data('bookingid');
-        const invoiceNo = $(this).data("invoiceno");
+        let invoiceNo = $(this).data("invoiceno");
+        let gstInvoiceNo = $(this).data("gstinvoiceno");
+
+        invoiceNo = invoiceNo && invoiceNo !== "0" ? Number(invoiceNo) : 0;
+        gstInvoiceNo = gstInvoiceNo && String(gstInvoiceNo).trim() !== "" ? String(gstInvoiceNo).trim() : "";
 
         //NEW
         const withHeader = $("#toggleWithHeader").is(":checked");
@@ -196,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const request = {
             BookingId: bookingId,
             InvoiceNo: invoiceNo,
-            GSTInvoiceNo: null,
+            GSTInvoiceNo: gstInvoiceNo,
             ProformaInvoiceNo: null,
             WithHeader: withHeader,
             ActionBy: Number(sessionStorage.getItem('userId') || 0)
@@ -386,6 +390,7 @@ function renderGSTSalesTable(data, totals) {
                     return `
                         <button class="btn btn-xs btn-view-invoice btn-outline-danger"
                                 data-invoiceno="${data.InvoiceNo}"
+                                data-gstinvoiceno="${data.GSTInvoiceNo}"
                                 data-bookingid="${data.BookingId}">
                             <i class="fa fa-download me-1"></i>
                         </button>

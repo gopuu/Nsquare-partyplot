@@ -5026,7 +5026,12 @@ function saveBooking() {
         PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text().replace(/₹|,/g, "").trim()) || 0,
         PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text().replace(/₹|,/g, "").trim()) || 0,
 
-        ReferenceImage: $("#BookingReferenceFile_Base64").val(),
+        JSON_Uploads: bookingReferenceFiles
+            .filter(x => x.UploadFile_Base64 && x.UploadFile_Base64.trim() !== "")
+            .map(x => ({
+                UploadFile_Id: x.UploadFile_Id || 0,
+                UploadFile_Base64: x.UploadFile_Base64
+            })),
 
         ActionBy: parseInt(sessionStorage.getItem("userId")) || 0
     };
@@ -6448,3 +6453,265 @@ $(document).on('change', '.reminderToggle', function () {
 
 //FOLLOW UP REMAIDNER - END ----------------------------------------------------------------------
 
+// UPLOADS FILE -- START
+const MAX_REFERENCE_FILES = 4;
+const MAX_REFERENCE_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+let bookingReferenceFiles = [];
+
+$("#BookingReferenceFile").on("change", async function (e) {
+
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
+    const currentFileCount = bookingReferenceFiles.length;
+    const remainingSlots = MAX_REFERENCE_FILES - currentFileCount;
+
+    // Maximum file count validation
+    if (remainingSlots <= 0) {
+        Swal.fire({
+            icon: "warning",
+            title: "Maximum Limit Reached",
+            text: `You can upload a maximum of ${MAX_REFERENCE_FILES} reference files.`
+        });
+        $(this).val("");
+        return;
+    }
+
+    // Selected files exceed remaining limit
+    if (files.length > remainingSlots) {
+        Swal.fire({
+            icon: "warning",
+            title: "Maximum File Limit",
+            text: `You can upload only ${remainingSlots} more file(s). Maximum ${MAX_REFERENCE_FILES} files are allowed.`
+        });
+        $(this).val("");
+        return;
+    }
+
+    // File size validation (2 MB per file)
+    const oversizedFile = files.find(file => file.size > MAX_REFERENCE_FILE_SIZE);
+    if (oversizedFile) {
+        Swal.fire({
+            icon: "warning",
+            title: "File Too Large",
+            text: `"${oversizedFile.name}" exceeds file size. MAX LIMIT = 2 MB.`
+        });
+        $(this).val("");
+        return;
+    }
+
+    for (const file of files) {
+        const base64 = await convertFileToBase64WithoutMetadata(file);
+
+        bookingReferenceFiles.push({
+            UploadFile_Id: 0,
+            FileName: file.name,
+            FilePath: null,
+            UploadFile_Base64: base64
+        });
+    }
+
+    updateBookingReferenceFileUI();
+
+    // Reset input so the same file can be selected again
+    $(this).val("");
+});
+
+function convertFileToBase64WithoutMetadata(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const base64WithMetadata = e.target.result;
+
+            // Remove: data:image/png;base64,
+            const base64 = base64WithMetadata.split(",")[1];
+
+            resolve(base64);
+        };
+
+        reader.onerror = function () {
+            reject(new Error("Failed to read file."));
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+function updateBookingReferenceFileUI() {
+    const fileList = $("#BookingReferenceFileList");
+
+    fileList.empty();
+
+    if (!bookingReferenceFiles.length) {
+        $("#BookingReferenceFile_JSON").val("");
+        return;
+    }
+
+    bookingReferenceFiles.forEach((file, index) => {
+        console.log("bookingReferenceFiles file:", file);
+        const fileItem = `
+            <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+                
+                <div class="text-truncate me-2" style="max-width: 200px;">
+                    <i class="fas fa-file-image me-1"></i>
+                    <span title="${escapeHtml(file.FileName)}">
+                        ${escapeHtml(file.FileName)}
+                    </span>
+                </div>
+
+                <div class="d-flex gap-1">
+
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            onclick="showReferenceFilePreview(${index}, '${file.FilePath}')"
+                            title="View File">
+                        <i class="fas fa-eye"></i>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-danger"
+                            onclick="removeBookingReferenceFile(${index})"
+                            title="Remove File">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+            </div>
+        `;
+
+        fileList.append(fileItem);
+    });
+
+    updateBookingReferenceFileHiddenField();
+}
+function getFileExtension(fileName) {
+    if (!fileName) return "";
+
+    const lastDotIndex = fileName.lastIndexOf(".");
+
+    if (lastDotIndex === -1) return "";
+
+    return fileName.substring(lastDotIndex + 1).toLowerCase();
+}
+function updateBookingReferenceFileHiddenField() {
+    const jsonData = bookingReferenceFiles.map(file => ({
+        UploadFile_Id: file.UploadFile_Id,
+        UploadFile_Base64: file.UploadFile_Base64
+    }));
+
+    $("#BookingReferenceFile_JSON").val(JSON.stringify(jsonData));
+}
+function showReferenceFilePreview(index = null, filePath = null) {
+    let fileUrl = "";
+
+    // Case 1: Existing file path passed directly
+    if (filePath) {
+        fileUrl = filePath;
+    }
+
+    // Case 2: File index passed
+    else if (index !== null) {
+        const file = bookingReferenceFiles[index];
+
+        if (!file) return;
+
+        // Existing uploaded file
+        if (file.UploadFile_Id > 0 && file.FilePath) {
+            fileUrl = file.FilePath;
+        }
+
+        // Newly selected file
+        else if (file.UploadFile_Base64) {
+            const extension = getFileExtension(file.FileName);
+
+            let mimeType = "image/jpeg";
+
+            if (extension === "png") {
+                mimeType = "image/png";
+            }
+            else if (extension === "jpg" || extension === "jpeg") {
+                mimeType = "image/jpeg";
+            }
+
+            fileUrl = `data:${mimeType};base64,${file.UploadFile_Base64}`;
+        }
+    }
+
+    if (!fileUrl) return;
+
+    $("#referenceFilePreviewImage").attr("src", fileUrl).show();
+    $("#referenceFilePreviewNoData").hide();
+
+    const modalElement = document.getElementById("referenceFilePreviewModal");
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    modal.show();
+}
+
+async function removeBookingReferenceFile(index) {
+    const file = bookingReferenceFiles[index];
+
+    if (!file) return;
+
+    // New file - remove only from UI
+    if (!file.UploadFile_Id || file.UploadFile_Id === 0) {
+        bookingReferenceFiles.splice(index, 1);
+        updateBookingReferenceFileUI();
+        return;
+    }
+
+    // Existing file - confirmation
+    const result = await Swal.fire({
+        title: "Delete File?",
+        text: "This file will be permanently removed.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        var payload = {
+            BookingUploadId: Number(file.UploadFile_Id),
+            ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
+        };
+        console.log("delete payload:", payload);
+
+        const response = await $.ajax({
+            url: "/api/BookingCalendar/DeleteBookingCalendar_Upload",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload)
+        });
+
+        console.log("delete response:", response);
+        if (response && response.status !== "Success") {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: response.message || "Failed to delete file."
+            });
+            return;
+        }
+
+        bookingReferenceFiles.splice(index, 1);
+
+        updateBookingReferenceFileUI();
+
+        handleApiSuccess("File deleted successfully");
+    }
+    catch (error) {
+        console.error("File delete error:", error);
+
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to delete file."
+        });
+    }
+}
+//UPLOADS FILE--END 

@@ -1572,11 +1572,6 @@
                         </div>
 
                         <!-- Notes -->
-                        <div class="col-md-12" id="notes1">
-                            <div id="notesContainer"></div>
-                        </div>
-
-                        <!-- Notes -->
                         <div class="col-md-12" id="notes">
                             <div class="row">
 
@@ -1598,24 +1593,39 @@
                                               placeholder="Enter internal office notes"></textarea>
                                 </div>
 
-                                <!-- Booking Reference File -->
+                                <!-- Booking Reference Files -->
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">Booking Reference File</label>
+
+                                    <label class="form-label fw-bold">
+                                        Upload Reference Files
+                                        <small class="text-muted fw-normal ms-1">
+                                            (Maximum 4 files • 2 MB per file)
+                                        </small>
+                                    </label>
 
                                     <input type="file"
                                            id="BookingReferenceFile"
                                            class="form-control"
-                                           accept=".jpg,.jpeg,.png">
+                                           accept=".jpg,.jpeg,.png"
+                                           multiple>
 
                                     <div class="form-text">
-                                        Select booking reference document or image.
+                                        Select one or more booking reference images.
                                     </div>
 
-                                    <!-- Base64 without MIME -->
-                                    <input type="hidden" id="BookingReferenceFile_Base64">
+                                    <!-- Stores upload data as JSON -->
+                                    <input type="hidden" id="BookingReferenceFile_JSON">
+
+                                    <!-- Selected Files List -->
+                                    <div id="BookingReferenceFileList" class="mt-2"></div>
                                 </div>
 
                             </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-md-12" id="notes1">
+                            <div id="notesContainer"></div>
                         </div>
 
                         <!-- Guest Details -->

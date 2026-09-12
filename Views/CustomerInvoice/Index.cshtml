@@ -743,13 +743,6 @@
                                        class="form-control form-control-sm text-end">
                             </div>
 
-                            <div class="total-row showLimit_section">
-                                <span>Total Non-Taxable</span>
-                                <input type="number"
-                                       id="totalNonTaxable"
-                                       class="form-control form-control-sm text-end">
-                            </div>
-
                             <div class="total-row">
                                 <span>Booking Discount</span>
                                 <input type="number"
@@ -835,11 +828,22 @@
         <div class="modal-content shadow-lg border-0 rounded-3">
 
             <!-- HEADER -->
-            <div class="modal-header bg-primary py-1 text-white">
-                <h5 class="modal-title text-white" id="bookingModalTitle">
-                    <i class="fa-solid fa-calendar-check me-2 text-white"></i>Booking Summary
+            <div class="modal-header bg-primary py-1 text-white d-flex align-items-center">
+
+                <!-- Left: Title -->
+                <h5 class="modal-title text-white mb-0" id="bookingModalTitle">
+                    <i class="fa-solid fa-calendar-check me-2"></i> Booking Summary
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+                <!-- Right: Action buttons + close -->
+                <div class="d-flex align-items-center gap-2 ms-auto">
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+
+                </div>
             </div>
 
             <!-- 🔹 Hidden booking id -->
@@ -847,6 +851,7 @@
 
             <!-- 🔹 Body -->
             <div class="modal-body bg-white" style="max-height: 75vh; overflow-y: auto;">
+
                 <!--Client Details-->
                 <section class="mb-2 p-0 border rounded">
                     <h6 class="fw-bold border-bottom pb-2 px-3 py-2 text-primary bg-light rounded-top">
@@ -866,6 +871,7 @@
                             </div>
                         </div>
 
+                        <!-- 🗒️ Internal Office Note / Booking Note -->
                         <div class="row">
                             <!-- 🗒️ Internal Office Note -->
                             <div class="col-md-6 mb-2">
@@ -883,94 +889,98 @@
                                 <p class="fst-italic text-muted px-3" id="bookingReport_bookingNoteCustomer">—</p>
                             </div>
                         </div>
+
+                        <!--Booking Notes Details-->
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                    <h6 class="fw-bold mb-0 text-primary">Booking Notes Details</h6>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="toggleBookingNotes">
+                                        <label class="form-check-label small text-muted" for="toggleBookingNotes">Show Notes</label>
+                                    </div>
+                                </div>
+                                <div id="bookingNotesContainer" class="mt-3" style="display:none;"></div>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
 
                 <!--Booking Details-->
-                <section class="mb-3 p-0">
-                    <div class="row g-3">
+                <section class="mb-2 p-0">
+                    <div class="row g-2">
 
                         <!-- 🟦 Booking Details -->
                         <div class="col-md-4">
                             <div class="card border-0 shadow-sm h-100">
 
                                 <!-- Header -->
-                                <div class="bg-light border-bottom rounded-top px-3 py-2">
-                                    <h6 class="fw-bold text-primary mb-0">
+                                <div class="bg-light border-bottom px-2 py-1">
+                                    <small class="fw-bold text-primary">
                                         <i class="fa-solid fa-calendar-check me-1"></i> Booking Details
-                                    </h6>
+                                    </small>
                                 </div>
 
                                 <!-- Body -->
-                                <div class="card-body p-3">
+                                <div class="card-body p-2 small">
 
-                                    <!-- Booking Ref# -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Booking Ref#</span>
-                                        <span id="bookingReport_BookingRef" class="text-end">—</span>
+                                        <span id="bookingReport_BookingRef">—</span>
                                     </div>
 
-                                    <!-- Invoice -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Invoice</span>
-                                        <span id="bookingReport_Invoice" class="text-end">—</span>
+                                        <span id="bookingReport_Invoice">—</span>
                                     </div>
 
-                                    <!-- Event Date -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Event Date</span>
-                                        <span id="bookingReport_EventDate" class="text-end">—</span>
+                                        <span id="bookingReport_EventDate">—</span>
                                     </div>
 
-                                    <!-- Till Date -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Till Date</span>
-                                        <span id="bookingReport_TillDate" class="text-end">—</span>
+                                        <span id="bookingReport_TillDate">—</span>
                                     </div>
 
-                                    <!--Event Time-->
                                     <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Event Time</span>
                                         <span id="bookingReport_EventTime">—</span>
                                     </div>
 
-                                    <!-- Slot -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Slot</span>
-                                        <span id="bookingReport_Slot" class="text-end">—</span>
+                                        <span id="bookingReport_Slot">—</span>
                                     </div>
 
-                                    <!-- Booked On -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Booked On</span>
-                                        <span id="bookingReport_BookedOn" class="text-end">—</span>
+                                        <span id="bookingReport_BookedOn">—</span>
                                     </div>
 
-                                    <!-- Event -->
                                     <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Event</span>
                                         <span id="bookingReport_EventName">—</span>
                                     </div>
 
-                                    <!-- SubEvent -->
                                     <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Sub-Event</span>
                                         <span id="bookingReport_SubEventName">—</span>
                                     </div>
 
-                                    <!-- Banquet -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Banquet</span>
-                                        <span id="bookingReport_Banquet" class="text-end">—</span>
+                                        <span id="bookingReport_Banquet">—</span>
                                     </div>
 
-                                    <!-- Halls -->
-                                    <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Halls</span>
-                                        <span id="bookingReport_Hall" class="text-end">—</span>
+                                        <span id="bookingReport_Hall">—</span>
                                     </div>
-                                </div>
 
+                                </div>
                             </div>
                         </div>
 
@@ -978,26 +988,22 @@
                         <div class="col-md-4">
                             <div class="card border-0 shadow-sm h-100">
 
-                                <!-- Header -->
-                                <div class="bg-light border-bottom rounded-top px-3 py-2">
-                                    <h6 class="fw-bold text-primary mb-0">
-                                        <i class="fa-solid fa-receipt me-1"></i> Services & Charges
-                                    </h6>
+                                <div class="bg-light border-bottom px-2 py-1">
+                                    <small class="fw-bold text-primary">
+                                        <i class="fa-solid fa-receipt me-1"></i> Services
+                                    </small>
                                 </div>
 
-                                <!-- Body -->
-                                <div class="card-body p-3">
+                                <div class="card-body p-2 small">
 
-                                    <!-- Pax -->
                                     <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">PAX</span>
-                                        <span id="bookingReport_Pax" class="text-end">—</span>
+                                        <span id="bookingReport_Pax">—</span>
                                     </div>
 
-                                    <!-- Hall Rent -->
                                     <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">Hall Rent</span>
-                                        <span class="text-end">₹<span id="bookingReport_HallRent">—</span></span>
+                                        <span>₹<span id="bookingReport_HallRent">—</span></span>
                                     </div>
 
                                     <div class="col-12">
@@ -1020,45 +1026,52 @@
                                         <span class="fw-semibold">Projector & Screen</span>
                                         <span>₹<span id="bookingReport_ProjectorScreen">—</span></span>
                                     </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Electricity Bill</span>
+                                        <span>₹<span id="bookingReport_ElectricityBill">—</span></span>
+                                    </div>
 
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Generator Charge</span>
+                                        <span>₹<span id="bookingReport_GeneratorCharge">—</span></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="fw-semibold">Other Charges</span>
+                                        <span>₹<span id="bookingReport_OtherCharges">—</span></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 🟧 Payment Trail -->
+                        <!-- 🟧 Payment Summary -->
                         <div class="col-md-4">
                             <div class="card border-0 shadow-sm h-100">
 
-                                <!-- Header -->
-                                <div class="bg-light border-bottom rounded-top px-3 py-2">
-                                    <h6 class="fw-bold text-primary mb-0">
-                                        <i class="fa-solid fa-credit-card me-1"></i> Payment Trail
-                                    </h6>
+                                <div class="bg-light border-bottom px-2 py-1">
+                                    <small class="fw-bold text-primary">
+                                        <i class="fa-solid fa-credit-card me-1"></i> Payment
+                                    </small>
                                 </div>
 
-                                <!-- Body -->
-                                <div class="card-body p-3">
+                                <div class="card-body p-2 small">
 
-                                    <!-- Deal Amount -->
-                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                        <span class="fw-semibold">Deal Amount</span>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span>Deal Amount</span>
                                         <span class="fw-bold">₹<span id="bookingReport_DealAmount">—</span></span>
                                     </div>
 
-                                    <!-- Tax -->
-                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                        <span class="fw-semibold">Tax</span>
-                                        <span class="fw-semibold">₹<span id="bookingReport_TaxAmount">—</span></span>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span>Tax</span>
+                                        <span>₹<span id="bookingReport_TaxAmount">—</span></span>
                                     </div>
 
-                                    <!-- Booking Discount -->
-                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                        <span class="fw-semibold">Booking Discount</span>
-                                        <span class="fw-semibold">₹<span id="bookingReport_BookingDiscount">—</span></span>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span>Discount</span>
+                                        <span>₹<span id="bookingReport_BookingDiscount">—</span></span>
                                     </div>
 
-                                    <!-- Total Amount -->
-                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
                                         <span class="fw-semibold">
                                             Total Amount
                                             <i class="fa fa-info-circle text-primary ms-1"
@@ -1069,15 +1082,13 @@
                                         <span class="fw-bold">₹<span id="bookingReport_TotalAmount">—</span></span>
                                     </div>
 
-                                    <!-- Paid Till Date -->
-                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                        <span class="fw-semibold">Paid Till Date</span>
-                                        <span class="fw-bold text-success">₹<span id="bookingReport_PaidTillDate">—</span></span>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span>Paid</span>
+                                        <span>₹<span id="bookingReport_PaidTillDate">—</span></span>
                                     </div>
 
-                                    <!-- Outstanding -->
-                                    <div class="d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-semibold">Outstanding Amount</span>
+                                    <div class="d-flex justify-content-between py-1">
+                                        <span>Due</span>
                                         <span class="fw-bold text-danger">₹<span id="bookingReport_OutstandingAmount">—</span></span>
                                     </div>
 
@@ -1088,7 +1099,7 @@
                     </div>
                 </section>
 
-                <!-- 🧾 Payment Details Table -->
+                <!-- 🧾 Payment Details Table here2-->
                 <section class="mb-3 p-0">
                     <div class="card border-0 shadow-sm">
                         <!-- Card Header -->
@@ -1201,22 +1212,77 @@
                                         <span id="bookingReport_ReachedUs">—</span>
                                     </p>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-12 d-none">
                                     <p class="mb-0">
                                         <strong>Reference:</strong>
                                         <span id="bookingReport_Reference">—</span>
                                     </p>
                                 </div>
+                                <div class="col-12">
+                                    <p class="mb-0">
+                                        <strong>Reference Files (Uploaded):</strong>
+                                    </p>
+
+                                    <div id="bookingReport_ReferenceFiles" class="mt-2">
+                                        —
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
-            </div>
 
-            <!-- 🔹 Footer -->
-            <div class="modal-footer bg-light border-top-0 justify-content-between flex-wrap">
-                <div>
-                </div>
+                <!-- 📋 Guest Details -->
+                <section class="mb-3 p-0">
+                    <div class="card border-0 shadow-sm">
+
+                        <!-- Card Header -->
+                        <div class="bg-light border-bottom rounded-top px-3 py-2">
+                            <h6 class="fw-bold text-primary mb-0">
+                                <i class="fa-solid fa-users me-1"></i> Guest Details
+                            </h6>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body p-0">
+
+                            <div class="table-responsive">
+
+                                <table id="bookingReport_GuestTable"
+                                       class="table table-bordered table-sm align-middle text-center mb-0 table-hover">
+
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="40">#</th>
+                                            <th>Name</th>
+                                            <th width="120">Whatsapp No</th>
+                                            <th width="120">Mobile No</th>
+                                            <th width="200">Email</th>
+                                            <th width="120">City</th>
+                                            <th width="100">DOB</th>
+                                            <th width="120">Anniversary</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="bookingReport_GuestBody">
+
+                                        <tr>
+                                            <td colspan="9"
+                                                class="text-muted small fst-italic text-center">
+                                                No guest records found
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </section>
             </div>
 
         </div>

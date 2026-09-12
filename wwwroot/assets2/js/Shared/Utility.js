@@ -150,9 +150,7 @@ function downloadReport(url, payload,
         },
 
         error: function (xhr, status, error) {
-
             clearInterval(progressTimer);
-
             handleApiError(
                 xhr,
                 status,

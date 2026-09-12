@@ -82,7 +82,7 @@ function getCompanyProfile() {
         dataType: "json", // Expecting JSON response
         //data: JSON.stringify({ Id: companyId }),
         success: function (res) {
-            console.log("GetCompanyProfileAndPropertyDetailsList() res:", res);
+            //console.log("GetCompanyProfileAndPropertyDetailsList() res:", res);
             if (res.status === "Success" && res.data.length > 0) {
                 let d = res.data[0];
                 companyId = d.Id; // Update company ID if it was 0
@@ -442,7 +442,7 @@ function getSettingsData() {
         data: JSON.stringify({ Id: 0 }),
         success: function (response) {
             //data = response; // Store the fetched data
-            console.log("response fetchData:", response);
+            //console.log("response fetchData:", response);
             var data = response.data;
             data = data.filter(item =>
                 item.Name?.trim().toLowerCase() === "Booking Grace Time (in Mins)".toLowerCase()
@@ -2044,12 +2044,12 @@ function fetchHallDetails() {
         contentType: 'application/json',
         data: JSON.stringify({ Id: 0 }), // Get all halls
         success: function (response) {
-            console.log("GetCompanyHallDetailsList res:", response);
+            //console.log("GetCompanyHallDetailsList res:", response);
             if (response.status === "Success" && response.data) {
                 populateHallTable(response.data);
 
                 hallList = response.data; //.filter(x => !x.isHallMerged);
-                console.log("Filtered Hall List:", hallList);
+                //console.log("Filtered Hall List:", hallList);
             } else {
                 //console.error('Failed to fetch hall details:', response.message);
                 // Swal.fire({
@@ -2645,7 +2645,6 @@ function toggleHeaderItems(headerId, btn) {
         btn.textContent = "▼";
     }
 }
-
 function addNewHeader_items(headerDbId = 0) {
     headerCount_items++;
 
@@ -2659,7 +2658,7 @@ function addNewHeader_items(headerDbId = 0) {
 
         <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top" style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
             <div class="d-flex flex-grow-1 align-items-center">
-                <input type="text" class="form-control form-control-sm me-2 food-item-header fw-semibold border-0 bg-transparent" placeholder="Header Name (e.g. Welcome Drink)" />
+                <input type="text" class="form-control form-control-sm me-2 food-item-header fw-semibold border-0 bg-transparent" placeholder="Category Name (e.g. Welcome Drink)" />
             </div>
 
             <div>
@@ -2668,61 +2667,75 @@ function addNewHeader_items(headerDbId = 0) {
             </div>
         </div>
 
-        <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:400px; overflow-y:auto;">
+        <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:1200px; overflow-y:auto;">
             ${generateFoodItemRow_items()}
 
-            <div class="mt-2">
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${headerId}')">+ Add Food Item</button>
+            <div class="add-food-item-wrapper mt-2">
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${headerId}')">+ Add Food SubCategory</button>
             </div>
         </div>
     `;
 
     document.getElementById('foodHeaderContainer_items').appendChild(container);
 }
-
 function generateFoodItemRow_items(foodItemDbId = 0) {
-    const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
     return `
         <div class="food-item-wrapper border rounded p-2 mb-2 bg-light">
             <div class="input-group food-item-row">
                 <input type="hidden" class="food-item-id" value="${foodItemDbId}" />
-                <input type="text" class="form-control food-item-name" placeholder="Food Item Name" />
+
+                <input type="text" class="form-control food-item-name" placeholder="Food Subcategory Name" />
+
                 <input type="text" class="form-control food-item-description ms-2" placeholder="Description (optional)" />
-                <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_items('${foodItemUniqueId}')">+ Child</button>
+
+                <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_items('${foodItemUniqueId}')">+ Add Food Item</button>
+
                 <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodItem_Items(this)">X</button>
             </div>
+
             <div id="${foodItemUniqueId}" class="food-child-container mt-2 ms-4"></div>
         </div>
     `;
 }
-
 function addFoodItem_items(headerId) {
     const container = document.getElementById(headerId);
-    const addMoreDiv = container.querySelector('.mt-2:last-child'); // button wrapper
-    addMoreDiv.insertAdjacentHTML('beforebegin', generateFoodItemRow_items());
-}
+    if (!container) return;
 
+    const addFoodItemWrapper = container.querySelector('.add-food-item-wrapper');
+
+    if (!addFoodItemWrapper) {
+        console.error('Add Food Item wrapper not found:', headerId);
+        return;
+    }
+
+    addFoodItemWrapper.insertAdjacentHTML('beforebegin', generateFoodItemRow_items());
+}
 function generateFoodChildItemRow_items(childDbId = 0) {
     return `
         <div class="input-group mb-2 food-child-item-row">
             <input type="hidden" class="food-child-item-id" value="${childDbId}" />
+
             <span class="input-group-text">↳</span>
-            <input type="text" class="form-control food-child-item-name" placeholder="Child Item Name" />
+
+            <input type="text" class="form-control food-child-item-name" placeholder="Food Item Name" />
+
             <input type="text" class="form-control food-child-item-description ms-2" placeholder="Description (optional)" />
-            <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodChildItem_items(this)">X</button>
+
+            <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodItem_Items(this)">X</button>
         </div>
     `;
 }
 function addFoodChildItem_items(parentFoodItemId) {
     const container = document.getElementById(parentFoodItemId);
+    if (!container) return;
+
     container.insertAdjacentHTML('beforeend', generateFoodChildItemRow_items());
-}
-function deleteFoodChildItem_items(button) {
-    $(button).closest('.food-child-item-row').remove();
 }
 
 function saveFoodItems() {
-    console.log("saveFoodItems clicked..");
+    //console.log("saveFoodItems clicked..");
 
     // Build cuisine dictionary
     let cuisines = {};
@@ -2732,36 +2745,38 @@ function saveFoodItems() {
 
     userId = Number(sessionStorage.getItem('userId') || 0);
 
-    // 🔧 Loop through headers first
+    // 🔧 Collect Food Items for Save
     let foodItems = [];
+
     $("#foodHeaderContainer_items > .border").each(function () {
-        let header = $(this);
+        const header = $(this);
 
-        let headerName = header.find(".food-item-header").val();
-        let headerId = header.find(".food-header-id").val() || 0;
+        const headerId = parseInt(header.find("> .food-header-id").val()) || 0;
+        const headerName = (header.find("> div:first-of-type .food-item-header").val() || "").trim();
 
-        let items = [];
+        const items = [];
 
-        // 🔹 Get parent food items
-        header.find(".food-item-wrapper").each(function () {
-            let itemWrapper = $(this);
-            let itemRow = itemWrapper.find(".food-item-row").first();
+        // 🔹 Get only parent food items directly under the header item container
+        header.find('[id^="header-item-"] > .food-item-wrapper').each(function () {
+            const itemWrapper = $(this);
 
-            let itemId = itemRow.find(".food-item-id").val() || 0;
-            let itemName = itemRow.find(".food-item-name").val();
-            let description = itemRow.find(".food-item-description").val();
+            const itemRow = itemWrapper.find("> .food-item-row");
 
-            let children = [];
+            const itemId = parseInt(itemRow.find(".food-item-id").val()) || 0;
+            const itemName = (itemRow.find(".food-item-name").val() || "").trim();
+            const description = (itemRow.find(".food-item-description").val() || "").trim();
 
-            // 🔸 Get child items of this parent item
-            itemWrapper.find(".food-child-item-row").each(function () {
-                let childRow = $(this);
+            const children = [];
 
-                let childId = childRow.find(".food-child-item-id").val() || 0;
-                let childName = childRow.find(".food-child-item-name").val();
-                let childDescription = childRow.find(".food-child-item-description").val();
+            // 🔸 Get only children belonging to this parent item
+            itemWrapper.find("> .food-child-container > .food-child-item-row").each(function () {
+                const childRow = $(this);
 
-                // Skip empty child rows
+                const childId = parseInt(childRow.find(".food-child-item-id").val()) || 0;
+                const childName = (childRow.find(".food-child-item-name").val() || "").trim();
+                const childDescription = (childRow.find(".food-child-item-description").val() || "").trim();
+
+                // Skip empty child item
                 if (!childName && !childDescription) return;
 
                 children.push({
@@ -2771,7 +2786,7 @@ function saveFoodItems() {
                 });
             });
 
-            // Skip completely empty parent rows
+            // Skip completely empty parent item
             if (!itemName && !description && children.length === 0) return;
 
             items.push({
@@ -2782,7 +2797,7 @@ function saveFoodItems() {
             });
         });
 
-        // Skip empty headers if needed
+        // Skip completely empty header
         if (!headerName && items.length === 0) return;
 
         foodItems.push({
@@ -2792,7 +2807,7 @@ function saveFoodItems() {
         });
     });
 
-    console.log(foodItems);
+    //console.log(foodItems);
 
     let requestData = {
         FoodItems: foodItems,
@@ -2800,7 +2815,7 @@ function saveFoodItems() {
         Cuisines: cuisines
     };
 
-    console.log("Save FoodItem Data:", requestData);
+    console.log("SaveCompanyFoodItems payload:", requestData);
 
     $.ajax({
         url: "/api/Company_FoodRate_Item/SaveCompanyFoodItems",
@@ -2812,7 +2827,7 @@ function saveFoodItems() {
             if (res.status === "Success") {
                 handleApiSuccess("Saved!");
                 loadFoodItems();
-                loadAddonCharges();
+                //loadAddonCharges(); //here2
             } else {
                 Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
             }
@@ -2833,7 +2848,7 @@ function loadFoodItems(itemId = 0) {
         contentType: "application/json",
         data: JSON.stringify({ Id: itemId }),
         success: function (res) {
-            console.log("Company_FoodRate_Item res:", res);
+            //console.log("Company_FoodRate_Item res:", res);
             if (res.status === "Success" && res.data) {
                 // ---------- Render cuisines ----------
                 if (res.data.Cuisines) {
@@ -2870,153 +2885,81 @@ function loadFoodItems(itemId = 0) {
                     headerContainer.innerHTML = '';
 
                     res.data.FoodItems.forEach((header, index) => {
-
-                        // Add Header
                         addNewHeader_items(header.Id || 0);
 
                         const lastHeaderContainer = headerContainer.lastElementChild;
 
-                        // Set Header Name
                         lastHeaderContainer.querySelector('.food-item-header').value = header.HeaderName || '';
 
-                        // Get Item Container
                         const itemsDiv = lastHeaderContainer.querySelector('[id^="header-item-"]');
 
-                        // Remove default generated item and button
                         itemsDiv.innerHTML = '';
 
-                        // ---------- Render Parent Food Items ----------
                         if (header.Items && header.Items.length > 0) {
-
                             header.Items.forEach(foodItem => {
+                                const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 
-                                // Generate unique ID for child container
-                                const foodItemUniqueId = `food-item-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-
-                                // Add Parent Food Item
                                 itemsDiv.insertAdjacentHTML('beforeend', `
                                     <div class="food-item-wrapper border rounded p-2 mb-2 bg-light">
-
                                         <div class="input-group food-item-row">
-
                                             <input type="hidden" class="food-item-id" value="${foodItem.ItemId || 0}" />
 
-                                            <input type="text"
-                                                   class="form-control food-item-name"
-                                                   placeholder="Food Item Name"
-                                                   value="${foodItem.ItemName || ''}" />
+                                            <input type="text" class="form-control food-item-name" placeholder="Food Subcategory Name" value="${foodItem.ItemName || ''}" />
 
-                                            <input type="text"
-                                                   class="form-control food-item-description ms-2"
-                                                   placeholder="Description (optional)"
-                                                   value="${foodItem.Description || ''}" />
+                                            <input type="text" class="form-control food-item-description ms-2" placeholder="Description (optional)" value="${foodItem.Description || ''}" />
 
-                                            <button type="button"
-                                                    class="btn btn-outline-primary ms-2"
-                                                    onclick="addFoodChildItem_items('${foodItemUniqueId}')">
-                                                + Child
-                                            </button>
+                                            <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_items('${foodItemUniqueId}')">+ Add Food Item</button>
 
-                                            <button type="button"
-                                                    class="btn btn-outline-danger ms-2"
-                                                    onclick="deleteFoodItem_Items(this)">
-                                                X
-                                            </button>
-
+                                            <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodItem_Items(this)">X</button>
                                         </div>
 
-                                        <div id="${foodItemUniqueId}"
-                                             class="food-child-container mt-2 ms-4">
-
-                                        </div>
-
+                                        <div id="${foodItemUniqueId}" class="food-child-container mt-2 ms-4"></div>
                                     </div>
                                 `);
 
-                                // Get newly created Child Container
                                 const childContainer = document.getElementById(foodItemUniqueId);
 
-                                // ---------- Render Child Items ----------
                                 if (foodItem.Children && foodItem.Children.length > 0) {
-
                                     foodItem.Children.forEach(child => {
-
                                         childContainer.insertAdjacentHTML('beforeend', `
                                             <div class="input-group mb-2 food-child-item-row">
-
-                                                <input type="hidden"
-                                                       class="food-child-item-id"
-                                                       value="${child.ItemId || 0}" />
+                                                <input type="hidden" class="food-child-item-id" value="${child.ItemId || 0}" />
 
                                                 <span class="input-group-text">↳</span>
 
-                                                <input type="text"
-                                                       class="form-control food-child-item-name"
-                                                       placeholder="Child Item Name"
-                                                       value="${child.ItemName || ''}" />
+                                                <input type="text" class="form-control food-child-item-name" placeholder="Food Item Name" value="${child.ItemName || ''}" />
 
-                                                <input type="text"
-                                                       class="form-control food-child-item-description ms-2"
-                                                       placeholder="Description (optional)"
-                                                       value="${child.Description || ''}" />
+                                                <input type="text" class="form-control food-child-item-description ms-2" placeholder="Description (optional)" value="${child.Description || ''}" />
 
-                                                <button type="button"
-                                                        class="btn btn-outline-danger ms-2"
-                                                        onclick="deleteFoodChildItem_items(this)">
-                                                    X
-                                                </button>
-
+                                                <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteFoodItem_Items(this)">X</button>
                                             </div>
                                         `);
-
                                     });
-
                                 }
-
                             });
-
                         }
 
-                        // ---------- Add Food Item Button ----------
                         itemsDiv.insertAdjacentHTML('beforeend', `
-                            <div class="mt-2">
-                                <button type="button"
-                                        class="btn btn-outline-success btn-sm"
-                                        onclick="addFoodItem_items('${itemsDiv.id}')">
-                                    + Add Food Item
-                                </button>
+                            <div class="add-food-item-wrapper mt-2">
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_items('${itemsDiv.id}')">+ Add Food Subcategory</button>
                             </div>
                         `);
 
-                        // ---------- Collapse Headers ----------
                         setTimeout(() => {
-
                             const headerId = itemsDiv.id;
-
                             const toggleBtn = lastHeaderContainer.querySelector('.toggle-arrow');
 
                             if (index === 0) {
-
-                                // First Header → Open
-                                if (toggleBtn) {
-                                    toggleBtn.textContent = '▼';
-                                }
-
+                                if (toggleBtn) toggleBtn.textContent = '▼';
                             } else {
-
-                                // Other Headers → Collapsed
                                 if (toggleBtn) {
                                     toggleHeaderItems(headerId, toggleBtn);
                                     toggleBtn.textContent = '◀';
                                 }
-
                             }
-
                         }, 50);
-
                     });
                 }
-
                 inclusionOptions = res.data.FoodItems;
                 loadFoodPackageData();
             } else {
@@ -3029,20 +2972,30 @@ function loadFoodItems(itemId = 0) {
 }
 
 function deleteFoodItem_Items(button) {
-    //REMOVE CHILDRENS
-    $(button).closest('.food-item-wrapper').remove();
+    const $wrapper = $(button).closest('.food-item-wrapper');
+    const $parentRow = $(button).closest('.food-item-row');
+    const $childRow = $(button).closest('.food-child-item-row');
 
-    const $row = $(button).closest('.food-item-row');
-    const id = $row.find('.food-item-id').val() || 0;
-    // If not saved in DB → just remove UI row
-    if (!id || id == 0) {
-        $row.remove();
+    let id = 0;
+    let $rowToRemove = null;
+
+    if ($childRow.length > 0) {
+        id = parseInt($childRow.find('.food-child-item-id').val()) || 0;
+        $rowToRemove = $childRow;
+    } else if ($parentRow.length > 0) {
+        id = parseInt($parentRow.find('.food-item-id').val()) || 0;
+        $rowToRemove = $wrapper;
+    }
+
+    if (id === 0) {
+        $rowToRemove.remove();
         return;
     }
+
     var actionBy = Number(sessionStorage.getItem("userId") ?? 0);
 
     const payload = {
-        Id: parseInt(id),
+        Id: id,
         DeletedBy: actionBy
     };
 
@@ -3053,14 +3006,13 @@ function deleteFoodItem_Items(button) {
         data: JSON.stringify(payload),
         success: function (data) {
             if (data.status === "Success") {
-                $row.remove();
-                handleApiSuccess(data.message || "Deleted!");    
-            }
-            else {
+                $rowToRemove.remove();
+                handleApiSuccess(data.message || "Deleted!");
+            } else {
                 Swal.fire({
                     icon: "error",
                     title: "Error",
-                    text: data.message,
+                    text: data.message || "Failed to delete food item.",
                     confirmButtonColor: "#d33"
                 });
             }
@@ -3119,7 +3071,7 @@ document.addEventListener("DOMContentLoaded", function () {
 let staticPackages = [];
 
 function loadFoodPackageData() {
-    console.log("inclusionOptions in pkg:", inclusionOptions);
+    //console.log("inclusionOptions in pkg:", inclusionOptions);
     var payload = {
         Id: 0  // send packageId (or null if all)
     };
@@ -3131,7 +3083,7 @@ function loadFoodPackageData() {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("GetCompanyFoodPackage res:", res);
+            //console.log("GetCompanyFoodPackage res:", res);
             if (res.status === "Success" && res.data && res.data.length > 0) {
                 staticPackages = res.data; // assuming only one setup record
                 const body = document.getElementById("packageTableBody");
@@ -3506,12 +3458,12 @@ function addNewHeader_charges(headerDbId) {
                 style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
 
                 <div class="d-flex flex-grow-1 align-items-center">
-                    <input type="text" class="form-control form-control-sm me-2 addon-charge-header fw-semibold border-0 bg-transparent" placeholder="Header Name (e.g. Service Charge)" />
+                    <input type="text" class="form-control form-control-sm me-2 addon-charge-header fw-semibold border-0 bg-transparent" placeholder="Category Name (e.g. Service Charge)" />
                 </div>
                 <div>
                     <button class="btn btn-sm btn-outline-primary me-2 toggle-arrow-charges"
                             onclick="toggleHeaderCharges('${headerId}', this)">▼</button>
-                    <button class="btn btn-sm btn-outline-danger border fw-bold here2" onclick="deleteAddonCharge_Header('${headerDbId}', this)">X</button>
+                    <button class="btn btn-sm btn-outline-danger border fw-bold" onclick="deleteAddonCharge_Header('${headerDbId}', this)">X</button>
                 </div>
             </div>
 
@@ -3585,7 +3537,7 @@ function saveAddonCharges() {
         ActionBy: Number(sessionStorage.getItem('userId') || 0)
     };
 
-    console.log("Saving AddonCharges:", requestData);
+    console.log("SaveCompanyFoodRateAddonCharge payload:", requestData);
     //showLoader();
 
     $.ajax({
@@ -3617,7 +3569,7 @@ function loadAddonCharges() {
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-            console.log("GetCompanyFoodRateAddonCharge() res:", res);
+            //console.log("GetCompanyFoodRateAddonCharge() res:", res);
             if (res.status === "Success" && res.data && res.data.length > 0) {
                 //document.getElementById('foodHeaderContainer_charges').innerHTML = '';
                 const container = document.getElementById('foodHeaderContainer_charges');
@@ -3628,7 +3580,7 @@ function loadAddonCharges() {
                     if (!grouped[item.HeaderName]) grouped[item.HeaderName] = [];
                     grouped[item.HeaderName].push(item);
                 });
-                console.log("addon grouped:", grouped);
+                //console.log("addon grouped:", grouped);
                 let headerIndex = 0;
                 // 🟡 Iterate through each header group
                 Object.keys(grouped).forEach(headerName => {
@@ -3937,7 +3889,7 @@ function loadCharges() {
         contentType: "application/json",
         data: JSON.stringify(inputData),
         success: function (res) {
-            console.log("GetCompanyFoodRateOtherCharge res:", res);
+            //console.log("GetCompanyFoodRateOtherCharge res:", res);
             let data = [];
             if (res.status === "Success" && res.data.length > 0) {
                 //console.log("dynamic data called");
@@ -3954,7 +3906,7 @@ function loadCharges() {
                     IsFixedService: item.IsFixedService === true // ensure boolean
                 }));
             } else {
-                console.log("static data called");
+                //console.log("static data called");
                 // ✅ Fallback to local services with consistent structure
                 data = services.map(s => ({
                     Id: s.Id || 0,
@@ -3972,7 +3924,7 @@ function loadCharges() {
 
             dynamicCharges = data;
             renderCharges(data);
-            console.log("GetCompanyFoodRateOtherCharge res data:", data);
+            //console.log("GetCompanyFoodRateOtherCharge res data:", data);
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, 'GetCompanyFoodRateOtherCharge');
@@ -4098,7 +4050,7 @@ function saveLabelSetup() {
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (res) {
-            console.log("SaveCompanyFoodRateLabelPrinting res:", res);
+            //console.log("SaveCompanyFoodRateLabelPrinting res:", res);
             if (res.status === "Success") {
                 handleApiSuccess("Saved");
                 loadLabelSetup();
@@ -4127,7 +4079,7 @@ function loadLabelSetup() {
         contentType: 'application/json',
         data: JSON.stringify(inputData),
         success: function (res) {
-            console.log("GetCompanyFoodRateLabelPrinting res:", res);
+            //console.log("GetCompanyFoodRateLabelPrinting res:", res);
             if (res.status === "Success" && res.data) {
                 document.getElementById('label_id').value = res.data.Id;
 
@@ -4291,7 +4243,7 @@ function saveTermsAndConditions() {
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function (response) {
-            console.log("SaveCompanyTermsAndConditions res:", response);
+            //console.log("SaveCompanyTermsAndConditions res:", response);
             if (response.status === "Success") {
                 handleApiSuccess("Saved");
             } else {
@@ -4320,7 +4272,7 @@ function getTermsAndConditions() {
         type: 'GET',
         contentType: 'application/json',
         success: function (response) {
-            console.log("GetCompanyTermsAndConditions res:", response);
+            //console.log("GetCompanyTermsAndConditions res:", response);
             if (response.status === "Success" && response.data && response.data.length > 0) {
                 const termsData = response.data[0];
                 $('#tncId').val(termsData.Id);

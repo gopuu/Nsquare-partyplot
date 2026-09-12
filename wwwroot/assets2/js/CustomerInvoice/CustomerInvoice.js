@@ -32,10 +32,6 @@ let selectedPaymentDuration = "thismonth";
 let selectedStatusDuration = "thismonth";
 let gstList = [];
 
-$(document).ready(function () {
-    setCurrentMonthDates();
-});
-
 function setCurrentMonthDates() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -250,6 +246,7 @@ $(function () {
         sessionStorage.removeItem("IsShowTotalSalesList");
     }
 
+    setCurrentMonthDates();
     restoreFiltersFromSession();
     fetchData(flag_isGeneratedInvoice);
 
@@ -631,7 +628,10 @@ $(function () {
                 SGST: parseFloat(row.find('.sgst').val()) || 0,
                 IGST: parseFloat(row.find('.igst').val()) || 0,
 
-                Total: parseFloat(row.find('.total').val()) || 0
+                Total: parseFloat(row.find('.total').val()) || 0,
+
+                IsPackage: String(row.find('.desc').attr('data-ispackage')).toLowerCase() === 'true',
+                IsDuplicate: String(row.find('.desc').attr('data-isduplicate')).toLowerCase() === 'true'
             });
         });
 
@@ -735,7 +735,6 @@ $(function () {
             SubTotal: parseFloat($('#subTotal').val()) || 0,
             BookingDiscount: parseFloat($('#bookingDiscount').val()) || 0,
             TotalTaxableAmount: parseFloat($('#totalTaxable').val()) || 0,
-            TotalNonTaxableAmount: parseFloat($('#totalNonTaxable').val()) || 0,
             TotalDiscountAcrossAllServices: 0,     // if not used
             TotalGST: totalGst,
             TotalVAT: 0,
@@ -1880,12 +1879,7 @@ function recalcAll(isManualTaxable = false) {
     }
 
     // ==========================================
-    // Step 3: Get Non-Taxable Amount
-    // ==========================================
-    const totalNonTaxable = parseFloat($('#totalNonTaxable').val()) || 0;
-
-    // ==========================================
-    // Step 4: Set Totals
+    // Step 3: Set Totals
     // ==========================================
     $('#bookingDiscount').val(totalDiscount.toFixed(2));
     $('#subTotal').val(subTotal.toFixed(2));
@@ -1894,14 +1888,14 @@ function recalcAll(isManualTaxable = false) {
     updateInvoiceTitle(totalGST);
 
     // ==========================================
-    // Step 5: Grand Total
+    // Step 4: Grand Total
     // ==========================================
-    const grandTotal = totalTaxable + totalGST + totalNonTaxable - totalDiscount;
+    const grandTotal = totalTaxable + totalGST - totalDiscount;
 
     $('#grandTotal').val(grandTotal.toFixed(2));
 
     // ==========================================
-    // Step 6: Round Off
+    // Step 5: Round Off
     // ==========================================
     const roundedTotal = Math.round(grandTotal);
 
@@ -1913,15 +1907,6 @@ function recalcAll(isManualTaxable = false) {
     calculateBalance();
 }
 
-$(document).on('input change', '#totalNonTaxable', function () {
-    let value = parseFloat($(this).val()) || 0;
-    if (value < 0) {
-        value = 0;
-    }
-
-    $(this).val(value);
-    recalcAll();
-});
 $(document).on('input change', '#totalTaxable', function () {
     let value = parseFloat($(this).val()) || 0;
     if (value < 0) {
@@ -2004,7 +1989,6 @@ function fetchInvoiceById(params) {
             $('#subTotal').val(data.SubTotal);
             $('#bookingDiscount').val(data.BookingDiscount);
             $('#totalTaxable').val(data.TotalTaxableAmount);
-            $('#totalNonTaxable').val(data.TotalNonTaxableAmount);
             $('#totalGST').val(data.TotalGST);
             // Call after setting GST
             updateInvoiceTitle(data.TotalGST);
@@ -2014,55 +1998,161 @@ function fetchInvoiceById(params) {
             $('#advancePaid').val(data.TotalAdvancePaid).attr('readonly', true);
             $('#balanceAmount').val(data.BalanceAmount);
             /* ---------- ITEMS ---------- */
-            $('#invoiceItemsBody').empty();
 
+            var isProformaInvoice = params.ProformaInvoiceNo !== null &&
+                                    params.ProformaInvoiceNo !== undefined &&
+                                    params.ProformaInvoiceNo !== "";
+
+            // EDIT INVOICE
+            $('#invoiceItemsBody').empty();
             if (data.Items && data.Items.length > 0) {
 
                 data.Items.forEach(item => {
-                    const gstOptions = buildGSTDropdown(item.GSTRate);
+
+                    var isPackage = item.IsPackage;
+                    var isDuplicate = item.IsDuplicate;
+                
+                    const gstRate = isDuplicate ? 0 : (item.GSTRate ?? 0);
+                    const gstOptions = buildGSTDropdown(gstRate);
+
+                    const description = item.Description ?? '';
+                    const cgst = isDuplicate ? 0 : (parseFloat(item.CGST) || 0);
+                    const sgst = isDuplicate ? 0 : (parseFloat(item.SGST) || 0);
+                    const igst = isDuplicate ? 0 : (parseFloat(item.IGST) || 0);
+                    const taxableAmount = parseFloat(item.TaxableAmount) || 0;
+                    const total = isDuplicate ? taxableAmount : (parseFloat(item.Total) || 0);
+
                     const row = `
-                        <tr>
+                        <tr class="${isDuplicate ? 'duplicate-package-row' : ''}">
                             <td class="text-center col-index"></td>
 
-                            <td><input class="form-control form-control-sm desc p-1" value="${item.Description ?? ''}"></td>
-                            <td><input class="form-control form-control-sm hsn p-1" value="${item.HSN ?? ''}"></td>
+                            <td class="p-1">
+                                <div class="input-group input-group-sm">
 
-                            <td><input class="form-control form-control-sm text-end rate calc p-1" value="${item.Rate}"></td>
-                            <td><input class="form-control form-control-sm text-end qty calc p-1" value="${item.Qty}"></td>
-                            <td><input class="form-control form-control-sm text-end subtotal calc p-1" value="${item.SubTotal}"></td>
+                                    <input type="text"
+                                           class="form-control form-control-sm desc p-1"
+                                           data-ispackage="${isPackage}"
+                                           data-isduplicate="${isDuplicate}"
+                                           value="${description}"
+                                           ${isPackage ? 'readonly' : ''}>
 
-                            <td><input class="form-control form-control-sm text-end discountrate calc p-1" value="${item.DiscountRate}"></td>
-                            <td>
+                                    ${isPackage && !isDuplicate && !isProformaInvoice ? `
+                                        <button type="button"
+                                                class="btn btn-outline-dark btn-copy-package showLimit_Section ${window.AppSettings.showLimit ? 'd-none' : ''}"
+                                                title="Create Duplicate">
+                                            <i class="fa fa-copy"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+
+                            <td class="p-1">
+                                <input type="text"
+                                       class="form-control form-control-sm hsn p-1"
+                                       value="${item.HSN ?? ''}">
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end rate calc p-1"
+                                       value="${item.Rate ?? 0}">
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end qty calc p-1"
+                                       value="${item.Qty ?? 0}">
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end subtotal calc p-1"
+                                       value="${item.SubTotal ?? 0}">
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end discountrate calc p-1"
+                                       value="${item.DiscountRate ?? 0}">
+                            </td>
+
+                            <td class="p-1">
                                 <select class="form-select form-select-sm discounttype p-1 calc">
-                                    <option value="1" ${item.DiscountTypeId == 1 ? "selected" : ""}>%</option>
-                                    <option value="2" ${item.DiscountTypeId == 2 ? "selected" : ""}>Flat</option>
+                                    <option value="1" ${(item.DiscountTypeId ?? 1) == 1 ? "selected" : ""}>%</option>
+                                    <option value="2" ${(item.DiscountTypeId ?? 1) == 2 ? "selected" : ""}>Flat</option>
                                 </select>
                             </td>
-                            <td><input class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount}"></td>
 
-                            <td><input class="form-control form-control-sm text-end taxable p-1 calc" value="${item.TaxableAmount}"></td>
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end discountamount p-1 calc"
+                                       value="${item.DiscountAmount ?? 0}">
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end taxable p-1 calc"
+                                       value="${taxableAmount}">
+                            </td>
 
                             <td class="col-gst p-1">
-                                <select class="form-select form-select-sm gst calc p-1">
+                                <select class="form-select form-select-sm gst calc p-1"
+                                        ${isDuplicate ? 'disabled' : ''}>
                                     ${gstOptions}
                                 </select>
                             </td>
 
-                            <td><input class="form-control form-control-sm text-end cgst p-1" value="${item.CGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end sgst p-1" value="${item.SGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end igst p-1" value="${item.IGST}" readonly></td>
-                            <td><input class="form-control form-control-sm text-end fw-bold total p-1" value="${item.Total}" readonly></td>
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end cgst p-1"
+                                       value="${cgst.toFixed(2)}"
+                                       readonly>
+                            </td>
 
-                            <td class="text-center">
-                                <i class="fa fa-times text-danger btn-delete-row"></i>
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end sgst p-1"
+                                       value="${sgst.toFixed(2)}"
+                                       readonly>
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end igst p-1"
+                                       value="${igst.toFixed(2)}"
+                                       readonly>
+                            </td>
+
+                            <td class="p-1">
+                                <input type="number"
+                                       class="form-control form-control-sm text-end fw-bold total p-1"
+                                       value="${total.toFixed(2)}"
+                                       readonly>
+                            </td>
+
+                            <td class="text-center p-1">
+                                <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
                             </td>
                         </tr>
                     `;
 
-                    $('#invoiceItemsBody').append(row);
+                    const $row = $(row);
+
+                    $('#invoiceItemsBody').append($row);
+
+                    if (isDuplicate) {
+                        $row.find('.gst').val('0').prop('disabled', true);
+                    }
+
+                    $row.find('.calc:last').trigger('change');
                 });
 
                 updateRowSequence();
+                //recalcAll();
+                applyShowLimit();
+            }
+            else {
+                addItemRow();
             }
             $("#paymentSection").addClass("d-none");
         },
@@ -2114,7 +2204,8 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                 $('#customerState option').filter(function () {
                     return $(this).text().trim().toLowerCase() === 'gujarat';
                 }).prop('selected', true);
-            } else {
+            }
+            else {
                 $('#customerState').val(stateId);
 
             }
@@ -2132,38 +2223,49 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                     //const gstPercent = taxable > 0 && item.GSTRate ? ((item.GSTRate / taxable) * 100).toFixed(2) : 0;
                     const gstOptions = buildGSTDropdown(item.GSTRate);
 
+                    var isPackage = String(item.IsPackage).toLowerCase() === "true";
+
                     const row = `
                         <tr>
                             <td class="text-center col-index p-1"></td>
 
                             <td class="p-1">
-                                <input type="text" class="form-control form-control-sm desc p-1"
-                                       value="${item.Item_Description ?? ''}">
+                                <div class="input-group input-group-sm">
+                                    <input type="text"
+                                        class="form-control form-control-sm desc p-1"
+                                        data-ispackage="${isPackage}" 
+                                        data-isduplicate="false"
+                                        value="${item.Item_Description ?? ''}"
+                                        ${isPackage ? 'readonly' : ''}>
+
+                                    ${isPackage && !isProformaInvoice ? `
+                                        <button type="button"
+                                            class="btn btn-outline-dark btn-copy-package showLimit_Section ${window.AppSettings.showLimit ? 'd-none' : ''}"
+                                            title="Create Duplicate">
+                                            <i class="fa fa-copy"></i>
+                                        </button>
+                                    ` : ""}
+                                </div>
                             </td>
 
                             <td class="p-1">
-                                <input type="text" class="form-control form-control-sm hsn p-1"
-                                       value="${item.HSN ?? ''}">
+                                <input type="text" class="form-control form-control-sm hsn p-1" value="${item.HSN ?? ''}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end rate calc p-1"
-                                       value="${item.Rate ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end rate calc p-1" value="${item.Rate ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end qty calc p-1"
-                                       value="${item.Qty ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end qty calc p-1" value="${item.Qty ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1"
-                                       value="${item.SubTotal ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1" value="${item.SubTotal ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1"
-                                       value="${item.DiscountRate ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1" value="${item.DiscountRate ?? 0}">
                             </td>
 
                             <td class="p-1">
@@ -2174,13 +2276,11 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc"
-                                       value="${item.DiscountAmount ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc"
-                                       value="${item.Taxable ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc" value="${item.Taxable ?? 0}">
                             </td>
 
                             <td class="col-gst p-1">
@@ -2222,6 +2322,7 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                 });
                 updateRowSequence();
                 recalcAll();
+                applyShowLimit();
             } else {
                 addItemRow(); // empty invoice
             }
@@ -2232,14 +2333,498 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
         }
     });
 }
+function getDuplicateDescription(originalDescription) {
+
+    originalDescription = String(originalDescription || "").trim();
+
+    const baseDescription = originalDescription.replace(/\sDuplicate\d*$/i, "").trim();
+
+    const existingDescriptions = $('#invoiceItemsBody .desc').map(function () {
+        return String($(this).val() || "").trim();
+    }).get();
+
+    let duplicateNumber = 0;
+    let duplicateDescription = `${baseDescription} Duplicate`;
+
+    while (existingDescriptions.some(description => description.toLowerCase() === duplicateDescription.toLowerCase())) {
+        duplicateNumber++;
+        duplicateDescription = `${baseDescription} Duplicate${duplicateNumber}`;
+    }
+
+    return duplicateDescription;
+}
+function addDuplicatePackageRow($sourceRow) {
+
+    const originalDescription = String($sourceRow.find('.desc').val() || "").trim();
+
+    if (!originalDescription) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Description Required',
+            text: 'Please enter a package description first.'
+        });
+
+        return;
+    }
+
+    const duplicateDescription = getDuplicateDescription(originalDescription);
+
+    const hsn = $sourceRow.find('.hsn').val() || '';
+    const rate = parseFloat($sourceRow.find('.rate').val()) || 0;
+    const qty = parseFloat($sourceRow.find('.qty').val()) || 0;
+    const subtotal = parseFloat($sourceRow.find('.subtotal').val()) || 0;
+    const discountRate = parseFloat($sourceRow.find('.discountrate').val()) || 0;
+    const discountType = $sourceRow.find('.discounttype').val() || '1';
+    const discountAmount = parseFloat($sourceRow.find('.discountamount').val()) || 0;
+    const taxable = parseFloat($sourceRow.find('.taxable').val()) || 0;
+
+    const gstOptions = buildGSTDropdown(0);
+
+    const row = `
+        <tr class="duplicate-package-row">
+            <td class="text-center col-index p-1"></td>
+
+            <td class="p-1">
+                <div class="input-group input-group-sm">
+                    <input type="text"
+                        class="form-control form-control-sm desc p-1"
+                        data-ispackage="true"
+                        data-isduplicate="true"
+                        value="${duplicateDescription}" 
+                        readonly>
+                </div>
+            </td>
+
+            <td class="p-1">
+                <input type="text" class="form-control form-control-sm hsn p-1" value="${hsn}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end rate calc p-1" value="${rate}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end qty calc p-1" value="${qty}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1" value="${subtotal}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1" value="${discountRate}">
+            </td>
+
+            <td class="p-1">
+                <select class="form-select form-select-sm discounttype calc p-1">
+                    <option value="1" ${discountType == 1 ? "selected" : ""}>%</option>
+                    <option value="2" ${discountType == 2 ? "selected" : ""}>Flat</option>
+                </select>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc" value="${discountAmount}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc" value="${taxable}">
+            </td>
+
+            <td class="col-gst p-1">
+                <select class="form-select form-select-sm gst calc p-1" disabled>
+                    ${gstOptions}
+                </select>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end cgst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end sgst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end igst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end fw-bold total p-1" value="${taxable.toFixed(2)}" readonly>
+            </td>
+
+            <td class="text-center p-1">
+                <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
+            </td>
+        </tr>
+    `;
+
+    const $newRow = $(row);
+
+    $sourceRow.after($newRow);
+
+    $newRow.find('.gst').val('0').prop('disabled', true);
+
+    updateRowSequence();
+
+    recalcAll();
+}
+
+$(document).on('click', '.btn-copy-package', function () {
+    const $row = $(this).closest('tr');
+    addDuplicatePackageRow($row);
+});
 //proforma & invoice -- fetch -- END
 
 //FOR SUMMARY -- START
+function renderBookingNotes(notes) {
+    console.log("render info notes:", notes);
+    const container = $('#bookingNotesContainer');
+    container.empty();
+    if (!notes?.length) {
+        container.html(`
+            <div class="alert alert-light text-muted mb-0">
+                No booking notes available.
+            </div>
+        `);
+        return;
+    }
+
+    let grouped = {};
+    notes.forEach(note => {
+        const key = note.CategoryId;
+        if (!grouped[key]) {
+            grouped[key] = {
+                CategoryName: note.CategoryName,
+                Items: []
+            };
+        }
+        grouped[key].Items.push(note);
+    });
+
+    let html = '';
+    Object.values(grouped).forEach(category => {
+        html += `
+        <div class="card mb-3 shadow-sm">
+
+            <div class="card-header fw-bold bg-light">
+                ${category.CategoryName}
+            </div>
+
+            <div class="card-body">
+        `;
+
+        let subGroups = {};
+
+        category.Items.forEach(item => {
+            const key = item.SubCategoryId;
+            if (!subGroups[key]) {
+                subGroups[key] = {
+                    SubCategoryName: item.SubCategoryName,
+                    Remarks: item.Remarks || '',
+                    Value: item.Value || '',
+                    Options: []
+                };
+            }
+            else {
+                subGroups[key].Remarks = subGroups[key].Remarks || item.Remarks;
+                subGroups[key].Value = subGroups[key].Value || item.Value;
+            }
+
+            (item.Options || []).forEach(opt => {
+                if (opt.OptionName) {
+                    subGroups[key].Options.push(opt.OptionName);
+                }
+            });
+        });
+
+        Object.values(subGroups).forEach(sub => {
+            const optionText = sub.Options.join(', ');
+            html += `
+                <div class="booking-note-row">
+                    <div class="booking-note-name">${sub.SubCategoryName}</div>
+                    <div class="booking-note-value">
+            `;
+
+            if (sub.Options.length) {
+                html += sub.Options.map(o =>
+                    `<span class="badge rounded-pill bg-primary-subtle text-primary border">${o}</span>`
+                ).join(' ');
+            }
+            else if (sub.Value !== null && sub.Value !== undefined && sub.Value !== '') {
+
+                let displayValue = sub.Value;
+
+                if (String(sub.Value).toLowerCase() === 'true')
+                    displayValue = 'YES';
+                else if (String(sub.Value).toLowerCase() === 'false')
+                    displayValue = 'NO';
+
+                html += `
+                    <span class="badge rounded-pill bg-secondary-subtle text-dark border">
+                        ${displayValue}
+                    </span>
+                `;
+            }
+            else {
+                html += `<span class="text-muted">-</span>`;
+            }
+
+            html += `
+                    </div>
+
+                    <div class="booking-note-remarks">
+                        ${sub.Remarks || ''}
+                    </div>
+
+                </div>
+            `;
+        });
+
+        html += `
+            </div>
+        </div>`;
+    });
+
+    container.html(html);
+}
+
+$('#toggleBookingNotes').on('change', function () {
+    const isVisible = this.checked;
+    $(this).next('label').text(isVisible ? 'Hide Notes' : 'Show Notes');
+
+    $('#bookingNotesContainer').stop(true, true).slideToggle(this.checked);
+});
+// Fill Payment Trail dynamically
+function fillPaymentTrailTable(paymentList = [], bookingId) {
+    const tbody = $("#bookingReport_PaymentTrailBody");
+    tbody.empty(); // Clear old data
+
+    if (!paymentList || paymentList.length === 0) {
+        tbody.append(`
+                <tr>
+                    <td colspan="13" class="text-muted small fst-italic text-center">
+                        No payment records found
+                    </td>
+                </tr>
+            `);
+        return;
+    }
+
+    //console.log("paymentList:", paymentList);
+
+    paymentList.forEach((item, index) => {
+        tbody.append(`
+                <tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td class="text-center"><span class="fw-semibold text-dark">#${item.PaymentId || "—"}</span></td>
+                    <td class="text-center"><span class="badge bg-success-subtle text-success border">${item.ModeName || "—"}</span></td>
+                    <td class="text-center">${item.DateOfPayment2 || "—"}</td>
+                    <td class="text-center">${item.TxnId || "—"}</td>
+                    <td class="text-center">${item.ChequeBank || "—"}</td>
+                    <td class="text-center">${item.ChequeNo || "—"}</td>
+                    <td class="text-center">${item.ChequeDate2 || "—"}</td>
+                    <td class="text-success fw-semibold text-center">₹${formatINR(item.Amount) || "0"}</td>
+                    <td class="text-danger fw-semibold text-center">₹${formatINR(item.DueBalance) || "0"}</td>
+                    <td class="text-muted small text-center">
+                        ${item.PaymentNotes
+                ? `<span class="text-primary cursor-pointer" title="${item.PaymentNotes}">
+                                            View Notes
+                                        </span>`
+                : "—"
+            }
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}" data-bookingid="${bookingId}">
+                            <i class="fa-solid fa-file-invoice text-primary"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+    });
+}
+
+function fillGuestTable(guestList = []) {
+    const tbody = $("#bookingReport_GuestBody");
+    // Clear old data
+    tbody.empty();
+
+    // No records
+    if (!guestList || guestList.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8"
+                    class="text-muted small fst-italic text-center">
+                    No guest records found
+                </td>
+            </tr>
+        `);
+
+        return;
+    }
+
+    console.log("guestList:", guestList);
+
+    guestList.forEach((item, index) => {
+
+        tbody.append(`
+            <tr>
+                <td>${index + 1}</td>
+
+                <td class="text-start">
+                    <span class="fw-semibold text-dark">
+                        ${item.Name || "—"}
+                    </span>
+                </td>
+
+                <td>
+                    ${item.WhatsappContact || "—"}
+                </td>
+
+                <td>
+                    ${item.MobileNo || "—"}
+                </td>
+
+                <td class="text-start">
+                    ${item.Email || "—"}
+                </td>
+
+                <td>
+                    ${item.CityName || "—"}
+                </td>
+
+                <td>
+                    ${item.Dob2 || "—"}
+                </td>
+
+                <td>
+                    ${item.AnniversaryDate2 || "—"}
+                </td>
+            </tr>
+        `);
+    });
+}
+
+//Bookimg Summary - Package DATA -- START ------------------
+function renderFoodPackages(packages) {
+    let html_services = "";
+
+    if (!packages || packages.length === 0) {
+        $("#bookingReport_FoodPackageName").html("—");
+
+        html_services = `
+            <div class="d-flex justify-content-between py-1 border-bottom">
+                <span class="fw-semibold">Food</span>
+                <span>₹0</span>
+            </div>
+        `;
+        $("#foodPackageContainer_summaryservices").html(html_services);
+        return;
+    }
+    $("#btnFoodLabels").data("foodpackage", JSON.stringify(packages));
+
+    let html = "";
+    packages.forEach((pkg, index) => {
+
+        const perPlate = pkg.PerPlate ?? "—";
+        const pax = pkg.Pax ?? 0;
+        const addon = pkg.Addons ?? 0;
+        const total = pkg.TotalCharges ?? 0;
+        html_services += `
+            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
+                
+                <span class="fw-semibold">
+                    ${`Food Package ${index + 1}`}
+                    
+                    <small class="text-muted">
+                        (₹${perPlate}/Plate)
+                        ${pax > 0 ? `(Pax: ${pax})` : ``}
+                        ${addon > 0 ? `(AddOn: ₹${addon})` : ``}
+                    </small>
+                </span>
+
+                <span>₹${total}</span>
+            </div>
+        `;
+
+        // 🔹 Group Menu Items by Header
+        const menuGrouped = {};
+        (pkg.MenuItemsList || []).forEach(item => {
+            if (!menuGrouped[item.MenuHeader_Name]) {
+                menuGrouped[item.MenuHeader_Name] = [];
+            }
+            menuGrouped[item.MenuHeader_Name].push(item.MenuItem_Name);
+        });
+
+        // 🔹 Group AddOns by Header
+        const addonGrouped = {};
+        (pkg.AddOnsList || []).forEach(item => {
+            if (!addonGrouped[item.AddOn_Header_Name]) {
+                addonGrouped[item.AddOn_Header_Name] = [];
+            }
+            addonGrouped[item.AddOn_Header_Name].push(item.AddOn_Item_Name);
+        });
+
+        html += `
+            <div style="margin-bottom:12px; padding:10px; border:1px solid #fecdd3; border-radius:10px; background:#fff1f2;">
+                
+                <!-- 📦 Package Title -->
+                <div style="font-weight:600; color:#9f1239; margin-bottom:6px;">
+                    ${pkg.FoodPackageName} <span style="font-size:12px;">(₹${pkg.PerPlate}/Plate)</span>
+                </div>
+        `;
+
+        // 🍽️ Menu Section
+        if (Object.keys(menuGrouped).length > 0) {
+            html += `<div style="margin-bottom:6px;">`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
+            for (let header in menuGrouped) {
+                const items = menuGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${items}
+                    </div>
+                `;
+            }
+            html += `</div>`;
+        }
+
+        // ➕ Addons Section
+        if (Object.keys(addonGrouped).length > 0) {
+            html += `<div>`;
+            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
+            for (let header in addonGrouped) {
+
+                const items = addonGrouped[header]
+                    .map((item, index) => `(${index + 1}) ${item}`)
+                    .join(", ");
+
+                html += `
+                    <div style="font-size:13px; margin-left:6px;">
+                        <strong>${header}:</strong> ${items}
+                    </div>
+                `;
+            }
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    });
+    $("#foodPackageContainer_summaryservices").html(html_services);
+
+    $("#bookingReport_FoodPackageName").html(html);
+}
+//Bookimg Summary - Package DATA -- END ------------------
+
 function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, actionMode = "singleData") {
     var requestData = {
-        BookingId: bookingId,
-        BanquetId: banquetId,
-        EventDate: eventDate
+        BookingId: Number(bookingId),
+        BanquetId: Number(banquetId),
+        EventDate: eventDate,
+        YearId: 0, // Number(selectedYearId) ?? 0,
+        MonthId: 0 //Number(selectedMonthId) ?? 0
     };
 
     $.ajax({
@@ -2248,17 +2833,32 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         contentType: 'application/json',
         data: JSON.stringify(requestData),
         success: function (response) {
+
             if (response.status === "Success") {
                 var data = response.data;
                 console.log("Booking List:",data);
+
                 if (actionMode === "singleData") {
                     //resetBooking();
                     data = data[0];
                     //console.log("singleData - Booking API Response:", data);
                     $("#bookingReport_BookingId").val(bookingId);
                     //Client Details
-                    $("#bookingReport_clientName").text(data.Client_Name || "—");
-                    $("#bookingReport_clientContact").text(data.Client_Contact || "—");
+                    var c_name = data.Client_Name || "-";
+                    var c_contact = data.Client_Contact || "";
+                    var c_event =
+                        (data.Booking_EventName || "-") +
+                        " (" +
+                        (data.Booking_PAX || 0) +
+                        " Pax)";
+
+                    $("#bookingReport_clientName").text(c_name);
+                    $("#bookingReport_clientContact").text(c_contact);
+
+                    $("#btnRequestFeedback, #btnEnterPayment, #btnGuestDirectory").attr("data-name", c_name);
+                    $("#btnRequestFeedback, #btnEnterPayment, #btnGuestDirectory").attr("data-contact", c_contact);
+                    $("#btnEnterPayment, #btnGuestDirectory").attr("data-event", c_event);
+
                     $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                     $("#bookingReport_clientEmail").text(data.Client_Email || "—");
                     $("#bookingReport_clientBookedBy").text(data.Booked_By_EmpName || "—");
@@ -2271,6 +2871,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                         ? data.OtherCharges_BookingNoteForCustomer
                         : "— No customer booking notes available —"
                     );
+                    //NOTES -RENDER
+                    const notes = data.JSON_Notes ?? [];
+                    renderBookingNotes(notes);
+                    $('#toggleBookingNotes').prop('checked', false); //.trigger("change");
+                    $('#bookingNotesContainer').hide();
+
                     $("#VendorWorkOrder_Count").text(data.VendorWorkOrder_Count);
 
                     //Booking Details
@@ -2281,14 +2887,12 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                             .removeClass()
                             .addClass("badge bg-success")
                             .text("#" + data.InvoiceNo);
-                    }
-                    else {
+                    } else {
                         $("#bookingReport_Invoice")
                             .removeClass()
                             .addClass("badge bg-secondary")
                             .text("Invoice Pending");
                     }
-
                     $("#bookingReport_EventDate").text(data.FromDate_Full || "—");
                     $("#bookingReport_TillDate").text(data.TillDate_Full || "—");
 
@@ -2296,7 +2900,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     const end = data.EndTime_Full ?? "-";
                     $("#bookingReport_EventTime").text(`${start} - ${end}`);
 
-                    $("#bookingReport_Slot").text(data.ShiftCode || "—");
+                    $("#bookingReport_Slot").text(`${data.ShiftCode} (${data.ShiftFullName})` || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
                     $("#bookingReport_EventName").text(data.Booking_EventName || "—");
                     $("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
@@ -2309,12 +2913,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     vendorWorkOrder_slotId = data.SlotId;
 
                     // Services & Charges
-                    // Services & Charges
                     $("#bookingReport_HallRent").text(data.Booking_HallRent || "0");
                     $("#bookingReport_Decoraton").text((data.OtherCharges_Decoration_Amount + data.OtherCharges_Decoration_GST) || "0");
                     $("#bookingReport_RoomCharges").text((data.OtherCharges_RoomCharges_Amount + data.OtherCharges_RoomCharges_GST) || "0");
                     $("#bookingReport_SoundSystem").text((data.OtherCharges_SoundSystem_Amount + data.OtherCharges_SoundSystem_GST) || "0");
                     $("#bookingReport_ProjectorScreen").text((data.OtherCharges_ProjectorScreen_Amount + data.OtherCharges_ProjectorScreen_GST) || "0");
+                    $("#bookingReport_ElectricityBill").text((Number(data.OtherCharges_ElectricityBill_Amount || 0) + Number(data.OtherCharges_ElectricityBill_GST || 0)));
+                    $("#bookingReport_GeneratorCharge").text((Number(data.OtherCharges_GeneratorCharge_Amount || 0) + Number(data.OtherCharges_GeneratorCharge_GST || 0)));
+                    $("#bookingReport_OtherCharges").text((Number(data.OtherCharges_Amount || 0) + Number(data.OtherCharges_GST || 0)));
 
                     // Payment Trail
                     $("#bookingReport_DealAmount").text(data.PaymentSummary_Total || "0");
@@ -2326,14 +2932,17 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     let amount = parseFloat(data.Payment_Amount) || 0;
                     $("#bookingReport_PaidTillDate").text(amount).toggleClass("text-success", amount > 0);
 
+                    //$("#bookingReport_OutstandingAmount").text((data.PaymentSummary_PayableAmount - data.Payment_Amount) || "0");
                     const diff = (data.PaymentSummary_PayableAmount || 0) - (data.Payment_Amount || 0);
                     const finalAmount = Math.abs(diff) < 1 ? 0 : diff;
                     $("#bookingReport_OutstandingAmount").text(finalAmount);
 
                     //Payment Details Table
-                    fillPaymentTrailTable(data.PaymentTrailList, bookingId);
+                    fillPaymentTrailTable(data.PaymentTrailList);
 
-                    // Food Package and Selected Menu
+                    //Guest Details Table
+                    fillGuestTable(data.GuestList);
+
                     // Food Package and Selected Menu
                     const packages = data?.JSON_FoodPackage ?? [];
                     //const foodPackageText = packages.length === 0
@@ -2344,11 +2953,49 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
-
+                    //console.log("summary data:", data);
                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
                     $("#bookingReport_Reference").text(data?.Reference || "—");
 
+                    $("#bookingReport_ReferenceFiles").html(
+                        data?.UploadsList && data.UploadsList.length > 0
+                            ? `
+                                <div class="row g-2">
+                                    ${data.UploadsList.map((file, index) => `
+                                        <div class="col-12 col-md-3">
+                                            <div class="d-flex align-items-center justify-content-between border rounded p-2 h-100">
+                                                <span class="text-truncate me-2">
+                                                    <i class="fa fa-file-image me-2"></i>
+                                                    Reference File ${index + 1}
+                                                </span>
+
+                                                <div class="d-flex gap-1 flex-shrink-0">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            onclick="showReferenceFilePreview(null, '${file.FilePath}')"
+                                                            title="View File">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+
+                                                    <a href="${file.FilePath}"
+                                                       download
+                                                       class="btn btn-sm btn-outline-success"
+                                                       title="Download File">
+                                                        <i class="fa fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join("")}
+                                </div>
+                            `
+                            : "—"
+                    );
+
+                    //data.InvoiceNo, data.ProformaInvoiceNo
+                    //setInvoiceButtons(data);
                     //Open REPORT MODAL
+                    //console.log("bookingReportModal show");
                     bookingReportModal.show();
                 }
             }
@@ -2482,55 +3129,6 @@ function renderFoodPackages(packages) {
 }
 //Bookimg Summary - Package DATA -- END ------------------
 
-
-// Fill Payment Trail dynamically
-function fillPaymentTrailTable(paymentList = [], bookingId) {
-    const tbody = $("#bookingReport_PaymentTrailBody");
-    tbody.empty(); // Clear old data
-
-    if (!paymentList || paymentList.length === 0) {
-        tbody.append(`
-                <tr>
-                    <td colspan="13" class="text-muted small fst-italic text-center">
-                        No payment records found
-                    </td>
-                </tr>
-            `);
-        return;
-    }
-
-    //console.log("paymentList:", paymentList);
-
-    paymentList.forEach((item, index) => {
-        tbody.append(`
-                <tr>
-                    <td class="text-center">${index + 1}</td>
-                    <td class="text-center"><span class="fw-semibold text-dark">#${item.PaymentId || "—"}</span></td>
-                    <td class="text-center"><span class="badge bg-success-subtle text-success border">${item.ModeName || "—"}</span></td>
-                    <td class="text-center">${item.DateOfPayment2 || "—"}</td>
-                    <td class="text-center">${item.TxnId || "—"}</td>
-                    <td class="text-center">${item.ChequeBank || "—"}</td>
-                    <td class="text-center">${item.ChequeNo || "—"}</td>
-                    <td class="text-center">${item.ChequeDate2 || "—"}</td>
-                    <td class="text-success fw-semibold text-center">₹${formatINR(item.Amount) || "0"}</td>
-                    <td class="text-danger fw-semibold text-center">₹${formatINR(item.DueBalance) || "0"}</td>
-                    <td class="text-muted small text-center">
-                        ${item.PaymentNotes
-                        ? `<span class="text-primary cursor-pointer" title="${item.PaymentNotes}">
-                                            View Notes
-                                        </span>`
-                        : "—"
-                    }
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}" data-bookingid="${bookingId}">
-                            <i class="fa-solid fa-file-invoice text-primary"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
-    });
-}
 
 //FOR SUMMARY -- END
 /*
@@ -2704,7 +3302,8 @@ function renderTable(data, totals) {
     data.forEach((x, i) => x.srno = i + 1);
     //const isSuperUser = sessionStorage.getItem("isSuperUser") === "true";
 
-    const hasValidNo = v => v !== null && v !== undefined && Number(v) > 0;
+    //const hasValidNo = v => v !== null && v !== undefined && Number(v) > 0;
+    const hasValidNo = v => v !== null && v !== undefined && String(v).trim() !== "" && String(v).trim() !== "0";
 
     $('#tableMain table').DataTable({
         data: data,
@@ -2897,7 +3496,27 @@ function renderTable(data, totals) {
                 name: 'ProformaInvoice',
                 render: function (row) {
 
-                    if (!hasValidNo(row.ProformaInvoiceNo)) {
+                    const isNormalInvoice = hasValidNo(row.InvoiceNo);
+                    const isGSTInvoice = hasValidNo(row.GSTInvoiceNo);
+                    const hasProforma = hasValidNo(row.ProformaInvoiceNo);
+                    const isInvoiceGrouped = row.IsInvoiceGrouped === true || row.IsInvoiceGrouped === 1 || row.IsInvoiceGrouped === "true";
+
+                    /*
+                        CASE 1:
+                        Normal Invoice row.
+                        Normal Invoice always owns Proforma when available.
+                    */
+                    if (isNormalInvoice) {
+
+                        if (hasProforma) {
+                            return `
+                                <button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                                        data-bookingid="${row.BookingId}"
+                                        data-proformano="${row.ProformaInvoiceNo}">
+                                    <i class="fa fa-pen me-1"></i>Edit
+                                </button>
+                            `;
+                        }
 
                         if (row.IsInvoiceBlocked) {
                             return `
@@ -2919,15 +3538,93 @@ function renderTable(data, totals) {
                         `;
                     }
 
+                    /*
+                        CASE 2:
+                        GST Invoice is part of a Group Invoice.
+            
+                        Normal Invoice owns the Proforma.
+                        Therefore, do not show anything on GST row.
+                    */
+                    if (isGSTInvoice && isInvoiceGrouped) {
+                        return '';
+                    }
+
+                    /*
+                        CASE 3:
+                        GST Invoice without Normal Invoice.
+            
+                        GST Invoice owns the Proforma.
+                    */
+                    if (isGSTInvoice) {
+
+                        if (hasProforma) {
+                            return `
+                                <button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                                        data-bookingid="${row.BookingId}"
+                                        data-proformano="${row.ProformaInvoiceNo}">
+                                    <i class="fa fa-pen me-1"></i>Edit
+                                </button>
+                            `;
+                        }
+
+                        if (row.IsInvoiceBlocked) {
+                            return `
+                                <span title="You can create Proforma only on or after the event date.">
+                                    <button class="btn btn-secondary btn-action-xs2"
+                                            data-bookingid="${row.BookingId}"
+                                            disabled>
+                                        Create Proforma
+                                    </button>
+                                </span>
+                            `;
+                        }
+
+                        return `
+                            <button class="btn btn-secondary btn-action-xs2 btn-create-proforma"
+                                    data-bookingid="${row.BookingId}">
+                                Create Proforma
+                            </button>
+                        `;
+                    }
+
+                    /*
+                        CASE 4:
+                        Only Proforma Invoice.
+                    */
+                    if (hasProforma) {
+                        return `
+                            <button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
+                                    data-bookingid="${row.BookingId}"
+                                    data-proformano="${row.ProformaInvoiceNo}">
+                                <i class="fa fa-pen me-1"></i>Edit
+                            </button>
+                        `;
+                    }
+
+                    /*
+                        No Invoice / GST Invoice / Proforma.
+                    */
+                    if (row.IsInvoiceBlocked) {
+                        return `
+                            <span title="You can create Proforma only on or after the event date.">
+                                <button class="btn btn-secondary btn-action-xs2"
+                                        data-bookingid="${row.BookingId}"
+                                        disabled>
+                                    Create Proforma
+                                </button>
+                            </span>
+                        `;
+                    }
+
                     return `
-                        <button class="btn btn-outline-warning btn-action-xs2 btn-edit-proforma"
-                                data-bookingid="${row.BookingId}"
-                                data-proformano="${row.ProformaInvoiceNo}">
-                            <i class="fa fa-pen me-1"></i>Edit
+                        <button class="btn btn-secondary btn-action-xs2 btn-create-proforma"
+                                data-bookingid="${row.BookingId}">
+                            Create Proforma
                         </button>
                     `;
                 }
             },
+
             //Send Proforma
             {
                 data: null,
@@ -3132,7 +3829,7 @@ function resetForm() {
     $('#invoicePayment_DueBalance').val("0.00").prop('readonly', true);
     $('#advancePaid').val("0.00").attr('readonly', true);
 
-    $('#subTotal, #bookingDiscount, #totalTaxable, #totalNonTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
+    $('#subTotal, #bookingDiscount, #totalTaxable, #totalGST, #grandTotal, #roundOff, #balanceAmount').val('0.00');
 
     $('#invoiceItemsBody').empty();
     $('#btnSaveInvoice').prop('disabled', false);

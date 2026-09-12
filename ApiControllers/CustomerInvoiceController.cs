@@ -42,6 +42,7 @@ namespace ERPAdmin.ApiControllers
             domainUrl = $"{request?.Scheme}://{request?.Host.Value}/";
         }
 
+        //GET GRID
         [HttpPost]
         [Route("GetCustomerInvoice_GRID")]
         public IActionResult GetCustomerInvoice_GRID(CustomerInvoiceRequest_GRID request)
@@ -95,6 +96,7 @@ namespace ERPAdmin.ApiControllers
                                 FinalInvoiceNo = Convert.ToString(dr["FinalInvoiceNo"]),
                                 InvoiceNo = Convert.ToInt64(dr["InvoiceNo"]),
                                 GSTInvoiceNo = Convert.ToString(dr["GSTInvoiceNo"]),
+                                IsInvoiceGrouped = Convert.ToBoolean(dr["IsInvoiceGrouped"]),
                                 IsExclusiveOfGST = Convert.ToBoolean(dr["IsExclusiveOfGST"]),
                                 IsInclusiveOfGST = Convert.ToBoolean(dr["IsInclusiveOfGST"]),
                                 EventDate = dr["EventDate"].ToString(),
@@ -163,6 +165,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DOWNLOAD PDF
         [HttpPost]
         [Route("DownloadCustomerInvoiceReport_Pdf")]
         public IActionResult DownloadCustomerInvoiceReport_Pdf([FromBody] Report_CustomerInvoiceRequest request)
@@ -466,6 +469,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DOWNLOAD EXCEL
         [HttpPost]
         [Route("DownloadCustomerInvoiceReport_Excel")]
         public IActionResult DownloadCustomerInvoiceReport_Excel([FromBody] Report_CustomerInvoiceRequest request)
@@ -605,6 +609,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //GET BY BOOKING ID
         [HttpPost]
         [Route("GetCustomerInvoiceByBookingId")]
         public IActionResult GetCustomerInvoiceByBookingId(CustomerInvoiceRequest_BookingId request)
@@ -643,9 +648,7 @@ namespace ERPAdmin.ApiControllers
                                 InvoiceDate = dr["InvoiceDate"]?.ToString(),
                                 GSTIN = dr["Client_GSTIN"]?.ToString(),
                                 Email = dr["Client_Email"]?.ToString(),
-                                ClientStateId = dr["Client_StateId"] == DBNull.Value
-                                                ? null
-                                                : Convert.ToInt64(dr["Client_StateId"]),
+                                ClientStateId = dr["Client_StateId"] == DBNull.Value ? null : Convert.ToInt64(dr["Client_StateId"]),
                                 Address = dr["Client_Address"]?.ToString(),
                                 IsGSTIncluded = dr["IsGSTIncluded"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsGSTIncluded"]),
                                 IsExclusiveOfGST = dr["IsExclusiveOfGST"] == DBNull.Value ? null : Convert.ToBoolean(dr["IsExclusiveOfGST"]),
@@ -657,8 +660,7 @@ namespace ERPAdmin.ApiControllers
 
                             if (!string.IsNullOrWhiteSpace(itemsJson))
                             {
-                                invoice.ItemsJson =
-                                    JsonConvert.DeserializeObject<List<CustomerInvoiceItem_BookingId>>(itemsJson);
+                                invoice.ItemsJson = JsonConvert.DeserializeObject<List<CustomerInvoiceItem_BookingId>>(itemsJson);
                             }
                             else
                             {
@@ -686,6 +688,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //GET BY INVOICE ID
         [HttpPost]
         [Route("GetCustomerInvoiceById")]
         public IActionResult GetCustomerInvoiceById(CustomerInvoiceRequest_Id request)
@@ -740,7 +743,6 @@ namespace ERPAdmin.ApiControllers
                                 SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                                 BookingDiscount = Convert.ToDecimal(dr["BookingDiscount"]),
                                 TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
-                                TotalNonTaxableAmount = Convert.ToDecimal(dr["TotalNonTaxableAmount"]),
                                 TotalDiscountAcrossAllServices = Convert.ToDecimal(dr["TotalDiscountAcrossAllServices"]),
                                 TotalGST = Convert.ToDecimal(dr["TotalGST"]),
                                 TotalVAT = Convert.ToDecimal(dr["TotalVAT"]),
@@ -777,6 +779,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //SAVE
         [HttpPost]
         [Route("SaveCustomerInvoice")]
         public async Task<IActionResult> SaveCustomerInvoice([FromBody] SaveCustomerInvoiceRequest request)
@@ -789,7 +792,7 @@ namespace ERPAdmin.ApiControllers
                     return errorResult!;
                 }
 
-                long invoiceId=0, GSTinvoiceId=0, normalInvoiceId=0;
+                long invoiceId = 0, GSTinvoiceId = 0;
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 string userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
@@ -844,7 +847,6 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@SubTotal", request.SubTotal);
                     cmd.Parameters.AddWithValue("@BookingDiscount", request.BookingDiscount);
                     cmd.Parameters.AddWithValue("@TotalTaxableAmount", request.TotalTaxableAmount);
-                    cmd.Parameters.AddWithValue("@TotalNonTaxableAmount", request.TotalNonTaxableAmount);
                     cmd.Parameters.AddWithValue("@TotalDiscountAcrossAllServices", request.TotalDiscountAcrossAllServices);
                     cmd.Parameters.AddWithValue("@TotalGST", request.TotalGST);
                     cmd.Parameters.AddWithValue("@TotalVAT", request.TotalVAT);
@@ -879,7 +881,6 @@ namespace ERPAdmin.ApiControllers
                             //bookingId = reader["BookingId"] != DBNull.Value ? Convert.ToInt64(reader["BookingId"]) : 0;
                             invoiceId = reader["CustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["CustomerInvoiceId"]) : 0;
                             GSTinvoiceId = reader["GSTCustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["GSTCustomerInvoiceId"]) : 0;
-                            normalInvoiceId = reader["NormalCustomerInvoiceId"] != DBNull.Value ? Convert.ToInt64(reader["NormalCustomerInvoiceId"]) : 0;
 
                             whatsapp_client_contactno = reader["Client_Contact"]?.ToString() ?? "";
 
@@ -993,6 +994,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DELETE
         [HttpPost]
         [Route("DeleteCustomerInvoice")]
         public IActionResult DeleteCustomerInvoice(DeleteCustomerInvoice request)
@@ -1040,6 +1042,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //GET NEXT INVOICE NO
         [HttpGet]
         [Route("GetCustomerInvoice_NextInvoiceNumbers")]
         public IActionResult GetCustomerInvoice_NextInvoiceNumbers()
@@ -1204,6 +1207,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DASHBOARD WIDGET 1
         [HttpPost]
         [Route("GetDashboardPaymentCollectionStatus")]
         public IActionResult GetDashboardPaymentCollectionStatus([FromBody] DashboardFeedbackRequest request)
@@ -1268,6 +1272,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DASHBOARD WIDGET 2
         [HttpPost]
         [Route("GetDashboardPaymentCollectionDetails")]
         public IActionResult GetDashboardPaymentCollectionDetails([FromBody] DashboardPaymentDetailsRequest request)
@@ -1371,6 +1376,7 @@ namespace ERPAdmin.ApiControllers
             }
         }
 
+        //DASHBOARD WIDGET 3
         [HttpPost]
         [Route("GetDashboardInvoiceStatus")]
         public IActionResult GetDashboardInvoiceStatus([FromBody] DashboardFeedbackRequest request)

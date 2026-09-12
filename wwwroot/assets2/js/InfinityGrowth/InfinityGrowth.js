@@ -1,9 +1,9 @@
 ﻿let sopDocuments = [];
 let sopCurrentPdfUrl = null;
 let sopViewerModal = null;
-
-let sopCurrentZoom = 100;
+let sopCurrentZoom = 1.25; // PDF.js scale factor
 let sopViewMode = "Fit";
+let sopCurrentPdf = null;
 
 $(document).ready(function () {
     const userId = getLoggedInEmployeeId();
@@ -16,8 +16,8 @@ $(document).ready(function () {
         return;
     }
 
-    sopViewerModal = new bootstrap.Modal(document.getElementById("sopViewerModal"));
 
+    sopViewerModal = new bootstrap.Modal(document.getElementById("sopViewerModal"));
     loadSOPDocuments();
 
     $("#sopViewerModal").on("hidden.bs.modal", function () {
@@ -26,10 +26,14 @@ $(document).ready(function () {
 
     $("#sopPdfViewer").on("load", function () {
         const src = $(this).attr("src");
-
         if (src) {
             $("#sopPdfLoader").addClass("d-none");
         }
+    });
+    // Disable right-click only inside the viewer
+    $(document).on("contextmenu", "#pdfContainer", function (e) {
+        e.preventDefault();
+        return false;
     });
 });
 
@@ -261,68 +265,97 @@ function countSOPDocuments(categories) {
         return total + documents.length;
     }, 0);
 }
-
 function viewSOPDocument(documentId) {
     const userId = getLoggedInEmployeeId();
-
     if (!userId || !documentId) {
         Swal.fire("Error", "Invalid document request.", "error");
         return;
     }
 
     const document = sopDocuments.find(x => Number(x.Id) === Number(documentId));
-
     $("#sopViewerTitle").text(document?.Title || document?.FileName || "Document");
-    $("#sopPdfViewer").attr("src", "");
     $("#sopPdfLoader").removeClass("d-none");
-
-    sopCurrentZoom = 100;
-    sopViewMode = "Fit";
-    $("#sopZoomLabel").text("100%");
-
     sopViewerModal.show();
 
-    const payload = {
-        DocumentId: documentId,
-        ActionBy: userId
-    };
+    const payload = { DocumentId: documentId, ActionBy: userId };
 
     fetch("/api/InfinityGrowth_SOP/GetInfinityGrowth_SOP_DocumentsForView", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(async function (response) {
-        if (!response.ok) {
-            const message = await response.text();
-            throw new Error(message || "Unable to open document.");
-        }
+        .then(async function (response) {
+            if (!response.ok) throw new Error(await response.text() || "Unable to open document.");
+            return response.blob();
+        })
+        .then(function (blob) {
+            if (blob.type && blob.type !== "application/pdf") throw new Error("Invalid document response.");
+            if (sopCurrentPdfUrl) URL.revokeObjectURL(sopCurrentPdfUrl);
 
-        return response.blob();
-    })
-    .then(function (blob) {
-        if (blob.type && blob.type !== "application/pdf")
-            throw new Error("Invalid document response.");
+            sopCurrentPdfUrl = URL.createObjectURL(blob);
+            const loadingTask = pdfjsLib.getDocument(sopCurrentPdfUrl);
+            return loadingTask.promise;
+        })
+        .then(function (pdf) {
+            sopCurrentPdf = pdf;
+            sopCurrentZoom = 1.0;
+            sopViewMode = "Fit";
+            $("#sopZoomLabel").text("100%");
+            renderAllPages();
+            $("#sopPdfLoader").addClass("d-none");
+        })
+        .catch(function (error) {
+            $("#sopPdfLoader").addClass("d-none");
+            sopViewerModal.hide();
+            Swal.fire("Unable to Open Document", error.message || "You may not have access to this document.", "error");
+        });
+}
+function renderAllPages2() {
+    const container = $("#pdfContainer");
+    container.empty();
+    for (let pageNum = 1; pageNum <= sopCurrentPdf.numPages; pageNum++) {
+        sopCurrentPdf.getPage(pageNum).then(function (page) {
+            const viewport = page.getViewport({ scale: sopCurrentZoom });
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            container.append(canvas);
 
-        if (sopCurrentPdfUrl)
-            URL.revokeObjectURL(sopCurrentPdfUrl);
+            page.render({ canvasContext: context, viewport });
+        });
+    }
+}
+function renderAllPages() {
+    const container = $("#pdfContainer");
+    container.empty();
 
-        sopCurrentPdfUrl = URL.createObjectURL(blob);
-
-        fitPageSOP();
-    })
-    .catch(function (error) {
-        $("#sopPdfLoader").addClass("d-none");
-        sopViewerModal.hide();
-
-        Swal.fire(
-            "Unable to Open Document",
-            error.message || "You may not have access to this document.",
-            "error"
-        );
+    // Ensure vertical stacking and centered alignment
+    container.css({
+        display: "flex",
+        "flex-direction": "column",
+        "align-items": "center",
+        "justify-content": "flex-start",
+        "overflow-y": "auto"
     });
+
+    for (let pageNum = 1; pageNum <= sopCurrentPdf.numPages; pageNum++) {
+        sopCurrentPdf.getPage(pageNum).then(function (page) {
+            const viewport = page.getViewport({ scale: sopCurrentZoom });
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Add spacing between pages
+            canvas.style.margin = "20px 0";
+
+            container.append(canvas);
+
+            const renderContext = { canvasContext: context, viewport: viewport };
+            page.render(renderContext);
+        });
+    }
 }
 
 function loadSOPPdf(fragment) {
@@ -334,64 +367,59 @@ function loadSOPPdf(fragment) {
     );
 }
 
+// Zoom controls
 function zoomInSOP() {
-    if (!sopCurrentPdfUrl || sopCurrentZoom >= 300) return;
-
-    sopCurrentZoom += 25;
+    if (!sopCurrentPdf || sopCurrentZoom >= 3.0) return;
+    sopCurrentZoom += 0.25;
     sopViewMode = "zoom";
-
-    $("#sopZoomLabel").text(`${sopCurrentZoom}%`);
-
-    loadSOPPdf(`zoom=${sopCurrentZoom}`);
+    $("#sopZoomLabel").text(Math.round(sopCurrentZoom * 100) + "%");
+    renderAllPages();
 }
 
 function zoomOutSOP() {
-    if (!sopCurrentPdfUrl || sopCurrentZoom <= 50) return;
-
-    sopCurrentZoom -= 25;
+    if (!sopCurrentPdf || sopCurrentZoom <= 0.5) return;
+    sopCurrentZoom -= 0.25;
     sopViewMode = "zoom";
-
-    $("#sopZoomLabel").text(`${sopCurrentZoom}%`);
-
-    loadSOPPdf(`zoom=${sopCurrentZoom}`);
+    $("#sopZoomLabel").text(Math.round(sopCurrentZoom * 100) + "%");
+    renderAllPages();
 }
 
 function fitWidthSOP() {
-    if (!sopCurrentPdfUrl) return;
-
-    sopCurrentZoom = 100;
+    if (!sopCurrentPdf) return;
     sopViewMode = "FitH";
-
+    sopCurrentZoom = 1.5;
     $("#sopZoomLabel").text("Fit Width");
-
-    loadSOPPdf("view=FitH");
+    renderAllPages();
 }
 
 function fitPageSOP() {
-    if (!sopCurrentPdfUrl) return;
-
-    sopCurrentZoom = 100;
+    if (!sopCurrentPdf) return;
     sopViewMode = "Fit";
-
+    sopCurrentZoom = 1.0;
     $("#sopZoomLabel").text("Fit Page");
-
-    loadSOPPdf("view=Fit");
+    renderAllPages();
 }
 
 function closeSOPDocument() {
-    $("#sopPdfViewer").attr("src", "");
-    $("#sopPdfLoader").removeClass("d-none");
-
-    sopCurrentZoom = 100;
+    $("#pdfContainer").empty();
+    sopCurrentZoom = 1.0;
     sopViewMode = "Fit";
     $("#sopZoomLabel").text("100%");
-
     if (sopCurrentPdfUrl) {
         URL.revokeObjectURL(sopCurrentPdfUrl);
         sopCurrentPdfUrl = null;
     }
+    sopCurrentPdf = null;
 }
 
+// Block Ctrl+S and Ctrl+P
+$(document).on("keydown", function (e) {
+    if (!$("#sopViewerModal").hasClass("show")) return;
+    if ((e.ctrlKey || e.metaKey) && ["s", "p"].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        return false;
+    }
+});
 function showSOPEmptyState(title, message) {
     $("#sopLoader").addClass("d-none");
     $("#sopContent").addClass("d-none");
@@ -404,18 +432,3 @@ function showSOPEmptyState(title, message) {
 function escapeHtml(value) {
     return $("<div>").text(value || "").html();
 }
-
-$(document).on("contextmenu", "#sopViewerModal", function (e) {
-    e.preventDefault();
-});
-
-$(document).on("keydown", function (e) {
-    if (!$("#sopViewerModal").hasClass("show")) {
-        return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && ["s", "p"].includes(e.key.toLowerCase())) {
-        e.preventDefault();
-        return false;
-    }
-});

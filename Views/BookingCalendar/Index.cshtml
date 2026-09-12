@@ -35,9 +35,21 @@
                             <div class="d-flex flex-column" id="booking-board">
                                 <!-- Loading State -->
                                 <div id="calendarLoader" class="text-center py-5">
-                                    <div class="spinner-border text-primary mb-3" role="status"></div>
-                                    <div class="fw-semibold">Fetching booking data...</div>
-                                    <div class="text-muted small">Please wait while we prepare your calendar.</div>
+                                    <div class="fw-semibold mb-2">Fetching booking data...</div>
+                                    <div class="text-muted small mb-3">Please wait while we prepare your calendar.</div>
+
+                                    <div class="progress mx-auto" style="max-width: 350px; height: 8px;">
+                                        <div id="calendarLoaderProgress"
+                                             class="progress-bar progress-bar-striped progress-bar-animated"
+                                             role="progressbar"
+                                             style="width: 0%"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            0%
+                                        </div>
+                                    </div>
+
+                                    <div id="calendarLoaderPercent" class="text-primary fw-semibold mt-2">0%</div>
                                 </div>
                             </div>
                         </div>
@@ -674,11 +686,6 @@
                         </div>
 
                         <!-- Notes -->
-                        <div class="col-md-12" id="notes1">
-                            <div id="notesContainer"></div>
-                        </div>
-
-                        <!-- Notes -->
                         <div class="col-md-12" id="notes">
                             <div class="row">
 
@@ -700,24 +707,39 @@
                                               placeholder="Enter internal office notes"></textarea>
                                 </div>
 
-                                <!-- Booking Reference File -->
+                                <!-- Booking Reference Files -->
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">Booking Reference File</label>
+
+                                    <label class="form-label fw-bold">
+                                        Upload Reference Files
+                                        <small class="text-muted fw-normal ms-1">
+                                            (Maximum 4 files • 2 MB per file)
+                                        </small>
+                                    </label>
 
                                     <input type="file"
                                            id="BookingReferenceFile"
                                            class="form-control"
-                                           accept=".jpg,.jpeg,.png">
+                                           accept=".jpg,.jpeg,.png"
+                                           multiple>
 
                                     <div class="form-text">
-                                        Select booking reference document or image.
+                                        Select one or more booking reference images.
                                     </div>
 
-                                    <!-- Base64 without MIME -->
-                                    <input type="hidden" id="BookingReferenceFile_Base64">
+                                    <!-- Stores upload data as JSON -->
+                                    <input type="hidden" id="BookingReferenceFile_JSON">
+
+                                    <!-- Selected Files List -->
+                                    <div id="BookingReferenceFileList" class="mt-2"></div>
                                 </div>
 
                             </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-md-12" id="notes1">
+                            <div id="notesContainer"></div>
                         </div>
 
                         <!-- Guest Details -->
@@ -1406,9 +1428,12 @@
                                 </div>
                                 <div class="col-12">
                                     <p class="mb-0">
-                                        <strong>Reference File Uploaded:</strong>
-                                        <span id="bookingReport_ReferenceImage">—</span>
+                                        <strong>Reference Files (Uploaded):</strong>
                                     </p>
+
+                                    <div id="bookingReport_ReferenceFiles" class="mt-2">
+                                        —
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2876,6 +2901,37 @@
     </div>
 </div>
 <!-- Guest Directory -- END-->
+
+<!-- Image View MODAL -- START-->
+<div class="modal fade" id="referenceFilePreviewModal" tabindex="-1" aria-labelledby="referenceFilePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary py-2">
+                <h5 class="modal-title text-white" id="referenceFilePreviewModalLabel">
+                    Preview Reference File (Uploaded)
+                </h5>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <img id="referenceFilePreviewImage"
+                     src=""
+                     alt="Reference File"
+                     class="img-fluid rounded"
+                     style="max-height: 70vh; display: none;">
+
+                <div id="referenceFilePreviewNoData" class="text-muted">
+                    No file selected.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Image View MODAL -- END-->
+
 
 
 

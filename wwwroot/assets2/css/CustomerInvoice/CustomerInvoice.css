@@ -1,4 +1,9 @@
-﻿#paymentSection input,
+﻿.desc {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+#paymentSection input,
 #paymentSection select,
 #paymentSection textarea {
     padding: 0.25rem !important; /* equivalent to p-1 */

@@ -186,6 +186,10 @@
     {
         public long? BookingId { get; set; }
     }
+    public class DeleteBookingCalendarUploadRequest : BaseClass
+    {
+        public long? BookingUploadId { get; set; }
+    }
 
     //cancel booking
     public class CancelBookingCalendarRequest : BaseClass
@@ -238,7 +242,6 @@
         public string? Payment_PaidTime { get; set; }
         public string? Payment_DueDate { get; set; }
         public string? Payment_Note { get; set; }
-        public string? ReferenceImage { get; set; } = "";
 
         public decimal? OtherCharges_Decoration_Amount { get; set; }
         public decimal? OtherCharges_Decoration_GST { get; set; }
@@ -272,6 +275,7 @@
         public List<FoodPackage>? JSON_FoodPackage { get; set; }
         public List<BookingCalendarNoteItem>? JSON_Notes { get; set; }
         public List<BookingCalendarGuestModel>? JSON_Guests { get; set; }
+        public List<BookingCalendarUploadModel>? JSON_Uploads { get; set; }
     }
     public class FoodPackage
     {
@@ -331,6 +335,11 @@
         public long CityId { get; set; }
         public string? Dob { get; set; }
         public string? AnniversaryDate { get; set; }
+    }
+    public class BookingCalendarUploadModel
+    {
+        public long? UploadFile_Id { get; set; } = 0;
+        public string? UploadFile_Base64 { get; set; }
     }
 
     //GET MODEL MASTER -NOTES
@@ -440,7 +449,6 @@
 
         public string? ReachedUs { get; set; }
         public string? Reference { get; set; }
-        public string? ReferenceImage { get; set; }
         public string? OtherCharges_BookingNoteForCustomer { get; set; }
         public string? OtherCharges_InternalOfficeNote { get; set; }
 
@@ -464,6 +472,7 @@
         public long? ProformaInvoiceNo { get; set; }
         public List<PaymentTrailModel>? PaymentTrailList { get; set; }
         public List<GuestModel>? GuestList { get; set; }
+        public List<BookingUploadModel>? UploadsList { get; set; }
     }
     public class PaymentTrailModel
     {
@@ -540,6 +549,11 @@
         public string? OptionName { get; set; }
     }
 
+    public class BookingUploadModel
+    {
+        public long? UploadId { get; set; }
+        public string? FilePath { get; set; }
+    }
     public class GuestModel
     {
         public long? Id { get; set; }

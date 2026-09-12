@@ -85,8 +85,9 @@ namespace ERPAdmin.ApiControllers
                     foreach (DataRow dr in dataTable.Rows)
                     {
                         BookingModel booking = new BookingModel();
+                        long bookingId = dr["BookingId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BookingId"]);
                         booking.BookingCalendar_IsBlocked = dr["BookingCalendar_IsBlocked"] == DBNull.Value ? false : Convert.ToBoolean(dr["BookingCalendar_IsBlocked"]);
-                        booking.BookingId = dr["BookingId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["BookingId"]);
+                        booking.BookingId = bookingId;
                         booking.EventDate = dr["EventDate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["EventDate"]).ToString("yyyy-MM-dd");
                         booking.EventDate_Format = dr["EventDate_Format"] == DBNull.Value ? "" : Convert.ToString(dr["EventDate_Format"]);
                         booking.ShiftCode = dr["ShiftCode"] == DBNull.Value ? "" : Convert.ToString(dr["ShiftCode"]);
@@ -197,10 +198,6 @@ namespace ERPAdmin.ApiControllers
                         booking.ReachedUs = dr["ReachedUs"] == DBNull.Value ? "" : Convert.ToString(dr["ReachedUs"]);
                         booking.Reference = dr["Reference"] == DBNull.Value ? "" : Convert.ToString(dr["Reference"]);
 
-                        booking.ReferenceImage = dr["ReferenceImage"] != DBNull.Value && !string.IsNullOrWhiteSpace(Convert.ToString(dr["ReferenceImage"]))
-                            ? $"{domainUrl}/uploads/org/{domain}/BookingCalendar/{Convert.ToString(dr["ReferenceImage"])}"
-                            : null;
-
                         booking.InvoiceNo = dr["InvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["InvoiceNo"]);
                         booking.ProformaInvoiceNo = dr["ProformaInvoiceNo"] == DBNull.Value ? 0 : Convert.ToInt64(dr["ProformaInvoiceNo"]);
 
@@ -213,6 +210,25 @@ namespace ERPAdmin.ApiControllers
                         booking.GuestList = !string.IsNullOrWhiteSpace(guestJson)
                             ? JsonConvert.DeserializeObject<List<GuestModel>>(guestJson)
                             : new List<GuestModel>();
+
+                        // Booking Uploads
+                        var uploadsJson = dr["UploadsJSON"] == DBNull.Value ? null : dr["UploadsJSON"].ToString();
+                        booking.UploadsList = !string.IsNullOrWhiteSpace(uploadsJson)
+                            ? JsonConvert.DeserializeObject<List<BookingUploadModel>>(uploadsJson)
+                            : new List<BookingUploadModel>();
+
+                        string folderPath = $"org/{domain}/BookingCalendar/BookingId_{bookingId}/";
+
+                        if (booking.UploadsList != null && booking.UploadsList.Any())
+                        {
+                            foreach (var upload in booking.UploadsList)
+                            {
+                                if (!string.IsNullOrWhiteSpace(upload.FilePath))
+                                {
+                                    upload.FilePath = $"{domainUrl}/uploads/{folderPath}{upload.FilePath}";
+                                }
+                            }
+                        }
 
                         bookings.Add(booking);
                     }
@@ -400,34 +416,39 @@ namespace ERPAdmin.ApiControllers
                     #endregion
 
                     //Reference Image Upload
+                    // Reference File Upload
                     #region REFERENCE FILE UPLOAD
-                    if (!string.IsNullOrWhiteSpace(model.ReferenceImage))
+
+                    if (model.JSON_Uploads != null && model.JSON_Uploads.Any())
                     {
-                        string fileType = _imageUploadService.GetFileTypeFromBase64(model.ReferenceImage);
-                        string folderPath = $"org/{domain}/BookingCalendar/";
-                        string filePrefix = $"BookingId_{bookingId}";
+                        List<object> uploadedFiles = new List<object>();
+                        string folderPath = $"org/{domain}/BookingCalendar/BookingId_{bookingId}/";
 
-                        _imageUploadService.DeleteImages(folderPath, filePrefix);
-
-                        string fileName = _imageUploadService.UploadImage(
-                            model.ReferenceImage,
-                            folderPath,
-                            filePrefix,
-                            fileType
-                        );
-
-                        using (SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con))
+                        foreach (var upload in model.JSON_Uploads)
                         {
-                            fileCmd.CommandType = CommandType.StoredProcedure;
+                            if (string.IsNullOrWhiteSpace(upload.UploadFile_Base64))
+                                continue;
 
-                            fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = bookingId;
-                            fileCmd.Parameters.Add("@DocumentName", SqlDbType.NVarChar, -1).Value = fileName;
-                            fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "BookingCalendar";
-
-                            fileCmd.ExecuteNonQuery();
+                            string fileType = _imageUploadService.GetFileTypeFromBase64(upload.UploadFile_Base64);
+                            string filePrefix = $"BookingId_{bookingId}_{Guid.NewGuid():N}";
+                            string fileName = _imageUploadService.UploadImage(upload.UploadFile_Base64, folderPath, filePrefix, fileType);
+                            uploadedFiles.Add(new { FileName = fileName});
                         }
-                        model.ReferenceImage = fileName;
+
+                        if (uploadedFiles.Any())
+                        {
+                            string documentNameJSON = JsonConvert.SerializeObject(uploadedFiles);
+                            using (SqlCommand fileCmd = new SqlCommand("Save_DocumentFile", con))
+                            {
+                                fileCmd.CommandType = CommandType.StoredProcedure;
+                                fileCmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = bookingId;
+                                fileCmd.Parameters.Add("@DocumentNameJSON", SqlDbType.NVarChar, -1).Value = documentNameJSON;
+                                fileCmd.Parameters.Add("@TableName", SqlDbType.NVarChar, 100).Value = "BookingCalendar";
+                                fileCmd.ExecuteNonQuery();
+                            }
+                        }
                     }
+
                     #endregion
 
                 }
@@ -488,6 +509,48 @@ namespace ERPAdmin.ApiControllers
                 apiResponse.message = ex.Message;
                 apiResponse.status = "Error";
                 return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DeleteBookingCalendar_Upload")]
+        public IActionResult DeleteBookingCalendar_Upload([FromBody] DeleteBookingCalendarUploadRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                // 🔹 Validate and get connection string
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                {
+                    return errorResult!;
+                }
+
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("DeleteBookingCalendar_Upload", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@Id", SqlDbType.BigInt).Value = model.BookingUploadId;
+                        cmd.Parameters.Add("@ActionBy", SqlDbType.BigInt).Value = model.ActionBy;
+                        cmd.ExecuteNonQuery();
+                    }
+                    conn.Close();
+                }
+
+                // 🔹 Success response
+                apiResponse.message = "Booking Upload deleted successfully!";
+                apiResponse.status = "Success";
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                // 🔹 Log and return error
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.message = ex.Message;
+                apiResponse.status = "Error";
+                return StatusCode(200, apiResponse);
             }
         }
 

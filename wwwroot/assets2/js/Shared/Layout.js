@@ -1,4 +1,9 @@
-﻿// PERMISSION CHECK
+﻿function getFileNameFromPath(filePath) {
+    if (!filePath) return "";
+    return filePath.split("/").pop();
+}
+
+// PERMISSION CHECK
 function checkPermission(type) {
     let allowed = (sessionStorage.getItem(type) || localStorage.getItem(type)) === "true";
     if (!allowed) Swal.fire("Access Denied", "Permission Required", "error");

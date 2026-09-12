@@ -5010,48 +5010,57 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
 
             //$('#isGstIncluded').prop('checked', data.IsGSTIncluded === true);
 
+            /* ---------- ITEMS ---------- */
             $('#invoiceModal_invoiceItemsBody').empty();
-
             if (data.ItemsJson && data.ItemsJson.length > 0) {
-
                 data.ItemsJson.forEach(item => {
 
                     const taxable = parseFloat(item.Taxable) || 0;
                     //const gstPercent = taxable > 0 && item.GSTRate ? ((item.GSTRate / taxable) * 100).toFixed(2) : 0;
                     const gstOptions = buildGSTDropdown(item.GSTRate);
 
+                    var isPackage = String(item.IsPackage).toLowerCase() === "true";
                     const row = `
                         <tr>
                             <td class="text-center col-index p-1"></td>
 
                             <td class="p-1">
-                                <input type="text" class="form-control form-control-sm desc p-1"
-                                       value="${item.Item_Description ?? ''}">
+                                <div class="input-group input-group-sm">
+                                    <input type="text"
+                                        class="form-control form-control-sm desc p-1"
+                                        data-ispackage="${isPackage}" 
+                                        data-isduplicate="false"
+                                        value="${item.Item_Description ?? ''}"
+                                        ${isPackage ? 'readonly' : ''}>
+
+                                    ${isPackage && !isProformaInvoice ? `
+                                        <button type="button"
+                                            class="btn btn-outline-primary btn-copy-package showLimit_Section ${window.AppSettings.showLimit ? 'd-none' : ''}"
+                                            title="Create Duplicate">
+                                            <i class="fa fa-copy"></i>
+                                        </button>
+                                    ` : ""}
+                                </div>
                             </td>
 
                             <td class="p-1">
-                                <input type="text" class="form-control form-control-sm hsn p-1"
-                                       value="${item.HSN ?? ''}">
+                                <input type="text" class="form-control form-control-sm hsn p-1" value="${item.HSN ?? ''}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end rate calc p-1"
-                                       value="${item.Rate ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end rate calc p-1" value="${item.Rate ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end qty calc p-1"
-                                       value="${item.Qty ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end qty calc p-1" value="${item.Qty ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1"
-                                       value="${item.SubTotal ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1" value="${item.SubTotal ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1"
-                                       value="${item.DiscountRate ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1" value="${item.DiscountRate ?? 0}">
                             </td>
 
                             <td class="p-1">
@@ -5062,13 +5071,11 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc"
-                                       value="${item.DiscountAmount ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc" value="${item.DiscountAmount ?? 0}">
                             </td>
 
                             <td class="p-1">
-                                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc"
-                                       value="${item.Taxable ?? 0}">
+                                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc" value="${item.Taxable ?? 0}">
                             </td>
 
                             <td class="col-gst p-1">
@@ -5099,21 +5106,26 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
                             </td>
 
                             <td class="text-center p-1">
-                                <i class="fa fa-times text-danger btn-delete-row-invoice" role="button"></i>
+                                <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
                             </td>
                         </tr>
                         `;
 
-                    $('#invoiceModal_invoiceItemsBody').append(row);
+                    const $row = $(row);
+                    $('#invoiceModal_invoiceItemsBody').append($row);
+                    $row.find('.calc:last').trigger('change');
                 });
-
                 updateRowSequence();
                 recalcAll();
+                applyShowLimit();
                 $('#invoiceModal_advancePaid').val(data.PaidAmount).attr('readonly', true);
-            } else {
+            }
+            else {
                 addItemRow(); // empty invoice
             }
+
             /* ---------- ITEMS ---------- */
+
             //bookingReportModal.hide();
             bookingReportModal_inDOM.classList.remove("show");
             bookingReportModal_inDOM.style.display = "none";
@@ -5129,6 +5141,146 @@ function fetchInvoiceByBookingId(bookingId, isInclusiveGST = false, isProformaIn
         }
     });
 }
+function getDuplicateDescription(originalDescription) {
+
+    originalDescription = String(originalDescription || "").trim();
+
+    const baseDescription = originalDescription.replace(/\sDuplicate\d*$/i, "").trim();
+
+    const existingDescriptions = $('#invoiceItemsBody .desc').map(function () {
+        return String($(this).val() || "").trim();
+    }).get();
+
+    let duplicateNumber = 0;
+    let duplicateDescription = `${baseDescription} Duplicate`;
+
+    while (existingDescriptions.some(description => description.toLowerCase() === duplicateDescription.toLowerCase())) {
+        duplicateNumber++;
+        duplicateDescription = `${baseDescription} Duplicate${duplicateNumber}`;
+    }
+
+    return duplicateDescription;
+}
+function addDuplicatePackageRow($sourceRow) {
+
+    const originalDescription = String($sourceRow.find('.desc').val() || "").trim();
+
+    if (!originalDescription) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Description Required',
+            text: 'Please enter a package description first.'
+        });
+
+        return;
+    }
+
+    const duplicateDescription = getDuplicateDescription(originalDescription);
+
+    const hsn = $sourceRow.find('.hsn').val() || '';
+    const rate = parseFloat($sourceRow.find('.rate').val()) || 0;
+    const qty = parseFloat($sourceRow.find('.qty').val()) || 0;
+    const subtotal = parseFloat($sourceRow.find('.subtotal').val()) || 0;
+    const discountRate = parseFloat($sourceRow.find('.discountrate').val()) || 0;
+    const discountType = $sourceRow.find('.discounttype').val() || '1';
+    const discountAmount = parseFloat($sourceRow.find('.discountamount').val()) || 0;
+    const taxable = parseFloat($sourceRow.find('.taxable').val()) || 0;
+
+    const gstOptions = buildGSTDropdown(0);
+
+    const row = `
+        <tr class="duplicate-package-row">
+            <td class="text-center col-index p-1"></td>
+
+            <td class="p-1">
+                <div class="input-group input-group-sm">
+                    <input type="text"
+                        class="form-control form-control-sm desc p-1"
+                        data-ispackage="true"
+                        data-isduplicate="true"
+                        value="${duplicateDescription}" 
+                        readonly>
+                </div>
+            </td>
+
+            <td class="p-1">
+                <input type="text" class="form-control form-control-sm hsn p-1" value="${hsn}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end rate calc p-1" value="${rate}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end qty calc p-1" value="${qty}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end subtotal calc p-1" value="${subtotal}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end discountrate calc p-1" value="${discountRate}">
+            </td>
+
+            <td class="p-1">
+                <select class="form-select form-select-sm discounttype calc p-1">
+                    <option value="1" ${discountType == 1 ? "selected" : ""}>%</option>
+                    <option value="2" ${discountType == 2 ? "selected" : ""}>Flat</option>
+                </select>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end discountamount p-1 calc" value="${discountAmount}">
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end taxable p-1 calc" value="${taxable}">
+            </td>
+
+            <td class="col-gst p-1">
+                <select class="form-select form-select-sm gst calc p-1" disabled>
+                    ${gstOptions}
+                </select>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end cgst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end sgst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end igst p-1" value="0.00" readonly>
+            </td>
+
+            <td class="p-1">
+                <input type="number" class="form-control form-control-sm text-end fw-bold total p-1" value="${taxable.toFixed(2)}" readonly>
+            </td>
+
+            <td class="text-center p-1">
+                <i class="fa fa-times text-danger btn-delete-row" role="button"></i>
+            </td>
+        </tr>
+    `;
+
+    const $newRow = $(row);
+
+    $sourceRow.after($newRow);
+
+    $newRow.find('.gst').val('0').prop('disabled', true);
+
+    updateRowSequence();
+
+    recalcAll();
+}
+
+$(document).on('click', '.btn-copy-package', function () {
+    const $row = $(this).closest('tr');
+    addDuplicatePackageRow($row);
+});
 
 //proforma & invoice -- fetch -- END
 function resetForm_InvoiceModal() {
@@ -5198,7 +5350,10 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
             SGST: parseFloat(row.find('.sgst').val()) || 0,
             IGST: parseFloat(row.find('.igst').val()) || 0,
 
-            Total: parseFloat(row.find('.total').val()) || 0
+            Total: parseFloat(row.find('.total').val()) || 0,
+
+            IsPackage: String(row.find('.desc').attr('data-ispackage')).toLowerCase() === 'true',
+            IsDuplicate: String(row.find('.desc').attr('data-isduplicate')).toLowerCase() === 'true'
         });
     });
 
@@ -5946,6 +6101,55 @@ function setGSTSwitch(isGSTAccepted) {
     }
 }
 
+function fillPaymentTrailTable(paymentList = [], bookingId) {
+    const tbody = $("#bookingReport_PaymentTrailBody");
+    tbody.empty(); // Clear old data
+
+    if (!paymentList || paymentList.length === 0) {
+        tbody.append(`
+                <tr>
+                    <td colspan="13" class="text-muted small fst-italic text-center">
+                        No payment records found
+                    </td>
+                </tr>
+            `);
+        return;
+    }
+
+    //console.log("paymentList:", paymentList);
+
+    paymentList.forEach((item, index) => {
+        tbody.append(`
+                <tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td class="text-center"><span class="fw-semibold text-dark">#${item.PaymentId || "—"}</span></td>
+                    <td class="text-center"><span class="badge bg-success-subtle text-success border">${item.ModeName || "—"}</span></td>
+                    <td class="text-center">${item.DateOfPayment2 || "—"}</td>
+                    <td class="text-center">${item.TxnId || "—"}</td>
+                    <td class="text-center">${item.ChequeBank || "—"}</td>
+                    <td class="text-center">${item.ChequeNo || "—"}</td>
+                    <td class="text-center">${item.ChequeDate2 || "—"}</td>
+                    <td class="text-success fw-semibold text-center">₹${formatINR(item.Amount) || "0"}</td>
+                    <td class="text-danger fw-semibold text-center">₹${formatINR(item.DueBalance) || "0"}</td>
+                    <td class="text-muted small text-center">
+                        ${item.PaymentNotes
+                ? `<span class="text-primary cursor-pointer" title="${item.PaymentNotes}">
+                                            View Notes
+                                        </span>`
+                : "—"
+            }
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-light btn-xs border btn-payment-download" title="View Receipt" data-id="${item.PaymentId}" data-bookingid="${bookingId}">
+                            <i class="fa-solid fa-file-invoice text-primary"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+    });
+}
+
+
 function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, actionMode = "fullData") {
     var requestData = {
         BookingId: Number(bookingId),
@@ -5955,6 +6159,39 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         MonthId: Number(selectedMonthId) ?? 0
     };
     //console.log("GetBookingCalendar requestData:", requestData);
+
+
+    let progress = 0;
+    // Show loader
+    $("#calendarLoader").removeClass("d-none");
+
+    // Reset progress
+    $("#calendarLoaderProgress")
+        .css("width", "0%")
+        .attr("aria-valuenow", 0)
+        .text("0%");
+
+    $("#calendarLoaderPercent").text("0%");
+
+    // Simulated progress
+    const progressTimer = setInterval(function () {
+
+        if (progress < 90) {
+            progress += 10;
+        }
+        else if (progress < 99) {
+            progress += 1;
+        }
+
+        $("#calendarLoaderProgress")
+            .css("width", `${progress}%`)
+            .attr("aria-valuenow", progress)
+            .text(`${progress}%`);
+
+        $("#calendarLoaderPercent").text(`${progress}%`);
+
+    }, 300);
+
     $.ajax({
         url: "/api/BookingCalendar/GetBookingCalendar",
         type: "POST",
@@ -5962,6 +6199,16 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         data: JSON.stringify(requestData),
         success: function (response) {
             if (response.status === "Success") {
+                // Complete progress
+                progress = 100;
+
+                $("#calendarLoaderProgress")
+                    .css("width", "100%")
+                    .attr("aria-valuenow", 100)
+                    .text("100%");
+
+                $("#calendarLoaderPercent").text("100%");
+
                 var data = response.data;
                 console.log("Booking List:",data);
                 if (actionMode === "fullData") {
@@ -6087,11 +6334,38 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#bookingReport_ReachedUs").text(data?.ReachedUs || "—");
                     $("#bookingReport_Reference").text(data?.Reference || "—");
 
-                    $("#bookingReport_ReferenceImage").html(
-                        data?.ReferenceImage
-                            ? `<a href="${data.ReferenceImage}" target="_blank" download class="btn btn-sm btn-outline-primary">
-                                    <i class="fa fa-download"></i> Download File
-                               </a>`
+                    $("#bookingReport_ReferenceFiles").html(
+                        data?.UploadsList && data.UploadsList.length > 0
+                            ? `
+                                <div class="row g-2">
+                                    ${data.UploadsList.map((file, index) => `
+                                        <div class="col-12 col-md-3">
+                                            <div class="d-flex align-items-center justify-content-between border rounded p-2 h-100">
+                                                <span class="text-truncate me-2">
+                                                    <i class="fa fa-file-image me-2"></i>
+                                                    Reference File ${index + 1}
+                                                </span>
+
+                                                <div class="d-flex gap-1 flex-shrink-0">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            onclick="showReferenceFilePreview(null, '${file.FilePath}')"
+                                                            title="View File">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+
+                                                    <a href="${file.FilePath}"
+                                                       download
+                                                       class="btn btn-sm btn-outline-success"
+                                                       title="Download File">
+                                                        <i class="fa fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join("")}
+                                </div>
+                            `
                             : "—"
                     );
 
@@ -6240,6 +6514,20 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     else {
                         addGuestRow();
                     }
+
+                    //UPLOADS
+                    bookingReferenceFiles = [];
+                    if (data.UploadsList && data.UploadsList.length > 0) {
+                        data.UploadsList.forEach(file => {
+                            bookingReferenceFiles.push({
+                                UploadFile_Id: file.UploadId || 0,
+                                FileName: getFileNameFromPath(file.FilePath),
+                                FilePath: file.FilePath,
+                                UploadFile_Base64: null
+                            });
+                        });
+                    }
+                    updateBookingReferenceFileUI();
                 }
                 else if (actionMode === "rescheduleData") {
                     //resetBooking();
@@ -6279,6 +6567,14 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         },
         error: function (xhr, status, error) {
             handleApiError(xhr, status, error, "Booking fetch fail")
+        },
+        complete: function () {
+            clearInterval(progressTimer);
+
+            // Keep 100% visible briefly
+            setTimeout(function () {
+                $("#calendarLoader").addClass("d-none");
+            }, 500);
         }
     });
 }
@@ -6731,8 +7027,6 @@ function parseDateTime_pkg(dateTimeStr) {
     };
 }
 
-
-
 function setInvoiceButtons(data) {
     hasInvoice = (data.InvoiceNo ?? 0) > 0;
     const hasProforma = (data.ProformaInvoiceNo ?? 0) > 0;
@@ -7148,27 +7442,268 @@ $(document).on('click', '.note-category-header', function () {
     $(this).find('.rotate-icon').toggleClass('open');
 });
 
-$("#BookingReferenceFile").on("change", function () {
-    const file = this.files[0];
-    if (!file) {
-        $("#BookingReferenceFile_Base64").val("");
+// UPLOADS FILE -- START
+const MAX_REFERENCE_FILES = 4;
+const MAX_REFERENCE_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+let bookingReferenceFiles = [];
+
+$("#BookingReferenceFile").on("change", async function (e) {
+
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
+    const currentFileCount = bookingReferenceFiles.length;
+    const remainingSlots = MAX_REFERENCE_FILES - currentFileCount;
+
+    // Maximum file count validation
+    if (remainingSlots <= 0) {
+        Swal.fire({
+            icon: "warning",
+            title: "Maximum Limit Reached",
+            text: `You can upload a maximum of ${MAX_REFERENCE_FILES} reference files.`
+        });
+        $(this).val("");
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const base64WithMime = e.target.result;
+    // Selected files exceed remaining limit
+    if (files.length > remainingSlots) {
+        Swal.fire({
+            icon: "warning",
+            title: "Maximum File Limit",
+            text: `You can upload only ${remainingSlots} more file(s). Maximum ${MAX_REFERENCE_FILES} files are allowed.`
+        });
+        $(this).val("");
+        return;
+    }
 
-        // Remove MIME type
-        // Example:
-        // data:application/pdf;base64,JVBERi0x...
-        // Result:
-        // JVBERi0x...
-        const base64 = base64WithMime.split(",")[1];
-        $("#BookingReferenceFile_Base64").val(base64);
-    };
-    reader.readAsDataURL(file);
+    // File size validation (2 MB per file)
+    const oversizedFile = files.find(file => file.size > MAX_REFERENCE_FILE_SIZE);
+    if (oversizedFile) {
+        Swal.fire({
+            icon: "warning",
+            title: "File Too Large",
+            text: `"${oversizedFile.name}" exceeds file size. MAX LIMIT = 2 MB.`
+        });
+        $(this).val("");
+        return;
+    }
+
+    for (const file of files) {
+        const base64 = await convertFileToBase64WithoutMetadata(file);
+
+        bookingReferenceFiles.push({
+            UploadFile_Id: 0,
+            FileName: file.name,
+            FilePath: null,
+            UploadFile_Base64: base64
+        });
+    }
+
+    updateBookingReferenceFileUI();
+
+    // Reset input so the same file can be selected again
+    $(this).val("");
 });
+
+function convertFileToBase64WithoutMetadata(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const base64WithMetadata = e.target.result;
+
+            // Remove: data:image/png;base64,
+            const base64 = base64WithMetadata.split(",")[1];
+
+            resolve(base64);
+        };
+
+        reader.onerror = function () {
+            reject(new Error("Failed to read file."));
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+function updateBookingReferenceFileUI() {
+    const fileList = $("#BookingReferenceFileList");
+
+    fileList.empty();
+
+    if (!bookingReferenceFiles.length) {
+        $("#BookingReferenceFile_JSON").val("");
+        return;
+    }
+
+    bookingReferenceFiles.forEach((file, index) => {
+        console.log("bookingReferenceFiles file:", file);
+        const fileItem = `
+            <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+                
+                <div class="text-truncate me-2" style="max-width: 200px;">
+                    <i class="fas fa-file-image me-1"></i>
+                    <span title="${escapeHtml(file.FileName)}">
+                        ${escapeHtml(file.FileName)}
+                    </span>
+                </div>
+
+                <div class="d-flex gap-1">
+
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            onclick="showReferenceFilePreview(${index}, '${file.FilePath}')"
+                            title="View File">
+                        <i class="fas fa-eye"></i>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-danger"
+                            onclick="removeBookingReferenceFile(${index})"
+                            title="Remove File">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+            </div>
+        `;
+
+        fileList.append(fileItem);
+    });
+
+    updateBookingReferenceFileHiddenField();
+}
+function getFileExtension(fileName) {
+    if (!fileName) return "";
+
+    const lastDotIndex = fileName.lastIndexOf(".");
+
+    if (lastDotIndex === -1) return "";
+
+    return fileName.substring(lastDotIndex + 1).toLowerCase();
+}
+function updateBookingReferenceFileHiddenField() {
+    const jsonData = bookingReferenceFiles.map(file => ({
+        UploadFile_Id: file.UploadFile_Id,
+        UploadFile_Base64: file.UploadFile_Base64
+    }));
+
+    $("#BookingReferenceFile_JSON").val(JSON.stringify(jsonData));
+}
+function showReferenceFilePreview(index = null, filePath = null) {
+    let fileUrl = "";
+
+    // Case 1: Existing file path passed directly
+    if (filePath) {
+        fileUrl = filePath;
+    }
+
+    // Case 2: File index passed
+    else if (index !== null) {
+        const file = bookingReferenceFiles[index];
+
+        if (!file) return;
+
+        // Existing uploaded file
+        if (file.UploadFile_Id > 0 && file.FilePath) {
+            fileUrl = file.FilePath;
+        }
+
+        // Newly selected file
+        else if (file.UploadFile_Base64) {
+            const extension = getFileExtension(file.FileName);
+
+            let mimeType = "image/jpeg";
+
+            if (extension === "png") {
+                mimeType = "image/png";
+            }
+            else if (extension === "jpg" || extension === "jpeg") {
+                mimeType = "image/jpeg";
+            }
+
+            fileUrl = `data:${mimeType};base64,${file.UploadFile_Base64}`;
+        }
+    }
+
+    if (!fileUrl) return;
+
+    $("#referenceFilePreviewImage").attr("src", fileUrl).show();
+    $("#referenceFilePreviewNoData").hide();
+
+    const modalElement = document.getElementById("referenceFilePreviewModal");
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    modal.show();
+}
+
+async function removeBookingReferenceFile(index) {
+    const file = bookingReferenceFiles[index];
+
+    if (!file) return;
+
+    // New file - remove only from UI
+    if (!file.UploadFile_Id || file.UploadFile_Id === 0) {
+        bookingReferenceFiles.splice(index, 1);
+        updateBookingReferenceFileUI();
+        return;
+    }
+
+    // Existing file - confirmation
+    const result = await Swal.fire({
+        title: "Delete File?",
+        text: "This file will be permanently removed.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        var payload = {
+            BookingUploadId: Number(file.UploadFile_Id),
+            ActionBy: Number(sessionStorage.getItem("userId") ?? "0")
+        };
+        console.log("delete payload:", payload);
+
+        const response = await $.ajax({
+            url: "/api/BookingCalendar/DeleteBookingCalendar_Upload",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload)
+        });
+
+        console.log("delete response:", response);
+        if (response && response.status !== "Success") {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: response.message || "Failed to delete file."
+            });
+            return;
+        }
+
+        bookingReferenceFiles.splice(index, 1);
+
+        updateBookingReferenceFileUI();
+
+        handleApiSuccess("File deleted successfully");
+    }
+    catch (error) {
+        console.error("File delete error:", error);
+
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to delete file."
+        });
+    }
+}
+//UPLOADS FILE--END 
 
 function saveBooking() {
     console.log("saveBooking1");
@@ -7270,7 +7805,13 @@ function saveBooking() {
         PaymentSummary_BookingDiscount_Total: parseFloat($("#paymentSummary_BookingAmount").text().replace(/₹|,/g, "").trim()) || 0,
         PaymentSummary_PayableAmount: parseFloat($("#paymentSummary_payableAmount").text().replace(/₹|,/g, "").trim()) || 0,
 
-        ReferenceImage: $("#BookingReferenceFile_Base64").val(),
+        JSON_Uploads: bookingReferenceFiles
+            .filter(x => x.UploadFile_Base64 && x.UploadFile_Base64.trim() !== "")
+            .map(x => ({
+                UploadFile_Id: x.UploadFile_Id || 0,
+                UploadFile_Base64: x.UploadFile_Base64
+            })),
+
         ActionBy: userId
     };
     console.log("saveBooking4");

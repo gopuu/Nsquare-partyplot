@@ -44,6 +44,7 @@
         public long? ProformaInvoiceNo { get; set; }
         public string? FinalInvoiceNo { get; set; }
         public string? GSTInvoiceNo { get; set; }
+        public bool? IsInvoiceGrouped { get; set; }
         public bool? IsExclusiveOfGST { get; set; }
         public bool? IsInclusiveOfGST { get; set; }
         public string? EventDate { get; set; }
@@ -93,7 +94,6 @@
         public decimal? SubTotal { get; set; }
         public decimal? BookingDiscount { get; set; }
         public decimal? TotalTaxableAmount { get; set; }
-        public decimal? TotalNonTaxableAmount { get; set; } = 0;
         public decimal TotalDiscountAcrossAllServices { get; set; }
         public decimal? TotalGST { get; set; }
         public decimal? TotalVAT { get; set; }
@@ -126,6 +126,8 @@
         public decimal? IGST { get; set; } = 0;
 
         public decimal Total { get; set; }
+        public bool IsPackage { get; set; } = false;
+        public bool IsDuplicate { get; set; } = false;
     }
     //SAVE
 
@@ -203,6 +205,7 @@
     public class CustomerInvoiceItem_BookingId
     {
         public string? Item_Description { get; set; }
+        public bool? IsPackage { get; set; } = false;
         public string? HSN { get; set; }
 
         public decimal? Rate { get; set; }
@@ -256,6 +259,9 @@
         public decimal? IGST { get; set; }
 
         public decimal? Total { get; set; }
+        public bool IsPackage { get; set; } = false;
+        public bool IsDuplicate { get; set; } = false;
+
     }
     public class CustomerInvoiceResponse_Id
     {
@@ -277,8 +283,7 @@
 
         public decimal? SubTotal { get; set; }
         public decimal? BookingDiscount { get; set; }
-        public decimal? TotalTaxableAmount { get; set; }
-        public decimal? TotalNonTaxableAmount { get; set; } = 0;
+        public decimal? TotalTaxableAmount { get; set; }        
         public decimal? TotalDiscountAcrossAllServices { get; set; }
         public decimal? TotalGST { get; set; }
         public decimal? TotalVAT { get; set; }
