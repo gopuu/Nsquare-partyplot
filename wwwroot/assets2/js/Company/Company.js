@@ -2818,7 +2818,7 @@ function saveFoodItems() {
     console.log("SaveCompanyFoodItems payload:", requestData);
 
     $.ajax({
-        url: "/api/Company_FoodRate_Item/SaveCompanyFoodItems",
+        url: "/api/Company_FoodRate_Item/SaveCompanyFoodItems", //here2
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(requestData),
@@ -2827,8 +2827,9 @@ function saveFoodItems() {
             if (res.status === "Success") {
                 handleApiSuccess("Saved!");
                 loadFoodItems();
-                //loadAddonCharges(); //here2
-            } else {
+                loadAddonFoodCharges(); //Saved SAME Food Category in AddOn also, from Procedure side, then Reload AddOn Data
+            }
+            else {
                 Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
             }
         },
@@ -2885,7 +2886,7 @@ function loadFoodItems(itemId = 0) {
                     headerContainer.innerHTML = '';
 
                     res.data.FoodItems.forEach((header, index) => {
-                        addNewHeader_items(header.Id || 0);
+                        addNewHeader_items(header.Id || 0); //here3
 
                         const lastHeaderContainer = headerContainer.lastElementChild;
 
@@ -3022,7 +3023,6 @@ function deleteFoodItem_Items(button) {
         }
     });
 }
-
 function deleteFoodItem(headerId, btn) {
 
     const id = headerId;
@@ -3069,7 +3069,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // 🔁 Track package rows and inclusions (updated format)
 let staticPackages = [];
-
 function loadFoodPackageData() {
     //console.log("inclusionOptions in pkg:", inclusionOptions);
     var payload = {
@@ -3426,317 +3425,533 @@ function deleteCompanyFoodPackage(id) {
 //<!-- TAB 5: Food Rate & Services > SubTab 5.2: Setup/Update Food Packages -- END -->
 
 //<!-- TAB 5: Food Rate & Services > SubTab 5.3: Add-on Food Charges -- START -->
+// =============================
+// TAB: Addon Food Charges
+// =============================
+// <!-- TAB 5: Food Rate & Services > SubTab 5.3: Add-on Food Charges -- START -->
 
 // =============================
 // TAB: Addon Food Charges
 // =============================
 let headerCount_charges = 0;
 
-function toggleHeaderCharges(bodyId, btn) {
-    const body = document.getElementById(bodyId);
-    if (!body) return;
+// =============================
+// TOGGLE HEADER
+// =============================
+function toggleHeaderCharges(headerId, btn) {
+    const container = document.getElementById(headerId);
 
-    if ($(body).is(':visible')) {
-        $(body).stop(true, true).slideUp(250); // smooth collapse
-        btn.textContent = '◀';
+    if (!container) return;
+
+    const isExpanded = btn.textContent.trim() === "▼";
+
+    if (isExpanded) {
+        container.style.maxHeight = container.scrollHeight + "px";
+
+        requestAnimationFrame(() => {
+            container.style.maxHeight = "0px";
+        });
+
+        btn.textContent = "◀";
     } else {
-        $(body).stop(true, true).slideDown(250); // smooth expand
-        btn.textContent = '▼';
+        container.style.display = "block";
+        container.style.maxHeight = container.scrollHeight + "px";
+
+        btn.textContent = "▼";
     }
 }
 
-function addNewHeader_charges(headerDbId) {
+// =============================
+// ADD NEW HEADER
+// =============================
+function addNewHeader_charges(headerDbId = 0) {
     headerCount_charges++;
+
     const headerId = `header-charge-${headerCount_charges}`;
     const container = document.createElement('div');
-    //container.className = 'border rounded mb-3 p-2 bg-light';
+
     container.className = 'border rounded mb-3 bg-white shadow-sm addon-charge-row-header';
 
     container.innerHTML = `
+        <input type="hidden" class="addon-charge-header-id" value = "${headerDbId}" />
 
-            <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top" 
-                style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
-
-                <div class="d-flex flex-grow-1 align-items-center">
-                    <input type="text" class="form-control form-control-sm me-2 addon-charge-header fw-semibold border-0 bg-transparent" placeholder="Category Name (e.g. Service Charge)" />
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-primary me-2 toggle-arrow-charges"
-                            onclick="toggleHeaderCharges('${headerId}', this)">▼</button>
-                    <button class="btn btn-sm btn-outline-danger border fw-bold" onclick="deleteAddonCharge_Header('${headerDbId}', this)">X</button>
-                </div>
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-top" style="background-color: #e9f5ff; margin: 2 -0.5rem; border-bottom: 1px solid #cce5ff;">
+            <div class="d-flex flex-grow-1 align-items-center">
+                <input type="text" class="form-control form-control-sm me-2 addon-charge-header fw-semibold border-0 bg-transparent" placeholder="Category Name (e.g. Service Charge)" />
             </div>
 
-            <div class="mt-2 mb-2 px-2" id="${headerId}">
-                ${generateFoodItemRow_charges()}
-                <div class="mt-2">
-                    <button class="btn btn-success btn-sm mt-2" onclick="addFoodItem_charges('${headerId}')">+ Add more</button>
-                </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-primary me-2 toggle-arrow-charges" onclick="toggleHeaderCharges('${headerId}', this)">▼</button>
+                <button type="button" class="btn btn-sm btn-outline-danger border fw-bold" onclick="deleteAddonCharge_Header(${headerDbId}, this)">X</button>
             </div>
-        `;
+        </div>
+
+        <div class="mt-2 mb-2 px-2" id="${headerId}" style="max-height:1200px; overflow-y:auto;">
+            ${generateFoodItemRow_charges()}
+
+            <div class="add-addon-charge-item-wrapper mt-2">
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_charges('${headerId}')">+ Add Food Subcategory</button>
+            </div>
+        </div>
+`;
+
     document.getElementById('foodHeaderContainer_charges').appendChild(container);
 }
 
-function generateFoodItemRow_charges() {
+// =============================
+// GENERATE LAYER 2 ITEM
+// =============================
+function generateFoodItemRow_charges(foodItemDbId = 0) {
+    const foodItemUniqueId = `addon - charge - item - ${ Date.now() } -${ Math.floor(Math.random() * 100000) } `;
+
     return `
-            <div class="input-group mb-2 addon-charge-row">
-                <input type="hidden" class="addon-charge-id" />
-                <input type="text" class="form-control addon-charge-name" placeholder="Food Item Name" />
-                <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" placeholder="Amount" />
-                <input type="text" class="form-control addon-charge-description ms-2" placeholder="Description (optional)" />
-                <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge_Items(this)">X</button>
+        <div class="addon-charge-item-wrapper border rounded p-2 mb-2 bg-light">
+            <div class="input-group addon-charge-item-row">
+                <input type="hidden" class="addon-charge-item-id" value="${foodItemDbId}" />
+
+                <input type="text" class="form-control addon-charge-item-name" placeholder="Food Subcategory Name" />
+
+                <input type="number" step="0.01" class="form-control addon-charge-item-amount ms-2" placeholder="Amount" />
+
+                <input type="text" class="form-control addon-charge-item-description ms-2" placeholder="Description (optional)" />
+
+                <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_charges('${foodItemUniqueId}')">+ Food Item</button>
+
+                <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteAddonCharge_Items(this)">X</button>
             </div>
-        `;
+
+            <div id="${foodItemUniqueId}" class="addon-charge-child-container mt-2 ms-4"></div>
+        </div >
+    `;
 }
 
+// =============================
+// ADD LAYER 2 ITEM
+// =============================
 function addFoodItem_charges(headerId) {
-    // const container = document.getElementById(headerId);
-    // container.insertAdjacentHTML('beforeend', generateFoodItemRow_charges());
-
     const container = document.getElementById(headerId);
-    const addMoreDiv = container.querySelector('.mt-2:last-child'); // button wrapper
-    addMoreDiv.insertAdjacentHTML('beforebegin', generateFoodItemRow_charges());
+    if (!container) return;
+
+    const addItemWrapper = container.querySelector('.add-addon-charge-item-wrapper');
+
+    if (!addItemWrapper) {
+        console.error('Add Addon Charge Item wrapper not found:', headerId);
+        return;
+    }
+
+    addItemWrapper.insertAdjacentHTML('beforebegin', generateFoodItemRow_charges());
 }
 
+// =============================
+// GENERATE LAYER 3 ITEM
+// =============================
+function generateFoodChildItemRow_charges(childDbId = 0) {
+    return `
+        <div class="input-group mb-2 addon-charge-child-item-row">
+            <input type="hidden" class="addon-charge-child-item-id" value="${childDbId}" />
+            <span class="input-group-text">↳</span>
+            <input type="text" class="form-control addon-charge-child-item-name" placeholder="Food Item Name" />
+            <input type="number" step="0.01" class="form-control addon-charge-child-item-amount ms-2" placeholder="Amount" />
+            <input type="text" class="form-control addon-charge-child-item-description ms-2" placeholder="Description (optional)" />
+            <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteAddonCharge_Items(this)">X</button>
+        </div>
+    `;
+}
+
+// =============================
+// ADD LAYER 3 ITEM
+// =============================
+function addFoodChildItem_charges(parentFoodItemId) {
+    const container = document.getElementById(parentFoodItemId);
+    if (!container) return;
+
+    container.insertAdjacentHTML('beforeend', generateFoodChildItemRow_charges());
+}
+// =============================
+// DELETE HEADER
+// =============================
+function deleteAddonCharge_Header(headerId, button) {
+    const row = button.closest('.addon-charge-row-header');
+    const id = Number(headerId || 0);
+
+    if (id === 0) {
+        row.remove();
+        return;
+    }
+
+    const actionBy = Number(sessionStorage.getItem("userId") || 0);
+    const payload = {
+        Id: id,
+        ActionBy: actionBy
+    };
+
+    $.ajax({
+        url: '/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Header',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function (data) {
+            if (data.status === "Success") {
+                row.remove();
+                handleApiSuccess(data.message || "Deleted!");
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: data.message || "Failed to delete addon charge header.",
+                    confirmButtonColor: "#d33"
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to delete addon charge header.");
+        }
+    });
+}
+
+// =============================
+// DELETE LAYER 2 / LAYER 3 ITEM
+// =============================
+function deleteAddonCharge_Items(button) {
+    const $wrapper = $(button).closest('.addon-charge-item-wrapper');
+    const $parentRow = $(button).closest('.addon-charge-item-row');
+    const $childRow = $(button).closest('.addon-charge-child-item-row');
+
+    let id = 0;
+    let $rowToRemove = null;
+
+    // Layer 3
+    if ($childRow.length > 0) {
+        id = parseInt($childRow.find('.addon-charge-child-item-id').val()) || 0;
+        $rowToRemove = $childRow;
+    }
+    // Layer 2
+    else if ($parentRow.length > 0) {
+        id = parseInt($parentRow.find('.addon-charge-item-id').val()) || 0;
+        $rowToRemove = $wrapper;
+    }
+
+    if (!$rowToRemove) {
+        console.error("Unable to identify Addon Charge row.");
+        return;
+    }
+
+    // New record: remove directly
+    if (id === 0) {
+        $rowToRemove.remove();
+        return;
+    }
+
+    const actionBy = Number(sessionStorage.getItem("userId") || 0);
+    const payload = { Id: id, ActionBy: actionBy };
+
+    $.ajax({
+        url: '/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Items',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function (data) {
+            if (data.status === "Success") {
+                $rowToRemove.remove();
+                handleApiSuccess(data.message || "Deleted!");
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: data.message || "Failed to delete addon charge item.",
+                    confirmButtonColor: "#d33"
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to delete addon charge item.");
+        }
+    });
+}
+
+// =============================
+// LOAD ADDON FOOD CHARGES
+// =============================
+function loadAddonFoodCharges(id = 0) {
+    const payload = { Id: id };
+
+    $.ajax({
+        url: '/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+
+        success: function (res) {
+            console.log("GetCompanyFoodRateAddonCharge response:", res);
+
+            const headerContainer = document.getElementById('foodHeaderContainer_charges');
+
+            if (!headerContainer) {
+                console.error("foodHeaderContainer_charges not found.");
+                return;
+            }
+
+            headerContainer.innerHTML = '';
+            headerCount_charges = 0;
+
+            if (res.status !== "Success" || !res.data || res.data.length === 0) return;
+
+            console.log("res2:", res);
+            res.data.forEach((header, index) => {
+                console.log("header2:", header);
+
+                addNewHeader_charges(header.Id || 0);
+
+                console.log("header3:", header);
+                const lastHeaderContainer = headerContainer.lastElementChild;
+
+                if (!lastHeaderContainer) return;
+
+                console.log("header4:", header);
+                const headerIdInput = lastHeaderContainer.querySelector('.addon-charge-header-id');
+                const headerNameInput = lastHeaderContainer.querySelector('.addon-charge-header');
+                const itemsDiv = lastHeaderContainer.querySelector('[id^="header-charge-"]');
+
+                console.log("header5:", header);
+                if (headerIdInput) headerIdInput.value = header.Id || 0;
+                console.log("header6:", header);
+                if (headerNameInput) headerNameInput.value = header.HeaderName || '';
+                console.log("header7:", header);
+                if (!itemsDiv) return;
+                console.log("header8:", header);
+
+                itemsDiv.innerHTML = '';
+
+                // =============================
+                // LAYER 2 ITEMS
+                // =============================
+                console.log("header:", header);
+                if (header.Items && header.Items.length > 0) {
+                    header.Items.forEach(addonItem => {
+                        console.log("addonItem:", addonItem);
+                        const addonItemUniqueId = `addon-charge-item-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+                        itemsDiv.insertAdjacentHTML('beforeend', `
+                            <div class="addon-charge-item-wrapper border rounded p-2 mb-2 bg-light">
+                                <div class="input-group addon-charge-item-row">
+                                    <input type="hidden" class="addon-charge-item-id" value="${addonItem.ItemId || 0}" />
+                                    <input type="text" class="form-control addon-charge-item-name" placeholder="Food Subcategory Name" value="${addonItem.ItemName || ''}" />
+                                    <input type="number" step="0.01" class="form-control addon-charge-item-amount ms-2" placeholder="Amount" value="${addonItem.Amount || 0}" />
+                                    <input type="text" class="form-control addon-charge-item-description ms-2" placeholder="Description (optional)" value="${addonItem.Description || ''}" />
+                                    <button type="button" class="btn btn-outline-primary ms-2" onclick="addFoodChildItem_charges('${addonItemUniqueId}')">+ Add Food Item</button>
+                                    <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteAddonCharge_Items(this)">X</button>
+                                </div>
+
+                                <div id="${addonItemUniqueId}" class="addon-charge-child-container mt-2 ms-4"></div>
+                            </div>
+                        `);
+
+                        const childContainer = document.getElementById(addonItemUniqueId);
+                        if (!childContainer) return;
+
+                        // =============================
+                        // LAYER 3 ITEMS
+                        // =============================
+                        if (addonItem.Children && addonItem.Children.length > 0) {
+                            addonItem.Children.forEach(child => {
+                                childContainer.insertAdjacentHTML('beforeend', `
+                                    <div class="input-group mb-2 addon-charge-child-item-row">
+                                        <input type="hidden" class="addon-charge-child-item-id" value="${child.ItemId || 0}" />
+                                        <span class="input-group-text">↳</span>
+                                        <input type="text" class="form-control addon-charge-child-item-name" placeholder="Food Item Name" value="${child.ItemName || ''}" />
+                                        <input type="number" step="0.01" class="form-control addon-charge-child-item-amount ms-2" placeholder="Amount" value="${child.Amount || 0}" />
+                                        <input type="text" class="form-control addon-charge-child-item-description ms-2" placeholder="Description (optional)" value="${child.Description || ''}" />
+                                        <button type="button" class="btn btn-outline-danger ms-2" onclick="deleteAddonCharge_Items(this)">X</button>
+                                    </div>
+                                `);
+                            });
+                        }
+                    });
+                }
+
+                // =============================
+                // ADD LAYER 2 BUTTON
+                // =============================
+                itemsDiv.insertAdjacentHTML('beforeend', `
+                    <div class="add-addon-charge-item-wrapper mt-2">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addFoodItem_charges('${itemsDiv.id}')">+ Add Food Subcategory</button>
+                    </div>
+                `);
+
+                // =============================
+                // COLLAPSE OTHER HEADERS
+                // =============================
+                setTimeout(() => {
+                    const toggleBtn = lastHeaderContainer.querySelector('.toggle-arrow-charges');
+
+                    if (!toggleBtn) return;
+
+                    if (index === 0) {
+                        toggleBtn.textContent = '▼';
+                    } else {
+                        toggleHeaderCharges(itemsDiv.id, toggleBtn);
+                        toggleBtn.textContent = '◀';
+                    }
+                }, 50);
+            });
+        },
+
+        error: function (xhr, status, error) {
+            handleApiError(xhr, status, error, "Failed to load addon food charges.");
+        }
+    });
+}
+
+//here2
 function saveAddonCharges() {
-    //console.log("saveAddonCharges called ");
     const addonCharges = [];
-    //const userId = sessionStorage.getItem("userId");
 
-    $("#foodHeaderContainer_charges .addon-charge-row").each(function () {
-        const id = $(this).find(".addon-charge-id").val() || 0;
-        const headerName = $(this).closest(".border").find(".addon-charge-header").val();
-        const itemName = $(this).find(".addon-charge-name").val();
-        const amount = parseFloat($(this).find(".addon-charge-amount").val()) || 0;
-        const description = $(this).find(".addon-charge-description").val();
+    $("#foodHeaderContainer_charges .addon-charge-row-header").each(function () {
+        const $header = $(this);
 
-        // Skip empty rows
-        if (!itemName && !description && (!amount || amount==0)) return;
+        const headerId = parseInt($header.find(".addon-charge-header-id").val()) || 0;
+        const headerName = ($header.find(".addon-charge-header").val() || "").trim();
+
+        const items = [];
+
+        // =============================
+        // LAYER 2 ITEMS
+        // =============================
+
+        $header.find(".addon-charge-item-wrapper").each(function () {
+            const $itemWrapper = $(this);
+            const $itemRow = $itemWrapper.find(".addon-charge-item-row");
+
+            const itemId = parseInt($itemRow.find(".addon-charge-item-id").val()) || 0;
+            const itemName = ($itemRow.find(".addon-charge-item-name").val() || "").trim();
+            const amount = parseFloat($itemRow.find(".addon-charge-item-amount").val()) || 0;
+            const description = ($itemRow.find(".addon-charge-item-description").val() || "").trim();
+
+            const children = [];
+
+            // =============================
+            // LAYER 3 ITEMS
+            // =============================
+
+            $itemWrapper.find(".addon-charge-child-item-row").each(function () {
+                const $childRow = $(this);
+
+                const childItemId = parseInt($childRow.find(".addon-charge-child-item-id").val()) || 0;
+                const childItemName = ($childRow.find(".addon-charge-child-item-name").val() || "").trim();
+                const childAmount = parseFloat($childRow.find(".addon-charge-child-item-amount").val()) || 0;
+                const childDescription = ($childRow.find(".addon-charge-child-item-description").val() || "").trim();
+
+                // Skip completely empty child rows
+                if (!childItemName && !childDescription && childAmount === 0) {
+                    return;
+                }
+
+                children.push({
+                    ItemId: childItemId,
+                    ItemName: childItemName,
+                    Amount: childAmount,
+                    Description: childDescription
+                });
+            });
+
+            // =============================
+            // SKIP EMPTY LAYER 2 ITEM
+            // =============================
+
+            if (!itemName && !description && amount === 0 && children.length === 0) {
+                return;
+            }
+
+            items.push({
+                ItemId: itemId,
+                ItemName: itemName,
+                Amount: amount,
+                Description: description,
+                Children: children
+            });
+        });
+
+        // =============================
+        // SKIP COMPLETELY EMPTY HEADER
+        // =============================
+
+        if (!headerName && items.length === 0) {
+            return;
+        }
 
         addonCharges.push({
-            Id: id,
+            Id: headerId,
             HeaderName: headerName,
-            ItemName: itemName,
-            Amount: amount,
-            Description: description
+            Items: items
         });
     });
 
+    // =============================
+    // VALIDATION
+    // =============================
+
     if (addonCharges.length === 0) {
-        addonCharges.push({
-            Id: 0,
-            HeaderName: null,
-            ItemName: null,
-            Amount: 0,
-            Description: null
+        Swal.fire({
+            icon: "warning",
+            title: "No Data",
+            text: "Please add at least one Add-on Food Charge."
         });
+
+        return;
     }
+
+    // =============================
+    // REQUEST DATA
+    // =============================
 
     const requestData = {
         AddonCharges: addonCharges,
-        ActionBy: Number(sessionStorage.getItem('userId') || 0)
+        ActionBy: Number(sessionStorage.getItem("userId") || 0)
     };
 
     console.log("SaveCompanyFoodRateAddonCharge payload:", requestData);
-    //showLoader();
+
+    // =============================
+    // API CALL
+    // =============================
 
     $.ajax({
         url: "/api/Company_FoodRate_AddonCharge/SaveCompanyFoodRateAddonCharge",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify(requestData),
+
         success: function (res) {
-            console.log("SaveCompanyFoodRateAddonCharge res:", res);
+            console.log("SaveCompanyFoodRateAddonCharge response:", res);
+
             if (res.status === "Success") {
-                handleApiSuccess("Saved");
+                handleApiSuccess(res.message || "Add-on charges saved successfully!");
 
-                loadAddonCharges();
+                // Reload updated data
+                loadAddonFoodCharges();
             } else {
-                Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
-            }
-        },
-        error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'Failed to save addon charges.');
-        }
-    });
-}
-
-function loadAddonCharges() {
-    //showLoader();
-    $.ajax({
-        url: "/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ Id: 0 }),
-        success: function (res) {
-            //console.log("GetCompanyFoodRateAddonCharge() res:", res);
-            if (res.status === "Success" && res.data && res.data.length > 0) {
-                //document.getElementById('foodHeaderContainer_charges').innerHTML = '';
-                const container = document.getElementById('foodHeaderContainer_charges');
-                container.innerHTML = ''; // clear old data
-
-                const grouped = {};
-                res.data.forEach(item => {
-                    if (!grouped[item.HeaderName]) grouped[item.HeaderName] = [];
-                    grouped[item.HeaderName].push(item);
-                });
-                //console.log("addon grouped:", grouped);
-                let headerIndex = 0;
-                // 🟡 Iterate through each header group
-                Object.keys(grouped).forEach(headerName => {
-                    const headerDbId = grouped[headerName][0].HeaderId;
-                    addNewHeader_charges(headerDbId);
-
-                    const lastHeader = container.lastElementChild;
-                    const headerInput = lastHeader.querySelector('.addon-charge-header');
-                    const headerBody = lastHeader.querySelector('.mt-2');
-                    const toggleBtn = lastHeader.querySelector('.toggle-arrow-charges');
-
-                    headerInput.value = headerName || '';
-                    headerBody.innerHTML = '';
-
-                    // 🔹 Render charges inside this header
-                    grouped[headerName].forEach(charge => {
-                        headerBody.insertAdjacentHTML('beforeend', `
-                                <div class="input-group mb-2 addon-charge-row">
-                                    <input type="hidden" class="addon-charge-id" value="${charge.Id || 0}" />
-                                    <input type="text" class="form-control addon-charge-name" value="${charge.ItemName || ''}" placeholder="Charge Name" />
-                                    <input type="number" step="0.01" class="form-control addon-charge-amount ms-2" value="${charge.Amount || 0}" placeholder="Amount" />
-                                    <input type="text" class="form-control addon-charge-description ms-2" value="${charge.Description || ''}" placeholder="Description" />
-                                    <button class="btn btn-outline-danger ms-2" type="button" onclick="deleteAddonCharge_Items(this)">X</button>
-                                </div>
-                            `);
-                    });
-
-                    // ➕ Add “Add More” button at the end
-                    headerBody.insertAdjacentHTML('beforeend', `
-                            <div class="mt-2">
-                                <button class="btn btn-outline-success btn-sm" onclick="addFoodItem_charges('${headerBody.id}')">+ Add more</button>
-                            </div>
-                        `);
-
-                    // 🎯 Expand 1st header only, collapse others
-                    setTimeout(() => {
-                        if (headerIndex === 0) {
-                            // ✅ Keep 1st header open
-                            $(headerBody).slideDown(0);
-                            if (toggleBtn) toggleBtn.textContent = '▼';
-                        } else {
-                            // 🔒 Hide others
-                            $(headerBody).hide();
-                            if (toggleBtn) toggleBtn.textContent = '◀';
-                        }
-                    }, 200); // delay ensures DOM is ready
-
-                    headerIndex++;
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: res.message || "Failed to save add-on charges."
                 });
             }
         },
+
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'Failed to load addon charges.');
+            handleApiError(
+                xhr,
+                status,
+                error,
+                "Failed to save addon charges."
+            );
         }
     });
-}
-
-function deleteAddonCharge_Header(id, button) {
-    const row = button.closest('.addon-charge-row-header');
-    //const id = row.querySelector('.addon-charge-headerid')?.value || 0;
-
-    if (!id || id == "0") {
-        row.remove();
-        return;
-    }
-
-    const payload = {
-        Id: Number(id || 0),
-        ActionBy: Number(sessionStorage.getItem("userId") || 0)
-    };
-    console.log("addOn Header delete payload:", payload);
-    //showLoader();
-
-    fetch('/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Header', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-        .then(res => res.json())
-        .then(data => {
-            //hideLoader();  // Hide after request completes (success or error)
-            console.log("Delete CompanyFoodRateAddonCharge title res:", data);
-            if (data.status === "Success") {
-                row.remove();
-                handleApiSuccess("Deleted!");
-            } else {
-                //alert("Error: " + data.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: data.message || 'Something went wrong!'
-                });
-            }
-        })
-        .catch(err => {
-            //hideLoader();  // Hide after request completes (success or error)
-            console.error("Delete AddonCharge title error:", err);
-            //alert("Failed to delete addon charge.");
-            Swal.fire({
-                icon: 'error',
-                title: 'failed',
-                text: 'Failed to delete addon charge title!'
-            });
-        });
-}
-function deleteAddonCharge_Items(button) {
-    const row = button.closest('.addon-charge-row');
-    const id = row.querySelector('.addon-charge-id')?.value || 0;
-
-    if (!id || id == "0") {
-        row.remove();
-        return;
-    }
-
-    const payload = {
-        Id: parseInt(id),
-        ActionBy: sessionStorage.getItem("userId") || 0
-    };
-    //showLoader();
-
-    fetch('/api/Company_FoodRate_AddonCharge/DeleteCompanyFoodRateAddonCharge_Items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-        .then(res => res.json())
-        .then(data => {
-            //hideLoader();  // Hide after request completes (success or error)
-            console.log("DeleteCompanyFoodRateAddonCharge res:", data);
-            if (data.status === "Success") {
-                row.remove();
-                handleApiSuccess("Deleted!");
-            } else {
-                //alert("Error: " + data.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: data.message || 'Something went wrong!'
-                });
-            }
-        })
-        .catch(err => {
-            //hideLoader();  // Hide after request completes (success or error)
-            console.error("DeleteCompanyFoodRateAddonCharge error:", err);
-            //alert("Failed to delete addon charge.");
-            Swal.fire({
-                icon: 'error',
-                title: 'failed',
-                text: 'Failed to delete addon charge!'
-            });
-        });
 }
 
 // Auto-load when page is ready
 document.addEventListener("DOMContentLoaded", function () {
-    loadAddonCharges();
+    loadAddonFoodCharges();
 });
 
 //<!-- TAB 5: Food Rate & Services > SubTab 5.3: Add-on Food Charges -- END -->

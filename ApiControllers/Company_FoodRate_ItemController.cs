@@ -251,11 +251,8 @@ namespace ERPAdmin.ApiControllers
                                 cmd.CommandType = CommandType.StoredProcedure;
 
                                 cmd.Parameters.Add("@id", SqlDbType.BigInt).Value = (object?)header.Id ?? DBNull.Value;
-
                                 cmd.Parameters.Add("@header_name", SqlDbType.NVarChar, 200).Value = (object?)header.HeaderName ?? DBNull.Value;
-
                                 cmd.Parameters.Add("@items_json", SqlDbType.NVarChar, -1).Value = itemsJson;
-
                                 cmd.Parameters.Add("@action_by", SqlDbType.BigInt).Value = (object?)model.ActionBy ?? DBNull.Value;
 
                                 rowsAffected += cmd.ExecuteNonQuery();
