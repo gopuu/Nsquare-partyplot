@@ -302,12 +302,14 @@
     }
     public class FoodPackage_AddOns
     {
-        public long? AddOn_Header_Id { get; set; } = null;
-        public long? AddOn_Item_Id { get; set; } = null;
-        public float? AddOn_Rate { get; set; } = null;
-        public long? AddOn_Pax { get; set; } = null;
-        public float? AddOn_Total { get; set; } = null;
-
+        public long? AddOn_Header_Id { get; set; }
+        public string? AddOn_Header_Name { get; set; }
+        public long? AddOn_Item_Id { get; set; }
+        public long? AddOn_Parent_Item_Id { get; set; }
+        public int? AddOn_Layer { get; set; }
+        public float? AddOn_Rate { get; set; }
+        public long? AddOn_Pax { get; set; }
+        public float? AddOn_Total { get; set; }
     }
 
     public class BookingCalendarNoteItem
@@ -523,6 +525,9 @@
     {
         public long? AddOn_Header_Id { get; set; } = null;
         public string? AddOn_Header_Name { get; set; } = null;
+        public long? AddOn_Parent_Item_Id { get; set; } = null;
+        public string? AddOn_Parent_Item_Name { get; set; } = null;
+        public long? AddOn_Layer { get; set; } = null;
         public long? AddOn_Item_Id { get; set; } = null;
         public string? AddOn_Item_Name { get; set; } = null;
         public float? AddOn_Rate { get; set; } = null;

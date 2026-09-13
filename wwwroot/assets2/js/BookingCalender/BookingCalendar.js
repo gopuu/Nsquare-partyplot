@@ -856,320 +856,555 @@ addFoodBtn.addEventListener('click', () => {
 //Food Addons ----- START ----------------------------------------------------------------
 let addon_Data = [];
 let headerTotals = {};
+let currentAddonButton = null;
+let currentAddonRow = null;
+
 loadAddonCharges();
+
 function loadAddonCharges() {
-    $.ajax({
+    return $.ajax({
         url: "/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge",
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({ Id: 0 }),
         success: function (res) {
-            //console.log("res AddOnCharges:", res);
-            if (res.status === "Success" && res.data && res.data.length > 0) {
+            console.log("res AddOnCharges:", res);
+
+            if (res.status === "Success" && Array.isArray(res.data)) {
                 addon_Data = res.data;
+            } else {
+                addon_Data = [];
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, 'Failed to load addon charges');
+            addon_Data = [];
+            handleApiError(xhr, status, error, "Failed to load addon charges");
         }
     });
 }
 
 function populateAddonModal(savedItems = []) {
-    console.log("populate AddOns:", savedItems);
-    let container = $("#addonItemsContainer");
-    let summaryContainer = $("#headerSummaryContainer");
+    const container = $("#addonItemsContainer");
+    const summaryContainer = $("#headerSummaryContainer");
+
     container.empty();
     summaryContainer.empty();
     headerTotals = {};
 
-    // Group data by header
-    let grouped = {};
-    addon_Data.forEach(item => {
-        if (!grouped[item.HeaderName]) grouped[item.HeaderName] = [];
-        grouped[item.HeaderName].push(item);
-    });
+    if (!Array.isArray(addon_Data) || addon_Data.length === 0) {
+        container.html(`<div class="text-center text-muted py-4"><i class="fa fa-info-circle me-2"></i>No Add-on Charges available.</div>`);
+        $("#finalTotal").text("0.00");
+        return;
+    }
 
-    Object.keys(grouped).forEach(header => {
-        headerTotals[header] = 0;
+    addon_Data.forEach(header => {
+        const headerId = Number(header.Id) || 0;
+        const headerName = header.HeaderName || "";
+        const summaryKey = `header-${headerId}`;
 
-        let headerCard = $(`
-                <div class="card shadow-sm border-0">
-                    <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                        <span class="fw-bold">${header}</span>
-                        <button class="btn btn-sm btn-outline-secondary toggle-btn">−</button>
-                    </div>
-                    <div class="card-body p-2" data-header-body="${header}"></div>
+        headerTotals[summaryKey] = 0;
+
+        const headerCard = $(`
+            <div class="card shadow-sm border-0 mb-3 addon-header-card" data-header-id="${headerId}">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <span class="fw-bold">${headerName}</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary toggle-btn">−</button>
                 </div>
-            `);
 
-        // Column headers
-        let columnHeader = $(`
-                <div class="d-flex fw-bold text-secondary border-bottom pb-1 mb-2">
-                    <div class="flex-grow-1">Food Item</div>
-                    <div style="width:100px;" class="text-center">Rate</div>
-                    <div style="width:100px;" class="text-center">Pax</div>
-                    <div style="width:130px;" class="text-center">Total</div>
-                </div>
-            `);
-        headerCard.find(`[data-header-body="${header}"]`).append(columnHeader);
-
-        // Populate items
-        grouped[header].forEach(item => {
-            // Find if this item was saved previously
-            let saved = savedItems.find(s =>
-                (s.AddOn_Item_Id === item.Id) &&
-                (s.AddOn_Header_Id === item.HeaderId)
-            );
-            //console.log("saved AddOns:", saved);
-            // If found, prefill values
-            let isChecked = saved ? true : false;
-            let rate = saved ? saved.AddOn_Rate : item.Amount;
-            //let pax = saved ? saved.AddOn_Pax : ($("#booking_pax").val() || 0);
-
-            let rowPax = 0;
-            if (currentAddonRow && currentAddonRow.length > 0) {
-                let paxInput = currentAddonRow.find(".pax");
-
-                if (paxInput.length > 0) {
-                    rowPax = parseFloat(paxInput.val()) || 0;
-                }
-                else {
-                    // fallback for first default row (which doesn't have .pax)
-                    rowPax = parseFloat($("#booking_pax").val()) || 0;
-                }
-            }
-            let pax = saved ? saved.AddOn_Pax : rowPax;
-
-            let total = saved ? saved.AddOn_Total : 0;
-
-            let row = $(`
-                    <div class="d-flex align-items-center justify-content-between mb-2"
-                         data-header="${item.HeaderName}" data-headerid="${item.HeaderId}" data-id="${item.Id}">
-
-                        <div class="d-flex align-items-center flex-grow-1">
-                            <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
-                            <span>${item.ItemName}</span>
-                        </div>
-
-                        <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01"
-                               value="${rate}" min="0" style="width:90px;">
-
-                        <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01"
-                               value="${pax}" min="0" style="width:90px;">
-
-                        <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1"
-                               value="${total.toFixed(2)}" readonly style="width:120px;">
+                <div class="card-body p-2 addon-header-body">
+                    <div class="d-flex fw-bold text-secondary border-bottom pb-1 mb-2">
+                        <div class="flex-grow-1">Food Item</div>
+                        <div style="width:100px;" class="text-center">Rate</div>
+                        <div style="width:100px;" class="text-center">Pax</div>
+                        <div style="width:130px;" class="text-center">Total</div>
                     </div>
-                `);
+                </div>
+            </div>
+        `);
 
-            row.find(".rate-input, .pax-input").on("input", function () {
-                recalcRow_AddOn(row);
+        const body = headerCard.find(".addon-header-body");
+
+        if (Array.isArray(header.Items) && header.Items.length > 0) {
+            header.Items.forEach(item => {
+                const itemId = Number(item.ItemId) || 0;
+                const childContainerId = `addon-children-${headerId}-${itemId}`;
+
+                appendAddonLayer2Item(body, headerId, headerName, item, savedItems, childContainerId);
+
+                if (Array.isArray(item.Children) && item.Children.length > 0) {
+                    const childContainer = $(`<div id="${childContainerId}" class="addon-layer3-container ms-4 mb-2" style="display:none;"></div>`);
+
+                    item.Children.forEach(child => {
+                        appendAddonLayer3Item(childContainer, headerId, headerName, itemId, child, savedItems);
+                    });
+
+                    body.append(childContainer);
+                }
             });
-
-            row.find(".addon-checkbox").on("change", function () {
-                recalcRow_AddOn(row);
-            });
-
-            headerCard.find(`[data-header-body="${header}"]`).append(row);
-        });
+        } else {
+            body.append(`<div class="text-center text-muted py-3">No Add-on Items available.</div>`);
+        }
 
         container.append(headerCard);
 
-        // Summary row
         summaryContainer.append(`
-                <div class="d-flex justify-content-between mb-1" data-header-summary="${header}">
-                    <span>${header}</span>
-                    <span class="header-total">0</span>
-                </div>
-            `);
+            <div class="d-flex justify-content-between mb-1" data-header-summary="${summaryKey}">
+                <span>${headerName}</span>
+                <span class="header-total">0.00</span>
+            </div>
+        `);
 
-        // Toggle button
         headerCard.find(".toggle-btn").on("click", function () {
-            let body = headerCard.find(`[data-header-body="${header}"]`);
-            let isVisible = body.is(":visible");
-            body.toggle();
+            const cardBody = headerCard.find(".addon-header-body");
+            const isVisible = cardBody.is(":visible");
+
+            cardBody.stop(true, true).slideToggle(200);
             $(this).text(isVisible ? "+" : "−");
         });
     });
 
-    $("[data-header]").each(function () {
+    $(".addon-selection-row").each(function () {
         recalcRow_AddOn($(this));
+    });
+
+    $(".addon-layer2-row").each(function () {
+        const $layer2Row = $(this);
+        const childContainerId = $layer2Row.data("child-container");
+
+        if (!childContainerId) return;
+
+        const $childContainer = $("#" + childContainerId);
+
+        if ($layer2Row.find(".addon-checkbox").is(":checked")) {
+            $childContainer.show();
+        } else {
+            $childContainer.hide();
+        }
     });
 }
 
-function recalcRow_AddOn(row) {
-    //console.log("here3");
-    let checked = row.find(".addon-checkbox").is(":checked");
-    let rate = parseFloat(row.find(".rate-input").val()) || 0;
-    let pax = parseFloat(row.find(".pax-input").val()) || 0;
-    let total = checked ? rate * pax : 0;
+function appendAddonItem(container, headerId, headerName, item, layer, savedItems = [], parentItemId = 0) {
+    const itemId = Number(item.ItemId) || 0;
+    const itemName = item.ItemName || "";
+    const itemAmount = parseFloat(item.Amount) || 0;
+    const description = item.Description || "";
 
-    //console.log("---- Addon Row Calculation ----");
-    //console.log("Checked:", checked);
-    //console.log("Rate:", rate);
-    //console.log("Pax:", pax);
-    //console.log("Computed Total:", total);
-    //console.log("-------------------------------");
+    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
+
+    const isChecked = !!saved;
+    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
+
+    let rowPax = 0;
+
+    if (currentAddonRow && currentAddonRow.length > 0) {
+        const paxInput = currentAddonRow.find(".pax");
+
+        if (paxInput.length > 0) {
+            rowPax = parseFloat(paxInput.val()) || 0;
+        } else {
+            rowPax = parseFloat($("#booking_pax").val()) || 0;
+        }
+    }
+
+    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : rowPax;
+    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
+
+    const layerClass = layer === 3 ? "ms-4 addon-layer-3" : "addon-layer-2";
+    const layerIcon = layer === 3 ? `<span class="me-2 text-muted">↳</span>` : "";
+    const layerStyle = layer === 3 ? `border-left:3px solid #dee2e6; padding-left:10px;` : "";
+
+    const row = $(`
+        <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row ${layerClass}"
+             style="${layerStyle}"
+             data-header-id="${headerId}"
+             data-header-name="${headerName}"
+             data-item-id="${itemId}"
+             data-parent-item-id="${parentItemId}"
+             data-layer="${layer}">
+
+            <div class="d-flex align-items-center flex-grow-1">
+                <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
+                ${layerIcon}
+                <div>
+                    <span>${itemName}</span>
+                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
+                </div>
+            </div>
+
+            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
+        </div>
+    `);
+
+    row.find(".rate-input, .pax-input").on("input", function () {
+        recalcRow_AddOn(row);
+    });
+
+    row.find(".addon-checkbox").on("change", function () {
+        recalcRow_AddOn(row);
+    });
+
+    container.append(row);
+}
+function appendAddonLayer2Item(container, headerId, headerName, item, savedItems = [], childContainerId = "") {
+    const itemId = Number(item.ItemId) || 0;
+    const itemName = item.ItemName || "";
+    const itemAmount = parseFloat(item.Amount) || 0;
+    const description = item.Description || "";
+
+    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
+
+    const isChecked = !!saved;
+    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
+    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : getAddonDefaultPax();
+    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
+
+    const row = $(`
+        <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row addon-layer2-row"
+             data-header-id="${headerId}"
+             data-header-name="${headerName}"
+             data-item-id="${itemId}"
+             data-parent-item-id="0"
+             data-layer="2"
+             data-child-container="${childContainerId}">
+
+            <div class="d-flex align-items-center flex-grow-1">
+                <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
+
+                <div>
+                    <span class="fw-semibold">${itemName}</span>
+                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
+                </div>
+            </div>
+
+            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
+        </div>
+    `);
+
+    row.find(".rate-input, .pax-input").on("input", function () {
+        recalcRow_AddOn(row);
+    });
+
+    row.find(".addon-checkbox").on("change", function () {
+        const isChecked = $(this).is(":checked");
+        const childContainerId = row.data("child-container");
+        const $childContainer = $("#" + childContainerId);
+
+        recalcRow_AddOn(row);
+
+        if (isChecked) {
+            $childContainer.stop(true, true).slideDown(200);
+        } else {
+            $childContainer.stop(true, true).slideUp(200);
+
+            $childContainer.find(".addon-checkbox").prop("checked", false);
+
+            $childContainer.find(".total-input").val("0.00");
+
+            recalcSummary_AddOn();
+        }
+    });
+
+    container.append(row);
+}
+function appendAddonLayer3Item(container, headerId, headerName, parentItemId, item, savedItems = []) {
+    const itemId = Number(item.ItemId) || 0;
+    const itemName = item.ItemName || "";
+    const itemAmount = parseFloat(item.Amount) || 0;
+    const description = item.Description || "";
+
+    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
+
+    const isChecked = !!saved;
+    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
+    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : getAddonDefaultPax();
+    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
+
+    const row = $(`
+        <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row addon-layer3-row"
+             data-header-id="${headerId}"
+             data-header-name="${headerName}"
+             data-item-id="${itemId}"
+             data-parent-item-id="${parentItemId}"
+             data-layer="3"
+             style="border-left:3px solid #dee2e6; padding-left:12px;">
+
+            <div class="d-flex align-items-center flex-grow-1">
+                <input type="checkbox" class="form-check-input me-2 addon-checkbox">
+
+                <span class="me-2 text-muted">↳</span>
+
+                <div>
+                    <span>${itemName}</span>
+                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
+                </div>
+            </div>
+
+            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
+
+            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
+        </div>
+    `);
+
+    row.find(".rate-input, .pax-input").on("input", function () {
+        recalcRow_AddOn(row);
+    });
+
+    row.find(".addon-checkbox").on("change", function () {
+        recalcRow_AddOn(row);
+    });
+
+    row.find(".addon-checkbox").prop("checked", isChecked);
+
+    container.append(row);
+}
+function getAddonDefaultPax() {
+    let rowPax = 0;
+
+    if (currentAddonRow && currentAddonRow.length > 0) {
+        const paxInput = currentAddonRow.find(".pax");
+
+        if (paxInput.length > 0) {
+            rowPax = parseFloat(paxInput.val()) || 0;
+        } else {
+            rowPax = parseFloat($("#booking_pax").val()) || 0;
+        }
+    }
+
+    return rowPax;
+}
+function recalcRow_AddOn(row) {
+    const checked = row.find(".addon-checkbox").is(":checked");
+    const rate = parseFloat(row.find(".rate-input").val()) || 0;
+    const pax = parseFloat(row.find(".pax-input").val()) || 0;
+    const total = checked ? rate * pax : 0;
 
     row.find(".total-input").val(total.toFixed(2));
-    //console.log("here4");
+
     recalcSummary_AddOn();
 }
 
 function recalcSummary_AddOn() {
-    //console.log("recalcSummary called");
-    // Reset
-    Object.keys(headerTotals).forEach(h => headerTotals[h] = 0);
-
-    //console.log("1 headerTotals:", headerTotals);
-    $("[data-header]").each(function () {
-        let header = $(this).data("header");
-        let total = parseFloat($(this).find(".total-input").val()) || 0;
-        headerTotals[header] += total;
+    Object.keys(headerTotals).forEach(key => {
+        headerTotals[key] = 0;
     });
 
-    Object.keys(headerTotals).forEach(header => {
-        $(`[data-header-summary="${header}"] .header-total`).text(headerTotals[header].toFixed(2));
+    $(".addon-selection-row").each(function () {
+        const $row = $(this);
+        const headerId = Number($row.data("header-id")) || 0;
+        const summaryKey = `header-${headerId}`;
+        const total = parseFloat($row.find(".total-input").val()) || 0;
+
+        if (headerTotals.hasOwnProperty(summaryKey)) {
+            headerTotals[summaryKey] += total;
+        }
     });
 
-    //console.log("2 headerTotals:", headerTotals);
-    let finalTotal = Object.values(headerTotals).reduce((a, b) => a + b, 0);
-    //console.log("finalTotal:", finalTotal);
+    Object.keys(headerTotals).forEach(summaryKey => {
+        $(`[data-header-summary="${summaryKey}"] .header-total`).text(headerTotals[summaryKey].toFixed(2));
+    });
+
+    const finalTotal = Object.values(headerTotals).reduce((sum, total) => sum + total, 0);
+
     $("#finalTotal").text(finalTotal.toFixed(2));
-
-    if (currentAddonButton) {
-        const $row = $(currentAddonButton).closest(".food-row, .food-block");
-        $row.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
-
-    // Recalculate that specific row only
-    //    if ($row.hasClass("food-block")) {
-    //        calculateFoodRowTotals($row);
-    //    }
-    //    else {
-    //        updatePackageCost();
-    //    }
-    }
-    updatePackageCost();
 }
 
 // Open modal function
-let currentAddonButton = null;
-let currentAddonRow = null;
+//let currentAddonButton = null;
+//let currentAddonRow = null;
 
 function openAddonModal(booking_foodPackageId = 0, button = null) {
-    //console.log("booking_foodPackageId:", booking_foodPackageId);
-    currentAddonButton = button; // 🔹 store reference to clicked button
-    //currentAddonRow = $(button).closest(".food-row, .food-block");
+    currentAddonButton = button;
 
-    currentAddonRow = $(button).closest(".food-block");   // for dynamic rows
+    currentAddonRow = $(button).closest(".food-block");
+
     if (currentAddonRow.length === 0) {
-        // default first row (no .food-block wrapper)
         currentAddonRow = $(button).closest(".food-row");
     }
 
-    let savedItems = $(button).data("selected-addonitems") || [];
-    console.log("addon data saved:", savedItems);
-    console.log("addon data addon_Data:", addon_Data);
+    const savedItems = $(button).data("selected-addonitems") || [];
 
-    if (addon_Data.length === 0) {
-        populateAddonModal();
-    } else {
+    console.log("Booking Food Package Id:", booking_foodPackageId);
+    console.log("Saved Addon Items:", savedItems);
+    console.log("Addon Master Data:", addon_Data);
+
+    //here2
+    if (addon_Data.length > 0) {
         populateAddonModal(savedItems);
-
-        // Reset button text if no items saved
-        if (savedItems.length === 0) {
-            $(button).html('<i class="fa fa-check"></i> Addons');
-        }
+        $("#addonChargeModal").modal("show");
+        return;
     }
-    $("#addonChargeModal").modal("show");
+
+    loadAddonCharges().done(function () {
+        populateAddonModal(savedItems);
+        $("#addonChargeModal").modal("show");
+    });
 }
 
-//SAVE AddOns Modal
+// Function to update the Addon button with the selected items and total
+function updateAddonButton(selectedItems) {
+    let addonButton = $(".btn-outline-success").last();
+    let total = selectedItems.reduce((sum, item) => sum + item.total, 0);
+
+    addonButton.next().find(".foodPackage_TotalValue").text("₹ " + formatINR(total));
+
+    addonButton.data("selected-addonitems", selectedItems);
+}
+
+// =============================
+// SAVE ADDON MODAL
+// =============================
 $(document).on("click", ".btn-saveAddOn", function () {
-    let selectedItems = [];
-    let grandTotal = 0;
+    if (!currentAddonButton) {
+        Swal.fire({
+            icon: "warning",
+            title: "Warning",
+            text: "Unable to identify the Add-on button."
+        });
+        return;
+    }
 
-    // Loop through all checked rows
-    $("#addonItemsContainer .addon-checkbox:checked").each(function () {
-        let row = $(this).closest("[data-header]");
-        let header = parseInt(row.data("headerid"));
-        let itemId = parseInt(row.data("id"));
-        let rate = parseFloat(row.find(".rate-input").val() || 0);
-        let pax = parseFloat(row.find(".pax-input").val() || 0);
-        let total = parseFloat(row.find(".total-input").val() || 0);
+    const selectedItems = [];
+    const selectedParentItemIds = [];
 
-        grandTotal += total;
+    // =============================
+    // FIRST: GET SELECTED LAYER 2 ITEMS
+    // =============================
+    $(".addon-selection-row[data-layer='2']").each(function () {
+        const $row = $(this);
+
+        if (!$row.find(".addon-checkbox").is(":checked")) return;
+
+        const headerId = Number($row.data("header-id")) || 0;
+        const headerName = $row.data("header-name") || "";
+        const itemId = Number($row.data("item-id")) || 0;
+        const parentItemId = Number($row.data("parent-item-id")) || 0;
+        const layer = Number($row.data("layer")) || 2;
+
+        const rate = parseFloat($row.find(".rate-input").val()) || 0;
+        const pax = parseFloat($row.find(".pax-input").val()) || 0;
+        const total = rate * pax;
+
+        $row.find(".total-input").val(total.toFixed(2));
+
+        selectedParentItemIds.push(itemId);
 
         selectedItems.push({
-            AddOn_Header_Id: header,
+            AddOn_Header_Id: headerId,
+            AddOn_Header_Name: headerName,
             AddOn_Item_Id: itemId,
+            AddOn_Parent_Item_Id: parentItemId,
+            AddOn_Layer: layer,
             AddOn_Rate: rate,
             AddOn_Pax: pax,
             AddOn_Total: total
         });
     });
 
-    // No selection warning
+    // =============================
+    // SECOND: GET SELECTED LAYER 3 ITEMS
+    // ONLY IF THEIR LAYER 2 PARENT IS SELECTED
+    // =============================
+    $(".addon-selection-row[data-layer='3']").each(function () {
+        const $row = $(this);
+
+        if (!$row.find(".addon-checkbox").is(":checked")) return;
+
+        const headerId = Number($row.data("header-id")) || 0;
+        const headerName = $row.data("header-name") || "";
+        const itemId = Number($row.data("item-id")) || 0;
+        const parentItemId = Number($row.data("parent-item-id")) || 0;
+        const layer = Number($row.data("layer")) || 3;
+
+        // Parent Layer 2 must be selected
+        if (!selectedParentItemIds.includes(parentItemId)) return;
+
+        const rate = parseFloat($row.find(".rate-input").val()) || 0;
+        const pax = parseFloat($row.find(".pax-input").val()) || 0;
+        const total = rate * pax;
+
+        $row.find(".total-input").val(total.toFixed(2));
+
+        selectedItems.push({
+            AddOn_Header_Id: headerId,
+            AddOn_Header_Name: headerName,
+            AddOn_Item_Id: itemId,
+            AddOn_Parent_Item_Id: parentItemId,
+            AddOn_Layer: layer,
+            AddOn_Rate: rate,
+            AddOn_Pax: pax,
+            AddOn_Total: total
+        });
+    });
+
+    // =============================
+    // VALIDATION
+    // =============================
     if (selectedItems.length === 0) {
         Swal.fire({
             icon: "warning",
             title: "No Addons Selected",
-            text: "Please select at least one addon item."
+            text: "Please select at least one Add-on item."
         });
         return;
     }
 
-    console.log("✅ Selected Addon Items:", selectedItems);
-    //console.log("💰 Grand Total:", grandTotal.toFixed(2));
-
-    // 🔹 Update the clicked AddOn button’s total span
-    if (currentAddonButton) {
-        //console.log("here addon btn 1");
-        let $btn = $(currentAddonButton);
-        let $totalSpan = $btn.closest(".d-flex").find(".foodPackage_TotalValue");
-
-        // Update total text
-        $totalSpan.text(grandTotal.toFixed(2));
-
-        // Store selected items for later retrieval
-        $btn.data("selected-addonitems", selectedItems);
-        $btn.data("total", grandTotal);
-
-        // 🔹 Update button label with count
-        let itemCount = selectedItems.length;
-        $btn.html(`<i class="fa fa-check"></i> Addons (${itemCount})`);
-
-        //Update Amount
-        let row = $(currentAddonButton).closest(".food-block");
-        // fallback for default row (no .food-block wrapper)
-        if (row.length === 0) {
-            row = $(currentAddonButton).closest(".food-row");
-        }
-        //console.log("grandTotal 2:", grandTotal);
-
-        updatePackageCost();
-        //calculateFoodRowTotals(row);
-        //recalculatePaymentSummary();
-
-        //console.log("grandTotal 3:", grandTotal);
-    }
-    // Close the modal
-    $("#addonChargeModal").modal("hide");
+    // =============================
+    // SAVE SELECTED ITEMS
+    // =============================
+    saveSelectedAddonItems(selectedItems);
 });
 
-// Function to update the Addon button with the selected items and total
-function updateAddonButton(selectedItems) {
-    // Find the button that was clicked (assuming we pass it as a context)
-    let addonButton = $(".btn-outline-success").last();  // Adjust as needed to target the correct button
-    let total = selectedItems.reduce((sum, item) => sum + item.total, 0);
 
-    // Update the button's total value
-    addonButton.next().find(".foodPackage_TotalValue").text("₹ " + formatINR(total));
+// =============================
+// SAVE SELECTED ADDON ITEMS
+// =============================
+function saveSelectedAddonItems(selectedItems) {
+    if (!currentAddonButton) return;
 
-    // Store the selected items for later use
-    addonButton.data("selected-addonitems", selectedItems);
+    const finalTotal = selectedItems.reduce((sum, item) => sum + (parseFloat(item.AddOn_Total) || 0), 0);
+
+    const $button = $(currentAddonButton);
+
+    $button.data("selected-addonitems", selectedItems);
+    $button.data("total", finalTotal);
+
+    // =============================
+    // UPDATE ADDON COST
+    // =============================
+    if (currentAddonRow && currentAddonRow.length > 0) {
+        currentAddonRow.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
+    }
+
+    // =============================
+    // UPDATE BUTTON
+    // =============================
+    $button.html(`<i class="fa fa-check"></i> Addons (${selectedItems.length})`);
+
+    // =============================
+    // UPDATE PACKAGE TOTAL
+    // =============================
+    updatePackageCost();
+
+    // =============================
+    // CLOSE MODAL
+    // =============================
+    $("#addonChargeModal").modal("hide");
+
+    console.log("Saved Selected Addons:", selectedItems);
+    console.log("Final Addon Total:", finalTotal);
 }
+
+
 //Food Addons ----- /END ------------------------------------------------------------------
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -4812,24 +5047,33 @@ function recalcRow(row) {
     if (taxable < 0) taxable = 0;
     row.find('.taxable').val(taxable.toFixed(2));
 
-    // Step 4: GST Calculation
+    const stateName = $('#customerState option:selected').text();
+    //console.log("stateName:", stateName);
+
     let gstAmount = round2(taxable * gstRate / 100);
-
-    const gstin = ($('#invoiceModal_gstin').val() || '').trim();
-    const stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "";
-
     let cgst = 0;
     let sgst = 0;
     let igst = 0;
 
-    if (gstin && stateCode !== "24") {
-        // Inter-state → IGST
-        igst = gstAmount;
+    // Validate state
+    if (!stateName || stateName == "" || stateName == "0") {
+        // ❌ No state selected
+        gstAmount = 0;
+        cgst = 0;
+        sgst = 0;
+        igst = 0;
     }
-    else {
-        // Intra-state → CGST + SGST
+    else if (stateName.toLowerCase() === "gujarat") {
+        // ✅ Gujarat → Intra-state
         cgst = gstAmount / 2;
         sgst = gstAmount / 2;
+        igst = 0;
+    }
+    else {
+        // ✅ Other state → Inter-state
+        igst = gstAmount;
+        cgst = 0;
+        sgst = 0;
     }
     let total = round2(taxable + gstAmount);
 
@@ -4837,7 +5081,9 @@ function recalcRow(row) {
     row.find('.sgst').val(sgst.toFixed(2));
     row.find('.igst').val(igst.toFixed(2));
     row.find('.total').val(total.toFixed(2));
+    recalcAll();
 }
+
 function recalcAll(isManualTaxable = false) {
 
     let subTotal = 0;
@@ -4845,21 +5091,23 @@ function recalcAll(isManualTaxable = false) {
     let totalGST = 0;
     let totalDiscount = 0;
 
-    const isInclusiveGST = $('#invoiceModal_invoiceNo').data('isinclusivegst') === true;
+    const isInclusiveGST = $('#invoiceNo').data('isinclusivegst') === true;
 
-    let rows = $('#invoiceModal_invoiceItemsBody tr');
+    let rows = $('#invoiceItemsBody tr');
 
     // ==========================================
-    // Step 1: Sum totals
+    // Step 1: Sum invoice item totals
     // ==========================================
     rows.each(function () {
         const row = $(this);
 
         let total = parseFloat(row.find('.total').val()) || 0;
         let taxable = parseFloat(row.find('.taxable').val()) || 0;
+
         let cgst = parseFloat(row.find('.cgst').val()) || 0;
         let sgst = parseFloat(row.find('.sgst').val()) || 0;
         let igst = parseFloat(row.find('.igst').val()) || 0;
+
         let discountamount = parseFloat(row.find('.discountamount').val()) || 0;
 
         subTotal += total;
@@ -4869,71 +5117,45 @@ function recalcAll(isManualTaxable = false) {
     });
 
     // ==========================================
-    // Step 2: Get Total Taxable
+    // Step 2: Get Taxable Amount
     // ==========================================
     let totalTaxable;
 
     if (isManualTaxable) {
-        totalTaxable = parseFloat($('#invoiceModal_totalTaxable').val()) || 0;
+        totalTaxable = parseFloat($('#totalTaxable').val()) || 0;
     } else {
         totalTaxable = calculatedTaxable;
-        $('#invoiceModal_totalTaxable').val(totalTaxable.toFixed(2));
+        $('#totalTaxable').val(totalTaxable.toFixed(2));
     }
 
     // ==========================================
-    // Step 3: Get Total Non-Taxable
+    // Step 3: Set Totals
     // ==========================================
-    const totalNonTaxable = parseFloat($('#invoiceModal_totalNonTaxable').val()) || 0;
-
-    // ==========================================
-    // Step 4: Show totals
-    // ==========================================
-    $('#invoiceModal_bookingDiscount').val(totalDiscount.toFixed(2));
-    $('#invoiceModal_subTotal').val(subTotal.toFixed(2));
-    $('#invoiceModal_totalGST').val(totalGST.toFixed(2));
+    $('#bookingDiscount').val(totalDiscount.toFixed(2));
+    $('#subTotal').val(subTotal.toFixed(2));
+    $('#totalGST').val(totalGST.toFixed(2));
 
     updateInvoiceTitle(totalGST);
 
     // ==========================================
-    // Step 5: Grand Total
+    // Step 4: Grand Total
     // ==========================================
-    const discount = parseFloat($('#invoiceModal_bookingDiscount').val()) || 0;
+    const grandTotal = totalTaxable + totalGST; // - totalDiscount;
 
-    const grandTotal = totalTaxable + totalNonTaxable + totalGST - discount;
-
-    $('#invoiceModal_grandTotal').val(grandTotal.toFixed(2));
+    $('#grandTotal').val(grandTotal.toFixed(2));
 
     // ==========================================
-    // Step 6: Round Off
+    // Step 5: Round Off
     // ==========================================
-    let roundedTotal = Math.round(grandTotal);
+    const roundedTotal = Math.round(grandTotal);
 
-    $('#invoiceModal_roundOff').val(roundedTotal.toFixed(2));
+    $('#roundOff').val(roundedTotal.toFixed(2));
 
     // ==========================================
-    // Step 7: Balance Amount
+    // Step 7: Balance
     // ==========================================
-    const advance = parseFloat($('#invoiceModal_advancePaid').val()) || 0;
-
-    $('#invoiceModal_balanceAmount, #invoiceModal_invoicePayment_DueBalance, #invoiceModal_invoicePayment_originalDueAmount')
-        .val((roundedTotal - advance).toFixed(2));
+    calculateBalance();
 }
-
-
-// ==========================================
-// Total Non-Taxable Change
-// ==========================================
-$(document).on('input change', '#invoiceModal_totalNonTaxable', function () {
-
-    let value = parseFloat($(this).val()) || 0;
-    if (value < 0) {
-        value = 0;
-    }
-
-    $(this).val(value);
-    recalcAll();
-});
-
 
 // ==========================================
 // Total Taxable Change
@@ -5438,7 +5660,6 @@ $('#invoiceModal_btnSaveInvoice').on('click', function () {
         SubTotal: parseFloat($('#invoiceModal_subTotal').val()) || 0,
         BookingDiscount: parseFloat($('#invoiceModal_bookingDiscount').val()) || 0,
         TotalTaxableAmount: parseFloat($('#invoiceModal_totalTaxable').val()) || 0,
-        TotalNonTaxableAmount: parseFloat($('#invoiceModal_totalNonTaxable').val()) || 0,
         TotalDiscountAcrossAllServices: 0,     // if not used
         TotalGST: totalGst,
         TotalVAT: 0,
@@ -6322,10 +6543,6 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     // Food Package and Selected Menu
                     const packages = data?.JSON_FoodPackage ?? [];
-                    //const foodPackageText = packages.length === 0
-                    //    ? "—"
-                    //    : packages.map(p => p.FoodPackageName).join(", ");
-                    //$("#bookingReport_FoodPackageName").text(foodPackageText);
                     renderFoodPackages(packages);
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
@@ -6419,18 +6636,18 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("input[name='menuType']").prop("checked", false);
                     $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change");
 
-                    const foodPackages = data.JSON_FoodPackage;
-                    if (!Array.isArray(foodPackages) || foodPackages.length === 0) return;
-                    //console.log("foodPackages:", foodPackages);
-                    foodPackages.forEach((pkg, index) => {
-                        if (index === 0) {
-                            bindStaticFoodRow(pkg);
-                        }
-                        else {
-                            const newBlock = createFoodBlock(); // custom function (below)
-                            bindDynamicFoodRow(newBlock, pkg);
-                        }
-                    });
+                    //here2
+                    const foodPackages = data?.JSON_FoodPackage ?? [];
+                    if (Array.isArray(foodPackages) && foodPackages.length > 0) {
+                        foodPackages.forEach(function (pkg, index) {
+                            if (index === 0) {
+                                bindStaticFoodRow(pkg);
+                            } else {
+                                const $newBlock = createFoodBlock();
+                                bindDynamicFoodRow($newBlock, pkg);
+                            }
+                        });
+                    }
 
                     //othercharges
                     $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
@@ -6745,7 +6962,7 @@ $('#toggleBookingNotes').on('change', function () {
 });
 
 //Bookimg Summary - Package DATA -- START ------------------
-function renderFoodPackages(packages) {
+function renderFoodPackages_OLD_13sept26(packages) {
     let html_services = "";
 
     if (!packages || packages.length === 0) {
@@ -6856,29 +7073,470 @@ function renderFoodPackages(packages) {
 
     $("#bookingReport_FoodPackageName").html(html);
 }
+function renderFoodPackages(packages) {
+    let html_services = "";
+
+    if (!packages || packages.length === 0) {
+        $("#bookingReport_FoodPackageName").html("—");
+
+        html_services = `
+            <div class="d-flex justify-content-between py-1 border-bottom">
+                <span class="fw-semibold">Food</span>
+                <span>₹0</span>
+            </div>
+        `;
+
+        $("#foodPackageContainer_summaryservices").html(html_services);
+        return;
+    }
+
+    $("#btnFoodLabels").data("foodpackage", JSON.stringify(packages));
+
+    let html = "";
+
+    packages.forEach((pkg, index) => {
+        const perPlate = Number(pkg.PerPlate) || 0;
+        const pax = Number(pkg.Pax) || 0;
+        const addon = Number(pkg.Addons) || 0;
+        const total = Number(pkg.TotalCharges) || 0;
+
+        html_services += `
+            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
+                <span class="fw-semibold">
+                    Food Package ${index + 1}
+                    <small class="text-muted">
+                        (₹${perPlate}/Plate)
+                        ${pax > 0 ? `(Pax: ${pax})` : ''}
+                        ${addon > 0 ? `(AddOn: ₹${addon})` : ''}
+                    </small>
+                </span>
+
+                <span>₹${total.toFixed(2)}</span>
+            </div>
+        `;
+
+        // =============================================
+        // GROUP MENU ITEMS BY HEADER
+        // =============================================
+        const menuGrouped = {};
+        (pkg.MenuItemsList || []).forEach(item => {
+            const headerName = item.MenuHeader_Name || "Other";
+
+            if (!menuGrouped[headerName]) menuGrouped[headerName] = [];
+
+            if (item.MenuItem_Name) menuGrouped[headerName].push(item.MenuItem_Name);
+        });
+
+        // =============================================
+        // BUILD ADDON 3 LAYER HIERARCHY
+        //
+        // Header
+        // └── Layer 2 Item
+        //      └── Layer 3 Item
+        // =============================================
+        const addonGrouped = {};
+
+        (pkg.AddOnsList || []).forEach(item => {
+            const headerId = Number(item.AddOn_Header_Id) || 0;
+            const headerName = item.AddOn_Header_Name?.trim() || "Food Category (Name not given)";
+
+            const itemId = Number(item.AddOn_Item_Id) || 0;
+            const parentItemId = Number(item.AddOn_Parent_Item_Id) || 0;
+
+            const layer = Number(item.AddOn_Layer) || 2;
+
+            if (!addonGrouped[headerId]) {
+                addonGrouped[headerId] = {
+                    HeaderName: headerName,
+                    Layer2Items: {}
+                };
+            }
+
+            // =============================================
+            // LAYER 2
+            // =============================================
+            if (layer === 2) {
+                if (!addonGrouped[headerId].Layer2Items[itemId]) {
+                    addonGrouped[headerId].Layer2Items[itemId] = {
+                        ItemId: itemId,
+                        ItemName: item.AddOn_Item_Name || "",
+                        Rate: Number(item.AddOn_Rate) || 0,
+                        Pax: Number(item.AddOn_Pax) || 0,
+                        Total: Number(item.AddOn_Total) || 0,
+                        Children: []
+                    };
+                }
+            }
+
+            // =============================================
+            // LAYER 3
+            // =============================================
+            if (layer === 3) {
+                if (!addonGrouped[headerId].Layer2Items[parentItemId]) {
+                    addonGrouped[headerId].Layer2Items[parentItemId] = {
+                        ItemId: parentItemId,
+                        ItemName: item.AddOn_Parent_Item_Name?.trim() || "Food Subcategory (Name not given)",
+                        Rate: 0,
+                        Pax: 0,
+                        Total: 0,
+                        Children: []
+                    };
+                }
+
+                addonGrouped[headerId].Layer2Items[parentItemId].Children.push({
+                    ItemId: itemId,
+                    ItemName: item.AddOn_Item_Name || "",
+                    Rate: Number(item.AddOn_Rate) || 0,
+                    Pax: Number(item.AddOn_Pax) || 0,
+                    Total: Number(item.AddOn_Total) || 0
+                });
+            }
+        });
+
+        // =============================================
+        // PACKAGE CARD
+        // =============================================
+        html += `
+            <div class="mb-3 border rounded-3 overflow-hidden shadow-sm">
+
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-danger-subtle border-bottom">
+
+                    <div>
+                        <div class="fw-bold text-danger">
+                            🍽️ ${pkg.FoodPackageName || `Food Package ${index + 1}`}
+                        </div>
+
+                        <small class="text-muted">
+                            ₹${perPlate.toFixed(2)} / Plate
+                            ${pax > 0 ? `• Pax: ${pax}` : ''}
+                        </small>
+                    </div>
+
+                    <div class="text-end">
+                        <div class="small text-muted">Total</div>
+                        <div class="fw-bold text-danger">₹${total.toFixed(2)}</div>
+                    </div>
+
+                </div>
+
+                <div class="p-3">
+        `;
+
+        // =============================================
+        // MENU SECTION
+        // =============================================
+        if (Object.keys(menuGrouped).length > 0) {
+            html += `
+                <div class="mb-3">
+
+                    <div class="fw-semibold mb-2">
+                        🍽️ Menu
+                    </div>
+            `;
+
+            Object.keys(menuGrouped).forEach(header => {
+                const items = menuGrouped[header];
+
+                html += `
+                    <div class="border rounded mb-2">
+
+                        <div class="px-2 py-1 bg-light border-bottom">
+                            <span class="fw-semibold">${header}</span>
+                        </div>
+
+                        <div class="px-2 py-2">
+                            <div class="d-flex flex-wrap gap-2">
+                `;
+
+                items.forEach((item, itemIndex) => {
+                    html += `
+                        <span class="badge text-bg-light border">
+                            ${itemIndex + 1}. ${item}
+                        </span>
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        // =============================================
+        // ADDONS SECTION
+        // =============================================
+        if (Object.keys(addonGrouped).length > 0) {
+            html += `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-semibold">
+                            ➕ Add-on Food Charges
+                        </div>
+                        <div class="small text-muted">
+                            Add-on Total: ₹${addon.toFixed(2)}
+                        </div>
+                    </div>
+            `;
+
+            // =============================================
+            // LOOP HEADERS (LAYER 1)
+            // =============================================
+            Object.keys(addonGrouped).forEach(headerId => {
+                const header = addonGrouped[headerId];
+
+                html += `
+                    <div class="border rounded-3 mb-2 overflow-hidden">
+                        <!-- LAYER 1 -->
+                        <div class="px-3 py-2 bg-primary-subtle border-bottom">
+                            <span class="fw-bold text-primary">
+                                📂 ${header.HeaderName}
+                            </span>
+                        </div>
+                        <div class="p-2">
+                `;
+
+                // =============================================
+                // LOOP LAYER 2
+                // =============================================
+                Object.keys(header.Layer2Items).forEach(itemId => {
+                    const layer2 = header.Layer2Items[itemId];
+                    const hasChildren = layer2.Children.length > 0;
+
+                    html += `
+                        <div class="border-start border-3 border-primary ps-3 mb-2">
+                            <!-- LAYER 2 -->
+                            <div class="d-flex justify-content-between align-items-center py-1">
+
+                                <div>
+                                    <span class="fw-semibold">
+                                        📌 ${layer2.ItemName}
+                                    </span>
+                                </div>
+
+                                <div class="text-end">
+
+                                    ${layer2.Rate > 0 ? `
+                                        <small class="text-muted">
+                                            ₹${layer2.Rate.toFixed(2)}
+                                            ${layer2.Pax > 0 ? ` × ${layer2.Pax}` : ''}
+                                        </small>
+                                    ` : ''}
+
+                                    ${layer2.Total > 0 ? `
+                                        <div class="fw-semibold text-success">
+                                            ₹${layer2.Total.toFixed(2)}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                    `;
+
+                    // =============================================
+                    // LOOP LAYER 3
+                    // =============================================
+                    if (hasChildren) {
+                        html += `
+                            <div class="ms-3 mt-1 mb-2">
+                                <div class="small text-muted mb-1">Food Items</div>
+                        `;
+
+                        layer2.Children.forEach((child, childIndex) => {
+                            html += `
+                                <div class="d-flex justify-content-between align-items-center border rounded px-2 py-1 mb-1 bg-light">
+                                    <div class="small">
+                                        <span class="text-muted me-1">
+                                            ↳
+                                        </span>
+                                        ${childIndex + 1}. ${child.ItemName}
+                                    </div>
+
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            ${child.Rate > 0 ? ` ₹${child.Rate.toFixed(2)}` : ''}
+                                            ${child.Pax > 0 ? ` × ${child.Pax}` : ''}
+                                        </small>
+
+                                        ${child.Total > 0 ? `
+                                            <span class="fw-semibold text-success ms-2">
+                                                ₹${child.Total.toFixed(2)}
+                                            </span>
+                                        ` : ''}
+
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += `
+                            </div>
+                        `;
+                    }
+                    html += `
+                        </div>
+                    `;
+                });
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            html += `
+                </div>
+            `;
+        }
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+
+    // =============================================
+    // RENDER SUMMARY SERVICES
+    // =============================================
+    $("#foodPackageContainer_summaryservices").html(html_services);
+
+    // =============================================
+    // RENDER FOOD PACKAGE DETAILS
+    // =============================================
+    $("#bookingReport_FoodPackageName").html(html);
+}
 //Bookimg Summary - Package DATA -- END ------------------
 
 function bindStaticFoodRow(pkg) {
+    const $row = $(".food-row").first();
 
-    $("#foodPackage_PackageDropdown").val(pkg.FoodPackageId ?? "0"); //.trigger('change');
+    $("#foodPackage_PackageDropdown").val(pkg.FoodPackageId ?? 0);
     $("#foodPackage_RatePerPlate").val(pkg.PerPlate ?? 0);
     $("#foodPackage_PackageCost").val(pkg.PackageCost ?? 0);
     $("#foodPackage_Addons").val(pkg.Addons ?? 0);
     $("#foodPackage_GST").val(pkg.GST ?? 0);
-    $("#foodPackage_TotalValue").text("₹ " + pkg.TotalCharges ?? 0);
+    $("#foodPackage_TotalValue").text(`₹ ${pkg.TotalCharges ?? 0}`);
 
-    // Addons
-    const addOnsList = pkg.AddOnsList || [];
-    //console.log("#addOnsList:", addOnsList);
-    $("#foodPackage_AddOnItems").data("selected-addonitems", addOnsList);
-    updateAddonButton($("#foodPackage_AddOnItems"), addOnsList);
+    $(".package_row_id").first().val(pkg.Id ?? 0);
 
-    // Menu
-    const menuItemsList = pkg.MenuItemsList || [];
-    //console.log("#menuItemsList:", menuItemsList);
+    const addOnsList = pkg.AddOnsList ?? [];
+    const $addonBtn = $("#foodPackage_AddOnItems");
+
+    $addonBtn.data("selected-addonitems", addOnsList);
+    updateAddonButton($addonBtn, addOnsList);
+
+    const menuItemsList = pkg.MenuItemsList ?? [];
     $("#foodPackage_PackageDropdown").data("selected-items", menuItemsList);
 }
+
 function createFoodBlock() {
+    const newRow = document.createElement("div");
+    newRow.className = "food-block border rounded p-3 mt-3";
+
+    newRow.innerHTML = `
+        <div class="row g-2 align-items-end p-2 mb-1">
+            <div class="col-md-4">
+                <label class="form-label">Addon Food Package #${addonCounter}</label>
+                <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label">Pax</label>
+                <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control form-control-sm">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Time</label>
+
+                <div class="d-flex gap-1">
+                    <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" style="width:70px;">
+                    <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" style="width:70px;">
+
+                    <select class="form-select form-select-sm" style="width:90px;">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end justify-content-end">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-btn">&times;</button>
+            </div>
+        </div>
+
+        <div class="row g-2 food-row align-items-end mt-1">
+
+            <div class="col-md-3">
+                <label class="form-label">Food Package</label>
+
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm foodPackageDropdown"></select>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">
+                        Menu
+                    </button>
+                </div>
+
+                <input type="hidden" class="package_row_id" value="0">
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label">Per Plate</label>
+                <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Package Cost</label>
+                <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label">Addons</label>
+                <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label">GST</label>
+                <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-center justify-content-between">
+
+                <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
+                    <i class="fa fa-plus"></i> Addons
+                </button>
+
+                <span class="fw-bold">
+                    Total:
+                    <span class="foodPackage_TotalValue">₹ 0</span>
+                </span>
+
+            </div>
+
+        </div>
+    `;
+
+    foodContainer.appendChild(newRow);
+
+    const $newBlock = $(newRow);
+    const $dropdown = $newBlock.find(".foodPackageDropdown");
+
+    populateFoodPackageDropdown($dropdown);
+
+    $newBlock.find(".remove-btn").on("click", function () {
+        $newBlock.remove();
+        updatePackageCost();
+    });
+
+    addonCounter++;
+
+    return $newBlock;
+}
+
+function createFoodBlock_OLD_13sept26() {
     const newRow = document.createElement('div');
     newRow.className = 'food-block border rounded p-3 mt-3';
 
@@ -6964,6 +7622,44 @@ function createFoodBlock() {
 }
 function bindDynamicFoodRow($block, pkg) {
     const $row = $block.find(".food-row");
+    const $dropdown = $row.find(".foodPackageDropdown");
+
+    $row.find(".package_row_id").val(pkg.Id ?? 0);
+
+    $dropdown.val(pkg.FoodPackageId ?? 0);
+
+    $row.find(".perPlate").val(pkg.PerPlate ?? 0);
+    $row.find(".packageCost").val(pkg.PackageCost ?? 0);
+    $row.find(".addonsCost").val(pkg.Addons ?? 0);
+    $row.find(".gstCost").val(pkg.GST ?? 0);
+    $row.find(".foodPackage_TotalValue").text(`₹ ${pkg.TotalCharges ?? 0}`);
+
+    const addOnsList = pkg.AddOnsList ?? [];
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+
+    $addonBtn.data("selected-addonitems", addOnsList);
+    $addonBtn.data("total", pkg.Addons ?? 0);
+
+    updateAddonButton($addonBtn, addOnsList);
+
+    const menuItemsList = pkg.MenuItemsList ?? [];
+
+    $dropdown.data("selected-items", menuItemsList);
+
+    $block.find('input[placeholder="Addon Food Package Name"]').val(pkg.FoodPackageTitleName ?? "");
+    $block.find(".pax").val(pkg.Pax ?? 0);
+
+    if (pkg.FoodPackageDateTime) {
+        const dateTime = parseDateTime_pkg(pkg.FoodPackageDateTime);
+
+        $block.find('input[type="date"]').val(dateTime.date ?? "");
+        $block.find('input[placeholder="HH"]').val(dateTime.hh ?? "12");
+        $block.find('input[placeholder="MM"]').val(dateTime.mm ?? "00");
+        $block.find("select").val(dateTime.ampm ?? "AM");
+    }
+}
+function bindDynamicFoodRow_OLD_13sept26($block, pkg) {
+    const $row = $block.find(".food-row");
 
     // Row 2 (main values)
     //console.log("pkg.FoodPackageId:", pkg.FoodPackageId);
@@ -7014,6 +7710,7 @@ function updateAddonButton($btn, list) {
         $btn.html(`<i class="fa fa-check"></i> Addons`);
     }
 }
+
 function parseDateTime_pkg(dateTimeStr) {
     if (!dateTimeStr) return {};
 
@@ -7900,6 +8597,7 @@ function saveBooking() {
     bookingData.JSON_Notes = notes;
     console.log("saveBooking6");
 
+    //GUESTS
     const guests = [];
     $("#bookingGuestContainer .guest-row").each(function () {
         guests.push({
@@ -8007,7 +8705,8 @@ function saveBooking() {
         }
     });
 }
-function buildFoodPackageObject($row, isDynamic, $block = null) {
+
+function buildFoodPackageObject_OLD_13sept26($row, isDynamic, $block = null) {
 
     const $dropdown = $row.find(".foodPackageDropdown");
     const selectedMenuItems = $dropdown.data("selected-items") || [];
@@ -8044,6 +8743,84 @@ function buildFoodPackageObject($row, isDynamic, $block = null) {
         foodPackage.FoodPackageTitleName = '';
         foodPackage.Pax = 0;
         foodPackage.FoodPackageDateTime = '';
+    }
+
+    return foodPackage;
+}
+function buildFoodPackageObject2($row, isDynamic, $block = null) {
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedMenuItems = $dropdown.data("selected-items") || [];
+
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
+
+    const foodPackage = {
+        Id: parseInt($row.find(".package_row_id").val()) || 0,
+        PackageId: parseInt($dropdown.val()) || 0,
+        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val()) || 0,
+        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val()) || 0,
+        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val()) || 0,
+        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val()) || 0,
+        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
+        MenuItems: selectedMenuItems,
+        AddOns: selectedAddOnCharges
+    };
+
+    if (isDynamic && $block) {
+        const name = ($block.find('input[placeholder="Addon Food Package Name"]').val() || '').trim();
+        const pax = parseInt($block.find('.pax').val()) || 0;
+        const date = $block.find('input[type="date"]').val() || '';
+
+        const hour = $block.find('input[placeholder="HH"]').val() || '12';
+        const minute = $block.find('input[placeholder="MM"]').val() || '00';
+        const ampm = $block.find('select').val() || 'AM';
+
+        foodPackage.FoodPackageTitleName = name;
+        foodPackage.Pax = pax;
+        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : '';
+    } else {
+        foodPackage.FoodPackageTitleName = '';
+        foodPackage.Pax = 0;
+        foodPackage.FoodPackageDateTime = '';
+    }
+
+    return foodPackage;
+}
+function buildFoodPackageObject($row, isDynamic, $block = null) {
+    const $dropdown = $row.find(".foodPackageDropdown");
+    const selectedMenuItems = $dropdown.data("selected-items") || [];
+
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
+
+    const foodPackage = {
+        Id: parseInt($row.find(".package_row_id").val()) || 0,
+        PackageId: parseInt($dropdown.val()) || 0,
+        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val()) || 0,
+        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val()) || 0,
+        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val()) || 0,
+        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val()) || 0,
+        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
+        MenuItems: selectedMenuItems,
+        AddOns: selectedAddOnCharges
+    };
+
+    if (isDynamic && $block) {
+        const name = $block.find('input[placeholder="Addon Food Package Name"]').val() || "";
+        const pax = parseInt($block.find(".pax").val()) || 0;
+        const date = $block.find('input[type="date"]').val();
+
+        const hour = $block.find('input[placeholder="HH"]').val() || "12";
+        const minute = $block.find('input[placeholder="MM"]').val() || "00";
+        const ampm = $block.find("select").val() || "AM";
+
+        foodPackage.FoodPackageTitleName = name;
+        foodPackage.Pax = pax;
+        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : "";
+    } else {
+        foodPackage.FoodPackageTitleName = "";
+        foodPackage.Pax = 0;
+        foodPackage.FoodPackageDateTime = "";
     }
 
     return foodPackage;

@@ -1890,7 +1890,7 @@ function recalcAll(isManualTaxable = false) {
     // ==========================================
     // Step 4: Grand Total
     // ==========================================
-    const grandTotal = totalTaxable + totalGST - totalDiscount;
+    const grandTotal = totalTaxable + totalGST; // - totalDiscount;
 
     $('#grandTotal').val(grandTotal.toFixed(2));
 
