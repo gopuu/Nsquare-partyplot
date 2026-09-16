@@ -267,7 +267,16 @@ public class FoodRateAddonChargeItem
     public string? ItemName { get; set; }
     public decimal Amount { get; set; }
     public string? Description { get; set; }
-    public List<FoodRateAddonChargeItem>? Children { get; set; }
+    public bool? IsParent { get; set; }
+    public List<FoodRateAddonChargeItem_Child>? Children { get; set; }
+}
+public class FoodRateAddonChargeItem_Child
+{
+    public long? ItemId { get; set; }
+    public string? ItemName { get; set; }
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+    public long? ParentId { get; set; }
 }
 
 //SAVE JSON

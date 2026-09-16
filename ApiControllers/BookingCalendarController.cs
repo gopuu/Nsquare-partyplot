@@ -165,15 +165,33 @@ namespace ERPAdmin.ApiControllers
                         booking.OtherCharges_BookingNoteForCustomer = dr["OtherCharges_BookingNoteForCustomer"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_BookingNoteForCustomer"]);
                         booking.OtherCharges_InternalOfficeNote = dr["OtherCharges_InternalOfficeNote"] == DBNull.Value ? "" : Convert.ToString(dr["OtherCharges_InternalOfficeNote"]);
 
-                        //booking.JSON_FoodPackage = JsonConvert.DeserializeObject<List<GetFoodPackage>>(Convert.ToString(dr["FoodPackageJSON"]));
                         var foodPackageJson = Convert.ToString(dr["FoodPackageJSON"]);
                         booking.JSON_FoodPackage = string.IsNullOrWhiteSpace(foodPackageJson)
                             ? new List<GetFoodPackage>()
                             : JsonConvert.DeserializeObject<List<GetFoodPackage>>(foodPackageJson) ?? new List<GetFoodPackage>();
+
                         foreach (var foodPackage in booking.JSON_FoodPackage)
                         {
-                            foodPackage.MenuItemsList ??= new List<GetFoodPackage_MenuIems>();
-                            foodPackage.AddOnsList ??= new List<GetFoodPackage_AddOns>();
+                            foodPackage.MenuItemsList ??= new List<GetFoodPackage_Menu>();
+                            foodPackage.AddOnsList ??= new List<GetFoodPackage_AddOn>();
+
+                            foreach (var menu in foodPackage.MenuItemsList)
+                            {
+                                menu.Items ??= new List<GetFoodPackage_MenuItem>();
+                                foreach (var item in menu.Items)
+                                {
+                                    item.Children ??= new List<GetFoodPackage_MenuChildItem>();
+                                }
+                            }
+
+                            foreach (var addon in foodPackage.AddOnsList)
+                            {
+                                addon.Items ??= new List<GetFoodPackage_AddOnItem>();
+                                foreach (var item in addon.Items)
+                                {
+                                    item.Children ??= new List<GetFoodPackage_AddOnChildItem>();
+                                }
+                            }
                         }
 
                         booking.JSON_Notes = JsonConvert.DeserializeObject<List<GetNotes>>(Convert.ToString(dr["NotesJSON"]));
@@ -640,7 +658,6 @@ namespace ERPAdmin.ApiControllers
                             };
 
                             string jsonFoodItems = dr["FoodItemsList"] == DBNull.Value ? "[]" : Convert.ToString(dr["FoodItemsList"]);
-
                             if (!string.IsNullOrWhiteSpace(jsonFoodItems))
                             {
                                 try

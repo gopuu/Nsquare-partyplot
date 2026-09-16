@@ -289,27 +289,101 @@
         public string? FoodPackageTitleName { get; set; }
         public long? Pax { get; set; }
         public string? FoodPackageDateTime { get; set; }
-        public List<FoodPackage_MenuIems>? MenuItems { get; set; }
-        public List<FoodPackage_AddOns>? AddOns { get; set; }
+
+        public List<FoodPackage_Menu>? MenuItems { get; set; } = new();
+        public List<FoodPackage_AddOn>? AddOns { get; set; } = new();
     }
-    public class FoodPackage_MenuIems
+
+    // =====================================================
+    // MENU - 3 LAYERS
+    // Layer 1 = Header
+    // Layer 2 = Item
+    // Layer 3 = Child
+    // =====================================================
+    public class FoodPackage_Menu
     {
-        public long? MenuHeader_Id { get; set; } = null;
-        public long? Inclusion_Id { get; set; } = null;
-        public long? MenuItem_Id { get; set; } = null;
-        public string? MenuItem_Name_NewAdded { get; set; }
-        public bool? IsChecked { get; set; } = null;
+        public long? MenuHeader_Id { get; set; }
+        public string? MenuHeader_Name { get; set; }
+        public long? Inclusion_Id { get; set; }
+
+        public List<FoodPackage_MenuItem>? Items { get; set; } = new();
     }
-    public class FoodPackage_AddOns
+    public class FoodPackage_MenuItem
+    {
+        public long? MenuItem_Id { get; set; }
+        public string? MenuItem_Name { get; set; }
+        public string? MenuItem_Name_NewAdded { get; set; }
+
+        public bool? IsChecked { get; set; }
+        public bool? IsParent { get; set; }
+
+        public int? MenuLayer { get; set; }
+
+        public long? MenuParentItem_Id { get; set; }
+
+        public List<FoodPackage_MenuChild>? Children { get; set; } = new();
+    }
+    public class FoodPackage_MenuChild
+    {
+        public long? MenuItem_Id { get; set; }
+        public string? MenuItem_Name { get; set; }
+        public string? MenuItem_Name_NewAdded { get; set; }
+
+        public bool? IsChecked { get; set; }
+        public bool? IsParent { get; set; }
+
+        public int? MenuLayer { get; set; }
+
+        public long? MenuParentItem_Id { get; set; }
+    }
+
+
+    // =====================================================
+    // ADD-ONS - 3 LAYERS
+    // Layer 1 = Header
+    // Layer 2 = Item
+    // Layer 3 = Child
+    // =====================================================
+    public class FoodPackage_AddOn
     {
         public long? AddOn_Header_Id { get; set; }
         public string? AddOn_Header_Name { get; set; }
+
+        public List<FoodPackage_AddOnItem>? Items { get; set; } = new();
+    }
+    public class FoodPackage_AddOnItem
+    {
         public long? AddOn_Item_Id { get; set; }
+        public string? AddOn_Item_Name { get; set; }
+
         public long? AddOn_Parent_Item_Id { get; set; }
+        public string? AddOn_Parent_Item_Name { get; set; }
+
         public int? AddOn_Layer { get; set; }
+
         public float? AddOn_Rate { get; set; }
         public long? AddOn_Pax { get; set; }
         public float? AddOn_Total { get; set; }
+
+        public bool? IsParent { get; set; }
+
+        public List<FoodPackage_AddOnChild>? Children { get; set; } = new();
+    }
+    public class FoodPackage_AddOnChild
+    {
+        public long? AddOn_Item_Id { get; set; }
+        public string? AddOn_Item_Name { get; set; }
+
+        public long? AddOn_Parent_Item_Id { get; set; }
+        public string? AddOn_Parent_Item_Name { get; set; }
+
+        public int? AddOn_Layer { get; set; }
+
+        public float? AddOn_Rate { get; set; }
+        public long? AddOn_Pax { get; set; }
+        public float? AddOn_Total { get; set; }
+
+        public bool? IsParent { get; set; }
     }
 
     public class BookingCalendarNoteItem
@@ -508,31 +582,80 @@
         public string? FoodPackageTitleName { get; set; }
         public long? Pax { get; set; }
         public string? FoodPackageDateTime { get; set; }
-        public List<GetFoodPackage_MenuIems> MenuItemsList { get; set; } = new();
-        public List<GetFoodPackage_AddOns> AddOnsList { get; set; } = new();
+
+        public List<GetFoodPackage_Menu> MenuItemsList { get; set; } = new();
+        public List<GetFoodPackage_AddOn> AddOnsList { get; set; } = new();
     }
-    public class GetFoodPackage_MenuIems
+    // 3-LAYER MENU
+    public class GetFoodPackage_Menu
     {
-        public long? MenuHeader_Id { get; set; } = null;
-        public string? MenuHeader_Name { get; set; } = null;
-        public long? Inclusion_Id { get; set; } = null;
-        public long? MenuItem_Id { get; set; } = null;
-        public string? MenuItem_Name { get; set; } = null;
+        public long? MenuHeader_Id { get; set; }
+        public string? MenuHeader_Name { get; set; }
+        public long? Inclusion_Id { get; set; }
+
+        public List<GetFoodPackage_MenuItem> Items { get; set; } = new();
+    }
+
+    public class GetFoodPackage_MenuItem
+    {
+        public long? MenuItem_Id { get; set; }
+        public string? MenuItem_Name { get; set; }
         public string? MenuItem_Name_NewAdded { get; set; }
-        public bool? IsChecked { get; set; } = null;
+        public bool? IsChecked { get; set; }
+        public long? MenuLayer { get; set; }
+        public bool? IsParent { get; set; }
+
+        public List<GetFoodPackage_MenuChildItem> Children { get; set; } = new();
     }
-    public class GetFoodPackage_AddOns
+
+    public class GetFoodPackage_MenuChildItem
     {
-        public long? AddOn_Header_Id { get; set; } = null;
-        public string? AddOn_Header_Name { get; set; } = null;
-        public long? AddOn_Parent_Item_Id { get; set; } = null;
-        public string? AddOn_Parent_Item_Name { get; set; } = null;
-        public long? AddOn_Layer { get; set; } = null;
-        public long? AddOn_Item_Id { get; set; } = null;
-        public string? AddOn_Item_Name { get; set; } = null;
-        public float? AddOn_Rate { get; set; } = null;
-        public float? AddOn_Pax { get; set; } = null;
-        public float? AddOn_Total { get; set; } = null;
+        public long? MenuItem_Id { get; set; }
+        public string? MenuItem_Name { get; set; }
+        public string? MenuItem_Name_NewAdded { get; set; }
+        public bool? IsChecked { get; set; }
+        public long? MenuParentItem_Id { get; set; }
+        public long? MenuLayer { get; set; }
+        public bool? IsParent { get; set; }
+    }
+
+    // 3-LAYER ADD-ON
+    public class GetFoodPackage_AddOn
+    {
+        public long? AddOn_Header_Id { get; set; }
+        public string? AddOn_Header_Name { get; set; }
+
+        public List<GetFoodPackage_AddOnItem> Items { get; set; } = new();
+    }
+
+    public class GetFoodPackage_AddOnItem
+    {
+        public long? AddOn_Item_Id { get; set; }
+        public string? AddOn_Item_Name { get; set; }
+        public long? AddOn_Parent_Item_Id { get; set; }
+        public long? AddOn_Layer { get; set; }
+
+        public float? AddOn_Rate { get; set; }
+        public float? AddOn_Pax { get; set; }
+        public float? AddOn_Total { get; set; }
+
+        public bool? IsParent { get; set; }
+
+        public List<GetFoodPackage_AddOnChildItem> Children { get; set; } = new();
+    }
+
+    public class GetFoodPackage_AddOnChildItem
+    {
+        public long? AddOn_Item_Id { get; set; }
+        public string? AddOn_Item_Name { get; set; }
+        public long? AddOn_Parent_Item_Id { get; set; }
+        public long? AddOn_Layer { get; set; }
+
+        public float? AddOn_Rate { get; set; }
+        public float? AddOn_Pax { get; set; }
+        public float? AddOn_Total { get; set; }
+
+        public bool? IsParent { get; set; }
     }
 
     public class GetNotes
@@ -581,21 +704,31 @@
         public long? Package_Id { get; set; } = null;
     }
 
-    /// PACKAGE MENU
+    /// PACKAGE MENU--START
     public class FoodItemModel
     {
         public long? Item_Id { get; set; }
         public string? Item_Name { get; set; }
+        public bool? IsParent { get; set; }
+        public List<FoodChildItemModel> Children { get; set; } = new List<FoodChildItemModel>();
     }
+
+    public class FoodChildItemModel
+    {
+        public long? Item_Id { get; set; }
+        public string? Item_Name { get; set; }
+        public long? ParentId { get; set; }
+    }
+
     public class FoodMenuModel
     {
         public long? FoodMenu_Id { get; set; }
         public string? FoodMenu_Name { get; set; }
         public long? Inclusion_Id { get; set; }
         public long? Count_Size { get; set; }
-
         public List<FoodItemModel> FoodItemsList { get; set; } = new List<FoodItemModel>();
     }
+    /// PACKAGE MENU--END
 
 
     public class PackageReportRequest : BaseClass

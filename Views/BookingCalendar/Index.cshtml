@@ -377,14 +377,17 @@
                             <div id="foodPackageContainer">
                                 <!-- Default first row -->
                                 <div class="row g-2 food-row align-items-end">
+
                                     <!-- Food Package Dropdown -->
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label class="form-label">Food Package</label>
-                                        <div class="d-flex gap-2">
-                                            <select class="form-select form-select-sm foodPackageDropdown" id="foodPackage_PackageDropdown"></select>
-                                            <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">Menu</button>
-                                        </div>
+                                        <select class="form-select form-select-sm foodPackageDropdown" id="foodPackage_PackageDropdown"></select>
                                         <input type="hidden" class="package_row_id" value="0" />
+                                    </div>
+
+                                    <!-- MENU BUTTON -->
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">Menu</button>
                                     </div>
 
                                     <!-- Per Plate -->
@@ -422,7 +425,7 @@
 
                                     <!-- Addons Button + Total -->
                                     <div class="col-md-3 d-flex align-items-center justify-content-between">
-                                        <button type="button" class="btn btn-outline-success btn-sm  foodPackage_AddOnItems" id="foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
+                                        <button type="button" class="btn btn-outline-success btn-sm foodPackage_AddOnItems" id="foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
                                             <i class="fa fa-check"></i> Addons
                                         </button>
                                         <span class="fw-semibold small text-nowrap">Total: <span class="foodPackage_TotalValue" id="foodPackage_TotalValue">0</span></span>
@@ -924,12 +927,16 @@
 </div>
 <!--AddOns -- MODAL -- END -->
 
-<!--Menu Item-- MODAL -- START -->
-<div class=" modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Menu Item MODAL -- START -->
+<div class="modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-3 shadow">
+
             <div class="modal-header bg-primary text-white py-1">
-                <h5 class="modal-title fw-bold text-white">Menu Items</h5>
+                <h5 class="modal-title fw-bold text-white">
+                    Menu Items
+                </h5>
+
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -941,10 +948,11 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary btn-saveMenu">Save</button>
             </div>
+
         </div>
     </div>
 </div>
-<!--Menu Item-- MODAL -- END -->
+<!-- Menu Item MODAL -- END -->
 
 <!-- Booking Info Modal -- START -->
 <div class="modal fade" id="bookingReportModal" tabindex="-1">

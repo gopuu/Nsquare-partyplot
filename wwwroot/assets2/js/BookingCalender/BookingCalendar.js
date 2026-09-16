@@ -376,12 +376,15 @@ function loadFoodPackageList() {
 }
 
 // ✅ STEP 2: Reusable dropdown populate
-function populateFoodPackageDropdown($dropdown) {
+function populateFoodPackageDropdown($dropdown, selectedId = 0) {
     let options = `<option value="0">-- Select Package --</option>`;
+
     $.each(foodPackages, (i, pkg) => {
         options += `<option value="${pkg.Id}" data-rateperperson="${pkg.RatePerPerson}">${pkg.PackageName}</option>`;
     });
+
     $dropdown.html(options);
+    $dropdown.val(selectedId ?? 0);
 }
 
 $(document).on("change", ".foodPackageDropdown", function () {
@@ -447,13 +450,13 @@ $(document).on("click", ".loadMenuBtn", function () {
         data: JSON.stringify(payload),
         success: function (response) {
             console.log("response GetPackage_MenuAndFoodItemsList:", response);
-            if (response.status === "Success" && response.data && response.data.length > 0)
-            {
+
+            if (response.status === "Success" && response.data && response.data.length > 0) {
                 renderMenuItems(response.data, () => {
                     $("#menuModal").data("activeDropdown", $dropdown);
-                    // 🔥 RESTORE SELECTION
+
                     const savedItems = $dropdown.data("selected-items");
-                    //console.log("restore savedItems:", savedItems);
+                    console.log("savedItems:", savedItems);
                     restoreSavedMenuSelection(savedItems);
 
                     $("#menuModal .modal-title").text(`Menu Items [${selectedText}]`);
@@ -466,6 +469,7 @@ $(document).on("click", ".loadMenuBtn", function () {
                     title: "Menu Items Not Found",
                     text: "No menu items found for this package."
                 });
+
                 $dropdown.val("0");
             }
         },
@@ -473,53 +477,408 @@ $(document).on("click", ".loadMenuBtn", function () {
             handleApiError(xhr, status, error, "Error fetching Package MenuItems list");
         }
     });
+
 });
 
+/* =========================================================
+   RESTORE SAVED MENU SELECTION
+   JSON:
+   Layer 1 -> Items (Layer 2) -> Children (Layer 3)
+========================================================= */
 function restoreSavedMenuSelection(savedItems) {
-    if (!savedItems || savedItems.length === 0) return;
-    savedItems.forEach(item => {
 
-        const section = $(`#menuModal .menu-section[data-menu-id='${item.MenuHeader_Id}']`);
-        if (!section.length) return;
+    console.log("savedItems:", savedItems);
 
-        // 🔹 EXISTING ITEM
-        if (item.MenuItem_Id && item.MenuItem_Id !== 0) {
-            section.find(`.item-checkbox[value='${item.MenuItem_Id}']`).prop("checked", item.IsChecked);
+    if (!Array.isArray(savedItems) || savedItems.length === 0) {
+        updateAllSelectAllStates();
+        return;
+    }
+
+    savedItems.forEach(menu => {
+
+        const menuId = parseInt(menu.MenuHeader_Id) || 0;
+
+        const $section = $(`#menuModal .menu-section[data-menu-id='${menuId}']`);
+
+        if (!$section.length) {
+            console.log("Menu section not found:", menuId);
+            return;
         }
 
-        // 🔹 NEW CUSTOM ITEM
-        else if (item.MenuItem_Id === 0 && item.MenuItem_Name_NewAdded ) {
-            const newItemHtml = `
-                <div class="form-check me-3 mb-2">
-                    <input class="form-check-input item-checkbox new-item"
+        const items = Array.isArray(menu.Items)
+            ? menu.Items
+            : [];
+
+        /* =====================================================
+           LAYER 2
+        ===================================================== */
+        items.forEach(item => {
+
+            const itemId = parseInt(item.MenuItem_Id) || 0;
+            const isChecked = item.IsChecked !== false;
+
+            /* ================================================
+               FIND EXISTING LAYER 2 ITEM
+            ================================================= */
+            let $layer2Checkbox = $section
+                .find(`.layer2-checkbox[data-item-id='${itemId}']`)
+                .first();
+
+            /* ================================================
+               CUSTOM NEW LAYER 2 ITEM
+               MenuItem_Id = 0
+            ================================================= */
+            if (!$layer2Checkbox.length && itemId === 0 && item.MenuItem_Name_NewAdded) {
+
+                const newItemName = item.MenuItem_Name_NewAdded;
+
+                const newItemHtml = `
+                    <div class="layer2-wrapper mb-3"
+                         data-item-id="0"
+                         data-parent-id="0"
+                         data-menu-id="${menuId}">
+
+                        <div class="d-flex align-items-center">
+
+                            <div class="form-check mb-0">
+
+                                <input class="form-check-input item-checkbox layer2-checkbox new-item"
+                                       type="checkbox"
+                                       value="0"
+                                       data-item-id="0"
+                                       data-menu-id="${menuId}"
+                                       data-layer="2"
+                                       data-item-name="${escapeHtml(newItemName)}"
+                                       ${isChecked ? "checked" : ""}>
+
+                                <label class="form-check-label fw-semibold">
+                                    ${escapeHtml(newItemName)}
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+
+                $section.find(".item-container").append(newItemHtml);
+
+                $layer2Checkbox = $section
+                    .find(`.layer2-checkbox.new-item[data-item-id='0']`)
+                    .last();
+            }
+
+            /* ================================================
+               LAYER 2 NOT FOUND
+            ================================================= */
+            if (!$layer2Checkbox.length) {
+                console.log("Layer 2 item not found:", itemId, item.MenuItem_Name);
+                return;
+            }
+
+            /* ================================================
+               CHECK / UNCHECK LAYER 2
+            ================================================= */
+            $layer2Checkbox.prop("checked", isChecked);
+
+            const $wrapper = $layer2Checkbox.closest(".layer2-wrapper");
+
+            /* ================================================
+               LAYER 3 CHILDREN
+            ================================================= */
+            const children = Array.isArray(item.Children)
+                ? item.Children
+                : [];
+
+            if (isChecked && children.length > 0) {
+
+                // Show Layer 3
+                $wrapper.find(".layer3-container").first().show();
+
+                children.forEach(child => {
+
+                    const childId = parseInt(child.MenuItem_Id) || 0;
+                    const childChecked = child.IsChecked !== false;
+
+                    const $layer3Checkbox = $wrapper
+                        .find(`.layer3-checkbox[data-item-id='${childId}']`)
+                        .first();
+
+                    if ($layer3Checkbox.length) {
+
+                        $layer3Checkbox.prop("checked", childChecked);
+
+                    } else {
+
+                        console.log(
+                            "Layer 3 item not found:",
+                            childId,
+                            "Parent:",
+                            itemId
+                        );
+                    }
+                });
+
+            } else {
+
+                // No selected Layer 3
+                $wrapper.find(".layer3-checkbox").prop("checked", false);
+                $wrapper.find(".select-all-layer3").prop("checked", false);
+
+                if (!isChecked) {
+                    $wrapper.find(".layer3-container").hide();
+                }
+            }
+
+            /* ================================================
+               UPDATE LAYER 3 SELECT ALL
+            ================================================= */
+            updateLayer3SelectAllState($wrapper);
+        });
+    });
+
+    /* =========================================================
+       UPDATE HEADER SELECT ALL
+    ========================================================= */
+    updateAllSelectAllStates();
+}
+
+/* =========================================================
+   LAYER 2 CHECKBOX
+   ========================================================= */
+$(document).on("change", "#menuModal .layer2-checkbox", function () {
+
+    const $checkbox = $(this);
+    const $wrapper = $checkbox.closest(".layer2-wrapper");
+
+    const isChecked = $checkbox.is(":checked");
+
+    if (isChecked) {
+        $wrapper.find(".layer3-container").first().slideDown(150);
+    }
+    else {
+        $wrapper.find(".layer3-container").first().slideUp(150);
+
+        $wrapper.find(".layer3-checkbox").prop("checked", false);
+
+        $wrapper.find(".select-all-layer3").prop("checked", false);
+    }
+
+    const $section = $checkbox.closest(".menu-section");
+
+    updateLayer3SelectAllState($wrapper);
+    updateMenuSelectAllState($section);
+    updateGlobalSelectionState();
+});
+
+/* =========================================================
+   LAYER 3 CHECKBOX
+   ========================================================= */
+$(document).on("change", "#menuModal .layer3-checkbox", function () {
+    const $checkbox = $(this);
+
+    const $wrapper = $checkbox.closest(".layer2-wrapper");
+
+    const $layer2Checkbox = $wrapper.find(".layer2-checkbox").first();
+
+    if ($checkbox.is(":checked")) {
+        $layer2Checkbox.prop("checked", true);
+
+        $wrapper.find(".layer3-container").show();
+    }
+
+    updateLayer3SelectAllState($wrapper);
+
+    const $section = $checkbox.closest(".menu-section");
+
+    updateMenuSelectAllState($section);
+    updateGlobalSelectionState();
+});
+
+/* =========================================================
+   MENU / HEADER SELECT ALL
+   Selects Layer 2 + Layer 3
+   ========================================================= */
+$(document).on("change", "#menuModal .select-all-menu", function () {
+
+    const $selectAll = $(this);
+    const $section = $selectAll.closest(".menu-section");
+
+    const isChecked = $selectAll.is(":checked");
+
+    $section.find(".layer2-checkbox").prop("checked", isChecked);
+
+    $section.find(".layer3-checkbox").prop("checked", isChecked);
+
+    if (isChecked) {
+        $section.find(".layer3-container").show();
+    }
+    else {
+        $section.find(".layer3-container").hide();
+    }
+
+    $section.find(".select-all-layer3").prop("checked", isChecked);
+
+    updateGlobalSelectionState();
+});
+
+/* =========================================================
+   LAYER 3 SELECT ALL
+   ========================================================= */
+$(document).on("change", "#menuModal .select-all-layer3", function () {
+
+    const $selectAll = $(this);
+
+    const $wrapper = $selectAll.closest(".layer3-container").closest(".layer2-wrapper");
+
+    const isChecked = $selectAll.is(":checked");
+
+    const $layer2Checkbox = $wrapper.find(".layer2-checkbox").first();
+
+    if (isChecked) {
+        $layer2Checkbox.prop("checked", true);
+
+        $wrapper.find(".layer3-container").show();
+
+        $wrapper.find(".layer3-checkbox").prop("checked", true);
+    }
+    else {
+        $wrapper.find(".layer3-checkbox").prop("checked", false);
+    }
+
+    const $section = $wrapper.closest(".menu-section");
+
+    updateLayer3SelectAllState($wrapper);
+    updateMenuSelectAllState($section);
+    updateGlobalSelectionState();
+});
+
+/* =========================================================
+   UPDATE LAYER 3 SELECT ALL
+   ========================================================= */
+function updateLayer3SelectAllState($wrapper) {
+    const $children = $wrapper.find(".layer3-checkbox");
+    const $selectAll = $wrapper.find(".select-all-layer3");
+
+    if (!$children.length) {
+        $selectAll.prop("checked", false);
+        return;
+    }
+
+    const checkedCount = $children.filter(":checked").length;
+
+    $selectAll.prop("checked", checkedCount === $children.length);
+}
+
+/* =========================================================
+   UPDATE HEADER SELECT ALL
+   ========================================================= */
+function updateMenuSelectAllState($section) {
+    const $layer2Items = $section.find(".layer2-checkbox");
+    const $layer3Items = $section.find(".layer3-checkbox");
+
+    const totalItems = $layer2Items.length + $layer3Items.length;
+
+    if (totalItems === 0) {
+        $section.find(".select-all-menu").prop("checked", false);
+        return;
+    }
+
+    const checkedItems = $layer2Items.filter(":checked").length + $layer3Items.filter(":checked").length;
+
+    $section.find(".select-all-menu").prop("checked", checkedItems === totalItems);
+}
+
+
+/* =========================================================
+   UPDATE ALL SELECT ALL STATES
+   ========================================================= */
+function updateAllSelectAllStates() {
+
+    $("#menuModal .menu-section").each(function () {
+
+        const $section = $(this);
+
+        $section.find(".layer2-wrapper").each(function () {
+            updateLayer3SelectAllState($(this));
+        });
+
+        updateMenuSelectAllState($section);
+    });
+
+    updateGlobalSelectionState();
+}
+
+/* =========================================================
+   UPDATE GLOBAL SELECTION STATE
+   ========================================================= */
+function updateGlobalSelectionState() {
+
+    $("#menuModal .menu-section").each(function () {
+        updateMenuSelectAllState($(this));
+    });
+}
+
+/* =========================================================
+   ADD NEW CUSTOM ITEM
+   ========================================================= */
+$(document).on("click", "#menuModal .btn-addNewItem", function () {
+
+    const $button = $(this);
+    const $section = $button.closest(".menu-section");
+
+    const $input = $section.find(".new-item-input");
+
+    const itemName = ($input.val() || "").trim();
+
+    if (!itemName) {
+        Swal.fire({
+            icon: "warning",
+            title: "Item Name Required",
+            text: "Please enter an item name."
+        });
+
+        return;
+    }
+
+    const newItemHtml = `
+        <div class="layer2-wrapper mb-3"
+             data-item-id="0"
+             data-parent-id="0"
+             data-menu-id="${$section.data("menu-id")}">
+
+            <div class="d-flex align-items-center">
+
+                <div class="form-check mb-0">
+
+                    <input class="form-check-input item-checkbox layer2-checkbox new-item"
                            type="checkbox"
                            value="0"
-                           data-menu-id="${item.MenuHeader_Id}"
-                           data-item-name="${item.MenuItem_Name_NewAdded}"
+                           data-item-id="0"
+                           data-menu-id="${$section.data("menu-id")}"
+                           data-layer="2"
+                           data-item-name="${escapeHtml(itemName)}"
                            checked>
-                    <label class="form-check-label">${item.MenuItem_Name_NewAdded}</label>
+
+                    <label class="form-check-label fw-semibold">
+                        ${escapeHtml(itemName)}
+                    </label>
+
                 </div>
-            `;
-            section.find(".item-container").append(newItemHtml);
-        }
-    });
 
-    updateSelectAllState();
-}
-function updateSelectAllState() {
-    $(".menu-section").each(function () {
-        const allItems = $(this).find(".item-checkbox");
-        const checkedItems = $(this).find(".item-checkbox:checked");
+            </div>
 
-        const selectAllCheckbox = $(this).find(".select-all");
+        </div>
+    `;
 
-        if (allItems.length === checkedItems.length && allItems.length > 0) {
-            selectAllCheckbox.prop("checked", true);
-        } else {
-            selectAllCheckbox.prop("checked", false);
-        }
-    });
-}
+    $section.find(".item-container").append(newItemHtml);
+
+    $input.val("");
+
+    updateMenuSelectAllState($section);
+    updateGlobalSelectionState();
+});
 
 function updatePackageCost() {
 
@@ -544,6 +903,31 @@ function updatePackageCost() {
     $("#foodPackage_TotalValue").text("₹ " + totalCharges.toFixed(2));
 
     recalculatePaymentSummary();  // 🔥 IMPORTANT
+}
+function updatePackageCost2($row = null) {
+
+    if (!$row || !$row.length) {
+        $row = currentAddonRow ? currentAddonRow.find(".food-row") : $(".food-row").first();
+    }
+
+    if (!$row || !$row.length) return;
+
+    const packageCost = parseFloat(
+        $row.find(".packageCost, #foodPackage_PackageCost").val()
+    ) || 0;
+
+    const addonsCost = parseFloat(
+        $row.find(".addonsCost, #foodPackage_Addons").val()
+    ) || 0;
+
+    const gst = parseFloat(
+        $row.find(".gstCost, #foodPackage_GST").val()
+    ) || 0;
+
+    const total = packageCost + addonsCost + gst;
+
+    $row.find(".foodPackage_TotalValue, #foodPackage_TotalValue")
+        .text(`₹ ${total.toFixed(2)}`);
 }
 
 $(document).on("input", "#foodPackage_RatePerPlate, #booking_pax", function () {
@@ -631,72 +1015,122 @@ $(document).on("input", ".pax, .perPlate, .addonsCost", function () {
 });
 
 // ✅ STEP 4: Build modal dynamically
+/* =========================================================
+   RENDER MENU
+   ========================================================= */
 function renderMenuItems(menuData, callback) {
+    console.log("menuData:", menuData);
 
-    //console.log("render Menu:", menuData);
     let html = "";
     menuData.forEach(menu => {
         const foodItems = menu.FoodItemsList?.length
-            ? menu.FoodItemsList.map(item => `
-                <div class="form-check me-3 mb-2">
-                    <input class="form-check-input item-checkbox" type="checkbox"
-                        value="${item.Item_Id}" data-menu-id="${menu.FoodMenu_Id}">
-                    <label class="form-check-label">${item.Item_Name}</label>
-                </div>`).join("")
-            : `<p class="text-muted">No items found.</p>`;
+            ? menu.FoodItemsList.map(item => {
+                const children = item.Children || [];
+
+                const childHtml = children.length
+                    ? `
+                        <div class="layer3-container mt-2 ms-4" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="fw-semibold text-muted small">
+                                    Food Items
+                                </div>
+
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="checkbox"
+                                           class="form-check-input select-all-layer3">
+                                    <label class="form-check-label small">
+                                        Select All
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="layer3-items">
+                                ${children.map(child => `
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input item-checkbox layer3-checkbox"
+                                               type="checkbox"
+                                               value="${child.Item_Id}"
+                                               data-item-id="${child.Item_Id}"
+                                               data-parent-id="${item.Item_Id}"
+                                               data-menu-id="${menu.FoodMenu_Id}"
+                                               data-layer="3">
+
+                                        <label class="form-check-label">
+                                            ${escapeHtml(child.Item_Name || "Unnamed Item")}
+                                        </label>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>
+                    `
+                    : "";
+
+                return `
+                    <div class="layer2-wrapper mb-3"
+                         data-item-id="${item.Item_Id}"
+                         data-parent-id="${item.ParentId || 0}"
+                         data-menu-id="${menu.FoodMenu_Id}">
+
+                        <div class="d-flex align-items-center">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input item-checkbox layer2-checkbox"
+                                       type="checkbox"
+                                       value="${item.Item_Id}"
+                                       data-item-id="${item.Item_Id}"
+                                       data-menu-id="${menu.FoodMenu_Id}"
+                                       data-layer="2">
+
+                                <label class="form-check-label fw-semibold">
+                                    ${escapeHtml(item.Item_Name || "Unnamed Item")}
+                                </label>
+                            </div>
+                        </div>
+
+                        ${childHtml}
+                    </div>
+                `;
+            }).join("")
+            : `<p class="text-muted mb-0">No items found.</p>`;
 
         html += `
-            <div class="border rounded p-3 mb-3 bg-light menu-section" data-menu-id="${menu.FoodMenu_Id}" data-inclusion-id="${menu.Inclusion_Id}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 fw-bold">${menu.FoodMenu_Name} (${menu.Count_Size})</h6>
-                    <div>
-                        <input type="checkbox" class="form-check-input select-all" id="selectAll_${menu.FoodMenu_Id}">
-                        <label for="selectAll_${menu.FoodMenu_Id}" class="form-check-label">Select All</label>
+            <div class="border rounded p-3 mb-3 bg-light menu-section"
+                 data-menu-id="${menu.FoodMenu_Id}"
+                 data-menu-name="${menu.FoodMenu_Name}"
+                 data-inclusion-id="${menu.Inclusion_Id}">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <h6 class="mb-0 fw-bold">
+                        ${escapeHtml(menu.FoodMenu_Name || "Unnamed Menu")}
+                        (${menu.Count_Size || 0})
+                    </h6>
+
+                    <div class="d-flex align-items-center gap-1">
+                        <input type="checkbox" class="form-check-input select-all-menu">
+                        <label class="form-check-label fw-semibold">Select All</label>
                     </div>
+
                 </div>
-                <div class="d-flex flex-wrap item-container">${foodItems}</div>
+
+                <div class="item-container">
+                    ${foodItems}
+                </div>
+
                 <div class="d-flex mt-2">
                     <input type="text" class="form-control form-control-sm me-2 new-item-input" placeholder="Add New Item">
                     <button type="button" class="btn btn-sm btn-primary btn-addNewItem">Add</button>
                 </div>
-            </div>`;
+
+            </div>
+        `;
     });
 
     $("#menuModalBody").html(html);
-    // ✅ render complete
-    if (callback) callback();
-}
 
-//ADD NEW ITEM
-$(document).on("click", ".btn-addNewItem", function () {
-
-    let section = $(this).closest(".menu-section");
-    let menuId = section.data("menu-id");
-
-    let input = section.find(".new-item-input");
-    let itemName = input.val().trim();
-
-    if (!itemName) {
-        alert("Please enter item name");
-        return;
+    if (callback) {
+        callback();
     }
-
-    let newItemHtml = `
-        <div class="form-check me-3 mb-2">
-            <input class="form-check-input item-checkbox new-item"
-                   type="checkbox"
-                   value="0"
-                   data-menu-id="${menuId}"
-                   data-item-name="${itemName}"
-                   checked>
-            <label class="form-check-label">${itemName}</label>
-        </div>
-    `;
-
-    section.find(".item-container").append(newItemHtml);
-
-    input.val("");
-});
+}
 
 // ✅ STEP 5: Modal “Select All” and “Save” buttons
 $(document).on("change", ".select-all", function () {
@@ -708,36 +1142,126 @@ $(document).on("change", ".select-all", function () {
     section.find(".item-checkbox").prop("checked", checked);
 });
 
-//StEP 6: Save MENU
+/* =========================================================
+    STEP 6: SAVE MENU ITEMS 
+   ========================================================= */
 $(document).on("click", ".btn-saveMenu", function () {
-    let selectedMenuData = [];
 
-    $(".menu-section").each(function () {
-        const menuId = $(this).data("menu-id");
-        const inclusionId = $(this).data("inclusion-id") || 0;
+    const selectedItems = [];
 
-        $(this).find(".item-checkbox:checked").each(function () {
-            let isNew = $(this).hasClass("new-item");
-            let itemId = parseInt($(this).val()) || 0;
+    $("#menuModal .menu-section").each(function () {
 
-            selectedMenuData.push({
-                Inclusion_Id: inclusionId,
-                MenuHeader_Id: parseInt(menuId),   // ✅ FIX
-                MenuItem_Id: itemId, //parseInt($(this).val()), // ✅ FIX
-                MenuItem_Name_NewAdded: isNew ? $(this).data("item-name") : null,
-                IsChecked: true
+        const $section = $(this);
+
+        const menuId = parseInt($section.data("menu-id")) || 0;
+        const inclusionId = parseInt($section.data("inclusion-id")) || 0;
+        const menuName = $section.data("menu-name") || "";
+
+        const menu = {
+            MenuHeader_Id: menuId,
+            MenuHeader_Name: menuName,
+            Inclusion_Id: inclusionId,
+            Items: []
+        };
+
+        /* ==========================================
+           LAYER 2
+        ========================================== */
+        $section.find(".layer2-checkbox:checked").each(function () {
+
+            const $checkbox = $(this);
+            const $wrapper = $checkbox.closest(".layer2-wrapper");
+
+            const itemId = parseInt($checkbox.data("item-id")) || 0;
+            const isNew = $checkbox.hasClass("new-item");
+
+            const itemName = $checkbox.data("item-name") ||
+                $checkbox.closest(".form-check").find("label").text().trim();
+
+            const children = [];
+
+            /* ==========================================
+               LAYER 3
+            ========================================== */
+            $wrapper.find(".layer3-checkbox:checked").each(function () {
+
+                const $childCheckbox = $(this);
+
+                const childItemId = parseInt($childCheckbox.data("item-id")) || 0;
+                const parentItemId = parseInt($childCheckbox.data("parent-id")) || itemId;
+
+                const childItemName = $childCheckbox.data("item-name") ||
+                    $childCheckbox.closest(".form-check").find("label").text().trim();
+
+                children.push({
+                    MenuItem_Id: childItemId,
+                    MenuItem_Name: childItemName,
+                    MenuItem_Name_NewAdded: null,
+                    IsChecked: true,
+                    MenuParentItem_Id: parentItemId,
+                    MenuLayer: 3,
+                    IsParent: false
+                });
+            });
+
+            /* ==========================================
+               ADD LAYER 2
+            ========================================== */
+            menu.Items.push({
+                MenuItem_Id: itemId,
+                MenuItem_Name: isNew ? null : itemName,
+                MenuItem_Name_NewAdded: isNew ? itemName : null,
+                IsChecked: true,
+                MenuLayer: 2,
+                IsParent: children.length > 0,
+                Children: children
             });
         });
+
+        /* ==========================================
+           ONLY ADD HEADER IF ITEMS EXIST
+        ========================================== */
+        if (menu.Items.length > 0) {
+            selectedItems.push(menu);
+        }
     });
 
-    // attach selected items to the dropdown that opened modal
-    const $activeDropdown = $("#menuModal").data("activeDropdown");
-    if ($activeDropdown) {
-        $activeDropdown.data("selected-items", selectedMenuData);
-        //$activeDropdown.attr("data-selected-items", JSON.stringify(selectedMenuData));
+    console.log("Selected Menu Items:", selectedItems);
+
+    /* ==========================================
+       GET ACTIVE FOOD PACKAGE DROPDOWN
+    ========================================== */
+    const $dropdown = $("#menuModal").data("activeDropdown");
+    if (!$dropdown || !$dropdown.length) {
+        Swal.fire({
+            icon: "error",
+            title: "Unable to Save",
+            text: "Food package row could not be identified."
+        });
+        return;
     }
 
-    console.log("Saved Menu Selection:", selectedMenuData);
+    /* ==========================================
+       SAVE 3-LAYER STRUCTURE
+    ========================================== */
+    $dropdown.data("selected-items", selectedItems);
+
+    console.log("Saved to dropdown:", selectedItems);
+
+    /* ==========================================
+       UPDATE MENU BUTTON
+    ========================================== */
+    const selectedCount = updateMenuButton(selectedItems);
+
+    const $row = $dropdown.closest(".food-row");
+    const $menuButton = $row.find(".loadMenuBtn");
+
+    $menuButton.html(
+        selectedCount > 0
+            ? `Menu (${selectedCount})`
+            : `Menu`
+    );
+
     $("#menuModal").modal("hide");
 });
 
@@ -759,14 +1283,17 @@ addFoodBtn.addEventListener('click', () => {
                     <label class="form-label">Addon Food Package #${addonCounter}</label>
                     <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
                 </div>
+
                 <div class="col-md-1">
                     <label class="form-label">Pax</label>
                     <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control form-control-sm">
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">Time</label>
                     <div class="d-flex gap-1">
@@ -785,24 +1312,24 @@ addFoodBtn.addEventListener('click', () => {
 
             <!-- Row 2 -->
             <div class="row g-2 food-row align-items-end mt-1">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Food Package</label>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm foodPackageDropdown"></select>
-                        <button type="button"
-                                class="btn btn-outline-primary btn-sm loadMenuBtn">
-                            Menu
-                        </button>
-                    </div>
+                    <select class="form-select form-select-sm foodPackageDropdown"></select>
                     <input type="hidden" class="package_row_id" value="0" />
                 </div>
+
                 <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">Menu</button>
+                </div>
+
+                <div class="col-md-2">
                     <label class="form-label">Per Plate</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text">₹</span>
                         <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
                     </div>
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label">Package Cost</label>
                     <div class="input-group input-group-sm">
@@ -810,13 +1337,15 @@ addFoodBtn.addEventListener('click', () => {
                         <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
                     </div>
                 </div>
-                <div class="col-md-3">
+
+                <div class="col-md-2">
                     <label class="form-label">Addons</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text">₹</span>
                         <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
                     </div>
                 </div>
+
                 <div class="col-md-1 d-none">
                     <label class="form-label">GST</label>
                     <div class="input-group input-group-sm">
@@ -824,8 +1353,13 @@ addFoodBtn.addEventListener('click', () => {
                         <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-center justify-content-between">
-                    <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
+
+                <div class="col-md-3 d-flex align-items-center justify-content-between">
+                    <button type="button" 
+                        class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" 
+                        onclick="event.preventDefault(); 
+                        openAddonModal(0, this)"><i class="fa fa-check"></i> Addons
+                    </button>
                     <span class="fw-bold">Total: <span class="foodPackage_TotalValue">₹ 0</span></span>
                 </div>
             </div>
@@ -860,7 +1394,6 @@ let currentAddonButton = null;
 let currentAddonRow = null;
 
 loadAddonCharges();
-
 function loadAddonCharges() {
     return $.ajax({
         url: "/api/Company_FoodRate_AddonCharge/GetCompanyFoodRateAddonCharge",
@@ -913,7 +1446,7 @@ function populateAddonModal(savedItems = []) {
 
                 <div class="card-body p-2 addon-header-body">
                     <div class="d-flex fw-bold text-secondary border-bottom pb-1 mb-2">
-                        <div class="flex-grow-1">Food Item</div>
+                        <div class="flex-grow-1">Food SubCategory & Item</div>
                         <div style="width:100px;" class="text-center">Rate</div>
                         <div style="width:100px;" class="text-center">Pax</div>
                         <div style="width:130px;" class="text-center">Total</div>
@@ -941,7 +1474,8 @@ function populateAddonModal(savedItems = []) {
                     body.append(childContainer);
                 }
             });
-        } else {
+        }
+        else {
             body.append(`<div class="text-center text-muted py-3">No Add-on Items available.</div>`);
         }
 
@@ -982,85 +1516,36 @@ function populateAddonModal(savedItems = []) {
         }
     });
 }
-
-function appendAddonItem(container, headerId, headerName, item, layer, savedItems = [], parentItemId = 0) {
-    const itemId = Number(item.ItemId) || 0;
-    const itemName = item.ItemName || "";
-    const itemAmount = parseFloat(item.Amount) || 0;
-    const description = item.Description || "";
-
-    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
-
-    const isChecked = !!saved;
-    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
-
-    let rowPax = 0;
-
-    if (currentAddonRow && currentAddonRow.length > 0) {
-        const paxInput = currentAddonRow.find(".pax");
-
-        if (paxInput.length > 0) {
-            rowPax = parseFloat(paxInput.val()) || 0;
-        } else {
-            rowPax = parseFloat($("#booking_pax").val()) || 0;
-        }
-    }
-
-    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : rowPax;
-    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
-
-    const layerClass = layer === 3 ? "ms-4 addon-layer-3" : "addon-layer-2";
-    const layerIcon = layer === 3 ? `<span class="me-2 text-muted">↳</span>` : "";
-    const layerStyle = layer === 3 ? `border-left:3px solid #dee2e6; padding-left:10px;` : "";
-
-    const row = $(`
-        <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row ${layerClass}"
-             style="${layerStyle}"
-             data-header-id="${headerId}"
-             data-header-name="${headerName}"
-             data-item-id="${itemId}"
-             data-parent-item-id="${parentItemId}"
-             data-layer="${layer}">
-
-            <div class="d-flex align-items-center flex-grow-1">
-                <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
-                ${layerIcon}
-                <div>
-                    <span>${itemName}</span>
-                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
-                </div>
-            </div>
-
-            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
-
-            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
-
-            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
-        </div>
-    `);
-
-    row.find(".rate-input, .pax-input").on("input", function () {
-        recalcRow_AddOn(row);
-    });
-
-    row.find(".addon-checkbox").on("change", function () {
-        recalcRow_AddOn(row);
-    });
-
-    container.append(row);
-}
 function appendAddonLayer2Item(container, headerId, headerName, item, savedItems = [], childContainerId = "") {
+
     const itemId = Number(item.ItemId) || 0;
+    const isParent = item.IsParent === true;
     const itemName = item.ItemName || "";
     const itemAmount = parseFloat(item.Amount) || 0;
     const description = item.Description || "";
 
-    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
+    // =====================================================
+    // FIND SAVED LAYER 2 ITEM
+    // =====================================================
+    const saved = getSavedAddonLayer2Item(
+        savedItems,
+        headerId,
+        itemId
+    );
 
     const isChecked = !!saved;
-    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
-    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : getAddonDefaultPax();
-    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
+
+    const rate = saved
+        ? parseFloat(saved.AddOn_Rate) || 0
+        : itemAmount;
+
+    const pax = saved
+        ? parseFloat(saved.AddOn_Pax) || 0
+        : getAddonDefaultPax();
+
+    const total = saved
+        ? parseFloat(saved.AddOn_Total) || 0
+        : 0;
 
     const row = $(`
         <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row addon-layer2-row"
@@ -1072,60 +1557,79 @@ function appendAddonLayer2Item(container, headerId, headerName, item, savedItems
              data-child-container="${childContainerId}">
 
             <div class="d-flex align-items-center flex-grow-1">
-                <input type="checkbox" class="form-check-input me-2 addon-checkbox" ${isChecked ? "checked" : ""}>
+
+                <input type="checkbox"
+                       class="form-check-input me-2 addon-checkbox"
+                       ${isChecked ? "checked" : ""}>
 
                 <div>
-                    <span class="fw-semibold">${itemName}</span>
-                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
+                    <span class="fw-semibold">
+                        ${itemName}
+                    </span>
+
+                    ${description
+            ? `<small class="d-block text-muted">${description}</small>`
+            : ""
+        }
                 </div>
+
             </div>
 
-            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
+            <input type="number"
+                   class="form-control form-control-sm rate-input text-center mx-1 p-1 ${isParent ? "d-none" : ""}"
+                   step="0.01"
+                   value="${rate}"
+                   min="0"
+                   style="width:90px;">
 
-            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
+            <input type="number"
+                   class="form-control form-control-sm pax-input text-center mx-1 p-1 ${isParent ? "d-none" : ""}"
+                   step="0.01"
+                   value="${pax}"
+                   min="0"
+                   style="width:90px;">
 
-            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
+            <input type="number"
+                   class="form-control form-control-sm total-input text-center mx-1 bg-light p-1 ${isParent ? "d-none" : ""}"
+                   value="${total.toFixed(2)}"
+                   readonly
+                   style="width:120px;">
+
         </div>
     `);
-
-    row.find(".rate-input, .pax-input").on("input", function () {
-        recalcRow_AddOn(row);
-    });
-
-    row.find(".addon-checkbox").on("change", function () {
-        const isChecked = $(this).is(":checked");
-        const childContainerId = row.data("child-container");
-        const $childContainer = $("#" + childContainerId);
-
-        recalcRow_AddOn(row);
-
-        if (isChecked) {
-            $childContainer.stop(true, true).slideDown(200);
-        } else {
-            $childContainer.stop(true, true).slideUp(200);
-
-            $childContainer.find(".addon-checkbox").prop("checked", false);
-
-            $childContainer.find(".total-input").val("0.00");
-
-            recalcSummary_AddOn();
-        }
-    });
 
     container.append(row);
 }
 function appendAddonLayer3Item(container, headerId, headerName, parentItemId, item, savedItems = []) {
+
     const itemId = Number(item.ItemId) || 0;
     const itemName = item.ItemName || "";
     const itemAmount = parseFloat(item.Amount) || 0;
     const description = item.Description || "";
 
-    const saved = savedItems.find(x => Number(x.AddOn_Item_Id) === itemId && Number(x.AddOn_Header_Id) === headerId);
+    // =====================================================
+    // FIND SAVED LAYER 3 ITEM
+    // =====================================================
+    const saved = getSavedAddonLayer3Item(
+        savedItems,
+        headerId,
+        parentItemId,
+        itemId
+    );
 
     const isChecked = !!saved;
-    const rate = saved ? parseFloat(saved.AddOn_Rate) || 0 : itemAmount;
-    const pax = saved ? parseFloat(saved.AddOn_Pax) || 0 : getAddonDefaultPax();
-    const total = saved ? parseFloat(saved.AddOn_Total) || 0 : 0;
+
+    const rate = saved
+        ? parseFloat(saved.AddOn_Rate) || 0
+        : itemAmount;
+
+    const pax = saved
+        ? parseFloat(saved.AddOn_Pax) || 0
+        : getAddonDefaultPax();
+
+    const total = saved
+        ? parseFloat(saved.AddOn_Total) || 0
+        : 0;
 
     const row = $(`
         <div class="d-flex align-items-center justify-content-between mb-2 addon-selection-row addon-layer3-row"
@@ -1137,36 +1641,54 @@ function appendAddonLayer3Item(container, headerId, headerName, parentItemId, it
              style="border-left:3px solid #dee2e6; padding-left:12px;">
 
             <div class="d-flex align-items-center flex-grow-1">
-                <input type="checkbox" class="form-check-input me-2 addon-checkbox">
 
-                <span class="me-2 text-muted">↳</span>
+                <input type="checkbox"
+                       class="form-check-input me-2 addon-checkbox"
+                       ${isChecked ? "checked" : ""}>
+
+                <span class="me-2 text-muted">
+                    ↳
+                </span>
 
                 <div>
-                    <span>${itemName}</span>
-                    ${description ? `<small class="d-block text-muted">${description}</small>` : ""}
+                    <span>
+                        ${itemName}
+                    </span>
+
+                    ${description
+            ? `<small class="d-block text-muted">${description}</small>`
+            : ""
+        }
                 </div>
+
             </div>
 
-            <input type="number" class="form-control form-control-sm rate-input text-center mx-1 p-1" step="0.01" value="${rate}" min="0" style="width:90px;">
+            <input type="number"
+                   class="form-control form-control-sm rate-input text-center mx-1 p-1"
+                   step="0.01"
+                   value="${rate}"
+                   min="0"
+                   style="width:90px;">
 
-            <input type="number" class="form-control form-control-sm pax-input text-center mx-1 p-1" step="0.01" value="${pax}" min="0" style="width:90px;">
+            <input type="number"
+                   class="form-control form-control-sm pax-input text-center mx-1 p-1"
+                   step="0.01"
+                   value="${pax}"
+                   min="0"
+                   style="width:90px;">
 
-            <input type="number" class="form-control form-control-sm total-input text-center mx-1 bg-light p-1" value="${total.toFixed(2)}" readonly style="width:120px;">
+            <input type="number"
+                   class="form-control form-control-sm total-input text-center mx-1 bg-light p-1"
+                   value="${total.toFixed(2)}"
+                   readonly
+                   style="width:120px;">
+
         </div>
     `);
 
-    row.find(".rate-input, .pax-input").on("input", function () {
-        recalcRow_AddOn(row);
-    });
-
-    row.find(".addon-checkbox").on("change", function () {
-        recalcRow_AddOn(row);
-    });
-
-    row.find(".addon-checkbox").prop("checked", isChecked);
-
     container.append(row);
 }
+
 function getAddonDefaultPax() {
     let rowPax = 0;
 
@@ -1183,45 +1705,144 @@ function getAddonDefaultPax() {
     return rowPax;
 }
 function recalcRow_AddOn(row) {
-    const checked = row.find(".addon-checkbox").is(":checked");
-    const rate = parseFloat(row.find(".rate-input").val()) || 0;
-    const pax = parseFloat(row.find(".pax-input").val()) || 0;
-    const total = checked ? rate * pax : 0;
+    const $row = $(row);
 
-    row.find(".total-input").val(total.toFixed(2));
+    const isChecked = $row.find(".addon-checkbox").is(":checked");
+    const rate = parseFloat($row.find(".rate-input").val()) || 0;
+    const pax = parseFloat($row.find(".pax-input").val()) || 0;
+
+    const total = isChecked ? rate * pax : 0;
+
+    $row.find(".total-input").val(total.toFixed(2));
 
     recalcSummary_AddOn();
 }
-
 function recalcSummary_AddOn() {
-    Object.keys(headerTotals).forEach(key => {
-        headerTotals[key] = 0;
-    });
+    const headerTotals = {};
 
     $(".addon-selection-row").each(function () {
         const $row = $(this);
-        const headerId = Number($row.data("header-id")) || 0;
-        const summaryKey = `header-${headerId}`;
-        const total = parseFloat($row.find(".total-input").val()) || 0;
+        const headerId = Number($row.attr("data-header-id")) || 0;
+        const isChecked = $row.find(".addon-checkbox").is(":checked");
 
-        if (headerTotals.hasOwnProperty(summaryKey)) {
-            headerTotals[summaryKey] += total;
+        const total = isChecked
+            ? parseFloat($row.find(".total-input").val()) || 0
+            : 0;
+
+        if (!headerTotals[headerId]) {
+            headerTotals[headerId] = 0;
         }
+
+        headerTotals[headerId] += total;
     });
 
-    Object.keys(headerTotals).forEach(summaryKey => {
-        $(`[data-header-summary="${summaryKey}"] .header-total`).text(headerTotals[summaryKey].toFixed(2));
+    /* ==========================================
+       UPDATE HEADER SUMMARY
+       ========================================== */
+    Object.keys(headerTotals).forEach(headerId => {
+        const total = headerTotals[headerId];
+        $(`[data-header-summary="header-${headerId}"] .header-total`).text(total.toFixed(2));
     });
 
-    const finalTotal = Object.values(headerTotals).reduce((sum, total) => sum + total, 0);
-
+    /* ==========================================
+       FINAL TOTAL
+       ========================================== */
+    const finalTotal = Object.values(headerTotals).reduce((sum, value) => sum + value, 0);
     $("#finalTotal").text(finalTotal.toFixed(2));
 }
+
+// =====================================================
+// GET SAVED ADDON LAYER 2 ITEM
+// =====================================================
+function getSavedAddonLayer2Item(savedItems, headerId, itemId) {
+    if (!Array.isArray(savedItems)) {
+        return null;
+    }
+
+    const header = savedItems.find(x =>
+        Number(x.AddOn_Header_Id) === Number(headerId)
+    );
+
+    if (!header || !Array.isArray(header.Items)) {
+        return null;
+    }
+
+    return header.Items.find(x =>
+        Number(x.AddOn_Item_Id) === Number(itemId)
+    ) || null;
+}
+
+
+// =====================================================
+// GET SAVED ADDON LAYER 3 ITEM
+// =====================================================
+function getSavedAddonLayer3Item(savedItems, headerId, parentItemId, itemId) {
+    if (!Array.isArray(savedItems)) {
+        return null;
+    }
+
+    const header = savedItems.find(x =>
+        Number(x.AddOn_Header_Id) === Number(headerId)
+    );
+
+    if (!header || !Array.isArray(header.Items)) {
+        return null;
+    }
+
+    const parentItem = header.Items.find(x =>
+        Number(x.AddOn_Item_Id) === Number(parentItemId)
+    );
+
+    if (!parentItem || !Array.isArray(parentItem.Children)) {
+        return null;
+    }
+
+    return parentItem.Children.find(x =>
+        Number(x.AddOn_Item_Id) === Number(itemId)
+    ) || null;
+}
+
+
+$(document).off("input.addonCalc", "#addonItemsContainer .rate-input, #addonItemsContainer .pax-input");
+$(document).on("input.addonCalc", "#addonItemsContainer .rate-input, #addonItemsContainer .pax-input", function () {
+    const $row = $(this).closest(".addon-selection-row");
+    recalcRow_AddOn($row);
+});
+$(document).off("change.addonCalc", "#addonItemsContainer .addon-checkbox");
+
+$(document).on("change.addonCalc", "#addonItemsContainer .addon-checkbox", function () {
+    const $checkbox = $(this);
+    const $row = $checkbox.closest(".addon-selection-row");
+    const isChecked = $checkbox.is(":checked");
+
+    /* ==========================================
+       LAYER 2
+       ========================================== */
+    if ($row.hasClass("addon-layer2-row")) {
+        const childContainerId = $row.attr("data-child-container");
+        if (childContainerId) {
+            const $childContainer = $("#" + childContainerId);
+            if (isChecked) {
+                $childContainer.stop(true, true).slideDown(200);
+            }
+            else {
+                $childContainer.stop(true, true).slideUp(200);
+                $childContainer.find(".addon-checkbox").prop("checked", false);
+                $childContainer.find(".total-input").val("0.00");
+            }
+        }
+    }
+    /* ==========================================
+       RECALCULATE CURRENT ROW
+       ========================================== */
+    recalcRow_AddOn($row);
+});
+
+
 
 // Open modal function
 //let currentAddonButton = null;
 //let currentAddonRow = null;
-
 function openAddonModal(booking_foodPackageId = 0, button = null) {
     currentAddonButton = button;
 
@@ -1237,10 +1858,15 @@ function openAddonModal(booking_foodPackageId = 0, button = null) {
     console.log("Saved Addon Items:", savedItems);
     console.log("Addon Master Data:", addon_Data);
 
-    //here2
     if (addon_Data.length > 0) {
         populateAddonModal(savedItems);
         $("#addonChargeModal").modal("show");
+        /*
+        $("#addonItemsContainer .addon-selection-row").each(function () {
+            recalcRow_AddOn($(this));
+        });
+        recalcSummary_AddOn();
+        */
         return;
     }
 
@@ -1248,6 +1874,11 @@ function openAddonModal(booking_foodPackageId = 0, button = null) {
         populateAddonModal(savedItems);
         $("#addonChargeModal").modal("show");
     });
+
+    $("#addonItemsContainer .addon-selection-row").each(function () {
+        recalcRow_AddOn($(this));
+    });
+    recalcSummary_AddOn();
 }
 
 // Function to update the Addon button with the selected items and total
@@ -1260,10 +1891,50 @@ function updateAddonButton(selectedItems) {
     addonButton.data("selected-addonitems", selectedItems);
 }
 
+// =====================================================
+// GET MENU SELECTED COUNT
+// =====================================================
+function updateMenuButton(menuList) {
+    if (!Array.isArray(menuList)) {
+        return 0;
+    }
+
+    let count = 0;
+
+    menuList.forEach(menu => {
+
+        const items = Array.isArray(menu.Items)
+            ? menu.Items
+            : [];
+
+        items.forEach(item => {
+
+            // Layer 2 - count only New Added items
+            if (
+                item.MenuItem_Name_NewAdded !== null &&
+                item.MenuItem_Name_NewAdded !== undefined &&
+                item.MenuItem_Name_NewAdded !== ""
+            ) {
+                count++;
+            }
+
+            // Layer 3 - count all children
+            const children = Array.isArray(item.Children)
+                ? item.Children
+                : [];
+
+            count += children.length;
+        });
+    });
+
+    return count;
+}
+
 // =============================
-// SAVE ADDON MODAL
+// SAVE ADDON MODAL - 3 LAYERS
 // =============================
 $(document).on("click", ".btn-saveAddOn", function () {
+
     if (!currentAddonButton) {
         Swal.fire({
             icon: "warning",
@@ -1274,136 +1945,197 @@ $(document).on("click", ".btn-saveAddOn", function () {
     }
 
     const selectedItems = [];
-    const selectedParentItemIds = [];
 
-    // =============================
-    // FIRST: GET SELECTED LAYER 2 ITEMS
-    // =============================
-    $(".addon-selection-row[data-layer='2']").each(function () {
-        const $row = $(this);
+    // =====================================================
+    // HEADER -> LAYER 2 -> LAYER 3
+    // =====================================================
+    $(".addon-header-card").each(function () {
 
-        if (!$row.find(".addon-checkbox").is(":checked")) return;
+        const $headerCard = $(this);
 
-        const headerId = Number($row.data("header-id")) || 0;
-        const headerName = $row.data("header-name") || "";
-        const itemId = Number($row.data("item-id")) || 0;
-        const parentItemId = Number($row.data("parent-item-id")) || 0;
-        const layer = Number($row.data("layer")) || 2;
+        const headerId = Number($headerCard.attr("data-header-id")) || 0;
+        const headerName = $headerCard.find(".card-header span").text().trim();
 
-        const rate = parseFloat($row.find(".rate-input").val()) || 0;
-        const pax = parseFloat($row.find(".pax-input").val()) || 0;
-        const total = rate * pax;
-
-        $row.find(".total-input").val(total.toFixed(2));
-
-        selectedParentItemIds.push(itemId);
-
-        selectedItems.push({
+        const menu = {
             AddOn_Header_Id: headerId,
             AddOn_Header_Name: headerName,
-            AddOn_Item_Id: itemId,
-            AddOn_Parent_Item_Id: parentItemId,
-            AddOn_Layer: layer,
-            AddOn_Rate: rate,
-            AddOn_Pax: pax,
-            AddOn_Total: total
+            Items: []
+        };
+
+        // =================================================
+        // LAYER 2
+        // =================================================
+        $headerCard.find(".addon-layer2-row").each(function () {
+
+            const $row = $(this);
+
+            if (!$row.find(".addon-checkbox").is(":checked")) {
+                return;
+            }
+
+            const itemId = Number($row.attr("data-item-id")) || 0;
+            const parentItemId = Number($row.attr("data-parent-item-id")) || 0;
+
+            const rate = parseFloat($row.find(".rate-input").val()) || 0;
+            const pax = parseFloat($row.find(".pax-input").val()) || 0;
+            const total = rate * pax;
+
+            $row.find(".total-input").val(total.toFixed(2));
+
+            const children = [];
+
+            // =============================================
+            // LAYER 3
+            // =============================================
+            const childContainerId = $row.attr("data-child-container");
+
+            if (childContainerId) {
+
+                const $childContainer = $("#" + childContainerId);
+
+                $childContainer.find(".addon-layer3-row").each(function () {
+
+                    const $childRow = $(this);
+
+                    if (!$childRow.find(".addon-checkbox").is(":checked")) {
+                        return;
+                    }
+
+                    const childItemId = Number($childRow.attr("data-item-id")) || 0;
+                    const childParentItemId = Number($childRow.attr("data-parent-item-id")) || itemId;
+
+                    const childRate = parseFloat($childRow.find(".rate-input").val()) || 0;
+                    const childPax = parseFloat($childRow.find(".pax-input").val()) || 0;
+                    const childTotal = childRate * childPax;
+
+                    $childRow.find(".total-input").val(childTotal.toFixed(2));
+
+                    children.push({
+                        AddOn_Item_Id: childItemId,
+                        AddOn_Item_Name: $childRow.find(".addon-checkbox").data("item-name") || null,
+                        AddOn_Parent_Item_Id: childParentItemId,
+                        AddOn_Layer: 3,
+                        AddOn_Rate: childRate,
+                        AddOn_Pax: childPax,
+                        AddOn_Total: childTotal,
+                        IsParent: false
+                    });
+                });
+            }
+
+            // =============================================
+            // ADD LAYER 2
+            // =============================================
+            menu.Items.push({
+                AddOn_Item_Id: itemId,
+                AddOn_Item_Name: $row.find(".addon-checkbox").data("item-name") || null,
+                AddOn_Parent_Item_Id: parentItemId,
+                AddOn_Layer: 2,
+                AddOn_Rate: rate,
+                AddOn_Pax: pax,
+                AddOn_Total: total,
+                IsParent: children.length > 0,
+                Children: children
+            });
         });
+
+        // =================================================
+        // ONLY ADD HEADER IF ITEMS EXIST
+        // =================================================
+        if (menu.Items.length > 0) {
+            selectedItems.push(menu);
+        }
     });
 
-    // =============================
-    // SECOND: GET SELECTED LAYER 3 ITEMS
-    // ONLY IF THEIR LAYER 2 PARENT IS SELECTED
-    // =============================
-    $(".addon-selection-row[data-layer='3']").each(function () {
-        const $row = $(this);
+    console.log("Selected Addons - 3 Layer:", selectedItems);
 
-        if (!$row.find(".addon-checkbox").is(":checked")) return;
-
-        const headerId = Number($row.data("header-id")) || 0;
-        const headerName = $row.data("header-name") || "";
-        const itemId = Number($row.data("item-id")) || 0;
-        const parentItemId = Number($row.data("parent-item-id")) || 0;
-        const layer = Number($row.data("layer")) || 3;
-
-        // Parent Layer 2 must be selected
-        if (!selectedParentItemIds.includes(parentItemId)) return;
-
-        const rate = parseFloat($row.find(".rate-input").val()) || 0;
-        const pax = parseFloat($row.find(".pax-input").val()) || 0;
-        const total = rate * pax;
-
-        $row.find(".total-input").val(total.toFixed(2));
-
-        selectedItems.push({
-            AddOn_Header_Id: headerId,
-            AddOn_Header_Name: headerName,
-            AddOn_Item_Id: itemId,
-            AddOn_Parent_Item_Id: parentItemId,
-            AddOn_Layer: layer,
-            AddOn_Rate: rate,
-            AddOn_Pax: pax,
-            AddOn_Total: total
-        });
-    });
-
-    // =============================
+    // =====================================================
     // VALIDATION
-    // =============================
+    // =====================================================
     if (selectedItems.length === 0) {
+
         Swal.fire({
             icon: "warning",
             title: "No Addons Selected",
             text: "Please select at least one Add-on item."
         });
+
         return;
     }
 
-    // =============================
-    // SAVE SELECTED ITEMS
-    // =============================
+    // =====================================================
+    // SAVE NESTED STRUCTURE TO CURRENT BUTTON
+    // =====================================================
     saveSelectedAddonItems(selectedItems);
 });
-
-
+//here2
 // =============================
 // SAVE SELECTED ADDON ITEMS
 // =============================
 function saveSelectedAddonItems(selectedItems) {
+    console.log("selectedItems AddOns:", selectedItems);
+
     if (!currentAddonButton) return;
 
-    const finalTotal = selectedItems.reduce((sum, item) => sum + (parseFloat(item.AddOn_Total) || 0), 0);
+    // =============================================
+    // CALCULATE TOTAL FROM LAYER 2 + LAYER 3
+    // =============================================
+    let finalTotal = 0;
+    let selectedCount = 0;
+
+    selectedItems.forEach(header => {
+
+        const items = Array.isArray(header.Items) ? header.Items : [];
+
+        items.forEach(item => {
+
+            // Layer 2 total
+            finalTotal += parseFloat(item.AddOn_Total) || 0;
+            selectedCount++;
+
+            // Layer 3 total
+            const children = Array.isArray(item.Children) ? item.Children : [];
+
+            children.forEach(child => {
+                finalTotal += parseFloat(child.AddOn_Total) || 0;
+                selectedCount++;
+            });
+        });
+    });
+
+    finalTotal = Number(finalTotal.toFixed(2));
 
     const $button = $(currentAddonButton);
 
+    // =============================================
+    // SAVE DATA
+    // =============================================
     $button.data("selected-addonitems", selectedItems);
     $button.data("total", finalTotal);
 
-    // =============================
+    // =============================================
     // UPDATE ADDON COST
-    // =============================
+    // =============================================
     if (currentAddonRow && currentAddonRow.length > 0) {
         currentAddonRow.find("#foodPackage_Addons, .addonsCost").val(finalTotal.toFixed(2));
     }
 
     // =============================
-    // UPDATE BUTTON
-    // =============================
-    $button.html(`<i class="fa fa-check"></i> Addons (${selectedItems.length})`);
-
-    // =============================
     // UPDATE PACKAGE TOTAL
     // =============================
-    updatePackageCost();
+    if (currentAddonRow && currentAddonRow.length > 0) {
+        updatePackageCost(currentAddonRow.find(".food-row"));
+    }
 
-    // =============================
+    // =============================================
     // CLOSE MODAL
-    // =============================
+    // =============================================
     $("#addonChargeModal").modal("hide");
 
     console.log("Saved Selected Addons:", selectedItems);
     console.log("Final Addon Total:", finalTotal);
+    console.log("Selected Addon Count:", selectedCount);
 }
-
 
 //Food Addons ----- /END ------------------------------------------------------------------
 
@@ -3488,45 +4220,6 @@ document.addEventListener("DOMContentLoaded", function () {
         selectAllBox.prop('checked', all.length === all.filter(':checked').length);
     });
 
-    // When Save Selection button is clicked
-    /*
-    $("#menuModal .btn-saveMenu").on("click", function () {
-        let menuData = [];
-
-        // Loop through each header section
-        $("#menuModal .border.rounded").each(function () {
-            let section = $(this);
-            let headerTitle = section.find("h6").text().trim();
-            let selectedItems = [];
-
-            // Collect checked items under this header
-            section.find(".items-container input[type='checkbox']:checked").each(function () {
-                selectedItems.push($(this).val());
-            });
-
-            // Push only if items are selected
-            if (selectedItems.length > 0) {
-                menuData.push({
-                    header: headerTitle,
-                    items: selectedItems
-                });
-            }
-        });
-
-        // Convert to JSON string
-        let jsonString = JSON.stringify(menuData);
-
-        // Save JSON string in dropdown (data attribute)
-        $("#foodPackage_PackageDropdown").data("menuitems", jsonString);
-
-        // Optionally show summary text in dropdown (or console)
-        //console.log("Saved Menu JSON:", jsonString);
-
-        // Close modal
-        $("#menuModal").modal("hide");
-    });
-    */
-    //Menu Item - START ----- END ---------------------------
 
     // 1️⃣ Reset to 0
     //$(".btn-outline-info").on("click", function () {
@@ -6636,13 +7329,17 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("input[name='menuType']").prop("checked", false);
                     $("input[name='menuType'][value='" + data.Booking_MenuType_Id + "']").prop("checked", true).trigger("change");
 
-                    //here2
+                    // =====================================================
+                    // EDIT FOOD PACKAGES
+                    // =====================================================
                     const foodPackages = data?.JSON_FoodPackage ?? [];
+                    console.log("foodPackages:", foodPackages);
                     if (Array.isArray(foodPackages) && foodPackages.length > 0) {
                         foodPackages.forEach(function (pkg, index) {
                             if (index === 0) {
                                 bindStaticFoodRow(pkg);
-                            } else {
+                            }
+                            else {
                                 const $newBlock = createFoodBlock();
                                 bindDynamicFoodRow($newBlock, pkg);
                             }
@@ -6962,118 +7659,9 @@ $('#toggleBookingNotes').on('change', function () {
 });
 
 //Bookimg Summary - Package DATA -- START ------------------
-function renderFoodPackages_OLD_13sept26(packages) {
-    let html_services = "";
-
-    if (!packages || packages.length === 0) {
-        $("#bookingReport_FoodPackageName").html("—");
-
-        html_services = `
-            <div class="d-flex justify-content-between py-1 border-bottom">
-                <span class="fw-semibold">Food</span>
-                <span>₹0</span>
-            </div>
-        `;
-        $("#foodPackageContainer_summaryservices").html(html_services);
-        return;
-    }
-    $("#btnFoodLabels").data("foodpackage", JSON.stringify(packages));
-
-    let html = "";
-    packages.forEach((pkg, index) => {
-
-        const perPlate = pkg.PerPlate ?? "—";
-        const pax = pkg.Pax ?? 0;
-        const addon = pkg.Addons ?? 0;
-        const total = pkg.TotalCharges ?? 0;
-        html_services += `
-            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
-                
-                <span class="fw-semibold">
-                    ${`Food Package ${index + 1}`}
-                    
-                    <small class="text-muted">
-                        (₹${perPlate}/Plate)
-                        ${pax > 0 ? `(Pax: ${pax})` : ``}
-                        ${addon > 0 ? `(AddOn: ₹${addon})` : ``}
-                    </small>
-                </span>
-
-                <span>₹${total}</span>
-            </div>
-        `;
-
-        // 🔹 Group Menu Items by Header
-        const menuGrouped = {};
-        (pkg.MenuItemsList || []).forEach(item => {
-            if (!menuGrouped[item.MenuHeader_Name]) {
-                menuGrouped[item.MenuHeader_Name] = [];
-            }
-            menuGrouped[item.MenuHeader_Name].push(item.MenuItem_Name);
-        });
-
-        // 🔹 Group AddOns by Header
-        const addonGrouped = {};
-        (pkg.AddOnsList || []).forEach(item => {
-            if (!addonGrouped[item.AddOn_Header_Name]) {
-                addonGrouped[item.AddOn_Header_Name] = [];
-            }
-            addonGrouped[item.AddOn_Header_Name].push(item.AddOn_Item_Name);
-        });
-
-        html += `
-            <div style="margin-bottom:12px; padding:10px; border:1px solid #fecdd3; border-radius:10px; background:#fff1f2;">
-                
-                <!-- 📦 Package Title -->
-                <div style="font-weight:600; color:#9f1239; margin-bottom:6px;">
-                    ${pkg.FoodPackageName} <span style="font-size:12px;">(₹${pkg.PerPlate}/Plate)</span>
-                </div>
-        `;
-
-        // 🍽️ Menu Section
-        if (Object.keys(menuGrouped).length > 0) {
-            html += `<div style="margin-bottom:6px;">`;
-            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">🍽️ Menu</div>`;
-            for (let header in menuGrouped) {
-                const items = menuGrouped[header]
-                    .map((item, index) => `(${index + 1}) ${item}`)
-                    .join(", ");
-
-                html += `
-                    <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${items}
-                    </div>
-                `;
-            }
-            html += `</div>`;
-        }
-
-        // ➕ Addons Section
-        if (Object.keys(addonGrouped).length > 0) {
-            html += `<div>`;
-            html += `<div style="font-size:12px; color:#be123c; font-weight:600;">➕ Add-ons</div>`;
-            for (let header in addonGrouped) {
-
-                const items = addonGrouped[header]
-                    .map((item, index) => `(${index + 1}) ${item}`)
-                    .join(", ");
-
-                html += `
-                    <div style="font-size:13px; margin-left:6px;">
-                        <strong>${header}:</strong> ${items}
-                    </div>
-                `;
-            }
-            html += `</div>`;
-        }
-
-        html += `</div>`;
-    });
-    $("#foodPackageContainer_summaryservices").html(html_services);
-
-    $("#bookingReport_FoodPackageName").html(html);
-}
 function renderFoodPackages(packages) {
+    console.log("food packages:", packages);
+
     let html_services = "";
 
     if (!packages || packages.length === 0) {
@@ -7100,339 +7688,434 @@ function renderFoodPackages(packages) {
         const addon = Number(pkg.Addons) || 0;
         const total = Number(pkg.TotalCharges) || 0;
 
+        /* =====================================================
+           SUMMARY SERVICES
+        ===================================================== */
         html_services += `
-            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? '' : 'mt-1'}">
+            <div class="d-flex justify-content-between py-1 border-bottom ${index === 0 ? "" : "mt-1"}">
                 <span class="fw-semibold">
                     Food Package ${index + 1}
                     <small class="text-muted">
                         (₹${perPlate}/Plate)
-                        ${pax > 0 ? `(Pax: ${pax})` : ''}
-                        ${addon > 0 ? `(AddOn: ₹${addon})` : ''}
+                        ${pax > 0 ? `(Pax: ${pax})` : ""}
+                        ${addon > 0 ? `(AddOn: ₹${addon})` : ""}
                     </small>
                 </span>
-
                 <span>₹${total.toFixed(2)}</span>
             </div>
         `;
 
-        // =============================================
-        // GROUP MENU ITEMS BY HEADER
-        // =============================================
-        const menuGrouped = {};
-        (pkg.MenuItemsList || []).forEach(item => {
-            const headerName = item.MenuHeader_Name || "Other";
-
-            if (!menuGrouped[headerName]) menuGrouped[headerName] = [];
-
-            if (item.MenuItem_Name) menuGrouped[headerName].push(item.MenuItem_Name);
-        });
-
-        // =============================================
-        // BUILD ADDON 3 LAYER HIERARCHY
-        //
-        // Header
-        // └── Layer 2 Item
-        //      └── Layer 3 Item
-        // =============================================
-        const addonGrouped = {};
-
-        (pkg.AddOnsList || []).forEach(item => {
-            const headerId = Number(item.AddOn_Header_Id) || 0;
-            const headerName = item.AddOn_Header_Name?.trim() || "Food Category (Name not given)";
-
-            const itemId = Number(item.AddOn_Item_Id) || 0;
-            const parentItemId = Number(item.AddOn_Parent_Item_Id) || 0;
-
-            const layer = Number(item.AddOn_Layer) || 2;
-
-            if (!addonGrouped[headerId]) {
-                addonGrouped[headerId] = {
-                    HeaderName: headerName,
-                    Layer2Items: {}
-                };
-            }
-
-            // =============================================
-            // LAYER 2
-            // =============================================
-            if (layer === 2) {
-                if (!addonGrouped[headerId].Layer2Items[itemId]) {
-                    addonGrouped[headerId].Layer2Items[itemId] = {
-                        ItemId: itemId,
-                        ItemName: item.AddOn_Item_Name || "",
-                        Rate: Number(item.AddOn_Rate) || 0,
-                        Pax: Number(item.AddOn_Pax) || 0,
-                        Total: Number(item.AddOn_Total) || 0,
-                        Children: []
-                    };
-                }
-            }
-
-            // =============================================
-            // LAYER 3
-            // =============================================
-            if (layer === 3) {
-                if (!addonGrouped[headerId].Layer2Items[parentItemId]) {
-                    addonGrouped[headerId].Layer2Items[parentItemId] = {
-                        ItemId: parentItemId,
-                        ItemName: item.AddOn_Parent_Item_Name?.trim() || "Food Subcategory (Name not given)",
-                        Rate: 0,
-                        Pax: 0,
-                        Total: 0,
-                        Children: []
-                    };
-                }
-
-                addonGrouped[headerId].Layer2Items[parentItemId].Children.push({
-                    ItemId: itemId,
-                    ItemName: item.AddOn_Item_Name || "",
-                    Rate: Number(item.AddOn_Rate) || 0,
-                    Pax: Number(item.AddOn_Pax) || 0,
-                    Total: Number(item.AddOn_Total) || 0
-                });
-            }
-        });
-
-        // =============================================
-        // PACKAGE CARD
-        // =============================================
+        /* =====================================================
+           PACKAGE CARD
+        ===================================================== */
         html += `
             <div class="mb-3 border rounded-3 overflow-hidden shadow-sm">
 
                 <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-danger-subtle border-bottom">
-
                     <div>
                         <div class="fw-bold text-danger">
-                            🍽️ ${pkg.FoodPackageName || `Food Package ${index + 1}`}
+                            🍽️ ${escapeHtml(pkg.FoodPackageName || `Food Package ${index + 1}`)}
                         </div>
 
                         <small class="text-muted">
                             ₹${perPlate.toFixed(2)} / Plate
-                            ${pax > 0 ? `• Pax: ${pax}` : ''}
+                            ${pax > 0 ? `• Pax: ${pax}` : ""}
                         </small>
                     </div>
 
                     <div class="text-end">
-                        <div class="small text-muted">Total</div>
-                        <div class="fw-bold text-danger">₹${total.toFixed(2)}</div>
-                    </div>
+                        <div class="small text-muted">
+                            Total
+                        </div>
 
+                        <div class="fw-bold text-danger">
+                            ₹${total.toFixed(2)}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="p-3">
         `;
 
-        // =============================================
-        // MENU SECTION
-        // =============================================
-        if (Object.keys(menuGrouped).length > 0) {
+        /* =====================================================
+           MENU SECTION - 3 LAYERS
+           Layer 1 = Header
+           Layer 2 = Parent
+           Layer 3 = Children
+        ===================================================== */
+        if (Array.isArray(pkg.MenuItemsList) && pkg.MenuItemsList.length > 0) {
+
             html += `
                 <div class="mb-3">
-
                     <div class="fw-semibold mb-2">
                         🍽️ Menu
                     </div>
             `;
 
-            Object.keys(menuGrouped).forEach(header => {
-                const items = menuGrouped[header];
+            pkg.MenuItemsList.forEach((menu) => {
+
+                const layer2Items = Array.isArray(menu.Items)
+                    ? menu.Items
+                    : [];
 
                 html += `
-                    <div class="border rounded mb-2">
+                    <div class="border rounded-3 mb-2 overflow-hidden">
 
-                        <div class="px-2 py-1 bg-light border-bottom">
-                            <span class="fw-semibold">${header}</span>
+                        <!-- LAYER 1 -->
+                        <div class="px-3 py-2 bg-light border-bottom">
+                            <span class="fw-bold">
+                                ${escapeHtml(menu.MenuHeader_Name || "Menu")}
+                            </span>
                         </div>
 
-                        <div class="px-2 py-2">
-                            <div class="d-flex flex-wrap gap-2">
+                        <!-- LAYER 2 + LAYER 3 -->
+                        <div class="row g-2 p-2">
                 `;
 
-                items.forEach((item, itemIndex) => {
+                if (layer2Items.length === 0) {
+
                     html += `
-                        <span class="badge text-bg-light border">
-                            ${itemIndex + 1}. ${item}
-                        </span>
+                        <div class="col-12">
+                            <span class="text-muted small">
+                                No menu items
+                            </span>
+                        </div>
                     `;
-                });
+
+                }
+                else {
+
+                    layer2Items.forEach((item, itemIndex) => {
+
+                        const isParent = item.IsParent === true;
+                        const children = Array.isArray(item.Children)
+                            ? item.Children
+                            : [];
+
+                        const hasChildren = isParent && children.length > 0;
+
+                        html += `
+                            <div class="col-md-4 col-sm-6">
+
+                                <div class="border rounded-2 h-100 p-2 bg-light">
+
+                                    <!-- LAYER 2 -->
+                                    <div class="fw-semibold mb-1">
+                                        <span class="text-primary me-1">↳</span>
+                                        ${itemIndex + 1}.
+                                        ${escapeHtml(
+                                    item.MenuItem_Name ||
+                                    item.MenuItem_Name_NewAdded ||
+                                    "Unnamed Item"
+                                )}
+                                    </div>
+                        `;
+
+                        /* =================================================
+                           LAYER 3
+                        ================================================= */
+                        if (hasChildren) {
+
+                            html += `
+                                <div class="ms-3 mt-1">
+                            `;
+
+                            children.forEach((child, childIndex) => {
+
+                                html += `
+                                    <div class="small text-muted py-1">
+                                        <span class="me-1">•</span>
+                                        ${escapeHtml(
+                                            child.MenuItem_Name ||
+                                            child.MenuItem_Name_NewAdded ||
+                                            "Unnamed Item"
+                                        )}
+                                    </div>
+                                `;
+                            });
+
+                            html += `
+                                </div>
+                            `;
+                        }
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
 
                 html += `
-                            </div>
                         </div>
                     </div>
                 `;
             });
-            html += `</div>`;
+
+            html += `
+                </div>
+            `;
         }
 
-        // =============================================
-        // ADDONS SECTION
-        // =============================================
-        if (Object.keys(addonGrouped).length > 0) {
+        /* =====================================================
+           ADD-ONS SECTION - 3 LAYERS
+           Layer 1 = Header
+           Layer 2 = Parent
+           Layer 3 = Children
+        ===================================================== */
+        if (Array.isArray(pkg.AddOnsList) && pkg.AddOnsList.length > 0) {
+
             html += `
                 <div class="mb-2">
+
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-semibold">
                             ➕ Add-on Food Charges
                         </div>
+
                         <div class="small text-muted">
                             Add-on Total: ₹${addon.toFixed(2)}
                         </div>
                     </div>
             `;
 
-            // =============================================
-            // LOOP HEADERS (LAYER 1)
-            // =============================================
-            Object.keys(addonGrouped).forEach(headerId => {
-                const header = addonGrouped[headerId];
+            pkg.AddOnsList.forEach((header) => {
+
+                const layer2Items = Array.isArray(header.Items)
+                    ? header.Items
+                    : [];
 
                 html += `
                     <div class="border rounded-3 mb-2 overflow-hidden">
+
                         <!-- LAYER 1 -->
                         <div class="px-3 py-2 bg-primary-subtle border-bottom">
                             <span class="fw-bold text-primary">
-                                📂 ${header.HeaderName}
+                                📂 ${escapeHtml(header.AddOn_Header_Name || "Add-on")}
                             </span>
                         </div>
-                        <div class="p-2">
+
+                        <!-- LAYER 2 + LAYER 3 -->
+                        <div class="row g-2 p-2">
                 `;
 
-                // =============================================
-                // LOOP LAYER 2
-                // =============================================
-                Object.keys(header.Layer2Items).forEach(itemId => {
-                    const layer2 = header.Layer2Items[itemId];
-                    const hasChildren = layer2.Children.length > 0;
+                if (layer2Items.length === 0) {
 
                     html += `
-                        <div class="border-start border-3 border-primary ps-3 mb-2">
-                            <!-- LAYER 2 -->
-                            <div class="d-flex justify-content-between align-items-center py-1">
-
-                                <div>
-                                    <span class="fw-semibold">
-                                        📌 ${layer2.ItemName}
-                                    </span>
-                                </div>
-
-                                <div class="text-end">
-
-                                    ${layer2.Rate > 0 ? `
-                                        <small class="text-muted">
-                                            ₹${layer2.Rate.toFixed(2)}
-                                            ${layer2.Pax > 0 ? ` × ${layer2.Pax}` : ''}
-                                        </small>
-                                    ` : ''}
-
-                                    ${layer2.Total > 0 ? `
-                                        <div class="fw-semibold text-success">
-                                            ₹${layer2.Total.toFixed(2)}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                    `;
-
-                    // =============================================
-                    // LOOP LAYER 3
-                    // =============================================
-                    if (hasChildren) {
-                        html += `
-                            <div class="ms-3 mt-1 mb-2">
-                                <div class="small text-muted mb-1">Food Items</div>
-                        `;
-
-                        layer2.Children.forEach((child, childIndex) => {
-                            html += `
-                                <div class="d-flex justify-content-between align-items-center border rounded px-2 py-1 mb-1 bg-light">
-                                    <div class="small">
-                                        <span class="text-muted me-1">
-                                            ↳
-                                        </span>
-                                        ${childIndex + 1}. ${child.ItemName}
-                                    </div>
-
-                                    <div class="text-end">
-                                        <small class="text-muted">
-                                            ${child.Rate > 0 ? ` ₹${child.Rate.toFixed(2)}` : ''}
-                                            ${child.Pax > 0 ? ` × ${child.Pax}` : ''}
-                                        </small>
-
-                                        ${child.Total > 0 ? `
-                                            <span class="fw-semibold text-success ms-2">
-                                                ₹${child.Total.toFixed(2)}
-                                            </span>
-                                        ` : ''}
-
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        html += `
-                            </div>
-                        `;
-                    }
-                    html += `
+                        <div class="col-12">
+                            <span class="text-muted small">
+                                No add-on items
+                            </span>
                         </div>
                     `;
-                });
+
+                }
+                else {
+
+                    layer2Items.forEach((item, itemIndex) => {
+
+                        const isParent = item.IsParent === true;
+
+                        const children = Array.isArray(item.Children)
+                            ? item.Children
+                            : [];
+
+                        const hasChildren = isParent && children.length > 0;
+
+                        const rate = Number(item.AddOn_Rate) || 0;
+                        const itemPax = Number(item.AddOn_Pax) || 0;
+                        const itemTotal = Number(item.AddOn_Total) || 0;
+
+                        html += `
+                            <div class="col-md-4 col-sm-6">
+
+                                <div class="border rounded-2 h-100 p-2 bg-light">
+
+                                    <!-- LAYER 2 -->
+                                    <div class="d-flex justify-content-between align-items-start">
+
+                                        <div class="fw-semibold">
+                                            <span class="text-primary me-1">↳</span>
+                                            ${itemIndex + 1}.
+                                            ${escapeHtml(item.AddOn_Item_Name || "Unnamed Item")}
+                                        </div>
+
+                                        ${itemTotal > 0
+                                        ? `
+                                                <span class="fw-semibold text-success ms-2 text-nowrap">
+                                                    ₹${itemTotal.toFixed(2)}
+                                                </span>
+                                            `
+                                        : ""
+                                    }
+
+                                    </div>
+                        `;
+
+                        /* =================================================
+                           LAYER 2 RATE
+                        ================================================= */
+                        if (rate > 0 || itemPax > 0) {
+
+                            html += `
+                                <div class="small text-muted ms-3 mb-1">
+                                    ₹${rate.toFixed(2)}
+                                    ${itemPax > 0 ? ` × ${itemPax}` : ""}
+                                </div>
+                            `;
+                        }
+
+                        /* =================================================
+                           LAYER 3
+                        ================================================= */
+                        if (hasChildren) {
+
+                            html += `
+                                <div class="ms-3 mt-1 pt-1 border-top">
+                            `;
+
+                            children.forEach((child, childIndex) => {
+
+                                const childRate = Number(child.AddOn_Rate) || 0;
+                                const childPax = Number(child.AddOn_Pax) || 0;
+                                const childTotal = Number(child.AddOn_Total) || 0;
+
+                                html += `
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+
+                                        <div class="small text-muted">
+                                            <span class="me-1">•</span>
+                                            ${escapeHtml(child.AddOn_Item_Name || "Unnamed Item")}
+                                        </div>
+
+                                        <div class="text-end text-nowrap">
+
+                                            ${childRate > 0 || childPax > 0
+                                                ? `
+                                                    <small class="text-muted">
+                                                        ₹${childRate.toFixed(2)}
+                                                        ${childPax > 0 ? ` × ${childPax}` : ""}
+                                                    </small>
+                                                `
+                                                : ""
+                                            }
+
+                                            ${childTotal > 0
+                                                ? `
+                                                    <span class="fw-semibold text-success ms-1">
+                                                        ₹${childTotal.toFixed(2)}
+                                                    </span>
+                                                `
+                                                : ""
+                                            }
+
+                                        </div>
+
+                                    </div>
+                                `;
+                            });
+
+                            html += `
+                                </div>
+                            `;
+                        }
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
                 html += `
                         </div>
                     </div>
                 `;
             });
+
             html += `
                 </div>
             `;
         }
+
         html += `
                 </div>
             </div>
         `;
     });
 
-
-    // =============================================
-    // RENDER SUMMARY SERVICES
-    // =============================================
+    /* =====================================================
+       RENDER SUMMARY SERVICES
+    ===================================================== */
     $("#foodPackageContainer_summaryservices").html(html_services);
 
-    // =============================================
-    // RENDER FOOD PACKAGE DETAILS
-    // =============================================
+    /* =====================================================
+       RENDER FOOD PACKAGE DETAILS
+    ===================================================== */
     $("#bookingReport_FoodPackageName").html(html);
 }
+
 //Bookimg Summary - Package DATA -- END ------------------
 
+// =====================================================
+// BIND STATIC FOOD ROW
+// =====================================================
 function bindStaticFoodRow(pkg) {
     const $row = $(".food-row").first();
+    const $dropdown = $row.find("#foodPackage_PackageDropdown");
+    const $addonBtn = $row.find("#foodPackage_AddOnItems");
+    const $menuButton = $row.find(".loadMenuBtn");
 
     $("#foodPackage_PackageDropdown").val(pkg.FoodPackageId ?? 0);
     $("#foodPackage_RatePerPlate").val(pkg.PerPlate ?? 0);
     $("#foodPackage_PackageCost").val(pkg.PackageCost ?? 0);
     $("#foodPackage_Addons").val(pkg.Addons ?? 0);
     $("#foodPackage_GST").val(pkg.GST ?? 0);
-    $("#foodPackage_TotalValue").text(`₹ ${pkg.TotalCharges ?? 0}`);
+    $("#foodPackage_TotalValue").text(`₹ ${Number(pkg.TotalCharges || 0).toFixed(2)}`);
 
     $(".package_row_id").first().val(pkg.Id ?? 0);
 
-    const addOnsList = pkg.AddOnsList ?? [];
-    const $addonBtn = $("#foodPackage_AddOnItems");
+    // =====================================================
+    // ADD-ONS
+    // =====================================================
+    const addOnsList = Array.isArray(pkg.AddOnsList)
+        ? pkg.AddOnsList
+        : [];
 
     $addonBtn.data("selected-addonitems", addOnsList);
+    $addonBtn.data("total", Number(pkg.Addons) || 0);
+
     updateAddonButton($addonBtn, addOnsList);
 
-    const menuItemsList = pkg.MenuItemsList ?? [];
-    $("#foodPackage_PackageDropdown").data("selected-items", menuItemsList);
+    // =====================================================
+    // MENU
+    // =====================================================
+    const menuItemsList = Array.isArray(pkg.MenuItemsList)
+        ? pkg.MenuItemsList
+        : [];
+
+    $dropdown.data("selected-items", menuItemsList);
+
+    // MENU COUNT
+    const selectedCount = updateMenuButton(menuItemsList);
+
+    $menuButton.html(
+        selectedCount > 0
+            ? `Menu (${selectedCount})`
+            : `Menu`
+    );
 }
 
+// =====================================================
+// CREATE DYNAMIC FOOD BLOCK
+// =====================================================
 function createFoodBlock() {
     const newRow = document.createElement("div");
     newRow.className = "food-block border rounded p-3 mt-3";
 
     newRow.innerHTML = `
         <div class="row g-2 align-items-end p-2 mb-1">
+
             <div class="col-md-4">
                 <label class="form-label">Addon Food Package #${addonCounter}</label>
                 <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
@@ -7465,25 +8148,22 @@ function createFoodBlock() {
             <div class="col-md-2 d-flex align-items-end justify-content-end">
                 <button type="button" class="btn btn-outline-danger btn-sm remove-btn">&times;</button>
             </div>
+
         </div>
 
         <div class="row g-2 food-row align-items-end mt-1">
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">Food Package</label>
-
-                <div class="d-flex gap-2">
-                    <select class="form-select form-select-sm foodPackageDropdown"></select>
-
-                    <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">
-                        Menu
-                    </button>
-                </div>
-
+                <select class="form-select form-select-sm foodPackageDropdown"></select>
                 <input type="hidden" class="package_row_id" value="0">
             </div>
 
             <div class="col-md-1">
+                <button type="button" class="btn btn-outline-primary btn-sm loadMenuBtn">Menu</button>
+            </div>
+
+            <div class="col-md-2">
                 <label class="form-label">Per Plate</label>
                 <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
             </div>
@@ -7493,19 +8173,21 @@ function createFoodBlock() {
                 <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
             </div>
 
-            <div class="col-md-1">
+            <div class="col-md-2">
                 <label class="form-label">Addons</label>
                 <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
             </div>
 
-            <div class="col-md-1">
+            <div class="col-md-1 d-none">
                 <label class="form-label">GST</label>
                 <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
             </div>
 
-            <div class="col-md-4 d-flex align-items-center justify-content-between">
+            <div class="col-md-3 d-flex align-items-center justify-content-between">
 
-                <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)">
+                <button type="button"
+                        class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems"
+                        onclick="event.preventDefault(); openAddonModal(0, this)">
                     <i class="fa fa-plus"></i> Addons
                 </button>
 
@@ -7536,119 +8218,70 @@ function createFoodBlock() {
     return $newBlock;
 }
 
-function createFoodBlock_OLD_13sept26() {
-    const newRow = document.createElement('div');
-    newRow.className = 'food-block border rounded p-3 mt-3';
-
-    newRow.innerHTML = `
-            <!-- Row 1 -->
-            <div class="row g-2 align-items-end p-2 mb-1">
-                <div class="col-md-4">
-                    <label class="form-label">Addon Food Package #${addonCounter}</label>
-                    <input type="text" class="form-control form-control-sm" placeholder="Addon Food Package Name">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">Pax</label>
-                    <input type="number" class="form-control form-control-sm pax" placeholder="Pax" value="0">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-control form-control-sm">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Time</label>
-                    <div class="d-flex gap-1">
-                        <input type="number" class="form-control form-control-sm" placeholder="HH" min="1" max="12" style="width: 70px;">
-                        <input type="number" class="form-control form-control-sm" placeholder="MM" min="0" max="59" style="width: 70px;">
-                        <select class="form-select form-select-sm" style="width: 90px;">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2 d-flex align-items-end justify-content-end">
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-btn">&times;</button>
-                </div>
-            </div>
-
-            <!-- Row 2 -->
-            <div class="row g-2 food-row align-items-end mt-1">
-                <div class="col-md-3">
-                    <label class="form-label">Food Package</label>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm foodPackageDropdown"></select>
-                        <button type="button"
-                                class="btn btn-outline-primary btn-sm loadMenuBtn">
-                            Menu
-                        </button>
-                    </div>
-                    <input type="hidden" class="package_row_id" value="0" />
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">Per Plate</label>
-                    <input type="number" class="form-control form-control-sm perPlate" placeholder="Per Plate" value="0">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Package Cost</label>
-                    <input type="number" class="form-control form-control-sm packageCost" placeholder="Package Cost" value="0" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">Addons</label>
-                    <input type="number" class="form-control form-control-sm addonsCost" placeholder="Addons" value="0" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label">GST</label>
-                    <input type="number" class="form-control form-control-sm gstCost" placeholder="GST" value="0" readonly>
-                </div>
-                <div class="col-md-4 d-flex align-items-center justify-content-between">
-                    <button type="button" class="btn btn-outline-success btn-sm mt-2 foodPackage_AddOnItems" onclick="event.preventDefault(); openAddonModal(0, this)"><i class="fa fa-check"></i> Addons</button>
-                    <span class="fw-bold">Total: <span class="foodPackage_TotalValue">₹ 0</span></span>
-                </div>
-            </div>
-        `;
-
-    foodContainer.appendChild(newRow);
-
-    const dropdown = newRow.querySelector(".foodPackageDropdown");
-    populateFoodPackageDropdown($(dropdown));
-
-    newRow.querySelector('.remove-btn').addEventListener('click', () => {
-        foodContainer.removeChild(newRow);
-    });
-
-    addonCounter++;
-
-    return $(newRow); // ✅ IMPORTANT
-}
+// =====================================================
+// BIND DYNAMIC FOOD ROW
+// =====================================================
 function bindDynamicFoodRow($block, pkg) {
+    console.log("bindDynamicFoodRow pkg:", pkg);
+
     const $row = $block.find(".food-row");
     const $dropdown = $row.find(".foodPackageDropdown");
+    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    const $menuButton = $row.find(".loadMenuBtn");
 
+    // =====================================================
+    // BASIC FOOD PACKAGE DETAILS
+    // =====================================================
     $row.find(".package_row_id").val(pkg.Id ?? 0);
 
-    $dropdown.val(pkg.FoodPackageId ?? 0);
+    //$dropdown.val(pkg.FoodPackageId ?? 0);
+    setTimeout(function () {
+        $dropdown.val(pkg.FoodPackageId ?? 0);
+    }, 2000);
+    //populateFoodPackageDropdown($dropdown, pkg.FoodPackageId ?? 0);
+
 
     $row.find(".perPlate").val(pkg.PerPlate ?? 0);
     $row.find(".packageCost").val(pkg.PackageCost ?? 0);
     $row.find(".addonsCost").val(pkg.Addons ?? 0);
     $row.find(".gstCost").val(pkg.GST ?? 0);
-    $row.find(".foodPackage_TotalValue").text(`₹ ${pkg.TotalCharges ?? 0}`);
 
-    const addOnsList = pkg.AddOnsList ?? [];
-    const $addonBtn = $row.find(".foodPackage_AddOnItems");
+    $row.find(".foodPackage_TotalValue").text(
+        `₹ ${Number(pkg.TotalCharges || 0).toFixed(2)}`
+    );
 
+    // =====================================================
+    // ADD-ONS-EDIT
+    // =====================================================
+    const addOnsList = Array.isArray(pkg.AddOnsList) ? pkg.AddOnsList : [];
     $addonBtn.data("selected-addonitems", addOnsList);
-    $addonBtn.data("total", pkg.Addons ?? 0);
+    $addonBtn.data("total", Number(pkg.Addons) || 0);
 
     updateAddonButton($addonBtn, addOnsList);
 
-    const menuItemsList = pkg.MenuItemsList ?? [];
-
+    // =====================================================
+    // MENU EDIT
+    // =====================================================
+    const menuItemsList = Array.isArray(pkg.MenuItemsList) ? pkg.MenuItemsList : [];
     $dropdown.data("selected-items", menuItemsList);
 
+    // MENU COUNT
+    const selectedCount = updateMenuButton(menuItemsList);
+    $menuButton.html(
+        selectedCount > 0
+            ? `Menu (${selectedCount})`
+            : `Menu`
+    );
+
+    // =====================================================
+    // ADDON FOOD PACKAGE DETAILS
+    // =====================================================
     $block.find('input[placeholder="Addon Food Package Name"]').val(pkg.FoodPackageTitleName ?? "");
     $block.find(".pax").val(pkg.Pax ?? 0);
 
+    // =====================================================
+    // DATE / TIME
+    // =====================================================
     if (pkg.FoodPackageDateTime) {
         const dateTime = parseDateTime_pkg(pkg.FoodPackageDateTime);
 
@@ -7658,56 +8291,41 @@ function bindDynamicFoodRow($block, pkg) {
         $block.find("select").val(dateTime.ampm ?? "AM");
     }
 }
-function bindDynamicFoodRow_OLD_13sept26($block, pkg) {
-    const $row = $block.find(".food-row");
 
-    // Row 2 (main values)
-    //console.log("pkg.FoodPackageId:", pkg.FoodPackageId);
-    $row.find(".foodPackageDropdown").val(pkg.FoodPackageId ?? "0"); //.trigger('change');
-
-    const $dropdown = $row.find(".foodPackageDropdown");
-    populateFoodPackageDropdown($dropdown);
-    // Delay OR callback
-    setTimeout(() => {
-        $dropdown.val(pkg.FoodPackageId); //.trigger('change');
-    }, 0);
-
-    $row.find(".perPlate").val("₹ " + pkg.PerPlate ?? 0);
-    $row.find(".packageCost").val("₹ " + pkg.PackageCost ?? 0);
-    $row.find(".addonsCost").val("₹ " + pkg.Addons ?? 0);
-    $row.find(".gstCost").val("₹ " + pkg.GST ?? 0);
-    $row.find(".foodPackage_TotalValue").text("₹ " + pkg.TotalCharges ?? 0);
-
-    // Addons
-    const addOnsList = pkg.AddOnsList || [];
-    //console.log(".addOnsList:", addOnsList);
-    const $addonBtn = $row.find(".foodPackage_AddOnItems");
-    $addonBtn.data("selected-addonitems", addOnsList);
-    updateAddonButton($addonBtn, addOnsList);
-
-    // Menu
-    const menuItemsList = pkg.MenuItemsList || [];
-    //console.log(".menuItemsList:", menuItemsList);
-    $row.find(".foodPackageDropdown").data("selected-items", menuItemsList);
-
-    // Row 1 (extra fields)
-    $block.find('input[placeholder="Addon Food Package Name"]').val(pkg.FoodPackageTitleName || '');
-    $block.find('.pax').val(pkg.Pax || 0);
-
-    if (pkg.FoodPackageDateTime) {
-        const { date, hh, mm, ampm } = parseDateTime_pkg(pkg.FoodPackageDateTime);
-
-        $block.find('input[type="date"]').val(date);
-        $block.find('input[placeholder="HH"]').val(hh);
-        $block.find('input[placeholder="MM"]').val(mm);
-        $block.find('select').val(ampm);
-    }
-}
+// =====================================================
+// UPDATE ADDON BUTTON
+// =====================================================
 function updateAddonButton($btn, list) {
-    if (list.length > 0) {
-        $btn.html(`<i class="fa fa-check text-success"></i> Addons (${list.length})`);
+    console.log("AddOn Count - list:", list);
+    let count = 0;
+
+    if (Array.isArray(list)) {
+        list.forEach(header => {
+            const items = Array.isArray(header.Items) ? header.Items : [];
+
+            items.forEach(item => {
+                // Layer 3 selected
+                if (Array.isArray(item.Children)) {
+                    count += item.Children.length;
+                }
+                else {
+                    // Layer 2 selected
+                    count++;
+                }
+            });
+        });
+    }
+
+    if (count > 0) {
+        $btn.html(`
+            <i class="fa fa-check text-success"></i>
+            Addons (${count})
+        `);
     } else {
-        $btn.html(`<i class="fa fa-check"></i> Addons`);
+        $btn.html(`
+            <i class="fa fa-plus"></i>
+            Addons
+        `);
     }
 }
 
@@ -8404,6 +9022,7 @@ async function removeBookingReferenceFile(index) {
 
 function saveBooking() {
     console.log("saveBooking1");
+
     if (!validateBookingForm()) {
         return;
     }
@@ -8706,86 +9325,6 @@ function saveBooking() {
     });
 }
 
-function buildFoodPackageObject_OLD_13sept26($row, isDynamic, $block = null) {
-
-    const $dropdown = $row.find(".foodPackageDropdown");
-    const selectedMenuItems = $dropdown.data("selected-items") || [];
-
-    const $addonBtn = $row.find(".foodPackage_AddOnItems");
-    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
-
-    const foodPackage = {
-        Id: parseInt($row.find(".package_row_id").val() || 0),
-        PackageId: parseInt($dropdown.val() || 0),
-        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val() || 0),
-        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val() || 0),
-        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val() || 0),
-        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val() || 0),
-        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
-        MenuItems: selectedMenuItems,
-        AddOns: selectedAddOnCharges
-    };
-
-    if (isDynamic && $block) {
-        const name = $block.find('input[placeholder="Addon Food Package Name"]').val() || '';
-        const pax = $block.find('.pax').val() || 0;
-        const date = $block.find('input[type="date"]').val();
-
-        const hour = $block.find('input[placeholder="HH"]').val() || '12';
-        const minute = $block.find('input[placeholder="MM"]').val() || '00';
-        const ampm = $block.find('select').val() || 'AM';
-
-        foodPackage.FoodPackageTitleName = name;
-        foodPackage.Pax = pax;
-        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : '';
-    }
-    else {
-        foodPackage.FoodPackageTitleName = '';
-        foodPackage.Pax = 0;
-        foodPackage.FoodPackageDateTime = '';
-    }
-
-    return foodPackage;
-}
-function buildFoodPackageObject2($row, isDynamic, $block = null) {
-    const $dropdown = $row.find(".foodPackageDropdown");
-    const selectedMenuItems = $dropdown.data("selected-items") || [];
-
-    const $addonBtn = $row.find(".foodPackage_AddOnItems");
-    const selectedAddOnCharges = $addonBtn.data("selected-addonitems") || [];
-
-    const foodPackage = {
-        Id: parseInt($row.find(".package_row_id").val()) || 0,
-        PackageId: parseInt($dropdown.val()) || 0,
-        PerPlate: parseFloat($row.find(".perPlate, #foodPackage_RatePerPlate").val()) || 0,
-        PackageCost: parseFloat($row.find(".packageCost, #foodPackage_PackageCost").val()) || 0,
-        AddonsCost: parseFloat($row.find(".addonsCost, #foodPackage_Addons").val()) || 0,
-        GST: parseFloat($row.find(".gstCost, #foodPackage_GST").val()) || 0,
-        TotalCharges: parseFloat($row.find(".foodPackage_TotalValue").text().replace(/₹|,/g, "").trim()) || 0,
-        MenuItems: selectedMenuItems,
-        AddOns: selectedAddOnCharges
-    };
-
-    if (isDynamic && $block) {
-        const name = ($block.find('input[placeholder="Addon Food Package Name"]').val() || '').trim();
-        const pax = parseInt($block.find('.pax').val()) || 0;
-        const date = $block.find('input[type="date"]').val() || '';
-
-        const hour = $block.find('input[placeholder="HH"]').val() || '12';
-        const minute = $block.find('input[placeholder="MM"]').val() || '00';
-        const ampm = $block.find('select').val() || 'AM';
-
-        foodPackage.FoodPackageTitleName = name;
-        foodPackage.Pax = pax;
-        foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : '';
-    } else {
-        foodPackage.FoodPackageTitleName = '';
-        foodPackage.Pax = 0;
-        foodPackage.FoodPackageDateTime = '';
-    }
-
-    return foodPackage;
-}
 function buildFoodPackageObject($row, isDynamic, $block = null) {
     const $dropdown = $row.find(".foodPackageDropdown");
     const selectedMenuItems = $dropdown.data("selected-items") || [];
@@ -8817,7 +9356,8 @@ function buildFoodPackageObject($row, isDynamic, $block = null) {
         foodPackage.FoodPackageTitleName = name;
         foodPackage.Pax = pax;
         foodPackage.FoodPackageDateTime = date ? `${date} ${hour}:${minute} ${ampm}` : "";
-    } else {
+    }
+    else {
         foodPackage.FoodPackageTitleName = "";
         foodPackage.Pax = 0;
         foodPackage.FoodPackageDateTime = "";
@@ -8869,6 +9409,7 @@ function resetBooking() {
 
     // ✅ Store FULL package array in button as JSON
     $("#btnFoodLabels").data("foodpackage", "");
+    $(".loadMenuBtn").html(`Menu`);
 
     $('#foodPackage_PackageDropdown')
         .removeAttr('data-selected-items')

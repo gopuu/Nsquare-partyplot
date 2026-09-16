@@ -9,7 +9,18 @@ function checkPermission(type) {
     if (!allowed) Swal.fire("Access Denied", "Permission Required", "error");
     return allowed;
 }
+/* =========================================================
+   HTML ESCAPE
+   ========================================================= */
+function escapeHtml(value) {
 
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 const walletToast = Swal.mixin({
     toast: true,
