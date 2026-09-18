@@ -106,6 +106,51 @@ $(document).ready(function () {
         $("#otherCharges").find("input[type='number']").val(0);
     });
 
+    $("#btnClientDetails").on("click", function () {
+        const details = $("#clientAdditionalDetails");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Client Details');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Client Details');
+        }
+    });
+
+    $("#btnNotesDetails").on("click", function () {
+        const details = $("#notes1");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Detail Notes');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Detail Notes');
+        }
+    });
+
+    $("#btnGuestDetails").on("click", function () {
+        const details = $("#Section_GuestDetails");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Guest Details');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Guest Details');
+        }
+    });
+
 });
 
 // NEW
@@ -7152,6 +7197,9 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#bookingReport_clientGSTIN").text(data.Client_GSTIN || "—");
                     $("#bookingReport_clientEmail").text(data.Client_Email || "—");
+                    $("#bookingReport_clientDOB").text(data.Client_DOB2 || "—");
+                    $("#bookingReport_clientAnniversaryDate").text(data.Client_AnniversaryDate2 || "—");
+
                     $("#bookingReport_clientBookedBy").text(data.Booked_By_EmpName || "—");
                     $("#bookingReport_internalOfficeNote").html(data.OtherCharges_InternalOfficeNote && data.OtherCharges_InternalOfficeNote.trim() !== ""
                         ? data.OtherCharges_InternalOfficeNote
@@ -7316,6 +7364,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     if (data.Client_StateId > 0) {
                         $("#clientStateDropdown").val(data.Client_StateId);
                     }
+                    $("#clientDOB").val(data.Client_DOB);
+                    $("#clientAnniversaryDate").val(data.Client_AnniversaryDate);
 
                     $("#booking_eventDropdown_div").hide();
                     $("#booking_subEventDropdown").val(data.Booking_SubEventId);
@@ -9063,6 +9113,8 @@ function saveBooking() {
         Client_Contact: $("#clientContact").val(),
         Client_GSTIN: $("#clientGSTIN").val(),
         Client_StateId: parseInt($("#clientStateDropdown").val() || 0),
+        Client_DOB: $("#clientDOB").val(),
+        Client_AnniversaryDate: $("#clientAnniversaryDate").val(),
 
         // Booking Details
         Booking_SubEventId: parseInt($("#booking_subEventDropdown").val() || 0),
@@ -10516,11 +10568,11 @@ function renderGuestTable(data) {
                 data: "CityName"
             },
             {
-                data: "Dob2",
+                data: "Client_Dob2",
                 className: "text-center"
             },
             {
-                data: "AnniversaryDate2",
+                data: "Client_AnniversaryDate2",
                 className: "text-center"
             },
             {

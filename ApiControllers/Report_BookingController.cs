@@ -86,7 +86,7 @@ namespace ERPAdmin.ApiControllers
                         Package = Convert.ToString(row["Package"]),
 
                         DealAmount = Convert.ToDecimal(row["DealAmount"]),
-                        GrossAmount = Convert.ToDecimal(row["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(row["SubTotal"]),
                         Discount = Convert.ToDecimal(row["Discount"]),
                         NetAmount = Convert.ToDecimal(row["NetAmount"]),
                         TaxableAmount = Convert.ToDecimal(row["TaxableAmount"]),
@@ -355,7 +355,7 @@ namespace ERPAdmin.ApiControllers
                             return Element.ALIGN_CENTER;
 
                         case "deal amount":
-                        case "gross total":
+                        case "subtotal":
                         case "discount":
                         case "net total":
                         case "taxable amt":
@@ -374,7 +374,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         bool isAmountColumn =
                             col.ColumnName.Equals("Deal Amount", StringComparison.OrdinalIgnoreCase) ||
-                            col.ColumnName.Equals("Gross Total", StringComparison.OrdinalIgnoreCase) ||
+                            col.ColumnName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             col.ColumnName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             col.ColumnName.Equals("Net Total", StringComparison.OrdinalIgnoreCase) ||
                             col.ColumnName.Equals("Taxable Amt", StringComparison.OrdinalIgnoreCase) ||
@@ -422,8 +422,8 @@ namespace ERPAdmin.ApiControllers
                                 isAmountColumn = true;
                                 break;
 
-                            case "Gross Total":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -600,8 +600,8 @@ namespace ERPAdmin.ApiControllers
                                 value = Convert.ToDecimal(totalRow["TotalDealAmount"]).ToString("N2");
                                 break;
 
-                            case "Gross Total":
-                                value = Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 break;
 
                             case "Discount":
@@ -639,7 +639,7 @@ namespace ERPAdmin.ApiControllers
                         // Right align numeric totals
                         if (columnName == "Pax"
                             || columnName == "Deal Amount"
-                            || columnName == "Gross Total"
+                            || columnName == "SubTotal"
                             || columnName == "Discount"
                             || columnName == "Net Total"
                             || columnName == "Taxable Amt"

@@ -117,6 +117,10 @@ namespace ERPAdmin.ApiControllers
                         booking.Client_Contact = dr["Client_Contact"] == DBNull.Value ? "" : Convert.ToString(dr["Client_Contact"]);
                         booking.Client_GSTIN = dr["Client_GSTIN"] == DBNull.Value ? "" : Convert.ToString(dr["Client_GSTIN"]);
                         booking.Client_StateId = dr["Client_StateId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Client_StateId"]);
+                        booking.Client_DOB = dr["Client_DOB"] == DBNull.Value ? "" : Convert.ToString(dr["Client_DOB"]);
+                        booking.Client_DOB2 = dr["Client_DOB2"] == DBNull.Value ? "" : Convert.ToString(dr["Client_DOB2"]);
+                        booking.Client_AnniversaryDate = dr["Client_AnniversaryDate"] == DBNull.Value ? "" : Convert.ToString(dr["Client_AnniversaryDate"]);
+                        booking.Client_AnniversaryDate2 = dr["Client_AnniversaryDate2"] == DBNull.Value ? "" : Convert.ToString(dr["Client_AnniversaryDate2"]);
 
                         booking.Booking_SubEventId = dr["Booking_SubEventId"] == DBNull.Value ? 0 : Convert.ToInt64(dr["Booking_SubEventId"]);
                         booking.Booking_SubEventName = dr["Booking_SubEventName"] == DBNull.Value ? "" : Convert.ToString(dr["Booking_SubEventName"]);
@@ -311,6 +315,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Client_Contact", model.Client_Contact ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_GSTIN", model.Client_GSTIN ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_StateId", model.Client_StateId ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DOB", model.Client_DOB ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@AnniversaryDate", model.Client_AnniversaryDate ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Booking_SubEventId", model.Booking_SubEventId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Booking_PAX", model.Booking_PAX ?? (object)DBNull.Value);

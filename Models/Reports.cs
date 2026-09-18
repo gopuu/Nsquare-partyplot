@@ -59,6 +59,10 @@
         public decimal Rate { get; set; }
         public decimal Qty { get; set; }
         public decimal SubTotal { get; set; }
+        public decimal? DiscountRate { get; set; } = 0;
+        public int? DiscountTypeId { get; set; } = 0;
+        public string? DiscountTypeName { get; set; } = "";
+        public decimal? DiscountAmount { get; set; } = 0;
         public decimal TaxableValue { get; set; }
         public decimal CGST_Percent { get; set; }
         public decimal CGST_Amount { get; set; }
@@ -66,7 +70,6 @@
         public decimal SGST_Amount { get; set; }
         public decimal IGST_Percent { get; set; }
         public decimal IGST_Amount { get; set; }
-
         public decimal Total { get; set; }
     }
 

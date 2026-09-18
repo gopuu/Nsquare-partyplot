@@ -342,11 +342,16 @@ namespace ERPAdmin.Services
             // ══════════════════════════════════════════
             //  4. ITEMS TABLE
             // ══════════════════════════════════════════
-            // Columns: HSN/SAC | Name of Service | Rate | Qty | Subtotal | Taxable Value
-            //          | CGST Tax% | CGST Amt | SGST Tax% | SGST Amt | IGST Tax% | IGST Amt
-            PdfPTable itemTable = new PdfPTable(12);
+            // Columns: HSN/SAC | Name of Service | Rate | Qty
+            //          | Subtotal | Discount | Taxable Value | CGST Tax%
+            //          | CGST Amt | SGST Tax% | SGST Amt | IGST Tax% | IGST Amt
+            PdfPTable itemTable = new PdfPTable(13);
             itemTable.WidthPercentage = 100;
-            itemTable.SetWidths(new float[] { 7, 18, 6, 5, 8, 8, 5, 6, 5, 6, 5, 6 });
+            itemTable.SetWidths(new float[] { 
+                    6, 10, 6, 5, 
+                    8, 9, 8, 5, 
+                    6, 5, 6, 5, 6 
+            });
 
             // ── Helper for header cell ──
             PdfPCell TH(string text, int colspan = 1, int rowspan = 1)
@@ -370,6 +375,7 @@ namespace ERPAdmin.Services
             itemTable.AddCell(TH("Rate", 1, 2));
             itemTable.AddCell(TH("Qty", 1, 2));
             itemTable.AddCell(TH("Subtotal", 1, 2));
+            itemTable.AddCell(TH("Discount", 1, 2));
             itemTable.AddCell(TH("Taxable Value", 1, 2));
             itemTable.AddCell(TH("CGST", 2));
             itemTable.AddCell(TH("SGST", 2));
@@ -410,6 +416,16 @@ namespace ERPAdmin.Services
                 itemTable.AddCell(TD("₹ " + item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
                 itemTable.AddCell(TD(item.Qty.ToString("0.##"), Element.ALIGN_CENTER, rowBg));
                 itemTable.AddCell(TD("₹ " + item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
+
+                itemTable.AddCell(TD(
+                    item.DiscountTypeName == "%"
+                        ? $"₹ {item.DiscountAmount:0.##} ({item.DiscountRate:0.##}%)"
+                        : $"₹ {item.DiscountAmount:0.##}",
+                    Element.ALIGN_RIGHT,
+                    rowBg,
+                    true
+                ));
+
                 itemTable.AddCell(TD("₹ " + item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
 
                 //var gst = company.GST?.Trim();
@@ -508,19 +524,19 @@ namespace ERPAdmin.Services
                 });
             }
 
-            AddTotal("Subtotal", "₹ " + totals.SubTotal.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Taxable", "₹ " + totals.Taxable.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total Discount Across All Services", "₹ " + totals.TotalDiscount.ToString("N0"), false, fBoldRupee7, fBoldRupee);
-            AddTotal("Total CGST", "₹ " + totals.TotalCGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total SGST", "₹ " + totals.TotalSGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total IGST", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Invoice Total", "₹ " + totals.InvoiceTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total Advance (Paid)", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            //AddTotal("Balance Amount", "₹ " + totals.Balance.ToString("N0"), true, fBoldRupee, fBoldRupee);
+            AddTotal("Subtotal", "₹ " + FormatAmount(totals.SubTotal), false, fBoldRupee, fBoldRupee);
+            AddTotal("Taxable", "₹ " + FormatAmount(totals.Taxable), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total Discount Across All Services", "₹ " + FormatAmount(totals.TotalDiscount), false, fBoldRupee7, fBoldRupee);
+            AddTotal("Total CGST", "₹ " + FormatAmount(totals.TotalCGST), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total SGST", "₹ " + FormatAmount(totals.TotalSGST), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total IGST", "₹ " + FormatAmount(totals.TotalIGST), false, fBoldRupee, fBoldRupee);
+            AddTotal("Invoice Total", "₹ " + FormatAmount(totals.InvoiceTotal), false, fBoldRupee, fBoldRupee);
+            AddTotal("Round off", "₹ " + FormatAmount(totals.RoundOff), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total Advance (Paid)", "₹ " + FormatAmount(totals.TotalAdvance), false, fBoldRupee, fBoldRupee);
+
             decimal balance = totals.Balance;
             string label = "Balance Amount";
-            string value = "₹ " + Math.Abs(balance).ToString("N0");
+            string value = "₹ " + FormatAmount(Math.Abs(balance));
             if (balance < 0)
             {
                 label = "Overpaid (Refund Required)";
@@ -529,9 +545,13 @@ namespace ERPAdmin.Services
             {
                 label = "Settled";
             }
+            //AddTotal(label, value, true, fBoldRupee, fBoldRupee);
             AddTotal(label, value, true, fBoldRupee, fBoldRupee);
 
-
+            string FormatAmount(decimal amount)
+            {
+                return amount.ToString("N2");
+            }
 
             // LEFT SIDE (Amount in Words)
             summaryRow.AddCell(new PdfPCell(leftInfo)
@@ -1126,63 +1146,94 @@ namespace ERPAdmin.Services
             }
 
             bool alt = false;
-            foreach (var item in items)
+
+            if (items != null && items.Count > 0)
             {
-                //var rowBg = alt ? colGray : BaseColor.WHITE;
-                var rowBg = BaseColor.WHITE;
-                alt = !alt;
+                foreach (var item in items)
+                {
+                    //var rowBg = alt ? colGray : BaseColor.WHITE;
+                    var rowBg = BaseColor.WHITE;
+                    alt = !alt;
 
-                itemTable.AddCell(TD(item.HSN, Element.ALIGN_CENTER, rowBg));
-                itemTable.AddCell(TD(item.Description, Element.ALIGN_LEFT, rowBg));
-                itemTable.AddCell(TD("₹ " + item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
-                itemTable.AddCell(TD(item.Qty.ToString("0.##"), Element.ALIGN_CENTER, rowBg));
-                itemTable.AddCell(TD("₹ " + item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
-                itemTable.AddCell(TD("₹ " + item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
+                    itemTable.AddCell(TD(item.HSN, Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(item.Description, Element.ALIGN_LEFT, rowBg));
+                    itemTable.AddCell(TD("₹ " + item.Rate.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
+                    itemTable.AddCell(TD(item.Qty.ToString("0.##"), Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD("₹ " + item.SubTotal.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
+                    itemTable.AddCell(TD("₹ " + item.TaxableValue.ToString("0.##"), Element.ALIGN_RIGHT, rowBg, true));
 
-                //var gst = company.GST?.Trim();
-                // Use interstate flag directly
-                bool isInterState = billTo.IsInterState ?? false;
+                    bool isInterState = billTo.IsInterState ?? false;
 
-                // CGST %
-                var cgstPercent = !isInterState
-                    ? $"{item.CGST_Percent:0.##}%"
-                    : "-";
+                    // CGST %
+                    var cgstPercent = !isInterState
+                        ? $"{item.CGST_Percent:0.##}%"
+                        : "-";
 
-                // CGST Amount
-                var cgstAmt = !isInterState
-                    ? (item.CGST_Amount == 0 ? "-" : "₹ " + item.CGST_Amount.ToString("#,##0.##"))
-                    : "-";
+                    // CGST Amount
+                    var cgstAmt = !isInterState
+                        ? (item.CGST_Amount == 0
+                            ? "-"
+                            : "₹ " + item.CGST_Amount.ToString("#,##0.##"))
+                        : "-";
 
-                // SGST %
-                var sgstPercent = !isInterState
-                    ? $"{item.SGST_Percent:0.##}%"
-                    : "-";
+                    // SGST %
+                    var sgstPercent = !isInterState
+                        ? $"{item.SGST_Percent:0.##}%"
+                        : "-";
 
-                // SGST Amount
-                var sgstAmt = !isInterState
-                    ? (item.SGST_Amount == 0 ? "-" : "₹ " + item.SGST_Amount.ToString("#,##0.##"))
-                    : "-";
+                    // SGST Amount
+                    var sgstAmt = !isInterState
+                        ? (item.SGST_Amount == 0
+                            ? "-"
+                            : "₹ " + item.SGST_Amount.ToString("#,##0.##"))
+                        : "-";
 
-                // IGST %
-                var igstPercent = isInterState
-                    ? $"{item.IGST_Percent:0.##}%"
-                    : "-";
+                    // IGST %
+                    var igstPercent = isInterState
+                        ? $"{item.IGST_Percent:0.##}%"
+                        : "-";
 
-                // IGST Amount
-                var igstAmt = isInterState
-                    ? (item.IGST_Amount == 0 ? "-" : "₹ " + item.IGST_Amount.ToString("#,##0.##"))
-                    : "-";
+                    // IGST Amount
+                    var igstAmt = isInterState
+                        ? (item.IGST_Amount == 0
+                            ? "-"
+                            : "₹ " + item.IGST_Amount.ToString("#,##0.##"))
+                        : "-";
 
-                // Add to table
-                itemTable.AddCell(TD(cgstPercent, Element.ALIGN_CENTER, rowBg));
-                itemTable.AddCell(TD(cgstAmt, Element.ALIGN_RIGHT, rowBg, true));
-                itemTable.AddCell(TD(sgstPercent, Element.ALIGN_CENTER, rowBg));
-                itemTable.AddCell(TD(sgstAmt, Element.ALIGN_RIGHT, rowBg, true));
-                itemTable.AddCell(TD(igstPercent, Element.ALIGN_CENTER, rowBg));
-                itemTable.AddCell(TD(igstAmt, Element.ALIGN_CENTER, rowBg, true));
+                    // Add to table
+                    itemTable.AddCell(TD(cgstPercent, Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(cgstAmt, Element.ALIGN_RIGHT, rowBg, true));
+
+                    itemTable.AddCell(TD(sgstPercent, Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(sgstAmt, Element.ALIGN_RIGHT, rowBg, true));
+
+                    itemTable.AddCell(TD(igstPercent, Element.ALIGN_CENTER, rowBg));
+                    itemTable.AddCell(TD(igstAmt, Element.ALIGN_CENTER, rowBg, true));
+                }
+            }
+            else
+            {
+                // ============================================================
+                // NO ITEMS
+                // ============================================================
+                PdfPCell noItemsCell = new PdfPCell(
+                    new Phrase("No items found", fSmall7Bold)
+                )
+                {
+                    Colspan = 12,
+                    HorizontalAlignment = Element.ALIGN_CENTER,
+                    VerticalAlignment = Element.ALIGN_MIDDLE,
+                    BorderColor = colBorder,
+                    BorderWidth = 0.4f,
+                    Padding = 8,
+                    BackgroundColor = BaseColor.WHITE
+                };
+
+                itemTable.AddCell(noItemsCell);
             }
 
             doc.Add(itemTable);
+
             #endregion
 
             #region TOTALs
@@ -1235,19 +1286,19 @@ namespace ERPAdmin.Services
                 });
             }
 
-            AddTotal("Subtotal", "₹ " + totals.SubTotal.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Taxable", "₹ " + totals.Taxable.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total Discount Across All Services", "₹ " + totals.TotalDiscount.ToString("N0"), false, fBoldRupee7, fBoldRupee);
+            AddTotal("Subtotal", "₹ " + totals.SubTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
+            AddTotal("Taxable", "₹ " + totals.Taxable.ToString("N2"), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total Discount Across All Services", "₹ " + totals.TotalDiscount.ToString("N2"), false, fBoldRupee7, fBoldRupee);
             AddTotal("Total CGST", "₹ " + totals.TotalCGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
             AddTotal("Total SGST", "₹ " + totals.TotalSGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
             AddTotal("Total IGST", "₹ " + totals.TotalIGST.ToString("N2"), false, fBoldRupee, fBoldRupee);
             AddTotal("Invoice Total", "₹ " + totals.InvoiceTotal.ToString("N2"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            AddTotal("Total Advance (Paid)", "₹ " + totals.TotalAdvance.ToString("N0"), false, fBoldRupee, fBoldRupee);
-            //AddTotal("Balance Amount", "₹ " + totals.Balance.ToString("N0"), true, fBoldRupee, fBoldRupee);
+            AddTotal("Round off", "₹ " + totals.RoundOff.ToString("N2"), false, fBoldRupee, fBoldRupee);
+            AddTotal("Total Advance (Paid)", "₹ " + totals.TotalAdvance.ToString("N2"), false, fBoldRupee, fBoldRupee);
+
             decimal balance = totals.Balance;
             string label = "Balance Amount";
-            string value = "₹ " + Math.Abs(balance).ToString("N0");
+            string value = "₹ " + Math.Abs(balance).ToString("N2");
             if (balance < 0)
             {
                 label = "Overpaid (Refund Required)";
@@ -1257,7 +1308,6 @@ namespace ERPAdmin.Services
                 label = "Settled";
             }
             AddTotal(label, value, true, fBoldRupee, fBoldRupee);
-
 
 
             // LEFT SIDE (Amount in Words)

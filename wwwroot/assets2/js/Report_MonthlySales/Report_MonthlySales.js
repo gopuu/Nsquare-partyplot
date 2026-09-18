@@ -3,7 +3,7 @@
     { key: "MonthName", label: "Month", visible: true },
     { key: "InvoiceCount", label: "Total Invoice Generated", visible: true },
 
-    { key: "GrossAmount", label: "Gross Sale", visible: true },
+    { key: "SubTotal", label: "SubTotal", visible: true },
     { key: "Discount", label: "Discount", visible: true },
 
     { key: "NetAmount", label: "Net Sale", visible: true },
@@ -23,7 +23,7 @@ const DETAILREPORT_COLUMNS = [
     { key: "BookingId", label: "Booking ID", visible: true },
 
     { key: "ClientName", label: "Client Name", visible: true },
-    { key: "GrossAmount", label: "Gross Amount", visible: true },
+    { key: "SubTotal", label: "SubTotal", visible: true },
     { key: "Taxes", label: "Taxes", visible: true },
     { key: "NetAmount", label: "Net Amount", visible: true },
 
@@ -345,8 +345,8 @@ function renderMonthlySalesTable(data, totals) {
             },
 
             {
-                data: "GrossAmount",
-                title: "Gross Sale",
+                data: "SubTotal",
+                title: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -414,7 +414,7 @@ function renderMonthlySalesTable(data, totals) {
             );
 
             $(api.column(3).footer()).html(
-                `<strong>${formatINR2(totals.TotalGrossAmount)}</strong>`
+                `<strong>${formatINR2(totals.TotalSubTotalAmount)}</strong>`
             );
 
             $(api.column(4).footer()).html(
@@ -536,7 +536,7 @@ function renderMonthlySalesDetailsTable(rows, totals) {
             },
 
             {
-                data: "GrossAmount",
+                data: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -605,7 +605,7 @@ function renderMonthlySalesDetailsTable(rows, totals) {
             const api = this.api();
             $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(`<strong>${formatINR2(totals.GrossAmount)}</strong>`);
+            $(api.column(5).footer()).html(`<strong>${formatINR2(totals.SubTotal)}</strong>`);
             $(api.column(6).footer()).html(`<strong>${formatINR2(totals.Discount)}</strong>`);
             $(api.column(7).footer()).html(`<strong>${formatINR2(totals.NetAmount)}</strong>`);
 

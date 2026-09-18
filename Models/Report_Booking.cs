@@ -1,6 +1,5 @@
 ﻿namespace ERPAdmin.Models
 {
-
     //GRID RESPONSE
     public class BookingReportGridModel
     {
@@ -20,7 +19,7 @@
         public string? Package { get; set; }
 
         public decimal DealAmount { get; set; }
-        public decimal GrossAmount { get; set; }
+        public decimal SubTotal { get; set; }
         public decimal Discount { get; set; }
         public decimal NetAmount { get; set; }
         public decimal TaxableAmount { get; set; }
@@ -48,8 +47,7 @@
 
         // 🔹 NEW
         public List<string>? Columns { get; set; }
-    }
-    
+    }    
     public class BookingReportRequestGRID : BaseClass
     {
         public string? NameEmailContactNo { get; set; } = string.Empty;

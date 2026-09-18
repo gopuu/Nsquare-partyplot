@@ -78,7 +78,7 @@ namespace ERPAdmin.ApiControllers
 
                         Qty = Convert.ToInt32(dr["Qty"]),
 
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                         Discount = Convert.ToDecimal(dr["Discount"]),
                         NetAmount = Convert.ToDecimal(dr["NetAmount"]),
                         TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
@@ -102,7 +102,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         TotalQty = Convert.ToInt32(dr["TotalQty"]),
 
-                        TotalGrossAmount = Convert.ToDecimal(dr["TotalGrossAmount"]),
+                        TotalSubTotalAmount = Convert.ToDecimal(dr["TotalSubTotalAmount"]),
                         TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
                         TotalNetAmount = Convert.ToDecimal(dr["TotalNetAmount"]),
                         TotalTaxableAmount = Convert.ToDecimal(dr["TotalTaxableAmount"]),
@@ -181,7 +181,7 @@ namespace ERPAdmin.ApiControllers
 
                         ClientName = Convert.ToString(dr["ClientName"]),
 
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                         Discount = Convert.ToDecimal(dr["Discount"]),
 
                         NetAmount = Convert.ToDecimal(dr["NetAmount"]),
@@ -207,7 +207,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
 
-                        TotalGrossAmount = Convert.ToDecimal(dr["TotalGrossAmount"]),
+                        TotalSubTotalAmount = Convert.ToDecimal(dr["TotalSubTotalAmount"]),
                         TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
 
                         TotalNetAmount = Convert.ToDecimal(dr["TotalNetAmount"]),
@@ -457,7 +457,7 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Amt", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Amt", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Taxable Amt", StringComparison.OrdinalIgnoreCase) ||
@@ -520,8 +520,8 @@ namespace ERPAdmin.ApiControllers
                                 align = Element.ALIGN_CENTER;
                                 break;
 
-                            case "Gross Amt":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -682,7 +682,6 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 // TOTAL ROW
-                // TOTAL ROW
                 if (totalTableDB != null && totalTableDB.Rows.Count > 0)
                 {
                     DataRow totalRow = totalTableDB.Rows[0];
@@ -699,8 +698,8 @@ namespace ERPAdmin.ApiControllers
                                 value = Convert.ToDecimal(totalRow["TotalQty"]).ToString("N0");
                                 break;
 
-                            case "Gross Amt":
-                                value = Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 break;
 
                             case "Discount":
@@ -751,7 +750,7 @@ namespace ERPAdmin.ApiControllers
                             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         }
                         else if (
-                            columnName == "Gross Amt" ||
+                            columnName == "SubTotal" ||
                             columnName == "Discount" ||
                             columnName == "Net Amt" ||
                             columnName == "Taxable Amt" ||
@@ -1009,7 +1008,7 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Taxable Amount", StringComparison.OrdinalIgnoreCase) ||
@@ -1071,8 +1070,8 @@ namespace ERPAdmin.ApiControllers
 
                         switch (colName)
                         {
-                            case "Gross Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -1232,7 +1231,7 @@ namespace ERPAdmin.ApiControllers
                         string value = colName switch
                         {
                             "Qty" => totalRow["TotalInvoices"].ToString(),
-                            "Gross Amount" => totalRow["TotalGrossAmount"].ToString(),
+                            "SubTotal" => totalRow["TotalSubTotalAmount"].ToString(),
                             "Discount" => totalRow["TotalDiscount"].ToString(),
                             "Net Amount" => totalRow["TotalNetAmount"].ToString(),
 

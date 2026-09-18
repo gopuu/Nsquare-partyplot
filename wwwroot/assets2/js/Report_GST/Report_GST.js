@@ -8,7 +8,7 @@ const REPORT_COLUMNS = [
     { key: "GSTIN", label: "GSTIN" },
     { key: "EventType", label: "Event Type" },
 
-    { key: "GrossSale", label: "Gross Sale" },
+    { key: "SubTotal", label: "SubTotal" },
     { key: "Discount", label: "Discount" },
     { key: "NetSale", label: "Net Sale" },
     { key: "TaxableAmount", label: "Taxable Amount" },
@@ -317,8 +317,8 @@ function renderGSTSalesTable(data, totals) {
             },
 
             {
-                data: "GrossSale",
-                title: "Gross Sale",
+                data: "SubTotal",
+                title: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -429,7 +429,7 @@ function renderGSTSalesTable(data, totals) {
 
             $(api.column(0).footer()).html("<strong class='fs-9'>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalGrossSale)}</strong>`);
+            $(api.column(5).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalSubTotal)}</strong>`);
 
             $(api.column(6).footer()).html(`<strong class='fs-9'>${fmt(totals.TotalDiscount)}</strong>`);
 

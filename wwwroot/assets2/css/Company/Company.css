@@ -1,4 +1,37 @@
-﻿#invoiceImageSample {
+﻿/*FOOD MENU-SAMPLE*/
+.foodMenuSample-food-menu-sample {
+    font-size: 14px;
+}
+.foodMenuSample-food-category {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    background: #fafafa;
+}
+.foodMenuSample-category-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0d6efd;
+    margin-bottom: 8px;
+}
+.foodMenuSample-subcategory {
+    margin-left: 15px;
+    margin-bottom: 8px;
+}
+.foodMenuSample-subcategory-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 3px;
+}
+.foodMenuSample-food-item {
+    margin-left: 30px;
+    color: #6c757d;
+    line-height: 1.7;
+}
+/*FOOD MENU-SAMPLE*/
+
+#invoiceImageSample {
     max-width: 48%;
     height: auto;
     object-fit: contain;

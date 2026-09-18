@@ -3466,6 +3466,51 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    $("#btnClientDetails").on("click", function () {
+        const details = $("#clientAdditionalDetails");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Client Details');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Client Details');
+        }
+    });
+
+    $("#btnNotesDetails").on("click", function () {
+        const details = $("#notes1");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Detail Notes');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Detail Notes');
+        }
+    });
+
+    $("#btnGuestDetails").on("click", function () {
+        const details = $("#Section_GuestDetails");
+        const icon = $(this).find("i");
+
+        details.toggleClass("d-none");
+
+        if (details.hasClass("d-none")) {
+            icon.removeClass("fa-minus").addClass("fa-plus");
+            $(this).html('<i class="fa fa-plus me-1"></i> Guest Details');
+        } else {
+            icon.removeClass("fa-plus").addClass("fa-minus");
+            $(this).html('<i class="fa fa-minus me-1"></i> Guest Details');
+        }
+    });
+
 });
 
 //package dropdown -- START --------------------
@@ -4969,6 +5014,9 @@ function saveBooking() {
         Client_Contact: $("#clientContact").val(),
         Client_GSTIN: $("#clientGSTIN").val(),
         Client_StateId: parseInt($("#clientStateDropdown").val() || 0),
+        Client_DOB: $("#clientDOB").val(),
+        Client_AnniversaryDate: $("#clientAnniversaryDate").val(),
+
 
         // Booking Details
         Booking_SubEventId: parseInt($("#booking_subEventDropdown").val() || 0),

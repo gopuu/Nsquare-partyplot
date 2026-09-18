@@ -220,6 +220,8 @@
         public string? Client_Contact { get; set; }
         public string? Client_GSTIN { get; set; }
         public long? Client_StateId { get; set; }
+        public string? Client_DOB { get; set; } = null;
+        public string? Client_AnniversaryDate { get; set; } = null;
 
         public long? Booking_SubEventId { get; set; }
         public long? Booking_PAX { get; set; }
@@ -482,6 +484,10 @@
         public string? Client_Contact { get; set; }
         public string? Client_GSTIN { get; set; }
         public long? Client_StateId { get; set; }
+        public string? Client_DOB { get; set; }
+        public string? Client_DOB2 { get; set; }
+        public string? Client_AnniversaryDate { get; set; }
+        public string? Client_AnniversaryDate2 { get; set; }
         public long? Booking_SubEventId { get; set; }
         public string? Booking_SubEventName { get; set; }
         public int Booking_PAX { get; set; }

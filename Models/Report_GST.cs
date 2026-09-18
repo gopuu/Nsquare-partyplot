@@ -52,7 +52,7 @@
         public string? GSTIN { get; set; }
         public string? EventType { get; set; }
 
-        public decimal GrossSale { get; set; }
+        public decimal SubTotal { get; set; }
         public decimal Discount { get; set; }
         public decimal NetSale { get; set; }
         public decimal TaxableAmount { get; set; }
@@ -71,7 +71,7 @@
     }
     public class GSTSalesTotalsModel
     {
-        public decimal TotalGrossSale { get; set; }
+        public decimal TotalSubTotal { get; set; }
         public decimal TotalDiscount { get; set; }
         public decimal TotalNetSale { get; set; }
         public decimal TotalTaxableAmount { get; set; }

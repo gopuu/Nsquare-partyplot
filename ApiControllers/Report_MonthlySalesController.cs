@@ -79,7 +79,7 @@ namespace ERPAdmin.ApiControllers
 
                         InvoiceGeneratedCount = Convert.ToInt32(dr["InvoiceGeneratedCount"]),
 
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                         Discount = Convert.ToDecimal(dr["Discount"]),
                         NetAmount = Convert.ToDecimal(dr["NetAmount"]),
                         TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
@@ -99,7 +99,7 @@ namespace ERPAdmin.ApiControllers
                     totals = new MonthlySalesTotalsModel
                     {
                         TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
-                        TotalGrossAmount = Convert.ToDecimal(dr["TotalGrossAmount"]),
+                        TotalSubTotalAmount = Convert.ToDecimal(dr["TotalSubTotalAmount"]),
                         TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
 
                         TotalNetAmount = Convert.ToDecimal(dr["TotalNetAmount"]),
@@ -185,7 +185,7 @@ namespace ERPAdmin.ApiControllers
 
                         ClientName = dr["ClientName"]?.ToString(),
 
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
 
                         Discount = Convert.ToDecimal(dr["Discount"]),
 
@@ -214,7 +214,7 @@ namespace ERPAdmin.ApiControllers
                     {
                         TotalInvoices = Convert.ToInt32(dr["TotalInvoices"]),
 
-                        GrossAmount = Convert.ToDecimal(dr["GrossAmount"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
 
                         Discount = Convert.ToDecimal(dr["Discount"]),
 
@@ -470,7 +470,7 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Sale", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Sale", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Taxable Amt.", StringComparison.OrdinalIgnoreCase) ||
@@ -530,8 +530,8 @@ namespace ERPAdmin.ApiControllers
                                 align = Element.ALIGN_CENTER;
                                 break;
 
-                            case "Gross Sale":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -694,40 +694,69 @@ namespace ERPAdmin.ApiControllers
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
 
-                        string value = columnName switch
-                        {
-                            "Total Invoice Generated" => totalRow["TotalInvoices"].ToString(),
-
-                            "Gross Sale" => Convert.ToDecimal(totalRow["TotalGrossAmount"]).ToString("N2"),
-
-                            "Discount" => Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2"),
-
-                            "Net Sale" => Convert.ToDecimal(totalRow["TotalNetAmount"]).ToString("N2"),
-
-                            "Taxable Amt." => Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2"),
-
-                            "Tax Amt." => Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2"),
-
-                            "Invoice Amt." => Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2"),
-
-                            "Payment Amt." => Convert.ToDecimal(totalRow["TotalPaymentAmount"]).ToString("N2"),
-
-                            "Due Payment" => Convert.ToDecimal(totalRow["TotalDuePayment"]).ToString("N2"),
-
-                            _ => i == 0 ? "TOTAL" : ""
-                        };
-
                         var cell = worksheet.Cell(row, i + 1);
 
-                        cell.Value = value;
+                        if (columnName == "Total Invoice Generated")
+                        {
+                            cell.Value = Convert.ToInt32(totalRow["TotalInvoices"]);
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+                        else if (columnName == "SubTotal")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalSubTotalAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Discount")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalDiscount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Net Sale")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalNetAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Taxable Amt.")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalTaxableAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Tax Amt.")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalTaxAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Invoice Amt.")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalInvoiceAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Payment Amt.")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalPaymentAmount"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else if (columnName == "Due Payment")
+                        {
+                            string value = Convert.ToDecimal(totalRow["TotalDuePayment"]).ToString("N2");
+                            cell.Value = value;
+                            cell.Style.NumberFormat.Format = "#,##0.00";
+                        }
+                        else
+                        {
+                            cell.Value = i == 0 ? "TOTAL" : "";
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
-
-                        if (columnName == "Total Invoice Generated")
-                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                        if (value == "TOTAL")
-                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     }
 
                     row++;
@@ -979,7 +1008,7 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Amount", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Amount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Taxable Amount", StringComparison.OrdinalIgnoreCase) ||
@@ -1041,8 +1070,8 @@ namespace ERPAdmin.ApiControllers
 
                         switch (colName)
                         {
-                            case "Gross Amount":
-                                value = "₹ " + Convert.ToDecimal(totalRow["GrossAmount"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["SubTotal"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -1204,22 +1233,65 @@ namespace ERPAdmin.ApiControllers
                     {
                         string columnName = dataTableDB.Columns[i].ColumnName;
 
-                        string value = columnName switch
-                        {
-                            "Gross Amount" => totalRow["GrossAmount"].ToString(),
-                            "Discount" => totalRow["Discount"].ToString(),
-                            "Net Amount" => totalRow["NetAmount"].ToString(),
-                            "Taxable Amount" => totalRow["TaxableAmount"].ToString(),
-                            "Tax Amount" => totalRow["TaxAmount"].ToString(),
-                            "Invoice Amount" => totalRow["InvoiceAmount"].ToString(),
-                            "Paid Amount" => totalRow["PaidAmount"].ToString(),
-                            "Due Amount" => totalRow["DueAmount"].ToString(),
-                            _ => i == 0 ? "TOTAL" : ""
-                        };
-
                         var cell = worksheet.Cell(row, i + 1);
+                        string value = "";
 
-                        cell.Value = value;
+                        switch (columnName)
+                        {
+                            case "SubTotal":
+                                value = Convert.ToDecimal(totalRow["SubTotal"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Discount":
+                                value = Convert.ToDecimal(totalRow["Discount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Net Amount":
+                                value = Convert.ToDecimal(totalRow["NetAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Taxable Amount":
+                                value = Convert.ToDecimal(totalRow["TaxableAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Tax Amount":
+                                value = Convert.ToDecimal(totalRow["TaxAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Invoice Amount":
+                                value = Convert.ToDecimal(totalRow["InvoiceAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Paid Amount":
+                                value = Convert.ToDecimal(totalRow["PaidAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            case "Due Amount":
+                                value = Convert.ToDecimal(totalRow["DueAmount"]).ToString("N2");
+                                cell.Value = value;
+                                cell.Style.NumberFormat.Format = "#,##0.00";
+                                break;
+
+                            default:
+                                cell.Value = i == 0 ? "TOTAL" : "";
+                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                                break;
+                        }
+
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.LightGray;
                     }

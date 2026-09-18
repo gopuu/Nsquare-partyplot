@@ -4,7 +4,7 @@
 
     { key: "Qty", label: "Qty", visible: true },
 
-    { key: "GrossAmount", label: "Gross Amt", visible: true },
+    { key: "SubTotal", label: "SubTotal", visible: true },
     { key: "Discount", label: "Discount", visible: true },
     { key: "NetAmount", label: "Net Amt", visible: true },
 
@@ -25,7 +25,7 @@ const DETAILREPORT_COLUMNS = [
     { key: "BookingId", label: "Booking ID", visible: true },
     { key: "ClientName", label: "Client Name", visible: true },
 
-    { key: "GrossAmount", label: "Gross Amount", visible: true },
+    { key: "SubTotal", label: "SubTotal", visible: true },
     { key: "Discount", label: "Discount", visible: true },
     { key: "NetAmount", label: "Net Amount", visible: true },
     { key: "TaxableAmount", label: "Taxable Amount", visible: true },
@@ -319,8 +319,8 @@ function renderDailySalesTable(data, totals) {
             },
 
             {
-                data: "GrossAmount",
-                title: "Gross Amt",
+                data: "SubTotal",
+                title: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -386,7 +386,7 @@ function renderDailySalesTable(data, totals) {
 
             $(api.column(2).footer()).html(`<strong>${totals.TotalQty ?? 0}</strong>`);
 
-            $(api.column(3).footer()).html(`<strong>${fmt(totals.TotalGrossAmount)}</strong>`);
+            $(api.column(3).footer()).html(`<strong>${fmt(totals.TotalSubTotalAmount)}</strong>`);
 
             $(api.column(4).footer()).html(`<strong>${fmt(totals.TotalDiscount)}</strong>`);
 
@@ -583,7 +583,7 @@ function renderDailySalesDetailsTable(rows, totals) {
             { data: "ClientName", width: "200px" },
 
             {
-                data: "GrossAmount",
+                data: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -657,7 +657,7 @@ function renderDailySalesDetailsTable(rows, totals) {
 
             $(api.column(0).footer()).html("<strong>TOTAL</strong>");
 
-            $(api.column(5).footer()).html(formatINR2(totals.TotalGrossAmount));
+            $(api.column(5).footer()).html(formatINR2(totals.TotalSubTotalAmount));
             $(api.column(6).footer()).html(formatINR2(totals.TotalDiscount));
             $(api.column(7).footer()).html(formatINR2(totals.TotalNetAmount));
             $(api.column(8).footer()).html(formatINR2(totals.TotalTaxableAmount));

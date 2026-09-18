@@ -87,7 +87,7 @@ namespace ERPAdmin.ApiControllers
                         GSTIN = dr["GSTIN"]?.ToString(),
                         EventType = dr["EventType"]?.ToString(),
 
-                        GrossSale = Convert.ToDecimal(dr["GrossSale"]),
+                        SubTotal = Convert.ToDecimal(dr["SubTotal"]),
                         Discount = Convert.ToDecimal(dr["Discount"]),
                         NetSale = Convert.ToDecimal(dr["NetSale"]),
                         TaxableAmount = Convert.ToDecimal(dr["TaxableAmount"]),
@@ -110,7 +110,7 @@ namespace ERPAdmin.ApiControllers
                 {
                     totals = new GSTSalesTotalsModel
                     {
-                        TotalGrossSale = Convert.ToDecimal(dr["TotalGrossSale"]),
+                        TotalSubTotal = Convert.ToDecimal(dr["TotalSubTotal"]),
 
                         TotalDiscount = Convert.ToDecimal(dr["TotalDiscount"]),
 
@@ -364,7 +364,7 @@ namespace ERPAdmin.ApiControllers
                         string colName = col.ColumnName.Trim();
 
                         bool isAmountColumn =
-                            colName.Equals("Gross Sale", StringComparison.OrdinalIgnoreCase) ||
+                            colName.Equals("SubTotal", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Discount", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Net Sale", StringComparison.OrdinalIgnoreCase) ||
                             colName.Equals("Taxable Amount", StringComparison.OrdinalIgnoreCase) ||
@@ -422,8 +422,8 @@ namespace ERPAdmin.ApiControllers
 
                         switch (col.ColumnName)
                         {
-                            case "Gross Sale":
-                                value = "₹ " + Convert.ToDecimal(totalRow["TotalGrossSale"]).ToString("N2");
+                            case "SubTotal":
+                                value = "₹ " + Convert.ToDecimal(totalRow["TotalSubTotal"]).ToString("N2");
                                 isAmountColumn = true;
                                 break;
 
@@ -604,7 +604,7 @@ namespace ERPAdmin.ApiControllers
 
                         string? value = columnName switch
                         {
-                            "Gross Sale" => totalRow["TotalGrossSale"].ToString(),
+                            "SubTotal" => totalRow["TotalSubTotal"].ToString(),
 
                             "Discount" => totalRow["TotalDiscount"].ToString(),
 

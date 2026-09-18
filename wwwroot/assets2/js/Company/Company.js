@@ -1,4 +1,9 @@
-﻿//<!-- TAB 1-2: Company Profile & Property Details -- START -->
+﻿function showFoodMenuSample() {
+    const modal = new bootstrap.Modal(document.getElementById("foodMenuSampleModal"));
+    modal.show();
+}
+
+//<!-- TAB 1-2: Company Profile & Property Details -- START -->
 
 let companyId = sessionStorage.getItem('companyId');
 if (!companyId) {

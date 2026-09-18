@@ -38,7 +38,7 @@
 
         public int InvoiceGeneratedCount { get; set; }
 
-        public decimal GrossAmount { get; set; }
+        public decimal SubTotal { get; set; }
 
         public decimal Discount { get; set; }
 
@@ -60,21 +60,13 @@
     public class MonthlySalesTotalsModel
     {
         public int TotalInvoices { get; set; }
-
-        public decimal TotalGrossAmount { get; set; }
-
+        public decimal TotalSubTotalAmount { get; set; }
         public decimal TotalDiscount { get; set; }
-
         public decimal TotalNetAmount { get; set; }
-
         public decimal TotalTaxableAmount { get; set; }
-
         public decimal TotalTaxAmount { get; set; }
-
         public decimal TotalInvoiceAmount { get; set; }
-
         public decimal TotalPaymentAmount { get; set; }
-
         public decimal TotalDuePayment { get; set; }
     }
 
@@ -104,7 +96,7 @@
 
         public string? ClientName { get; set; }
 
-        public decimal GrossAmount { get; set; }
+        public decimal SubTotal { get; set; }
         public decimal Discount { get; set; }
         public decimal NetAmount { get; set; }
         public decimal TaxableAmount { get; set; }
@@ -121,7 +113,7 @@
     {
         public int TotalInvoices { get; set; }
 
-        public decimal GrossAmount { get; set; }
+        public decimal SubTotal { get; set; }
 
         public decimal Discount { get; set; }
 

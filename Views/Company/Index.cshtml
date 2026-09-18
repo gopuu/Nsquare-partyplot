@@ -1314,8 +1314,18 @@
                                     <div class="row g-3">
 
                                         <div class="col-md-6">
-                                            <h5 class="text-primary mb-3">Food Menu</h5>
+
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <h5 class="text-primary mb-0">Food Menu</h5>
+
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        onclick="showFoodMenuSample()">
+                                                    <i class="fa fa-eye me-1"></i> Show Sample
+                                                </button>
+                                            </div>
+
                                             <div id="foodHeaderContainer_items"></div>
+
                                             <button class="btn btn-outline-success mt-2" onclick="addNewHeader_items()">+ Add Food Category</button>
                                         </div>
 
@@ -1634,6 +1644,301 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for FOOD MENU (SAMPLE) view --START-->
+<div class="modal fade" id="foodMenuSampleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-primary">
+                    <i class="fa fa-cutlery me-2"></i>
+                    Food Menu Sample
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="alert alert-warning py-2 mb-3">
+                    <i class="fa fa-info-circle me-1"></i>
+                    Sample structure for organizing your food menu.
+                </div>
+
+                <div class="foodMenuSample-food-menu-sample">
+
+                    <!-- Format -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 <i>Food Category</i>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 <i>Food Sub-Category</i>
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 <i>Food Item 1</i>
+                            </div>
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 <i>Food Item 2</i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Course -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Main Course
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Punjabi Sabji
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Paneer Butter Masala 
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Veg Kolhapuri 
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Dal &amp; Rice
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Dal Tadka
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Jeera Rice
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gujarati Thali -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Gujarati Thali
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Shaak (Curry)
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Kaju Karela
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Sev Tameta
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Farsan
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Khaman Dhokla
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Patra
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fast Food -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Fast Food
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Pizza &amp; Burger
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Cheese Burst Pizza
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Veg Supreme Burger
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 South Indian
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Mysore Masala Dosa
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Medu Vada
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chinese & Oriental -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Chinese &amp; Oriental
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Noodles &amp; Rice
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Hakka Noodles
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Schezwan Fried Rice
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Soup
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Veg Manchow Soup
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Hot &amp; Sour Soup
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Beverages -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Beverages &amp; Drinks
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Cold Drinks / Mocktails
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Virgin Mojito
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Blue Lagoon
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Hot Beverages
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Masala Tea
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Cappuccino Coffee
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Italian -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Italian &amp; Continental
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Pasta
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 White Sauce Pasta (Alfredo)
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Red Sauce Pasta (Arrabbiata)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desserts -->
+                    <div class="foodMenuSample-food-category">
+                        <div class="foodMenuSample-category-title">
+                            📁 Sweets &amp; Desserts
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Traditional Sweets
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Gulab Jamun
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Kaju Katli
+                            </div>
+                        </div>
+
+                        <div class="foodMenuSample-subcategory">
+                            <div class="foodMenuSample-subcategory-title">
+                                └── 📂 Bakery &amp; Ice Cream
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                ├── 🍕 Sizzling Brownie
+                            </div>
+
+                            <div class="foodMenuSample-food-item">
+                                └── 🍕 Rajbhog Ice Cream
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal for FOOD MENU (SAMPLE) view --END-->
 
 <!-- Modal for full image view -->
 <div class="modal fade" id="imageModal" tabindex="-1">

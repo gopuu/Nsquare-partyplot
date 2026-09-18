@@ -14,7 +14,7 @@
 
     { key: "DealAmount", label: "Deal Amount", visible: true },
 
-    { key: "GrossAmount", label: "Gross Total", visible: true },
+    { key: "SubTotal", label: "Sub-Total", visible: true },
 
     { key: "Discount", label: "Discount", visible: true },
 
@@ -317,9 +317,9 @@ function renderBookingTable(data) {
             },
 
             {
-                data: "GrossAmount",
-                name: "GrossAmount",
-                title: "Gross Amount",
+                data: "SubTotal",
+                name: "SubTotal",
+                title: "SubTotal",
                 className: "text-end",
                 render: d => formatINR2(d)
             },
@@ -376,7 +376,7 @@ function renderBookingTable(data) {
             $(api.column('Pax:name').footer()).html(sumByField('Pax'));
             $(api.column('DealAmount:name').footer()).html(formatINR2(sumByField('DealAmount')));
 
-            $(api.column('GrossAmount:name').footer()).html(formatINR2(sumByField('GrossAmount')));
+            $(api.column('SubTotal:name').footer()).html(formatINR2(sumByField('SubTotal')));
             $(api.column('Discount:name').footer()).html(formatINR2(sumByField('Discount')));
 
             $(api.column('NetAmount:name').footer()).html(formatINR2(sumByField('NetAmount')));

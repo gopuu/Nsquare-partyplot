@@ -2421,13 +2421,18 @@ function bindExpenseAnalysis(list, grandTotal) {
         html += `
         <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <div class="fw-semibold text-truncate pe-2">
+                <div class="fw-semibold pe-2"
+                     style="white-space: normal; word-break: break-word;">
                     ${item.CategoryName}
                 </div>
 
                 <div class="text-end">
-                    <span class="fw-bold text-danger">${formatINR2(item.TotalAmount)}</span>
-                    <small class="text-muted ms-1">(${item.Rate}%)</small>
+                    <div class="fw-bold text-danger">
+                        ${formatINR2(item.TotalAmount)}
+                    </div>
+                    <small class="text-muted">
+                        ${item.Rate}%
+                    </small>
                 </div>
             </div>
 
@@ -2573,7 +2578,7 @@ function bindRevenueExpensePNL(list) {
     drawRevenueExpensePNLChart(months, revenue, expense, pnl);
 }
 
-function drawRevenueExpensePNLChart(labels, revenue, expense, pnl) {
+function drawRevenueExpensePNLChart_17sept26(labels, revenue, expense, pnl) {
     console.log("Revenue:", revenue);
     console.log("Expense:", expense);
     console.log("P&L:", pnl);
@@ -2632,6 +2637,88 @@ function drawRevenueExpensePNLChart(labels, revenue, expense, pnl) {
             scales: {
                 y: {
                     beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return formatINR2(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+//ADDED RED BAR - if amt < 0
+function drawRevenueExpensePNLChart(labels, revenue, expense, pnl) {
+    console.log("Revenue:", revenue);
+    console.log("Expense:", expense);
+    console.log("P&L:", pnl);
+
+    if (revenueExpensePNLChart)
+        revenueExpensePNLChart.destroy();
+
+    const ctx = document.getElementById("revenueExpensePNLChart").getContext("2d");
+
+    revenueExpensePNLChart = new Chart(ctx, {
+        type: "bar",
+
+        data: {
+            labels: labels,
+
+            datasets: [
+                {
+                    label: "Revenue",
+                    data: revenue,
+                    backgroundColor: revenue.map(value =>
+                        Number(value) < 0 ? "#dc3545" : "#ff7f2a"
+                    )
+                },
+
+                {
+                    label: "Expense",
+                    data: expense,
+                    backgroundColor: expense.map(value =>
+                        Number(value) < 0 ? "#dc3545" : "#ffc107"
+                    )
+                },
+
+                {
+                    label: "P&L",
+                    data: pnl,
+                    backgroundColor: pnl.map(value =>
+                        Number(value) < 0 ? "#dc3545" : "#4caf50"
+                    )
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
+            plugins: {
+                legend: {
+                    position: "bottom"
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + " : " + formatINR2(context.raw);
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+
                     ticks: {
                         callback: function (value) {
                             return formatINR2(value);
