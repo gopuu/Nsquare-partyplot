@@ -315,8 +315,8 @@ namespace ERPAdmin.ApiControllers
                     cmd.Parameters.AddWithValue("@Client_Contact", model.Client_Contact ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_GSTIN", model.Client_GSTIN ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Client_StateId", model.Client_StateId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@DOB", model.Client_DOB ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@AnniversaryDate", model.Client_AnniversaryDate ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Client_DOB", model.Client_DOB ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Client_AnniversaryDate", model.Client_AnniversaryDate ?? (object)DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@Booking_SubEventId", model.Booking_SubEventId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Booking_PAX", model.Booking_PAX ?? (object)DBNull.Value);
