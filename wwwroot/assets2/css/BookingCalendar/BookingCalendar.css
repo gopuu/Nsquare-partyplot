@@ -1,4 +1,11 @@
-﻿/* ====== GUEST MODAL --START =====*/
+﻿.row-wrapper {
+    position: relative;
+}
+.row-wrapper .day-cell {
+    overflow: visible;
+}
+
+/* ====== GUEST MODAL --START =====*/
 .guest-row-editing {
     background-color: #fff3cd !important;
 }

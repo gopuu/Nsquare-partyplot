@@ -447,9 +447,8 @@ function renderTable(data) {
                 data: 'QuotationDate2',
                 title: 'Quotation Date'
             },
-            { data: 'BanquetName', title: 'Hall' },
+            { data: 'BanquetName', title: 'Venue' },
             { data: 'SlotName', title: 'Slot' },
-            //{ data: 'BanquetRent', title: 'Rent' },
             { data: 'Pax', title: 'PAX' },
             { data: 'ReferenceTypeName', title: 'Medium' },
             {

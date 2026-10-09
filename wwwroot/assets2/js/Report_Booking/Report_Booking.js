@@ -7,7 +7,7 @@
 
     { key: "EventDate", label: "Event Date", visible: true },
     { key: "EventType", label: "Event Type", visible: true },
-    { key: "HallName", label: "Hall Name", visible: true },
+    { key: "HallName", label: "Venue Name", visible: true },
 
     { key: "Pax", label: "Pax", visible: true },
     { key: "Package", label: "Package", visible: true },
@@ -297,7 +297,7 @@ function renderBookingTable(data) {
 
             { data: "EventDisplay", name: "EventDisplay", title: "Event", width: "100px" },
 
-            { data: "HallName", name: "HallName", title: "Hall Name" },
+            { data: "HallName", name: "Venue Name", title: "Venue Name" },
 
             {
                 data: "Pax",
@@ -475,7 +475,7 @@ function loadCompanyHallDropdown(selectedId = "") {
 
             let dropdown = $("#ddlCompanyHall");
             dropdown.empty();
-            dropdown.append(`<option value="0">-- Select Hall --</option>`);
+            dropdown.append(`<option value="0">-- Select Venue --</option>`);
             if (response.status === "Success" && response.data.length > 0) {
                 response.data.forEach(item => {
                     dropdown.append(`<option value="${item.Id}" ${selectedId == item.Id ? "selected" : ""}>${item.HallName_Display}</option>`);
@@ -483,10 +483,11 @@ function loadCompanyHallDropdown(selectedId = "") {
             }
         },
         error: function (xhr, status, error) {
-            handleApiError(xhr, status, error, "Failed to load hall list");
+            handleApiError(xhr, status, error, "Failed to load venue list");
         }
     });
 }
+
 function ViewBookingReport(actionName) {
 
     const withHeader = $("#toggleWithHeader").is(":checked");

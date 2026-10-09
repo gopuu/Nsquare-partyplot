@@ -984,5 +984,152 @@ namespace ERPAdmin.ApiControllers
                 return StatusCode(500, apiResponse);
             }
         }
+
+        #region MUHURAT
+        [HttpPost]
+        [Route("SaveMuhurat")]
+        public IActionResult SaveMuhurat([FromBody] SaveMuhuratModel model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                long muhuratId = 0;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("SaveMuhurat", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", model.Id);
+                    cmd.Parameters.AddWithValue("@MuhuratDate", model.MuhuratDate);
+                    cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
+                    cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
+                    cmd.Parameters.AddWithValue("@Title", model.Title ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    con.Open();
+
+                    object result = cmd.ExecuteScalar();
+                    muhuratId = Convert.ToInt64(result);
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.data = new { Id = muhuratId };
+                apiResponse.message = "Muhurat saved successfully.";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("DeleteMuhurat")]
+        public IActionResult DeleteMuhurat([FromBody] DeleteMuhuratModel model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("DeleteMuhurat", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", model.Id);
+                    cmd.Parameters.AddWithValue("@ActionBy", model.ActionBy);
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.data = null;
+                apiResponse.message = "Muhurat deleted successfully.";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                return StatusCode(500, apiResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("GetMuhurat")]
+        public IActionResult GetMuhurat([FromBody] GetMuhuratModelRequest model)
+        {
+            apiResponse apiResponse = new apiResponse();
+
+            try
+            {
+                if (!TryGetConnectionAndDomain(ControllerContext, Request, out string connString, out string domain, out IActionResult? errorResult))
+                    return errorResult!;
+
+                DataTable dt = new DataTable();
+
+                using (SqlConnection con = new SqlConnection(connString))
+                using (SqlCommand cmd = new SqlCommand("GetMuhurat", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Id", model.Id);
+                    cmd.Parameters.AddWithValue("@MuhuratDate", string.IsNullOrWhiteSpace(model.MuhuratDate) ? (object)DBNull.Value : model.MuhuratDate);
+
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(dt);
+                    }
+                }
+
+                List<GetMuhuratModelResponse> list = new List<GetMuhuratModelResponse>();
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    list.Add(new GetMuhuratModelResponse
+                    {
+                        Id = Convert.ToInt32(row["Id"]),
+
+                        MuhuratDate = Convert.ToString(row["MuhuratDate"]) ?? "",
+                        MuhuratDate1 = Convert.ToString(row["MuhuratDate1"]) ?? "",
+
+                        StartTime = Convert.ToString(row["StartTime"]) ?? "",
+                        StartTime1 = Convert.ToString(row["StartTime1"]) ?? "",
+
+                        EndTime = Convert.ToString(row["EndTime"]) ?? "",
+                        EndTime1 = Convert.ToString(row["EndTime1"]) ?? "",
+
+                        Title = Convert.ToString(row["Title"]) ?? ""
+                    });
+                }
+
+                apiResponse.status = "Success";
+                apiResponse.data = list;
+                apiResponse.message = "Muhurat fetched successfully.";
+
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.LogException(ex, ControllerContext, Request, null);
+                apiResponse.status = "Error";
+                apiResponse.message = ex.Message;
+                apiResponse.data = null;
+                return StatusCode(500, apiResponse);
+            }
+        }
+        #endregion
     }
 }

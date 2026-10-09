@@ -27,6 +27,7 @@
             <div class="col-12 col-xxl-12">
                 <div class="row align-items-center justify-content-between mb-4">
                     <div class="col-12">
+
                         <div class="mb-0">
                             <div class="row align-items-center mb-4 py-1">
                                 <!-- LEFT : TITLE -->
@@ -113,7 +114,7 @@
                                 </div>
 
                                 <!-- Card 3 : Total Customer Visits -->
-                                <div class="col-md-2">
+                                <div class="col-md-2 d-none">
                                     <div class="stat-box bg-sky">
                                         <div class="stat-top sky"></div>
                                         <div class="stat-body">
@@ -127,7 +128,7 @@
                                 </div>
 
                                 <!-- Card 4 : Events Lost -->
-                                <div class="col-md-2">
+                                <div class="col-md-2 d-none">
                                     <div class="stat-box bg-lavender">
                                         <div class="stat-top lavender"></div>
                                         <div class="stat-body">
@@ -186,206 +187,11 @@
                             </div>
                             <!---------- Widgets - end---------->
 
-                            <!---------- Corporate Event vs Family Events / Corporate & Sub type of Event / Family & Subtype of Event - END ---------->
-                            <div class="row g-3 py-2">
-                                <!---------- Corporate Event vs Family Events ----------->
-                                <div class="col-md-4 text-center">
-                                    <div class="chart-box position-relative">
-                                        <!-- label -->
-                                        <div class="chart-label">Corporate vs Family Events</div>
-                                        <!-- small dropdown -->
-                                        <div class="dropdown chart-filter-pie">
-                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                                    type="button"
-                                                    id="jobChartFilter"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                This Month
-                                            </button>
-
-                                            <ul class="dropdown-menu py-2" aria-labelledby="sortByDropdown">
-                                                <li><a class="dropdown-item sort-option py-1" data-value="yesterday" href="#">Yesterday</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last7days" href="#">Last 7 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last30days" href="#">Last 30 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="lastmonth" href="#">Last Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last12months" href="#">Last 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1 active" href="#" data-value="thismonth">This Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next3month">Next 3 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next6month">Next 6 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next12month">Next 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="overall">Overall</a></li>
-                                            </ul>
-                                        </div>
-
-                                        <!-- chart -->
-                                        <canvas id="jobPie" class="mt-3"></canvas>
-                                    </div>
-                                </div>
-
-                                <!---------- Corporate & Sub type of Event ----------->
-                                <div class="col-md-4 text-center">
-                                    <div class="chart-box position-relative">
-                                        <!-- small dropdown -->
-                                        <div class="chart-label">Corporate & Sub-Events</div>
-                                        <div class="dropdown chart-filter-eventPie">
-
-                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                                    type="button"
-                                                    id="eventPieChartFilter"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                This Month
-                                            </button>
-
-                                            <ul class="dropdown-menu py-2" aria-labelledby="sortByDropdown">
-                                                <li><a class="dropdown-item sort-option py-1" data-value="yesterday" href="#">Yesterday</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last7days" href="#">Last 7 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last30days" href="#">Last 30 days</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="lastmonth" href="#">Last Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" data-value="last12months" href="#">Last 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1 active" href="#" data-value="thismonth">This Month</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next3month">Next 3 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next6month">Next 6 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="next12month">Next 12 Months</a></li>
-                                                <li><a class="dropdown-item sort-option py-1" href="#" data-value="overall">Overall</a></li>
-                                            </ul>
-                                        </div>
-
-                                        <div class="row mt-2">
-
-                                            <div class="col-md-5">
-                                                <canvas id="eventPie"></canvas>
-                                            </div>
-
-                                            <div class="col-md-7">
-                                                <div id="legend_CorporateSubEvent" class="legend_CorporateSubEvent"></div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!---------- Family & Subtype of Event ---------->
-                                <div class="col-md-4 text-center">
-                                    <div class="chart-box position-relative">
-
-                                        <div class="chart-label">Family & Sub-Events</div>
-
-                                        <!-- small dropdown -->
-                                        <div class="dropdown chart-filter-salepie">
-
-                                            <button class="btn btn-outline-secondary btn-xs dropdown-toggle"
-                                                    type="button"
-                                                    id="salepieChartFilter"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                This Month
-                                            </button>
-
-                                            <ul class="dropdown-menu py-2" aria-labelledby="sortByDropdown">
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       data-value="yesterday" href="#">
-                                                        Yesterday
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       data-value="last7days" href="#">
-                                                        Last 7 days
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       data-value="last30days" href="#">
-                                                        Last 30 days
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       data-value="lastmonth" href="#">
-                                                        Last Month
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       data-value="last12months" href="#">
-                                                        Last 12 Months
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1 active"
-                                                       href="#"
-                                                       data-value="thismonth">
-                                                        This Month
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       href="#"
-                                                       data-value="next3month">
-                                                        Next 3 Months
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       href="#"
-                                                       data-value="next6month">
-                                                        Next 6 Months
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       href="#"
-                                                       data-value="next12month">
-                                                        Next 12 Months
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a class="dropdown-item sort-option py-1"
-                                                       href="#"
-                                                       data-value="overall">
-                                                        Overall
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-
-                                        <div class="row mt-2">
-
-                                            <!-- Doughnut -->
-                                            <div class="col-md-6">
-                                                <canvas id="salesPie"></canvas>
-                                            </div>
-
-                                            <!-- Custom Legend -->
-                                            <div class="col-md-6">
-                                                <div id="legend_FamilySubEvent"
-                                                     class="legend_FamilySubEvent">
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                            <!---------- Corporate Event vs Family Events / Corporate & Sub type of Event / Family & Subtype of Event - END ---------->
-
                             <!--Overall Bookings Statistics & Lead Source --- START -->
                             <div class="row g-3 py-2">
 
                                 <!-- Overall Bookings Statistics - START -->
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <div class="card">
                                         <!-- Card Header -->
                                         <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
@@ -427,50 +233,6 @@
                                 </div>
                                 <!-- Overall Bookings Statistics - END -->
 
-                                <!-- Lead Source -- START -->
-                                <div class="col-md-4">
-                                    <div class="card">
-                                        <!-- Card Header -->
-                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-3">
-                                            <h5 class="mb-0"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-placement="top"
-                                                title="Lead Source means where your customer enquiry came from — like Walk-In, Social Media, Website, Google Ads, Referral, etc.">
-                                                Enquiry Lead Source
-                                            </h5>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="dropdown pie-chart-filter">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            id="leadSourceFilterBtn"
-                                                            data-bs-toggle="dropdown">
-                                                        This Month
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end py-2">
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="yesterday">Yesterday</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last7days">Last 7 days</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last30days">Last 30 days</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="lastmonth">Last Month</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last12months">Last 12 Months</a></li>
-                                                        <li><a class="dropdown-item py-1 active" href="#" data-value="thismonth">This Month</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next3month">Next 3 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next6month">Next 6 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next12month">Next 12 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="overall">Overall</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="card-body">
-                                            <div class="position-relative chart-scroll-wrapper">
-                                                <canvas id="leadSourceChart"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Lead Source -- END -->
-
                             </div>
                             <!--Overall Bookings Statistics & Lead Source --- END -->
 
@@ -478,7 +240,7 @@
                             <div class="row g-3 py-2">
 
                                 <!-- Top Revenue List --- START -->
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <div class="card shadow-sm border-0 h-100">
 
                                         <!-- 🔹 Card Header -->
@@ -521,54 +283,6 @@
                                 </div>
                                 <!-- Top Revenue List --- END -->
 
-                                <!-- Lead Lost Analysis -- START -->
-                                <div class="col-md-4">
-                                    <div class="card">
-
-                                        <!-- Card Header -->
-                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-3">
-                                            <h5 class="mb-0"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-placement="top"
-                                                title="Lead Lost Analysis shows which event types are losing the most enquiries — helping identify weak conversion areas like Wedding, Corporate, Birthday, etc.">
-                                                Lead Lost Analysis
-                                            </h5>
-
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="dropdown pie-chart-filter">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            id="leadLostFilterBtn"
-                                                            data-bs-toggle="dropdown">
-                                                        This Month
-                                                    </button>
-
-                                                    <ul class="dropdown-menu dropdown-menu-end py-2">
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="yesterday">Yesterday</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last7days">Last 7 days</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last30days">Last 30 days</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="lastmonth">Last Month</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="last12months">Last 12 Months</a></li>
-                                                        <li><a class="dropdown-item py-1 active" href="#" data-value="thismonth">This Month</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next3month">Next 3 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next6month">Next 6 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="next12month">Next 12 Months</a></li>
-                                                        <li><a class="dropdown-item py-1" href="#" data-value="overall">Overall</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Card Body -->
-                                        <div class="card-body">
-                                            <div class="position-relative" style="height:300px;">
-                                                <canvas id="leadLostChart"></canvas>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                <!-- Lead Lost Analysis -- END -->
                             </div>
                             <!--Top Revenue Events --- END -->
 
@@ -879,96 +593,6 @@
 
                             </div>
                             <!---------- Expense Analysis, Enquiry to Booking Conversion - START ---------->
-
-                            <!----------- Hall Occupancy - START ----------->
-                            <div class="row py-2 g-2">
-                                <!---------- Hall Occupancy - START ---------->
-                                <div class="col-5">
-                                    <div class="card">
-                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
-
-                                            <h5 id="hallOccupancyTooltip"
-                                                class="mb-0"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-html="true"
-                                                data-bs-title="Loading...">
-                                                <i class="fa-solid fa-chart-column me-2 text-primary"></i>
-                                                Hall Occupancy Rate
-                                            </h5>
-
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="fw-semibold">Month:</span>
-                                                <input type="month"
-                                                       class="form-control form-control-sm"
-                                                       id="txtOccupancyMonth"
-                                                       style="width:170px;" />
-                                            </div>
-
-                                        </div>
-
-                                        <div class="card-body">
-
-                                            <div class="mb-3 text-end">
-                                                <span class="badge bg-primary fs-8">
-                                                    Overall Occupancy :
-                                                    <span id="lblOverallOccupancy">0%</span>
-                                                </span>
-                                            </div>
-
-                                            <div id="hallOccupancyContainer"></div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <!---------- Hall Occupancy - END ---------->
-
-                                <!----------- Revenue vs Expense vs P&L - START ----------->
-                                <div class="col-7">
-                                    <div class="card">
-                                        <!-- Header -->
-                                        <div class="card-header bg-rating d-flex justify-content-between align-items-center py-2">
-
-                                            <h5 class="mb-0"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-placement="top"
-                                                title="AI-powered insights showing booking trends and revenue performance.">
-                                                <i class="fa-solid fa-chart-column text-primary me-2"></i>
-                                                Revenue vs Expense vs P&L
-                                            </h5>
-
-                                            <div class="d-flex align-items-center gap-2">
-
-                                                <label class="fw-semibold mb-0">Year:</label>
-
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            id="revenueExpenseYearBtn"
-                                                            data-bs-toggle="dropdown">
-                                                        Select Year
-                                                    </button>
-
-                                                    <ul class="dropdown-menu dropdown-menu-end"
-                                                        id="ddlRevenueExpenseYear">
-                                                    </ul>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                        <div class="card-body">
-
-                                            <div style="height:340px">
-                                                <canvas id="revenueExpensePNLChart"></canvas>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <!----------- Revenue vs Expense vs P&L - END ----------->
-
-                            </div>
-                            <!----------- Hall Occupancy - END ----------->
 
                         </div>
                     </div>

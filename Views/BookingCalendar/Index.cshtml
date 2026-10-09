@@ -20,10 +20,10 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0 fw-bold text-warning">Booking Calendar</h4>
                         <div class="d-flex gap-2">
+                            <button class="btn btn-warning btn-sm" id="btnMuhurat">Muhurat</button>
                             <button class="btn btn-outline-dark btn-sm" id="btnBlockHall">Block</button>
                             <button class="btn btn-outline-primary btn-sm d-none" id="bookmapBtn">Bookmap</button>
                             <button class="btn btn-outline-secondary btn-sm d-none" id="toggleViewBtn">List View</button>
-                            <button class="btn btn-dark btn-sm d-none">Block</button>
                             <select class="form-select form-select-sm" id="yearSelect" style="width: 100px;"></select>
                             <div class="btn-group" id="monthButtons"></div>
                         </div>
@@ -142,12 +142,12 @@
                     <div class="row g-3">
                         <!-- Event & Banquet Info -->
                         <!--banquetDropdown-->
-                        <div class="col-md-2">
-                            <label class="form-label">Banquets <span class="text-danger">*</span></label>
+                        <div class="col-md-3">
+                            <label class="form-label">Venue <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm" id="banquetDropdown">
                                 <option value="0">Full Property</option>
                             </select>
-                            <div class="text-danger small mt-1 error-msg d-none">Please select banquet</div>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select venue</div>
                         </div>
                         <!--fromDate-->
                         <div class="col-md-2">
@@ -162,8 +162,17 @@
                             <div class="text-danger small mt-1 error-msg d-none">Please select to date</div>
                         </div>
 
+                        <!--slot Dropdown-->
+                        <div class="col-md-3">
+                            <label class="form-label">Slot <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="slotDropdown">
+                                <option value="0">Select</option>
+                            </select>
+                            <div class="text-danger small mt-1 error-msg d-none">Please select slot</div>
+                        </div>
+
                         <!-- START TIME FIELD -->
-                        <div class="col-md-2 position-relative">
+                        <div class="col-md-2 position-relative d-none">
                             <label for="eventStart" class="form-label">
                                 Start Time <span class="text-danger">*</span>
                             </label>
@@ -209,7 +218,7 @@
                         </div>
 
                         <!-- END TIME FIELD -->
-                        <div class="col-md-2 position-relative">
+                        <div class="col-md-2 position-relative d-none">
                             <label for="eventEnd" class="form-label">
                                 End Time <span class="text-danger">*</span>
                             </label>
@@ -253,7 +262,6 @@
                                 </div>
                             </div>
                         </div>
-
 
                         <div id="slotStatusMsg" class="alert py-1 mt-2 d-none"></div>
                         <div id="slotStatusWarning" class="alert py-1 mt-1 d-none fs-9"></div>
@@ -325,8 +333,16 @@
                                            id="clientDOB">
                                 </div>
 
-                            </div>
+                                <!-- Anniversary Date -->
+                                <div class="col-md-2">
+                                    <label class="form-label">Anniversary Date</label>
+                                    <input type="date"
+                                           class="form-control form-control-sm"
+                                           id="clientAnniversaryDate">
+                                </div>
 
+
+                            </div>
 
                             <!-- Legal Details -->
                             <div class="row g-3 mt-1">
@@ -335,14 +351,6 @@
                                     <div class="fw-semibold text-primary border-bottom pb-1">
                                         Legal Details
                                     </div>
-                                </div>
-
-                                <!-- Anniversary Date -->
-                                <div class="col-md-2">
-                                    <label class="form-label">Anniversary Date</label>
-                                    <input type="date"
-                                           class="form-control form-control-sm"
-                                           id="clientAnniversaryDate">
                                 </div>
 
                                 <!-- GSTIN -->
@@ -366,7 +374,6 @@
 
                         </div>
 
-
                         <hr class="m-1" />
 
                         <!-- Booking Details -->
@@ -374,14 +381,14 @@
                             <h6 class="text-primary">Booking Details</h6>
                             <div class="row g-2 align-items-end">
                                 <!-- Event (Dropdown, width 3) WORK -->
-                                <div class="col-md-2" id="booking_eventDropdown_div">
+                                <div class="col-md-2 d-none" id="booking_eventDropdown_div">
                                     <label class="form-label">Event Type</label>
                                     <select class="form-select form-select-sm" id="booking_eventDropdown"></select>
                                     <div class="text-danger small mt-1 error-msg d-none">Please select event</div>
                                 </div>
 
                                 <!-- Sub-Event (Dropdown, width 3) -->
-                                <div class="col-md-3">
+                                <div class="col-md-3 d-none">
                                     <label class="form-label">Sub-Event Type<span class="text-danger">*</span></label>
                                     <select class="form-select form-select-sm" id="booking_subEventDropdown"></select>
                                     <div class="text-danger small mt-1 error-msg d-none">Please select subevent</div>
@@ -389,14 +396,14 @@
 
                                 <!-- Pax (Input, width 2) -->
                                 <div class="col-md-2">
-                                    <label class="form-label">Pax <span class="text-danger">*</span></label>
+                                    <label class="form-label">Pax</label>
                                     <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_pax">
                                     <div class="text-danger small mt-1 error-msg d-none">Please enter PAX</div>
                                 </div>
 
-                                <!-- Hall Rent (Input, width 2) -->
+                                <!-- Rent (Input, width 2) -->
                                 <div class="col-md-2">
-                                    <label class="form-label">Hall Rent</label>
+                                    <label class="form-label">Rent</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">₹</span>
                                         <input type="number" min="0" class="form-control form-control-sm" value="0" id="booking_hallRent">
@@ -411,7 +418,7 @@
 
                                 <!-- Reference (Dropdown, width 3) -->
                                 <div class="col-md-3">
-                                    <label class="form-label">Reference <span class="text-danger">*</span></label>
+                                    <label class="form-label">Reference</label>
                                     <select class="form-select form-select-sm" id="booking_leadReferenceDropdown"></select>
                                     <div class="text-danger small mt-1 error-msg d-none">Please select reference type</div>
                                 </div>
@@ -419,7 +426,7 @@
                         </div>
 
                         <!-- Food Package -->
-                        <div class="col-12">
+                        <div class="col-12 d-none">
                             <label class="form-label d-none">Select Menu Type</label>
                             <!-- Menu Type - Chef/Choice-->
                             <div class="d-flex gap-4 mt-1 d-none">
@@ -809,7 +816,7 @@
                         </div>
 
                         <!-- Notes Button -->
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end d-none">
                             <button type="button"
                                     class="btn btn-outline-primary btn-sm mb-0"
                                     id="btnNotesDetails">
@@ -946,8 +953,8 @@
                     <div class="d-flex flex-column">
                         <label class="form-label mb-1">Booking Type</label>
                         <select class="form-select form-select-sm" id="BookingType">
-                            <option value="1">Confirmed</option>
-                            <option value="2">Tentative</option>
+                            <option value="1" selected>Confirmed</option>
+                            @* <option value="2">Tentative</option> *@
                         </select>
                     </div>
 
@@ -1123,11 +1130,11 @@
                 <section class="mb-3 p-0">
                     <div class="d-flex flex-wrap gap-2">
 
-                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnFoodLabels" data-foodpackage="">
+                        <button type="button" class="btn btn-outline-danger btn-sm d-none" id="btnFoodLabels" data-foodpackage="">
                             <i class="fa-solid fa-utensils me-1"></i> Food Labels
                         </button>
 
-                        <button type="button" class="btn btn-outline-success btn-sm" id="btnVendorWorkOrders">
+                        <button type="button" class="btn btn-outline-success btn-sm d-none" id="btnVendorWorkOrders">
                             <i class="fa-solid fa-truck me-1"></i> Vendor Work Orders (<span id="VendorWorkOrder_Count">0</span>)
                         </button>
 
@@ -1143,7 +1150,7 @@
                             <i class="fa-solid fa-bell me-1"></i> Post Booking Followups (0)
                         </button>
 
-                        <button type="button" class="btn btn-outline-dark btn-sm" id="btnPrepareOrder">
+                        <button type="button" class="btn btn-outline-dark btn-sm d-none" id="btnPrepareOrder">
                             <i class="fa-solid fa-list-check me-1"></i> Prepare Order (PO)
                         </button>
 
@@ -1195,7 +1202,7 @@
                         </div>
 
                         <!--Booking Notes Details-->
-                        <div class="row mt-2">
+                        <div class="row mt-2 d-none">
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
                                     <h6 class="fw-bold mb-0 text-primary">Booking Notes Details</h6>
@@ -1264,23 +1271,23 @@
                                         <span id="bookingReport_BookedOn">—</span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom d-none">
                                         <span class="fw-semibold">Event</span>
                                         <span id="bookingReport_EventName">—</span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <div class="d-flex justify-content-between py-1 border-bottom d-none">
                                         <span class="fw-semibold">Sub-Event</span>
                                         <span id="bookingReport_SubEventName">—</span>
                                     </div>
 
                                     <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <span class="fw-semibold">Banquet</span>
+                                        <span class="fw-semibold">Property</span>
                                         <span id="bookingReport_Banquet">—</span>
                                     </div>
 
                                     <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <span class="fw-semibold">Halls</span>
+                                        <span class="fw-semibold">Venue</span>
                                         <span id="bookingReport_Hall">—</span>
                                     </div>
 
@@ -1306,7 +1313,7 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <span class="fw-semibold">Hall Rent</span>
+                                        <span class="fw-semibold">Rent</span>
                                         <span>₹<span id="bookingReport_HallRent">—</span></span>
                                     </div>
 
@@ -1447,7 +1454,7 @@
                 </section>
 
                 <!-- 🍽️ Food Package and Selected Menu -->
-                <section class="mb-3 p-0">
+                <section class="mb-3 p-0 d-none">
                     <div class="card border-0 shadow-sm">
                         <!-- 🔹 Card Header (Connected with Parent) -->
                         <div class="bg-light border-bottom rounded-top d-flex flex-wrap justify-content-between align-items-center px-3 py-2">
@@ -1600,7 +1607,7 @@
                         <i class="fa-solid fa-users me-1"></i> Guest Directory
                     </button>
 
-                    <button type="button" class="btn btn-outline-success btn-sm" id="btnRequestFeedback">
+                    <button type="button" class="btn btn-outline-success btn-sm d-none" id="btnRequestFeedback">
                         <i class="fa-solid fa-bullhorn me-1"></i> Request Feedback
                     </button>
 
@@ -3028,7 +3035,112 @@
 </div>
 <!-- Image View MODAL -- END-->
 
+<!-- Muhurat Modal -->
+<div class="modal fade" id="muhuratModal" tabindex="-1" aria-labelledby="muhuratModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
 
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title" id="muhuratModalLabel">
+                    <i class="bi bi-sun me-2"></i>Muhurat Management
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- SECTION 1: FORM -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header fw-semibold">
+                        <i class="bi bi-calendar-plus me-1"></i>
+                        Add / Edit Muhurat
+                    </div>
+
+                    <div class="card-body">
+                        <form id="muhuratForm">
+                            <input type="hidden" id="muhuratId" value="0" />
+
+                            <div class="row g-3">
+                                <div class="col-md-2">
+                                    <label for="muhuratDate" class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="muhuratDate" required />
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label for="muhuratStartTime" class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="time" class="form-control" id="muhuratStartTime" required />
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label for="muhuratEndTime" class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="time" class="form-control" id="muhuratEndTime" required />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="muhuratTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="muhuratTitle" maxlength="200"
+                                           placeholder="Enter Muhurat title" required />
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnResetMuhurat">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                </button>
+
+                                <button type="submit" class="btn btn-warning btn-sm" id="btnSaveMuhurat">
+                                    <i class="bi bi-save me-1"></i>Save Muhurat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: GRID -->
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">
+                            <i class="bi bi-table me-1"></i>Muhurat List
+                        </span>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRefreshMuhurat">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-sm align-middle text-center mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:60px;">#</th>
+                                        <th>Date</th>
+                                        <th>Title</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th style="width:150px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="muhuratGridBody">
+                                    <tr>
+                                        <td colspan="6" class="text-muted py-3">Loading Muhurats...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Muhurat Modal -->
 
 
 <!--Booking Note - text Editor --- START ---->

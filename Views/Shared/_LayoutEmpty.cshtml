@@ -55,15 +55,17 @@
 </head>
 
 <body>
+
     <div id="loaderOverlay">
         <div class="spinner"></div>
     </div>
+
     <main class="main" id="top">       
        @RenderBody()
     </main>
 
     <!-- Feedback Link Button -->
-    <div id="feedbackFab" title="Open Feedback Form">
+    <div id="feedbackFab" title="Open Feedback Form" class="d-none">
         <img src="/assets2/img/feedback/feedback_icon2.svg"
              alt="Feedback Link"
              class="feedback-icon">

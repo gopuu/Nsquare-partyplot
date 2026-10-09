@@ -5,7 +5,7 @@
 
     { key: "ClientName", label: "Client Name", visible: true },
     { key: "EventType", label: "Event Type (Sub-Type)", visible: true },
-    { key: "Hall", label: "Hall", visible: true },
+    { key: "Hall", label: "Venue", visible: true },
 
     { key: "Pax", label: "Pax", visible: true },
     { key: "LeadSource", label: "Lead Source", visible: true },
@@ -311,7 +311,7 @@ function renderEnquiryTable(data) {
             {
                 data: "Hall",
                 name: "Hall",
-                title: "Hall"
+                title: "Venue"
             },
 
             {

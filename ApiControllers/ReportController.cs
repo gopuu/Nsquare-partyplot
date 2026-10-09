@@ -1360,8 +1360,8 @@ namespace ERPAdmin.ApiControllers
                 }
 
                 AddRightRow("PAX", pax);
-                AddRightRow("Hall", hallName);
-                AddRightRow("Menu Type", menuType);
+                AddRightRow("Venue", hallName);
+                //AddRightRow("Menu Type", menuType);
                 AddRightRow("Booking Type", bookingType);
 
                 AddRightRow("Event", eventName);
@@ -1382,6 +1382,7 @@ namespace ERPAdmin.ApiControllers
                 document.Add(new iTextParagraph("\n"));
 
                 // ================= FOOD PACKAGE (FULL WIDTH) =================
+                /*
                 PdfPTable packageTable = new PdfPTable(1) { WidthPercentage = 100 };
                 int i = 1;
                 foreach (var pkg in packageItems)
@@ -1527,7 +1528,7 @@ namespace ERPAdmin.ApiControllers
                 // ✅ ADD PACKAGE FULL WIDTH
                 document.Add(packageTable);
                 document.Add(new iTextParagraph("\n"));
-
+                */
                 // ================= PAYMENT TABLE =================
                 PdfPTable paymentTable = new PdfPTable(2) { WidthPercentage = 100 };
                 paymentTable.SetWidths(new float[] { 0.65f, 0.35f });
@@ -1642,6 +1643,7 @@ namespace ERPAdmin.ApiControllers
                 document.Add(lineBottom);
 
                 //BOOKING NOTES
+                /*
                 string notesJson = row["NotesJSON"]?.ToString() ?? "[]";
                 List<BookingNotePdf> notes = JsonConvert.DeserializeObject<List<BookingNotePdf>>(notesJson) ?? new List<BookingNotePdf>();
 
@@ -1717,8 +1719,8 @@ namespace ERPAdmin.ApiControllers
                 {
                     notesPara.Add(new Chunk("No booking notes available.", labelFontLeft));
                 }
-
                 document.Add(notesPara);
+                */
 
                 if (!string.IsNullOrWhiteSpace(otherCharges_BookingNoteForCustomer))
                 {

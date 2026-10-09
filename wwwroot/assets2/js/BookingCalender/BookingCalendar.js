@@ -2113,7 +2113,7 @@ $(document).on("click", ".btn-saveAddOn", function () {
     // =====================================================
     saveSelectedAddonItems(selectedItems);
 });
-//here2
+
 // =============================
 // SAVE SELECTED ADDON ITEMS
 // =============================
@@ -2185,7 +2185,7 @@ function saveSelectedAddonItems(selectedItems) {
 //Food Addons ----- /END ------------------------------------------------------------------
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-let shiftNames = ["FD", "MO", "AF", "EV", "ON"]; //,"BF","LN","HT","DN"];
+let shiftNames = ["FD", "FH", "SH"]; //,"BF","LN","HT","DN"];
 const legendColors = { available: "success", past: "secondary", confirmed: "danger", online: "primary", tentative: "light", blocked: "dark", mahurat: "pink" };
 
 const yearSelect = document.getElementById("yearSelect");
@@ -2369,6 +2369,58 @@ function generateShiftDataPerDay(dateObj) {
     });
 }
 
+//muhurat ----- helpers
+function normalizeMuhuratDate(value) {
+    if (!value) return "";
+
+    return String(value).split("T")[0].substring(0, 10);
+}
+
+function parseMuhuratTime(value) {
+    if (!value) return null;
+
+    const match = String(value).trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+    if (!match) return null;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const meridiem = (match[3] || "").toUpperCase();
+
+    if (hours > 23 || minutes > 59) return null;
+
+    if (meridiem === "PM" && hours < 12) hours += 12;
+    if (meridiem === "AM" && hours === 12) hours = 0;
+
+    return hours * 60 + minutes;
+}
+
+function isMuhuratTimeOverlap(dateISO, slotStart, slotEnd) {
+    if (!Array.isArray(muhuratData)) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const slotDate = new Date(dateISO + "T00:00:00");
+
+    // Ignore past dates
+    if (slotDate < today) return false;
+
+    return muhuratData.some(m => {
+        const muhuratDate = normalizeMuhuratDate(m.MuhuratDate ?? m.muhuratDate);
+
+        if (muhuratDate !== dateISO) return false;
+
+        const start = parseMuhuratTime(m.StartTime1 ?? m.StartTime ?? m.startTime);
+        const end = parseMuhuratTime(m.EndTime1 ?? m.EndTime ?? m.endTime);
+
+        if (start === null || end === null) return false;
+
+        // Check whether the Muhurat overlaps this slot
+        return start < slotEnd && end > slotStart;
+    });
+}
+
+
 var global_bookingData = null;
 //main booking board
 async function renderBoard(bookingData = null) {
@@ -2395,6 +2447,7 @@ async function renderBoard(bookingData = null) {
     headerLabel.style.minWidth = "80px";
     headerLabel.innerHTML = `<div class="fw-bold">${monthNames[selectedMonth]}-${selectedYear}</div><div class="mt-2">Enquiries</div>`;
     dateRow.appendChild(headerLabel);
+    //here2
 
     //Column Header -> Date - Day - Enquiry Count
     cacheddays.forEach(d => {
@@ -2574,7 +2627,7 @@ async function renderBoard(bookingData = null) {
             // Populate cell with shift data
             // ===============================
 
-            // Generate inner HTML for each shift (FD, MO, AF, EV, ON)
+            // Generate inner HTML for each shift (FD, FH, SH)
             // shiftArr → array representing visual state placeholders for each shift
             cell.innerHTML = shiftArr.map((color, i) => {
 
@@ -2596,7 +2649,7 @@ async function renderBoard(bookingData = null) {
                 // - others → white text
                 var textColor = finalColor === "light" ? "text-black" : "text-white";
 
-                // Get shift code based on index (e.g., 0=FD, 1=MO, 2=AF, 3=EV, 4=ON)
+                // Get shift code based on index (e.g., 0=FD, 1=FH, 2=SH)
                 const shiftCode = shiftNames[i];
 
                 // Get full readable name (e.g., "Evening" for EV)
@@ -2617,14 +2670,16 @@ async function renderBoard(bookingData = null) {
                 const slotStart = timeToMinutes(shiftTimes[shiftCode].start);
                 const slotEnd = timeToMinutes(shiftTimes[shiftCode].end);
 
+                const isMuhuratSlot = isMuhuratTimeOverlap(dateStr_ISO, slotStart, slotEnd);
+
                 let isBookingConfirmed = false;
                 let isBookingTentative = false;
                 let isBlocked = false;
 
-                // Will hold the matched booking for this specific slot (FD/MO/AF/EV/ON)
+                // Will hold the matched booking for this specific slot (FD/FH/SH/)
                 let bookingMatch = null;
 
-                // Default display text is the shift code (e.g., FD, MO, EV...)
+                // Default display text is the shift code (e.g., FD, FH, SH...)
                 let displayText = shiftCode;
 
                 // Ensure bookingData is valid before processing
@@ -2806,7 +2861,7 @@ async function renderBoard(bookingData = null) {
                     // ✅ Case 2: Non-FD → DO NOT MERGE (important fix)
                     // ===============================
                     else {
-                        // No merging for EV / MO / AF / ON
+                        // No merging for FH / SH
                         // Each slot should render independently
                         spanCount = 1;
                     }
@@ -2834,7 +2889,7 @@ async function renderBoard(bookingData = null) {
                     textColor = "text-white";
                 }
 
-                // 🎯 CASE 3: Actual booked slot (EV / MO / AF / ON)
+                // 🎯 CASE 3: Actual booked slot (FH / SH)
                 else if (shiftBookingMap[shiftCode]?.length > 0) { //isBookingConfirmed) {
                     finalColor = "danger";
                     textColor = "text-white";
@@ -2843,6 +2898,20 @@ async function renderBoard(bookingData = null) {
                 // 🎯 CASE 4: Tentative booking (soft hold)
                 else if (isBookingTentative) {
                     finalColor = "white";
+                    textColor = "text-dark";
+                }
+
+                // Highlight available Muhurat slots in yellow
+                if (
+                    isMuhuratSlot &&
+                    !isBlocked &&
+                    !isBookingConfirmed &&
+                    !isBookingTentative &&
+                    !bookingMatch &&
+                    !(shiftBookingMap[shiftCode]?.length > 0) &&
+                    !(shiftCode === "FD" && hasAnyBooking)
+                ) {
+                    finalColor = "warning";
                     textColor = "text-dark";
                 }
 
@@ -2899,7 +2968,7 @@ async function renderBoard(bookingData = null) {
                         return bookingCount;
                     }
 
-                    // Case 3: Default → show shift code (MO, AF, EV, etc.)
+                    // Case 3: Default → show shift code (FH, SH, etc.)
                     return shiftCode;
                 }
 
@@ -2907,9 +2976,12 @@ async function renderBoard(bookingData = null) {
 
             row.appendChild(cell);
         });
+        
+
         board.appendChild(row);
     });
     //console.log("bookingCount:", bookingCount, ", bookingCountTemp:", bookingCountTemp);
+
 
     //on cell hover - tooltip ---- START --------------------
     // 🧠 Create a custom tooltip element (only once)
@@ -2955,10 +3027,8 @@ async function renderBoard(bookingData = null) {
 
             const shiftIcons = {
                 FD: "fa-solid fa-sun",
-                MO: "fa-solid fa-cloud-sun",
-                AF: "fa-solid fa-sun",
-                EV: "fa-solid fa-cloud-moon",
-                ON: "fa-solid fa-moon"
+                FH: "fa-solid fa-cloud-sun",
+                SH: "fa-solid fa-sun",
             };
 
             const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock";
@@ -3014,10 +3084,8 @@ async function renderBoard(bookingData = null) {
 
                 const shiftOrder = {
                     FD: 1,
-                    MO: 2,
-                    AF: 3,
-                    EV: 4,
-                    ON: 5
+                    FH: 2,
+                    SH: 3,
                 };
 
                 const shiftDiff = (shiftOrder[a.ShiftCode] || 99) - (shiftOrder[b.ShiftCode] || 99);
@@ -3270,10 +3338,8 @@ async function renderBoard(bookingData = null) {
 
             const shiftIcons = {
                 FD: "fa-solid fa-sun",
-                MO: "fa-solid fa-cloud-sun",
-                AF: "fa-solid fa-sun",          // or fa-sun-haze if available
-                EV: "fa-solid fa-cloud-moon",
-                ON: "fa-solid fa-moon"
+                FH: "fa-solid fa-cloud-sun",
+                SH: "fa-solid fa-sun",          // or fa-sun-haze if available
             };
 
             const iconClass = shiftIcons[shiftcode] || "fa-solid fa-clock"; // fallback
@@ -3928,12 +3994,21 @@ var vendorWorkOrder_eventTime = 0;
 var vendorWorkOrder_slotId = 0;
 let hasInvoice = false;
 let openedFromReport = false;
+
+let muhuratData = null;
+const muhuratApi = {
+    get: "/api/BookingCalendar/GetMuhurat",
+    save: "/api/BookingCalendar/SaveMuhurat",
+    delete: "/api/BookingCalendar/DeleteMuhurat"
+};
+
+
 // Initial Load
 document.addEventListener("DOMContentLoaded", function () {
     $("#btnBook").prop("disabled", true);
 
     //const bookingId = getBookingId();
-
+    loadMuhuratList();
     populateYearDropdown();
     //populateMonthButtons();
     //loadBookingCalendar();
@@ -3942,9 +4017,9 @@ document.addEventListener("DOMContentLoaded", function () {
     loadClientMasterList();
     loadStateList();
     loadCityList();
-    loadEventTypeList();
-    loadSubEventList();
-    loadFoodPackageList();
+    //loadEventTypeList();
+    //loadSubEventList();
+    //loadFoodPackageList();
 
     getNextInvoiceNumbers();
 
@@ -5104,7 +5179,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ✏️ Edit
     document.getElementById("btnEdit").addEventListener("click", function () {
         const bookingId = getBookingId();
-        //console.log("✏️ Edit clicked - Booking ID:", bookingId);
+        console.log("✏️ Edit clicked - Booking ID:", bookingId);
 
         openedFromReport = true;
         // Just hide visually (do not destroy modal state)
@@ -5423,6 +5498,320 @@ document.addEventListener("DOMContentLoaded", function () {
         $("#btnSaveHallBlock").text("Save");
     }
     //Hall Block --- END ------------------------------
+
+    //MUHURAT --- START------------------------------
+    let muhuratModalInstance = null;
+
+    // Open modal
+    $("#btnMuhurat").on("click", function () {
+        const modalElement = document.getElementById("muhuratModal");
+        muhuratModalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        muhuratModalInstance.show();
+        resetMuhuratForm();
+        loadMuhuratList(true);
+    });
+
+    // Reset form
+    function resetMuhuratForm() {
+        $("#muhuratForm")[0].reset();
+
+        const now = new Date();
+
+        const currentDate = now.getFullYear() + "-" +
+            String(now.getMonth() + 1).padStart(2, "0") + "-" +
+            String(now.getDate()).padStart(2, "0");
+
+        const currentTime = String(now.getHours()).padStart(2, "0") + ":" +
+            String(now.getMinutes()).padStart(2, "0");
+
+        const endDate = new Date(now.getTime() + 60 * 60 * 1000);
+
+        const endTime = String(endDate.getHours()).padStart(2, "0") + ":" +
+            String(endDate.getMinutes()).padStart(2, "0");
+
+        $("#muhuratId").val(0);
+        $("#muhuratDate").val(currentDate);
+        $("#muhuratStartTime").val(currentTime);
+        $("#muhuratEndTime").val(endTime);
+
+        $("#btnSaveMuhurat").html('<i class="bi bi-save me-1"></i>Save Muhurat');
+    }
+
+    // Reset button
+    $("#btnResetMuhurat").on("click", function () {
+        resetMuhuratForm();
+    });
+
+    // Refresh grid
+    $("#btnRefreshMuhurat").on("click", function () {
+        loadMuhuratList(true);
+    });
+
+    // Load Muhurat list
+    function loadMuhuratList(isForModel=false) {
+        $("#muhuratGridBody").html(
+            '<tr><td colspan="6" class="text-center text-muted py-3">Loading...</td></tr>'
+        );
+        var payload = {
+            Id: 0,
+            MuhuratDate: null
+        };
+        console.log("get payload:", payload);
+
+        $.ajax({
+            url: muhuratApi.get,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                console.log("get response:", response);
+                const data = response.data || response.Data || [];
+                muhuratData = data;
+                if (isForModel) {
+                    renderMuhuratGrid(data);
+                }
+            },
+            error: function (xhr) {
+                $("#muhuratGridBody").html(
+                    '<tr><td colspan="6" class="text-center text-danger py-3">Failed to load Muhurat list.</td></tr>'
+                );
+
+                console.error("GetMuhurat error:", xhr.responseText);
+
+                Swal.fire("Error", "Unable to load Muhurat list.", "error");
+            }
+        });
+    }
+
+    // Render grid
+    function renderMuhuratGrid(list) {
+        const tbody = $("#muhuratGridBody");
+        tbody.empty();
+
+        if (!list || list.length === 0) {
+            tbody.html(
+                '<tr><td colspan="6" class="text-center text-muted py-3">No Muhurats found.</td></tr>'
+            );
+            return;
+        }
+
+        list.forEach(function (item, index) {
+            const id = item.id ?? item.Id;
+            const date = item.MuhuratDate1;
+            const title = item.Title;
+            const startTime = item.StartTime1;
+            const endTime = item.EndTime1;
+
+            const tr = $("<tr></tr>");
+            tr.append($("<td></td>").text(index + 1));
+            tr.append($("<td></td>").text(date));
+            tr.append($("<td class='text-start fw-semibold'></td>").text(title));
+            tr.append($("<td></td>").text(startTime));
+            tr.append($("<td></td>").text(endTime));
+
+            const actions = $("<td></td>");
+            actions.append(
+                $("<button type='button' class='btn btn-outline-primary btn-sm me-1'><i class='fa fa-pencil'></i></button>")
+                    .on("click", function () {
+                        editMuhurat(item);
+                    })
+            );
+            actions.append(
+                $("<button type='button' class='btn btn-outline-danger btn-sm'><i class='fa fa-trash'></i></button>")
+                    .on("click", function () {
+                        deleteMuhurat(id);
+                    })
+            );
+
+            tr.append(actions);
+            tbody.append(tr);
+        });
+    }
+
+    // Edit Muhurat
+    function editMuhurat(item)
+    {
+        console.log("muhurat edit:", item);
+        $("#muhuratId").val(item.Id ?? 0);
+        $("#muhuratDate").val(item.MuhuratDate);
+        $("#muhuratStartTime").val(item.StartTime);
+        $("#muhuratEndTime").val(item.EndTime);
+        $("#muhuratTitle").val(item.Title);
+
+        $("#btnSaveMuhurat").html('<i class="bi bi-pencil-square me-1"></i>Update Muhurat');
+
+        document.getElementById("muhuratForm").scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    // Save / Update Muhurat
+    $("#muhuratForm").on("submit", function (e) {
+        e.preventDefault();
+
+        const id = parseInt($("#muhuratId").val(), 10) || 0;
+        const date = $("#muhuratDate").val();
+        const startTime = $("#muhuratStartTime").val();
+        const endTime = $("#muhuratEndTime").val();
+        const title = $("#muhuratTitle").val().trim();
+
+        if (!date || !startTime || !endTime || !title) {
+            Swal.fire("Validation", "Please fill in all Muhurat fields.", "warning");
+            return;
+        }
+
+        if (endTime <= startTime) {
+            Swal.fire("Validation", "End Time must be later than Start Time.", "warning");
+            return;
+        }
+
+        const payload = {
+            Id: id,
+            MuhuratDate: date,
+            StartTime: startTime,
+            EndTime: endTime,
+            Title: title
+        };
+        console.log("muhurat save payload:", payload);
+        $("#btnSaveMuhurat").prop("disabled", true).text("Saving...");
+
+        $.ajax({
+            url: muhuratApi.save,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response.status === "Error" || response.Status === "Error") {
+                    Swal.fire("Error", response.message || response.Message || "Unable to save Muhurat.", "error");
+                    return;
+                }
+                handleApiSuccess(response.message || response.Message || "Muhurat saved successfully.");
+
+                resetMuhuratForm();
+                loadMuhuratList(true);
+                loadBookingCalendar();
+            },
+            error: function (xhr) {
+                console.error("SaveMuhurat error:", xhr.responseText);
+                Swal.fire("Error", "Unable to save Muhurat.", "error");
+            },
+            complete: function () {
+                $("#btnSaveMuhurat").prop("disabled", false);
+                $("#btnSaveMuhurat").html(
+                    ($("#muhuratId").val() || "0") !== "0"
+                        ? '<i class="bi bi-pencil-square me-1"></i>Update Muhurat'
+                        : '<i class="bi bi-save me-1"></i>Save Muhurat'
+                );
+            }
+        });
+    });
+
+    // Delete Muhurat
+    function deleteMuhurat(id) {
+        Swal.fire({
+            title: "Delete Muhurat?",
+            text: "Are you sure you want to delete this Muhurat?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#dc3545"
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: muhuratApi.delete,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    Id: id
+                }),
+                success: function (response) {
+                    if (response.status === "Error" || response.Status === "Error") {
+                        Swal.fire("Error", response.message || response.Message || "Unable to delete Muhurat.", "error");
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "Deleted",
+                        text: response.message || response.Message || "Muhurat deleted successfully.",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    if (String($("#muhuratId").val()) === String(id)) {
+                        resetMuhuratForm();
+                    }
+
+                    loadMuhuratList(true);
+                },
+                error: function (xhr) {
+                    console.error("DeleteMuhurat error:", xhr.responseText);
+                    Swal.fire("Error", "Unable to delete Muhurat.", "error");
+                }
+            });
+        });
+    }
+
+    // Format date for display
+    function formatMuhuratDate(value) {
+        if (!value) return "";
+
+        const datePart = String(value).split("T")[0];
+        const parts = datePart.split("-");
+
+        if (parts.length === 3 && parts[0].length === 4) {
+            return `${ parts[2] } -${ parts[1] } -${ parts[0] } `;
+        }
+
+        return datePart;
+    }
+
+    // Convert date to yyyy-MM-dd for date input
+    function toDateInputValue(value) {
+        if (!value) return "";
+
+        return String(value).split("T")[0];
+    }
+
+    // Format time for grid display
+    function formatMuhuratTime(value) {
+        if (!value) return "";
+
+        const text = String(value);
+        const match = text.match(/(\d{1,2}):(\d{2})/);
+
+        if (!match) return text;
+
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2];
+        const suffix = hours >= 12 ? "PM" : "AM";
+
+        hours = hours % 12 || 12;
+
+        return `${ String(hours).padStart(2, "0") }:${ minutes } ${ suffix } `;
+    }
+
+    // Convert API time to HH:mm for time input
+    function toTimeInputValue(value) {
+        if (!value) return "";
+
+        const match = String(value).match(/(\d{1,2}):(\d{2})/);
+
+        if (!match) return "";
+
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2];
+
+        // API may return either "14:30" or "02:30 PM".
+        if (/\bPM\b/i.test(value) && hours < 12) hours += 12;
+        if (/\bAM\b/i.test(value) && hours === 12) hours = 0;
+
+        return `${ String(hours).padStart(2, "0") }:${ minutes } `;
+    }
+    //MUHURAT --- END ------------------------------
 
     //Check Slot Availability ------- START ------------------------------------
     // Trigger on date, time, banquet change
@@ -7117,8 +7506,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
         YearId: Number(selectedYearId) ?? 0,
         MonthId: Number(selectedMonthId) ?? 0
     };
-    //console.log("GetBookingCalendar requestData:", requestData);
-
+    console.log("GetBookingCalendar requestData:", requestData);
 
     let progress = 0;
     // Show loader
@@ -7211,8 +7599,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                         : "— No customer booking notes available —"
                     );
                     //NOTES -RENDER
-                    const notes = data.JSON_Notes ?? [];
-                    renderBookingNotes(notes);
+                    //const notes = data.JSON_Notes ?? [];
+                    //renderBookingNotes(notes);
                     $('#toggleBookingNotes').prop('checked', false); //.trigger("change");
                     $('#bookingNotesContainer').hide();
 
@@ -7241,8 +7629,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
 
                     $("#bookingReport_Slot").text(`${data.ShiftCode} (${data.ShiftFullName})` || "—");
                     $("#bookingReport_BookedOn").text(data.Booked_On || "—");
-                    $("#bookingReport_EventName").text(data.Booking_EventName || "—");
-                    $("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
+                    //$("#bookingReport_EventName").text(data.Booking_EventName || "—");
+                    //$("#bookingReport_SubEventName").text(data.Booking_SubEventName || "—");
                     $("#bookingReport_Banquet").text(data.BanquetPropertyName || "—");
                     $("#bookingReport_Hall").text(data.BanquetName || "—");
                     $("#bookingReport_Pax").text(data.Booking_PAX || "—");
@@ -7283,8 +7671,8 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     fillGuestTable(data.GuestList);
 
                     // Food Package and Selected Menu
-                    const packages = data?.JSON_FoodPackage ?? [];
-                    renderFoodPackages(packages);
+                    //const packages = data?.JSON_FoodPackage ?? [];
+                    //renderFoodPackages(packages);
 
                     $("#bookingReport_FoodPackageUpdatedBy").text(data?.Booked_By_EmpName || "—");
                     $("#bookingReport_FoodPackageUpdatedOn").text(data?.Booked_On || "—");
@@ -7350,6 +7738,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#fromDate").val(data.FromDate);
                     $("#toDate").val(data.TillDate);
 
+                    $("#slotDropdown").val(data.SlotId);
                     $("#eventStart").val(data.StartTime_Full);
                     $("#eventEnd").val(data.EndTime_Full);
 
@@ -7382,6 +7771,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     // =====================================================
                     // EDIT FOOD PACKAGES
                     // =====================================================
+                    /*
                     const foodPackages = data?.JSON_FoodPackage ?? [];
                     console.log("foodPackages:", foodPackages);
                     if (Array.isArray(foodPackages) && foodPackages.length > 0) {
@@ -7394,7 +7784,7 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                                 bindDynamicFoodRow($newBlock, pkg);
                             }
                         });
-                    }
+                    }*/
 
                     //othercharges
                     $("#OtherCharges_Decoration_Amount").val(data.OtherCharges_Decoration_Amount);
@@ -7449,10 +7839,10 @@ function loadBookingCalendar(bookingId = 0, banquetId = 0, eventDate = null, act
                     $("#OtherCharges_internalNote").val(data.OtherCharges_InternalOfficeNote || '');
 
                     //NOTES -for edit
-                    const notes = data.JSON_Notes ?? [];
+                    /*const notes = data.JSON_Notes ?? [];
                     if (notes.length > 0) {
                         loadBookingNotes(notes);
-                    }                    
+                    }*/                    
 
                     $("#BookingType").val(data.Booking_TypeId ?? "");
                     $("#AgentCheck").prop("checked", data.Booking_IsAgent);
@@ -8484,12 +8874,10 @@ function formatAmount(val) {
 }
 
 function validateBookingForm() {
-
     clearAllErrors();
     let isValid = true;
 
     /* ================= BASIC BOOKING ================= */
-
     if (!$("#fromDate").val()) {
         showFieldError($("#fromDate"), "Please select from date");
         isValid = false;
@@ -8497,6 +8885,11 @@ function validateBookingForm() {
 
     if (!$("#toDate").val()) {
         showFieldError($("#toDate"), "Please select to date");
+        isValid = false;
+    }
+
+    if (!$("#slotDropdown").val()) {
+        showFieldError($("#toDate"), "Please select to slot");
         isValid = false;
     }
 
@@ -8534,7 +8927,7 @@ function validateBookingForm() {
         showFieldError($("#clientContact"), "Enter valid 10 digit contact");
         isValid = false;
     }
-
+    /*
     if (parseInt($("#booking_subEventDropdown").val()) <= 0) {
         showFieldError($("#booking_subEventDropdown"), "Please select event");
         isValid = false;
@@ -8548,11 +8941,9 @@ function validateBookingForm() {
     if (parseInt($("#booking_leadReferenceDropdown").val()) <= 0) {
         showFieldError($("#booking_leadReferenceDropdown"), "Please select reference type");
         isValid = false;
-    }
-
+    }*/
 
     /* ================= PAYMENT VALIDATION ================= */
-
     let paymentAmount = parseFloat($("#PaymentDetails_Amount").val()) || 0;
     let paymentMode = parseInt($("#PaymentDetails_Mode").val()) || 0;
     let paymentAccount = parseInt($("#PaymentDetails_AccountId").val()) || 0;
@@ -9186,6 +9577,7 @@ function saveBooking() {
 
     // 🔹 2. Build Food Packages JSON --here
     const foodPackages = [];
+    /*
     // 1. FIRST ROW (static)
     $("#foodPackageContainer > .food-row").each(function () {
         const $row = $(this);
@@ -9198,12 +9590,14 @@ function saveBooking() {
         const $row = $block.find(".food-row"); // important
         foodPackages.push(buildFoodPackageObject($row, true, $block));
     });
+    */
     // 🔹 3. Attach as JSON string
     bookingData.JSON_FoodPackage = foodPackages;
     console.log("saveBooking5");
 
     //NOTES
     let notes = [];
+    /*
     $('.note-subcategory').each(function () {
         const categoryId = $(this).data('categoryid');
         const subCategoryId = $(this).data('subcategoryid');
@@ -9265,6 +9659,7 @@ function saveBooking() {
         });
 
     });
+    */
     bookingData.JSON_Notes = notes;
     console.log("saveBooking6");
 
@@ -9447,6 +9842,7 @@ function resetBooking() {
         .data("eventdate", null)      // clear stored date
         .data("shiftid", null);       // clear stored shift
 
+    $("#slotDropdown").val("0");
     $("#eventStart").val("");
     $("#eventEnd").val("");
     
@@ -10362,7 +10758,7 @@ function loadSlotDropdown() {
         data: JSON.stringify(payload),
         success: function (response) {
             //console.log("response SlotMaster:", response);
-            const $slotDropdowns = $("#SlotId, #reschedule_SlotId, #PO_Slot");
+            const $slotDropdowns = $("#slotDropdown, #SlotId, #reschedule_SlotId, #PO_Slot");
             const $abbrContainer = $("#slotAbbreviations");
 
             $slotDropdowns.html(`<option value="0">-- Select Slot --</option>`);
@@ -10414,6 +10810,35 @@ function loadSlotDropdown() {
             handleApiError(xhr, status, error, "Slot Fetch Error");
         }
     });
+}
+
+$("#slotDropdown").off("change.slotTime").on("change.slotTime", function () {
+    const $selected = $(this).find(":selected");
+
+    const startTime = $selected.attr("data-start");
+    const endTime = $selected.attr("data-end");
+
+    if ($(this).val() === "0") {
+        $("#eventStart, #eventEnd").val("");
+        return;
+    }
+
+    $("#eventStart").val(formatTime(startTime));
+    $("#eventEnd").val(formatTime(endTime));
+});
+
+function formatTime(time) {
+    if (!time) return "";
+
+    const parts = time.split(":");
+    let hours = parseInt(parts[0], 10);
+    const minutes = parts[1] || "00";
+
+    const period = hours >= 12 ? "PM" : "AM";
+
+    hours = hours % 12 || 12;
+
+    return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
 }
 
 // Slot Change for Reschedule
